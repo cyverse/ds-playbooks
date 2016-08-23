@@ -1,0 +1,44 @@
+---
+default_resource: CyVerseRes
+
+aegis_resources:
+  - aegisASU1Res
+  - aegisNAU1Res
+
+iclimate_resources:
+  - aegisUA1Res
+
+iplant_resources:
+  - dustyRes
+  - holmesRes
+  - hugoRes
+  - juniorRes
+  - pennyRes
+  - romeoRes
+  - snoopyRes
+  - trixieRes
+
+single_threaded_resources:
+  - cshlWildcatRes
+
+dbms_port: 5432
+dbms_username: irodsuser
+dbms_password: Ux5924d
+
+negotiation_key: bdi7hc5EJ8swaToV1Robo47FyoaEf2ZI
+
+#rabbitmq_host: bugs.iplantcollaborative.org
+#rabbitmq_port: 31333
+rabbitmq_host: ares.iplantcollaborative.org
+rabbitmq_port: 5672
+rabbitmq_username: ipc
+rabbitmq_password: mostly810S
+rabbitmq_ephemeral: false
+
+server_control_plane_key: QSESYyLeUdiLUvjPRL6oeN3nfWTn02uB
+server_port_range_start: 20000
+server_port_range_end: 20399
+
+zone_admin_username: ipc_admin
+zone_admin_password: Zebra99zz--__
+zone_key: PAEDXpss4o1oxktFKlz9jMPWzwBHHMxc5d8dIfzd

@@ -1,0 +1,12 @@
+[dbms]
+irods-2.cyverse.org
+
+[irods:children]
+ies
+rs
+
+[ies]
+irods-2.cyverse.org
+
+[rs]
+

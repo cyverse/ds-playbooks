@@ -1,0 +1,30 @@
+---
+default_resource: demoResc
+
+aegis_resources: []
+
+iclimate_resources: []
+
+iplant_resources: []
+
+single_threaded_resources: []
+
+dbms_port: 31398
+dbms_username: irods
+dbms_password: SillyBilly
+
+negotiation_key: 'D^a!lP2+Kv+zZFnR1S7xsIh5y7Rff89X'
+
+rabbitmq_host: irods-2.cyverse.org
+rabbitmq_port: 31333
+rabbitmq_username: ipc
+rabbitmq_password: mostly810S
+rabbitmq_ephemeral: false
+
+server_control_plane_key: zcDxUM9S57Wf22B8wwAMrwpBtwsBBZff
+server_port_range_start: 20000
+server_port_range_end: 20399
+
+zone_admin_username: rods
+zone_admin_password: SillyBilly
+zone_key: P3SDF2SWQR22sMs7drCgtcxYDUxL6JDjqsJDM6FMAzUkdHpaf

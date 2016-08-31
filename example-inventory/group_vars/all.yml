@@ -1,6 +1,13 @@
 ---
+# A flag indicating whether or not these playbooks are allowed to manage the system. i.e., do things
+# like update system packages and reboot
+manage_system: true
+
 # The new name for the default iRODS resource
 default_resource: CyVerseRes
+
+# The location of the vault for the resource server's default resource.
+default_resource_directory: /var/lib/irods/iRODS/Vault
 
 # The resources in aegisRG
 aegis_resources: []

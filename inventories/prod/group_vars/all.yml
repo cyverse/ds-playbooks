@@ -1,4 +1,6 @@
 ---
+manage_system: true
+
 default_resource: CyVerseRes
 
 aegis_resources:

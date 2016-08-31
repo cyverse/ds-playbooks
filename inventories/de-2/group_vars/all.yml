@@ -1,5 +1,8 @@
 ---
+manage_system: true
+
 default_resource: demoResc
+default_resource_directory: /var/lib/irods/iRODS/Vault
 
 aegis_resources: []
 

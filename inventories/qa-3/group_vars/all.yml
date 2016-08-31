@@ -1,5 +1,8 @@
 ---
+manage_system: true
+
 default_resource: CyVerseRes
+default_resource_directory: /var/lib/iRODS/Vault
 
 aegis_resources:
   - aegisASU1Res

@@ -14,9 +14,8 @@ iclimate_resources:
 iplant_resources:
   - dustyRes
   - holmesRes
-  - hugoRes
   - juniorRes
-  - pennyRes
+  - kelcieRes
   - romeoRes
   - snoopyRes
   - trixieRes

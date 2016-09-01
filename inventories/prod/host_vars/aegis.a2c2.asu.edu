@@ -1,3 +1,3 @@
 ---
-manage_system: false
+manage_system: true
 default_resource_directory: /data/Vault

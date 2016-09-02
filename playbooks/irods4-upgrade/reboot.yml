@@ -4,17 +4,21 @@
   become: true
   gather_facts: true
   tasks:
-    - name: reboot
-      command: /sbin/shutdown -r +2
-      async: 0
-      poll: 0
-      ignore_errors: true
+    - block:
+        - name: reboot
+          command: /sbin/shutdown -r +2
+          async: 0
+          poll: 0
+          ignore_errors: true
       
-    - name: wait for server to stop
-      become: false
-      local_action: wait_for host={{ inventory_hostname }} port={{ ansible_ssh_port }} state=stopped
+        - name: wait for server to stop
+          become: false
+          local_action: |
+            wait_for host={{ inventory_hostname }} port={{ ansible_ssh_port }} state=stopped
 
-    - name: verify server up
-      become: false
-      local_action: wait_for host={{ inventory_hostname }} port={{ ansible_ssh_port }} state=started
+        - name: verify server up
+          become: false
+          local_action: |
+            wait_for host={{ inventory_hostname }} port={{ ansible_ssh_port }} state=started
 
+      when: manage_system

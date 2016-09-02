@@ -8,3 +8,4 @@
       package:
         name: '*'
         state: latest
+      when: manage_system

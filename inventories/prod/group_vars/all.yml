@@ -31,7 +31,7 @@ negotiation_key: bdi7hc5EJ8swaToV1Robo47FyoaEf2ZI
 #rabbitmq_host: bugs.iplantcollaborative.org
 #rabbitmq_port: 31333
 rabbitmq_host: ares.iplantcollaborative.org
-rabbitmq_port: 5672
+rabbitmq_port: 24000
 rabbitmq_username: ipc
 rabbitmq_password: mostly810S
 rabbitmq_ephemeral: false

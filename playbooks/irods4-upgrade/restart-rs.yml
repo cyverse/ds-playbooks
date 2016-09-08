@@ -1,0 +1,12 @@
+---
+- name: restart resource servers
+  hosts: rs
+  become: true
+  gather_facts: false
+  tasks:
+    - name: start resource servers again
+      service:
+        name: irods
+        pattern: irodsServer
+        state: restarted
+

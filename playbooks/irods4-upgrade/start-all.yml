@@ -1,0 +1,23 @@
+---
+- name: start IES
+  hosts: ies
+  become: true
+  gather_facts: true
+  tasks:
+    - name: start IES
+      service:
+        name: irods
+        pattern: irodsServer
+        state: started
+
+- name: start resource servers
+  hosts: rs
+  become: true
+  gather_facts: true
+  tasks:
+    - name: start resource servers
+      service:
+        name: irods
+        pattern: irodsServer
+        state: started
+

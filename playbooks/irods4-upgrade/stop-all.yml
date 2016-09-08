@@ -1,0 +1,12 @@
+---
+- name: stop all
+  hosts: irods
+  become: true
+  gather_facts: true
+  tasks:
+    - name: stop
+      service:
+        name: irods
+        pattern: irodsServer
+        state: stopped
+

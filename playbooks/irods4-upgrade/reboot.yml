@@ -6,7 +6,7 @@
   tasks:
     - block:
         - name: reboot
-          command: /sbin/shutdown -r +2
+          command: /sbin/reboot
           async: 0
           poll: 0
           ignore_errors: true

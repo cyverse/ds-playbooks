@@ -9,7 +9,7 @@
     - name: unblock port 1247 for 128.196.38.0
       lineinfile:
         dest: /etc/sysconfig/iptables
-        insertbefore: -A {{ iptables_input_chain }} .*-m state --state NEW -m tcp .*--dport 1247
+        insertbefore: -A {{ iptables_input_chain }} .*-m state --state NEW -m tcp .*--dport 1247 -j REJECT
         line: -A {{ iptables_input_chain }} -m state --state NEW -m tcp -p tcp -s 128.196.38.0/25 --dport 1247 -j ACCEPT
       register: access
 

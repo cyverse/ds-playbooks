@@ -26,7 +26,7 @@ rabbitmq_ephemeral: false
 
 server_control_plane_key: zcDxUM9S57Wf22B8wwAMrwpBtwsBBZff
 server_port_range_start: 20000
-server_port_range_end: 20399
+server_port_range_end: 20099
 
 zone_admin_username: rods
 zone_admin_password: SillyBilly

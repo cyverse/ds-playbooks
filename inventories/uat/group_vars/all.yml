@@ -1,0 +1,43 @@
+---
+manage_system: true
+
+default_resource: CyVerseRes
+default_resource_directory: /var/lib/iRODS/Vault
+
+aegis_resources:
+  - aegisASU1Res
+  - aegisNAU1Res
+
+iclimate_resources:
+  - aegisUA1Res
+
+iplant_resources:
+  - dustyRes
+  - holmesRes
+  - juniorRes
+  - kelcieRes
+  - romeoRes
+  - snoopyRes
+  - trixieRes
+
+single_threaded_resources: []
+
+dbms_port: 5432
+dbms_username: irodsuser
+dbms_password: Ux5924d
+
+negotiation_key: VvmpepaRQWDsJ5HkK9juKcwPyRjedMTX
+
+rabbitmq_host: mokiedb.iplantcollaborative.org
+rabbitmq_port: 31333
+rabbitmq_username: ipc
+rabbitmq_password: mostly810S
+rabbitmq_ephemeral: false
+
+server_control_plane_key: Wd29uBVwFEn9KHmEQhvk3xedYnYaDTcr
+server_port_range_start: 20000
+server_port_range_end: 20399
+
+zone_admin_username: ipc_admin
+zone_admin_password: Zebra99zz--__
+zone_key: 2UngRg5Fmq4Kdx2rCfcHwBa2nGmDLqRXeq2EAGHD

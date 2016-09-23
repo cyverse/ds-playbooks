@@ -1,0 +1,6 @@
+---
+- hosts: "{{ hosts | default('all') }}"
+  tasks:
+    - debug: var="{{ var1 | default('inventory_hostname') }}"
+    - debug: var="{{ var2 }}"
+      when: var2 is defined

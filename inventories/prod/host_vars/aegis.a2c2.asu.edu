@@ -1,3 +1,4 @@
 ---
+ansible_port: 22
 manage_system: true
 default_resource_directory: /data/Vault

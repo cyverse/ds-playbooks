@@ -1,4 +1,6 @@
 ---
+ansible_port: 1657
+
 manage_system: true
 
 default_resource: CyVerseRes

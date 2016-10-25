@@ -3,7 +3,7 @@ ansible_port: 1657
 
 manage_system: true
 
-default_resource: demoResc
+default_resource: rootResource
 default_resource_directory: /var/lib/irods/iRODS/Vault
 
 aegis_resources: []
@@ -14,13 +14,13 @@ iplant_resources: []
 
 single_threaded_resources: []
 
-dbms_port: 31398
+dbms_port: 5432
 dbms_username: irods
 dbms_password: SillyBilly
 
 negotiation_key: 'D^a!lP2+Kv+zZFnR1S7xsIh5y7Rff89X'
 
-rabbitmq_broker_uri: amqp://ipc:mostly810S@bark.cyverse.org:31333/%2Fde-2%2Fdata-store
+rabbitmq_broker_uri: amqp://ipc:mostly810S@bark.cyverse.org:31333/%2Farcher%2Fdata-store
 rabbitmq_ephemeral: false
 
 server_control_plane_key: zcDxUM9S57Wf22B8wwAMrwpBtwsBBZff

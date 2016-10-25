@@ -1,0 +1,12 @@
+[dbms]
+bark.cyverse.org
+
+[irods:children]
+ies
+rs
+
+[ies]
+twig.cyverse.org
+
+[rs]
+squirrel.cyverse.org

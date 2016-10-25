@@ -30,10 +30,7 @@ dbms_password: Ux5924d
 
 negotiation_key: VvmpepaRQWDsJ5HkK9juKcwPyRjedMTX
 
-rabbitmq_host: mokiedb.iplantcollaborative.org
-rabbitmq_port: 31333
-rabbitmq_username: ipc
-rabbitmq_password: mostly810S
+rabbitmq_broker_uri: amqp://ipc:mostly810S@mokie.cyverse.org:31333/%2F
 rabbitmq_ephemeral: false
 
 server_control_plane_key: Wd29uBVwFEn9KHmEQhvk3xedYnYaDTcr

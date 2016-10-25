@@ -30,10 +30,7 @@ dbms_password: Ux5924d
 
 negotiation_key: Lfgaso2UAV6QEPsycw3hfPUIkMzys8EZ
 
-rabbitmq_host: localhost
-rabbitmq_port: 31333
-rabbitmq_username: ipc
-rabbitmq_password: mostly810S
+rabbitmq_broker_uri: amqp://ipc:mostly810S@mokie.cyverse.org:31333/%2Fqa-3%2Fdata-store
 rabbitmq_ephemeral: false
 
 server_control_plane_key: 2IHmIaXx3pfyLFq2QNv3D1R0f09GNm95

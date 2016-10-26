@@ -1,3 +1,3 @@
 ---
-- name: CyVerse-Ansible.cyverse-irods-cfg
+- name: cyverse.cyverse-irods-cfg
   src: CyVerse-Ansible.cyverse-irods-cfg

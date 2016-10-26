@@ -3,7 +3,7 @@
   hosts: irods
   become: true
   roles:
-    - role: CyVerse-Ansible.cyverse-irods-cfg
+    - role: cyverse.cyverse-irods-cfg
       irods_icat_host: "{{ groups['ies'][0] }}"
       irods_default_resource_name: "{{ default_resource }}"
       irods_negotiation_key: "{{ negotiation_key }}"

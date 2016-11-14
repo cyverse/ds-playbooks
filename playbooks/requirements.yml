@@ -1,3 +1,6 @@
 ---
 - name: cyverse.cyverse-irods-cfg
   src: CyVerse-Ansible.cyverse-irods-cfg
+
+- name: cyverse.ip
+  src: CyVerse-Ansible.cyverse-ip

@@ -3,6 +3,17 @@ ansible_port: 1657
 
 manage_system: true
 
+
+# System configuration
+
+nic_txqueuelen: 1000
+sysctl: []
+
+
+# iRODS configuration
+default_number_of_transfer_threads: 3
+parallel_transfer_buffer_size: 4
+
 default_resource: CyVerseRes
 
 aegis_resources:

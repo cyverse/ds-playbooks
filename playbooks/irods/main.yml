@@ -1,0 +1,73 @@
+---
+- name: determine the resource servers that are on a physical machines
+  hosts: irods
+  become: true
+  gather_facts: true
+  tasks:
+    - name: group by virtualization type
+      group_by: 
+        key: "{{ 'physical' if ansible_virtualization_type == 'NA' }}"
+
+- name: determine the NIC throughput for the physical resource servers
+  hosts: physical:&rs
+  become: true
+  gather_facts: false
+  tasks:
+    - name: call ethtool
+      shell: "ethtool {{ ansible_default_ipv4.alias }} | sed -n 's/\tSpeed: \\([0-9]*\\).*/\\1/p'"
+      register: ethtool
+      changed_when: false
+
+    - name: group by NIC speed
+      group_by: 
+        key: "{{ 'rs_10G' if ethtool.stdout|int >= 10000 else
+                 'rs_1G'  if ethtool.stdout|int >= 1000 }}"
+
+- name: tune networking
+  hosts: physical:&irods
+  become: true
+  gather_facts: false
+  roles:
+    - role: ansible-ip
+      ip_link_txqueuelen: "{{ nic_txqueuelen }}"
+
+  tasks:
+    - name: configure linux kernel 
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+      with_items: "{{ sysctl }}"
+
+- name: configure iRODS
+  hosts: irods
+  become: true
+  roles:
+    - role: cyverse.cyverse-irods-cfg
+      irods_icat_host: "{{ groups['ies'][0] }}"
+      irods_default_number_of_transfer_threads: "{{ default_number_of_transfer_threads }}"
+      irods_default_resource_name: "{{ default_resource }}"
+      irods_negotiation_key: "{{ negotiation_key }}"
+      irods_parallel_transfer_buffer_size: "{{ parallel_transfer_buffer_size }}"
+      irods_server_control_plane_key: "{{ server_control_plane_key }}"
+      irods_server_port_range_start: "{{ server_port_range_start }}"
+      irods_server_port_range_end: "{{ server_port_range_end }}"
+      irods_zone_key: "{{ zone_key }}"
+      irods_zone_user: "{{ zone_admin_username }}"
+      irods_amqp_uri: "{{ rabbitmq_broker_uri }}"
+      irods_amqp_ephemeral: "{{ rabbitmq_ephemeral }}"
+      irods_single_threaded_resources: "{{ single_threaded_resources }}"
+      irods_db:
+        host: "{{ groups['dbms'][0] }}"
+        port: "{{ dbms_port }}"
+        username: "{{ dbms_username }}"
+        password: "{{ dbms_password }}"
+
+- name: reload config files
+  hosts: ies
+  become: true
+  become_user: irods
+  gather_facts: false
+  tasks:
+    - file:
+        path: /etc/irods/core.re
+        state: touch

@@ -3,4 +3,7 @@
   src: CyVerse-Ansible.cyverse-irods-cfg
 
 - name: cyverse.ip
-  src: CyVerse-Ansible.cyverse-ip
+  src: CyVerse-Ansible.ip
+
+- name: cyverse.rabbitmq-vhost
+  src: CyVerse-Ansible.rabbitmq-vhost

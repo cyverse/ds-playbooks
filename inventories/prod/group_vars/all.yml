@@ -41,8 +41,11 @@ dbms_password: Ux5924d
 
 negotiation_key: bdi7hc5EJ8swaToV1Robo47FyoaEf2ZI
 
-#rabbitmq_broker_uri: amqp://ipc:mostly810S@bugs.iplantcollaborative.org:31333/%2Fprod%2Fdata-store
-rabbitmq_broker_uri: amqp://ipc:mostly810S@ares.iplantcollaborative.org:24000/%2F
+rabbitmq_host: ares.iplantcollaborative.org
+rabbitmq_broker_port: 24000
+rabbitmq_user: ipc
+rabbitmq_password: mostly810S
+rabbitmq_vhost_name: /prod/data-store
 rabbitmq_ephemeral: false
 
 server_control_plane_key: QSESYyLeUdiLUvjPRL6oeN3nfWTn02uB

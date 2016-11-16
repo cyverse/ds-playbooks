@@ -33,5 +33,5 @@ valmont.iplantcollaborative.org
 whitecomb.iplantcollaborative.org
 wildcat.cshl.edu
 
-[amqp-brokers]
+[rabbitmq]
 ares.iplantcollaborative.org

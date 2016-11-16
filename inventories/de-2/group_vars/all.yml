@@ -12,7 +12,6 @@ sysctl: []
 
 # rabbitmq configuration
 
-rabbitmq_host: bark.cyverse.org
 rabbitmq_port: 31333
 rabbitmq_user: ipc
 rabbitmq_password: mostly810S

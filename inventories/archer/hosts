@@ -11,5 +11,5 @@ twig.cyverse.org
 [rs]
 squirrel.cyverse.org
 
-[amqp-brokers]
+[rabbitmq]
 bark.cyverse.org

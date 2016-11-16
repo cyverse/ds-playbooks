@@ -43,7 +43,7 @@
       with_items: "{{ sysctl }}"
 
 - name: configure AMQP broker
-  hosts: amqp-brokers
+  hosts: rabbitmq
   become: true
   gather_facts: false
   roles:
@@ -58,6 +58,10 @@
 - name: configure iRODS
   hosts: irods
   become: true
+  vars:
+    rabbitmq_host: "{{ groups['rabbitmq'][0] }}"
+    rabbitmq_vhost_uri: "{{ rabbitmq_vhost | replace('/', '%2F') }}"
+    dbms_host: "{{ groups['dbms'][0] }}"        
   roles:
     - role: cyverse.cyverse-irods-cfg
       irods_icat_host: "{{ groups['ies'][0] }}"
@@ -70,11 +74,11 @@
       irods_server_port_range_end: "{{ server_port_range_end }}"
       irods_zone_key: "{{ zone_key }}"
       irods_zone_user: "{{ zone_admin_username }}"
-      irods_amqp_uri: "amqp://{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ rabbitmq_host }}:{{ rabbitmq_port }}/{{ rabbitmq_vhost | replace('/', '%2F') }}"
+      irods_amqp_uri: "amqp://{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ rabbitmq_host }}:{{ rabbitmq_port }}/{{ rabbitmq_vhost_uri }}"
       irods_amqp_ephemeral: "{{ rabbitmq_ephemeral }}"
       irods_single_threaded_resources: "{{ single_threaded_resources }}"
       irods_db:
-        host: "{{ groups['dbms'][0] }}"
+        host: "{{ dbms_host }}"
         port: "{{ dbms_port }}"
         username: "{{ dbms_username }}"
         password: "{{ dbms_password }}"

@@ -12,7 +12,6 @@ sysctl: []
 
 # rabbitmq configuration
 
-rabbitmq_host: ares.iplantcollaborative.org
 rabbitmq_port: 20400
 rabbitmq_user: ipc
 rabbitmq_password: mostly810S

@@ -10,3 +10,5 @@ mokie.cyverse.org
 
 [rs]
 
+[amqp-brokers]
+mokie.cyverse.org

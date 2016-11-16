@@ -3,6 +3,28 @@ ansible_port: 1657
 
 manage_system: true
 
+# System configuration
+
+nic_txqueuelen: 1000
+sysctl: []
+
+
+# rabbitmq configuration
+
+rabbitmq_host: mokie.cyverse.org
+rabbitmq_port: 31333
+rabbitmq_user: ipc
+rabbitmq_password: mostly810S
+rabbitmq_vhost: /qa-3/data-store
+rabbitmq_ephemeral: false
+
+
+# iRODS configuration
+
+default_number_of_transfer_threads: 3
+parallel_transfer_buffer_size: 4
+
+
 default_resource: CyVerseRes
 default_resource_directory: /var/lib/iRODS/Vault
 
@@ -29,9 +51,6 @@ dbms_username: irodsuser
 dbms_password: Ux5924d
 
 negotiation_key: Lfgaso2UAV6QEPsycw3hfPUIkMzys8EZ
-
-rabbitmq_broker_uri: amqp://ipc:mostly810S@mokie.cyverse.org:31333/%2Fqa-3%2Fdata-store
-rabbitmq_ephemeral: false
 
 server_control_plane_key: 2IHmIaXx3pfyLFq2QNv3D1R0f09GNm95
 server_port_range_start: 20000

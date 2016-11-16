@@ -1,0 +1,11 @@
+---
+- name: upgrade system packages
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: upgrade system packages
+      package:
+        name: '*'
+        state: latest
+      when: manage_system

@@ -10,3 +10,6 @@ twig.cyverse.org
 
 [rs]
 squirrel.cyverse.org
+
+[amqp-brokers]
+bark.cyverse.org

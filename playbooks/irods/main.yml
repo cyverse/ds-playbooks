@@ -6,7 +6,11 @@
   tasks:
     - name: group by virtualization type
       group_by: 
-        key: "{{ 'physical' if ansible_virtualization_type == 'NA' }}"
+        key: "{{ 'physical' if ansible_virtualization_type == 'NA' else '' }}"
+
+    - name: group by managed
+      group_by:
+        key: "{{ 'managed' if manage_system else '' }}"
 
 - name: determine the NIC throughput for the physical resource servers
   hosts: physical:&rs
@@ -21,10 +25,10 @@
     - name: group by NIC speed
       group_by: 
         key: "{{ 'rs_10G' if ethtool.stdout|int >= 10000 else
-                 'rs_1G'  if ethtool.stdout|int >= 1000 }}"
+                 'rs_1G'  if ethtool.stdout|int >= 1000 else '' }}"
 
 - name: tune networking
-  hosts: physical:&irods
+  hosts: physical:&managed:&irods
   become: true
   gather_facts: false
   roles:
@@ -44,9 +48,9 @@
   gather_facts: false
   roles:
     - role: cyverse.rabbitmq-vhost
-      rabbitmq_vhost_name: "{{ rabbitmq_vhost_name }}"
+      rabbitmq_vhost_name: "{{ rabbitmq_vhost }}"
       rabbitmq_vhost_users: 
-        - name: "{{ rabbitmq_host }}"
+        - name: "{{ rabbitmq_user }}"
           configure_priv: .*
           write_priv: .*
           read_priv: .*
@@ -66,7 +70,7 @@
       irods_server_port_range_end: "{{ server_port_range_end }}"
       irods_zone_key: "{{ zone_key }}"
       irods_zone_user: "{{ zone_admin_username }}"
-      irods_amqp_uri: "amqp://{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ rabbitmq_host }}:{{ rabbitmq_broker_port }}/{{ rabbitmq_vhost_name | replace('/', '%2F') }}"
+      irods_amqp_uri: "amqp://{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ rabbitmq_host }}:{{ rabbitmq_port }}/{{ rabbitmq_vhost | replace('/', '%2F') }}"
       irods_amqp_ephemeral: "{{ rabbitmq_ephemeral }}"
       irods_single_threaded_resources: "{{ single_threaded_resources }}"
       irods_db:

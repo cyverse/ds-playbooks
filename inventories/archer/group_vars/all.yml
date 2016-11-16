@@ -3,6 +3,27 @@ ansible_port: 1657
 
 manage_system: true
 
+# System configuration
+
+nic_txqueuelen: 1000
+sysctl: []
+
+
+# rabbitmq configuration
+
+rabbitmq_host: bark.cyverse.org
+rabbitmq_port: 31333
+rabbitmq_user: ipc
+rabbitmq_password: mostly810S
+rabbitmq_vhost: /archer/data-store
+rabbitmq_ephemeral: false
+
+
+# iRODS configuration
+
+default_number_of_transfer_threads: 3
+parallel_transfer_buffer_size: 4
+
 default_resource: rootResource
 default_resource_directory: /var/lib/irods/iRODS/Vault
 
@@ -19,9 +40,6 @@ dbms_username: irods
 dbms_password: SillyBilly
 
 negotiation_key: 'D^a!lP2+Kv+zZFnR1S7xsIh5y7Rff89X'
-
-rabbitmq_broker_uri: amqp://ipc:mostly810S@bark.cyverse.org:31333/%2Farcher%2Fdata-store
-rabbitmq_ephemeral: false
 
 server_control_plane_key: zcDxUM9S57Wf22B8wwAMrwpBtwsBBZff
 server_port_range_start: 20000

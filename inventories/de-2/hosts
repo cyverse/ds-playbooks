@@ -10,3 +10,5 @@ irods-2.cyverse.org
 
 [rs]
 
+[amqp-brokers]
+bark.cyverse.org

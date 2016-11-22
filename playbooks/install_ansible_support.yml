@@ -4,17 +4,18 @@
   become: true
   gather_facts: true
   tasks:
+    - name: install libselinux python support
+      package:
+        name: libselinux-python
+
     - name: install pip
       package:
         name: python-pip
-        state: present
 
     - name: install requests
       package:
         name: python-requests
-        state: present
 
     - name: install virtualenv
       package:
         name: python-virtualenv
-        state: present

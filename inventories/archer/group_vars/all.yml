@@ -47,3 +47,7 @@ server_port_range_end: 20099
 zone_admin_username: rods
 zone_admin_password: SillyBilly
 zone_key: P3SDF2SWQR22sMs7drCgtcxYDUxL6JDjqsJDM6FMAzUkdHpaf
+
+sernec_owners: []
+sernec_writers: []
+sernec_readers: []

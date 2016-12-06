@@ -58,3 +58,13 @@ server_port_range_end: 20399
 zone_admin_username: ipc_admin
 zone_admin_password: Zebra99zz--__
 zone_key: PAEDXpss4o1oxktFKlz9jMPWzwBHHMxc5d8dIfzd
+
+sernec_owners:
+  - sernec
+
+sernec_writers:
+  - brownh
+
+sernec_readers:
+  - michael_denslow
+  - narro

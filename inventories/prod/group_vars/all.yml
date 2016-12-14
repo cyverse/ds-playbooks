@@ -21,8 +21,8 @@ rabbitmq_ephemeral: false
 
 # iRODS configuration
 
-default_number_of_transfer_threads: 3
-parallel_transfer_buffer_size: 4
+default_number_of_transfer_threads: 16
+parallel_transfer_buffer_size: 32
 
 default_resource: CyVerseRes
 

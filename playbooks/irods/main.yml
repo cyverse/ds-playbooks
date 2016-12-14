@@ -1,5 +1,5 @@
 ---
-- name: determine the resource servers that are on a physical machines
+- name: determine the iRODS servers that are on a physical machines
   hosts: irods
   become: true
   gather_facts: true
@@ -12,8 +12,8 @@
       group_by:
         key: "{{ 'managed' if manage_system else '' }}"
 
-- name: determine the NIC throughput for the physical resource servers
-  hosts: physical:&rs
+- name: determine the NIC throughput for the physical servers
+  hosts: physical
   become: true
   gather_facts: false
   tasks:
@@ -28,7 +28,7 @@
                  'rs_1G'  if ethtool.stdout|int >= 1000 else '' }}"
 
 - name: tune networking
-  hosts: physical:&managed:&irods
+  hosts: physical:&managed
   become: true
   gather_facts: false
   roles:

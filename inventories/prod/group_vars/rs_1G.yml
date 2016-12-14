@@ -8,5 +8,3 @@ sysctl:
     value: 4096 65536 16777216
   - name: net.ipv4.tcp_wmem
     value: 4096 65536 16777216
-
-parallel_transfer_buffer_size: 10

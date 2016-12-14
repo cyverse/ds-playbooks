@@ -1,6 +1,4 @@
 ---
 manage_system: false
 
-parallel_transfer_buffer_size: 20
-
 default_resource_directory: /gpfs1/irods_vault

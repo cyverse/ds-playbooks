@@ -1,0 +1,8 @@
+---
+- name: Disable THP
+  hosts: dbms
+  become: true
+  roles:
+    - role: jtyr.grub_cmdline
+      grub_cmdline_add_args:
+        - transparent_hugepage=never

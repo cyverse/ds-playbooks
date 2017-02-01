@@ -52,3 +52,6 @@ zone_key: P3SDF2SWQR22sMs7drCgtcxYDUxL6JDjqsJDM6FMAzUkdHpaf
 sernec_owners: []
 sernec_writers: []
 sernec_readers: []
+
+irods_sys_user: irods
+irods_vaults: []

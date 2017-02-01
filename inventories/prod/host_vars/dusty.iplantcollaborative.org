@@ -1,2 +1,4 @@
 ---
 default_resource_directory: /irods_vault/dusty_vault
+irods_vaults:
+  - /irods_vault/dusty_vault

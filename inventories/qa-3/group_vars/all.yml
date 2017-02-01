@@ -62,3 +62,6 @@ zone_key: xi5Rmu
 sernec_owners: []
 sernec_writers: []
 sernec_readers: []
+
+irods_sys_user: irods
+irods_vaults: []

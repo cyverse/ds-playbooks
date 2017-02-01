@@ -1,2 +1,5 @@
 ---
 default_resource_directory: /irods_vault/trixie_vault
+
+irods_vaults:
+  - /irods_vault/trixie_vault

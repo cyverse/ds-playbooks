@@ -68,3 +68,6 @@ sernec_writers:
 sernec_readers:
   - michael_denslow
   - narro
+
+irods_sys_user: irods
+irods_vaults: []

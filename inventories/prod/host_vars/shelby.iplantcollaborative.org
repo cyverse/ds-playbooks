@@ -1,2 +1,4 @@
 ---
 default_resource_directory: /irods_vault/shelby_vault
+irods_vaults:
+  - /irods_vault/shelby_vault

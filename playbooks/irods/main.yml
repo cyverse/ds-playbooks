@@ -55,6 +55,8 @@
           write_priv: .*
           read_priv: .*
 
+- include: mk_vaults.yml
+
 - name: configure iRODS
   hosts: irods
   become: true

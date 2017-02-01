@@ -1,9 +1,18 @@
 ---
+- name: determine managed servers
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: group by managed
+      group_by:
+        key: "{{ 'managed' if manage_system else '' }}"
+
 - name: create iRODS vaults
-  hosts: rs
+  hosts: rs:&managed
   become: true
   tasks:
     - name: create vaults directory
+      when: manage_system
       with_items: "{{ irods_vaults }}"
       file:
         path: "{{ item }}"

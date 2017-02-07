@@ -1,0 +1,12 @@
+---
+irods_vaults:
+  - /Vault                       # /irods_vault is a sym link to this
+  - /Vault/aegis_combined_vault  # /data/Vault is a sym link to this
+  - /Vault/hades_vault           # /gpfs1/irods_vault is a sym link to this
+  - /Vault/taccCorral_vault      # /corral-tacc/tacc/iplant/Vault is a sym link to this
+  - /irods_vault/dusty_vault
+  - /irods_vault/junior_vault
+  - /irods_vault/kelcie_vault
+  - /irods_vault/romeo_vault
+  - /irods_vault/shelby_vault
+  - /irods_vault/trixie_vault

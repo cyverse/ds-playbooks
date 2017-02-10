@@ -60,6 +60,7 @@
 - name: configure iRODS
   hosts: irods
   become: true
+  become_user: "{{ irods_sys_user }}"
   vars:
     rabbitmq_host: "{{ groups['rabbitmq'][0] }}"
     rabbitmq_vhost_uri: "{{ rabbitmq_vhost | replace('/', '%2F') }}"

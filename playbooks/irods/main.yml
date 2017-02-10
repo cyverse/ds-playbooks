@@ -66,45 +66,4 @@
         name: pika
         state: latest
 
-- name: configure iRODS
-  hosts: irods
-  become: true
-  become_user: "{{ irods_sys_user }}"
-  vars:
-    rabbitmq_host: "{{ groups['rabbitmq'][0] }}"
-    rabbitmq_vhost_uri: "{{ rabbitmq_vhost | replace('/', '%2F') }}"
-    dbms_host: "{{ groups['dbms'][0] }}"  
-
-  roles:
-    - role: cyverse.cyverse-irods-cfg
-      irods_icat_host: "{{ groups['ies'][0] }}"
-      irods_default_number_of_transfer_threads: "{{ default_number_of_transfer_threads }}"
-      irods_default_resource_name: "{{ default_resource }}"
-      irods_negotiation_key: "{{ negotiation_key }}"
-      irods_parallel_transfer_buffer_size: "{{ parallel_transfer_buffer_size }}"
-      irods_server_control_plane_key: "{{ server_control_plane_key }}"
-      irods_server_port_range_start: "{{ server_port_range_start }}"
-      irods_server_port_range_end: "{{ server_port_range_end }}"
-      irods_zone_key: "{{ zone_key }}"
-      irods_zone_user: "{{ zone_admin_username }}"
-      irods_amqp_uri: "amqp://{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ rabbitmq_host }}:{{ rabbitmq_port }}/{{ rabbitmq_vhost_uri }}"
-      irods_amqp_ephemeral: "{{ rabbitmq_ephemeral }}"
-      irods_single_threaded_resources: "{{ single_threaded_resources }}"
-      irods_db:
-        host: "{{ dbms_host }}"
-        port: "{{ dbms_port }}"
-        username: "{{ dbms_username }}"
-        password: "{{ dbms_password }}"
-      irods_sernec_owners: "{{ sernec_owners | default([]) }}"
-      irods_sernec_writers: "{{ sernec_writers | default([]) }}"
-      irods_sernec_readers: "{{ sernec_readers | default([]) }}"
-
-- name: reload config files
-  hosts: ies
-  become: true
-  become_user: irods
-  gather_facts: false
-  tasks:
-    - file:
-        path: /etc/irods/core.re
-        state: touch
+- include: cfg_irods.yml

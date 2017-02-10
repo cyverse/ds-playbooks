@@ -63,7 +63,14 @@
   vars:
     rabbitmq_host: "{{ groups['rabbitmq'][0] }}"
     rabbitmq_vhost_uri: "{{ rabbitmq_vhost | replace('/', '%2F') }}"
-    dbms_host: "{{ groups['dbms'][0] }}"        
+    dbms_host: "{{ groups['dbms'][0] }}"  
+
+  pre_tasks:
+    - name: ensure pika installed
+      pip:
+        name: pika
+        state: latest
+
   roles:
     - role: cyverse.cyverse-irods-cfg
       irods_icat_host: "{{ groups['ies'][0] }}"

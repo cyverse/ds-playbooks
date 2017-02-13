@@ -1,0 +1,32 @@
+---
+- name: shutdown iRODS
+  hosts: irods
+  become: true
+  tasks:
+    - name: shutdown iRODS
+      service:
+        name: irods
+        pattern: irodsServer
+        state: stopped
+
+- name: upgrade iRODS on IES
+  hosts: ies
+  become: true
+  gather_facts: false
+  tasks:
+    - name: download iRODS ICAT package
+      get_url:
+        url: ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm
+        dest: /root/irods-icat-4.1.10-centos6-x86_64.rpm
+
+    - name: download iRODS PostgreSQL plugin package
+      get_url:
+        url: ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
+        dest: /root/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
+
+    - name: upgrade iRODS 
+      shell: |
+        rpm --upgrade /root/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
+        rpm --upgrade /root/irods-icat-4.1.10-centos6-x86_64.rpm
+
+

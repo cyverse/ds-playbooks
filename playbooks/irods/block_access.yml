@@ -1,0 +1,36 @@
+---
+# XXX For ansible 2.1.1.0, iptables can't find our rules
+- name: block remote access to iRODS
+  hosts: irods
+  become: true
+  gather_facts: true
+  tasks:
+    - include: tasks/set_iptables_input_chain.yml
+
+    - name: ensure CyVerse users don't have special access
+      lineinfile:
+        dest: /etc/sysconfig/iptables
+        line: -A {{ iptables_input_chain }} -m state --state NEW -m tcp -p tcp -s 128.196.38.0    /25 --dport 1247 -j ACCEPT
+        state: absent
+      register: cyverse_access
+
+    - name: ensure resource servers can still access IES
+      lineinfile:
+        dest: /etc/sysconfig/iptables
+        insertbefore: -A {{ iptables_input_chain }} .*-m state --state NEW -m tcp .*--dport 1247
+        line: -A {{ iptables_input_chain }} -m state --state NEW -m tcp -p tcp -s {{ lookup('dig', item) }} --dport 1247 -j ACCEPT
+      with_items: "{{ groups['irods'] }}"
+      register: rs_access
+
+    - name: block port 1247 for everyone else
+      lineinfile:
+        dest: /etc/sysconfig/iptables
+        insertbefore: -A {{ iptables_input_chain }} .*-m state --state NEW -m tcp .*--dport 1247
+        line: -A {{ iptables_input_chain }} -m state --state NEW -m tcp -p tcp --dport 1247 -j REJECT
+      register: block_rest
+
+    - name: reload iptables
+      service:
+        name: iptables
+        state: restarted  # XXX reloaded fails
+      when: cyverse_access|changed or rs_access|changed or block_rest|changed

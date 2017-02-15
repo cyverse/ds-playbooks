@@ -8,10 +8,11 @@
     rabbitmq_host: "{{ groups['rabbitmq'][0] }}"
     rabbitmq_vhost_uri: "{{ rabbitmq_vhost | replace('/', '%2F') }}"
     dbms_host: "{{ groups['dbms'][0] }}"
+    icat_host: "{{ groups['ies'][0] }}"
 
   roles:
     - role: cyverse.cyverse-irods-cfg
-      irods_icat_host: "{{ groups['ies'][0] }}"
+      irods_icat_host: "{{ icat_host }}"
       irods_default_number_of_transfer_threads: "{{ default_number_of_transfer_threads }}"
       irods_default_resource_name: "{{ default_resource }}"
       irods_negotiation_key: "{{ negotiation_key }}"
@@ -29,6 +30,7 @@
         port: "{{ dbms_port }}"
         username: "{{ dbms_username }}"
         password: "{{ dbms_password }}"
+      irods_bisque_irods_host: "{{ bisque_irods_host | default(icat_host) }}"
       irods_sernec_owners: "{{ sernec_owners | default([]) }}"
       irods_sernec_writers: "{{ sernec_writers | default([]) }}"
       irods_sernec_readers: "{{ sernec_readers | default([]) }}"

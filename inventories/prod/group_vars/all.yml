@@ -59,6 +59,8 @@ zone_admin_username: ipc_admin
 zone_admin_password: Zebra99zz--__
 zone_key: PAEDXpss4o1oxktFKlz9jMPWzwBHHMxc5d8dIfzd
 
+bisque_irods_host: data.iplantcollaborative.org 
+
 sernec_owners:
   - sernec
 

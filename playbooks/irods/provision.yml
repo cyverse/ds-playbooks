@@ -1,0 +1,28 @@
+---
+- name: prepare for bisque_ops
+  hosts: ies
+  become: true
+  tasks:
+    - name: ensure /var/log/bisque exists
+      when: bisque_url is defined
+      file:
+        path: /var/log/bisque
+        state: directory
+        owner: "{{ irods_sys_user }}"
+        group: "{{ irods_sys_user }}"        
+        mode: u=rwx
+
+- name: removed bisque
+  hosts: irods
+  become: true
+  tasks:
+    - name: ensure /var/log/bisque doesn't exist
+      when: bisque_url is not defined
+      file:
+        path: /var/log/bisque
+        state: absent
+
+    - name: remove /etc/bisque
+      file:
+        path: /etc/bisque
+        state: absent

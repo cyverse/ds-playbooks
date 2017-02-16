@@ -66,4 +66,5 @@
         name: pika
         state: latest
 
+- include: provision.yml
 - include: cfg_irods.yml

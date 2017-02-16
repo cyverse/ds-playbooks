@@ -1,14 +1,41 @@
 ---
+- name: configure bisque client
+  hosts: ies
+  become: "{{ false if ansible_user|default('') == irods_sys_user else true }}"
+  become_user: "{{ irods_sys_user }}"
+  gather_facts: true
+  tasks:
+    - when: bisque_url is defined
+      block:
+        - name: install bisque_ops.py
+          get_url:
+            url: https://biodev.ece.ucsb.edu/projects/bisquik/browser/bisque/contrib/irods/bisque_ops/bisque_ops.py?format=txt
+            dest: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_ops.py"
+            mode: u=rx
+
+        - name: place .bisque
+          template:
+            src: templates/bisque.j2
+            dest: "{{ ansible_env.HOME }}/.bisque"
+            mode: u=r
+
 - name: configure iRODS
   hosts: irods
   become: "{{ false if ansible_user|default('') == irods_sys_user else true }}"
   become_user: "{{ irods_sys_user }}"
-  gather_facts: false
+  gather_facts: true
   vars:
     rabbitmq_host: "{{ groups['rabbitmq'][0] }}"
     rabbitmq_vhost_uri: "{{ rabbitmq_vhost | replace('/', '%2F') }}"
     dbms_host: "{{ groups['dbms'][0] }}"
     icat_host: "{{ groups['ies'][0] }}"
+
+  pre_tasks:
+    - name: remove bisque_ops.py
+      when: bisque_url is not defined
+      file:
+        path: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_ops.py"
+        state: absent
 
   roles:
     - role: cyverse.cyverse-irods-cfg
@@ -30,7 +57,6 @@
         port: "{{ dbms_port }}"
         username: "{{ dbms_username }}"
         password: "{{ dbms_password }}"
-      irods_bisque_irods_host: "{{ bisque_irods_host | default(icat_host) }}"
       irods_sernec_owners: "{{ sernec_owners | default([]) }}"
       irods_sernec_writers: "{{ sernec_writers | default([]) }}"
       irods_sernec_readers: "{{ sernec_readers | default([]) }}"

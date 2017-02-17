@@ -23,19 +23,11 @@
   hosts: irods
   become: "{{ false if ansible_user|default('') == irods_sys_user else true }}"
   become_user: "{{ irods_sys_user }}"
-  gather_facts: true
   vars:
     rabbitmq_host: "{{ groups['rabbitmq'][0] }}"
     rabbitmq_vhost_uri: "{{ rabbitmq_vhost | replace('/', '%2F') }}"
     dbms_host: "{{ groups['dbms'][0] }}"
     icat_host: "{{ groups['ies'][0] }}"
-
-  pre_tasks:
-    - name: remove bisque_ops.py
-      when: bisque_url is not defined
-      file:
-        path: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_ops.py"
-        state: absent
 
   roles:
     - role: cyverse.cyverse-irods-cfg

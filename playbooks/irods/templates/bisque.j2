@@ -2,5 +2,4 @@
 bisque_host = {{ bisque_url }}
 bisque_admin_user = {{ bisque_user | default('admin') }}
 bisque_admin_pass = {{ bisque_password | default('admin') }}
-irods_host = {{ bisque_irods_url | default('irods://' + groups['ies'][0]) }}
 logfile = /var/log/bisque/bisque_ops.log

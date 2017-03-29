@@ -1,0 +1,33 @@
+---
+- name: stop resource servers
+  hosts: rs:!ies
+  become: true
+  tasks:
+    - name: stop resource servers
+      service:
+        name: irods
+        pattern: irodsServer
+        state: stopped
+      failed_when: false
+
+- name: restart IES
+  hosts: ies
+  become: true
+  tasks:
+    - name: restart IES
+      service:
+        name: irods
+        pattern: irodsServer
+        state: restarted
+
+- name: start resource servers
+  hosts: rs:!ies
+  become: true
+  gather_facts: false
+  tasks:
+    - name: start resource servers
+      service:
+        name: irods
+        pattern: irodsServer
+        state: started
+

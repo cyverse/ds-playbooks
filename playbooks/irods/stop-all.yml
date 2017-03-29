@@ -9,6 +9,7 @@
         name: irods
         pattern: irodsServer
         state: stopped
+      failed_when: false
 
 - name: stop IES
   hosts: ies

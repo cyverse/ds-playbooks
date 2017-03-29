@@ -1,0 +1,18 @@
+127.0.0.1 localhost
+::1       localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+{% if inventory_hostname in groups['ies'] %}
+# ICAT DBMS
+{{ lookup('dig', groups['dbms'][0]) }} {{ groups['dbms'][0] }} 
+
+{% endif %}
+# IES
+{{ lookup('dig', groups['ies'][0]) }} ares.iplantcollaborative.org  data.cyverse.org data.iplantcollaborative.org
+
+# Resource servers
+{% for r in groups['rs'] %}
+{{ lookup('dig', r) }}  {{ r }}
+{% endfor %}
+
+# corralZ zone IES
+{{ lookup('dig', ds_federation[0].icat_host) }} {{ ds_federation[0].icat_host }}

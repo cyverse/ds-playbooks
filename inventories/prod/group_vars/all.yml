@@ -71,3 +71,10 @@ sernec_readers:
 
 irods_sys_user: irods
 irods_vaults: []
+
+ds_federation:
+  - zone_name: corralZ
+    icat_host: c3-dtn04.corral.tacc.utexas.edu
+    zone_key: d2489f57Amazonasb5e31d80b230f3e7
+    negotiation_key: tvqV80Xy3RfD8AbB7JHX7vc7jDrRj5Sz
+

@@ -1,13 +1,48 @@
 ---
-- name: shutdown iRODS
-  hosts: irods
+- name: download iRODS packages
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    # get_url doesn't seem to work for localhost downloads from FTP sites
+    - name: Download ICAT Server package
+      shell: |
+        wget -O /tmp/irods-icat-4.1.10-centos6-x86_64.rpm \
+          ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm
+
+    - name: Download Database plugin package
+      shell: |
+        wget -O /tmp/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm \
+          ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
+     
+    - name: Download resource server package
+      shell: |
+        wget -O /tmp/irods-resource-4.1.10-centos6-x86_64.rpm \
+          ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-resource-4.1.10-centos6-x86_64.rpm
+
+    - name: Download runtime library package
+      shell: |
+        wget -O /tmp/irods-runtime-4.1.10-centos6-x86_64.rpm \
+          ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-runtime-4.1.10-centos6-x86_64.rpm
+
+- include: stop-all.yml
+
+- hosts: irods
   become: true
   tasks:
-    - name: shutdown iRODS
-      service:
-        name: irods
-        pattern: irodsServer
-        state: stopped
+    - name: remove old NetCDF iCommands
+      package:
+        name: irods-icommands-netcdf
+        state: absent
+
+    - name: remove old NetCDF microservice plugin
+      package:
+        name: irods-microservice-plugin-netcdf
+        state: absent
+
+    - name: remove old NetCDF API plugin
+      package:
+        name: irods-api-plugin-netcdf
+        state: absent
 
 - name: upgrade iRODS on IES
   hosts: ies
@@ -15,18 +50,82 @@
   gather_facts: false
   tasks:
     - name: download iRODS ICAT package
-      get_url:
-        url: ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm
+      copy:
+        src: /tmp/irods-icat-4.1.10-centos6-x86_64.rpm
         dest: /root/irods-icat-4.1.10-centos6-x86_64.rpm
 
     - name: download iRODS PostgreSQL plugin package
-      get_url:
-        url: ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
+      copy:
+        src: /tmp/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
         dest: /root/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
 
-    - name: upgrade iRODS 
-      shell: |
-        rpm --upgrade /root/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
-        rpm --upgrade /root/irods-icat-4.1.10-centos6-x86_64.rpm
+    - name: upgrade database plugin 
+      yum:
+        name: /root/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
 
+    - name: upgrade ies
+      yum:
+        name: /root/irods-icat-4.1.10-centos6-x86_64.rpm
 
+- name: upgrade iRODS on resource servers
+  hosts: rs
+  become: true
+  gather_facts: false
+  tasks:
+    - name: download iRODS resource server package
+      copy:
+        src: /tmp/irods-resource-4.1.10-centos6-x86_64.rpm
+        dest: /root/irods-resource-4.1.10-centos6-x86_64.rpm
+
+    - name: upgrade iRODS
+      yum:
+        name: /root/irods-resource-4.1.10-centos6-x86_64.rpm
+
+- name: upgrade plugins
+  hosts: irods
+  become: true
+  gather_facts: false
+  tasks:
+    - name: download iRODS runtime libraries package
+      copy:
+        src: /tmp/irods-runtime-4.1.10-centos6-x86_64.rpm
+        dest: /root/irods-runtime-4.1.10-centos6-x86_64.rpm
+
+    - name: download NetCDF API plugin
+      copy:
+        src: irods-netcdf-build/packages/centos-6/irods-api-plugin-netcdf-1.0-centos6.rpm
+        dest: /root/irods-api-plugin-netcdf-1.0-centos6.rpm
+
+    - name: download NetCDF microservice plugin
+      copy:
+        src: irods-netcdf-build/packages/centos-6/irods-microservice-plugin-netcdf-1.0-centos6.rpm
+        dest: /root/irods-microservice-plugin-netcdf-1.0-centos6.rpm
+
+    - name: download NetCDF iCommands
+      copy:
+        src: irods-netcdf-build/packages/centos-6/irods-icommands-netcdf-1.0-centos6.rpm
+        dest: /root/irods-icommands-netcdf-1.0-centos6.rpm
+
+    - name: upgrade runtime
+      yum: 
+        name: /root/irods-runtime-4.1.10-centos6-x86_64.rpm
+
+    - name: install NetCDF API
+      yum:
+        name: /root/irods-api-plugin-netcdf-1.0-centos6.rpm
+
+    - name: install NetCDF microservices
+      yum:
+        name: /root/irods-microservice-plugin-netcdf-1.0-centos6.rpm
+        
+    - name: install NetCDF iCommands
+      yum:
+        name: /root/irods-icommands-netcdf-1.0-centos6.rpm
+
+    - name: upgrade msiSetAVU microservice
+      copy:
+        src: irods-setavu-plugin/src/libmsiSetAVU.so
+        dest: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
+        owner: irods
+
+- include: restart-all.yml

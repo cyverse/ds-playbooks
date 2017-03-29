@@ -68,7 +68,7 @@
         name: /root/irods-icat-4.1.10-centos6-x86_64.rpm
 
 - name: upgrade iRODS on resource servers
-  hosts: rs
+  hosts: rs:!ies
   become: true
   gather_facts: false
   tasks:

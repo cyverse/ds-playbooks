@@ -2,7 +2,7 @@
 - name: reboot servers
   hosts: all
   become: true
-  gather_facts: true
+  gather_facts: false
   tasks:
     - block:
         - name: reboot

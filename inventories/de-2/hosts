@@ -13,3 +13,6 @@ irods-2.cyverse.org
 
 [rabbitmq]
 bark.cyverse.org
+
+[unmanaged_systems]
+bark.cyverse.org  # Managed with archer environment

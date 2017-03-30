@@ -1,6 +1,4 @@
 ---
-manage_system: false
-
 default_resource_directory: /gpfs1/irods_vault
 
 irods_vaults:

@@ -13,3 +13,6 @@ qairods.cyverse.org
 
 [rabbitmq]
 mokie.cyverse.org
+
+[unmanaged_systems]
+mokie.cyverse.org  # Managed with uat environment

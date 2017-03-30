@@ -1,5 +1,4 @@
 ---
-manage_system: true
 default_resource_directory: /irods_vault
 
 irods_vaults:

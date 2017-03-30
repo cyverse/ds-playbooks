@@ -8,10 +8,6 @@
       group_by: 
         key: "{{ 'physical' if ansible_virtualization_type == 'NA' else '' }}"
 
-    - name: group by managed
-      group_by:
-        key: "{{ 'managed' if manage_system else '' }}"
-
 - name: determine the NIC throughput for the physical servers
   hosts: physical
   become: true
@@ -28,7 +24,7 @@
                  'rs_1G'  if ethtool.stdout|int >= 1000 else '' }}"
 
 - name: tune networking
-  hosts: physical:&managed
+  hosts: physical:!unmanaged_systems
   become: true
   gather_facts: false
   roles:

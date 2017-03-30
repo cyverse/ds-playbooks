@@ -1,6 +1,6 @@
 ---
 - name: upgrade system packages
-  hosts: all
+  hosts: all:!unmanaged_systems
   become: true
   gather_facts: true
   tasks:
@@ -8,4 +8,3 @@
       package:
         name: '*'
         state: latest
-      when: manage_system

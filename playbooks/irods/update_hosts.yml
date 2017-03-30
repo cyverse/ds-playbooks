@@ -1,13 +1,8 @@
 ---
-- name: group managed systems
-  hosts: all
-  tasks:
-    - name: group by managed
-      group_by:
-        key: "{{ 'managed' if manage_system else '' }}"
+# This playbook is only valid for prod
 
 - name: Update /etc/hosts
-  hosts: irods:&managed
+  hosts: irods:!unmanaged_systems
   become: true
   gather_facts: false
   tasks:

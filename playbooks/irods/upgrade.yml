@@ -60,12 +60,20 @@
         dest: /root/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
 
     - name: upgrade database plugin 
-      yum:
-        name: /root/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
-
-    - name: upgrade ies
-      yum:
-        name: /root/irods-icat-4.1.10-centos6-x86_64.rpm
+      shell: |
+        version=$(rpm --query --queryformat '%{VERSION}' irods-database-plugin-postgres93)
+        if [ $? -ne 0 -o "$version" != 1.10 ]
+        then
+          yum install --assumeyes /root/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
+        fi
+        
+    - name: upgrade IES package
+      shell: |
+        version=$(rpm --query --queryformat '%{VERSION}' irods-icat)
+        if [ $? -ne 0 -o "$version" != 4.1.10 ]
+        then
+          yum install --assumeyes /root/irods-icat-4.1.10-centos6-x86_64.rpm
+        fi
 
 - name: upgrade iRODS on resource servers
   hosts: rs:!ies
@@ -78,13 +86,16 @@
         dest: /root/irods-resource-4.1.10-centos6-x86_64.rpm
 
     - name: upgrade iRODS
-      yum:
-        name: /root/irods-resource-4.1.10-centos6-x86_64.rpm
+      shell: |
+        version=$(rpm --query --queryformat '%{VERSION}' irods-resource)
+        if [ $? -ne 0 -o "$version" != 4.1.10 ]
+        then
+          yum install --assumeyes /root/irods-resource-4.1.10-centos6-x86_64.rpm
+        fi
 
 - name: upgrade plugins
   hosts: irods
   become: true
-  gather_facts: false
   tasks:
     - name: download iRODS runtime libraries package
       copy:
@@ -107,8 +118,12 @@
         dest: /root/irods-icommands-netcdf-1.0-centos6.rpm
 
     - name: upgrade runtime
-      yum: 
-        name: /root/irods-runtime-4.1.10-centos6-x86_64.rpm
+      shell: |
+        version=$(rpm --query --queryformat '%{VERSION}' irods-runtime)
+        if [ $? -ne 0 -o "$version" != 4.1.10 ]
+        then
+          yum install --assumeyes /root/irods-runtime-4.1.10-centos6-x86_64.rpm
+        fi
 
     - name: install NetCDF API
       yum:

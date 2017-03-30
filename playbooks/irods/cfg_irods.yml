@@ -46,7 +46,7 @@
         port: "{{ dbms_port }}"
         username: "{{ dbms_username }}"
         password: "{{ dbms_password }}"
-      irods_federation: "{{ ds_federation }}"
+      irods_federation: "{{ ds_federation | default([]) }}"
       irods_single_threaded_resources: "{{ single_threaded_resources }}"
       irods_amqp_uri: "amqp://{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ rabbitmq_host }}:{{ rabbitmq_port }}/{{ rabbitmq_vhost_uri }}"
       irods_amqp_ephemeral: "{{ rabbitmq_ephemeral }}"

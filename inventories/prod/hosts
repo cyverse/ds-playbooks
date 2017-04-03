@@ -36,10 +36,10 @@ wildcat.cshl.edu
 zeus.iplantcollaborative.org
 
 [rabbitmq]
-ares.iplantcollaborative.org
+bugs.cyverse.org
 
 [unmanaged_systems]
-ares.iplantcollaborative.org       # Managed as data.cyverse.org
+bugs.cyverse.org                   # Managed by DE
 hades.iplantcollaborative.org      # Managed manually
 poseidon.iplantcollaborative.org   # Managed manually
 zeus.iplantcollaborative.org       # Managed manually

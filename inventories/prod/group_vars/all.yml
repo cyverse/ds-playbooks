@@ -10,7 +10,7 @@ sysctl: []
 
 # rabbitmq configuration
 
-rabbitmq_port: 20400
+rabbitmq_port: 31333
 rabbitmq_user: ipc
 rabbitmq_password: mostly810S
 rabbitmq_vhost: /prod/data-store

@@ -1,0 +1,39 @@
+---
+- name: determine the servers that are on a physical machines
+  hosts: all:!unmanaged_systems
+  become: true
+  tasks:
+    - name: group by virtualization type
+      group_by: 
+        key: "{{ 'physical' if ansible_virtualization_type == 'NA' else '' }}"
+
+- name: determine the NIC throughput for the physical servers
+  hosts: physical
+  become: true
+  gather_facts: false
+  tasks:
+    - name: call ethtool
+      shell: "ethtool {{ ansible_default_ipv4.alias }} | sed -n 's/\tSpeed: \\([0-9]*\\).*/\\1/p'"
+      register: ethtool
+      changed_when: false
+
+    - name: group by NIC speed
+      group_by: 
+        key: "{{ 'rs_10G' if ethtool.stdout|int >= 10000 else
+                 'rs_1G'  if ethtool.stdout|int >= 1000 else '' }}"
+
+- name: tune networking
+  hosts: physical
+  become: true
+  gather_facts: false
+  roles:
+    - role: cyverse.ip
+      ip_link_txqueuelen: "{{ nic_txqueuelen }}"
+
+  tasks:
+    - name: configure linux kernel 
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+      with_items: "{{ sysctl }}"
+

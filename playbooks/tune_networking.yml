@@ -5,7 +5,8 @@
   tasks:
     - name: group by virtualization type
       group_by: 
-        key: "{{ 'physical' if ansible_virtualization_type == 'NA' else '' }}"
+        key: "{{ 'physical' if ansible_virtualization_type == 'NA' 
+                            or ansible_virtualization_type == 'kvm' else '' }}"
 
     - name: group by OS Version
       group_by:

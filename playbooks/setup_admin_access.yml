@@ -1,0 +1,9 @@
+---
+- name: Install public keys for dirk's access
+  hosts: all:!unmanaged_systems
+  tasks:
+    - name: install key
+      authorized_key: 
+        user: "{{ admin_user }}"
+        key: "{{ admin_key }}"
+        state: present

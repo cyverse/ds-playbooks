@@ -9,50 +9,30 @@
         # get_url doesn't seem to work for localhost downloads from FTP sites
         - name: Download ICAT Server package
           shell: | 
-<<<<<<< HEAD
             wget --output-document /tmp/irods-icat-4.1.10-centos6-x86_64.rpm \
                  ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm
           args:
-=======
-              wget --output-document /tmp/irods-icat-4.1.10-centos6-x86_64.rpm \
-                   ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm
->>>>>>> db8cff103b7d8f27d6ace2d7e03ceeca6d849ca8
             creates: /tmp/irods-icat-4.1.10-centos6-x86_64.rpm
 
         - name: Download Database plugin package
           shell: |
-<<<<<<< HEAD
             wget --output-document /tmp/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm \
                  ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
           args:
-=======
-              wget --output-document /tmp/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm \
-                   ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
->>>>>>> db8cff103b7d8f27d6ace2d7e03ceeca6d849ca8
             creates: /tmp/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
 
         - name: Download resource server package
           shell: |
-<<<<<<< HEAD
             wget --output-document /tmp/irods-resource-4.1.10-centos6-x86_64.rpm \
                  ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-resource-4.1.10-centos6-x86_64.rpm
           args:
-=======
-              wget --output-document /tmp/irods-resource-4.1.10-centos6-x86_64.rpm \
-                   ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-resource-4.1.10-centos6-x86_64.rpm
->>>>>>> db8cff103b7d8f27d6ace2d7e03ceeca6d849ca8
             creates: /tmp/irods-resource-4.1.10-centos6-x86_64.rpm
 
         - name: Download runtime library package
           shell: |
-<<<<<<< HEAD
             wget --output-document /tmp/irods-runtime-4.1.10-centos6-x86_64.rpm \
                  ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-runtime-4.1.10-centos6-x86_64.rpm
           args:
-=======
-              wget --output-document /tmp/irods-runtime-4.1.10-centos6-x86_64.rpm \
-                   ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-runtime-4.1.10-centos6-x86_64.rpm
->>>>>>> db8cff103b7d8f27d6ace2d7e03ceeca6d849ca8
             creates: /tmp/irods-runtime-4.1.10-centos6-x86_64.rpm
 
 - include: stop-all.yml

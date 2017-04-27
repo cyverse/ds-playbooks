@@ -10,6 +10,8 @@ sysctl:
     value: 67108864
   - name: net.core.wmem_max
     value: 67108864
+  - name: net.ipv4.tcp_mtu_probing
+    value: 1
   - name: net.ipv4.tcp_rmem
     value: 4096 87380 33554432
   - name: net.ipv4.tcp_wmem

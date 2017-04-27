@@ -1,6 +1,4 @@
 ---
-nic_txqueuelen: 10000
-
 sysctl:
   - name: net.core.default_qdisc
     value: fq

@@ -6,7 +6,6 @@ admin_key: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCi9RJ8pNY8nOPW33k4ZPuMAhQj89kU
 
 # System configuration
 
-nic_txqueuelen: 1000
 sysctl_net: []
 
 

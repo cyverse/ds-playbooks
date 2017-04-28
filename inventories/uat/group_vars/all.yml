@@ -4,7 +4,6 @@ ansible_port: 1657
 
 # System configuration
 
-nic_txqueuelen: 1000
 sysctl_net: []
 
 

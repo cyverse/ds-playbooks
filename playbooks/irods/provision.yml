@@ -1,7 +1,18 @@
 ---
+- name: configure linux kernel on IES
+  hosts: ies
+  become: true
+  tasks:
+    - name: configure linux kernel
+      sysctl:
+        name: kernel.{{ item.name }}
+        value: "{{ item.value }}"
+      with_items: "{{ sysctl_kernel|default([]) }}"
+
 - name: prepare for bisque_ops
   hosts: ies
   become: true
+  gather_facts: false
   tasks:
     - name: ensure /var/log/bisque exists
       when: bisque_url is defined

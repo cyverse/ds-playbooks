@@ -43,7 +43,7 @@
   tasks:
     - name: configure linux kernel 
       sysctl:
-        name: "{{ item.name }}"
+        name: net.{{ item.name }}
         value: "{{ item.value }}"
-      with_items: "{{ sysctl }}"
+      with_items: "{{ sysctl_net }}"
 

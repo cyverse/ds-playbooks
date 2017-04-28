@@ -1,18 +1,18 @@
 ---
 nic_txqueuelen: 10000
 
-sysctl:
-  - name: net.core.netdev_max_backlog
+sysctl_net:
+  - name: core.netdev_max_backlog
     value: 1000
-  - name: net.core.rmem_max
+  - name: core.rmem_max
     value: 67108864
-  - name: net.core.wmem_max
+  - name: core.wmem_max
     value: 67108864
-  - name: net.ipv4.tcp_congestion_control
+  - name: ipv4.tcp_congestion_control
     value: htcp
-  - name: net.ipv4.tcp_mtu_probing
+  - name: ipv4.tcp_mtu_probing
     value: 1
-  - name: net.ipv4.tcp_rmem
+  - name: ipv4.tcp_rmem
     value: 4096 87380 33554432
-  - name: net.ipv4.tcp_wmem
+  - name: ipv4.tcp_wmem
     value: 4096 65536 33554432

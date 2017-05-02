@@ -1,4 +1,5 @@
 ---
+nic_mtu: 9000
 nic_txqueuelen: 10000
 
 sysctl_net:

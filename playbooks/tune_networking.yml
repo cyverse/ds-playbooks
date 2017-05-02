@@ -1,5 +1,5 @@
 ---
-- name: determine the servers that are on physical machines and OS version
+- name: determine the servers that are on physical machines
   hosts: all:!unmanaged_systems
   become: true
   tasks:
@@ -7,10 +7,6 @@
       group_by: 
         key: "{{ 'physical' if ansible_virtualization_type == 'NA' 
                             or ansible_virtualization_type == 'kvm' else '' }}"
-
-    - name: group by OS Version
-      group_by:
-        key: centos{{ ansible_distribution_major_version }}
 
 - name: determine the NIC throughput and OS version for the physical servers
   hosts: physical
@@ -28,8 +24,16 @@
                 '10G' if ethtool.stdout|int >= 10000 else
                 '1G'  if ethtool.stdout|int >= 1000 else '' }}
 
-- name: tune NIC
-  hosts: physical:&centos6
+- name: tune MTU
+  hosts: physical:&rs
+  become: true
+  gather_facts: false
+  roles:
+    - role: cyverse.ip
+      ip_link_mtu: "{{ nic_mtu }}"
+
+- name: tune txqueuelen
+  hosts: physical
   become: true
   gather_facts: false
   roles:

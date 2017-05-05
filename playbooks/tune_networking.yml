@@ -24,7 +24,11 @@
                 '10G' if ethtool.stdout|int >= 10000 else
                 '1G'  if ethtool.stdout|int >= 1000 else '' }}
 
+# TODO MTU tuning needs to be done based on the broadcast domain
 - name: tune MTU
+# TODO figure out if the IES having an MTU of 9000 without the DBMS having an MTU of 9000 affects
+# performance.
+#  hosts: physical:&irods
   hosts: physical:&rs
   become: true
   gather_facts: false

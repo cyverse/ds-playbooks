@@ -1,4 +1,4 @@
 ---
-irods_vaults:
-  - /var/lib/irods/qa-vault
-  - /var/lib/irods/squirrel-vault
+irods_resources:
+  - vault: /var/lib/irods/qa-vault
+  - vault: /var/lib/irods/squirrel-vault

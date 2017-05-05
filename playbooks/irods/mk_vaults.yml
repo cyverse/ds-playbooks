@@ -4,9 +4,9 @@
   become: true
   tasks:
     - name: create vaults directory
-      with_items: "{{ irods_vaults }}"
+      with_items: "{{ irods_resources }}"
       file:
-        path: "{{ item }}"
+        path: "{{ item.vault }}"
         owner: "{{ irods_sys_user }}"
         group: "{{ irods_sys_user }}"
         state: directory

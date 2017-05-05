@@ -71,7 +71,7 @@ sernec_readers:
   - narro
 
 irods_sys_user: irods
-irods_vaults: []
+irods_resources: []
 
 ds_federation:
   - zone_name: corralZ

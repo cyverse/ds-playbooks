@@ -1,4 +1,5 @@
 ---
 default_resource_directory: /irods_vault/romeo_vault
-irods_vaults:
-  - /irods_vault/romeo_vault
+
+irods_resources:
+  - vault: /irods_vault/romeo_vault

@@ -64,4 +64,4 @@ sernec_writers: []
 sernec_readers: []
 
 irods_sys_user: irods
-irods_vaults: []
+irods_resources: []

@@ -2,3 +2,6 @@
 ansible_port: 22
 ansible_user: irods
 default_resource_directory: /gpfs/corral3/tacc/projects/iplant/Vault
+
+irods_resources:
+  - vault: /gpfs/corral3/tacc/projects/iplant/Vault

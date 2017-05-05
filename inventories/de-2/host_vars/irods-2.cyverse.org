@@ -1,6 +1,6 @@
 ---
-irods_vaults:
-  - /var/lib/irods/iRODS/Vault
-  - /irods_vault/aegisUA1Res
-  - /irods_vault/aegisASU1Res
-  - /irods_vault/aegisNAU1Res
+irods_resources:
+  - vault: /var/lib/irods/iRODS/Vault
+  - vault: /irods_vault/aegisUA1Res
+  - vault: /irods_vault/aegisASU1Res
+  - vault: /irods_vault/aegisNAU1Res

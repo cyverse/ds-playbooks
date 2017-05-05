@@ -1,5 +1,3 @@
 ---
-default_resource_directory: /gpfs1/irods_vault
-
 irods_resources:
   - vault: /gpfs1/irods_vault

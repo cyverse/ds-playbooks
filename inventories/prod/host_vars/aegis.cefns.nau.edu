@@ -1,6 +1,5 @@
 ---
 ansible_port: 22
-default_resource_directory: /data/Vault
 
 irods_resources:
   - vault: /data/Vault

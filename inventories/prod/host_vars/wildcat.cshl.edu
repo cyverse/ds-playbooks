@@ -1,6 +1,5 @@
 ---
 ansible_port: 22
-default_resource_directory: /irods_vault
 
 irods_resources:
   - vault: /irods_vault

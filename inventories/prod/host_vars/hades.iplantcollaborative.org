@@ -1,3 +1,5 @@
 ---
 irods_resources:
-  - vault: /gpfs1/irods_vault
+  - name: hadesRes
+    vault: /gpfs1/irods_vault
+    context: minimum_free_space_for_create_in_bytes=122348585877504

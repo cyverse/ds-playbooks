@@ -3,4 +3,6 @@ ansible_port: 22
 ansible_user: irods
 
 irods_resources:
-  - vault: /gpfs/corral3/tacc/projects/iplant/Vault
+  - name: taccCorralRes
+    vault: /gpfs/corral3/tacc/projects/iplant/Vault
+    context: minimum_free_space_for_create_in_bytes=1917273400934400

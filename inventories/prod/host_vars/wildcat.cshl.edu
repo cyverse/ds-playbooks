@@ -2,4 +2,6 @@
 ansible_port: 22
 
 irods_resources:
-  - vault: /irods_vault
+  - name: cshlWildcatRes
+    vault: /irods_vault
+    context: minimum_free_space_for_create_in_bytes=3298214321356

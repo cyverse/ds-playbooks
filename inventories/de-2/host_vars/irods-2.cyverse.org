@@ -1,6 +1,14 @@
 ---
 irods_resources:
-  - vault: /var/lib/irods/iRODS/Vault
-  - vault: /irods_vault/aegisUA1Res
-  - vault: /irods_vault/aegisASU1Res
-  - vault: /irods_vault/aegisNAU1Res
+  - name: demoResc
+    vault: /var/lib/irods/iRODS/Vault
+    context: minimum_free_space_for_create_in_bytes=54882517402
+  - name: aegisUA1Res
+    vault: /irods_vault/aegisUA1Res
+    context: minimum_free_space_for_create_in_bytes=54882517402
+  - name: aegisASU1Res
+    vault: /irods_vault/aegisASU1Res
+    context: minimum_free_space_for_create_in_bytes=54882517402
+  - name: aegisNAU1Res
+    vault: /irods_vault/aegisNAU1Res
+    context: minimum_free_space_for_create_in_bytes=54882517402

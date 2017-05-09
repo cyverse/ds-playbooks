@@ -1,3 +1,5 @@
 ---
 irods_resources:
-  - vault: /irods_vault/shelby_vault
+  - name: shelbyRes
+    vault: /irods_vault/shelby_vault
+    context: minimum_free_space_for_create_in_bytes=26835874270003

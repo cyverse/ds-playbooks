@@ -1,9 +1,36 @@
 ---
-- name: Install public keys for dirk's access
+- name: Install public keys for DS admin access
   hosts: all:!unmanaged_systems
+  become: true
   tasks:
+    - name: group by OS version
+      group_by:
+        key: centos{{ ansible_distribution_major_version }}
+
     - name: install key
-      authorized_key: 
+      authorized_key:
         user: "{{ admin_user }}"
         key: "{{ admin_key }}"
         state: present
+
+    - name: all admin user to connect by ssh
+      shell: |
+        cfg=/etc/ssh/sshd_config
+
+        if [ -z $(sed --quiet '/^AllowGroups /p' "$cfg") ]
+        then
+          printf 'AllowGroups {{ admin_user }}\n' >> "$cfg"
+          printf 'changed'
+        elif [ -z $(sed --quiet '/^AllowGroups.* {{ admin_user }}\( \|$\)/p' "$cfg") ]
+        then
+          sed --in-place 's/\(^AllowGroups .*\)/\1 {{ admin_user }}/' "$cfg"
+          printf 'changed'
+        fi
+      register: result
+      changed_when: result.stdout == 'changed'
+
+    - name: restart sshd
+      when: result.stdout == 'changed'
+      service:
+        name: sshd
+        state: restarted

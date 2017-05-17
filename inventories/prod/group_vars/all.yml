@@ -1,8 +1,8 @@
 ---
 ansible_port: 1657
 
-admin_user: root
-admin_key: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCi9RJ8pNY8nOPW33k4ZPuMAhQj89kU2164Np0QfY2ifZM7wIbSE/RL7fKJNqBFFkxTcmRjsfO/IQKps7G4dkZqwbfadFeIKB5XujuUAFKeHQHlenJzVorMSD1z+EDXGeVRkTHnULmTy/DlEs0GwILYoSVHSymc04Pr2WgVTVf3wgddGohChlgn6OZ5iBR6EVFbBMcRwfYLd/qAoZDVk8PWz7wAgWf8444lWga7eZUf7V5hYqJJKcImnLTD5HxpJHYkQ6mKfMs0Ai8ASEmenv6PeRSpbiVeMNgYXzG9nyuyE5O4niRJXaOrbl1JyRCO4i0YoSOciq8WnbYhR7q95sRD root@dirk'
+admin_user: irods
+admin_key: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEecMrUmgOlbaXQfdmHVvB2An2vTgPDechc6ji0ElRPF ds-adm@cyverse.org' 
 
 # System configuration
 
@@ -78,4 +78,3 @@ ds_federation:
     icat_host: c3-dtn04.corral.tacc.utexas.edu
     zone_key: d2489f57Amazonasb5e31d80b230f3e7
     negotiation_key: tvqV80Xy3RfD8AbB7JHX7vc7jDrRj5Sz
-

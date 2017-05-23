@@ -8,8 +8,8 @@
       block:
         - name: remove urllib3
           pip:
-           name: urllib3
-           state: absent
+            name: urllib3
+            state: absent
 
         - name: upgrade system packages
           package:

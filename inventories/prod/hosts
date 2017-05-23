@@ -9,8 +9,8 @@ rs
 data.cyverse.org
 
 [rs]
-aegis.a2c2.asu.edu
 aegis.cefns.nau.edu
+aegis.researchcomputing.asu.edu
 aegis-ua-1.arl.arizona.edu
 cyverse.corral.tacc.utexas.edu
 ds01.cyverse.org
@@ -44,9 +44,9 @@ zeus.iplantcollaborative.org
 bugs.cyverse.org
 
 [unmanaged_systems]
-bugs.cyverse.org                   # Managed by DE
-aegis-ua-1.arl.arizona.edu         # Managed at ARL by Jim Davis
-aegis.a2c2.asu.edu                 # Managed at ASU by (?)
-aegis.cefns.nau.edu                # Managed at NAU by (?)
-cyverse.corral.tacc.utexas.edu     # Managed at UT by Chris Jordan
-wildcat.cshl.edu                   # Managed at CSHL by Peter Van Buren
+bugs.cyverse.org                 # Managed by DE
+aegis-ua-1.arl.arizona.edu       # Managed at ARL by Jim Davis
+aegis.cefns.nau.edu              # Managed at NAU by Donald Speer
+aegis.researchcomputing.asu.edu  # Managed at ASU by Johnathan Lee
+cyverse.corral.tacc.utexas.edu   # Managed at UT by Chris Jordan
+wildcat.cshl.edu                 # Managed at CSHL by Peter Van Buren

@@ -1,5 +1,5 @@
 ---
-reboot: false
+rebootable: false
 
 irods_resources:
   - name: hadesRes

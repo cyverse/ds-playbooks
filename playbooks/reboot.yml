@@ -4,16 +4,18 @@
   become: true
   gather_facts: false
   tasks:
-    - name: reboot
-      command: /sbin/reboot
-      async: 0
-      poll: 0
-      ignore_errors: true
-        
-    - name: wait for server to stop
-      become: false
-      local_action: wait_for host={{ inventory_hostname }} port={{ ansible_port }} state=stopped
+    - when: rebootable
+      block:
+      - name: reboot
+        command: /sbin/reboot
+        async: 0
+        poll: 0
+        ignore_errors: true
 
-    - name: verify server up
-      become: false
-      local_action: wait_for host={{ inventory_hostname }} port={{ ansible_port }} state=started
+      - name: wait for server to stop
+        become: false
+        local_action: wait_for host={{ inventory_hostname }} port={{ ansible_port }} state=stopped
+
+      - name: verify server up
+        become: false
+        local_action: wait_for host={{ inventory_hostname }} port={{ ansible_port }} state=started

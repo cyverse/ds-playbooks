@@ -1,6 +1,8 @@
 ---
 ansible_port: 1657
 
+rebootable: true
+
 
 # System configuration
 

@@ -45,9 +45,6 @@ bugs.cyverse.org
 
 [unmanaged_systems]
 bugs.cyverse.org                   # Managed by DE
-hades.iplantcollaborative.org      # Managed manually
-poseidon.iplantcollaborative.org   # Managed manually
-zeus.iplantcollaborative.org       # Managed manually
 aegis-ua-1.arl.arizona.edu         # Managed at ARL by Jim Davis
 aegis.a2c2.asu.edu                 # Managed at ASU by (?)
 aegis.cefns.nau.edu                # Managed at NAU by (?)

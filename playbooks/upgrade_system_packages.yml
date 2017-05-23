@@ -5,6 +5,7 @@
   gather_facts: true
   tasks:
     - name: upgrade system packages
+      when: rebootable
       package:
         name: '*'
         state: latest

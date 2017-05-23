@@ -1,4 +1,6 @@
 ---
+reboot: false
+
 irods_resources:
   - name: hadesRes
     vault: /gpfs1/irods_vault

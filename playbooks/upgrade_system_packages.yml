@@ -4,8 +4,14 @@
   become: true
   gather_facts: true
   tasks:
-    - name: upgrade system packages
-      when: rebootable
-      package:
-        name: '*'
-        state: latest
+    - when: rebootable
+      block:
+        - name: remove urllib3
+          pip:
+           name: urllib3
+           state: absent
+
+        - name: upgrade system packages
+          package:
+            name: '*'
+            state: latest

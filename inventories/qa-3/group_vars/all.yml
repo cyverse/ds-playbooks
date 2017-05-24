@@ -63,5 +63,6 @@ sernec_owners: []
 sernec_writers: []
 sernec_readers: []
 
+irods_version: 4.1.10
 irods_sys_user: irods
 irods_resources: []

@@ -1,0 +1,18 @@
+---
+# TODO implement
+# - name: open firewall for iRODS
+
+- name: create iRODS system user
+  hosts: irods:!unmanaged_systems
+  become: true
+  tasks:
+    - name: create user
+      user:
+        name: "{{ irods_sys_user }}"
+        system: yes
+        home: /var/lib/irods
+        createhome: yes
+        comment: iRODS service
+
+- include: mk_vaults.yml
+- include: install_resource_pkg.yml

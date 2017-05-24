@@ -15,6 +15,7 @@
              ftp://ftp.renci.org/pub/irods/releases/{{ irods_version }}/{{ os }}/{{ pkg }}-{{ irods_version }}-{{ os }}-x86_64.rpm
       args:
         creates: /tmp/{{ pkg }}-{{ irods_version }}-{{ os }}-x86_64.rpm
+        warn: false
 
     - name: upload package to resource server
       copy:

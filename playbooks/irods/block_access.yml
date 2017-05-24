@@ -10,23 +10,23 @@
     - name: ensure CyVerse users don't have special access
       lineinfile:
         dest: /etc/sysconfig/iptables
-        line: -A {{ iptables_input_chain }} -m state --state NEW -m tcp -p tcp -s 128.196.38.0    /25 --dport 1247 -j ACCEPT
+        line: -A {{ iptables_input_chain }} -m state --state NEW -m tcp -p tcp -s 128.196.38.0/25 --dport {{ irods_port }} -j ACCEPT
         state: absent
       register: cyverse_access
 
     - name: ensure resource servers can still access IES
       lineinfile:
         dest: /etc/sysconfig/iptables
-        insertbefore: -A {{ iptables_input_chain }} .*-m state --state NEW -m tcp .*--dport 1247
-        line: -A {{ iptables_input_chain }} -m state --state NEW -m tcp -p tcp -s {{ lookup('dig', item) }} --dport 1247 -j ACCEPT
+        insertbefore: -A {{ iptables_input_chain }} .*-m state --state NEW -m tcp .*--dport {{ irods_port }}
+        line: -A {{ iptables_input_chain }} -m state --state NEW -m tcp -p tcp -s {{ lookup('dig', item) }} --dport {{ irods_port }} -j ACCEPT
       with_items: "{{ groups['irods'] }}"
       register: rs_access
 
-    - name: block port 1247 for everyone else
+    - name: block for everyone else
       lineinfile:
         dest: /etc/sysconfig/iptables
-        insertbefore: -A {{ iptables_input_chain }} .*-m state --state NEW -m tcp .*--dport 1247
-        line: -A {{ iptables_input_chain }} -m state --state NEW -m tcp -p tcp --dport 1247 -j REJECT
+        insertbefore: -A {{ iptables_input_chain }} .*-m state --state NEW -m tcp .*--dport {{ irods_port }}
+        line: -A {{ iptables_input_chain }} -m state --state NEW -m tcp -p tcp --dport {{ irods_port }} -j REJECT
       register: block_rest
 
     - name: reload iptables

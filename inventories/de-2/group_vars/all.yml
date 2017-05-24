@@ -25,8 +25,6 @@ rabbitmq_ephemeral: false
 default_number_of_transfer_threads: 16
 parallel_transfer_buffer_size: 32
 
-default_resource: demoResc
-
 aegis_resources: []
 
 iclimate_resources: []
@@ -55,6 +53,8 @@ irods_version: 4.1.10
 irods_service_account_name: irods
 irods_service_group_name: irods
 irods_port: 1247
+irods_zone: iplant
 irods_zone_user: rods
 irods_zone_password: SillyBilly
+irods_default_resource: demoResc
 irods_resources: []

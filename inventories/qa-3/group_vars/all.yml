@@ -25,8 +25,6 @@ rabbitmq_ephemeral: false
 default_number_of_transfer_threads: 16
 parallel_transfer_buffer_size: 32
 
-default_resource: CyVerseRes
-
 aegis_resources:
   - aegisASU1Res
   - aegisNAU1Res
@@ -65,6 +63,8 @@ irods_version: 4.1.10
 irods_service_account_name: irods
 irods_service_group_name: irods
 irods_port: 1247
+irods_zone: iplant
 irods_zone_user: ipc_admin
 irods_zone_password: Zebra99zz--__
+irods_default_resource: CyVerseRes
 irods_resources: []

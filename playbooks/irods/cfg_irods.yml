@@ -1,8 +1,8 @@
 ---
 - name: configure bisque client
   hosts: ies
-  become: "{{ false if ansible_user|default('') == irods_sys_user else true }}"
-  become_user: "{{ irods_sys_user }}"
+  become: "{{ false if ansible_user|default('') == irods_service_account_name else true }}"
+  become_user: "{{ irods_service_account_name }}"
   gather_facts: true
   tasks:
     - when: bisque_url is defined
@@ -21,8 +21,8 @@
 
 - name: configure iRODS
   hosts: irods
-  become: "{{ false if ansible_user|default('') == irods_sys_user else true }}"
-  become_user: "{{ irods_sys_user }}"
+  become: "{{ false if ansible_user|default('') == irods_service_account_name else true }}"
+  become_user: "{{ irods_service_account_name }}"
   vars:
     rabbitmq_host: "{{ groups['rabbitmq'][0] }}"
     rabbitmq_vhost_uri: "{{ rabbitmq_vhost | replace('/', '%2F') }}"
@@ -57,19 +57,19 @@
 
 - name: set minimum free space for resource
   hosts: rs
-  become: "{{ false if ansible_user|default('') == irods_sys_user else true }}"
-  become_user: "{{ irods_sys_user }}"
+  become: "{{ false if ansible_user|default('') == irods_service_account_name else true }}"
+  become_user: "{{ irods_service_account_name }}"
   gather_facts: false
   tasks:
     - name: initialize free space estimate
       with_items: "{{ irods_resources }}"
       shell: |
         if ! resc=$(iadmin lr '{{ item.name }}') || [ "$resc" = 'No rows foud']
-        then 
+        then
           exit 1
         fi
 
-        freeSpace=$(sed --quiet 's/free_space: //p' <<< "$resc") 
+        freeSpace=$(sed --quiet 's/free_space: //p' <<< "$resc")
 
                 #if [ -n "$freeSpace" ]
                 #then
@@ -92,7 +92,7 @@
     - name: set context
       with_items: "{{ irods_resources }}"
       shell: |
-        if ! currentContext=$(iadmin lr '{{ item.name }}' | sed --quiet 's/^resc_context: //p') 
+        if ! currentContext=$(iadmin lr '{{ item.name }}' | sed --quiet 's/^resc_context: //p')
         then
           exit 1
         fi
@@ -101,7 +101,7 @@
         then
           exit 0
         fi
-          
+
         if ! iadmin modresc '{{ item.name }}' context '{{ item.context }}'
         then
           exit 1

@@ -8,7 +8,7 @@
       file:
         path: "{{ item.vault }}"
         follow: yes
-        owner: "{{ irods_sys_user }}"
-        group: "{{ irods_sys_user }}"
+        owner: "{{ irods_service_group_name }}"
+        group: "{{ irods_service_account_name }}"
         mode: 'u=rwx'
         state: directory

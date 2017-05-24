@@ -55,6 +55,6 @@ irods_service_group_name: irods
 irods_port: 1247
 irods_zone: iplant
 irods_zone_user: rods
-irods_zone_password: SillyBilly
+irods_zone_user_password: SillyBilly
 irods_default_resource: rootResource
 irods_resources: []

@@ -74,7 +74,7 @@ irods_service_group_name: irods
 irods_port: 1247
 irods_zone: iplant
 irods_zone_user: ipc_admin
-irods_zone_password: Zebra99zz--__
+irods_zone_user_password: Zebra99zz--__
 irods_default_resource: CyVerseRes
 irods_resources: []
 

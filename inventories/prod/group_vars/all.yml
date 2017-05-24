@@ -58,8 +58,6 @@ server_control_plane_key: QSESYyLeUdiLUvjPRL6oeN3nfWTn02uB
 server_port_range_start: 20000
 server_port_range_end: 20399
 
-zone_admin_username: ipc_admin
-zone_admin_password: Zebra99zz--__
 zone_key: PAEDXpss4o1oxktFKlz9jMPWzwBHHMxc5d8dIfzd
 
 sernec_owners:
@@ -76,6 +74,8 @@ irods_version: 4.1.10
 irods_service_account_name: irods
 irods_service_group_name: irods
 irods_port: 1247
+irods_zone_user: ipc_admin
+irods_zone_password: Zebra99zz--__
 irods_resources: []
 
 ds_federation:

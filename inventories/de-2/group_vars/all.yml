@@ -45,8 +45,6 @@ server_control_plane_key: zcDxUM9S57Wf22B8wwAMrwpBtwsBBZff
 server_port_range_start: 20000
 server_port_range_end: 20099
 
-zone_admin_username: rods
-zone_admin_password: SillyBilly
 zone_key: P3SDF2SWQR22sMs7drCgtcxYDUxL6JDjqsJDM6FMAzUkdHpaf
 
 sernec_owners: []
@@ -57,4 +55,6 @@ irods_version: 4.1.10
 irods_service_account_name: irods
 irods_service_group_name: irods
 irods_port: 1247
+irods_zone_user: rods
+irods_zone_password: SillyBilly
 irods_resources: []

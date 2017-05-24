@@ -17,3 +17,23 @@
   become: true
   tasks:
   - include: tasks/proxy_install.yml os=centos6 pkg=irods-resource
+
+- name: ensure server account owns what it's supposed to
+  hosts: rs:!ies:!unmanaged_systems
+  become: true
+  tasks:
+    - name: ensure account own /var/lib/irods
+      file:
+        path: /var/lib/irods
+        owner: "{{ irods_service_account_name }}"
+        group: "{{ irods_service_group_name }}"
+        mode: o-rwx
+        recurse: yes
+
+    - name: ensure account owns /etc/irods
+      file:
+        path: /etc/irods
+        owner: "{{ irods_service_account_name }}"
+        group: "{{ irods_service_group_name }}"
+        mode: o-rwx
+        recurse: yes

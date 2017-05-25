@@ -40,6 +40,7 @@
       irods_server_port_range_start: "{{ server_port_range_start }}"
       irods_server_port_range_end: "{{ server_port_range_end }}"
       irods_zone_key: "{{ zone_key }}"
+      irods_zone_user: "{{ irods_clerver_user }}"
       irods_db:
         host: "{{ dbms_host }}"
         port: "{{ dbms_port }}"

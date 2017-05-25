@@ -54,7 +54,7 @@ irods_service_account_name: irods
 irods_service_group_name: irods
 irods_port: 1247
 irods_zone: iplant
-irods_zone_user: rods
-irods_zone_user_password: SillyBilly
+irods_clerver_user: rods
+irods_clerver_password: SillyBilly
 irods_default_resource: demoResc
 irods_resources: []

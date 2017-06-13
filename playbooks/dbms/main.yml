@@ -6,3 +6,27 @@
     - role: jtyr.grub_cmdline
       grub_cmdline_add_args:
         - transparent_hugepage=never
+
+- name: Install postgresql server
+  hosts: dbms
+  become: true
+  gather_facts: false
+  tasks:
+    - name: install postgresql yum repo
+      yum:
+        name: https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm
+
+    - name: install postgresql server
+      package:
+        name: postgresql93-server
+
+- name: Initialize postgresql DBMS
+  hosts: dbms
+  become: true
+  become_user: postgres
+  gather_facts: false
+  tasks:
+    - name: initialize postgresql DBMS
+      command: /usr/pgsql-9.3/bin/initdb --auth ident --lc-collate C --locale en_US.UTF-8 --pgdata /var/lib/pgsql/9.3/data 
+
+

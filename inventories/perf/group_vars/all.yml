@@ -1,4 +1,6 @@
 ---
+ansible_port: 1657
+
 rebootable: true
 
 admin_user: irods

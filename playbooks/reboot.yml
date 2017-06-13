@@ -2,13 +2,14 @@
 - name: reboot servers
   hosts: all:!unmanaged_systems
   become: true
-  gather_facts: false
   tasks:
     - when: rebootable
       block:
       - name: reboot
-        command: /sbin/reboot
-        async: 0
+        shell: |
+          sleep 1
+          reboot
+        async: 1000000000
         poll: 0
         ignore_errors: true
 

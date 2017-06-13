@@ -1,0 +1,17 @@
+[dbms]
+davos.cyverse.org
+
+[irods:children]
+ies
+rs
+
+[ies]
+davos.cyverse.org
+
+[rs]
+ds05.cyverse.org
+
+[rabbitmq]
+davos.cyverse.org
+
+[unmanaged_systems]

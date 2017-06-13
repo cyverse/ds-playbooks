@@ -1,0 +1,20 @@
+---
+# We have a switch or two in the DMZ that don't support MTUs of 9000.
+# nic_mtu: 9000
+nic_mtu: 1500
+
+sysctl_net:
+  - name: core.default_qdisc
+    value: fq
+  - name: core.netdev_max_backlog
+    value: 1000
+  - name: core.rmem_max
+    value: 67108864
+  - name: core.wmem_max
+    value: 67108864
+  - name: ipv4.tcp_mtu_probing
+    value: 1
+  - name: ipv4.tcp_rmem
+    value: 4096 87380 33554432
+  - name: ipv4.tcp_wmem
+    value: 4096 65536 33554432

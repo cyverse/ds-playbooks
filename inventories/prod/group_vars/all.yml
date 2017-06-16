@@ -34,15 +34,6 @@ aegis_resources:
 iclimate_resources:
   - aegisUA1Res
 
-iplant_resources:
-  - dustyRes
-  - holmesRes
-  - juniorRes
-  - kelcie
-  - romeoRes
-  - snoopyRes
-  - trixieRes
-
 single_threaded_resources:
   - cshlWildcatRes
 

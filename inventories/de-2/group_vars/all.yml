@@ -29,8 +29,6 @@ aegis_resources: []
 
 iclimate_resources: []
 
-iplant_resources: []
-
 single_threaded_resources: []
 
 dbms_port: 31398

@@ -65,6 +65,7 @@ sernec_writers:
   - brownh
 
 sernec_readers:
+  - bjoyce3
   - michael_denslow
   - narro
 

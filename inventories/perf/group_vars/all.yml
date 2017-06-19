@@ -16,7 +16,7 @@ sysctl_net: []
 # rabbitmq configuration
 
 rabbitmq_port: 31333
-rabbitmq_user: ipc
+rabbitmq_user: irods
 rabbitmq_password: ',QZx`7~l=2qrQB,*'
 rabbitmq_vhost: /perf/data-store
 rabbitmq_ephemeral: false
@@ -33,7 +33,7 @@ iclimate_resources: []
 single_threaded_resources: []
 
 dbms_port: 5432
-dbms_username: irodsuser
+dbms_username: irods
 dbms_password: 'eX00OWE<ks42[~zl'
 
 negotiation_key: NMDXriXVgnelVanSHR4d4Ngbnm9SHY2P
@@ -55,8 +55,8 @@ irods_service_account_name: irods
 irods_service_group_name: irods
 irods_port: 1247
 irods_zone: iplant
-irods_clerver_user: ipc_admin
-irods_clerver_password: ')pD7QmWoe5,%`?WW'
+irods_clerver_user: rods
+irods_clerver_password: 't2MG^6v+8yCrJJLx'
 irods_default_resource: CyVerseRes
 irods_resources: []
 

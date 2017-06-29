@@ -2,7 +2,7 @@
 ansible_port: 1657
 
 rebootable: true
-
+update_e2fsprogs: true
 
 # System configuration
 

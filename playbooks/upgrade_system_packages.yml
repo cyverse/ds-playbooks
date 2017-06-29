@@ -4,6 +4,12 @@
   become: true
   gather_facts: true
   tasks:
+    - name: ensure e2fsprogs is never updated by yum
+      when: not update_e2fsprogs
+      lineinfile:
+        name: /etc/yum.conf
+        line: exclude=e2fsprogs.*
+
     - when: rebootable
       block:
         - name: remove urllib3

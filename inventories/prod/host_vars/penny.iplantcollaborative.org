@@ -1,4 +1,6 @@
 ---
+update_e2fsprogs: false
+
 irods_resources:
   - name: pennyRes
     vault: /irods_vault

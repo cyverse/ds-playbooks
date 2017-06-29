@@ -1,4 +1,6 @@
 ---
+update_e2fsprogs: false
+
 irods_resources:
   - name: trixieRes
     vault: /irods_vault/trixie_vault

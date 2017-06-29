@@ -1,4 +1,6 @@
 ---
+update_e2fsprogs: false
+
 irods_resources:
   - name: shelbyRes
     vault: /irods_vault/shelby_vault

@@ -1,4 +1,6 @@
 ---
+update_e2fsprogs: false
+
 irods_resources:
   - name: holmesRes
     vault: /irods_vault

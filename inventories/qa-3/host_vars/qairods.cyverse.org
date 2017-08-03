@@ -1,13 +1,10 @@
 ---
 irods_resources:
-  - name: aegisASU1Res
-    vault: /data/Vault
+  - name: aegisIngest
+    vault: /irods_vault/aegisIngest
     context: minimum_free_space_for_create_in_bytes=886022527796
-  - name: aegisNAU1Res
-    vault: /data/Vault 
-    context: minimum_free_space_for_create_in_bytes=886022527796
-  - name: aegisUA1Res
-    vault: /data/Vault 
+  - name: aegisRepl
+    vault: /irods_vault/aegisRepl 
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: cshlWildcatRes
     vault: /irods_vault

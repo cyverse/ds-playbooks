@@ -19,6 +19,7 @@ ds03.cyverse.org
 ds04.cyverse.org
 #ds05.cyverse.org
 dusty.iplantcollaborative.org
+fractus.has.arizona.edu
 gatsby.iplantcollaborative.org
 hades.iplantcollaborative.org
 holmes.iplantcollaborative.org
@@ -48,4 +49,5 @@ aegis-ua-1.arl.arizona.edu       # Managed at ARL by Jim Davis
 aegis.cefns.nau.edu              # Managed at NAU by Donald Speer
 aegis.researchcomputing.asu.edu  # Managed at ASU by Johnathan Lee
 cyverse.corral.tacc.utexas.edu   # Managed at UT by Chris Jordan
+fractus.has.arizona.edu          # Managed in HAS department by Mike Eklund
 wildcat.cshl.edu                 # Managed at CSHL by Peter Van Buren

@@ -1,0 +1,2 @@
+---
+irods_default_resource_dir: "{{ irods_resources[0].vault }}"

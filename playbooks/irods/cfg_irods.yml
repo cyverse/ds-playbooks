@@ -33,6 +33,8 @@
     - role: cyverse.cyverse-irods-cfg
       irods_icat_host: "{{ icat_host }}"
       irods_default_number_of_transfer_threads: "{{ default_number_of_transfer_threads }}"
+      irods_default_resource_directory: "{{ irods_default_resource_dir 
+                                           | default('/var/lib/irods/iRODS/Vault') }}"
       irods_default_resource_name: "{{ irods_default_resource }}"
       irods_negotiation_key: "{{ negotiation_key }}"
       irods_parallel_transfer_buffer_size: "{{ parallel_transfer_buffer_size }}"

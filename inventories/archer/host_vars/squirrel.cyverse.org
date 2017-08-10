@@ -1,4 +1,6 @@
 ---
+irods_default_resource_dir: /var/lib/irods/squirrel-vault
+
 irods_resources:
   - name: qaResource
     vault: /var/lib/irods/qa-vault

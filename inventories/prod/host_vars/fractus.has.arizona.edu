@@ -7,5 +7,5 @@ irods_default_resource: haboobRes
 
 irods_resources:
   - name: haboob
-    vault: /f2
+    vault: /f2/haboob
     context: minimum_free_space_for_create_in_bytes=5000174501888  # 5%

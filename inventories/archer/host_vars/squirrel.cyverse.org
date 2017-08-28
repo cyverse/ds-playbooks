@@ -3,6 +3,6 @@ irods_resources:
   - name: qaResource
     vault: /var/lib/irods/qa-vault
     context: minimum_free_space_for_create_in_bytes=19686844417
-  - name: squirrelResource
-    vault: /var/lib/irods/squirrel-vault
+  - name: mainIngest
+    vault: /irods_vault/mainIngest
     context: minimum_free_space_for_create_in_bytes=19686844417

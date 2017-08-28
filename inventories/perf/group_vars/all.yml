@@ -27,7 +27,6 @@ rabbitmq_ephemeral: false
 default_number_of_transfer_threads: 16
 parallel_transfer_buffer_size: 32
 
-aegis_resources: []
 iclimate_resources: []
 
 single_threaded_resources: []

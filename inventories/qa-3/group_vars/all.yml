@@ -52,4 +52,8 @@ irods_zone: iplant
 irods_clerver_user: ipc_admin
 irods_clerver_password: Zebra99zz--__
 irods_default_resource: CyVerseRes
+irods_default_repl_resource: taccCorralRes
 irods_resources: []
+
+aegis_resource_name: aegisUA1Res
+aegis_repl_resource_name: aegisReplRes

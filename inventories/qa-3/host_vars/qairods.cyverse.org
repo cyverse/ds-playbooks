@@ -4,10 +4,10 @@ irods_resources:
     vault: /irods_vault/aegisIngest
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: aegisRepl
-    vault: /irods_vault/aegisRepl 
+    vault: /irods_vault/aegisRepl
     context: minimum_free_space_for_create_in_bytes=886022527796
-  - name: cshlWildcatRes
-    vault: /irods_vault
+  - name: cshl
+    vault: /irods_vault/cshl
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: dustyRes
     vault: /irods_vault/dusty_vault
@@ -19,34 +19,34 @@ irods_resources:
     vault: /gpfs1/irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: holmesRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: hugoRes
     vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: jonahRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: juniorRes
     vault: /irods_vault/junior_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: kelcieRes
-    vault: /irods_vault/kelcie_vault 
+    vault: /irods_vault/kelcie_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: lilywhiteRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: lucyRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: pennyRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: pumpkinRes
     vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: romeoRes
-    vault: /irods_vault/romeo_vault 
+    vault: /irods_vault/romeo_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: shelbyRes
     vault: /irods_vault/shelby_vault
@@ -61,8 +61,8 @@ irods_resources:
     vault: /irods_vault/trixie_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: valmontRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: whitecombRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796

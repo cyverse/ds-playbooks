@@ -39,6 +39,9 @@ irods_resources:
   - name: lucyRes
     vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
+  - name: mainRepl
+    vault: /irods_vault/mainRepl
+    context: minimum_free_space_for_create_in_bytes=886022527796
   - name: pennyRes
     vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
@@ -53,9 +56,6 @@ irods_resources:
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: snoopyRes
     vault: /irods_vault
-    context: minimum_free_space_for_create_in_bytes=886022527796
-  - name: taccCorralRes
-    vault: /gpfs/corral3/tacc/projects/iplant/Vault
     context: minimum_free_space_for_create_in_bytes=886022527796
   - name: trixieRes
     vault: /irods_vault/trixie_vault

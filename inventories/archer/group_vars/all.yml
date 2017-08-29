@@ -2,6 +2,7 @@
 ansible_port: 1657
 
 rebootable: true
+update_e2sprogs: true
 
 
 # System configuration
@@ -51,4 +52,8 @@ irods_zone: iplant
 irods_clerver_user: rods
 irods_clerver_password: SillyBilly
 irods_default_resource: rootResource
+irods_default_repl_resource: mainReplRes
 irods_resources: []
+
+aegis_resource_name: aegisIngestRes
+aegis_repl_resource: aegisReplRes

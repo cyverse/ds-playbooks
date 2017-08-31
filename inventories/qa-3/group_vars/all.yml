@@ -55,5 +55,5 @@ irods_default_resource: CyVerseRes
 irods_default_repl_resource: taccCorralRes
 irods_storage_resources: []
 
-aegis_resource_name: aegisUA1Res
-aegis_repl_resource_name: aegisReplRes
+irods_aegis_resource: aegisUA1Res
+irods_aegis_repl_resource: aegisReplRes

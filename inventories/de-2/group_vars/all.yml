@@ -55,5 +55,5 @@ irods_default_resource: demoResc
 irods_default_repl_resource: mainReplRes
 irods_storage_resources: []
 
-aegis_resource_name: aegisIngestRes
-aegis_repl_resource_name: aegisReplRes
+irods_aegis_resource: aegisIngestRes
+irods_aegis_repl_resource: aegisReplRes

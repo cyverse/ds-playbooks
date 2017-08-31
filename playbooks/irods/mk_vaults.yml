@@ -4,7 +4,7 @@
   become: true
   tasks:
     - name: create vault directory
-      with_items: "{{ irods_resources }}"
+      with_items: "{{ irods_storage_resources }}"
       file:
         path: "{{ item.vault }}"
         follow: yes

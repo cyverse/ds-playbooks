@@ -1,5 +1,5 @@
 ---
-irods_resources:
+irods_storage_resources:
   - name: aegisIngest
     vault: /irods_vault/aegisIngest
     context: minimum_free_space_for_create_in_bytes=19686844417

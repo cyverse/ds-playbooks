@@ -51,4 +51,4 @@ irods_zone: iplant
 irods_clerver_user: ipc_admin
 irods_clerver_password: Zebra99zz--__
 irods_default_resource: CyVerseRes
-irods_resources: []
+irods_storage_resources: []

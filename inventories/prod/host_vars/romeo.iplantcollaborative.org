@@ -1,7 +1,7 @@
 ---
 update_e2fsprogs: false
 
-irods_resources:
+irods_storage_resources:
   - name: romeoRes
     vault: /irods_vault/romeo_vault
     context: minimum_free_space_for_create_in_bytes=26835874270003

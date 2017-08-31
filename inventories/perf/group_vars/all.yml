@@ -55,6 +55,6 @@ irods_zone: iplant
 irods_clerver_user: rods
 irods_clerver_password: 't2MG^6v+8yCrJJLx'
 irods_default_resource: CyVerseRes
-irods_resources: []
+irods_storage_resources: []
 
 ds_federation: []

@@ -65,7 +65,7 @@
   gather_facts: false
   tasks:
     - name: initialize free space estimate
-      with_items: "{{ irods_resources }}"
+      with_items: "{{ irods_storage_resources }}"
       shell: |
         if ! resc=$(iadmin lr '{{ item.name }}') || [ "$resc" = 'No rows found']
         then
@@ -93,7 +93,7 @@
       changed_when: out.stdout == 'changed'
 
     - name: set context
-      with_items: "{{ irods_resources }}"
+      with_items: "{{ irods_storage_resources }}"
       shell: |
         if ! currentContext=$(iadmin lr '{{ item.name }}' | sed --quiet 's/^resc_context: //p')
         then

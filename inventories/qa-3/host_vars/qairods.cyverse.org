@@ -36,6 +36,3 @@ irods_storage_resources:
   - name: trixieRes
     vault: /irods_vault/trixie_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
-  - name: whitecombRes
-    vault: /irods_vault
-    context: minimum_free_space_for_create_in_bytes=886022527796

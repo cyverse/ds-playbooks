@@ -18,9 +18,6 @@ irods_storage_resources:
   - name: hadesRes
     vault: /gpfs1/irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796
-  - name: hugoRes
-    vault: /irods_vault
-    context: minimum_free_space_for_create_in_bytes=886022527796
   - name: jonahRes
     vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796

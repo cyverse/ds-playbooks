@@ -27,9 +27,6 @@ irods_storage_resources:
   - name: mainRepl
     vault: /irods_vault/mainRepl
     context: minimum_free_space_for_create_in_bytes=886022527796
-  - name: pennyRes
-    vault: /irods_vault
-    context: minimum_free_space_for_create_in_bytes=886022527796
   - name: pumpkinRes
     vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=886022527796

@@ -2,6 +2,6 @@
 update_e2fsprogs: false
 
 irods_storage_resources:
-  - name: juniorRes
+  - name: junior
     vault: /irods_vault/junior_vault
     context: minimum_free_space_for_create_in_bytes=26835874270003

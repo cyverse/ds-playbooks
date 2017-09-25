@@ -1,4 +1,7 @@
 ---
+host_aliases:
+  - r03c07u13-ds04.cyverse.org
+
 irods_storage_resources:
   - name: ds04
     vault: /irods_vault/ds04

@@ -1,6 +1,9 @@
 ---
 ansible_port: 22
 
+host_aliases:
+  - AEGIS.a2c2.asu.edu
+
 irods_storage_resources:
   - name: aegisASU1Res
     vault: /data/Vault

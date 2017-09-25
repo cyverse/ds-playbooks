@@ -2,6 +2,9 @@
 ansible_port: 22
 ansible_user: irods
 
+host_aliases:
+  - 129.114.51.136
+
 irods_storage_resources:
   - name: taccCorralRes
     vault: /gpfs/corral3/tacc/projects/iplant/Vault

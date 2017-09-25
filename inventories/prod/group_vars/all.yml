@@ -9,6 +9,7 @@ admin_key: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEecMrUmgOlbaXQfdmHVvB2An2vTgPDe
 
 # System configuration
 
+host_aliases: []
 nic_mtu: null
 nic_txqueuelen: null
 sysctl_net: []

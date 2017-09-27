@@ -1,55 +1,58 @@
 ---
 irods_storage_resources:
-  - name: aegisASU1Res
-    vault: /data/Vault
+  - name: aegisASU1
+    vault: /irods_vault/aegisASU1
     context: minimum_free_space_for_create_in_bytes=1181365456282
-  - name: aegisNAU1Res
-    vault: /data/Vault 
+  - name: aegisNAU1
+    vault: /irods_vault/aegisNAU1
     context: minimum_free_space_for_create_in_bytes=1181365456282
-  - name: aegisUA1Res
-    vault: /data/Vault 
+  - name: aegisUA1
+    vault: /irods_vault/aegisUA1
     context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: cshlWildcatRes
     vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282
-  - name: dustyRes
-    vault: /irods_vault/dusty_vault
+  - name: cyverseUKRes
+    vault: /irods_vault/cyverseUK
     context: minimum_free_space_for_create_in_bytes=1181365456282
-  - name: gatsbyRes
-    vault: /irods_vault
+  - name: ds01
+    vault: /irods_vault/ds01
+    context: minimum_free_space_for_create_in_bytes=1181365456282
+  - name: ds02
+    vault: /irods_vault/ds02
+    context: minimum_free_space_for_create_in_bytes=1181365456282
+  - name: haboob
+    vault: /irods_vault/haboob
     context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: hadesRes
     vault: /gpfs1/irods_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: holmesRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: hugoRes
     vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282
-  - name: jonahRes
-    vault: /irods_vault 
+  - name: jonah
+    vault: /irods_vault/jonah
     context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: juniorRes
     vault: /irods_vault/junior_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282
-  - name: kelcieRes
-    vault: /irods_vault/kelcie_vault 
-    context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: lilywhiteRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: lucyRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: pennyRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: pumpkinRes
     vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: romeoRes
-    vault: /irods_vault/romeo_vault 
+    vault: /irods_vault/romeo_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: shelbyRes
     vault: /irods_vault/shelby_vault
@@ -63,9 +66,12 @@ irods_storage_resources:
   - name: trixieRes
     vault: /irods_vault/trixie_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282
+  - name: unlRes
+    vault: /irods_vault/unl
+    context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: valmontRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282
   - name: whitecombRes
-    vault: /irods_vault 
+    vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=1181365456282

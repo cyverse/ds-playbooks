@@ -1,5 +1,5 @@
 ---
 irods_storage_resources:
-  - name: whitecombRes
+  - name: whitecomb
     vault: /irods_vault
     context: minimum_free_space_for_create_in_bytes=13200422181273

@@ -5,6 +5,6 @@ host_aliases:
   - AEGIS.a2c2.asu.edu
 
 irods_storage_resources:
-  - name: aegisASU1Res
+  - name: aegisASU1
     vault: /data/Vault
     context: minimum_free_space_for_create=13200422181274

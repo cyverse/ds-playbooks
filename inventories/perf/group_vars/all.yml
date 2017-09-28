@@ -2,9 +2,11 @@
 ansible_port: 1657
 
 rebootable: true
+update_e2fsprogs: true
 
 admin_user: irods
 admin_key: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEecMrUmgOlbaXQfdmHVvB2An2vTgPDechc6ji0ElRPF ds-adm@cyverse.org'
+
 
 # System configuration
 

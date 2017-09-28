@@ -6,6 +6,7 @@ rebootable: true
 
 # System configuration
 
+host_aliases: []
 nic_mtu: null
 nic_txqueuelen: null
 sysctl_net: []
@@ -51,4 +52,8 @@ irods_zone: iplant
 irods_clerver_user: ipc_admin
 irods_clerver_password: Zebra99zz--__
 irods_default_resource: CyVerseRes
+irods_default_repl_resource: taccCorralRes
 irods_storage_resources: []
+
+irods_aegis_resource: aegisUA1Res
+irods_aegis_repl_resource: aegisReplRes

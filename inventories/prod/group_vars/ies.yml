@@ -1,7 +1,0 @@
----
-bisque_url: https://bisque.cyverse.org
-bisque_password: '4iplant6!'
-
-sysctl_kernel:
-  - name: pid_max
-    value: 131071

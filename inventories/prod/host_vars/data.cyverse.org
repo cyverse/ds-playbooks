@@ -1,4 +1,0 @@
----
-host_aliases:
-  - data.iplantcollaborative.org
-  - ares.iplantcollaborative.org

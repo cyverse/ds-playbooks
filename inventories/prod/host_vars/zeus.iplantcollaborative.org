@@ -1,7 +1,0 @@
----
-rebootable: false
-
-irods_storage_resources:
-  - name: hades
-    vault: /gpfs1/irods_vault
-    context: minimum_free_space_for_create_in_bytes=122348585877504

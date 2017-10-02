@@ -1,8 +1,0 @@
----
-host_aliases:
-  - r03c07u01-ds01.cyverse.org
-
-irods_storage_resources:
-  - name: ds01
-    vault: /irods_vault/ds01
-    context: minimum_free_space_for_create_in_bytes=35861217343488

@@ -36,6 +36,10 @@
       irods_default_resource_directory: "{{ irods_default_resource_dir 
                                            | default('/var/lib/irods/iRODS/Vault') }}"
       irods_default_resource_name: "{{ irods_default_resource }}"
+      irods_default_repl_resource_name: "{{ irods_default_repl_resource }}"
+      irods_aegis_resource_name: "{{ irods_aegis_resource }}"
+      irods_aegis_repl_resource_name: "{{ irods_aegis_repl_resource }}"
+      irods_host_aliases: "{{ host_aliases }}"
       irods_negotiation_key: "{{ negotiation_key }}"
       irods_parallel_transfer_buffer_size: "{{ parallel_transfer_buffer_size }}"
       irods_server_control_plane_key: "{{ server_control_plane_key }}"
@@ -64,7 +68,7 @@
   gather_facts: false
   tasks:
     - name: initialize free space estimate
-      with_items: "{{ irods_resources }}"
+      with_items: "{{ irods_storage_resources }}"
       shell: |
         if ! resc=$(iadmin lr '{{ item.name }}') || [ "$resc" = 'No rows found']
         then
@@ -92,7 +96,7 @@
       changed_when: out.stdout == 'changed'
 
     - name: set context
-      with_items: "{{ irods_resources }}"
+      with_items: "{{ irods_storage_resources }}"
       shell: |
         if ! currentContext=$(iadmin lr '{{ item.name }}' | sed --quiet 's/^resc_context: //p')
         then

@@ -3,15 +3,14 @@
 set -e
 
 readonly ExecName=$(readlink --canonicalize "$0")
-readonly PlaybookDir=$(dirname "$ExecName")/playbooks
+readonly RolesDir=$(dirname "$ExecName")/ext_roles
 
-for roleDir in $(find "$PlaybookDir" -type d -name roles)
+# ansible-galaxy won't update roles installed through dependencies, so delete all roles before
+# updating
+for role in $(find "$RolesDir" -maxdepth 1 -mindepth 1 -type d)
 do
-  # ansible-galaxy won't update roles installed through dependencies, so delete all roles before
-  # updating
-  for role in $(find "$roleDir" -maxdepth 1 -mindepth 1 -type d)
-  do
-    rm --force --recursive "$role"
-  done
-  ansible-galaxy install --force --role-file="$roleDir"/requirements.yml --roles-path="$roleDir"
+  rm --force --recursive "$role"
 done
+
+ansible-galaxy install --force --role-file="$RolesDir"/requirements.yml --roles-path="$RolesDir"
+

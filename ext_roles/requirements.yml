@@ -3,5 +3,12 @@
   src: https://github.com/CyVerse-Ansible/ansible-cyverse-irods-cfg
   version: master
 
+- name: cyverse.ip
+  src: CyVerse-Ansible.ip
+
 - name: cyverse.rabbitmq-vhost
   src: CyVerse-Ansible.rabbitmq-vhost
+
+- name: jtyr.grub_cmdline
+  src: jtyr.grub_cmdline
+

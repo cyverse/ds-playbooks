@@ -1,5 +1,0 @@
----
-irods_resources:
-  - name: ds03
-    vault: /irods_vault/ds03
-    context: minimum_free_space_for_create_in_bytes=35861217343488

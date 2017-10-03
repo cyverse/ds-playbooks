@@ -1,7 +1,0 @@
----
-ansible_port: 22
-
-irods_resources:
-  - name: aegisUA1Res
-    vault: /data/Vault
-    context: minimum_free_space_for_create=12000201120153

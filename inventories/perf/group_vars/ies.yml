@@ -1,4 +1,0 @@
----
-sysctl_kernel:
-  - name: pid_max
-    value: 131071

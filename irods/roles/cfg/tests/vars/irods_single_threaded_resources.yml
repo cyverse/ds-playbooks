@@ -1,0 +1,5 @@
+---
+irods_single_threaded_resources:
+  - resource-1
+  - resource-2
+

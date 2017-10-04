@@ -1,0 +1,3 @@
+---
+irods_aegis_resource_name: aegisIngest
+irods_aegis_repl_resource_name: aegisReplication

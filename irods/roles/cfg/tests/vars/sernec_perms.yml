@@ -1,0 +1,12 @@
+---
+irods_sernec_owners:
+  - own1
+  - own2
+
+irods_sernec_writers:
+  - write1
+  - write2
+
+irods_sernec_readers:
+  - read1
+  - read2

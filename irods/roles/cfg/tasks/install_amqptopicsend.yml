@@ -1,0 +1,10 @@
+---
+- name: verify that pika is installed
+  shell: pip2.6 show pika
+  changed_when: false
+
+- name: install amqptopicsend.py
+  copy:
+    src: var/lib/irods/iRODS/server/bin/cmd/amqptopicsend.py
+    dest: /var/lib/irods/iRODS/server/bin/cmd/
+    owner: irods

@@ -1,0 +1,5 @@
+---
+- name: reload rules
+  file:
+    path: /etc/irods/core.re
+    state: touch

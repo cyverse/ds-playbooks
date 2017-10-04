@@ -30,7 +30,7 @@
     icat_host: "{{ groups['ies'][0] }}"
 
   roles:
-    - role: cyverse.cyverse-irods-cfg
+    - role: cfg
       irods_icat_host: "{{ icat_host }}"
       irods_default_number_of_transfer_threads: "{{ default_number_of_transfer_threads }}"
       irods_default_resource_name: "{{ irods_default_resource }}"

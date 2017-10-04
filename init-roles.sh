@@ -11,7 +11,10 @@ do
 
   # ansible-galaxy won't update roles installed through dependencies, so delete all roles before
   # updating
-  for role in $(sed --quiet 's/^\(-\| \) name: //p' "$reqFile")
+  roles=$(find "$roleDir" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort)
+  keepers=$(sed --quiet 's/^!//p' "$roleDir"/.gitignore | sort --unique)
+
+  for role in $(comm -2 -3 <(echo "$roles") <(echo "$keepers"))
   do
     rm --force --recursive "$roleDir"/"$role"
   done

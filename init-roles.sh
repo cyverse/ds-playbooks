@@ -3,7 +3,7 @@
 set -e
 
 readonly ExecName=$(readlink --canonicalize "$0")
-readonly RolesDir=$(dirname "$ExecName")/ext_roles
+readonly RolesDir=$(dirname "$ExecName")/roles
 
 # ansible-galaxy won't update roles installed through dependencies, so delete all roles before
 # updating

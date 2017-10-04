@@ -7,12 +7,14 @@ readonly PlaybooksDir=$(dirname "$ExecName")
 
 for roleDir in $(find "$PlaybooksDir" -type d -name roles)
 do
+  reqFile="$roleDir"/requirements.yml
+
   # ansible-galaxy won't update roles installed through dependencies, so delete all roles before
   # updating
-  for role in $(find "$roleDir" -maxdepth 1 -mindepth 1 -type d)
+  for role in $(sed --quiet 's/^\(-\| \) name: //p' "$reqFile")
   do
-    rm --force --recursive "$role"
+    rm --force --recursive "$roleDir"/"$role"
   done
 
-  ansible-galaxy install --force --role-file="$roleDir"/requirements.yml --roles-path="$roleDir"
+  ansible-galaxy install --force --role-file="$reqFile" --roles-path="$roleDir"
 done

@@ -5,6 +5,6 @@
 
 - name: install amqptopicsend.py
   copy:
-    src: var/lib/irods/iRODS/server/bin/cmd/amqptopicsend.py
+    src: cmd/amqptopicsend.py
     dest: /var/lib/irods/iRODS/server/bin/cmd/
     owner: irods

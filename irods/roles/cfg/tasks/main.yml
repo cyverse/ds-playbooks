@@ -8,7 +8,7 @@
     dest: /etc/irods/
     owner: irods
   with_fileglob:
-    - "etc/irods/*"
+    - "etc/*"
   notify:
     - reload rules
 

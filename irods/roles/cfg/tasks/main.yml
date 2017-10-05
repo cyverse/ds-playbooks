@@ -18,6 +18,6 @@
     dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
     owner: irods
   with_fileglob:
-    - "../templates/etc/irods/*.re.j2"
+    - "../templates/*"
   notify:
     - reload rules

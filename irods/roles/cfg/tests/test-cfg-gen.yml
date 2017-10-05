@@ -5,10 +5,10 @@
   vars_files:
     - ../defaults/main.yml
   vars:
-    aegis_env: "{{ lookup('template', '../templates/etc/irods/aegis-env.re.j2') }}"
-    bisque_env: "{{ lookup('template', '../templates/etc/irods/bisque-env.re.j2') }}"
-    ipc_env: "{{ lookup('template', '../templates/etc/irods/ipc-env.re.j2') }}"
-    sernec_env: "{{ lookup('template', '../templates/etc/irods/sernec-env.re.j2') }}"
+    aegis_env: "{{ lookup('template', '../templates/aegis-env.re.j2') }}"
+    bisque_env: "{{ lookup('template', '../templates/bisque-env.re.j2') }}"
+    ipc_env: "{{ lookup('template', '../templates/ipc-env.re.j2') }}"
+    sernec_env: "{{ lookup('template', '../templates/sernec-env.re.j2') }}"
   tasks:
     - name: verify constants expand correctly in ipc-env.re.j2
       assert:
@@ -43,7 +43,7 @@
     - ../defaults/main.yml
     - vars/aegis_opts.yml
   vars:
-    aegis_env: "{{ lookup('template', '../templates/etc/irods/aegis-env.re.j2') }}"
+    aegis_env: "{{ lookup('template', '../templates/aegis-env.re.j2') }}"
   tasks:
     - name: verify params
       assert:
@@ -58,7 +58,7 @@
     - ../defaults/main.yml
     - vars/single_threaded_resources.yml
   vars:
-    ipc_env: "{{ lookup('template', '../templates/etc/irods/ipc-env.re.j2') }}"
+    ipc_env: "{{ lookup('template', '../templates/ipc-env.re.j2') }}"
   tasks:
     - name: verify acSetNumThreads defined correctly in ipc-env.re
       assert:
@@ -73,7 +73,7 @@
     - ../defaults/main.yml
     - vars/bisque_irods_host.yml
   vars:
-    bisque_env: "{{ lookup('template', '../templates/etc/irods/bisque-env.re.j2') }}"
+    bisque_env: "{{ lookup('template', '../templates/bisque-env.re.j2') }}"
   tasks:
     - name: verify bisque_env
       assert:
@@ -87,7 +87,7 @@
     - ../defaults/main.yml
     - vars/sernec_perms.yml
   vars:
-    sernec_env: "{{ lookup('template', '../templates/etc/irods/sernec-env.re.j2') }}"
+    sernec_env: "{{ lookup('template', '../templates/sernec-env.re.j2') }}"
   tasks:
     - name: verify sernec_env
       assert:

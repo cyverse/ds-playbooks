@@ -1,7 +1,6 @@
 ---
 dependencies:
-  - name: CyVerse-Ansible.irods-cfg
-    version: master
+  - role: cyverse.irods-cfg
     vars:
       irods_cfg_client_server_negotiation: "{{ irods_client_server_negotiation }}"
       irods_cfg_client_server_policy: CS_NEG_REFUSE

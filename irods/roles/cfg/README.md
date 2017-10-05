@@ -17,7 +17,6 @@ Variable                                  | Required | Default                  
 ----------------------------------------- | -------- | -------------------------------- | ------------------------------- | --------
 `irods_aegis_resource_name`               | no       | aegisIngestRes                   |                                 | the name of the aegis resource where newly uploaded files are written
 `irods_aegis_repl_resource_name`          | no       | aegisReplRes                     |                                 | the name of the aegis resource where replicas are written
-`irods_automate_repl`                     | no       | false                            |                                 | whether or not to automate replication from default resource to default repl resource
 `irods_icat_host`                         | no       | localhost                        |                                 | the FQDN of the IES
 `irods_client_server_negotiation`         | no       | request_server_negotiation       | request_server_negotiation, off | indicates whether or not to use advanced negotiation
 `irods_default_number_of_transfer_threads | no       | 4                                |                                 | the default maximum number of transfer streams for parallel transfer

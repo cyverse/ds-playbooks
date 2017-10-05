@@ -1,5 +1,4 @@
 ---
-irods_automate_repl: false
 irods_icat_host: localhost
 irods_client_server_negotiation: request_server_negotiation
 irods_default_number_of_transfer_threads: 4

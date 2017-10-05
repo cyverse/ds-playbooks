@@ -3,7 +3,9 @@
 ipc_AMQP_EPHEMERAL = {% if irods_amqp_ephemeral %}true{% else %}false{% endif %}
 
 ipc_IES_IP = '{{ lookup("dig", irods_icat_host) }}'
+
 ipc_RE_HOST = '{{ irods_icat_host }}'
+ipc_MAX_NUM_RE_PROCS = {{ irods_max_num_re_procs }}
 
 ipc_DEFAULT_RESC = '{{ irods_default_resource_name }}'
 ipc_DEFAULT_REPL_RESC = '{{ irods_default_repl_resource_name }}'

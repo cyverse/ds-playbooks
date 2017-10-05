@@ -24,6 +24,7 @@ Variable                                  | Required | Default                  
 `irods_default_resource_directory`        | no       |                                  |                                 | the absolute path to the vault on the resource server being configured (N/A when configuring IES and it doesn't host a resource)
 \irods_default_repl_resource_name`        | no       | `irods_default_resource_name`    |                                 | the default resource for replication
 `irods_default_resource_name`             | no       | demoResc                         |                                 | the name of the default resource
+`irods_max_num_re_procs`                  | no       | 4                                |                                 | the maximum number of rule engine processes to run
 `irods_negotiation_key`                   | no       | TEMPORARY_32byte_negotiation_key |                                 | the negotiation key
 `irods_server_control_plane_key`          | no       | TEMPORARY__32byte_ctrl_plane_key |                                 | the server control plane key
 `irods_parallel_transfer_buffer_size      | no       | 4                                |                                 | the transfer buffer size in MiB for each stream during parallel transfer

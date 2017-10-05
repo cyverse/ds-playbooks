@@ -7,6 +7,7 @@ irods_default_resource_name: demoResc
 irods_default_repl_resource_name: "{{ irods_default_resource_name }}"
 irods_default_resource_directory: /var/lib/irods/iRODS/Vault
 irods_host_aliases: []
+irods_max_num_re_procs: 4
 irods_negotiation_key: TEMPORARY_32byte_negotiation_key
 irods_server_control_plane_key: TEMPORARY__32byte_ctrl_plane_key
 irods_server_port_range_start: 20000

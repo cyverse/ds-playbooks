@@ -401,9 +401,9 @@ ipc_acPreConnect(*OUT) { *OUT = 'CS_NEG_REFUSE'; }
 ipc_acSetNumThreads { msiSetNumThreads('default', 'default', 'default'); }
 
 
-# Have eight rule engine processes
+# Set maximum number of rule engine processes
 #
-ipc_acSetReServerNumProc { msiSetReServerNumProc('8'); }
+ipc_acSetReServerNumProc { msiSetReServerNumProc(str(ipc_MAX_NUM_RE_PROCS)); }
 
 
 # This rule makes the admin group owner of a collection when a collection is created by an

@@ -25,6 +25,7 @@ dependencies:
           'db_username': irods_db_username
         } if inventory_hostname == irods_icat_host else None }}"
       irods_cfg_icat_host: "{{ irods_icat_host }}"
+      irods_cfg_maximum_number_of_concurrent_rule_engine_server_processes: 8
       irods_cfg_negotiation_key: "{{ irods_negotiation_key }}"
       irods_cfg_re_additional_rulebases:
         - ipc-custom

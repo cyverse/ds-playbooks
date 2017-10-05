@@ -4,4 +4,4 @@
 #
 # These are the environment-specific BisQue rules.
 
-bisque_IRODS_URL_BASE = 'irods://{{ irods_bisque_irods_host | default(irods_icat_host) }}'  
+bisque_IRODS_URL_BASE = 'irods://{{ irods_bisque_irods_host | default(cfg_icat_host) }}'  

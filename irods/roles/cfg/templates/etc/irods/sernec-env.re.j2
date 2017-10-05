@@ -2,6 +2,6 @@
 #
 # environment specific sernec rules
 
-sernec_OWNERS = list({{ irods_sernec_owners | map('to_json') | join(', ') }})
-sernec_WRITERS = list({{ irods_sernec_writers | map('to_json') | join(', ') }})
-sernec_READERS = list({{ irods_sernec_readers | map('to_json') | join(', ') }})
+sernec_OWNERS = list({{ cfg_sernec_owners | map('to_json') | join(', ') }})
+sernec_WRITERS = list({{ cfg_sernec_writers | map('to_json') | join(', ') }})
+sernec_READERS = list({{ cfg_sernec_readers | map('to_json') | join(', ') }})

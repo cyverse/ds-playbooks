@@ -2,38 +2,38 @@
 dependencies:
   - role: cyverse.irods-cfg
     vars:
-      irods_cfg_client_server_negotiation: "{{ irods_client_server_negotiation }}"
+      irods_cfg_client_server_negotiation: "{{ cfg_client_server_negotiation }}"
       irods_cfg_client_server_policy: CS_NEG_REFUSE
       irods_cfg_default_hash_scheme: MD5
-      irods_cfg_default_number_of_transfer_threads: "{{ irods_default_number_of_transfer_threads }}"
-      irods_cfg_default_resource_directory: "{{ irods_default_resource_directory }}"
-      irods_cfg_default_resource_name: "{{ irods_default_resource_name }}"
+      irods_cfg_default_number_of_transfer_threads: "{{ cfg_default_number_of_transfer_threads }}"
+      irods_cfg_default_resource_directory: "{{ cfg_default_resource_directory }}"
+      irods_cfg_default_resource_name: "{{ cfg_default_resource_name }}"
       irods_cfg_environment_variables:  "{{
-        { 'IRODS_AMQP_URI': irods_amqp_uri } if inventory_hostname == irods_icat_host else
+        { 'IRODS_AMQP_URI': cfg_amqp_uri } if inventory_hostname == cfg_icat_host else
         {} }}"
-      irods_cfg_federation: "{{ irods_federation }}"
+      irods_cfg_federation: "{{ cfg_federation }}"
       irods_cfg_host_entries: "{{ [
           {
             'address_type': 'local',
-            'addresses': ([inventory_hostname] + irods_host_aliases)
+            'addresses': ([inventory_hostname] + cfg_host_aliases)
           }
-        ] if (irods_host_aliases | count) > 0 else [] }}"
+        ] if (cfg_host_aliases | count) > 0 else [] }}"
       irods_cfg_icat: "{{ {
           'db_host': irods_db_host,
           'db_password': irods_db_password,
           'db_port': irods_db_port,
           'db_username': irods_db_username
-        } if inventory_hostname == irods_icat_host else None }}"
-      irods_cfg_icat_host: "{{ irods_icat_host }}"
+        } if inventory_hostname == cfg_icat_host else None }}"
+      irods_cfg_icat_host: "{{ cfg_icat_host }}"
       irods_cfg_maximum_number_of_concurrent_rule_engine_server_processes: 8
-      irods_cfg_negotiation_key: "{{ irods_negotiation_key }}"
+      irods_cfg_negotiation_key: "{{ cfg_negotiation_key }}"
       irods_cfg_re_additional_rulebases:
         - ipc-custom
-      irods_cfg_server_control_plane_key: "{{ irods_server_control_plane_key }}"
-      irods_cfg_server_port_range_end: "{{ irods_server_port_range_end }}"
-      irods_cfg_server_port_range_start: "{{ irods_server_port_range_start }}"
+      irods_cfg_server_control_plane_key: "{{ cfg_server_control_plane_key }}"
+      irods_cfg_server_port_range_end: "{{ cfg_server_port_range_end }}"
+      irods_cfg_server_port_range_start: "{{ cfg_server_port_range_start }}"
       irods_cfg_transfer_buffer_size_for_parallel_transfer: "{{
-        irods_parallel_transfer_buffer_size }}"
-      irods_cfg_zone_key: "{{ irods_zone_key }}"
+        cfg_parallel_transfer_buffer_size }}"
+      irods_cfg_zone_key: "{{ cfg_zone_key }}"
       irods_cfg_zone_name: iplant
-      irods_cfg_zone_user: "{{ irods_zone_user }}"
+      irods_cfg_zone_user: "{{ cfg_zone_user }}"

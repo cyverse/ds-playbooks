@@ -1,6 +1,6 @@
 ---
 - include: install_amqptopicsend.yml
-  when: inventory_hostname == irods_icat_host
+  when: inventory_hostname == cfg_icat_host
 
 - name: place static config in /etc/irods
   copy:
@@ -8,7 +8,7 @@
     dest: /etc/irods/
     owner: irods
   with_fileglob:
-    - "etc/irods/*"
+    - "etc/*"
   notify:
     - reload rules
 
@@ -18,6 +18,6 @@
     dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
     owner: irods
   with_fileglob:
-    - "../templates/etc/irods/*.re.j2"
+    - "../templates/*"
   notify:
     - reload rules

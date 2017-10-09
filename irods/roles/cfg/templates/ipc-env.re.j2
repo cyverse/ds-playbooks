@@ -1,0 +1,19 @@
+# The production environment rule customizations belong in this file.
+
+ipc_AMQP_EPHEMERAL = {% if cfg_amqp_ephemeral %}true{% else %}false{% endif %}
+
+ipc_IES_IP = '{{ lookup("dig", cfg_icat_host) }}'
+ipc_RE_HOST = '{{ cfg_icat_host }}'
+
+ipc_DEFAULT_RESC = '{{ cfg_default_resource_name }}'
+ipc_DEFAULT_REPL_RESC = '{{ cfg_default_repl_resource_name }}'
+
+{% if cfg_single_threaded_resources|length > 0 %}
+acSetNumThreads {
+{% for resc in cfg_single_threaded_resources %}
+  ON($rescName == '{{ resc }}' && $clientAddr == ipc_IES_IP) {
+    msiSetNumThreads('default', '0', 'default');
+  }
+{% endfor %}
+}
+{% endif %}

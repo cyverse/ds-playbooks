@@ -58,7 +58,7 @@
     - ../defaults/main.yml
     - vars/max_num_re_procs.yml
   vars:
-    ipc_env: "{{ lookup('template', '../templates/etc/irods/ipc-env.re.j2') }}"
+    ipc_env: "{{ lookup('template', '../templates/ipc-env.re.j2') }}"
   tasks:
     - name: verify ipc_MAX_NUM_RE_PROCS
       assert:

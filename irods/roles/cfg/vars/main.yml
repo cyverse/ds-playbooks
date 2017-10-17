@@ -17,13 +17,7 @@ _cfg_client_server_negotiation: "{{
   cfg_client_server_negotiation if cfg_client_server_negotiation else
   None }}"
 
-_cfg_db: "{{ cfg_db if cfg_db else
-  {
-    'host': inventory_hostname,
-    'password': 'testpassword',
-    'port': 5432,
-    'username': 'irods'
-  } }}"
+_cfg_db: "{{ cfg_db if cfg_db else None }}"
 
 _cfg_default_number_of_transfer_threads: "{{
   cfg_default_number_of_transfer_threads if cfg_default_number_of_transfer_threads else

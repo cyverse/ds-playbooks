@@ -1,2 +1,2 @@
 ---
-irods_bisque_irods_host: custom.irods.host
+cfg_bisque_irods_host: custom.irods.host

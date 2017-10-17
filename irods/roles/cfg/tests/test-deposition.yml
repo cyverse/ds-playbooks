@@ -70,11 +70,11 @@
     - name: verify irods_environment.json is created correctly
       assert:
         that:
-          - irods_environment.cfg_client_server_negotiation == 'request_server_negotiation'
+          - irods_environment.irods_client_server_negotiation == 'request_server_negotiation'
           - irods_environment.irods_client_server_policy == 'CS_NEG_REFUSE'
           - irods_environment.irods_default_hash_scheme == 'MD5'
           - irods_environment.irods_default_resource == 'demoResc'
-          - irods_environment.cfg_server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
+          - irods_environment.irods_server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
           - irods_environment.irods_user_name == 'rods'
           - irods_environment.irods_zone_name == 'iplant'
 

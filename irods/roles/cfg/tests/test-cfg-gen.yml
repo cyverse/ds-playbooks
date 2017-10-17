@@ -4,6 +4,7 @@
   gather_facts: false
   vars_files:
     - ../defaults/main.yml
+    - ../vars/main.yml
   vars:
     aegis_env: "{{ lookup('template', '../templates/aegis-env.re.j2') }}"
     bisque_env: "{{ lookup('template', '../templates/bisque-env.re.j2') }}"
@@ -17,6 +18,7 @@
           - ipc_env | search("ipc_DEFAULT_REPL_RESC = 'demoResc'")
           - ipc_env | search("ipc_RE_HOST = 'localhost'")
           - ipc_env | search("ipc_MAX_NUM_RE_PROCS = 4")
+
     - name: verify constants expand correctly in aegis-env.re.j2
       assert:
         that:
@@ -42,6 +44,7 @@
   vars_files:
     - ../defaults/main.yml
     - vars/aegis_opts.yml
+    - ../vars/main.yml
   vars:
     aegis_env: "{{ lookup('template', '../templates/aegis-env.re.j2') }}"
   tasks:
@@ -57,6 +60,7 @@
   vars_files:
     - ../defaults/main.yml
     - vars/max_num_re_procs.yml
+    - ../vars/main.yml
   vars:
     ipc_env: "{{ lookup('template', '../templates/ipc-env.re.j2') }}"
   tasks:
@@ -71,6 +75,7 @@
   vars_files:
     - ../defaults/main.yml
     - vars/single_threaded_resources.yml
+    - ../vars/main.yml
   vars:
     ipc_env: "{{ lookup('template', '../templates/ipc-env.re.j2') }}"
   tasks:
@@ -86,6 +91,7 @@
   vars_files:
     - ../defaults/main.yml
     - vars/bisque_irods_host.yml
+    - ../vars/main.yml
   vars:
     bisque_env: "{{ lookup('template', '../templates/bisque-env.re.j2') }}"
   tasks:
@@ -100,6 +106,7 @@
   vars_files:
     - ../defaults/main.yml
     - vars/sernec_perms.yml
+    - ../vars/main.yml
   vars:
     sernec_env: "{{ lookup('template', '../templates/sernec-env.re.j2') }}"
   tasks:

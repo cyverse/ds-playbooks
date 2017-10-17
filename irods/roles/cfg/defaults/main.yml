@@ -1,36 +1,34 @@
 ---
-cfg_icat_host: localhost
-cfg_client_server_negotiation: request_server_negotiation
-cfg_default_number_of_transfer_threads: 4
-cfg_default_resource_name: demoResc
-cfg_default_repl_resource_name: "{{ cfg_default_resource_name }}"
-cfg_default_resource_directory: /var/lib/irods/iRODS/Vault
-cfg_host_aliases: []
-cfg_max_num_re_procs: 4
-cfg_negotiation_key: TEMPORARY_32byte_negotiation_key
-cfg_server_control_plane_key: TEMPORARY__32byte_ctrl_plane_key
-cfg_server_port_range_start: 20000
-cfg_server_port_range_end: 20199
-cfg_parallel_transfer_buffer_size: 4
-cfg_zone_key: TEMPORARY_zone_key
-cfg_zone_user: rods
+cfg_icat_host: null
+cfg_client_server_negotiation: null
+cfg_default_number_of_transfer_threads: null
+cfg_default_resource_name: null
+cfg_default_repl_resource_name: null
+cfg_default_resource_directory: null
+cfg_host_aliases: null
+cfg_max_num_re_procs: null
+cfg_negotiation_key: null
+cfg_server_control_plane_key: null
+cfg_server_port_range_start: null
+cfg_server_port_range_end: null
+cfg_parallel_transfer_buffer_size: null
+cfg_zone_key: null
+cfg_zone_user: null
 
-cfg_amqp_uri: amqp://guest:guest@localhost:5672/%2F
-cfg_amqp_ephemeral: true
+cfg_amqp_uri: null
+cfg_amqp_ephemeral: null
 
-cfg_db:
-  host: localhost
-  port: 5432
-  username: irods
-  password: testpassword
+cfg_db: null
 
-cfg_single_threaded_resources: []
+cfg_single_threaded_resources: null
 
-cfg_aegis_resource_name: aegisIngestRes
-cfg_aegis_repl_resource_name: aegisReplRes
+cfg_aegis_resource_name: null
+cfg_aegis_repl_resource_name: null
 
-cfg_sernec_owners: []
-cfg_sernec_writers: []
-cfg_sernec_readers: []
+cfg_sernec_owners: null
+cfg_sernec_writers: null
+cfg_sernec_readers: null
 
-cfg_federation: []
+cfg_federation: null
+
+cfg_bisque_irods_host: null

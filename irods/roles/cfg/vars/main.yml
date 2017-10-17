@@ -15,7 +15,7 @@ _cfg_bisque_irods_host: "{{ cfg_bisque_irods_host if cfg_bisque_irods_host else 
 
 _cfg_client_server_negotiation: "{{
   cfg_client_server_negotiation if cfg_client_server_negotiation else
-  'request_server_negotiation' }}"
+  None }}"
 
 _cfg_db: "{{ cfg_db if cfg_db else
   {
@@ -27,7 +27,7 @@ _cfg_db: "{{ cfg_db if cfg_db else
 
 _cfg_default_number_of_transfer_threads: "{{
   cfg_default_number_of_transfer_threads if cfg_default_number_of_transfer_threads else
-  4 }}"
+  None }}"
 
 _cfg_default_repl_resource_name: "{{
   cfg_default_repl_resource_name if cfg_default_repl_resource_name else
@@ -40,7 +40,7 @@ _cfg_default_resource_directory: "{{
 _cfg_default_resource_name: "{{ cfg_default_resource_name if cfg_default_resource_name else
                                 'demoResc' }}"
 
-_cfg_federation: "{{ cfg_federation if cfg_federation else [] }}"
+_cfg_federation: "{{ cfg_federation if cfg_federation else None }}"
 
 _cfg_host_aliases: "{{ cfg_host_aliases if cfg_host_aliases else [] }}"
 
@@ -48,12 +48,11 @@ _cfg_icat_host: "{{ cfg_icat_host if cfg_icat_host else 'localhost' }}"
 
 _cfg_max_num_re_procs: "{{ cfg_max_num_re_procs if cfg_max_num_re_procs else 4 }}"
 
-_cfg_negotiation_key: "{{ cfg_negotiation_key if cfg_negotiation_key else
-                          'TEMPORARY_32byte_negotiation_key' }}"
+_cfg_negotiation_key: "{{ cfg_negotiation_key if cfg_negotiation_key else None }}"
 
 _cfg_parallel_transfer_buffer_size: "{{
   cfg_parallel_transfer_buffer_size if cfg_parallel_transfer_buffer_size else
-  4 }}"
+  None }}"
 
 _cfg_sernec_owners: "{{ cfg_sernec_owners if cfg_sernec_owners else [] }}"
 
@@ -62,18 +61,17 @@ _cfg_sernec_readers: "{{ cfg_sernec_readers if cfg_sernec_readers else [] }}"
 _cfg_sernec_writers: "{{ cfg_sernec_writers if cfg_sernec_writers else [] }}"
 
 _cfg_server_control_plane_key: "{{ cfg_server_control_plane_key if cfg_server_control_plane_key else
-                                   'TEMPORARY__32byte_ctrl_plane_key' }}"
+                                   None }}"
 
-_cfg_server_port_range_end: "{{ cfg_server_port_range_end if cfg_server_port_range_end else
-                                20199 }}"
+_cfg_server_port_range_end: "{{ cfg_server_port_range_end if cfg_server_port_range_end else None }}"
 
 _cfg_server_port_range_start: "{{ cfg_server_port_range_start if cfg_server_port_range_start else
-                                  20000 }}"
+                                  None }}"
 
 _cfg_single_threaded_resources: "{{
   cfg_single_threaded_resources if cfg_single_threaded_resources else
   [] }}"
 
-_cfg_zone_key: "{{ cfg_zone_key if cfg_zone_key else 'TEMPORARY_zone_key' }}"
+_cfg_zone_key: "{{ cfg_zone_key if cfg_zone_key else None }}"
 
-_cfg_zone_user: "{{ cfg_zone_user if cfg_zone_user else 'rods' }}"
+_cfg_zone_user: "{{ cfg_zone_user if cfg_zone_user else None }}"

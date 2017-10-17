@@ -19,7 +19,7 @@ _cfg_client_server_negotiation: "{{
 
 _cfg_db: "{{ cfg_db if cfg_db else
   {
-    'host': 'localhost',
+    'host': inventory_hostname,
     'password': 'testpassword',
     'port': 5432,
     'username': 'irods'

@@ -19,8 +19,13 @@ dependencies:
           }
         ] if (_cfg_host_aliases | count) > 0 else [] }}"
       irods_cfg_icat: "{{ None if inventory_hostname != _cfg_icat_host else
-                          _cfg_db if _cfg_db else
-                          [] }}"
+                          {
+                            'db_host': _cfg_db.host,
+                            'db_port': _cfg_db.port,
+                            'db_password': _cfg_db.password,
+                            'db_user_name': _cfg_db.username
+                          } if _cfg_db else
+                          {} }}"
       irods_cfg_icat_host: "{{ _cfg_icat_host }}"
       irods_cfg_maximum_number_of_concurrent_rule_engine_server_processes: "{{
         _cfg_max_num_re_procs }}"

@@ -19,10 +19,10 @@ _cfg_client_server_negotiation: "{{
 
 _cfg_db: "{{ cfg_db if cfg_db else
   {
-    db_host: localhost
-    db_port: 5432
-    db_username: irods
-    db_password: testpassword
+    host: localhost
+    port: 5432
+    password: testpassword
+    username: irods
   } }}"
 
 _cfg_default_number_of_transfer_threads: "{{

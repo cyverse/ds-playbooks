@@ -21,8 +21,8 @@ dependencies:
       irods_cfg_icat: "{{ None if inventory_hostname != _cfg_icat_host else
                           {
                             'db_host': _cfg_db.host,
-                            'db_port': _cfg_db.port,
                             'db_password': _cfg_db.password,
+                            'db_port': _cfg_db.port,
                             'db_user_name': _cfg_db.username
                           } if _cfg_db else
                           {} }}"

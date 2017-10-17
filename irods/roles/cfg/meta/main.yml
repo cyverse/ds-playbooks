@@ -18,8 +18,8 @@ dependencies:
             'addresses': ([inventory_hostname] + _cfg_host_aliases)
           }
         ] if (_cfg_host_aliases | count) > 0 else [] }}"
-      irods_cfg_icat: "{{ None if inventory_hostname != _cfg_icat_host else 
-                          _cfg_icat if _cfg_icat else 
+      irods_cfg_icat: "{{ None if inventory_hostname != _cfg_icat_host else
+                          _cfg_db if _cfg_db else
                           [] }}"
       irods_cfg_icat_host: "{{ _cfg_icat_host }}"
       irods_cfg_maximum_number_of_concurrent_rule_engine_server_processes: "{{

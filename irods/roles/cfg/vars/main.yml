@@ -35,7 +35,7 @@ _cfg_default_repl_resource_name: "{{
 
 _cfg_default_resource_directory: "{{
   cfg_default_resource_directory if cfg_default_resource_directory else
-  '/var/lib/irods/iRODS/Vault' }}"
+  None }}"
 
 _cfg_default_resource_name: "{{ cfg_default_resource_name if cfg_default_resource_name else
                                 'demoResc' }}"

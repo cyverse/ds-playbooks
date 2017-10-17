@@ -1,34 +1,27 @@
 ---
-cfg_icat_host: null
+cfg_aegis_repl_resource_name: null
+cfg_aegis_resource_name: null
+cfg_amqp_ephemeral: null
+cfg_amqp_uri: null
+cfg_bisque_irods_host: null
 cfg_client_server_negotiation: null
+cfg_db: null
 cfg_default_number_of_transfer_threads: null
-cfg_default_resource_name: null
 cfg_default_repl_resource_name: null
 cfg_default_resource_directory: null
+cfg_default_resource_name: null
+cfg_federation: null
 cfg_host_aliases: null
+cfg_icat_host: null
 cfg_max_num_re_procs: null
 cfg_negotiation_key: null
-cfg_server_control_plane_key: null
-cfg_server_port_range_start: null
-cfg_server_port_range_end: null
 cfg_parallel_transfer_buffer_size: null
+cfg_sernec_owners: null
+cfg_sernec_readers: null
+cfg_sernec_writers: null
+cfg_server_control_plane_key: null
+cfg_server_port_range_end: null
+cfg_server_port_range_start: null
+cfg_single_threaded_resources: null
 cfg_zone_key: null
 cfg_zone_user: null
-
-cfg_amqp_uri: null
-cfg_amqp_ephemeral: null
-
-cfg_db: null
-
-cfg_single_threaded_resources: null
-
-cfg_aegis_resource_name: null
-cfg_aegis_repl_resource_name: null
-
-cfg_sernec_owners: null
-cfg_sernec_writers: null
-cfg_sernec_readers: null
-
-cfg_federation: null
-
-cfg_bisque_irods_host: null

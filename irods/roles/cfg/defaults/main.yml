@@ -12,7 +12,7 @@ cfg_default_resource_directory: null
 cfg_default_resource_name: null
 cfg_federation: null
 cfg_host_aliases: null
-cfg_icat_host: null
+cfg_ies_host: null
 cfg_max_num_re_procs: null
 cfg_negotiation_key: null
 cfg_parallel_transfer_buffer_size: null

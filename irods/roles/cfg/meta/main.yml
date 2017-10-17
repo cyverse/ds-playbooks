@@ -9,7 +9,7 @@ dependencies:
       irods_cfg_default_resource_directory: "{{ _cfg_default_resource_directory }}"
       irods_cfg_default_resource_name: "{{ _cfg_default_resource_name }}"
       irods_cfg_environment_variables:  "{{
-        { 'IRODS_AMQP_URI': _cfg_amqp_uri } if inventory_hostname == _cfg_icat_host else
+        { 'IRODS_AMQP_URI': _cfg_amqp_uri } if inventory_hostname == _cfg_ies_host else
         {} }}"
       irods_cfg_federation: "{{ _cfg_federation }}"
       irods_cfg_host_entries: "{{ [
@@ -18,7 +18,7 @@ dependencies:
             'addresses': ([inventory_hostname] + _cfg_host_aliases)
           }
         ] if (_cfg_host_aliases | count) > 0 else [] }}"
-      irods_cfg_icat: "{{ None if inventory_hostname != _cfg_icat_host else
+      irods_cfg_icat: "{{ None if inventory_hostname != _cfg_ies_host else
                           {
                             'db_host': _cfg_db.host,
                             'db_password': _cfg_db.password,
@@ -26,7 +26,7 @@ dependencies:
                             'db_user_name': _cfg_db.username
                           } if _cfg_db else
                           {} }}"
-      irods_cfg_icat_host: "{{ _cfg_icat_host }}"
+      irods_cfg_icat_host: "{{ _cfg_ies_host }}"
       irods_cfg_maximum_number_of_concurrent_rule_engine_server_processes: "{{
         _cfg_max_num_re_procs }}"
       irods_cfg_negotiation_key: "{{ _cfg_negotiation_key }}"

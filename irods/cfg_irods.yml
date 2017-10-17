@@ -31,7 +31,7 @@
 
   roles:
     - role: cfg
-      cfg_icat_host: "{{ icat_host }}"
+      cfg_ies_host: "{{ icat_host }}"
       cfg_default_number_of_transfer_threads: "{{ default_number_of_transfer_threads }}"
       cfg_default_resource_name: "{{ irods_default_resource }}"
       cfg_default_repl_resource_name: "{{ irods_default_repl_resource }}"
@@ -55,7 +55,7 @@
       cfg_single_threaded_resources: "{{ single_threaded_resources }}"
       cfg_amqp_uri: "amqp://{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ rabbitmq_host }}:{{ rabbitmq_port }}/{{ rabbitmq_vhost_uri }}"
       cfg_amqp_ephemeral: "{{ rabbitmq_ephemeral }}"
-      irods_bisque_irods_host: "{{ bisque_irods_host | default(icat_host) }}"
+      cfg_bisque_irods_host: "{{ bisque_irods_host | default(icat_host) }}"
       cfg_sernec_owners: "{{ sernec_owners | default([]) }}"
       cfg_sernec_writers: "{{ sernec_writers | default([]) }}"
       cfg_sernec_readers: "{{ sernec_readers | default([]) }}"

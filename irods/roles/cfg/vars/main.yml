@@ -11,7 +11,7 @@ _cfg_amqp_ephemeral: "{{
 
 _cfg_amqp_uri: "{{ cfg_amqp_uri if cfg_amqp_uri else 'amqp://guest:guest@localhost:5672/%2F' }}"
 
-_cfg_bisque_irods_host: "{{ cfg_bisque_irods_host if cfg_bisque_irods_host else _cfg_icat_host }}"
+_cfg_bisque_irods_host: "{{ cfg_bisque_irods_host if cfg_bisque_irods_host else _cfg_ies_host }}"
 
 _cfg_client_server_negotiation: "{{
   cfg_client_server_negotiation if cfg_client_server_negotiation else
@@ -44,7 +44,7 @@ _cfg_federation: "{{ cfg_federation if cfg_federation else None }}"
 
 _cfg_host_aliases: "{{ cfg_host_aliases if cfg_host_aliases else [] }}"
 
-_cfg_icat_host: "{{ cfg_icat_host if cfg_icat_host else inventory_hostname }}"
+_cfg_ies_host: "{{ cfg_ies_host if cfg_ies_host else inventory_hostname }}"
 
 _cfg_max_num_re_procs: "{{ cfg_max_num_re_procs if cfg_max_num_re_procs else 4 }}"
 

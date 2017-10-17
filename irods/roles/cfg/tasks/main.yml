@@ -1,6 +1,6 @@
 ---
 - include: install_amqptopicsend.yml
-  when: inventory_hostname == _cfg_icat_host
+  when: inventory_hostname == _cfg_ies_host
 
 - name: place static config in /etc/irods
   copy:

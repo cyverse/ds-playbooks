@@ -21,7 +21,7 @@ Variable                                 | Default                          | Ch
 `cfg_aegis_resource_name`                | aegisIngestRes                   |                                 | the name of the aegis resource where newly uploaded files are written
 `cfg_amqp_ephemeral`                     | true                             |                                 | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
 `cfg_amqp_uri`                           |                                  |                                 | the AMQP URI used to connect to the broker (N/A for non-IES resource servers)
-`cfg_bisque_irods_host`                  | `cfg_icat_host`                |                                 | The iRODS host to report to BisQue.
+`cfg_bisque_irods_host`                  | `cfg_ies_host`                |                                 | The iRODS host to report to BisQue.
 `cfg_client_server_negotiation`          | request_server_negotiation       | request_server_negotiation, off | indicates whether or not to use advanced negotiation
 `cfg_db`                                 |                                  |                                 | the DBMS connection information, see below (N/A for non-IES resource servers)
 `cfg_default_number_of_transfer_threads` | 4                                |                                 | the default maximum number of transfer streams for parallel transfer
@@ -29,7 +29,7 @@ Variable                                 | Default                          | Ch
 `cfg_default_resource_directory`         |                                  |                                 | the absolute path to the vault on the resource server being configured (N/A when configuring IES and it doesn't host a resource)
 `cfg_default_resource_name`              | demoResc                         |                                 | the name of the default resource
 `cfg_federation`                         | []                               |                                 | a list of other iRODS zones to federate with, see below
-`cfg_icat_host`                          | `inventory_hostname`                        |                                 | the FQDN of the IES
+`cfg_ies_host`                           | `inventory_hostname`                        |                                 | the FQDN of the IES
 `cfg_max_num_re_procs`                   | 4                                |                                 | the maximum number of rule engine processes to run
 `cfg_negotiation_key`                    | TEMPORARY_32byte_negotiation_key |                                 | the negotiation key
 `cfg_parallel_transfer_buffer_size`      | 4                                |                                 | the transfer buffer size in MiB for each stream during parallel transfer

@@ -17,7 +17,7 @@ Variable                                  | Required | Default                  
 ----------------------------------------- | -------- | -------------------------------- | ------------------------------- | --------
 `cfg_aegis_resource_name`               | no       | aegisIngestRes                   |                                 | the name of the aegis resource where newly uploaded files are written
 `cfg_aegis_repl_resource_name`          | no       | aegisReplRes                     |                                 | the name of the aegis resource where replicas are written
-`cfg_icat_host`                         | no       | localhost                        |                                 | the FQDN of the IES
+`cfg_icat_host`                         | no       | `inventory_hostname`                        |                                 | the FQDN of the IES
 `cfg_client_server_negotiation`         | no       | request_server_negotiation       | request_server_negotiation, off | indicates whether or not to use advanced negotiation
 `cfg_default_number_of_transfer_threads | no       | 4                                |                                 | the default maximum number of transfer streams for parallel transfer
 `cfg_default_resource_directory`        | no       |                                  |                                 | the absolute path to the vault on the resource server being configured (N/A when configuring IES and it doesn't host a resource)

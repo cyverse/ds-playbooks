@@ -19,10 +19,10 @@ _cfg_client_server_negotiation: "{{
 
 _cfg_db: "{{ cfg_db if cfg_db else
   {
-    host: localhost
-    port: 5432
-    password: testpassword
-    username: irods
+    'host': 'localhost',
+    'port': 5432,
+    'password': 'testpassword',
+    'username': 'irods'
   } }}"
 
 _cfg_default_number_of_transfer_threads: "{{
@@ -44,7 +44,7 @@ _cfg_federation: "{{ cfg_federation if cfg_federation else None }}"
 
 _cfg_host_aliases: "{{ cfg_host_aliases if cfg_host_aliases else [] }}"
 
-_cfg_icat_host: "{{ cfg_icat_host if cfg_icat_host else 'localhost' }}"
+_cfg_icat_host: "{{ cfg_icat_host if cfg_icat_host else inventory_hostname }}"
 
 _cfg_max_num_re_procs: "{{ cfg_max_num_re_procs if cfg_max_num_re_procs else 4 }}"
 

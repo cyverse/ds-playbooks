@@ -23,7 +23,7 @@ dependencies:
                             'db_host': _cfg_db.host,
                             'db_password': _cfg_db.password,
                             'db_port': _cfg_db.port,
-                            'db_user_name': _cfg_db.username
+                            'db_username': _cfg_db.username
                           } if _cfg_db else
                           {} }}"
       irods_cfg_icat_host: "{{ _cfg_ies_host }}"

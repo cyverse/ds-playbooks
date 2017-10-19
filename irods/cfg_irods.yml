@@ -66,34 +66,8 @@
   become_user: "{{ irods_service_account_name }}"
   gather_facts: false
   tasks:
-    - name: update free space estimate
-      with_items: "{{ irods_storage_resources }}"
-      shell: |
-        if ! resc=$(iadmin lr '{{ item.name }}') || [ "$resc" = 'No rows found']
-        then
-          exit 1
-        fi
-
-        estFreeSpace=$(sed --quiet 's/free_space: //p' <<< "$resc")
-
-        freeSpace=$(df --portability --block-size 1 '{{ item.vault }}' \
-                      | tail -1 \
-                      | awk '{ print $4 }')
-
-        if [ "$freeSpace" = "$estFreeSpace" ]
-        then
-          exit 0
-        fi
-
-        if ! iadmin modresc '{{ item.name }}' freespace "$freeSpace"
-        then
-          exit 1
-        fi
-
-        printf changed
-      register: out
-      changed_when: out.stdout == 'changed'
-
+    - include: tasks/set_resc_free_space.yml
+    
     - name: set context
       with_items: "{{ irods_storage_resources }}"
       shell: |

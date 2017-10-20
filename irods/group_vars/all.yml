@@ -1,0 +1,72 @@
+---
+_bisque_irods_host: "{{ bisque_irods_host if bisque_irods_host is defined else _icat_host }}"
+
+_dbms_password: "{{ dbms_password if dbms_password is defined else None }}"
+
+_dbms_port: "{{ dbms_port if dbms_port is defined else None }}"
+
+_dbms_username: "{{ dbms_username if dbms_username is defined else None }}"
+
+_default_number_of_transfer_threads: "{{
+  default_number_of_transfer_threads if default_number_of_transfer_threads is defined else
+  None }}"
+
+_ds_federation: "{{ ds_federation if ds_federation is defined else [] }}"
+
+_host_aliases: "{{ host_aliases if host_aliases is defined else [] }}"
+
+_icat_host: "{{ icat_host if icat_host is defined else groups['ies'][0] }}"
+
+_irods_aegis_repl_resource: "{{
+  irods_aegis_repl_resource if irods_aegis_repl_resource is defined else
+  'aegisReplRes' }}"
+
+_irods_aegis_resource: "{{ irods_aegis_resource if irods_aegis_resource is defined else
+                           'aegisIngestRes' }}"
+
+_irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else None }}"
+
+_irods_default_repl_resource: "{{
+  irods_default_repl_resource if irods_default_repl_resource is defined else
+  _irods_default_resource }}"
+
+_irods_default_resource: "{{ irods_default_resource if irods_default_resource is defined else
+                             'demoResc' }}"
+
+_irods_max_num_re_procs: "{{ irods_max_num_re_procs if irods_max_num_re_procs is defined else 4 }}"
+
+_negotiation_key: "{{ negotiation_key if negotiation_key is defined else None }}"
+
+_parallel_transfer_buffer_size: "{{
+  parallel_transfer_buffer_size if parallel_transfer_buffer_size is defined else
+  None }}"
+
+_rabbitmq_ephemeral: "{{ rabbitmq_ephemeral if rabbitmq_ephemeral is defined else True }}"
+
+_rabbitmq_password: "{{ rabbitmq_password if rabbitmq_password is defined else 'guest' }}"
+
+_rabbitmq_port: "{{ rabbitmq_port if rabbitmq_port is defined else 5672 }}"
+
+_rabbitmq_user: "{{ rabbitmq_user if rabbitmq_user is defined else 'guest' }}"
+
+_rabbitmq_vhost: "{{ rabbitmq_vhost if rabbitmq_vhost is defined else '/' }}"
+
+_sernec_owners: "{{ sernec_owners if sernec_owners is defined else [] }}"
+
+_sernec_readers: "{{ sernec_readers if sernec_readers is defined else [] }}"
+
+_sernec_writers: "{{ sernec_writers if sernec_writers is defined else [] }}"
+
+_server_control_plane_key: "{{ server_control_plane_key if server_control_plane_key is defined else
+                               None }}"
+
+_server_port_range_end: "{{ server_port_range_end if server_port_range_end is defined else None }}"
+
+_server_port_range_start: "{{ server_port_range_start if server_port_range_start is defined else
+                              None }}"
+
+_single_threaded_resources: "{{
+  single_threaded_resources if single_threaded_resources is defined else
+  [] }}"
+
+_zone_key: "{{ zone_key if zone_key is defined else None }}"

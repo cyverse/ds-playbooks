@@ -25,41 +25,84 @@
   become_user: "{{ irods_service_account_name }}"
   vars:
     dbms_host: "{{ groups['dbms'][0] }}"
-    icat_host: "{{ groups['ies'][0] }}"
-    rabbitmq_user_info: "{{ rabbitmq_user }}:{{ rabbitmq_password }}"
-    rabbitmq_authority: "{{ rabbitmq_user_info }}@{{ groups['rabbitmq'][0] }}:{{ rabbitmq_port }}"
-    rabbitmq_path: /{{ rabbitmq_vhost | replace('/', '%2F') }}
+    rabbitmq_user_info: "{{ _rabbitmq_user }}:{{ _rabbitmq_password }}"
+    rabbitmq_authority: "{{ rabbitmq_user_info }}@{{ groups['rabbitmq'][0] }}:{{ _rabbitmq_port }}"
+    rabbitmq_path: /{{ _rabbitmq_vhost | replace('/', '%2F') }}
+    rabbitmq_uri: amqp://{{ rabbitmq_authority }}{{ rabbitmq_path }}
   roles:
-    - role: cfg
+    - role: cyverse.irods-cfg
       vars:
-        cfg_aegis_repl_resource_name: "{{ irods_aegis_repl_resource }}"
-        cfg_aegis_resource_name: "{{ irods_aegis_resource }}"
-        cfg_amqp_ephemeral: "{{ rabbitmq_ephemeral }}"
-        cfg_amqp_uri: amqp://{{ rabbitmq_authority }}{{ rabbitmq_path }}
-        cfg_bisque_irods_host: "{{ bisque_irods_host | default(icat_host) }}"
-        cfg_db:
-          host: "{{ dbms_host }}"
-          password: "{{ dbms_password }}"
-          port: "{{ dbms_port }}"
-          username: "{{ dbms_username }}"
-        cfg_default_number_of_transfer_threads: "{{ default_number_of_transfer_threads }}"
-        cfg_default_repl_resource_name: "{{ irods_default_repl_resource }}"
-        cfg_default_resource_name: "{{ irods_default_resource }}"
-        cfg_federation: "{{ ds_federation | default([]) }}"
-        cfg_host_aliases: "{{ host_aliases }}"
-        cfg_ies_host: "{{ icat_host }}"
-        cfg_max_num_re_procs: "{{ irods_re_max_num_procs | default(None) }}"
-        cfg_negotiation_key: "{{ negotiation_key }}"
-        cfg_parallel_transfer_buffer_size: "{{ parallel_transfer_buffer_size }}"
-        cfg_sernec_owners: "{{ sernec_owners | default([]) }}"
-        cfg_sernec_readers: "{{ sernec_readers | default([]) }}"
-        cfg_sernec_writers: "{{ sernec_writers | default([]) }}"
-        cfg_server_control_plane_key: "{{ server_control_plane_key }}"
-        cfg_server_port_range_end: "{{ server_port_range_end }}"
-        cfg_server_port_range_start: "{{ server_port_range_start }}"
-        cfg_single_threaded_resources: "{{ single_threaded_resources }}"
-        cfg_zone_key: "{{ zone_key }}"
-        cfg_zone_user: "{{ irods_clerver_user }}"
+        irods_cfg_client_server_policy: CS_NEG_REFUSE
+        irods_cfg_default_hash_scheme: MD5
+        irods_cfg_default_number_of_transfer_threads: "{{ _default_number_of_transfer_threads }}"
+        irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
+        irods_cfg_environment_variables: "{{
+          { 'IRODS_AMQP_URI': rabbitmq_uri } if inventory_hostname == _icat_host else
+          {} }}"
+        irods_cfg_federation: "{{ _ds_federation }}"
+        irods_cfg_host_entries: "{{ [
+            {
+              'address_type': 'local',
+              'addresses': ([inventory_hostname] + _host_aliases)
+            }
+          ] if (_host_aliases | count) > 0 else [] }}"
+        irods_cfg_icat: "{{ None if inventory_hostname != _icat_host else
+                            {
+                              'db_host': dbms_host,
+                              'db_password': _dbms_password,
+                              'db_port': _dbms_port,
+                              'db_username': _dbms.username
+                            } }}"
+        irods_cfg_icat_host: "{{ _icat_host }}"
+        irods_cfg_maximum_number_of_concurrent_rule_engine_server_processes: "{{
+          _irods_max_num_re_procs }}"
+        irods_cfg_negotiation_key: "{{ _negotiation_key }}"
+        irods_cfg_re_additional_rulebases:
+          - ipc-custom
+        irods_cfg_server_control_plane_key: "{{ _server_control_plane_key }}"
+        irods_cfg_server_port_range_end: "{{ _server_port_range_end }}"
+        irods_cfg_server_port_range_start: "{{ _server_port_range_start }}"
+        irods_cfg_transfer_buffer_size_for_parallel_transfer: "{{ _parallel_transfer_buffer_size }}"
+        irods_cfg_zone_key: "{{ _zone_key }}"
+        irods_cfg_zone_name: iplant
+        irods_cfg_zone_user: "{{ _irods_clerver_user }}"
+
+  tasks:
+    - name: place static config in /etc/irods
+      copy:
+        src: "{{ item }}"
+        dest: /etc/irods/
+        owner: "{{ irods_service_account_name }}"
+        group: "{{ irods_service_group_name }}"
+      with_fileglob:
+        - "files/etc/*"
+      notify:
+        - reload rules
+
+    - name: place dynamic rule bases in /etc/irods
+      template:
+        src: "{{ item }}"
+        dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
+        owner: "{{ irods_service_account_name }}"
+        group: "{{ irods_service_group_name }}"
+      with_fileglob:
+        - "templates/etc/irods/*"
+      notify:
+        - reload rules
+
+  handlers:
+    - name: reload rules
+      file:
+        path: /etc/irods/core.re
+        state: touch
+
+- name: Install AMQP publishing script
+  hosts: ies
+  become: "{{ false if ansible_user|default('') == irods_service_account_name else true }}"
+  become_user: "{{ irods_service_account_name }}"
+  gather_facts: false
+  tasks:
+    - include: tasks/install_amqptopicsend.yml
 
 - name: set minimum free space for resource
   hosts: rs

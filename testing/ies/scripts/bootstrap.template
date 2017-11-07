@@ -1,0 +1,25 @@
+#! /bin/bash
+
+set -e
+
+printf 'Waiting for DBMS on %s' "$DBMS_HOST"
+
+until exec <>/dev/tcp/"$DBMS_HOST"/"$DBMS_PORT"
+do
+  sleep 1
+  printf '.'
+done 2> /dev/null
+
+printf '\n'
+printf 'Starting iRODS: '
+
+if err=$(/var/lib/irods/iRODS/irodsctl start 2>&1 > /dev/null)
+then
+  printf 'SUCCESS\n'
+
+  exec bash
+else
+  printf 'FAILURE\n'
+  print '%s\n' "$err"
+  exit 1
+fi

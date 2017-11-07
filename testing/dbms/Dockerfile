@@ -15,7 +15,7 @@ ARG IRODS_ZONE_USER=rods
 
 ENV PGDATA /var/lib/pgsql/9.3
 
-COPY bootstrap.sh .
+COPY bootstrap.sh /
 
 RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6 && \
     yum --assumeyes install \

@@ -1,18 +1,6 @@
 FROM centos:6
 MAINTAINER Tony Edgin @ CyVerse
 
-ARG DB_NAME=ICAT
-ARG DB_PASSWORD=testpassword
-ARG DB_USER=irods
-ARG DBMS_PORT=5432
-ARG DBMS_TYPE=postgres
-ARG IRODS_IES=ies
-ARG IRODS_DEFAULT_RESOURCE=demoResc
-ARG IRODS_DEFAULT_VAULT=/var/lib/irods/Vault
-ARG IRODS_ZONE_NAME=tempZone
-ARG IRODS_ZONE_PASSWORD=rods
-ARG IRODS_ZONE_USER=rods
-
 ENV PGDATA /var/lib/pgsql/9.3
 
 COPY bootstrap.sh /
@@ -35,6 +23,18 @@ RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6 && \
 
 COPY scripts/* /tmp/
 COPY config/*.conf "$PGDATA"/
+
+ARG DB_NAME=ICAT
+ARG DB_PASSWORD=testpassword
+ARG DB_USER=irods
+ARG DBMS_PORT=5432
+ARG DBMS_TYPE=postgres
+ARG IRODS_IES=ies
+ARG IRODS_DEFAULT_RESOURCE=demoResc
+ARG IRODS_DEFAULT_VAULT=/var/lib/irods/Vault
+ARG IRODS_ZONE_NAME=tempZone
+ARG IRODS_ZONE_PASSWORD=rods
+ARG IRODS_ZONE_USER=rods
 
 RUN chown postgres:postgres "$PGDATA"/* && \
     yum --assumeyes install cpp gcc-c++ openssl-devel perl perl-JSON && \

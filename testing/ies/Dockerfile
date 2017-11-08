@@ -1,6 +1,8 @@
 FROM centos:6
 MAINTAINER Tony Edgin @ CyVerse
 
+COPY scripts/* /tmp/
+
 ARG IRODS_SYSTEM_USER=irods
 ARG IRODS_SYSTEM_GROUP=irods
 ARG IRODS_DEFAULT_VAULT=/var/lib/irods/Vault
@@ -21,8 +23,6 @@ ARG DB_USER=irods
 ARG DBMS_HOST=dbms
 ARG DBMS_PORT=5432
 ARG DBMS_TYPE=postgres
-
-COPY scripts/* /tmp/
 
 RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6 && \
     yum --assumeyes install epel-release && \

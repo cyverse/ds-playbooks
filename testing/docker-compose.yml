@@ -1,0 +1,20 @@
+---
+version: "2.0"
+
+services:
+  dbms:
+    build:
+      context: dbms
+    hostname: dbms
+    tty: true
+
+  ies:
+    build:
+      context: ies
+      args:
+        IRODS_LAST_EPHEMERAL_PORT: 20009
+        IRODS_SCHEMA_VALIDATION: "off"
+    hostname: ies
+    tty: true
+    links:
+      - dbms

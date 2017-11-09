@@ -1,5 +1,17 @@
 #!/bin/bash -e
 
+# escapes / and \ for sed script
+escape()
+{
+  local var="$1"
+
+  # Escape \ first to avoid escaping the escape character, i.e. avoid / -> \/ -> \\/
+  var="${var//\\/\\\\}"
+
+  printf '%s' "${var//\//\\/}"
+}
+
+
 # define service account for this installation
 /var/lib/irods/packaging/setup_irods_service_account.sh <<EOF
 $IRODS_SYSTEM_USER
@@ -31,7 +43,8 @@ fi
 
 # setup database
 sudo -i -u "$IRODS_SYSTEM_USER" \
-    DB_NAME="$DB_NAME" DBMS_TYPE="$DBMS_TYPE" /tmp/setup_irods_database.sh \
+    DB_NAME="$DB_NAME" DBMS_TYPE="$DBMS_TYPE" IRODS_HOST="$IRODS_HOST" \
+    /tmp/setup_irods_database.sh \
 <<EOF
 $DBMS_HOST
 $DBMS_PORT
@@ -41,10 +54,13 @@ $DB_PASSWORD
 yes
 EOF
 
-# init .irodsA
-g++ -o /tmp/mk_irods_a --std c++0x /tmp/mk_irods_a.cpp -lcrypto
-/tmp/mk_irods_a "$IRODS_ZONE_PASSWORD"
-
 # create bootstrap.sh
-sed "s/\\\$DBMS_HOST/$DBMS_HOST/g" /tmp/bootstrap.template > /bootstrap.sh
+cat <<EOF | sed --file - /tmp/bootstrap.template > /bootstrap.sh
+s/\$DBMS_HOST/$(escape $DBMS_HOST)/g
+s/\$DBMS_PORT/$(escape $DBMS_PORT)/g
+s/\$IRODS_ZONE_PASSWORD/$(escape $IRODS_ZONE_PASSWORD)/g
+EOF
+
+cat /bootstrap.sh
+
 chmod a+rx /bootstrap.sh

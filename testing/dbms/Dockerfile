@@ -37,7 +37,7 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_USER=rods
 
 RUN chown postgres:postgres "$PGDATA"/* && \
-    yum --assumeyes install cpp gcc-c++ openssl-devel perl perl-JSON && \
+    yum --assumeyes install cpp perl perl-JSON && \
     su --command "export DB_NAME='$DB_NAME' && \
                   export DB_PASSWORD='$DB_PASSWORD' && \
                   export DB_USER='$DB_USER' && \
@@ -51,7 +51,7 @@ RUN chown postgres:postgres "$PGDATA"/* && \
                   export IRODS_ZONE_USER='$IRODS_ZONE_USER' && \
                   /tmp/irods_setup.sh" \
        --login postgres && \
-    yum --assumeyes remove cpp gcc-c++ openssl-devel perl perl-JSON && \
+    yum --assumeyes remove cpp perl perl-JSON && \
     yum clean all && \
     rm --force --recursive /tmp/* /logs/*
 

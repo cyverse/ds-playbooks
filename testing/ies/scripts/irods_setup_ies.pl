@@ -76,6 +76,7 @@ $IRODS_HOME = abs_path( $IRODS_HOME );
 $configDir  = abs_path( $configDir );
 $userIrodsDir = "/var/lib/irods/.irods";
 
+
 ########################################################################
 #
 # Initialize.
@@ -97,7 +98,6 @@ require File::Spec->catfile( $perlScriptsDir, "utils_config.pl" );
 require File::Spec->catfile( $perlScriptsDir, "utils_prompt.pl" );
 my $irodsctl = File::Spec->catfile( $perlScriptsDir, "irodsctl.pl" );
 
-
 # Get the path to Perl.  We'll use it for running other Perl scripts.
 my $perl = $Config{"perlpath"};
 if ( !defined( $perl ) || $perl eq "" )
@@ -112,8 +112,6 @@ if ( !defined( $perl ) || $perl eq "" )
 my $thisOS     = getCurrentOS( );
 my $thisUser   = getCurrentUser( );
 my $thisUserID = $<;
-my $thisHost   = getCurrentHostName( );
-my %thisHostAddresses = getCurrentHostAddresses( );
 
 
 ########################################################################
@@ -185,6 +183,7 @@ my $ip;
 my $env;
 
 $DB_NAME = $ENV{"DB_NAME"};
+$IRODS_HOST = $ENV{"IRODS_HOST"};
 
 # =-=-=-=-=-=-=-
 # JMC :: if arguments are 0, we assume this is a RESOURCE installation.
@@ -367,7 +366,7 @@ sub configureIrodsUser
   # populate the irods environment for this server instance
   printToFile( $userIrodsFile,
     "{\n" .
-    "    \"irods_host\": \"$thisHost\",\n" .
+    "    \"irods_host\": \"$IRODS_HOST\",\n" .
     "    \"irods_port\": $IRODS_PORT,\n" .
     "    \"irods_default_resource\": \"$RESOURCE_NAME\",\n" .
     "    \"irods_home\": \"/$ZONE_NAME/home/$IRODS_ADMIN_NAME\",\n" .
@@ -881,7 +880,7 @@ sub createOdbcIni()
   close( TOUCHFILE );
 
   # iRODS now supports a script to determine the path & lib name of the odbc driver
-  my $psqlOdbcLib  = `$scripttoplevel/packaging/find_odbc_postgres.sh`;
+  my $psqlOdbcLib  = `/tmp/find_odbc_postgres.sh`;
   chomp($psqlOdbcLib);
 
   if ($psqlOdbcLib eq "")

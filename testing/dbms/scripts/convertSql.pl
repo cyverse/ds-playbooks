@@ -36,8 +36,6 @@ else {
     die("Invalid argument");
 }
 
-print ("$arg1\n");
-
 runCmd("cpp -D$arg1 icatSysTables.sql.pp | grep -v '^#' > icatSysTables.sql");
 print "Preprocess icatSysTables.sql.pp to icatSysTables.sql\n";
 
@@ -56,4 +54,3 @@ sub runCmd {
 	die("command failed");
     }
 }
-

@@ -35,7 +35,7 @@ yes
 EOF
 
 # if default vault path does not exist, create it with proper permissions
-if [ ! -e "$IRODS_DEFAULT_VAULT" ]
+if [ -n "$IRODS_DEFAULT_VAULT" ]
 then
   mkdir --parents "$IRODS_DEFAULT_VAULT"
   chown "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$IRODS_DEFAULT_VAULT"

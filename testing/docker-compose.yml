@@ -9,6 +9,8 @@ services:
   dbms:
     build:
       context: dbms
+      args:
+        IRODS_RESOURCE_SERVER: rs-centos6
     hostname: dbms
     tty: true
 
@@ -24,13 +26,15 @@ services:
       - amqp
       - dbms
 
-  rs:
+  rs_centos6:
     build:
       context: rs
+      dockerfile: Dockerfile.centos6
       args:
+        IRODS_HOST: rs-centos6
         IRODS_LAST_EPHEMERAL_PORT: 20009
         IRODS_SCHEMA_VALIDATION: "off"
-    hostname: rs
+    hostname: rs-centos6
     tty: true
     links:
       - amqp

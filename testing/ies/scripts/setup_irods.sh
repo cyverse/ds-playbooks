@@ -24,7 +24,6 @@ $IRODS_ZONE_NAME
 $IRODS_ZONE_PORT
 $IRODS_FIRST_EPHEMERAL_PORT
 $IRODS_LAST_EPHEMERAL_PORT
-$IRODS_DEFAULT_VAULT
 $IRODS_ZONE_KEY
 $IRODS_NEGOTIATION_KEY
 $IRODS_CONTROL_PLANE_PORT
@@ -33,13 +32,6 @@ $IRODS_SCHEMA_VALIDATION
 $IRODS_ZONE_USER
 yes
 EOF
-
-# if default vault path does not exist, create it with proper permissions
-if [ -n "$IRODS_DEFAULT_VAULT" ]
-then
-  mkdir --parents "$IRODS_DEFAULT_VAULT"
-  chown "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$IRODS_DEFAULT_VAULT"
-fi
 
 # setup database
 sudo -i -u "$IRODS_SYSTEM_USER" \
@@ -60,7 +52,5 @@ s/\$DBMS_HOST/$(escape $DBMS_HOST)/g
 s/\$DBMS_PORT/$(escape $DBMS_PORT)/g
 s/\$IRODS_ZONE_PASSWORD/$(escape $IRODS_ZONE_PASSWORD)/g
 EOF
-
-cat /bootstrap.sh
 
 chmod a+rx /bootstrap.sh

@@ -22,7 +22,7 @@ printf 'Preparing %s...\n' "$ICATSetupValues"
 cat <<EOF | sed --file - "$ICATSetupValues".template > "$ICATSetupValues"
 s/ZONE_NAME_TEMPLATE/$(escape $IRODS_ZONE_NAME)/g
 s/ADMIN_NAME_TEMPLATE/$(escape $IRODS_ZONE_USER)/g
-s/HOSTNAME_TEMPLATE/$(escape $IRODS_IES)/g
+s/HOSTNAME_TEMPLATE/$(escape $IRODS_RESOURCE_SERVER)/g
 s/RESOURCE_DIR_TEMPLATE/$(escape $IRODS_DEFAULT_VAULT)/g
 s/ADMIN_PASSWORD_TEMPLATE/$(escape $IRODS_ZONE_PASSWORD)/g
 s/RESOURCE_NAME_TEMPLATE/$(escape $IRODS_DEFAULT_RESOURCE)/g

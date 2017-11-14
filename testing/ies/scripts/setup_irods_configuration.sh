@@ -3,7 +3,6 @@
 # set some paths
 readonly PackagingDir=/var/lib/irods/packaging
 readonly ServerConfig=/etc/irods/server_config.json
-readonly DefaultresourceDir=/var/lib/irods/iRODS/Vault
 readonly SetupIRODSCfg=/tmp/"$USER"/setup_irods_configuration.flag
 
 # detect correct python version
@@ -61,7 +60,6 @@ then
   rangeStart=$(get_server_config_field server_port_range_start)
   rangeEnd=$(get_server_config_field server_port_range_end)
   localZoneKey=$(get_server_config_field zone_key)
-  resourceDir=$(get_server_config_field default_resource_directory)
   negotiationKey=$(get_server_config_field negotiation_key)
   controlPlanePort=$(get_server_config_field server_control_plane_port)
   controlPlaneKey=$(get_server_config_field server_control_plane_key)
@@ -112,7 +110,6 @@ do
   request_cfg_value port "iRODS server's port" "${port-1247}"
   request_cfg_value rangeStart 'iRODS port range (begin)' "${rangeStart-20000}"
   request_cfg_value rangeEnd 'iRODS port range (end)' "${rangeEnd-20199}"
-  request_cfg_value resourceDir 'iRODS Vault directory' "${resourceDir-/var/lib/irods/Vault}"
   request_cfg_value localZoneKey "iRODS server's zone_key" "${localZoneKey-TEMPORARY_zone_key}"
 
   # get negotiation_key
@@ -172,7 +169,6 @@ do
   printf 'iRODS Port:                 %s\n' "$port"
   printf 'Range (Begin):              %s\n' "$rangeStart"
   printf 'Range (End):                %s\n' "$rangeEnd"
-  printf 'Vault Directory:            %s\n' "$resourceDir"
   printf 'zone_key:                   %s\n' "$localZoneKey"
   printf 'negotiation_key:            %s\n' "$negotiationKey"
   printf 'Control Plane Port:         %s\n' "$controlPlanePort"
@@ -202,7 +198,6 @@ printf 'Updating %s...\n' "$ServerConfig"
 set_server_config_field string zone_name "$zone"
 
 # everything else
-set_server_config_field string default_resource_directory "$resourceDir"
 set_server_config_field integer zone_port "$port"
 set_server_config_field integer server_port_range_start "$rangeStart"
 set_server_config_field integer server_port_range_end "$rangeEnd"
@@ -213,3 +208,6 @@ set_server_config_field integer server_control_plane_port "$controlPlanePort"
 set_server_config_field string server_control_plane_key "$controlPlaneKey"
 set_server_config_field string schema_validation_base_uri "$validationBaseURI"
 set_server_config_field string icat_host $(hostname)
+
+# Remove default resource directory
+sed --in-place '/"default_resource_directory"/d' "$ServerConfig"

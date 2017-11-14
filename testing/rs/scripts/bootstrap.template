@@ -1,0 +1,32 @@
+#! /bin/bash
+
+set -e
+
+until exec 3<> /dev/tcp/"$IRODS_IES"/"$IRODS_ZONE_PORT"
+do
+  printf 'Waiting for IES\n'
+  sleep 1
+done 2> /dev/null
+
+exec 3<&-
+exec 3>&-
+
+printf 'Authenticating clerver user\n'
+
+if ! err=$(IRODS_HOST="$IRODS_IES" iinit "$IRODS_ZONE_PASSWORD" 2>&1)
+then
+  printf '%s\n' "$err" >&2
+  exit 1
+fi
+
+printf 'Starting iRODS\n'
+
+if ! err=$(/var/lib/irods/iRODS/irodsctl start 2>&1)
+then
+  printf '%s\n' "$err" >&2
+  cat /var/lib/irods/iRODS/server/log/rodsLog* >&2
+  exit 1
+fi
+
+printf 'done\n'
+exec bash

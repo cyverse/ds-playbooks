@@ -10,6 +10,7 @@ RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6 && \
       https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm && \
     yum --assumeyes install postgresql93-server && \
     yum clean all && \
+    rm --force --recursive /var/cache/yum && \
     mkdir /data /logs && \
     chmod a+rwx /bootstrap.sh /data /logs && \
     chown postgres:postgres /bootstrap.sh /data /logs && \
@@ -29,9 +30,9 @@ ARG DB_PASSWORD=testpassword
 ARG DB_USER=irods
 ARG DBMS_PORT=5432
 ARG DBMS_TYPE=postgres
-ARG IRODS_IES=ies
 ARG IRODS_DEFAULT_RESOURCE=demoResc
 ARG IRODS_DEFAULT_VAULT=/var/lib/irods/Vault
+ARG IRODS_RESOURCE_SERVER=rs
 ARG IRODS_ZONE_NAME=tempZone
 ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_USER=rods
@@ -45,7 +46,7 @@ RUN chown postgres:postgres "$PGDATA"/* && \
                   export DBMS_TYPE='$DBMS_TYPE' && \
                   export IRODS_DEFAULT_RESOURCE='$IRODS_DEFAULT_RESOURCE' && \
                   export IRODS_DEFAULT_VAULT='$IRODS_DEFAULT_VAULT' && \
-                  export IRODS_IES='$IRODS_IES' && \
+                  export IRODS_RESOURCE_SERVER='$IRODS_RESOURCE_SERVER' && \
                   export IRODS_ZONE_NAME='$IRODS_ZONE_NAME' && \
                   export IRODS_ZONE_PASSWORD='$IRODS_ZONE_PASSWORD' && \
                   export IRODS_ZONE_USER='$IRODS_ZONE_USER' && \
@@ -53,7 +54,7 @@ RUN chown postgres:postgres "$PGDATA"/* && \
        --login postgres && \
     yum --assumeyes remove cpp perl perl-JSON && \
     yum clean all && \
-    rm --force --recursive /tmp/* /logs/*
+    rm --force --recursive /tmp/* /logs/* /var/cache/yum
 
 EXPOSE "$DBMS_PORT"/tcp
 

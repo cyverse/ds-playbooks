@@ -18,3 +18,14 @@ services:
     tty: true
     links:
       - dbms
+
+  rs:
+    build:
+      context: rs
+      args:
+        IRODS_LAST_EPHEMERAL_PORT: 20009
+        IRODS_SCHEMA_VALIDATION: "off"
+    hostname: rs
+    tty: true
+    links:
+      - ies

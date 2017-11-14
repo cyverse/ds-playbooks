@@ -2,6 +2,14 @@
 
 set -e
 
+
+terminate()
+{
+  /var/lib/irods/iRODS/irodsctl stop
+  exit "$?"
+}
+
+
 until exec 3<> /dev/tcp/"$DBMS_HOST"/"$DBMS_PORT"
 do
   printf 'Waiting for DBMS\n'
@@ -11,21 +19,21 @@ done 2> /dev/null
 exec 3<&-
 exec 3>&-
 
-printf 'Starting iRODS\n'
-
-if ! err=$(/var/lib/irods/iRODS/irodsctl start 2>&1)
+if ! /var/lib/irods/iRODS/irodsctl start
 then
-  printf '%s\n' "$err" >&2
+  cat /var/lib/irods/iRODS/server/log/rodsLog* >&2
   exit 1
 fi
+
+trap 'kill ${!}; terminate' SIGTERM
 
 printf 'Authenticating clerver user\n'
-
-if ! err=$(iinit "$IRODS_ZONE_PASSWORD" 2>&1)
-then
-  printf '%s\n' "$err" >&2
-  exit 1
-fi
+iinit "$IRODS_ZONE_PASSWORD"
 
 printf 'done\n'
-exec bash
+
+while true
+do
+  tail --follow /dev/null &
+  wait ${!}
+done

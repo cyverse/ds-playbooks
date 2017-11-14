@@ -2,13 +2,19 @@
 
 set -e
 
-printf 'Starting postgresql\n'
 
-if ! err=$(/usr/pgsql-9.3/bin/pg_ctl -w start 2>&1)
-then
-  printf '%s\n' "$err" >&2
-  exit 1
-fi
+terminate()
+{
+  /usr/pgsql-9.3/bin/pg_ctl -w stop
+  exit "$?"
+}
 
-printf 'done\n'
-exec bash
+
+/usr/pgsql-9.3/bin/pg_ctl -w start
+trap 'kill ${!}; terminate' SIGTERM
+
+while true
+do
+  tail --follow /dev/null &
+  wait ${!}
+done

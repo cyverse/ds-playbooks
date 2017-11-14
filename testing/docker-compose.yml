@@ -2,6 +2,10 @@
 version: "2.0"
 
 services:
+  amqp:
+    image: rabbitmq:3.5-management
+    hostname: amqp
+
   dbms:
     build:
       context: dbms
@@ -17,6 +21,7 @@ services:
     hostname: ies
     tty: true
     links:
+      - amqp
       - dbms
 
   rs:
@@ -28,4 +33,5 @@ services:
     hostname: rs
     tty: true
     links:
+      - amqp
       - ies

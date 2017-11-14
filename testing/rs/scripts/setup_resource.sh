@@ -89,4 +89,4 @@ set_server_config_field string default_resource_name "$IRODS_LOCAL_RESOURCE"
 
 printf 'Running irods_setup.pl...\n'
 cd iRODS
-perl /tmp/irods_setup_rs.pl "$IRODS_ZONE_PASSWORD"
+perl /tmp/irods_setup_rs.pl

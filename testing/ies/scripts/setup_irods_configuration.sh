@@ -208,6 +208,7 @@ set_server_config_field integer server_control_plane_port "$controlPlanePort"
 set_server_config_field string server_control_plane_key "$controlPlaneKey"
 set_server_config_field string schema_validation_base_uri "$validationBaseURI"
 set_server_config_field string icat_host $(hostname)
+set_server_config_field string default_resource_name "$IRODS_DEFAULT_RESOURCE"
 
 # Remove default resource directory
 sed --in-place '/"default_resource_directory"/d' "$ServerConfig"

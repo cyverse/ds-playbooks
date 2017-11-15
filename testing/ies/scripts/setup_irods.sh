@@ -19,7 +19,9 @@ $IRODS_SYSTEM_GROUP
 EOF
 
 # configure iRODS
-sudo -i -u "$IRODS_SYSTEM_USER" /tmp/setup_irods_configuration.sh <<EOF
+sudo -i -u "$IRODS_SYSTEM_USER" \
+     IRODS_DEFAULT_RESOURCE="$IRODS_DEFAULT_RESOURCE" /tmp/setup_irods_configuration.sh \
+<<EOF
 $IRODS_ZONE_NAME
 $IRODS_ZONE_PORT
 $IRODS_FIRST_EPHEMERAL_PORT

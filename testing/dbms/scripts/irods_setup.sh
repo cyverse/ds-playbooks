@@ -19,13 +19,15 @@ readonly ICATSetupValues=/tmp/icatSetupValues.sql
 
 printf 'Preparing %s...\n' "$ICATSetupValues"
 
+IFS=: read -r resourceName resourceServer vault <<<"$IRODS_RESOURCES"
+
 cat <<EOF | sed --file - "$ICATSetupValues".template > "$ICATSetupValues"
 s/ZONE_NAME_TEMPLATE/$(escape $IRODS_ZONE_NAME)/g
 s/ADMIN_NAME_TEMPLATE/$(escape $IRODS_ZONE_USER)/g
-s/HOSTNAME_TEMPLATE/$(escape $IRODS_RESOURCE_SERVER)/g
-s/RESOURCE_DIR_TEMPLATE/$(escape $IRODS_DEFAULT_VAULT)/g
+s/HOSTNAME_TEMPLATE/$(escape $resourceServer)/g
+s/RESOURCE_DIR_TEMPLATE/$(escape $vault)/g
 s/ADMIN_PASSWORD_TEMPLATE/$(escape $IRODS_ZONE_PASSWORD)/g
-s/RESOURCE_NAME_TEMPLATE/$(escape $IRODS_DEFAULT_RESOURCE)/g
+s/RESOURCE_NAME_TEMPLATE/$(escape $resourceName)/g
 EOF
 
 /usr/pgsql-9.3/bin/pg_ctl -w start

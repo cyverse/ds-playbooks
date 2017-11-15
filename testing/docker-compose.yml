@@ -10,7 +10,7 @@ services:
     build:
       context: dbms
       args:
-        IRODS_RESOURCES: rs_centos6:rs_centos6:/var/lib/irods/Vault
+        IRODS_RESOURCES: "rs_centos6:rs_centos6:/var/lib/irods/Vault rs_centos7:rs_centos7:/var/lib/irods/Vault"
     hostname: dbms
     tty: true
 

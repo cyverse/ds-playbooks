@@ -19,16 +19,29 @@ readonly ICATSetupValues=/tmp/icatSetupValues.sql
 
 printf 'Preparing %s...\n' "$ICATSetupValues"
 
-IFS=: read -r resourceName resourceServer vault <<<"$IRODS_RESOURCES"
-
 cat <<EOF | sed --file - "$ICATSetupValues".template > "$ICATSetupValues"
 s/ZONE_NAME_TEMPLATE/$(escape $IRODS_ZONE_NAME)/g
 s/ADMIN_NAME_TEMPLATE/$(escape $IRODS_ZONE_USER)/g
-s/HOSTNAME_TEMPLATE/$(escape $resourceServer)/g
-s/RESOURCE_DIR_TEMPLATE/$(escape $vault)/g
 s/ADMIN_PASSWORD_TEMPLATE/$(escape $IRODS_ZONE_PASSWORD)/g
-s/RESOURCE_NAME_TEMPLATE/$(escape $resourceName)/g
 EOF
+
+id=9101
+
+while IFS=: read -r name server vault
+do
+  cat <<EOF
+INSERT INTO R_RESC_MAIN (
+  resc_id, resc_name, zone_name,          resc_type_name,   resc_class_name, resc_net,
+  resc_def_path, free_space, free_space_ts, resc_info, r_comment, resc_status, create_ts,
+  modify_ts)
+VALUES (
+  $id,     '$name',   '$IRODS_ZONE_NAME', 'unixfilesystem', 'cache',         '$server',
+  '$vault',      '',         '',            '',        '',        '',          '1170000000',
+  '1170000000');
+EOF
+
+((id++))
+done < <(tr ' ' '\n' <<< "$IRODS_RESOURCES") >> "$ICATSetupValues"
 
 /usr/pgsql-9.3/bin/pg_ctl -w start
 psql --command "CREATE DATABASE \"$DB_NAME"\"

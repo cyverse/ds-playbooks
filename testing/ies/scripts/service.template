@@ -15,7 +15,7 @@ start()
   if ! service irods start
   then
     cat /var/lib/irods/iRODS/server/log/rodsLog* >&2
-    exit 1
+    return 1
   fi
 
   printf 'Authenticating clerver user\n'

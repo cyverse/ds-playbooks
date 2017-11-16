@@ -1,5 +1,6 @@
 #!/bin/bash -e
 
+
 # escapes / and \ for sed script
 escape()
 {
@@ -11,6 +12,8 @@ escape()
   printf '%s' "${var//\//\\/}"
 }
 
+
+set -e
 
 # define service account for this installation
 /var/lib/irods/packaging/setup_irods_service_account.sh <<EOF
@@ -49,10 +52,11 @@ yes
 EOF
 
 # create bootstrap.sh
-cat <<EOF | sed --file - /tmp/bootstrap.template > /bootstrap.sh
+cat <<EOF | sed --file - /tmp/service.template > /service.sh
 s/\$DBMS_HOST/$(escape $DBMS_HOST)/g
 s/\$DBMS_PORT/$(escape $DBMS_PORT)/g
+s/\$IRODS_SYSTEM_USER/$(escape $IRODS_SYSTEM_USER)/g
 s/\$IRODS_ZONE_PASSWORD/$(escape $IRODS_ZONE_PASSWORD)/g
 EOF
 
-chmod a+rx /bootstrap.sh
+chmod a+rx /service.sh

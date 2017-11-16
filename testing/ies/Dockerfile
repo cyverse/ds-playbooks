@@ -1,4 +1,4 @@
-FROM centos:6
+FROM ansible-support
 MAINTAINER Tony Edgin @ CyVerse
 
 COPY scripts/* /tmp/
@@ -25,8 +25,7 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 ARG IRODS_ZONE_USER=rods
 
-RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6 && \
-    yum --assumeyes install epel-release && \
+RUN yum --assumeyes install epel-release && \
     rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6 && \
     yum --assumeyes install \
       https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm && \
@@ -44,7 +43,4 @@ EXPOSE "$IRODS_ZONE_PORT"/tcp \
 
 VOLUME /etc/irods /var/lib/irods/iRODS/server/log /var/lib/irods/.irods
 
-USER "$IRODS_SYSTEM_USER"
-WORKDIR /var/lib/irods
-
-ENTRYPOINT [ "/bootstrap.sh" ]
+CMD [ "/service.sh" ]

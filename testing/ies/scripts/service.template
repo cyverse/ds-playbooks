@@ -1,0 +1,59 @@
+#! /bin/bash
+
+
+start()
+{
+  until exec 3<> /dev/tcp/"$DBMS_HOST"/"$DBMS_PORT"
+  do
+    printf 'Waiting for DBMS\n'
+    sleep 1
+  done 2> /dev/null
+
+  exec 3<&-
+  exec 3>&-
+
+  if ! service irods start
+  then
+    cat /var/lib/irods/iRODS/server/log/rodsLog* >&2
+    exit 1
+  fi
+
+  printf 'Authenticating clerver user\n'
+  su --command "iinit '$IRODS_ZONE_PASSWORD'" --login "$IRODS_SYSTEM_USER"
+}
+
+
+stop()
+{
+  service irods stop
+}
+
+
+main()
+{
+  if [ "$#" -lt 1 ]
+  then
+    printf 'Requires one parameter' >&2
+    return 1
+  fi
+
+  local action="$1"
+
+  case "$action" in
+    start)
+      start
+      ;;
+    stop)
+      stop
+      ;;
+    *)
+      printf 'Unknown command "%s"\n' "$action" >&2
+      return 1
+      ;;
+  esac
+}
+
+
+set -e
+
+main "$@"

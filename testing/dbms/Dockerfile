@@ -1,19 +1,16 @@
-FROM centos:6
+FROM ansible-support
 MAINTAINER Tony Edgin @ CyVerse
 
 ENV PGDATA /var/lib/pgsql/9.3
 
-COPY bootstrap.sh /
-
-RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6 && \
-    yum --assumeyes install \
+RUN yum --assumeyes install \
       https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm && \
     yum --assumeyes install postgresql93-server && \
     yum clean all && \
     rm --force --recursive /var/cache/yum && \
     mkdir /data /logs && \
-    chmod a+rwx /bootstrap.sh /data /logs && \
-    chown postgres:postgres /bootstrap.sh /data /logs && \
+    chmod a+rwx /data /logs && \
+    chown postgres:postgres /data /logs && \
     sed --in-place "s|^PGDATA=.*|PGDATA='$PGDATA'|" /var/lib/pgsql/.bash_profile && \
     su --command "/usr/pgsql-9.3/bin/initdb --auth ident \
                                             --lc-collate C \
@@ -56,7 +53,6 @@ EXPOSE "$DBMS_PORT"/tcp
 
 VOLUME /data /logs
 
-USER postgres
-WORKDIR /var/lib/pgsql
+COPY service.sh /
 
-ENTRYPOINT [ "/bootstrap.sh" ]
+CMD [ "/service.sh" ]

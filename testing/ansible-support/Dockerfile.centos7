@@ -9,7 +9,9 @@ COPY config.sh /tmp
 # Configure for ansible
 RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
     /tmp/config.sh && \
-    rm --force /tmp/config.sh
+    rm --force /tmp/config.sh && \
+    ssh-keygen -q -f /etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa && \
+    ssh-keygen -q -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519
 
 COPY entrypoint /
 

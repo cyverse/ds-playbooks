@@ -4,7 +4,7 @@ main()
 {
   if [ "$#" -lt 1 ]
   then
-    printf 'Requires one paramter' >&2
+    printf 'Requires one parameter' >&2
     return 1
   fi
 

@@ -1,4 +1,4 @@
-FROM ansible-support
+FROM ansible-support:centos6
 MAINTAINER Tony Edgin @ CyVerse
 
 ENV PGDATA /var/lib/pgsql/9.3

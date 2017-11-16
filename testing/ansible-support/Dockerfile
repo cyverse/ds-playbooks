@@ -1,4 +1,4 @@
-FROM centos:centos6
+FROM centos:6
 MAINTAINER Tony Edgin @ CyVerse
 
 # This image is based on the lemonbar/centos6-ssh image, but it allows unauthenticated logins by

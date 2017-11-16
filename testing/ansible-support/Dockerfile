@@ -21,6 +21,6 @@ RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6 && \
     chmod 700 /root/.ssh && \
     chpasswd <<< root:
 
-COPY bootstrap.sh /
+COPY entrypoint /
 
-ENTRYPOINT [ "/bootstrap.sh" ]
+ENTRYPOINT [ "/entrypoint" ]

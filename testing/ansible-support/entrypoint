@@ -2,6 +2,8 @@
 
 start()
 {
+  local cmd="$*"
+
   if [ -n "$cmd" ]
   then
     eval "$cmd" start
@@ -13,6 +15,8 @@ start()
 
 stop()
 {
+  local cmd="$*"
+
   service sshd stop
 
   if [ -n "$cmd" ]

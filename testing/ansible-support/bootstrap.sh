@@ -15,7 +15,7 @@ stop()
 {
   service sshd stop
 
-  if [ -m "$cmd" ]
+  if [ -n "$cmd" ]
   then
     eval "$cmd" stop
   fi

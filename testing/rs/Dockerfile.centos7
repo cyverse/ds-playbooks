@@ -1,4 +1,4 @@
-FROM centos:7
+FROM ansible-support:centos7
 MAINTAINER Tony Edgin @ CyVerse
 
 COPY scripts/* /tmp/
@@ -21,8 +21,7 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 ARG IRODS_ZONE_USER=rods
 
-RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
-    yum --assumeyes install epel-release && \
+RUN yum --assumeyes install epel-release && \
     rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7 && \
     yum --assumeyes install \
       sudo which \
@@ -37,6 +36,4 @@ EXPOSE "$IRODS_ZONE_PORT"/tcp \
 
 VOLUME "$IRODS_DEFAULT_VAULT" /etc/irods /var/lib/irods/iRODS/server/log /var/lib/irods/.irods
 
-COPY entrypoint /
-
-ENTRYPOINT [ "/entrypoint", "/service.sh" ]
+CMD [ "/service.sh" ]

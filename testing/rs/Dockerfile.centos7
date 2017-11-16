@@ -37,7 +37,6 @@ EXPOSE "$IRODS_ZONE_PORT"/tcp \
 
 VOLUME "$IRODS_DEFAULT_VAULT" /etc/irods /var/lib/irods/iRODS/server/log /var/lib/irods/.irods
 
-USER "$IRODS_SYSTEM_USER"
-WORKDIR /var/lib/irods
+COPY entrypoint /
 
-ENTRYPOINT [ "/bootstrap.sh" ]
+ENTRYPOINT [ "/entrypoint", "/service.sh" ]

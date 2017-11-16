@@ -1,0 +1,59 @@
+#! /bin/bash
+
+
+start()
+{
+  until exec 3<> /dev/tcp/"$IRODS_IES"/"$IRODS_ZONE_PORT"
+  do
+    printf 'Waiting for IES\n'
+    sleep 1
+  done 2> /dev/null
+
+  exec 3<&-
+  exec 3>&-
+
+  printf 'Authenticating clerver user\n'
+  su --command "IRODS_HOST='$IRODS_IES' iinit '$IRODS_ZONE_PASSWORD'" --login "$IRODS_SYSTEM_USER"
+
+  if ! su --command '/var/lib/irods/iRODS/irodsctl start' --login "$IRODS_SYSTEM_USER"
+  then
+    cat /var/lib/irods/iRODS/server/log/rodsLog* >&2
+    return 1
+  fi
+}
+
+
+stop()
+{
+  su --command '/var/lib/irods/iRODS/irodsctl stop' --login "$IRODS_SYSTEM_USER"
+}
+
+
+main()
+{
+  if [ "$#" -lt 1 ]
+  then
+    printf 'Requires one parameter' >&2
+    return 1
+  fi
+
+  local action="$1"
+
+  case "$action" in
+    start)
+      start
+      ;;
+    stop)
+      stop
+      ;;
+    *)
+      printf 'Unknown command "%s"\n' "$action" >&2
+      return 1
+      ;;
+  esac
+}
+
+
+set -e
+
+main "$@"

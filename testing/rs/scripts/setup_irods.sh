@@ -16,6 +16,8 @@ escape()
 }
 
 
+set -e
+
 # define service account for this installation
 "$PackagingDir"/setup_irods_service_account.sh <<EOF
 $IRODS_SYSTEM_USER
@@ -42,7 +44,7 @@ chown "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$IRODS_DEFAULT_VAULT"
 
 # setup resource server script
 sudo -i -u "$IRODS_SYSTEM_USER" \
-     IRODS_HOST="$IRODS_HOST" IRODS_LOCAL_RESOURCE="$IRODS_LOCAL_RESOURCE" /tmp/setup_resource.sh \
+  IRODS_HOST="$IRODS_HOST" IRODS_LOCAL_RESOURCE="$IRODS_LOCAL_RESOURCE" /tmp/setup_resource.sh \
 <<EOF
 $IRODS_IES
 $IRODS_ZONE_NAME
@@ -50,10 +52,11 @@ yes
 EOF
 
 # create bootstrap.sh
-cat <<EOF | sed --file - /tmp/bootstrap.template > /bootstrap.sh
+cat <<EOF | sed --file - /tmp/service.template > /service.sh
 s/\$IRODS_IES/$(escape $IRODS_IES)/g
 s/\$IRODS_ZONE_PASSWORD/$(escape $IRODS_ZONE_PASSWORD)/g
+s/\$IRODS_SYSTEM_USER/$(escape $IRODS_SYSTEM_USER)/g
 s/\$IRODS_ZONE_PORT/$(escape $IRODS_ZONE_PORT)/g
 EOF
 
-chmod a+rx /bootstrap.sh
+chmod a+rx /service.sh

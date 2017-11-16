@@ -9,7 +9,7 @@ start()
     eval "$cmd" start
   fi
 
-  service sshd start
+  /usr/sbin/sshd
 
   printf 'ready\n'
 }
@@ -19,7 +19,7 @@ stop()
 {
   local cmd="$*"
 
-  service sshd stop
+  kill -SIGTERM $(cat /var/run/sshd.pid)
 
   if [ -n "$cmd" ]
   then

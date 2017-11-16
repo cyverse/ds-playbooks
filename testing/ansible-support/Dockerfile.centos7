@@ -1,4 +1,4 @@
-FROM centos:6
+FROM centos:7
 MAINTAINER Tony Edgin @ CyVerse
 
 # This image is based on the lemonbar/centos6-ssh image, but it allows unauthenticated logins by
@@ -7,7 +7,7 @@ MAINTAINER Tony Edgin @ CyVerse
 COPY config.sh /tmp
 
 # Configure for ansible
-RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6 && \
+RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
     /tmp/config.sh && \
     rm --force /tmp/config.sh
 

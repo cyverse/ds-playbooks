@@ -7,7 +7,7 @@ readonly PackagingDir=/var/lib/irods/packaging
 # escapes / and \ for sed script
 escape()
 {
-  local var="$1"
+  local var="$*"
 
   # Escape \ first to avoid escaping the escape character, i.e. avoid / -> \/ -> \\/
   var="${var//\\/\\\\}"

@@ -1,6 +1,7 @@
 FROM williamyeh/ansible:centos7
 MAINTAINER Tony Edgin @ CyVerse
 
-VOLUME /inventory /playbook.yml
+COPY inventory /inventory
+COPY playbook.yml /playbook.yml
 
-ENTRYPOINT [ "/usr/bin/ansible-playbook", "--inventory-file=/inventory", "/playbook.yml" ]
+ENTRYPOINT [ "ansible-playbook", "--inventory-file=/inventory", "/playbook.yml" ]

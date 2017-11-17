@@ -6,21 +6,6 @@ services:
     image: rabbitmq:3.5-management
     hostname: amqp
 
-  ansible:
-    build:
-      context: ansible
-    hostname: ansible
-    tty: true
-    volumes:
-      - ./inventory:/inventory
-      - ./playbook.yml:/playbook.yml
-    depends_on:
-      - amqp
-      - dbms
-      - ies
-      - rs_centos6
-      - rs_centos7
-
   dbms:
     build:
       context: dbms

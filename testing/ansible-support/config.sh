@@ -2,7 +2,7 @@
 
 set -e
 
-yum --assumeyes install openssh-server
+yum --assumeyes install openssh-server sudo
 yum clean all
 rm --force --recursive /var/cache/yum
 

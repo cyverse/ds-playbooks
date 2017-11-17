@@ -6,10 +6,7 @@ MAINTAINER Tony Edgin @ CyVerse
 
 COPY config.sh /tmp
 
-# Configure for ansible
-RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
-    /tmp/config.sh && \
-    rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7 && \
+RUN /tmp/config.sh 7 && \
     ssh-keygen -q -f /etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa && \
     ssh-keygen -q -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519 && \
     rm --force /tmp/config.sh

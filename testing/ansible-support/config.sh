@@ -1,23 +1,46 @@
 #! /bin/bash
 
-set -e
 
-yum --assumeyes install epel-release openssh-server sudo
-yum clean all
-rm --force --recursive /var/cache/yum
+main()
+{
+  if [ "$#" -lt 1 ]
+  then
+    printf 'The CentOS version number is required as the first argument\n' >&2
+    return 1
+  fi
 
-ssh-keygen -q -f /etc/ssh/ssh_host_key -N '' -t rsa
-ssh-keygen -q -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
-ssh-keygen -q -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
+  local version="$1"
 
-sed --in-place '/session    required     pam_loginuid.so/d' /etc/pam.d/sshd
+  rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
+  yum --assumeyes install epel-release
+  rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
+  yum --assumeyes install \
+      libselinux-python openssh-server python-pip python-requests python-virtualenv sudo
+  yum clean all
+  rm --force --recursive /var/cache/yum
 
-cat <<EOF | sed --in-place --file - /etc/ssh/sshd_config
+  ssh-keygen -q -f /etc/ssh/ssh_host_key -N '' -t rsa
+  ssh-keygen -q -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
+  ssh-keygen -q -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
+
+  sed --in-place '/session    required     pam_loginuid.so/d' /etc/pam.d/sshd
+  update_sshd_config
+  mkdir --parents /root/.ssh
+  chmod 700 /root/.ssh
+
+  chpasswd <<< root:
+}
+
+
+update_sshd_config()
+{
+  cat <<EOF | sed --in-place --file - /etc/ssh/sshd_config
 s/PermitRootLogin without-password/PermitRootLogin yes/
 s/#PermitEmptyPasswords no/PermitEmptyPasswords yes/
 EOF
+}
 
-mkdir --parents /root/.ssh
-chmod 700 /root/.ssh
 
-chpasswd <<< root:
+set -e
+
+main "$@"

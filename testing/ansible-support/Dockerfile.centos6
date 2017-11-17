@@ -6,10 +6,7 @@ MAINTAINER Tony Edgin @ CyVerse
 
 COPY config.sh /tmp
 
-# Configure for ansible
-RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6 && \
-    /tmp/config.sh && \
-    rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6 && \
+RUN /tmp/config.sh 6 && \
     rm --force /tmp/config.sh
 
 COPY entrypoint /

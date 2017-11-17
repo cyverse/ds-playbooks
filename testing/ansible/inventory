@@ -1,1 +1,11 @@
-localhost ansible_connection=local
+dbms
+
+[irods]
+ies
+
+[irods:children]
+rs
+
+[rs]
+rs_centos6
+rs_centos7

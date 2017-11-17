@@ -1,8 +1,14 @@
 FROM williamyeh/ansible:centos7
 MAINTAINER Tony Edgin @ CyVerse
 
-COPY inventory /inventory
+RUN mkdir --parents /root/.ssh
 
-VOLUME /playbook.yml
+COPY ssh-config /root/.ssh/config
+
+RUN chmod --recursive go-rwx /root/.ssh
+
+COPY inventory playbook.yml /
+
+VOLUME /playbook-under-test.yml
 
 ENTRYPOINT [ "ansible-playbook", "--inventory-file=/inventory", "/playbook.yml" ]

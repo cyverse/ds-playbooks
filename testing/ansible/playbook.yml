@@ -1,0 +1,9 @@
+---
+- name: wait for testing systems
+  hosts: all:!localhost
+  gather_facts: false
+  tasks:
+    - name: wait for testing system to become reachable
+      wait_for_connection:
+
+- import_playbook: /playbook-under-test.yml

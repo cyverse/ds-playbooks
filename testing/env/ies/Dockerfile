@@ -25,9 +25,7 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 ARG IRODS_ZONE_USER=rods
 
-RUN yum --assumeyes install epel-release && \
-    rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6 && \
-    yum --assumeyes install \
+RUN yum --assumeyes install \
       https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm && \
     yum --assumeyes install \
       ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm \

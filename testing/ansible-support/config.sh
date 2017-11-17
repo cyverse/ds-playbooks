@@ -2,7 +2,7 @@
 
 set -e
 
-yum --assumeyes install openssh-server sudo
+yum --assumeyes install epel-release openssh-server sudo
 yum clean all
 rm --force --recursive /var/cache/yum
 

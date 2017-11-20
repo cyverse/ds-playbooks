@@ -9,10 +9,6 @@
 # This script configures the common ansible requirements for either CentOS
 # version.
 #
-# Credit:
-#  This image is based on the lemonbar/centos6-ssh image, but it allows
-#  unauthenticated logins by root.
-#
 
 
 main()

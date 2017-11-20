@@ -2,29 +2,36 @@
 
 main()
 {
-  local baseDir=$(dirname $(readlink -f "$0"))
-  local playbook="$*"
-
-  if ! [ -f "$playbook" ]
+  if [ "$#" -lt 1 ]
   then
-    printf 'The absolute path to a playbook is required as the first argument\n' >&2
+    printf 'The name of a folder holding the playbook is requred\n'
     return 1
   fi
 
-  if ! [[ "$playbook" =~ ^/ ]]
+  local baseDir=$(dirname $(readlink -f "$0"))
+  local playbooks="$1"
+
+  if [ "$#" -ge 2 ]
   then
-    playbook="$(pwd)"/"$playbook"
+    playbook="$2"
+  else
+    playbook=main.yml
   fi
-  
+
+  if ! [[ "$playbooks" =~ ^/ ]]
+  then
+    playbooks="$(pwd)"/"$playbooks"
+  fi
+
   if docker-compose --file "$baseDir"/env/docker-compose.yml --project-name dstesting up -d
   then
     docker run --rm --tty \
-               --network dstesting_default --volume "$playbook":/playbook-under-test.yml:ro \
-               dstesting_ansible
+               --network dstesting_default --volume "$playbooks":/playbooks-under-test:ro \
+               dstesting_ansible "$playbook"
   fi
 
   docker-compose --file "$baseDir"/env/docker-compose.yml --project-name dstesting down
 }
 
 
-main "$*"
+main "$@"

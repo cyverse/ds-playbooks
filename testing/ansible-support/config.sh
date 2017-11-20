@@ -1,7 +1,18 @@
 #! /bin/bash
-
-# This image is based on the lemonbar/centos6-ssh image, but it allows unauthenticated logins by
-# root.
+#
+# Usage:
+#  config.sh VERSION
+#
+# Parameter:
+#  VERSION  the CentOS major version to configure, either 6 or 7.
+#
+# This script configures the common ansible requirements for either CentOS
+# version.
+#
+# Credit:
+#  This image is based on the lemonbar/centos6-ssh image, but it allows
+#  unauthenticated logins by root.
+#
 
 
 main()

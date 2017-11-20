@@ -1,11 +1,11 @@
 FROM centos:6
 MAINTAINER Tony Edgin @ CyVerse
 
-COPY config.sh /tmp
+COPY config.sh /tmp/config
 
-RUN /tmp/config.sh 6 && \
-    rm --force /tmp/config.sh
+RUN /tmp/config 6 && \
+    rm --force /tmp/config
 
-COPY entrypoint /
+COPY entrypoint.sh /entrypoint
 
 ENTRYPOINT [ "/entrypoint" ]

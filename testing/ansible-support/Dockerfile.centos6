@@ -1,9 +1,6 @@
 FROM centos:6
 MAINTAINER Tony Edgin @ CyVerse
 
-# This image is based on the lemonbar/centos6-ssh image, but it allows unauthenticated logins by
-# root.
-
 COPY config.sh /tmp
 
 RUN /tmp/config.sh 6 && \

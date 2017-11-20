@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# This image is based on the lemonbar/centos6-ssh image, but it allows unauthenticated logins by
+# root.
+
 
 main()
 {

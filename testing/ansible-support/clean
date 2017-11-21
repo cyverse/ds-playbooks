@@ -1,0 +1,20 @@
+#! /bin/bash
+#
+# Usage:
+#  clean
+#
+# This script untags the CentOS6 and 7 ansible-support images. It deletes them
+# if no other images refer to them.
+#
+
+
+main()
+{
+  while read -r repository tag rest
+  do
+    docker rmi "$repository":"$tag"
+  done < <(docker images --filter reference=ansible-support | tail --lines +2)
+}
+
+
+main

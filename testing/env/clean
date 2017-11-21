@@ -5,8 +5,6 @@ main()
 {
   local baseDir=$(dirname $(readlink -f "$0"))
 
-  . "$baseDir"/env.inc
-
   while read -r repository rest
   do
     docker rmi "$repository"

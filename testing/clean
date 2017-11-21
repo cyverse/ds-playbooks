@@ -5,6 +5,8 @@ main()
 {
   local baseDir=$(dirname $(readlink -f "$0"))
 
+  . "$baseDir"/config.inc
+
   "$baseDir"/ansible-tester/clean
   "$baseDir"/env/clean
   "$baseDir"/ansible-support/clean

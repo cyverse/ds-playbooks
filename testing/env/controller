@@ -12,8 +12,6 @@ main()
   local baseDir=$(dirname $(readlink -f "$0"))
   local action="$1"
 
-  . "$baseDir"/env.inc
-
   case "$action" in
     start)
       local dcCmd='up -d'

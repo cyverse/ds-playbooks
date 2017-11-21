@@ -20,7 +20,7 @@ RUN yum --assumeyes install \
     mv /data/*.conf "$PGDATA"/
 
 COPY scripts/* /tmp/
-COPY config/*.conf "$PGDATA"/
+COPY config/* "$PGDATA"/
 
 ARG DB_NAME=ICAT
 ARG DB_PASSWORD=testpassword

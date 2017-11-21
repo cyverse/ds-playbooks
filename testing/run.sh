@@ -24,14 +24,14 @@ main()
     playbooks="$(pwd)"/"$playbooks"
   fi
 
-  if docker-compose --file "$baseDir"/env/docker-compose.yml --project-name dstesting up -d
+  if "$baseDir"/env/controller start
   then
     docker run --rm --tty \
                --network dstesting_default --volume "$playbooks":/playbooks-under-test:ro \
                ansible-tester "$playbook"
   fi
 
-  docker-compose --file "$baseDir"/env/docker-compose.yml --project-name dstesting down
+  "$baseDir"/env/controller stop
 }
 
 

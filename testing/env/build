@@ -1,0 +1,14 @@
+#! /bin/bash
+
+
+main()
+{
+  local baseDir=$(dirname $(readlink -f "$0"))
+
+  docker-compose --file "$baseDir"/docker-compose.yml --project-name dstesting build
+}
+
+
+set -e
+
+main

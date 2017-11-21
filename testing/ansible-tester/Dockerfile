@@ -1,7 +1,10 @@
 FROM williamyeh/ansible:centos7
 MAINTAINER Tony Edgin @ CyVerse
 
-RUN mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test /root/.ssh
+RUN yum --assumeyes install python-dns && \
+    yum clean all && \
+    rm --force --recursive /var/cache/yum && \
+    mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test /root/.ssh
 
 COPY ansible.cfg /root/.ansible.cfg
 COPY ssh-config /root/.ssh/config

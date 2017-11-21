@@ -1,10 +1,11 @@
 #! /bin/bash
 
+
 main()
 {
   if [ "$#" -lt 1 ]
   then
-    printf 'Requires one parameter' >&2
+    printf 'Requires either "start" or "stop" as its first parameter\n' >&2
     return 1
   fi
 

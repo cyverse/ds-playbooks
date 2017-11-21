@@ -3,10 +3,14 @@
 
 main()
 {
+  local baseDir=$(dirname $(readlink -f "$0"))
+
+  . "$baseDir"/env.inc
+
   while read -r repository rest
   do
     docker rmi "$repository"
-  done < <(docker images --filter reference=dstesting_* | tail --lines +2)
+  done < <(docker images --filter reference="$PROJECT"_* | tail --lines +2)
 }
 
 

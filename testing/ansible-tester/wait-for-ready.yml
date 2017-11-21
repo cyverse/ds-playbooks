@@ -4,4 +4,4 @@
   gather_facts: false
   tasks:
     - name: wait for testing system to become reachable
-      wait_for_connection:
+      wait_for_connection:  

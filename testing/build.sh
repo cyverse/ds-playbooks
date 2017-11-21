@@ -7,7 +7,7 @@ main()
 
   "$baseDir"/ansible-support/build
   "$baseDir"/env/build
-  docker build --tag ansible-tester "$baseDir"/ansible-tester
+  "$baseDir"/ansible-tester/build
 }
 
 

@@ -5,7 +5,7 @@ main()
 {
   local baseDir=$(dirname $(readlink -f "$0"))
 
-  docker rmi ansible-tester
+  "$baseDir"/ansible-tester/clean
   "$baseDir"/env/clean
   "$baseDir"/ansible-support/clean
 }

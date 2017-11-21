@@ -1,5 +1,6 @@
 #! /bin/bash
 
+
 main()
 {
   if [ "$#" -lt 1 ]
@@ -27,7 +28,7 @@ main()
   then
     docker run --rm --tty \
                --network dstesting_default --volume "$playbooks":/playbooks-under-test:ro \
-               dstesting_ansible "$playbook"
+               ansible-tester "$playbook"
   fi
 
   docker-compose --file "$baseDir"/env/docker-compose.yml --project-name dstesting down

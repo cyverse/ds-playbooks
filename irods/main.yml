@@ -5,9 +5,9 @@
   gather_facts: false
   roles:
     - role: cyverse.rabbitmq-vhost
-      rabbitmq_vhost_name: "{{ rabbitmq_vhost }}"
-      rabbitmq_vhost_users: 
-        - name: "{{ rabbitmq_user }}"
+      rabbitmq_vhost_name: "{{ _rabbitmq_vhost }}"
+      rabbitmq_vhost_users:
+        - name: "{{ _rabbitmq_user }}"
           configure_priv: .*
           write_priv: .*
           read_priv: .*

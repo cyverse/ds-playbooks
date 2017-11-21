@@ -3,7 +3,7 @@
 
 {% if inventory_hostname in groups['ies'] %}
 # ICAT DBMS
-{{ lookup('dig', groups['dbms'][0]) }} {{ groups['dbms'][0] }} 
+{{ lookup('dig', groups['dbms'][0]) }} {{ groups['dbms'][0] }}
 
 {% endif %}
 # IES
@@ -14,5 +14,9 @@
 {{ lookup('dig', r) }}  {{ r }}
 {% endfor %}
 
+{% if (_ds_federation | count) > 0 %}
 # corralZ zone IES
-{{ lookup('dig', ds_federation[0].icat_host) }} {{ ds_federation[0].icat_host }}
+{% for f in ds_federation %}
+{{ lookup('dig', f.icat_host) }}  {{ f.icat_host }}
+{% endfor %}
+{% endif %}

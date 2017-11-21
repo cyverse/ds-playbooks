@@ -1,0 +1,21 @@
+#! /bin/bash
+
+
+main()
+{
+  if [ "$#" -lt 1 ]
+  then
+    printf 'A project name is required as the first argument\n'
+    return 1
+  fi
+
+  local project="$1"
+
+  while read -r repository rest
+  do
+    docker rmi "$repository"
+  done < <(docker images --filter reference="$project"_* | tail --lines +2)
+}
+
+
+main "$@"

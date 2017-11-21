@@ -36,10 +36,10 @@ main()
     printf 'The playbook %s/%s does not exist\n' "$playbooks" "$playbook" >&2
     return 1
   fi
-  
+
   if "$baseDir"/env/controller start
   then
-    docker run --rm --tty \
+    docker run --rm --interactive --tty \
                --network dstesting_default --volume "$playbooks":/playbooks-under-test:ro \
                ansible-tester "$playbook"
   fi

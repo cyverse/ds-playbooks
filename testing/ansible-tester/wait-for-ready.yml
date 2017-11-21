@@ -1,6 +1,6 @@
 ---
 - name: wait for testing systems
-  hosts: all:!localhost
+  hosts: all:!unmanaged:!localhost  # XXX Remove unmanged when amqp is supported
   gather_facts: false
   tasks:
     - name: wait for testing system to become reachable

@@ -10,18 +10,18 @@ services:
     build:
       context: dbms
       args:
-        IRODS_RESOURCES: "rs_centos6:rs_centos6:/var/lib/irods/Vault rs_centos7:rs_centos7:/var/lib/irods/Vault"
-    hostname: dbms
+        IRODS_RESOURCES: "rs_centos6:dstesting_rs_centos6_1:/var/lib/irods/Vault rs_centos7:dstesting_rs_centos7_2:/var/lib/irods/Vault"
     tty: true
 
   ies:
     build:
       context: ies
       args:
+        DBMS_HOST: dstesting_dbms_1
         IRODS_DEFAULT_RESOURCE: rs_centos6
+        IRODS_HOST: dstesting_ies_1
         IRODS_LAST_EPHEMERAL_PORT: 20009
         IRODS_SCHEMA_VALIDATION: "off"
-    hostname: ies
     tty: true
     depends_on:
       - amqp
@@ -32,11 +32,11 @@ services:
       context: rs
       dockerfile: Dockerfile.centos6
       args:
-        IRODS_HOST: rs_centos6
+        IRODS_HOST: dstesting_rs_centos6_1
+        IRODS_IES: dstesting_ies_1
         IRODS_LAST_EPHEMERAL_PORT: 20009
         IRODS_LOCAL_RESOURCE: rs_centos6
         IRODS_SCHEMA_VALIDATION: "off"
-    hostname: rs_centos6
     tty: true
     depends_on:
       - ies
@@ -46,11 +46,11 @@ services:
       context: rs
       dockerfile: Dockerfile.centos7
       args:
-        IRODS_HOST: rs_centos7
+        IRODS_HOST: dstesting_rs_centos7_1
+        IRODS_IES: dstesting_ies_1
         IRODS_LAST_EPHEMERAL_PORT: 20009
         IRODS_LOCAL_RESOURCE: rs_centos7
         IRODS_SCHEMA_VALIDATION: "off"
-    hostname: rs_centos7
     tty: true
     depends_on:
       - ies

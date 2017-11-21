@@ -1,4 +1,7 @@
 ---
+ds_federation:
+  - icat_host: irods-2.cyverse.org
+
 irods_port: 1247
 irods_service_account_name: irods
 irods_service_group_name: irods

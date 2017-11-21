@@ -19,6 +19,6 @@
       file:
         path: /var/log/bisque
         state: directory
-        owner: "{{ irods_sys_user }}"
-        group: "{{ irods_sys_user }}"        
+        owner: "{{ irods_service_account_name }}"
+        group: "{{ irods_service_group_name }}"
         mode: u=rwx

@@ -39,7 +39,7 @@ main()
 
   if "$baseDir"/env/controller start
   then
-    docker run --rm --interactive --tty \
+    docker run --interactive --rm --tty \
                --network dstesting_default --volume "$playbooks":/playbooks-under-test:ro \
                ansible-tester "$playbook"
   fi

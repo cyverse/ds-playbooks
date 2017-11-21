@@ -1,24 +1,11 @@
 ---
-dbms_password: testpassword
-
-ds_federation:
-  - icat_host: irods-2.cyverse.org
-    negotiation_key: TEMPORARY_32byte_negotiation_ke2
-    zone_key: TEMPORARY_zone_key_2
-    zone_name: corralZ
-
 irods_port: 1247
 irods_service_account_name: irods
-irods_service_group_name: irods
 irods_version: 4.1.10
 
-negotiation_key: TEMPORARY_32byte_negotiation_key
-
-rabbitmq_password: guest
-
-server_control_plane_key: TEMPORARY__32byte_ctrl_plane_key
 server_port_range_end: 20009
 
-zone_key: TEMPORARY_zone_key
 
 admin_user: "{{ irods_service_account_name }}"
+
+irods_service_group_name: "{{ irods_service_account_name }}"

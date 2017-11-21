@@ -92,6 +92,12 @@ added precaution, TCP port 22 is intentionally not exposed. If this port needs
 to be exposed, it should be exposed through the derived image used in testing.
 
 
+## Building the Images
+
+The `build` script can be used to generate the images.  The `clean` script can
+be used to remove the images.
+
+
 ## Acknowledgement
 
 This image is based on the `lemonbar/centos6-ssh` image.

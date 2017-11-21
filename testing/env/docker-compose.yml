@@ -18,7 +18,7 @@ services:
       context: ies
       args:
         DBMS_HOST: dstesting_dbms_1
-        IRODS_DEFAULT_RESOURCE: rs_centos6
+        IRODS_DEFAULT_RESOURCE: rs_centos6 
         IRODS_HOST: dstesting_ies_1
         IRODS_LAST_EPHEMERAL_PORT: 20009
         IRODS_SCHEMA_VALIDATION: "off"

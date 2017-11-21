@@ -1,7 +1,7 @@
 FROM williamyeh/ansible:centos7
 MAINTAINER Tony Edgin @ CyVerse
 
-RUN yum --assumeyes install python-dns && \
+RUN yum --assumeyes install python-dns wget && \
     yum clean all && \
     rm --force --recursive /var/cache/yum && \
     mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test /root/.ssh

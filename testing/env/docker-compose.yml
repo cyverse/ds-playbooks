@@ -4,13 +4,13 @@ version: "2.0"
 services:
   amqp:
     image: rabbitmq:3.5-management
-    hostname: amqp
 
   dbms:
     build:
       context: dbms
       args:
         IRODS_RESOURCES: "rs_centos6:dstesting_rs_centos6_1:/var/lib/irods/Vault rs_centos7:dstesting_rs_centos7_2:/var/lib/irods/Vault"
+        IRODS_ZONE_NAME: iplant
     tty: true
 
   ies:
@@ -18,10 +18,11 @@ services:
       context: ies
       args:
         DBMS_HOST: dstesting_dbms_1
-        IRODS_DEFAULT_RESOURCE: rs_centos6 
+        IRODS_DEFAULT_RESOURCE: rs_centos6
         IRODS_HOST: dstesting_ies_1
         IRODS_LAST_EPHEMERAL_PORT: 20009
         IRODS_SCHEMA_VALIDATION: "off"
+        IRODS_ZONE_NAME: iplant
     hostname: dstesting_ies_1
     tty: true
     depends_on:
@@ -38,6 +39,7 @@ services:
         IRODS_LAST_EPHEMERAL_PORT: 20009
         IRODS_LOCAL_RESOURCE: rs_centos6
         IRODS_SCHEMA_VALIDATION: "off"
+        IRODS_ZONE_NAME: iplant
     hostname: dstesting_rs_centos6_1
     tty: true
     depends_on:
@@ -53,6 +55,7 @@ services:
         IRODS_LAST_EPHEMERAL_PORT: 20009
         IRODS_LOCAL_RESOURCE: rs_centos7
         IRODS_SCHEMA_VALIDATION: "off"
+        IRODS_ZONE_NAME: iplant
     hostname: dstesting_rs_centos7_1
     tty: true
     depends_on:

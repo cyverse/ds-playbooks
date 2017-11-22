@@ -20,7 +20,9 @@ main()
     local playbook=main.yml
   fi
 
-  . "$baseDir"/config.inc
+  local cfg="$baseDir"/config.inc
+
+  . "$cfg"
 
   if ! [[ "$playbooks" =~ ^/ ]]
   then
@@ -39,14 +41,14 @@ main()
     return 1
   fi
 
-  if "$baseDir"/env/controller start
+  if "$baseDir"/env/controller "$cfg" start
   then
     docker run --interactive --rm --tty \
                --network "$ENV_NAME"_default --volume "$playbooks":/playbooks-under-test:ro \
                ansible-tester "$playbook"
   fi
 
-  "$baseDir"/env/controller stop
+  "$baseDir"/env/controller "$cfg" stop
 }
 
 

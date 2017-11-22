@@ -4,6 +4,20 @@
 main()
 {
   local baseDir=$(dirname $(readlink -f "$0"))
+  local cfg="$@"
+
+  if [ -z "$cfg" ]
+  then
+    printf 'An environment variable include file is needed.\n' >&2
+    return 1
+  fi
+
+  if ! [[ "$cfg" =~ ^/ ]]
+  then
+    cfg="$(pwd)"/"$cfg"
+  fi
+
+  . "$cfg"
 
   while read -r repository rest
   do
@@ -12,4 +26,4 @@ main()
 }
 
 
-main
+main "$*"

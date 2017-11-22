@@ -5,10 +5,8 @@ main()
 {
   local baseDir=$(dirname $(readlink -f "$0"))
 
-  . "$baseDir"/config.inc
-
   "$baseDir"/ansible-support/build
-  "$baseDir"/env/build
+  "$baseDir"/env/build "$baseDir"/config.inc
   "$baseDir"/ansible-tester/build
 }
 

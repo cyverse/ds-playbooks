@@ -3,14 +3,30 @@
 
 main()
 {
+  local baseDir=$(dirname $(readlink -f "$0"))
+
   if [ "$#" -lt 1 ]
   then
-    printf 'Requires either "start" or "stop" as its first parameter\n' >&2
+    printf 'An environment variable include file is required as its first parameter.\n' >&2
     return 1
   fi
 
-  local baseDir=$(dirname $(readlink -f "$0"))
-  local action="$1"
+  local cfg="$1"
+
+  if [ "$#" -lt 2 ]
+  then
+    printf 'Requires either "start" or "stop" as its second parameter.\n' >&2
+    return 1
+  fi
+
+  local action="$2"
+
+  if ! [[ "$cfg" =~ ^/ ]]
+  then
+    cfg="$(pwd)"/"$cfg"
+  fi
+
+  . "$cfg"
 
   case "$action" in
     start)

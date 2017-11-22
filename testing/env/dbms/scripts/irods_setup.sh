@@ -1,43 +1,6 @@
 #!/bin/bash -e
 
 
-convert_sql()
-{
-  local dbmsType="$1"
-  local tmplDir="$2"
-
-  if [ "$dbmsType" != oracle -a "$dbmsType" != postgres -a "$dbmsType" != mysql ]
-  then
-    printf 'Usage postgres|oracle|mysql\n'
-    printf 'Invalid argument\n' >&2
-    return 1
-  fi
-
-  local cwd="$(pwd)"
-
-  cd "$tmplDir"
-
-  local cmd="cp icatSysTables.sql.pp icatSysTables.sql"
-
-  printf 'running: %s\n' "$cmd"
-  eval "$cmd" > /dev/null
-  local cmdStat="$?"
-
-  if [ "$cmdStat" -ne 0 ]
-  then
-    printf 'The following command failed:\n'
-    printf '%s\n' "$cmd"
-    printf 'Exit code = %d\n' "$cmdStat"
-    printf 'command failed\n' >&2
-    cd "$cwd"
-    return 1
-  fi
-
-  printf 'Preprocess icatSysTables.sql.pp to icatSysTables.sql\n'
-  cd "$cwd"
-}
-
-
 # escapes / and \ for sed script
 escape()
 {
@@ -49,8 +12,6 @@ escape()
   printf '%s' "${var//\//\\/}"
 }
 
-
-convert_sql "$DBMS_TYPE" /tmp
 
 # prepare SQL from template
 readonly ICATSetupValues=/tmp/icatSetupValues.sql

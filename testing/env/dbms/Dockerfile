@@ -26,26 +26,24 @@ ARG DB_NAME=ICAT
 ARG DB_PASSWORD=testpassword
 ARG DB_USER=irods
 ARG DBMS_PORT=5432
-ARG DBMS_TYPE=postgres
 ARG IRODS_RESOURCES=demoResc:rs:/var/lib/irods/Vault
 ARG IRODS_ZONE_NAME=tempZone
 ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_USER=rods
 
 RUN chown postgres:postgres "$PGDATA"/* && \
-    yum --assumeyes install cpp perl perl-JSON && \
+    yum --assumeyes install perl perl-JSON && \
     su --command "export DB_NAME='$DB_NAME' && \
                   export DB_PASSWORD='$DB_PASSWORD' && \
                   export DB_USER='$DB_USER' && \
                   export DBMS_PORT='$DBMS_PORT' && \
-                  export DBMS_TYPE='$DBMS_TYPE' && \
                   export IRODS_RESOURCES='$IRODS_RESOURCES' && \
                   export IRODS_ZONE_NAME='$IRODS_ZONE_NAME' && \
                   export IRODS_ZONE_PASSWORD='$IRODS_ZONE_PASSWORD' && \
                   export IRODS_ZONE_USER='$IRODS_ZONE_USER' && \
                   /tmp/irods_setup.sh" \
        --login postgres && \
-    yum --assumeyes remove cpp perl perl-JSON && \
+    yum --assumeyes remove perl perl-JSON && \
     yum clean all && \
     rm --force --recursive /tmp/* /logs/* /var/cache/yum
 

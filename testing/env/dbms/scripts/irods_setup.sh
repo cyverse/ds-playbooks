@@ -17,7 +17,7 @@ convert_sql()
 
   cd "$tmplDir"
 
-  local cmd="cpp -D'$dbmsType' icatSysTables.sql.pp | grep -v '^#' > icatSysTables.sql"
+  local cmd="cp icatSysTables.sql.pp icatSysTables.sql"
 
   printf 'running: %s\n' "$cmd"
   eval "$cmd" > /dev/null

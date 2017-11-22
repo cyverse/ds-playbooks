@@ -48,7 +48,7 @@ sub execute_sql($$)
 {
   my ($databaseName,$sqlFilename) = @_;
 
-  $PSQL=`/tmp/find_bin_postgres.sh`;
+  $PSQL=`/tmp/find-bin-postgres`;
 
   chomp $PSQL;
   $PSQL=$PSQL . "/psql";

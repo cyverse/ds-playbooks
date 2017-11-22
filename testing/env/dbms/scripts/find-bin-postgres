@@ -1,4 +1,11 @@
 #! /bin/bash
+#
+# Usage:
+#  find-bin-postgres
+#
+# This script locates the bin/ directory holding the psql executable. It writes
+# the absolute path to the directory to stdout.
+#
 
 
 main()

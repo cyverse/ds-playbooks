@@ -67,8 +67,8 @@ my $status;
 my $output;
 
 my @sqlfiles = (
-    "icatSysTables.sql",
-    "icatSysInserts.sql",
+    "icat-sys-tables.sql",
+    "icat-sys-inserts.sql",
     "icat-setup-values.sql");
 
 my $sqlfile;

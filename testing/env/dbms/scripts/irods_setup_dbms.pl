@@ -69,7 +69,7 @@ my $output;
 my @sqlfiles = (
     "icatSysTables.sql",
     "icatSysInserts.sql",
-    "icatSetupValues.sql");
+    "icat-setup-values.sql");
 
 my $sqlfile;
 printStatus( "    Inserting iCAT tables...\n" );

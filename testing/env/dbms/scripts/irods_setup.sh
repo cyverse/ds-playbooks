@@ -14,7 +14,7 @@ escape()
 
 
 # prepare SQL from template
-readonly ICATSetupValues=/tmp/icatSetupValues.sql
+readonly ICATSetupValues=/tmp/icat-setup-values.sql
 
 printf 'Preparing %s...\n' "$ICATSetupValues"
 

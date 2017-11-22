@@ -17,8 +17,8 @@ irods_setup_dbms()
 {
   local dbmsPort="$1"
   local dbName="$2"
-  local dbAdmName="$3"
-  local dbAdmPasswd="$4"
+  local dbUser="$3"
+  local dbPasswd="$4"
 
   # Create the tables.
   # The iCAT SQL files issue a number of instructions to create tables and
@@ -31,14 +31,13 @@ irods_setup_dbms()
   print_msg  $'    \n' '    Inserting iCAT tables...'
 
   local serverSqlDir=/tmp
-  local psql="$(/tmp/find-bin-postgres)"/psql
 
   for sqlfile in ${sqlfiles[@]}
   do
     local sqlPath="$serverSqlDir"/"$sqlfile"
 
-    local output=$(PGPASSWORD="$dbAdmPasswd" \
-                   "$psql" --port "$dbmsPort" --user "$dbAdmName" "$dbName" < "$sqlPath" 2>&1)
+    local output=$(PGPASSWORD="$dbPasswd" \
+                   psql --port "$dbmsPort" --user "$dbUser" "$dbName" < "$sqlPath" 2>&1)
 
     local status="$?"
 

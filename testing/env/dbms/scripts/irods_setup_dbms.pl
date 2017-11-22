@@ -2,8 +2,6 @@ use warnings;
 
 use File::Spec;
 
-require "/tmp/utils_print.pl";
-
 $DATABASE_PORT           = $ARGV[0];
 $DATABASE_NAME           = $ARGV[1];
 $DATABASE_ADMIN_NAME     = $ARGV[2];
@@ -54,6 +52,66 @@ sub execute_sql($$)
 
   return run( "PGPASSWORD=$DATABASE_ADMIN_PASSWORD \\
                $PSQL -U $DATABASE_ADMIN_NAME -p $DATABASE_PORT $databaseName < $sqlFilename" );
+}
+
+
+########################################################################
+#
+# Print messages
+#
+
+#
+# @brief	Print a message with a color.
+#
+# @param	$color
+# 	the color string
+# @param	@message
+# 	an array of message strings
+#
+sub printMessage
+{
+	my ($color,@message) = @_;
+
+	return if ( $#message < 0 );
+
+	# If the first message line is just white space, then
+	# presume it is an indent for the rest of the message
+	# lines.  But if there's nothing more in the message
+	# array, then it isn't an indent.
+	my $indent = "";
+
+	if ( $message[0] =~ /^[ \t]+$/ && $#message > 0 )
+	{
+		$indent .= $message[0];
+		shift @message;
+	}
+
+	# Print the message line-by-line.
+	my $entry;
+
+	foreach $entry (@message)
+	{
+		# Add the color choice and indent at the start.
+		$entry =~ s/^/$color$indent/g;
+
+		# Add the indent for intermediate carriage returns.
+		$entry =~ s/\n(?!$)/\n$indent/g;
+
+		# Print and add the color reset to the end.
+		print( $entry );
+	}
+}
+
+
+#
+# @brief        Print a status message.
+#
+# @param        @message
+#       an array of message strings
+#
+sub printStatus
+{
+  printMessage( "", "    ", @_ );
 }
 
 

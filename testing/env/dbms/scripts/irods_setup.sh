@@ -26,7 +26,7 @@ irods_setup_dbms()
 
   print_msg  $'    \n' 'Creating iCAT tables...'
 
-  local sqlfiles=(icat-sys-tables.sql icat-sys-inserts.sql icat-setup-values.sql)
+  local sqlfiles=(tables.sql sys-values.sql setup-values.sql)
 
   print_msg  $'    \n' '    Inserting iCAT tables...'
 
@@ -95,7 +95,7 @@ print_msg()
 
 
 # prepare SQL from template
-readonly ICATSetupValues=/tmp/icat-setup-values.sql
+readonly ICATSetupValues=/tmp/setup-values.sql
 
 printf 'Preparing %s...\n' "$ICATSetupValues"
 

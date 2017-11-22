@@ -2,7 +2,6 @@ use warnings;
 
 use File::Spec;
 
-require "/tmp/utils_platform.pl";
 require "/tmp/utils_print.pl";
 
 $DATABASE_PORT           = $ARGV[0];
@@ -55,6 +54,31 @@ sub execute_sql($$)
 
   return run( "PGPASSWORD=$DATABASE_ADMIN_PASSWORD \\
                $PSQL -U $DATABASE_ADMIN_NAME -p $DATABASE_PORT $databaseName < $sqlFilename" );
+}
+
+
+#
+# @brief        Run an external command.
+#
+# Run the command and return it's status and output.
+# By routing command execution through this function,
+# we can log each command, and use a portable way to
+# grab the command's output.
+#
+# @param        $command
+#       the command to run
+# @return
+#       a 2-tuple including a numeric exit code and the
+#       stdout/stderr output of the command.
+#
+sub run($)
+{
+  my ($command) = @_;
+
+  # Run it, capturing all output.
+  my $output = `$command 2>&1`;
+
+  return (($?>>8),$output);
 }
 
 

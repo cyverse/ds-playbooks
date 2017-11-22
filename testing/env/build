@@ -5,7 +5,7 @@ main()
 {
   local baseDir=$(dirname $(readlink -f "$0"))
 
-  docker-compose --file "$baseDir"/docker-compose.yml --project-name "$PROJECT" build
+  docker-compose --file "$baseDir"/docker-compose.yml --project-name "$ENV_NAME" build
 }
 
 

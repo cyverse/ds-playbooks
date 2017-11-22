@@ -32,7 +32,7 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_USER=rods
 
 RUN chown postgres:postgres "$PGDATA"/* && \
-    yum --assumeyes install perl perl-JSON && \
+    yum --assumeyes install perl && \
     su --command "export DB_NAME='$DB_NAME' && \
                   export DB_PASSWORD='$DB_PASSWORD' && \
                   export DB_USER='$DB_USER' && \
@@ -43,7 +43,7 @@ RUN chown postgres:postgres "$PGDATA"/* && \
                   export IRODS_ZONE_USER='$IRODS_ZONE_USER' && \
                   /tmp/irods_setup.sh" \
        --login postgres && \
-    yum --assumeyes remove perl perl-JSON && \
+    yum --assumeyes remove perl && \
     yum clean all && \
     rm --force --recursive /tmp/* /logs/* /var/cache/yum
 

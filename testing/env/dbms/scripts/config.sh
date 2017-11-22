@@ -26,7 +26,7 @@ irods_setup_dbms()
 
   print_msg  $'    \n' 'Creating iCAT tables...'
 
-  local sqlfiles=(tables.sql sys-values.sql setup-values.sql)
+  local sqlfiles=(tables.sql sys-values.sql config-values.sql)
 
   print_msg  $'    \n' '    Inserting iCAT tables...'
 
@@ -95,11 +95,11 @@ print_msg()
 
 
 # prepare SQL from template
-readonly ICATSetupValues=/tmp/setup-values.sql
+readonly ConfigSQL=/tmp/config-values.sql
 
-printf 'Preparing %s...\n' "$ICATSetupValues"
+printf 'Preparing %s...\n' "$ConfigSQL"
 
-cat <<EOF | sed --file - "$ICATSetupValues".template > "$ICATSetupValues"
+cat <<EOF | sed --file - "$ConfigSQL".template > "$ConfigSQL"
 s/ZONE_NAME_TEMPLATE/$(escape $IRODS_ZONE_NAME)/g
 s/ADMIN_NAME_TEMPLATE/$(escape $IRODS_ZONE_USER)/g
 s/ADMIN_PASSWORD_TEMPLATE/$(escape $IRODS_ZONE_PASSWORD)/g
@@ -121,7 +121,7 @@ VALUES (
 EOF
 
 ((id++))
-done < <(tr ' ' '\n' <<< "$IRODS_RESOURCES") >> "$ICATSetupValues"
+done < <(tr ' ' '\n' <<< "$IRODS_RESOURCES") >> "$ConfigSQL"
 
 /usr/pgsql-9.3/bin/pg_ctl -w start
 psql --command "CREATE DATABASE \"$DB_NAME"\"

@@ -19,7 +19,8 @@ RUN yum --assumeyes install \
        --login postgres && \
     mv /data/*.conf "$PGDATA"/
 
-COPY scripts/* /tmp/
+COPY scripts/*.sql* /tmp/
+COPY scripts/config.sh /tmp/config
 COPY config/* "$PGDATA"/
 
 ARG DB_NAME=ICAT
@@ -40,7 +41,7 @@ RUN chown postgres:postgres "$PGDATA"/* && \
                   export IRODS_ZONE_NAME='$IRODS_ZONE_NAME' && \
                   export IRODS_ZONE_PASSWORD='$IRODS_ZONE_PASSWORD' && \
                   export IRODS_ZONE_USER='$IRODS_ZONE_USER' && \
-                  /tmp/irods_setup.sh" \
+                  /tmp/config" \
        --login postgres && \
     rm --force --recursive /tmp/* /logs/*
 

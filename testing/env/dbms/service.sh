@@ -1,5 +1,6 @@
 #! /bin/bash
 
+TODO document
 
 main()
 {

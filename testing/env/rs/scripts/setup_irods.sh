@@ -52,7 +52,7 @@ yes
 EOF
 
 # create bootstrap.sh
-cat <<EOF | sed --file - /tmp/service.template > /service.sh
+cat <<EOF | sed --file - /tmp/service.sh.template > /service.sh
 s/\$IRODS_IES/$(escape $IRODS_IES)/g
 s/\$IRODS_ZONE_PASSWORD/$(escape $IRODS_ZONE_PASSWORD)/g
 s/\$IRODS_SYSTEM_USER/$(escape $IRODS_SYSTEM_USER)/g

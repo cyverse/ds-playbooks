@@ -52,7 +52,7 @@ yes
 EOF
 
 # create bootstrap.sh
-cat <<EOF | sed --file - /tmp/service.template > /service.sh
+cat <<EOF | sed --file - /tmp/service.sh.template > /service.sh
 s/\$DBMS_HOST/$(escape $DBMS_HOST)/g
 s/\$DBMS_PORT/$(escape $DBMS_PORT)/g
 s/\$IRODS_SYSTEM_USER/$(escape $IRODS_SYSTEM_USER)/g

@@ -254,16 +254,7 @@ sub createOdbcIni()
   close( TOUCHFILE );
 
   # iRODS now supports a script to determine the path & lib name of the odbc driver
-  my $psqlOdbcLib  = `/tmp/find_odbc_postgres.sh`;
-  chomp($psqlOdbcLib);
-
-  if ($psqlOdbcLib eq "")
-  {
-    printError("\nInstall Problem:\n");
-    printError("    find_odbc_postgres.sh did not find odbc driver.\n");
-
-    cleanAndExit( 1 );
-  }
+  my $psqlOdbcLib = "/usr/pgsql-9.3/lib/psqlodbc.so";
 
   open( NEWCONFIGFILE, ">$userODBC" );
   print( NEWCONFIGFILE "[postgres]\n" .

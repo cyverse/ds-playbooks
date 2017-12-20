@@ -1,6 +1,10 @@
 #! /bin/bash
+#
+# Usage:
+#  service (start|stop)
+#
+# This script starts or stops the postgresSQL server inside the container.
 
-TODO document
 
 main()
 {

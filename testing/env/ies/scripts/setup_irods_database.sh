@@ -22,21 +22,132 @@ dbPassword=temppassword
 dbName=ICAT
 
 
-get_database_config_field()
+cfg_db_user()
 {
-  local field="$1"
+  local dbmsPort="$1"
+  local dbName="$2"
+  local dbAdminName="$3"
+  local dbAdminPassword="$4"
 
-  "$Python" -c "import json; print json.load(open('$DatabaseConfig'))['$field']"
+  printf '*:%d:%s:%s:%s\n' "$dbmsPort" "$dbName" "$dbAdminName" "$dbAdminPassword" \
+    > "$TopLevelDir"/.pgpass
 }
 
 
-set_database_config_field()
+cfg_irods_server()
 {
-  local type="$1"
-  local field="$2"
-  local value="$3"
+  local dbmsType="$1"
+  local dbAdminName="$2"
+  local dbAdminPassword="$3"
 
-  "$Python" "$PackagingDir"/update_json.py "$DatabaseConfig" "$type" "$field" "$value"
+  set_cfg_field "$ServerConfig" string icat_host localhost
+  set_cfg_field "$ServerConfig" string zone_auth_scheme native
+  chmod 0600 "$ServerConfig"
+
+  set_cfg_field "$DatabaseConfig" string catalog_database_type "$dbmsType"
+  set_cfg_field "$DatabaseConfig" string db_username "$dbAdminName"
+  set_cfg_field "$DatabaseConfig" string db_password "$dbAdminPassword"
+  chmod 0600 "$DatabaseConfig"
+}
+
+
+cfg_irods_user()
+{
+  local host=$(hostname --fqdn)
+  local zonePort=$(get_cfg_field "$ServerConfig" zone_port)
+  local resc=$(get_cfg_field "$ServerConfig" default_resource_name)
+  local zone=$(get_cfg_field "$ServerConfig" zone_name)
+  local admin=$(get_cfg_field "$ServerConfig" zone_user)
+  local controlPlanePort=$(get_cfg_field "$ServerConfig" server_control_plane_port)
+  local key=$(get_cfg_field "$ServerConfig" server_control_plane_key)
+  local numRounds=$(get_cfg_field "$ServerConfig" server_control_plane_encryption_num_hash_rounds)
+  local algorithm=$(get_cfg_field "$ServerConfig" server_control_plane_encryption_algorithm)
+
+  local envDir="$TopLevelDir"/.irods
+  mkdir "$envDir"
+  chmod 0700 "$envDir"
+
+  local envCfg="$envDir"/irods_environment.json
+  printf '{}' > "$envCfg"
+  set_cfg_field "$envCfg" string irods_host "$host"
+  set_cfg_field "$envCfg" integer irods_port "$zonePort"
+  set_cfg_field "$envCfg" string irods_default_resource "$resc"
+  set_cfg_field "$envCfg" string irods_home /"$zone"/home/"$admin"
+  set_cfg_field "$envCfg" string irods_cwd /"$zone"/home/"$admin"
+  set_cfg_field "$envCfg" string irods_user_name "$admin"
+  set_cfg_field "$envCfg" string irods_zone_name "$zone"
+  set_cfg_field "$envCfg" string irods_client_server_negotiation request_server_negotiation
+  set_cfg_field "$envCfg" string irods_client_server_policy CS_NEG_REFUSE
+  set_cfg_field "$envCfg" integer irods_encryption_key_size 32
+  set_cfg_field "$envCfg" integer irods_encryption_salt_size 8
+  set_cfg_field "$envCfg" integer irods_encryption_num_hash_rounds 16
+  set_cfg_field "$envCfg" string irods_encryption_algorithm AES-256-CBC
+  set_cfg_field "$envCfg" string irods_default_hash_scheme SHA256
+  set_cfg_field "$envCfg" string irods_match_hash_policy compatible
+  set_cfg_field "$envCfg" integer irods_server_control_plane_port "$controlPlanePort"
+  set_cfg_field "$envCfg" string irods_server_control_plane_key "$key"
+  set_cfg_field "$envCfg" integer irods_server_control_plane_encryption_num_hash_rounds "$numRounds"
+  set_cfg_field "$envCfg" string irods_server_control_plane_encryption_algorithm "$algorithm"
+  set_cfg_field "$envCfg" integer irods_maximum_size_for_single_buffer_in_megabytes 32
+  set_cfg_field "$envCfg" integer irods_default_number_of_transfer_threads 4
+  set_cfg_field "$envCfg" integer irods_transfer_buffer_size_for_parallel_transfer_in_megabytes 4
+  chmod 0600 "$envCfg"
+}
+
+
+create_odbc_ini()
+{
+  local dbmsHost="$1"
+  local dbmsPort="$2"
+  local dbName="$3"
+
+  cat <<EOINI > "$TopLevelDir"/.odbc.ini
+[postgres]
+Driver=/usr/pgsql-9.3/lib/psqlodbc.so
+Debug=0
+CommLog=0
+Servername=$dbmsHost
+Database=$dbName
+ReadOnly=no
+Ksqo=0
+Port=$dbmsPort
+EOINI
+}
+
+
+get_cfg_field()
+{
+  local cfgFile="$1"
+  local field="$2"
+
+  "$Python" -c "import json; print json.load(open('$cfgFile'))['$field']"
+}
+
+
+irods_setup_ies()
+{
+  local dbmsType="$1"
+  local dbmsHost="$2"
+  local dbmsPort="$3"
+  local dbName="$4"
+  local dbUser="$5"
+  local dbPassword="$6"
+
+  cfg_db_user "$dbmsPort" "$dbName" "$dbUser" "$dbPassword"
+  create_odbc_ini "$dbmsHost" "$dbmsPort" "$dbName"
+  cfg_irods_server "$dbmsType" "$dbUser" "$dbPassword"
+  cfg_irods_user
+}
+
+
+set_cfg_field()
+{
+  local cfgFile="$1"
+  local type="$2"
+  local field="$3"
+  local value="$4"
+
+  "$Python" "$PackagingDir"/update_json.py "$cfgFile" "$type" "$field" "$value"
 }
 
 
@@ -131,11 +242,11 @@ printf '===================================================================\n'
 # update database_config.json
 printf 'Updating %s...\n' "$DatabaseConfig"
 
-set_database_config_field string catalog_database_type "$DBMS_TYPE"
-set_database_config_field string db_username "$dbUser"
-set_database_config_field string db_host "$dbmsHost"
-set_database_config_field integer db_port "$dbmsPort"
-set_database_config_field string db_name "$dbName"
+set_cfg_field "$DatabaseConfig" string catalog_database_type "$DBMS_TYPE"
+set_cfg_field "$DatabaseConfig" string db_username "$dbUser"
+set_cfg_field "$DatabaseConfig" string db_host "$dbmsHost"
+set_cfg_field "$DatabaseConfig" integer db_port "$dbmsPort"
+set_cfg_field "$DatabaseConfig" string db_name "$dbName"
 
 printf '\n'
 
@@ -145,7 +256,7 @@ printf '\n'
 printf -- '-----------------------------\n'
 printf 'Running irods_setup.pl...\n'
 cd iRODS
-perl /tmp/irods_setup_ies.pl "$DBMS_TYPE" "$dbmsHost" "$dbmsPort" "$dbUser" "$dbPassword"
+irods_setup_ies "$DBMS_TYPE" "$dbmsHost" "$dbmsPort" "$dbName" "$dbUser" "$dbPassword"
 cd ..
 
 # =-=-=-=-=-=-=-

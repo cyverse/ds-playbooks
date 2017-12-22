@@ -30,7 +30,7 @@ RUN yum --assumeyes install \
     yum --assumeyes install \
       ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm \
       ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm && \
-    /tmp/setup_irods.sh && \
+    /tmp/config.sh && \
     yum clean all && \
     rm --force --recursive /tmp/* /var/cache/yum
 

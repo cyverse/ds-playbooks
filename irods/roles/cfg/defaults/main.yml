@@ -4,6 +4,7 @@ cfg_aegis_resource_name: null
 cfg_amqp_ephemeral: null
 cfg_amqp_uri: null
 cfg_bisque_irods_host: null
+cfg_bisque_projects: null
 cfg_client_server_negotiation: null
 cfg_db: null
 cfg_default_number_of_transfer_threads: null

@@ -10,7 +10,6 @@
 
 BISQUE_ID_ATTR = 'ipc-bisque-id'
 BISQUE_URI_ATTR = 'ipc-bisque-uri'
-BISQUE_PROJECTS = list('NEVP', 'sernec')
 
 
 logMsg(*Msg) = writeLine('serverLog', 'BISQUE: *Msg')
@@ -164,7 +163,7 @@ isInProject(*Project, *Path) = *Path like '/iplant/home/shared/*Project/\*'
 
 isInProjects(*Path) {
   *result = false;
-  foreach(*project in BISQUE_PROJECTS) {
+  foreach(*project in bisque_PROJECTS) {
     if (isInProject(*project, *Path)) {
       *result = true;
       break;

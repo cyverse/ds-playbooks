@@ -13,6 +13,8 @@ _cfg_amqp_uri: "{{ cfg_amqp_uri if cfg_amqp_uri else 'amqp://guest:guest@localho
 
 _cfg_bisque_irods_host: "{{ cfg_bisque_irods_host if cfg_bisque_irods_host else _cfg_ies_host }}"
 
+_cfg_bisque_projects: "{{ cfg_bisque_projects if cfg_bisque_projects else [] }}"
+
 _cfg_client_server_negotiation: "{{
   cfg_client_server_negotiation if cfg_client_server_negotiation else
   None }}"

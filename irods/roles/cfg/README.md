@@ -17,31 +17,32 @@ None of these variables are required.
 
 Variable                                 | Default                          | Choices                         | Comments
 ---------------------------------------- | -------------------------------- | ------------------------------- | --------
-`cfg_aegis_repl_resource_name`           | aegisReplRes                     |                                 | the name of the aegis resource where replicas are written
-`cfg_aegis_resource_name`                | aegisIngestRes                   |                                 | the name of the aegis resource where newly uploaded files are written
-`cfg_amqp_ephemeral`                     | true                             |                                 | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
-`cfg_amqp_uri`                           |                                  |                                 | the AMQP URI used to connect to the broker (N/A for non-IES resource servers)
-`cfg_bisque_irods_host`                  | `cfg_ies_host`                |                                 | The iRODS host to report to BisQue.
+`cfg_aegis_repl_resource_name`           | aegisReplRes                     |                               | the name of the aegis resource where replicas are written
+`cfg_aegis_resource_name`                | aegisIngestRes                   |                               | the name of the aegis resource where newly uploaded files are written
+`cfg_amqp_ephemeral`                     | true                             |                               | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
+`cfg_amqp_uri`                           |                                  |                               | the AMQP URI used to connect to the broker (N/A for non-IES resource servers)
+`cfg_bisque_irods_host`                  | `cfg_ies_host`                |                               | The iRODS host to report to BisQue.
+`cfg_bisque_projects`                    | []                               |                               | The of projects configured to publish data to BisQue.
 `cfg_client_server_negotiation`          | request_server_negotiation       | request_server_negotiation, off | indicates whether or not to use advanced negotiation
-`cfg_db`                                 |                                  |                                 | the DBMS connection information, see below (N/A for non-IES resource servers)
-`cfg_default_number_of_transfer_threads` | 4                                |                                 | the default maximum number of transfer streams for parallel transfer
-`cfg_default_repl_resource_name`         | `cfg_default_resource_name`    |                                 | the default resource for replication
-`cfg_default_resource_directory`         |                                  |                                 | the absolute path to the vault on the resource server being configured (N/A when configuring IES and it doesn't host a resource)
-`cfg_default_resource_name`              | demoResc                         |                                 | the name of the default resource
-`cfg_federation`                         | []                               |                                 | a list of other iRODS zones to federate with, see below
-`cfg_ies_host`                           | `inventory_hostname`                        |                                 | the FQDN of the IES
-`cfg_max_num_re_procs`                   | 4                                |                                 | the maximum number of rule engine processes to run
-`cfg_negotiation_key`                    | TEMPORARY_32byte_negotiation_key |                                 | the negotiation key
-`cfg_parallel_transfer_buffer_size`      | 4                                |                                 | the transfer buffer size in MiB for each stream during parallel transfer
-`cfg_sernec_owners`                      | []                               |                                 | a list of users who get ownership of sernec collections
-`cfg_sernec_readers`                     | []                               |                                 | a list of users who get read access to sernec collections
-`cfg_sernec_writers`                     | []                               |                                 | a list of users who get write access to sernec collections
-`cfg_server_control_plane_key`           | TEMPORARY__32byte_ctrl_plane_key |                                 | the server control plane key
-`cfg_server_port_range_end`              | 20199                            |                                 | the last address in the range of auxillary TCP and UDP ports
-`cfg_server_port_range_start`            | 20000                            |                                 | the first address in the range of auxillary TCP and UDP ports
-`cfg_single_threaded_resources`          | []                               |                                 | a list of resources that only support single threaded transfers
-`cfg_zone_key`                           | TEMPORARY_zone_key               |                                 | the zone key
-`cfg_zone_user`                          | rods                             |                                 | the rodsadmin user to be used by the server being configured
+`cfg_db`                                 |                                  |                               | the DBMS connection information, see below (N/A for non-IES resource servers)
+`cfg_default_number_of_transfer_threads` | 4                                |                               | the default maximum number of transfer streams for parallel transfer
+`cfg_default_repl_resource_name`         | `cfg_default_resource_name`    |                               | the default resource for replication
+`cfg_default_resource_directory`         |                                  |                               | the absolute path to the vault on the resource server being configured (N/A when configuring IES and it doesn't host a resource)
+`cfg_default_resource_name`              | demoResc                         |                               | the name of the default resource
+`cfg_federation`                         | []                               |                               | a list of other iRODS zones to federate with, see below
+`cfg_ies_host`                           | `inventory_hostname`                        |                               | the FQDN of the IES
+`cfg_max_num_re_procs`                   | 4                                |                               | the maximum number of rule engine processes to run
+`cfg_negotiation_key`                    | TEMPORARY_32byte_negotiation_key |                               | the negotiation key
+`cfg_parallel_transfer_buffer_size`      | 4                                |                               | the transfer buffer size in MiB for each stream during parallel transfer
+`cfg_sernec_owners`                      | []                               |                               | a list of users who get ownership of sernec collections
+`cfg_sernec_readers`                     | []                               |                               | a list of users who get read access to sernec collections
+`cfg_sernec_writers`                     | []                               |                               | a list of users who get write access to sernec collections
+`cfg_server_control_plane_key`           | TEMPORARY__32byte_ctrl_plane_key |                               | the server control plane key
+`cfg_server_port_range_end`              | 20199                            |                               | the last address in the range of auxillary TCP and UDP ports
+`cfg_server_port_range_start`            | 20000                            |                               | the first address in the range of auxillary TCP and UDP ports
+`cfg_single_threaded_resources`          | []                               |                               | a list of resources that only support single threaded transfers
+`cfg_zone_key`                           | TEMPORARY_zone_key               |                               | the zone key
+`cfg_zone_user`                          | rods                             |                               | the rodsadmin user to be used by the server being configured
 
 
 `cfg_db` fields

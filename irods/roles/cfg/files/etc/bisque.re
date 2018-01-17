@@ -1,4 +1,4 @@
-# VERSION 6
+# VERSION 7
 #
 # bisque.re
 # Bisque related rules for > iRods 4.0
@@ -8,10 +8,9 @@
 
 @include 'bisque-env'
 
-
-BISQUE_GROUPS = list('NEVP', 'sernec')
 BISQUE_ID_ATTR = 'ipc-bisque-id'
 BISQUE_URI_ATTR = 'ipc-bisque-uri'
+BISQUE_PROJECTS = list('NEVP', 'sernec')
 
 
 logMsg(*Msg) = writeLine('serverLog', 'BISQUE: *Msg')
@@ -48,7 +47,7 @@ ln(*IESHost, *Permission, *Client, *Path) {
       msiGetStdoutInExecCmdOut(*out, *resp);
       *props = split(trimr(triml(*resp, ' '), '/'), ' ')
 
-# XXX - This is broken. See https://github.com/irods/irods/issues/3304. This is fixed in iRODS 
+# XXX - This is broken. See https://github.com/irods/irods/issues/3304. This is fixed in iRODS
 #       4.1.10.
 #      msiStrArray2String(*props, *kvStr);
       *kvStr = "";
@@ -160,13 +159,13 @@ ensureBisqueWritePermColl(*Path) {
 }
 
 
-isInGroup(*Group, *Path) = *Path like '/iplant/home/shared/*Group/\*'
+isInProject(*Project, *Path) = *Path like '/iplant/home/shared/*Project/\*'
 
 
-isInGroups(*Groups, *Path) {
+isInProjects(*Path) {
   *result = false;
-  foreach(*group in *Groups) {
-    if (isInGroup(*group, *Path)) {
+  foreach(*project in BISQUE_PROJECTS) {
+    if (isInProject(*project, *Path)) {
       *result = true;
       break;
     }
@@ -179,13 +178,12 @@ isInUser(*Path) = *Path like regex '/iplant/home/[^/]\*/bisque_data($|/.\*)'
                   && !(*Path like '/iplant/home/shared/\*')
 
 
-isForBisque(*Path) = $userNameClient != "bisque"
-                     && (isInUser(*Path) || isInGroups(BISQUE_GROUPS, *Path))
+isForBisque(*Path) = $userNameClient != "bisque" && (isInUser(*Path) || isInProjects(*Path))
 
 
 handleNewObject(*IESHost, *Client, *Path) {
   ensureBisqueWritePerm(*Path);
-  *perm = if isInGroups(BISQUE_GROUPS, *Path) then 'published' else 'private';
+  *perm = if isInProjects(*Path) then 'published' else 'private';
   ln(*IESHost, *perm, *Client, *Path);
 }
 
@@ -278,7 +276,7 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity, *IESHost) {
 
 # Add a call to this rule from inside the acPostProcForDelete PEP.
 bisque_acPostProcForDelete(*IESHost) {
-  if (isInUser($objPath) || isInGroups(BISQUE_GROUPS, $objPath)) {
+  if (isInUser($objPath) || isInProjects($objPath)) {
     rm(*IESHost, getClient($objPath), $objPath);
   }
 }

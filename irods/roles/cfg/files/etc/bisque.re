@@ -45,19 +45,7 @@ ln(*IESHost, *Permission, *Client, *Path) {
       }
       msiGetStdoutInExecCmdOut(*out, *resp);
       *props = split(trimr(triml(*resp, ' '), '/'), ' ')
-
-# XXX - This is broken. See https://github.com/irods/irods/issues/3304. This is fixed in iRODS
-#       4.1.10.
-#      msiStrArray2String(*props, *kvStr);
-      *kvStr = "";
-      foreach(*prop in *props) {
-        if (*kvStr == "" ) {
-          *kvStr = *prop;
-        } else {
-          *kvStr = *kvStr ++ "%" ++ *prop;
-        }
-      }
-# XXX ^^^
+      msiStrArray2String(*props, *kvStr);
       msiString2KeyValPair(*kvStr, *kvs);
       msiGetValByKey(*kvs, 'resource_uniq', *qId);
       *id = substr(*qId, 1, strlen(*qId) - 1);

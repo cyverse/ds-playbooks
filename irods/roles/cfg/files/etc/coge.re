@@ -1,17 +1,19 @@
+# VERSION: 2
+#
 # coge.re
-# COGE related rules for > iRods 3.0
+#
+# COGE related rules
 # put this in server/config/reConfigs/coge.re
 
-ZONE = 'iplant'
 
-isForCoge(*Path) = *Path like '/' ++ ZONE ++ '/home/*/coge_data' || 
-                   *Path like '/' ++ ZONE ++ '/home/*/coge_data/*'
+isForCoge(*Path) = *Path like '/' ++ ipc_ZONE ++ '/home/*/coge_data' ||
+                   *Path like '/' ++ ipc_ZONE ++ '/home/*/coge_data/*'
 
 setCogePerm(*Path) {
-  *lvl = if *Path == '/' ++ ZONE ++ '/home/coge/coge_data' || 
-            *Path like '/' ++ ZONE ++ '/home/coge/coge_data/*' ||
-            *Path like '/' ++ ZONE ++ '/home/coge/*/coge/data' ||
-            *Path like '/' ++ ZONE ++ '/home/coge/*/coge_data/*'
+  *lvl = if *Path == '/' ++ ipc_ZONE ++ '/home/coge/coge_data' ||
+            *Path like '/' ++ ipc_ZONE ++ '/home/coge/coge_data/*' ||
+            *Path like '/' ++ ipc_ZONE ++ '/home/coge/*/coge/data' ||
+            *Path like '/' ++ ipc_ZONE ++ '/home/coge/*/coge_data/*'
          then 'own'
          else 'write';
   msiSetACL('default', *lvl, 'coge', *Path);
@@ -29,7 +31,7 @@ ensureCogeWritePermObj(*Path) {
 coge_acPostProcForCollCreate {
   if(isForCoge($collName)) {
     writeLine('serverLog', 'COGE: permitting coge user RW on $collName');
-    ensureCogeWritePermColl($collName);    
+    ensureCogeWritePermColl($collName);
   }
 }
 
@@ -55,7 +57,7 @@ coge_acPostProcForObjRename(*SrcEntity, *DestEntity) {
       }
 
       # Ensure the data objects more deeply nested have the correct permissions
-      msiExecStrCondQuery("SELECT COLL_NAME, DATA_NAME WHERE COLL_NAME LIKE '*DestEntity/%'", 
+      msiExecStrCondQuery("SELECT COLL_NAME, DATA_NAME WHERE COLL_NAME LIKE '*DestEntity/%'",
                           *results);
       foreach(*row in *results) {
         msiGetValByKey(*row, "COLL_NAME", *coll);
@@ -67,4 +69,3 @@ coge_acPostProcForObjRename(*SrcEntity, *DestEntity) {
     }
   }
 }
-

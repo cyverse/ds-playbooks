@@ -1,3 +1,5 @@
+# VERSION: 1
+#
 # All customizations done to the iRODS rule logic are placed in this file or
 # should be included by this file.
 
@@ -14,6 +16,7 @@
 
 @include 'ipc-logic'
 @include 'ipc-repl'
+@inlcude 'ipc-services'
 
 # THIRD PARTY RULES
 #

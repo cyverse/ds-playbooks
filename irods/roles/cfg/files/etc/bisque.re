@@ -206,19 +206,8 @@ _bisque_scheduleRm(*IESHost, *Client, *Path) {
 }
 
 
-_bisque_ensureBisqueWritePerm(*Path) {
-  msiSetACL('default', 'write', _bisque_USER, *Path);
-}
-
-
-_bisque_ensureBisqueWritePermColl(*Path) {
-  _bisque_logMsg('permitting ' ++ _bisque_USER ++ ' user RW on *Path');
-  msiSetACL('recursive', 'write', _bisque_USER, *Path);
-}
-
-
 _bisque_handleNewObject(*IESHost, *Client, *Path) {
-  _bisque_ensureBisqueWritePerm(*Path);
+  _ipc_giveWriteAccessObj(_bisque_USER, *Path);
   *perm = if _bisque_isInProjects(*Path) then 'published' else 'private';
   _bisque_scheduleLn(*IESHost, *perm, *Client, *Path);
 }
@@ -227,7 +216,7 @@ _bisque_handleNewObject(*IESHost, *Client, *Path) {
 # Add a call to this rule from inside the acPostProcForCollCreate PEP.
 bisque_acPostProcForCollCreate {
   if (_bisque_isForBisque($collName)) {
-    _bisque_ensureBisqueWritePermColl($collName);
+    ipc_giveWriteAccessColl(_bisque_USER, $collName);
   }
 }
 
@@ -256,7 +245,7 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity, *IESHost) {
 
   if (*type == '-c') {
     if (*forBisque) {
-      _bisque_ensureBisqueWritePermColl(*DestEntity);
+      ipc_giveWriteAccessColl(_bisque_USER, *DestEntity);
     }
 
     foreach (*collPat in list(*DestEntity, *DestEntity ++ '/%')) {

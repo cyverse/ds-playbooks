@@ -50,12 +50,9 @@ _bisque_inInProjects(*Projects, *Path) =
 
 _bisque_isInProjects(*Path) = _bisque_isInProjects(bisque_PROJECTS, *Path)
 
-_bisque_isInUser(*Path) =
-  *Path like regex '/' ++ ipc_ZONE ++ '/home/[^/]\*/' ++ _bisque_COLL ++ '($|/.\*)'
-  && !(*Path like '/' ++ ipc_ZONE ++ '/home/shared/\*')
-
 _bisque_isForBisque(*Path) =
-  $userNameClient != _bisque_USER && (_bisque_isInUser(*Path) || _bisque_isInProjects(*Path))
+  $userNameClient != _bisque_USER
+  && (ipc_isForService(_bisque_USER, _bisque_COLL, *Path) || _bisque_isInProjects(*Path))
 
 _bisque_joinPath(*ParentColl, *ObjName) = *ParentColl ++ '/' ++ *ObjName
 
@@ -291,7 +288,7 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity, *IESHost) {
 
 # Add a call to this rule from inside the acPostProcForDelete PEP.
 bisque_acPostProcForDelete(*IESHost) {
-  if (_bisque_isInUser($objPath) || _bisque_isInProjects($objPath)) {
+  if (ipc_isForService(_bisque_USER, _bisque_COLL, $objPath) || _bisque_isInProjects($objPath)) {
     _bisque_scheduleRm(*IESHost, _bisque_getClient($objPath), $objPath);
   }
 }

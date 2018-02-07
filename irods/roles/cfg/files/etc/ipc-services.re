@@ -5,19 +5,6 @@
 
 _ipc_HOME = / ++ ipc_ZONE ++ /home
 
-
-_ipc_giveWriteAccessColl(*SvcUser, *CollPath) {
-  writeLine('serverLog', 'permitting *SvcUser write access to *CollPath and everything in it');
-  msiSetACL('recursive', 'write', *SvcUser, *CollPath);
-}
-
-
-_ipc_giveWriteAccessObj(*SvcUser, *ObjPath) {
-  writeLine('serverLog', 'permitting *SvcUser write access to *ObjPath');
-  msiSetACL('default', 'write', *SvcUser, *ObjPath);
-}
-
-
 # This function checks to see if a collection or data object is inside a user
 # collection managed by a service.
 #
@@ -26,11 +13,40 @@ _ipc_giveWriteAccessObj(*SvcUser, *ObjPath) {
 #  SvcColl  the name of the user collection managed by the service
 #  Path     the path to the collection or data object of interest
 #
+# RETURNS:
+#  It returns true if the collection or data object is inside the user
+#  collection, otherwise it returns false.
+#
 ipc_isForService: string * string * path -> boolean
 ipc_isForService(*SvcUser, *SvcColl, *Path) =
   *Path like regex _ipc_HOME ++ '/[^/]\*/*SvcColl($|/.\*)'
   && !(*Path like _ipc_HOME ++ '/*SvcUser/\*')
   && !(*Path like _ipc_HOME ++ '/shared/\*')
+
+
+# This rule gives write access to a service for a collection and everything in
+# it.
+#
+# PARAMETERS:
+#  SvcUser   the iRODS user name used by the service
+#  CollPath  the path to the collection of begin given write access to
+#
+ipc_giveWriteAccessColl(*SvcUser, *CollPath) {
+  writeLine('serverLog', 'permitting *SvcUser write access to *CollPath and everything in it');
+  msiSetACL('recursive', 'write', *SvcUser, *CollPath);
+}
+
+
+# This rule gives write access to a service for a data object.
+#
+# PARAMETERS:
+#  SvcUser  the iRODS user name used by the service
+#  ObjPath  the path to the data object of begin given write access to
+#
+ipc_giveWriteAccessObj(*SvcUser, *ObjPath) {
+  writeLine('serverLog', 'permitting *SvcUser write access to *ObjPath');
+  msiSetACL('default', 'write', *SvcUser, *ObjPath);
+}
 
 
 # This rule ensures that a service user gets write access to a presumably newly

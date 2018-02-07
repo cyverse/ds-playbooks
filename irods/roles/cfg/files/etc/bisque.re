@@ -1,7 +1,7 @@
-# VERSION 7
+# VERSION 8
 #
 # bisque.re
-# Bisque related rules for > iRods 4.0
+# Bisque related rules
 # put this in server/config/reConfigs/bisque.re
 # include this file from within ipc-custom.re
 ###############################################
@@ -146,7 +146,7 @@ ensureBisqueWritePermColl(*Path) {
 }
 
 
-isInProject(*Project, *Path) = *Path like '/iplant/home/shared/*Project/\*'
+isInProject(*Project, *Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/*Project/\*'
 
 
 isInProjects(*Path) {
@@ -161,8 +161,8 @@ isInProjects(*Path) {
 }
 
 
-isInUser(*Path) = *Path like regex '/iplant/home/[^/]\*/bisque_data($|/.\*)'
-                  && !(*Path like '/iplant/home/shared/\*')
+isInUser(*Path) = *Path like regex '/' ++ ipc_ZONE ++ '/home/[^/]\*/bisque_data($|/.\*)'
+                  && !(*Path like '/' ++ ipc_ZONE ++ '/home/shared/\*')
 
 
 isForBisque(*Path) = $userNameClient != "bisque" && (isInUser(*Path) || isInProjects(*Path))

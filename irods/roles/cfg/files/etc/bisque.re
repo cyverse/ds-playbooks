@@ -11,7 +11,7 @@ _bisque_ID_ATTR = 'ipc-bisque-id'
 _bisque_URI_ATTR = 'ipc-bisque-uri'
 _bisque_USER = 'bisque'
 
-_bisque_stripTrailingSlash(*Path) = if *Path like '*/' then trimr(*Path, '/') else *Path
+_bisque_stripTrailingSlash(*Path) = if str(*Path) like '*/' then trimr(str(*Path), '/') else *Path
 
 _bisque_determineSrc(*BaseSrcColl, *BaseDestColl, *DestEntity) =
   let *dest = _bisque_stripTrailingSlash(*DestEntity) in

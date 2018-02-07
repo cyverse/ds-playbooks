@@ -60,7 +60,9 @@ _bisque_joinPath(*ParentColl, *ObjName) = *ParentColl ++ '/' ++ *ObjName
 _bisque_mkIrodsUrl(*Path) = bisque_IRODS_URL_BASE ++ *Path
 
 
-_bisque_logMsg(*Msg) = writeLine('serverLog', 'BISQUE: *Msg')
+_bisque_logMsg(*Msg) {
+  writeLine('serverLog', 'BISQUE: *Msg');
+}
 
 
 # Tells BisQue to create a link for a given user to a data object.

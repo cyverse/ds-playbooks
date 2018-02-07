@@ -3,7 +3,7 @@
 # ipc-services.re
 # This is a library of rules to support service specific policies.
 
-_ipc_HOME = / ++ ipc_ZONE ++ /home
+_ipc_HOME = '/' ++ ipc_ZONE ++ '/home'
 
 # This function checks to see if a collection or data object is inside a user
 # collection managed by a service.
@@ -19,9 +19,10 @@ _ipc_HOME = / ++ ipc_ZONE ++ /home
 #
 ipc_isForService: string * string * path -> boolean
 ipc_isForService(*SvcUser, *SvcColl, *Path) =
-  *Path like regex _ipc_HOME ++ '/[^/]\*/*SvcColl($|/.\*)'
-  && !(*Path like _ipc_HOME ++ '/*SvcUser/\*')
-  && !(*Path like _ipc_HOME ++ '/shared/\*')
+  let *strPath = str(*Path) in
+  *strPath like regex _ipc_HOME ++ '/[^/]\*/*SvcColl($|/.\*)'
+  && !(*strPath like _ipc_HOME ++ '/*SvcUser/\*')
+  && !(*strPath like _ipc_HOME ++ '/shared/\*')
 
 
 # This rule gives write access to a service for a collection and everything in
@@ -59,7 +60,7 @@ ipc_giveWriteAccessObj(*SvcUser, *ObjPath) {
 #  CollPath  the path to the collection of interest
 #
 ipc_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *CollPath) {
-  if (ipc_isForService(*SvcUser, *SvcColl, *CollPath)) {
+  if (ipc_isForService(*SvcUser, *SvcColl, /*CollPath)) {
     ipc_giveWriteAccessColl(*SvcUser, *CollPath);
   }
 }
@@ -75,7 +76,7 @@ ipc_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *CollPath) {
 #  ObjPath  the path to the data object of interest
 #
 ipc_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *ObjPath) {
-  if (ipc_isForService(*SvcUser, *SvcColl, *ObjPath)) {
+  if (ipc_isForService(*SvcUser, *SvcColl, /*ObjPath)) {
     ipc_giveWriteAccessObj(*SvcUser, *ObjPath);
   }
 }
@@ -92,8 +93,8 @@ ipc_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *ObjPath) {
 #  NewPath  the new iRODS path to the entity
 #
 ipc_ensureAccessOnMv(*SvcUser, *SvcColl, *OldPath, *NewPath) {
-  if (!ipc_isForService(*SvcUser, *SvcColl, *OldPath)
-      && ipc_isForService(*SvcUser, *SvcColl, *NewPath)) {
+  if (!ipc_isForService(*SvcUser, *SvcColl, /*OldPath)
+      && ipc_isForService(*SvcUser, *SvcColl, /*NewPath)) {
 
     msiGetObjType(*Path, *type);
 

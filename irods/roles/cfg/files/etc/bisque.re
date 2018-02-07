@@ -49,6 +49,7 @@ _bisque_inInProjects(*Projects, *Path) =
 
 _bisque_isInProjects(*Path) = _bisque_isInProjects(bisque_PROJECTS, *Path)
 
+_bisque_isForBisque: path -> boolean
 _bisque_isForBisque(*Path) =
   $userNameClient != _bisque_USER
   && (ipc_isForService(_bisque_USER, _bisque_COLL, *Path) || _bisque_isInProjects(*Path))

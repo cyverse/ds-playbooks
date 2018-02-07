@@ -139,17 +139,6 @@ _bisque_getClient(*Path) =
   if *homeUser == '' then $userNameClient else *homeUser
 
 
-_bisque_ensureBisqueWritePerm(*Path) {
-  msiSetACL('default', 'write', 'bisque', *Path);
-}
-
-
-_bisque_ensureBisqueWritePermColl(*Path) {
-  _bisque_logMsg('permitting bisque user RW on *Path');
-  msiSetACL('recursive', 'write', 'bisque', *Path);
-}
-
-
 _bisque_isInProject(*Project, *Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/*Project/\*'
 
 
@@ -196,6 +185,17 @@ _bisque_isInBisque(*CollName, *DataName) =
                      AND META_DATA_ATTR_NAME = '*idAttr') {
     *reg.META_DATA_ATTR_VALUE != '0'
   }
+
+
+_bisque_ensureBisqueWritePerm(*Path) {
+  msiSetACL('default', 'write', 'bisque', *Path);
+}
+
+
+_bisque_ensureBisqueWritePermColl(*Path) {
+  _bisque_logMsg('permitting bisque user RW on *Path');
+  msiSetACL('recursive', 'write', 'bisque', *Path);
+}
 
 
 # Add a call to this rule from inside the acPostProcForCollCreate PEP.

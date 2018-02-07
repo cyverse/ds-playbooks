@@ -112,7 +112,7 @@ acPostProcForPut {
   *err = errormsg(ipc_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(bisque_acPostProcForPut(ipc_RE_HOST), *msg);
+  *err = errormsg(bisque_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForPut, *msg);
@@ -129,7 +129,7 @@ acPostProcForCopy {
   *err = errormsg(ipc_acPostProcForCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(bisque_acPostProcForCopy(ipc_RE_HOST), *msg);
+  *err = errormsg(bisque_acPostProcForCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForCopy, *msg);
@@ -173,7 +173,7 @@ acPostProcForDelete {
   *err = errormsg(ipc_acPostProcForDelete, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(bisque_acPostProcForDelete(ipc_RE_HOST), *msg);
+  *err = errormsg(bisque_acPostProcForDelete, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
@@ -181,7 +181,7 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
   *err = errormsg(ipc_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(bisque_acPostProcForObjRename(*SourceObject, *DestObject, ipc_RE_HOST), *msg);
+  *err = errormsg(bisque_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForObjRename(*SourceObject, *DestObject), *msg);

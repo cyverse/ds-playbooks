@@ -67,14 +67,14 @@ _bisque_logMsg(*Msg) {
 #
 # bisque_ops.py --alias user ln -P permission /path/to/data.object
 #
-_bisque_Ln() {
+_bisque_Ln(*Permission, *Client, *Path) {
   _bisque_logMsg("linking *Path for *Client with permission *Permission");
 
   *pArg = execCmdArg(*Permission);
   *aliasArg = execCmdArg(*Client);
   *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
   *argStr = '--alias *aliasArg -P *pArg ln *pathArg';
-  *status = errorcode(msiExecCmd("bisque_ops.py", *argStr, *IESHost, "null", "null", *out));
+  *status = errorcode(msiExecCmd("bisque_ops.py", *argStr, ipc_RE_HOST, "null", "null", *out));
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
@@ -115,14 +115,14 @@ _bisque_Ln() {
 #
 # bisque_ops.py --alias user mv /old/path/to/data.object /new/path/to/data.object
 #
-_bisque_Mv(*IESHost, *Permission, *Client, *Path) {
+_bisque_Mv(*Permission, *Client, *Path) {
   _bisque_logMsg('moving link from *OldPath to *NewPath for *Client');
 
   *aliasArg = execCmdArg(*Client);
   *oldPathArg = execCmdArg(_bisque_mkIrodsUrl(*OldPath));
   *newPathArg = execCmdArg(_bisque_mkIrodsUrl(*NewPath));
   *argStr = '--alias *aliasArg mv *oldPathArg *newPathArg';
-  *status = errorcode(msiExecCmd('bisque_ops.py', *argStr, *IESHost, 'null', 'null', *out));
+  *status = errorcode(msiExecCmd('bisque_ops.py', *argStr, ipc_RE_HOST, 'null', 'null', *out));
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
@@ -149,13 +149,13 @@ _bisque_Mv(*IESHost, *Permission, *Client, *Path) {
 #
 # bisque_ops.py --alias user rm /path/to/data.object
 #
-_bisque_Rm(*IESHost, *Client, *Path) {
+_bisque_Rm(*Client, *Path) {
   _bisque_logMsg("Removing link from *Path for *Client");
 
   *aliasArg = execCmdArg(*Client);
   *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
   *argStr = '--alias *aliasArg rm *pathArg';
-  *status = errorcode(msiExecCmd("bisque_ops.py", *argStr, *IESHost, "null", "null", *out));
+  *status = errorcode(msiExecCmd("bisque_ops.py", *argStr, ipc_RE_HOST, "null", "null", *out));
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
@@ -178,37 +178,37 @@ _bisque_Rm(*IESHost, *Client, *Path) {
 }
 
 
-_bisque_scheduleLn(*IESHost, *Permission, *Client, *Path) {
+_bisque_scheduleLn(*Permission, *Client, *Path) {
   _bisque_logMsg("scheduling linking of *Path for *Client with permission *Permission");
 
   delay("<PLUSET>1s</PLUSET>") {
-    _bisque_Ln(*IESHost, *Permission, *Client, *Path);
+    _bisque_Ln(*Permission, *Client, *Path);
   }
 }
 
 
-_bisque_scheduleMv(*IESHost, *Client, *OldPath, *NewPath) {
+_bisque_scheduleMv(*Client, *OldPath, *NewPath) {
   _bisque_logMsg('scheduling link move from *OldPath to *NewPath for *Client');
 
   delay("<PLUSET>1s</PLUSET>") {
-    _bisque_Mv(*IESHost, *Client, *OldPath, *NewPath);
+    _bisque_Mv(ipc_RE_HOST, *Client, *OldPath, *NewPath);
   }
 }
 
 
-_bisque_scheduleRm(*IESHost, *Client, *Path) {
+_bisque_scheduleRm(*Client, *Path) {
   _bisque_logMsg("scheduling removal of linking to *Path for *Client");
 
   delay("<PLUSET>1s</PLUSET>") {
-    _bisque_Mv(*IESHost, *Client, *Path);
+    _bisque_Rm(*Client, *Path);
   }
 }
 
 
-_bisque_handleNewObject(*IESHost, *Client, *Path) {
-  _ipc_giveWriteAccessObj(_bisque_USER, *Path);
+_bisque_handleNewObject(*Client, *Path) {
+  ipc_giveWriteAccessObj(_bisque_USER, *Path);
   *perm = if _bisque_isInProjects(*Path) then 'published' else 'private';
-  _bisque_scheduleLn(*IESHost, *perm, *Client, *Path);
+  _bisque_scheduleLn(*perm, *Client, *Path);
 }
 
 
@@ -221,23 +221,23 @@ bisque_acPostProcForCollCreate {
 
 
 # Add a call to this rule from inside the acPostProcForPut PEP.
-bisque_acPostProcForPut(*IESHost) {
+bisque_acPostProcForPut {
   if (_bisque_isForBisque($objPath)) {
-    _bisque_handleNewObject(*IESHost, _bisque_getClient($objPath), $objPath);
+    _bisque_handleNewObject(_bisque_getClient($objPath), $objPath);
   }
 }
 
 
 # Add a call to this rule from inside the acPostProcForCopy PEP.
-bisque_acPostProcForCopy(*IESHost) {
+bisque_acPostProcForCopy {
   if (_bisque_isForBisque($objPath)) {
-    _bisque_handleNewObject(*IESHost, _bisque_getClient($objPath), $objPath);
+    _bisque_handleNewObject(_bisque_getClient($objPath), $objPath);
   }
 }
 
 
 # Add a call to this rule from inside the acPostProcForObjRename PEP.
-bisque_acPostProcForObjRename(*SrcEntity, *DestEntity, *IESHost) {
+bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   *client = _bisque_getClient(*SrcEntity);
   *forBisque = _bisque_isForBisque(*DestEntity);
   msiGetObjType(*DestEntity, *type);
@@ -256,9 +256,9 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity, *IESHost) {
           *srcSubColl = _bisque_determineSrc(*SrcEntity, *DestEntity, *collName);
           *srcObj = _bisque_joinPath(*srcSubColl, *dataName);
           *destObj = _bisque_joinPath(*collName, *dataName);
-          _bisque_scheduleMv(*IESHost, *client, *srcObj, *destObj);
+          _bisque_scheduleMv(*client, *srcObj, *destObj);
         } else if (*forBisque) {
-          _bisque_handleNewObject(*IESHost, *client, _bisque_joinPath(*collName, *dataName));
+          _bisque_handleNewObject(*client, _bisque_joinPath(*collName, *dataName));
         }
       }
     }
@@ -266,17 +266,17 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity, *IESHost) {
     msiSplitPath(*DestEntity, *collName, *dataName);
 
     if (_bisque_isInBisque(*collName, *dataName)) {
-      _bisque_scheduleMv(*IESHost, *client, *SrcEntity, *DestEntity);
+      _bisque_scheduleMv(*client, *SrcEntity, *DestEntity);
     } else if (*forBisque) {
-      _bisque_handleNewObject(*IESHost, *client, *DestEntity);
+      _bisque_handleNewObject(*client, *DestEntity);
     }
   }
 }
 
 
 # Add a call to this rule from inside the acPostProcForDelete PEP.
-bisque_acPostProcForDelete(*IESHost) {
+bisque_acPostProcForDelete {
   if (ipc_isForService(_bisque_USER, _bisque_COLL, $objPath) || _bisque_isInProjects($objPath)) {
-    _bisque_scheduleRm(*IESHost, _bisque_getClient($objPath), $objPath);
+    _bisque_scheduleRm(_bisque_getClient($objPath), $objPath);
   }
 }

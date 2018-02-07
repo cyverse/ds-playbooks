@@ -153,16 +153,14 @@ _bisque_ensureBisqueWritePermColl(*Path) {
 _bisque_isInProject(*Project, *Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/*Project/\*'
 
 
-_bisque_isInProjects(*Path) {
-  *result = false;
-  foreach(*project in bisque_PROJECTS) {
-    if (_bisque_isInProject(*project, *Path)) {
-      *result = true;
-      break;
-    }
-  }
-  *result;
-}
+_bisque_inInProjects(*Projects, *Path) =
+  if size(*Projects) == 0
+  then false
+  else if _bisque_inInProject(hd(*Projects), *Path)
+       then true
+       else _bisque_inInProjects(tl(*Projects), *Path)
+
+_bisque_isInProjects(*Path) = _bisque_isInProjects(bisque_PROJECTS, *Path)
 
 
 _bisque_isInUser(*Path) =

@@ -111,6 +111,9 @@ acPostProcForPut {
   *err = errormsg(bisque_acPostProcForPut(ipc_RE_HOST), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
+  *err = errormsg(coge_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
   *err = errormsg(replPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
@@ -120,6 +123,9 @@ acPostProcForCopy {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(bisque_acPostProcForCopy(ipc_RE_HOST), *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(coge_acPostProcForCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sernec_acPostProcForCopy, *msg);

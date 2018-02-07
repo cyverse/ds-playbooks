@@ -127,16 +127,16 @@ _bisque_joinPath(*ParentColl, *ObjName) = *ParentColl ++ '/' ++ *ObjName
 
 
 _bisque_getHomeUser(*Path) =
-  let *nodes = split(*Path, '/')
-  in if size(*nodes) <= 2
-     then ''
-     else let *user = elem(*nodes, 2)
-          in if *user == 'shared' then '' else *user
+  let *nodes = split(*Path, '/') in
+  if size(*nodes) <= 2
+  then ''
+  else let *user = elem(*nodes, 2) in
+       if *user == 'shared' then '' else *user
 
 
 _bisque_getClient(*Path) =
-  let *homeUser = _bisque_getHomeUser(*Path)
-  in if *homeUser == '' then $userNameClient else *homeUser
+  let *homeUser = _bisque_getHomeUser(*Path) in
+  if *homeUser == '' then $userNameClient else *homeUser
 
 
 _bisque_ensureBisqueWritePerm(*Path) {
@@ -183,24 +183,19 @@ _bisque_stripTrailingSlash(*Path) = if *Path like '*/' then trimr(*Path, '/') el
 
 
 _bisque_determineSrc(*BaseSrcColl, *BaseDestColl, *DestEntity) =
-  let *dest = _bisque_stripTrailingSlash(*DestEntity)
-  in _bisque_stripTrailingSlash(*BaseSrcColl)
-     ++ substr(*dest, strlen(_bisque_stripTrailingSlash(*BaseDestColl)), strlen(*dest))
+  let *dest = _bisque_stripTrailingSlash(*DestEntity) in
+  _bisque_stripTrailingSlash(*BaseSrcColl)
+    ++ substr(*dest, strlen(_bisque_stripTrailingSlash(*BaseDestColl)), strlen(*dest))
 
 
-_bisque_isInBisque(*CollName, *DataName) {
-  *inBisque = false;
-  *idAttr = _bisque_ID_ATTR;
-
+_bisque_isInBisque(*CollName, *DataName) =
+  let *idAttr = _bisque_ID_ATTR in
   foreach (*reg in SELECT COUNT(META_DATA_ATTR_VALUE)
                    WHERE COLL_NAME = '*CollName'
                      AND DATA_NAME = '*DataName'
                      AND META_DATA_ATTR_NAME = '*idAttr') {
-    *inBisque = *reg.META_DATA_ATTR_VALUE != '0';
+    *reg.META_DATA_ATTR_VALUE != '0'
   }
-
-  *inBisque;
-}
 
 
 # Add a call to this rule from inside the acPostProcForCollCreate PEP.

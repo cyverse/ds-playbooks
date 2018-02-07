@@ -10,11 +10,57 @@
 _bisque_ID_ATTR = 'ipc-bisque-id'
 _bisque_URI_ATTR = 'ipc-bisque-uri'
 
+_bisque_stripTrailingSlash(*Path) = if *Path like '*/' then trimr(*Path, '/') else *Path
 
-_bisque_logMsg(*Msg) = writeLine('serverLog', 'BISQUE: *Msg')
+_bisque_determineSrc(*BaseSrcColl, *BaseDestColl, *DestEntity) =
+  let *dest = _bisque_stripTrailingSlash(*DestEntity) in
+  _bisque_stripTrailingSlash(*BaseSrcColl)
+    ++ substr(*dest, strlen(_bisque_stripTrailingSlash(*BaseDestColl)), strlen(*dest))
 
+_bisque_getHomeUser(*Path) =
+  let *nodes = split(*Path, '/') in
+  if size(*nodes) <= 2
+  then ''
+  else let *user = elem(*nodes, 2) in
+       if *user == 'shared' then '' else *user
+
+_bisque_getClient(*Path) =
+  let *homeUser = _bisque_getHomeUser(*Path) in
+  if *homeUser == '' then $userNameClient else *homeUser
+
+_bisque_isInBisque(*CollName, *DataName) =
+  let *idAttr = _bisque_ID_ATTR in
+  foreach (*reg in SELECT COUNT(META_DATA_ATTR_VALUE)
+                   WHERE COLL_NAME = '*CollName'
+                     AND DATA_NAME = '*DataName'
+                     AND META_DATA_ATTR_NAME = '*idAttr') {
+    *reg.META_DATA_ATTR_VALUE != '0'
+  }
+
+_bisque_isInProject(*Project, *Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/*Project/\*'
+
+_bisque_inInProjects(*Projects, *Path) =
+  if size(*Projects) == 0
+  then false
+  else if _bisque_isInProject(hd(*Projects), *Path)
+       then true
+       else _bisque_inInProjects(tl(*Projects), *Path)
+
+_bisque_isInProjects(*Path) = _bisque_isInProjects(bisque_PROJECTS, *Path)
+
+_bisque_isInUser(*Path) =
+  *Path like regex '/' ++ ipc_ZONE ++ '/home/[^/]\*/bisque_data($|/.\*)'
+  && !(*Path like '/' ++ ipc_ZONE ++ '/home/shared/\*')
+
+_bisque_isForBisque(*Path) =
+  $userNameClient != "bisque" && (_bisque_isInUser(*Path) || _bisque_isInProjects(*Path))
+
+_bisque_joinPath(*ParentColl, *ObjName) = *ParentColl ++ '/' ++ *ObjName
 
 _bisque_mkIrodsUrl(*Path) = bisque_IRODS_URL_BASE ++ *Path
+
+
+_bisque_logMsg(*Msg) = writeLine('serverLog', 'BISQUE: *Msg')
 
 
 # Tells BisQue to create a link for a given user to a data object.
@@ -59,17 +105,8 @@ _bisque_Ln() {
                          *kv);
 
     msiSetKeyValuePairsToObj(*kv, *Path, '-d');
-    
+
     _bisque_logMsg('linked *Path for *Client with permission *Permission');
-  }
-}
-
-
-_bisque_scheduleLn(*IESHost, *Permission, *Client, *Path) {
-  _bisque_logMsg("scheduling linking of *Path for *Client with permission *Permission");
-
-  delay("<PLUSET>1s</PLUSET>") {
-    _bisque_Ln(*IESHost, *Permission, *Client, *Path);
   }
 }
 
@@ -108,15 +145,6 @@ _bisque_Mv(*IESHost, *Permission, *Client, *Path) {
 }
 
 
-_bisque_scheduleMv(*IESHost, *Client, *OldPath, *NewPath) {
-  _bisque_logMsg('scheduling link move from *OldPath to *NewPath for *Client');
-
-  delay("<PLUSET>1s</PLUSET>") {
-    _bisque_Mv(*IESHost, *Client, *OldPath, *NewPath);
-  }
-}
-
-
 # Tells BisQue to remove a link to data object.
 #
 # bisque_ops.py --alias user rm /path/to/data.object
@@ -150,6 +178,24 @@ _bisque_Rm(*IESHost, *Client, *Path) {
 }
 
 
+_bisque_scheduleLn(*IESHost, *Permission, *Client, *Path) {
+  _bisque_logMsg("scheduling linking of *Path for *Client with permission *Permission");
+
+  delay("<PLUSET>1s</PLUSET>") {
+    _bisque_Ln(*IESHost, *Permission, *Client, *Path);
+  }
+}
+
+
+_bisque_scheduleMv(*IESHost, *Client, *OldPath, *NewPath) {
+  _bisque_logMsg('scheduling link move from *OldPath to *NewPath for *Client');
+
+  delay("<PLUSET>1s</PLUSET>") {
+    _bisque_Mv(*IESHost, *Client, *OldPath, *NewPath);
+  }
+}
+
+
 _bisque_scheduleRm(*IESHost, *Client, *Path) {
   _bisque_logMsg("scheduling removal of linking to *Path for *Client");
 
@@ -157,70 +203,6 @@ _bisque_scheduleRm(*IESHost, *Client, *Path) {
     _bisque_Mv(*IESHost, *Client, *Path);
   }
 }
-
-
-_bisque_joinPath(*ParentColl, *ObjName) = *ParentColl ++ '/' ++ *ObjName
-
-
-_bisque_getHomeUser(*Path) =
-  let *nodes = split(*Path, '/') in
-  if size(*nodes) <= 2
-  then ''
-  else let *user = elem(*nodes, 2) in
-       if *user == 'shared' then '' else *user
-
-
-_bisque_getClient(*Path) =
-  let *homeUser = _bisque_getHomeUser(*Path) in
-  if *homeUser == '' then $userNameClient else *homeUser
-
-
-_bisque_isInProject(*Project, *Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/*Project/\*'
-
-
-_bisque_inInProjects(*Projects, *Path) =
-  if size(*Projects) == 0
-  then false
-  else if _bisque_inInProject(hd(*Projects), *Path)
-       then true
-       else _bisque_inInProjects(tl(*Projects), *Path)
-
-_bisque_isInProjects(*Path) = _bisque_isInProjects(bisque_PROJECTS, *Path)
-
-
-_bisque_isInUser(*Path) =
-  *Path like regex '/' ++ ipc_ZONE ++ '/home/[^/]\*/bisque_data($|/.\*)'
-  && !(*Path like '/' ++ ipc_ZONE ++ '/home/shared/\*')
-
-
-_bisque_isForBisque(*Path) =
-  $userNameClient != "bisque" && (_bisque_isInUser(*Path) || _bisque_isInProjects(*Path))
-
-
-_bisque_handleNewObject(*IESHost, *Client, *Path) {
-  _bisque_ensureBisqueWritePerm(*Path);
-  *perm = if _bisque_isInProjects(*Path) then 'published' else 'private';
-  _bisque_scheduleLn(*IESHost, *perm, *Client, *Path);
-}
-
-
-_bisque_stripTrailingSlash(*Path) = if *Path like '*/' then trimr(*Path, '/') else *Path
-
-
-_bisque_determineSrc(*BaseSrcColl, *BaseDestColl, *DestEntity) =
-  let *dest = _bisque_stripTrailingSlash(*DestEntity) in
-  _bisque_stripTrailingSlash(*BaseSrcColl)
-    ++ substr(*dest, strlen(_bisque_stripTrailingSlash(*BaseDestColl)), strlen(*dest))
-
-
-_bisque_isInBisque(*CollName, *DataName) =
-  let *idAttr = _bisque_ID_ATTR in
-  foreach (*reg in SELECT COUNT(META_DATA_ATTR_VALUE)
-                   WHERE COLL_NAME = '*CollName'
-                     AND DATA_NAME = '*DataName'
-                     AND META_DATA_ATTR_NAME = '*idAttr') {
-    *reg.META_DATA_ATTR_VALUE != '0'
-  }
 
 
 _bisque_ensureBisqueWritePerm(*Path) {
@@ -231,6 +213,13 @@ _bisque_ensureBisqueWritePerm(*Path) {
 _bisque_ensureBisqueWritePermColl(*Path) {
   _bisque_logMsg('permitting bisque user RW on *Path');
   msiSetACL('recursive', 'write', 'bisque', *Path);
+}
+
+
+_bisque_handleNewObject(*IESHost, *Client, *Path) {
+  _bisque_ensureBisqueWritePerm(*Path);
+  *perm = if _bisque_isInProjects(*Path) then 'published' else 'private';
+  _bisque_scheduleLn(*IESHost, *perm, *Client, *Path);
 }
 
 

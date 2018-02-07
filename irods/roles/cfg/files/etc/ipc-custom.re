@@ -28,6 +28,7 @@
 @include 'aegis'
 @include 'bisque'
 @include 'coge'
+@include 'sciapps'
 @include 'sernec'
 
 
@@ -117,6 +118,9 @@ acPostProcForPut {
   *err = errormsg(coge_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
+  *err = errormsg(sciapps_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
   *err = errormsg(replPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
@@ -129,6 +133,9 @@ acPostProcForCopy {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForCopy, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sciapps_acPostProcForCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sernec_acPostProcForCopy, *msg);
@@ -146,6 +153,9 @@ acPostProcForCollCreate {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sciapps_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sernec_acPostProcForCollCreate, *msg);
@@ -175,6 +185,9 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sciapps_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sernec_acPostProcForObjRename(*SourceObject, *DestObject), *msg);

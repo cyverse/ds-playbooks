@@ -1,9 +1,8 @@
 # VERSION 9
 #
 # bisque.re
-# Bisque related rules
-# put this in server/config/reConfigs/bisque.re
-# include this file from within ipc-custom.re
+#
+# BisQue related rules
 
 @include 'bisque-env'
 

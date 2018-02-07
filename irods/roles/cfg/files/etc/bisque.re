@@ -21,7 +21,7 @@ _bisque_mkIrodsUrl(*Path) = bisque_IRODS_URL_BASE ++ *Path
 #
 # bisque_ops.py --alias user ln -P permission /path/to/data.object
 #
-_bisque_ln(*IESHost, *Permission, *Client, *Path) {
+_bisque_scheduleLn(*IESHost, *Permission, *Client, *Path) {
   _bisque_logMsg("scheduling linking of *Path for *Client with permission *Permission");
   delay("<PLUSET>1s</PLUSET>") {
     _bisque_logMsg("linking *Path for *Client with permission *Permission");
@@ -64,7 +64,7 @@ _bisque_ln(*IESHost, *Permission, *Client, *Path) {
 #
 # bisque_ops.py --alias user mv /old/path/to/data.object /new/path/to/data.object
 #
-_bisque_mv(*IESHost, *Client, *OldPath, *NewPath) {
+_bisque_scheduleMv(*IESHost, *Client, *OldPath, *NewPath) {
   _bisque_logMsg('scheduling link move from *OldPath to *NewPath for *Client');
   delay("<PLUSET>1s</PLUSET>") {
     _bisque_logMsg('moving link from *OldPath to *NewPath for *Client');
@@ -96,7 +96,7 @@ _bisque_mv(*IESHost, *Client, *OldPath, *NewPath) {
 #
 # bisque_ops.py --alias user rm /path/to/data.object
 #
-_bisque_rm(*IESHost, *Client, *Path) {
+_bisque_scheduleRm(*IESHost, *Client, *Path) {
   _bisque_logMsg("scheduling removal of linking to *Path for *Client");
   delay("<PLUSET>1s</PLUSET>") {
     _bisque_logMsg("Removing link from *Path for *Client");
@@ -164,7 +164,7 @@ _bisque_isForBisque(*Path) =
 _bisque_handleNewObject(*IESHost, *Client, *Path) {
   _bisque_ensureBisqueWritePerm(*Path);
   *perm = if _bisque_isInProjects(*Path) then 'published' else 'private';
-  _bisque_ln(*IESHost, *perm, *Client, *Path);
+  _bisque_scheduleLn(*IESHost, *perm, *Client, *Path);
 }
 
 
@@ -242,7 +242,7 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity, *IESHost) {
           *srcSubColl = _bisque_determineSrc(*SrcEntity, *DestEntity, *collName);
           *srcObj = _bisque_joinPath(*srcSubColl, *dataName);
           *destObj = _bisque_joinPath(*collName, *dataName);
-          _bisque_mv(*IESHost, *client, *srcObj, *destObj);
+          _bisque_scheduleMv(*IESHost, *client, *srcObj, *destObj);
         } else if (*forBisque) {
           _bisque_handleNewObject(*IESHost, *client, _bisque_joinPath(*collName, *dataName));
         }
@@ -252,7 +252,7 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity, *IESHost) {
     msiSplitPath(*DestEntity, *collName, *dataName);
 
     if (_bisque_isInBisque(*collName, *dataName)) {
-      _bisque_mv(*IESHost, *client, *SrcEntity, *DestEntity);
+      _bisque_scheduleMv(*IESHost, *client, *SrcEntity, *DestEntity);
     } else if (*forBisque) {
       _bisque_handleNewObject(*IESHost, *client, *DestEntity);
     }
@@ -263,6 +263,6 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity, *IESHost) {
 # Add a call to this rule from inside the acPostProcForDelete PEP.
 bisque_acPostProcForDelete(*IESHost) {
   if (_bisque_isInUser($objPath) || _bisque_isInProjects($objPath)) {
-    _bisque_rm(*IESHost, _bisque_getClient($objPath), $objPath);
+    _bisque_scheduleRm(*IESHost, _bisque_getClient($objPath), $objPath);
   }
 }

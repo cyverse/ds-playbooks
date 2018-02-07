@@ -1,17 +1,26 @@
 # The production environment rule customizations belong in this file.
 
+ipc_AMQP_EPHEMERAL : boolean
+ipc_AMQP_EPHEMERAL = {% if _cfg_amqp_ephemeral %}true{% else %}false{% endif %}
+
+ipc_DEFAULT_REPL_RESC : string
+ipc_DEFAULT_REPL_RESC = '{{ _cfg_default_repl_resource_name }}'
+
+ipc_DEFAULT_RESC : string
+ipc_DEFAULT_RESC = '{{ _cfg_default_resource_name }}'
+
+ipc_IES_IP : string
+ipc_IES_IP = '{{ lookup("dig", _cfg_ies_host) }}'
+
+ipc_MAX_NUM_RE_PROCS : integer
+ipc_MAX_NUM_RE_PROCS = {{ _cfg_max_num_re_procs }}
+
+ipc_RE_HOST : string
+ipc_RE_HOST = '{{ _cfg_ies_host }}'
+
 ipc_ZONE : string
 ipc_ZONE = 'iplant'
 
-ipc_AMQP_EPHEMERAL = {% if _cfg_amqp_ephemeral %}true{% else %}false{% endif %}
-
-ipc_IES_IP = '{{ lookup("dig", _cfg_ies_host) }}'
-ipc_RE_HOST = '{{ _cfg_ies_host }}'
-
-ipc_MAX_NUM_RE_PROCS = {{ _cfg_max_num_re_procs }}
-
-ipc_DEFAULT_RESC = '{{ _cfg_default_resource_name }}'
-ipc_DEFAULT_REPL_RESC = '{{ _cfg_default_repl_resource_name }}'
 
 {% if _cfg_single_threaded_resources|length > 0 %}
 acSetNumThreads {

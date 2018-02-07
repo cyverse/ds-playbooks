@@ -96,12 +96,12 @@ ipc_ensureAccessOnMv(*SvcUser, *SvcColl, *OldPath, *NewPath) {
   if (!ipc_isForService(*SvcUser, *SvcColl, /*OldPath)
       && ipc_isForService(*SvcUser, *SvcColl, /*NewPath)) {
 
-    msiGetObjType(*Path, *type);
+    msiGetObjType(*NewPath, *type);
 
     if (*type == '-c') {
-      ipc_giveWriteAccessColl(*SvcUser, *Path);
+      ipc_giveWriteAccessColl(*SvcUser, *NewPath);
     } else if (*type == '-d') {
-      ipc_giveWriteAccessObj(*SvcUser, *Path);
+      ipc_giveWriteAccessObj(*SvcUser, *NewPath);
     }
   }
 }

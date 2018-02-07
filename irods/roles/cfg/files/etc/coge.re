@@ -4,7 +4,7 @@
 #
 # COGE related rules
 # put this in server/config/reConfigs/coge.re
-
+# include this file from within ipc-custom.re
 
 _coge_USER = 'coge'
 _coge_COLL = 'coge_data'

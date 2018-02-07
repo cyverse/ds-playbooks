@@ -1,6 +1,6 @@
 # VERSION 1
 #
-# services.re
+# ipc-services.re
 # This is a library of rules to support service specific policies.
 
 _ipc_HOME = / ++ ipc_ZONE ++ /home

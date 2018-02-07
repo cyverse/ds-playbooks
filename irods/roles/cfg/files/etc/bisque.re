@@ -23,6 +23,7 @@ _bisque_mkIrodsUrl(*Path) = bisque_IRODS_URL_BASE ++ *Path
 #
 _bisque_Ln() {
   _bisque_logMsg("linking *Path for *Client with permission *Permission");
+
   *pArg = execCmdArg(*Permission);
   *aliasArg = execCmdArg(*Client);
   *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
@@ -58,6 +59,7 @@ _bisque_Ln() {
                          *kv);
 
     msiSetKeyValuePairsToObj(*kv, *Path, '-d');
+    
     _bisque_logMsg('linked *Path for *Client with permission *Permission');
   }
 }
@@ -78,6 +80,7 @@ _bisque_scheduleLn(*IESHost, *Permission, *Client, *Path) {
 #
 _bisque_Mv(*IESHost, *Permission, *Client, *Path) {
   _bisque_logMsg('moving link from *OldPath to *NewPath for *Client');
+
   *aliasArg = execCmdArg(*Client);
   *oldPathArg = execCmdArg(_bisque_mkIrodsUrl(*OldPath));
   *newPathArg = execCmdArg(_bisque_mkIrodsUrl(*NewPath));
@@ -118,29 +121,40 @@ _bisque_scheduleMv(*IESHost, *Client, *OldPath, *NewPath) {
 #
 # bisque_ops.py --alias user rm /path/to/data.object
 #
-_bisque_scheduleRm(*IESHost, *Client, *Path) {
-  _bisque_logMsg("scheduling removal of linking to *Path for *Client");
-  delay("<PLUSET>1s</PLUSET>") {
-    _bisque_logMsg("Removing link from *Path for *Client");
-    *aliasArg = execCmdArg(*Client);
-    *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
-    *argStr = '--alias *aliasArg rm *pathArg';
-    *status = errorcode(msiExecCmd("bisque_ops.py", *argStr, *IESHost, "null", "null", *out));
-    if (*status != 0) {
-      msiGetStderrInExecCmdOut(*out, *resp);
-      _bisque_logMsg('FAILURE - *resp');
+_bisque_Rm(*IESHost, *Client, *Path) {
+  _bisque_logMsg("Removing link from *Path for *Client");
+
+  *aliasArg = execCmdArg(*Client);
+  *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
+  *argStr = '--alias *aliasArg rm *pathArg';
+  *status = errorcode(msiExecCmd("bisque_ops.py", *argStr, *IESHost, "null", "null", *out));
+
+  if (*status != 0) {
+    msiGetStderrInExecCmdOut(*out, *resp);
+    _bisque_logMsg('FAILURE - *resp');
+    _bisque_logMsg('failed to remove link to *Path for *Client');
+    fail;
+  } else {
+    # bisque_ops.py exits normally even when an error occurs.
+
+    msiGetStderrInExecCmdOut(*out, *errMsg);
+
+    if (strlen(*errMsg) > 0) {
+      _bisque_logMsg(*errMsg);
       _bisque_logMsg('failed to remove link to *Path for *Client');
       fail;
-    } else {
-      # bisque_ops.py exits normally even when an error occurs.
-      msiGetStderrInExecCmdOut(*out, *errMsg);
-      if (strlen(*errMsg) > 0) {
-        _bisque_logMsg(*errMsg);
-        _bisque_logMsg('failed to remove link to *Path for *Client');
-        fail;
-      }
-      _bisque_logMsg('removed link to *Path for *Client');
     }
+
+    _bisque_logMsg('removed link to *Path for *Client');
+  }
+}
+
+
+_bisque_scheduleRm(*IESHost, *Client, *Path) {
+  _bisque_logMsg("scheduling removal of linking to *Path for *Client");
+
+  delay("<PLUSET>1s</PLUSET>") {
+    _bisque_Mv(*IESHost, *Client, *Path);
   }
 }
 

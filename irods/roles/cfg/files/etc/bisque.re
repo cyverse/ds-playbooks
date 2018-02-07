@@ -139,7 +139,9 @@ _bisque_getClient(*Path) =
   in if *homeUser == '' then $userNameClient else *homeUser
 
 
-_bisque_ensureBisqueWritePerm(*Path) = msiSetACL('default', 'write', 'bisque', *Path)
+_bisque_ensureBisqueWritePerm(*Path) {
+  msiSetACL('default', 'write', 'bisque', *Path);
+}
 
 
 _bisque_ensureBisqueWritePermColl(*Path) {

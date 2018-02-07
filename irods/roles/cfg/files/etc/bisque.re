@@ -76,30 +76,40 @@ _bisque_scheduleLn(*IESHost, *Permission, *Client, *Path) {
 #
 # bisque_ops.py --alias user mv /old/path/to/data.object /new/path/to/data.object
 #
-_bisque_scheduleMv(*IESHost, *Client, *OldPath, *NewPath) {
-  _bisque_logMsg('scheduling link move from *OldPath to *NewPath for *Client');
-  delay("<PLUSET>1s</PLUSET>") {
-    _bisque_logMsg('moving link from *OldPath to *NewPath for *Client');
-    *aliasArg = execCmdArg(*Client);
-    *oldPathArg = execCmdArg(_bisque_mkIrodsUrl(*OldPath));
-    *newPathArg = execCmdArg(_bisque_mkIrodsUrl(*NewPath));
-    *argStr = '--alias *aliasArg mv *oldPathArg *newPathArg';
-    *status = errorcode(msiExecCmd('bisque_ops.py', *argStr, *IESHost, 'null', 'null', *out));
-    if (*status != 0) {
-      msiGetStderrInExecCmdOut(*out, *resp);
-      _bisque_logMsg('FAILURE - *resp');
+_bisque_Mv(*IESHost, *Permission, *Client, *Path) {
+  _bisque_logMsg('moving link from *OldPath to *NewPath for *Client');
+  *aliasArg = execCmdArg(*Client);
+  *oldPathArg = execCmdArg(_bisque_mkIrodsUrl(*OldPath));
+  *newPathArg = execCmdArg(_bisque_mkIrodsUrl(*NewPath));
+  *argStr = '--alias *aliasArg mv *oldPathArg *newPathArg';
+  *status = errorcode(msiExecCmd('bisque_ops.py', *argStr, *IESHost, 'null', 'null', *out));
+
+  if (*status != 0) {
+    msiGetStderrInExecCmdOut(*out, *resp);
+    bisque_logMsg('FAILURE - *resp');
+    _bisque_logMsg('failed to move link from *OldPath to *NewPath for *Client');
+    fail;
+  } else {
+    # bisque_ops.py exits normally even when an error occurs.
+
+    msiGetStderrInExecCmdOut(*out, *errMsg);
+
+    if (strlen(*errMsg) > 0) {
+      _bisque_logMsg(*errMsg);
       _bisque_logMsg('failed to move link from *OldPath to *NewPath for *Client');
       fail;
-    } else {
-      # bisque_ops.py exits normally even when an error occurs.
-      msiGetStderrInExecCmdOut(*out, *errMsg);
-      if (strlen(*errMsg) > 0) {
-        _bisque_logMsg(*errMsg);
-        _bisque_logMsg('failed to move link from *OldPath to *NewPath for *Client');
-        fail;
-      }
-      _bisque_logMsg('moved link from *OldPath to *NewPath for *Client');
     }
+
+    _bisque_logMsg('moved link from *OldPath to *NewPath for *Client');
+  }
+}
+
+
+_bisque_scheduleMv(*IESHost, *Client, *OldPath, *NewPath) {
+  _bisque_logMsg('scheduling link move from *OldPath to *NewPath for *Client');
+
+  delay("<PLUSET>1s</PLUSET>") {
+    _bisque_Mv(*IESHost, *Client, *OldPath, *NewPath);
   }
 }
 

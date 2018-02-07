@@ -7,8 +7,10 @@
 
 @include 'bisque-env'
 
+_bisque_COLL = 'bisque_data'
 _bisque_ID_ATTR = 'ipc-bisque-id'
 _bisque_URI_ATTR = 'ipc-bisque-uri'
+_bisque_USER = 'bisque'
 
 _bisque_stripTrailingSlash(*Path) = if *Path like '*/' then trimr(*Path, '/') else *Path
 
@@ -49,11 +51,11 @@ _bisque_inInProjects(*Projects, *Path) =
 _bisque_isInProjects(*Path) = _bisque_isInProjects(bisque_PROJECTS, *Path)
 
 _bisque_isInUser(*Path) =
-  *Path like regex '/' ++ ipc_ZONE ++ '/home/[^/]\*/bisque_data($|/.\*)'
+  *Path like regex '/' ++ ipc_ZONE ++ '/home/[^/]\*/' ++ _bisque_COLL ++ '($|/.\*)'
   && !(*Path like '/' ++ ipc_ZONE ++ '/home/shared/\*')
 
 _bisque_isForBisque(*Path) =
-  $userNameClient != "bisque" && (_bisque_isInUser(*Path) || _bisque_isInProjects(*Path))
+  $userNameClient != _bisque_USER && (_bisque_isInUser(*Path) || _bisque_isInProjects(*Path))
 
 _bisque_joinPath(*ParentColl, *ObjName) = *ParentColl ++ '/' ++ *ObjName
 
@@ -208,13 +210,13 @@ _bisque_scheduleRm(*IESHost, *Client, *Path) {
 
 
 _bisque_ensureBisqueWritePerm(*Path) {
-  msiSetACL('default', 'write', 'bisque', *Path);
+  msiSetACL('default', 'write', _bisque_USER, *Path);
 }
 
 
 _bisque_ensureBisqueWritePermColl(*Path) {
-  _bisque_logMsg('permitting bisque user RW on *Path');
-  msiSetACL('recursive', 'write', 'bisque', *Path);
+  _bisque_logMsg('permitting ' ++ _bisque_USER ++ ' user RW on *Path');
+  msiSetACL('recursive', 'write', _bisque_USER, *Path);
 }
 
 

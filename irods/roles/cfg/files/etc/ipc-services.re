@@ -18,7 +18,16 @@ _ipc_giveWriteAccessObj(*SvcUser, *ObjPath) {
 }
 
 
-_ipc_isForService(*SvcUser, *SvcColl, *Path) =
+# This function checks to see if a collection or data object is inside a user
+# collection managed by a service.
+#
+# PARAMETERS:
+#  SvcUser  the iRODS user name used by the service
+#  SvcColl  the name of the user collection managed by the service
+#  Path     the path to the collection or data object of interest
+#
+ipc_isForService: string * string * path -> boolean
+ipc_isForService(*SvcUser, *SvcColl, *Path) =
   *Path like regex _ipc_HOME ++ '/[^/]\*/*SvcColl($|/.\*)'
   && !(*Path like _ipc_HOME ++ '/*SvcUser/\*')
   && !(*Path like _ipc_HOME ++ '/shared/\*')
@@ -34,7 +43,7 @@ _ipc_isForService(*SvcUser, *SvcColl, *Path) =
 #  CollPath  the path to the collection of interest
 #
 ipc_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *CollPath) {
-  if (_ipc_isForService(*SvcUser, *SvcColl, *CollPath)) {
+  if (ipc_isForService(*SvcUser, *SvcColl, *CollPath)) {
     ipc_giveWriteAccessColl(*SvcUser, *CollPath);
   }
 }
@@ -45,12 +54,12 @@ ipc_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *CollPath) {
 # service.
 #
 # PARAMETERS:
-#  SvcUser   the iRODS user name used by the service
-#  SvcColl   the name of the user collection managed by the service
-#  CollPath  the path to the collection of interest
+#  SvcUser  the iRODS user name used by the service
+#  SvcColl  the name of the user collection managed by the service
+#  ObjPath  the path to the data object of interest
 #
 ipc_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *ObjPath) {
-  if (_ipc_isForService(*SvcUser, *SvcColl, *ObjPath)) {
+  if (ipc_isForService(*SvcUser, *SvcColl, *ObjPath)) {
     ipc_giveWriteAccessObj(*SvcUser, *ObjPath);
   }
 }
@@ -67,8 +76,8 @@ ipc_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *ObjPath) {
 #  NewPath  the new iRODS path to the entity
 #
 ipc_ensureAccessOnMv(*SvcUser, *SvcColl, *OldPath, *NewPath) {
-  if (!_ipc_isForService(*SvcUser, *SvcColl, *OldPath)
-      && _ipc_isForService(*SvcUser, *SvcColl, *NewPath)) {
+  if (!ipc_isForService(*SvcUser, *SvcColl, *OldPath)
+      && ipc_isForService(*SvcUser, *SvcColl, *NewPath)) {
 
     msiGetObjType(*Path, *type);
 

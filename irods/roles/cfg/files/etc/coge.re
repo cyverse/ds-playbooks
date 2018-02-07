@@ -6,34 +6,43 @@
 # put this in server/config/reConfigs/coge.re
 
 
-isForCoge(*Path) = *Path like '/' ++ ipc_ZONE ++ '/home/*/coge_data' ||
-                   *Path like '/' ++ ipc_ZONE ++ '/home/*/coge_data/*'
+_coge_USER = 'coge'
+_coge_COLL = 'coge_data'
+
+
+isForCoge(*Path) = *Path like '/' ++ ipc_ZONE ++ '/home/*/' ++ _coge_COLL ||
+                   *Path like '/' ++ ipc_ZONE ++ '/home/*/' ++ _coge_COLL ++ '/*'
+
 
 setCogePerm(*Path) {
-  *lvl = if *Path == '/' ++ ipc_ZONE ++ '/home/coge/coge_data' ||
-            *Path like '/' ++ ipc_ZONE ++ '/home/coge/coge_data/*' ||
-            *Path like '/' ++ ipc_ZONE ++ '/home/coge/*/coge/data' ||
-            *Path like '/' ++ ipc_ZONE ++ '/home/coge/*/coge_data/*'
+  *lvl = if *Path == '/' ++ ipc_ZONE ++ '/home/' ++ _coge_USER ++ '/' ++ _coge_COLL ||
+            *Path like '/' ++ ipc_ZONE ++ '/home/' ++ coge_USER ++ '/' ++ _coge_COLL ++ '/*' ||
+            *Path like '/' ++ ipc_ZONE ++ '/home/' ++ coge_USER ++ '/*/' ++ _coge_COLL ||
+            *Path like '/' ++ ipc_ZONE ++ '/home/' ++ coge_USER ++ '/*/' ++ _coge_COLL ++ '/*'
          then 'own'
          else 'write';
-  msiSetACL('default', *lvl, 'coge', *Path);
+  msiSetACL('default', *lvl, _coge_USER, *Path);
 }
+
 
 ensureCogeWritePermColl(*Path) {
   setCogePerm(*Path);
   msiSetACL('recursive', 'inherit', 'null', *Path);
 }
 
+
 ensureCogeWritePermObj(*Path) {
   setCogePerm(*Path);
 }
 
+
 coge_acPostProcForCollCreate {
   if(isForCoge($collName)) {
-    writeLine('serverLog', 'COGE: permitting coge user RW on $collName');
+    writeLine('serverLog', 'COGE: permitting ' ++ _coge_USER ++ ' user RW on $collName');
     ensureCogeWritePermColl($collName);
   }
 }
+
 
 coge_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   if(!isForCoge(*SrcEntity) && isForCoge(*DestEntity)) {

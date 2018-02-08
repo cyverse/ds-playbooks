@@ -14,12 +14,12 @@ sciapps_acPostProcForCollCreate {
 
 
 sciapps_acPostProcForCopy {
-  ipc_ensureAccessOnCreateObj(_sciapps_USER, _sciapps_COLL, $dataPath);
+  ipc_ensureAccessOnCreateObj(_sciapps_USER, _sciapps_COLL, $objPath);
 }
 
 
 sciapps_acPostProcForPut {
-  ipc_ensureAccessOnCreateObj(_sciapps_USER, _sciapps_COLL, $dataPath);
+  ipc_ensureAccessOnCreateObj(_sciapps_USER, _sciapps_COLL, $objPath);
 }
 
 

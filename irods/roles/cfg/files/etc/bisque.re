@@ -47,11 +47,10 @@ _bisque_isInProjects(*Projects, *Path) =
        then true
        else _bisque_isInProjects(tl(*Projects), *Path)
 
-_bisque_isInProjects(*Path) = _bisque_isInProjects(bisque_PROJECTS, *Path)
-
 _bisque_isForBisque(*Author, *Path) =
   *Author != _bisque_USER
-  && (ipc_isForService(_bisque_USER, _bisque_COLL, *Path) || _bisque_isInProjects(*Path))
+  && (ipc_isForService(_bisque_USER, _bisque_COLL, /*Path)
+      || _bisque_isInProjects(bisque_PROJECTS, *Path))
 
 _bisque_mkIrodsUrl(*Path) = bisque_IRODS_URL_BASE ++ *Path
 
@@ -205,7 +204,7 @@ _bisque_scheduleRm(*Client, *Path) {
 
 _bisque_handleNewObject(*Client, *Path) {
   ipc_giveWriteAccessObj(_bisque_USER, *Path);
-  *perm = if _bisque_isInProjects(*Path) then 'published' else 'private';
+  *perm = if _bisque_isInProjects(bisque_PROJECTS, *Path) then 'published' else 'private';
   _bisque_scheduleLn(*perm, *Client, *Path);
 }
 
@@ -272,7 +271,9 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 
 # Add a call to this rule from inside the acPostProcForDelete PEP.
 bisque_acPostProcForDelete {
-  if (ipc_isForService(_bisque_USER, _bisque_COLL, $objPath) || _bisque_isInProjects($objPath)) {
+  if (ipc_isForService(_bisque_USER, _bisque_COLL, $objPath)
+      || _bisque_isInProjects(bisque_PROJECTS, $objPath)) {
+
     _bisque_scheduleRm(_bisque_getClient($userNameClient, $objPath), $objPath);
   }
 }

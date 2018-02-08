@@ -53,8 +53,6 @@ _bisque_isForBisque(*Author, *Path) =
   *Author != _bisque_USER
   && (ipc_isForService(_bisque_USER, _bisque_COLL, *Path) || _bisque_isInProjects(*Path))
 
-_bisque_joinPath(*ParentColl, *ObjName) = *ParentColl ++ '/' ++ *ObjName
-
 _bisque_mkIrodsUrl(*Path) = bisque_IRODS_URL_BASE ++ *Path
 
 
@@ -254,11 +252,9 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 
         if (_bisque_isInBisque(*collName, *dataName)) {
           *srcSubColl = _bisque_determineSrc(*SrcEntity, *DestEntity, *collName);
-          *srcObj = _bisque_joinPath(*srcSubColl, *dataName);
-          *destObj = _bisque_joinPath(*collName, *dataName);
-          _bisque_scheduleMv(*client, *srcObj, *destObj);
+          _bisque_scheduleMv(*client, '*srcSubColl/*dataName', '*collName/*dataName');
         } else if (*forBisque) {
-          _bisque_handleNewObject(*client, _bisque_joinPath(*collName, *dataName));
+          _bisque_handleNewObject(*client, '*collName/*dataName');
         }
       }
     }

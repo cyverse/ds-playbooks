@@ -269,11 +269,16 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 }
 
 
+# Add a call to this rule from inside the acDataDeletePolicy PEP.
+bisque_acDataDeletePolicy {
+  msiSplitPath($objPath, *collName, *dataName);
+  temporaryStorage.'bisque_$objPath' = if _bisque_isInBisque(*collName, *dataName) then 'rm' else ''
+}
+
+
 # Add a call to this rule from inside the acPostProcForDelete PEP.
 bisque_acPostProcForDelete {
-  if (ipc_isForService(_bisque_USER, _bisque_COLL, $objPath)
-      || _bisque_isInProjects(bisque_PROJECTS, $objPath)) {
-
+  if (temporaryStorage.'bisque_$objPath' = 'rm') {
     _bisque_scheduleRm(_bisque_getClient($userNameClient, $objPath), $objPath);
   }
 }

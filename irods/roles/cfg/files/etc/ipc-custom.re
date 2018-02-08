@@ -41,7 +41,10 @@ acCreateCollByAdmin(*ParColl, *ChildColl) {
   ipc_acCreateCollByAdmin(*ParColl, *ChildColl);
 }
 
-acDataDeletePolicy { ipc_acDataDeletePolicy; }
+acDataDeletePolicy {
+  bisque_acDataDeletePolicy;
+  ipc_acDataDeletePolicy;
+}
 
 acDeleteCollByAdmin(*ParColl, *ChildColl) {
   msiDeleteCollByAdmin(*ParColl, *ChildColl);

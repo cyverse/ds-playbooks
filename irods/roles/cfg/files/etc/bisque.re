@@ -112,7 +112,7 @@ _bisque_Ln(*Permission, *Client, *Path) {
 #
 # bisque_ops.py --alias user mv /old/path/to/data.object /new/path/to/data.object
 #
-_bisque_Mv(*Permission, *Client, *Path) {
+_bisque_Mv(*Client, *OldPath, *NewPath) {
   _bisque_logMsg('moving link from *OldPath to *NewPath for *Client');
 
   *aliasArg = execCmdArg(*Client);

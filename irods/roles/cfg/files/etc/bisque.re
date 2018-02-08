@@ -29,12 +29,14 @@ _bisque_getClient(*Author, *Path) =
 
 _bisque_isInBisque(*CollName, *DataName) =
   let *idAttr = _bisque_ID_ATTR in
-  foreach (*reg in SELECT COUNT(META_DATA_ATTR_VALUE)
-                   WHERE COLL_NAME = '*CollName'
-                     AND DATA_NAME = '*DataName'
-                     AND META_DATA_ATTR_NAME = '*idAttr') {
-    *reg.META_DATA_ATTR_VALUE != '0'
-  }
+  let *status =
+    foreach (*reg in select count(META_DATA_ATTR_VALUE)
+                     where COLL_NAME = '*CollName'
+                       and DATA_NAME = '*DataName'
+                       and META_DATA_ATTR_NAME = '*idAttr') {
+      *found = *reg.META_DATA_ATTR_VALUE != '0';
+    }
+  in *found
 
 _bisque_isInProject(*Project, *Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/*Project/\*'
 

@@ -49,9 +49,8 @@ _bisque_isInProjects(*Projects, *Path) =
 
 _bisque_isInProjects(*Path) = _bisque_isInProjects(bisque_PROJECTS, *Path)
 
-_bisque_isForBisque: path -> boolean
-_bisque_isForBisque(*Path) =
-  $userNameClient != _bisque_USER
+_bisque_isForBisque(*Author, *Path) =
+  *Author != _bisque_USER
   && (ipc_isForService(_bisque_USER, _bisque_COLL, *Path) || _bisque_isInProjects(*Path))
 
 _bisque_joinPath(*ParentColl, *ObjName) = *ParentColl ++ '/' ++ *ObjName
@@ -215,7 +214,7 @@ _bisque_handleNewObject(*Client, *Path) {
 
 # Add a call to this rule from inside the acPostProcForCollCreate PEP.
 bisque_acPostProcForCollCreate {
-  if (_bisque_isForBisque($collName)) {
+  if (_bisque_isForBisque($userNameClient, $collName)) {
     ipc_giveWriteAccessColl(_bisque_USER, $collName);
   }
 }
@@ -223,7 +222,7 @@ bisque_acPostProcForCollCreate {
 
 # Add a call to this rule from inside the acPostProcForPut PEP.
 bisque_acPostProcForPut {
-  if (_bisque_isForBisque($objPath)) {
+  if (_bisque_isForBisque($userNameClient, $objPath)) {
     _bisque_handleNewObject(_bisque_getClient($userNameClient, $objPath), $objPath);
   }
 }
@@ -231,7 +230,7 @@ bisque_acPostProcForPut {
 
 # Add a call to this rule from inside the acPostProcForCopy PEP.
 bisque_acPostProcForCopy {
-  if (_bisque_isForBisque($objPath)) {
+  if (_bisque_isForBisque($userNameClient, $objPath)) {
     _bisque_handleNewObject(_bisque_getClient($userNameClient, $objPath), $objPath);
   }
 }
@@ -240,7 +239,7 @@ bisque_acPostProcForCopy {
 # Add a call to this rule from inside the acPostProcForObjRename PEP.
 bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   *client = _bisque_getClient($userNameClient, *SrcEntity);
-  *forBisque = _bisque_isForBisque(*DestEntity);
+  *forBisque = _bisque_isForBisque($userNameClient, *DestEntity);
   msiGetObjType(*DestEntity, *type);
 
   if (*type == '-c') {

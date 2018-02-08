@@ -16,7 +16,7 @@
 
 @include 'ipc-logic'
 @include 'ipc-repl'
-@inlcude 'ipc-services'
+@include 'ipc-services'
 
 # THIRD PARTY RULES
 #

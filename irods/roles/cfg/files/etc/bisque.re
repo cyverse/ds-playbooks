@@ -278,7 +278,7 @@ bisque_acDataDeletePolicy {
 
 # Add a call to this rule from inside the acPostProcForDelete PEP.
 bisque_acPostProcForDelete {
-  if (temporaryStorage.'bisque_$objPath' = 'rm') {
+  if (temporaryStorage.'bisque_$objPath' == 'rm') {
     _bisque_scheduleRm(_bisque_getClient($userNameClient, $objPath), $objPath);
   }
 }

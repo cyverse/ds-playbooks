@@ -19,10 +19,10 @@ _bisque_determineSrc(*BaseSrcColl, *BaseDestColl, *DestEntity) =
     ++ substr(*dest, strlen(_bisque_stripTrailingSlash(*BaseDestColl)), strlen(*dest))
 
 _bisque_getHomeUser(*Path) =
-  let *nodes = split(*Path, '/') in
-  if size(*nodes) <= 2
-  then ''
-  else let *user = elem(*nodes, 2) in if *user == 'shared' then '' else *user
+  if *Path like regex '^/iplant/home/shared($|/.*)' then ''
+  else if *Path like regex '^/iplant/home/[^/]+/.+' then elem(split(*Path, '/'), 2)
+  else if *Path like regex '/iplant/trash/home/[^/]+/.+' then elem(split(*Path, '/'), 3)
+  else ''
 
 _bisque_getClient(*Author, *Path) =
   let *homeUser = _bisque_getHomeUser(*Path) in if *homeUser == '' then *Author else *homeUser

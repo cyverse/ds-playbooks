@@ -38,14 +38,14 @@ _bisque_isInBisque(*CollName, *DataName) =
     }
   in *found
 
-_bisque_isInProject(*Project, *Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/*Project/\*'
+_bisque_isInProject(*Project, *Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/*Project/*'
 
-_bisque_inInProjects(*Projects, *Path) =
+_bisque_isInProjects(*Projects, *Path) =
   if size(*Projects) == 0
   then false
   else if _bisque_isInProject(hd(*Projects), *Path)
        then true
-       else _bisque_inInProjects(tl(*Projects), *Path)
+       else _bisque_isInProjects(tl(*Projects), *Path)
 
 _bisque_isInProjects(*Path) = _bisque_isInProjects(bisque_PROJECTS, *Path)
 

@@ -22,12 +22,10 @@ _bisque_getHomeUser(*Path) =
   let *nodes = split(*Path, '/') in
   if size(*nodes) <= 2
   then ''
-  else let *user = elem(*nodes, 2) in
-       if *user == 'shared' then '' else *user
+  else let *user = elem(*nodes, 2) in if *user == 'shared' then '' else *user
 
-_bisque_getClient(*Path) =
-  let *homeUser = _bisque_getHomeUser(*Path) in
-  if *homeUser == '' then $userNameClient else *homeUser
+_bisque_getClient(*Author, *Path) =
+  let *homeUser = _bisque_getHomeUser(*Path) in if *homeUser == '' then *Author else *homeUser
 
 _bisque_isInBisque(*CollName, *DataName) =
   let *idAttr = _bisque_ID_ATTR in
@@ -224,7 +222,7 @@ bisque_acPostProcForCollCreate {
 # Add a call to this rule from inside the acPostProcForPut PEP.
 bisque_acPostProcForPut {
   if (_bisque_isForBisque($objPath)) {
-    _bisque_handleNewObject(_bisque_getClient($objPath), $objPath);
+    _bisque_handleNewObject(_bisque_getClient($userNameClient, $objPath), $objPath);
   }
 }
 
@@ -232,14 +230,14 @@ bisque_acPostProcForPut {
 # Add a call to this rule from inside the acPostProcForCopy PEP.
 bisque_acPostProcForCopy {
   if (_bisque_isForBisque($objPath)) {
-    _bisque_handleNewObject(_bisque_getClient($objPath), $objPath);
+    _bisque_handleNewObject(_bisque_getClient($userNameClient, $objPath), $objPath);
   }
 }
 
 
 # Add a call to this rule from inside the acPostProcForObjRename PEP.
 bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
-  *client = _bisque_getClient(*SrcEntity);
+  *client = _bisque_getClient($userNameClient, *SrcEntity);
   *forBisque = _bisque_isForBisque(*DestEntity);
   msiGetObjType(*DestEntity, *type);
 
@@ -278,6 +276,6 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 # Add a call to this rule from inside the acPostProcForDelete PEP.
 bisque_acPostProcForDelete {
   if (ipc_isForService(_bisque_USER, _bisque_COLL, $objPath) || _bisque_isInProjects($objPath)) {
-    _bisque_scheduleRm(_bisque_getClient($objPath), $objPath);
+    _bisque_scheduleRm(_bisque_getClient($userNameClient, $objPath), $objPath);
   }
 }

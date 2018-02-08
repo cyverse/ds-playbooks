@@ -20,9 +20,9 @@ _ipc_HOME = '/' ++ ipc_ZONE ++ '/home'
 ipc_isForService: string * string * path -> boolean
 ipc_isForService(*SvcUser, *SvcColl, *Path) =
   let *strPath = str(*Path) in
-  *strPath like regex _ipc_HOME ++ '/[^/]\*/*SvcColl($|/.\*)'
-  && !(*strPath like _ipc_HOME ++ '/*SvcUser/\*')
-  && !(*strPath like _ipc_HOME ++ '/shared/\*')
+  *strPath like regex _ipc_HOME ++ '/[^/]+/*SvcColl($|/.*)'
+  && !(*strPath like _ipc_HOME ++ '/*SvcUser/*')
+  && !(*strPath like _ipc_HOME ++ '/shared/*')
 
 
 # This rule gives write access to a service for a collection and everything in

@@ -188,7 +188,7 @@ _bisque_scheduleMv(*Client, *OldPath, *NewPath) {
   _bisque_logMsg('scheduling link move from *OldPath to *NewPath for *Client');
 
   delay("<PLUSET>1s</PLUSET>") {
-    _bisque_Mv(ipc_RE_HOST, *Client, *OldPath, *NewPath);
+    _bisque_Mv(*Client, *OldPath, *NewPath);
   }
 }
 

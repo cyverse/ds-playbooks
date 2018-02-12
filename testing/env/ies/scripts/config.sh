@@ -1,4 +1,41 @@
 #!/bin/bash
+#
+# This script configures the IES.
+#
+# It requires the following environment variables to be defined.
+#
+# DB_NAME                     The name of the DB iRODS will use.
+# DB_PASSWORD                 The password used to authenticate DB_USER within
+#                             PostgreSQL.
+# DB_USER                     The DBMS user iRODS will use to connect to DB_NAME
+#                             DB.
+# DBMS_PORT                   The TCP port the PostgreSQL will listen on.
+# IRODS_CONTROL_PLANE_KEY     The encryption key required for communicating with
+#                             the grid control plane.
+# IRODS_CONTROL_PLANE_PORT    The port on which the control plane operates.
+# IRODS_DEFAULT_RESOURCE      The name of the default resource to use
+# IRODS_FIRST_EPHEMERAL_PORT  The beginning of the port range available for
+#                             parallel transfer and reconnections.
+# IRODS_HOST                  The FQDN or IP address of the server being
+#                             configured.
+# IRODS_LAST_EPHEMERAL_PORT   The end of the port range available for parallel
+#                             transfer and reconnections.vim
+# IRODS_NEGOTIATION_KEY       The shared encryption key used by the zone in
+#                             advanced negotiation handshake a the beginning of
+#                             a client connection
+# IRODS_SCHEMA_VALIDATION     The URI for the schema used to validate the
+#                             configuration files or 'off'.
+# IRODS_SYSTEM_GROUP          The system group for the iRODS process
+# IRODS_SYSTEM_USER           The system user for the iRODS process
+# IRODS_ZONE_KEY              The shared secred used for authentication during
+#                             server-to-server communication
+# IRODS_ZONE_NAME             The name of the iRODS zone.
+# IRODS_ZONE_PASSWORD         The password used to authenticate the
+#                             IRODS_ZONE_USER user.
+# IRODS_ZONE_PORT             The main TCP port used by the zone for
+#                             communication.
+# IRODS_ZONE_USER             The main rodsadmin user.
+
 
 readonly CfgDir=/etc/irods
 readonly DbCfg="$CfgDir"/database_config.json
@@ -118,7 +155,7 @@ EOF
 
 populate_db_cfg()
 {
-  set_cfg_field "$DbCfg" string catalog_database_type "$DBMS_TYPE"
+  set_cfg_field "$DbCfg" string catalog_database_type postgres
   set_cfg_field "$DbCfg" string db_host "$DBMS_HOST"
   set_cfg_field "$DbCfg" string db_name "$DB_NAME"
   set_cfg_field "$DbCfg" integer db_port "$DBMS_PORT"

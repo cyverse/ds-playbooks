@@ -3,7 +3,7 @@
 
 {% if inventory_hostname in groups['ies'] %}
 # ICAT DBMS
-{{ lookup('dig', groups['dbms'][0]) }} {{ groups['dbms'][0] }} 
+{{ lookup('dig', groups['dbms'][0]) }} {{ groups['dbms'][0] }}
 
 {% endif %}
 # IES
@@ -16,3 +16,10 @@
 
 # corralZ zone IES
 {{ lookup('dig', ds_federation[0].icat_host) }} {{ ds_federation[0].icat_host }}
+
+{% if inventory_hostname in ['hades.iplantcollaborative.org', 'poseidon.iplantcollaborative.org', 'zeus.iplantcollaborative.org'] %}
+# GPFS node names
+192.168.172.246         zeus-ib
+192.168.172.247         poseidon-ib
+192.168.172.248         hades-ib
+{% endif %}

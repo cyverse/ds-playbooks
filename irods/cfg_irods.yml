@@ -86,7 +86,7 @@
         owner: "{{ _irods_service_account_name }}"
         group: "{{ _irods_service_group_name }}"
       with_fileglob:
-        - "templates/etc/*"
+        - "templates/etc/irods/*"
       notify:
         - reload rules
 

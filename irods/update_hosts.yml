@@ -8,5 +8,5 @@
   tasks:
     - name: update /etc/hosts
       template:
-        src: templates/hosts.j2
+        src: templates/etc/hosts.j2
         dest: /etc/hosts

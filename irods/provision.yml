@@ -15,10 +15,10 @@
   gather_facts: false
   tasks:
     - name: ensure /var/log/bisque exists
-      when: bisque_url is defined
+      when: _bisque_irods_host
       file:
         path: /var/log/bisque
         state: directory
-        owner: "{{ irods_service_account_name }}"
-        group: "{{ irods_service_group_name }}"
+        owner: "{{ _irods_service_account_name }}"
+        group: "{{ _irods_service_group_name }}"
         mode: u=rwx

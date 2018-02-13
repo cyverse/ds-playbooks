@@ -8,16 +8,16 @@
   tasks:
     - name: create service group
       group:
-        name: "{{ irods_service_group_name }}"
+        name: "{{ _irods_service_group_name }}"
         system: yes
 
     - name: create service account
       user:
-        name: "{{ irods_service_account_name }}"
+        name: "{{ _irods_service_account_name }}"
         system: yes
         home: /var/lib/irods
         createhome: yes
-        group: "{{ irods_service_group_name }}"
+        group: "{{ _irods_service_group_name }}"
         comment: iRODS service
 
 - include: mk_vaults.yml

@@ -1,11 +1,11 @@
 ---
 - name: verify that pika is installed
-  shell: pip2.6 show pika
+  shell: "{{ 'pip' if ansible_distribution_major_version >= 7 else 'pip2.6' }} show pika"
   changed_when: false
 
 - name: install amqptopicsend.py
-  copy:
-    src: files/amqptopicsend.py
-    dest: /var/lib/irods/iRODS/server/bin/cmd/
-    owner: "{{ irods_service_account_name }}"
-    group: "{{ irods_service_group_name }}"
+  template:
+    src: amqptopicsend.py.j2
+    dest: /var/lib/irods/iRODS/server/bin/cmd/amqptopicsend.py
+    owner: "{{ _irods_service_account_name }}"
+    group: "{{ _irods_service_group_name }}"

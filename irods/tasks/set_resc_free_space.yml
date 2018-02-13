@@ -1,6 +1,6 @@
 ---
 - name: update free space estimate
-  with_items: "{{ irods_storage_resources }}"
+  with_items: "{{ _irods_storage_resources }}"
   shell: |
     if ! resc=$(iadmin lr '{{ item.name }}') || [ "$resc" = 'No rows found']
     then

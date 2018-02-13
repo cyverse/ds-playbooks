@@ -1,5 +1,7 @@
 ---
-_bisque_irods_host: "{{ bisque_irods_host if bisque_irods_host is defined else _icat_host }}"
+_bisque_irods_host: "{{ bisque_irods_host if bisque_irods_host is defined else None }}"
+
+_bisque_projects: "{{ bisque_projects if bisque_projects is defined else [] }}"
 
 _dbms_password: "{{ dbms_password if dbms_password is defined else None }}"
 
@@ -34,6 +36,16 @@ _irods_default_resource: "{{ irods_default_resource if irods_default_resource is
                              'demoResc' }}"
 
 _irods_max_num_re_procs: "{{ irods_max_num_re_procs if irods_max_num_re_procs is defined else 4 }}"
+
+_irods_service_account_name: "{{
+  irods_service_account_name if irods_service_account_name is defined else 'irods' }}"
+
+_irods_service_group_name: "{{
+  irods_service_group_name if irods_service_group_name is defined else
+  _irods_service_account_name }}"
+
+_irods_storage_resources: "{{
+  irods_storage_resources if irods_storage_resources is defined else [] }}"
 
 _negotiation_key: "{{ negotiation_key if negotiation_key is defined else None }}"
 

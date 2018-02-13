@@ -1,11 +1,11 @@
 ---
 - name: configure bisque client
   hosts: ies
-  become: "{{ false if ansible_user|default('') == irods_service_account_name else true }}"
-  become_user: "{{ irods_service_account_name }}"
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
   gather_facts: true
   tasks:
-    - when: bisque_url is defined
+    - when: _bisque_irods_host
       block:
         - name: install bisque_ops.py
           get_url:
@@ -21,11 +21,10 @@
 
 - name: configure iRODS
   hosts: irods
-  become: "{{ false if ansible_user|default('') == irods_service_account_name else true }}"
-  become_user: "{{ irods_service_account_name }}"
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
   vars:
     dbms_host: "{{ groups['dbms'][0] }}"
-    icat_host: "{{ groups['ies'][0] }}"
     rabbitmq_user_info: "{{ _rabbitmq_user }}:{{ _rabbitmq_password }}"
     rabbitmq_authority: "{{ rabbitmq_user_info }}@{{ groups['rabbitmq'][0] }}:{{ _rabbitmq_port }}"
     rabbitmq_path: /{{ _rabbitmq_vhost | replace('/', '%2F') }}
@@ -38,7 +37,7 @@
         irods_cfg_default_number_of_transfer_threads: "{{ _default_number_of_transfer_threads }}"
         irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
         irods_cfg_environment_variables: "{{
-          { 'IRODS_AMQP_URI': rabbitmq_uri } if inventory_hostname == icat_host else
+          { 'IRODS_AMQP_URI': rabbitmq_uri } if inventory_hostname == _icat_host else
           {} }}"
         irods_cfg_federation: "{{ _ds_federation }}"
         irods_cfg_host_entries: "{{ [
@@ -47,14 +46,14 @@
               'addresses': ([inventory_hostname] + _host_aliases)
             }
           ] if (_host_aliases | count) > 0 else [] }}"
-        irods_cfg_icat: "{{ None if inventory_hostname != icat_host else
+        irods_cfg_icat: "{{ None if inventory_hostname != _icat_host else
                             {
                               'db_host': dbms_host,
                               'db_password': _dbms_password,
                               'db_port': _dbms_port,
                               'db_username': _dbms_username
                             } }}"
-        irods_cfg_icat_host: "{{ icat_host }}"
+        irods_cfg_icat_host: "{{ _icat_host }}"
         irods_cfg_maximum_number_of_concurrent_rule_engine_server_processes: "{{
           _irods_max_num_re_procs }}"
         irods_cfg_negotiation_key: "{{ _negotiation_key }}"
@@ -73,8 +72,8 @@
       copy:
         src: "{{ item }}"
         dest: /etc/irods/
-        owner: "{{ irods_service_account_name }}"
-        group: "{{ irods_service_group_name }}"
+        owner: "{{ _irods_service_account_name }}"
+        group: "{{ _irods_service_group_name }}"
       with_fileglob:
         - "files/etc/*"
       notify:
@@ -84,10 +83,10 @@
       template:
         src: "{{ item }}"
         dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
-        owner: "{{ irods_service_account_name }}"
-        group: "{{ irods_service_group_name }}"
+        owner: "{{ _irods_service_account_name }}"
+        group: "{{ _irods_service_group_name }}"
       with_fileglob:
-        - "templates/etc/irods/*"
+        - "templates/etc/*"
       notify:
         - reload rules
 
@@ -99,22 +98,22 @@
 
 - name: Install AMQP publishing script
   hosts: ies
-  become: "{{ false if ansible_user|default('') == irods_service_account_name else true }}"
-  become_user: "{{ irods_service_account_name }}"
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
   tasks:
     - include: tasks/install_amqptopicsend.yml
 
 - name: set minimum free space for resource
   hosts: rs
-  become: "{{ false if ansible_user|default('') == irods_service_account_name else true }}"
-  become_user: "{{ irods_service_account_name }}"
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
   tasks:
     - include: tasks/set_resc_free_space.yml
 
     - name: set context
-      with_items: "{{ irods_storage_resources }}"
+      with_items: "{{ _irods_storage_resources }}"
       shell: |
         if ! currentContext=$(iadmin lr '{{ item.name }}' | sed --quiet 's/^resc_context: //p')
         then

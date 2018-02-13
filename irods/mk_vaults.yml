@@ -4,11 +4,11 @@
   become: true
   tasks:
     - name: create vault directory
-      with_items: "{{ irods_storage_resources }}"
+      with_items: "{{ _irods_storage_resources }}"
       file:
         path: "{{ item.vault }}"
         follow: yes
-        owner: "{{ irods_service_group_name }}"
-        group: "{{ irods_service_account_name }}"
+        owner: "{{ _irods_service_account_name }}"
+        group: "{{ _irods_service_group_name }}"
         mode: 'u=rwx'
         state: directory

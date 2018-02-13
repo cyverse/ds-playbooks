@@ -25,7 +25,7 @@
 #
 #   Example:
 #     project_replBelongsTo : path -> boolean
-#     project_replBelongsTo(*Entity) = str(*Entity) like '/iplant/home/shared/project/*'
+#     project_replBelongsTo(*Entity) = str(*Entity) like '/' ++ ipc_ZONE ++ '/home/shared/project/*'
 #
 # <file_name>_replIngestResc
 #   Returns the resource where newly ingested files for the project should be

@@ -123,7 +123,7 @@ _bisque_Mv(*Client, *OldPath, *NewPath) {
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
-    bisque_logMsg('FAILURE - *resp');
+    _bisque_logMsg('FAILURE - *resp');
     _bisque_logMsg('failed to move link from *OldPath to *NewPath for *Client');
     fail;
   } else {

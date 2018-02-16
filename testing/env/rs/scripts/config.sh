@@ -1,76 +1,51 @@
-#! /bin/bash -e
+#! /bin/bash
 
-# iRODS packaging directory
-readonly PackagingDir=/var/lib/irods/packaging
+readonly CfgDir=/etc/irods
+readonly ServerCfg="$CfgDir"/server_config.json
+readonly SvcAccount="$CfgDir"/service_account.config
 
-readonly ServerConfig=/etc/irods/server_config.json
-readonly UserIrodsDir=/var/lib/irods/.irods
-readonly UserIrodsFile="$UserIrodsDir"/irods_environment.json
+readonly HomeDir=/var/lib/irods
+
+readonly EnvDir="$HomeDir"/.irods
+readonly EnvCfg="$EnvDir"/irods_environment.json
+
+readonly PackagingDir="$HomeDir"/packaging
 
 
 main()
 {
-  setup_irods_service_account
+  validate_32_byte_key "$IRODS_NEGOTIATION_KEY" "iRODS server's negotiation key"
+  validate_32_byte_key "$IRODS_CONTROL_PLANE_KEY" 'Control Plane key'
+
+  mk_svc_account
+  ensure_ownership "$SvcAccount"
+
   setup_irods_configuration
 
   mkdir --parents "$IRODS_DEFAULT_VAULT"
-  chown "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$IRODS_DEFAULT_VAULT"
+  ensure_ownership "$IRODS_DEFAULT_VAULT"
 
-  configure_irods_server
-  chmod 0600 "$ServerConfig"
-  chown "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$ServerConfig"
+  populate_server_cfg
+  ensure_ownership "$ServerCfg"
 
-  mkdir --mode 0700 "$UserIrodsDir"
-  configure_irods_user
-  chmod 0600 "$UserIrodsFile"
-  chown --recursive "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$UserIrodsDir"
+  mkdir --parents --mode=0700 "$EnvDir"
+  ensure_ownership "$EnvDir"
 
-  mk_service_script
+  mk_irods_env
+  ensure_ownership "$EnvCfg"
+
+  prepare_svc_script > /service.sh
   chmod a+rx /service.sh
 }
 
 
-# Update the iRODS server_config.json file.
-configure_irods_server()
+ensure_ownership()
 {
-  set_server_config_field string icat_host "$IRODS_IES"
-  set_server_config_field string zone_name "$IRODS_ZONE_NAME"
-  set_server_config_field string default_resource_name "$IRODS_LOCAL_RESOURCE"
-  set_server_config_field integer zone_port "$IRODS_ZONE_PORT"
-  set_server_config_field string zone_user "$IRODS_ZONE_USER"
-  set_server_config_field string zone_auth_scheme native
-}
+  local fsEntity="$1"
 
-
-# populate the irods environment for this server instance
-configure_irods_user()
-{
-  cat <<EOF > "$UserIrodsFile"
-{
-  "irods_host": "$IRODS_HOST",
-  "irods_port": $IRODS_ZONE_PORT,
-  "irods_default_resource": "$IRODS_LOCAL_RESOURCE",
-  "irods_home": "/$IRODS_ZONE_NAME/home/$IRODS_ZONE_USER",
-  "irods_cwd": "/$IRODS_ZONE_NAME/home/$IRODS_ZONE_USER",
-  "irods_user_name": "$IRODS_ZONE_USER",
-  "irods_zone_name": "$IRODS_ZONE_NAME",
-  "irods_client_server_negotiation": "request_server_negotiation",
-  "irods_client_server_policy": "CS_NEG_REFUSE",
-  "irods_encryption_key_size": 32,
-  "irods_encryption_salt_size": 8,
-  "irods_encryption_num_hash_rounds": 16,
-  "irods_encryption_algorithm": "AES-256-CBC",
-  "irods_default_hash_scheme": "SHA256",
-  "irods_match_hash_policy": "compatible",
-  "irods_server_control_plane_port": $IRODS_CONTROL_PLANE_PORT,
-  "irods_server_control_plane_key": "$IRODS_CONTROL_PLANE_KEY",
-  "irods_server_control_plane_encryption_num_hash_rounds": 16,
-  "irods_server_control_plane_encryption_algorithm": "AES-256-CBC",
-  "irods_maximum_size_for_single_buffer_in_megabytes": 32,
-  "irods_default_number_of_transfer_threads": 4,
-  "irods_transfer_buffer_size_for_parallel_transfer_in_megabytes": 4
-}
-EOF
+  chown "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$fsEntity"
+  chmod u+rw "$fsEntity"
+  chmod go= "$fsEntity"
 }
 
 
@@ -86,9 +61,70 @@ escape()
 }
 
 
-mk_service_script()
+get_cfg_field()
 {
-  cat <<EOF | sed --file - /tmp/service.sh.template > /service.sh
+  local cfgFile="$1"
+  local field="$2"
+
+  python -c "import json; print json.load(open('$cfgFile'))['$field']"
+}
+
+
+mk_irods_env()
+{
+  local algorithm=$(get_cfg_field "$ServerCfg" server_control_plane_encryption_algorithm)
+  local numRounds=$(get_cfg_field "$ServerCfg" server_control_plane_encryption_num_hash_rounds)
+
+  printf '{}' > "$EnvCfg"
+  set_cfg_field "$EnvCfg" string irods_client_server_negotiation request_server_negotiation
+  set_cfg_field "$EnvCfg" string irods_client_server_policy CS_NEG_REFUSE
+  set_cfg_field "$EnvCfg" string irods_cwd /"$IRODS_ZONE_NAME"/home/"$IRODS_ZONE_USER"
+  set_cfg_field "$EnvCfg" string irods_default_hash_scheme SHA256
+  set_cfg_field "$EnvCfg" integer irods_default_number_of_transfer_threads 4
+  set_cfg_field "$EnvCfg" string irods_default_resource "$IRODS_DEFAULT_RESOURCE"
+  set_cfg_field "$EnvCfg" string irods_encryption_algorithm AES-256-CBC
+  set_cfg_field "$EnvCfg" integer irods_encryption_key_size 32
+  set_cfg_field "$EnvCfg" integer irods_encryption_num_hash_rounds 16
+  set_cfg_field "$EnvCfg" integer irods_encryption_salt_size 8
+  set_cfg_field "$EnvCfg" string irods_home /"$IRODS_ZONE_NAME"/home/"$IRODS_ZONE_USER"
+  set_cfg_field "$EnvCfg" string irods_host "$IRODS_HOST"
+  set_cfg_field "$EnvCfg" string irods_match_hash_policy compatible
+  set_cfg_field "$EnvCfg" integer irods_maximum_size_for_single_buffer_in_megabytes 32
+  set_cfg_field "$EnvCfg" integer irods_port "$IRODS_ZONE_PORT"
+  set_cfg_field "$EnvCfg" string irods_server_control_plane_encryption_algorithm "$algorithm"
+  set_cfg_field "$EnvCfg" integer irods_server_control_plane_encryption_num_hash_rounds "$numRounds"
+  set_cfg_field "$EnvCfg" string irods_server_control_plane_key "$IRODS_CONTROL_PLANE_KEY"
+  set_cfg_field "$EnvCfg" integer irods_server_control_plane_port "$IRODS_CONTROL_PLANE_PORT"
+  set_cfg_field "$EnvCfg" integer irods_transfer_buffer_size_for_parallel_transfer_in_megabytes 4
+  set_cfg_field "$EnvCfg" string irods_user_name "$IRODS_ZONE_USER"
+  set_cfg_field "$EnvCfg" string irods_zone_name "$IRODS_ZONE_NAME"
+}
+
+
+mk_svc_account()
+{
+  # define service account for this installation
+  "$PackagingDir"/setup_irods_service_account.sh <<EOF
+$IRODS_SYSTEM_USER
+$IRODS_SYSTEM_GROUP
+EOF
+}
+
+
+populate_server_cfg()
+{
+  set_cfg_field "$ServerCfg" string icat_host "$IRODS_IES"
+  set_cfg_field "$ServerCfg" string zone_name "$IRODS_ZONE_NAME"
+  set_cfg_field "$ServerCfg" string default_resource_name "$IRODS_LOCAL_RESOURCE"
+  set_cfg_field "$ServerCfg" integer zone_port "$IRODS_ZONE_PORT"
+  set_cfg_field "$ServerCfg" string zone_user "$IRODS_ZONE_USER"
+  set_cfg_field "$ServerCfg" string zone_auth_scheme native
+}
+
+
+prepare_svc_script()
+{
+  cat <<EOF | sed --file - /tmp/service.sh.template
 s/\$IRODS_IES/$(escape $IRODS_IES)/g
 s/\$IRODS_ZONE_PASSWORD/$(escape $IRODS_ZONE_PASSWORD)/g
 s/\$IRODS_SYSTEM_USER/$(escape $IRODS_SYSTEM_USER)/g
@@ -97,13 +133,14 @@ EOF
 }
 
 
-set_server_config_field()
+set_cfg_field()
 {
-  local type="$1"
-  local field="$2"
-  local value="$3"
+  local cfgFile="$1"
+  local type="$2"
+  local field="$3"
+  local value="$4"
 
-  python /var/lib/irods/packaging/update_json.py "$ServerConfig" "$type" "$field" "$value"
+  python "$PackagingDir"/update_json.py "$cfgFile" "$type" "$field" "$value"
 }
 
 
@@ -126,13 +163,17 @@ EOF
 }
 
 
-# define service account for this installation
-setup_irods_service_account()
+validate_32_byte_key()
 {
-  "$PackagingDir"/setup_irods_service_account.sh <<EOF
-$IRODS_SYSTEM_USER
-$IRODS_SYSTEM_GROUP
-EOF
+  local keyVal="$1"
+  local keyName="$2"
+
+  # check length (must equal 32)
+  if [ ${#keyVal} -ne 32 ]
+  then
+    printf '%s needs to be 32 bytes long\n' "$keyName" >&2
+    return 1
+  fi
 }
 
 

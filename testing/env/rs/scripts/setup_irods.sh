@@ -43,16 +43,7 @@ mkdir --parents "$IRODS_DEFAULT_VAULT"
 chown "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$IRODS_DEFAULT_VAULT"
 
 # setup resource server script
-sudo -i -u "$IRODS_SYSTEM_USER" \
-  CONTROL_PLANE_KEY="$IRODS_CONTROL_PLANE_KEY" \
-  CONTROL_PLANE_PORT="$IRODS_CONTROL_PLANE_PORT" \
-  IRODS_ADMIN_NAME="$IRODS_ZONE_USER" \
-  IRODS_IES="$IRPDS_IES" \
-  IRODS_HOST="$IRODS_HOST" \
-  IRODS_LOCAL_RESOURCE="$IRODS_LOCAL_RESOURCE" \
-  IRODS_PORT="$IRODS_ZONE_PORT" \
-  IRODS_ZONE_NAME="$IRODS_ZONE_NAME" \
-  /tmp/setup_resource.sh
+/tmp/setup_resource.sh
 
 # create bootstrap.sh
 cat <<EOF | sed --file - /tmp/service.sh.template > /service.sh

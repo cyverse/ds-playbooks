@@ -4,6 +4,22 @@
 readonly PackagingDir=/var/lib/irods/packaging
 
 
+main()
+{
+  setup_irods_service_account
+  setup_irods_configuration
+
+  mkdir --parents "$IRODS_DEFAULT_VAULT"
+  chown "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$IRODS_DEFAULT_VAULT"
+
+  # setup resource server script
+  /tmp/setup_resource.sh
+
+  mk_service_script
+  chmod a+rx /service.sh
+}
+
+
 # escapes / and \ for sed script
 escape()
 {
@@ -16,16 +32,21 @@ escape()
 }
 
 
-set -e
-
-# define service account for this installation
-"$PackagingDir"/setup_irods_service_account.sh <<EOF
-$IRODS_SYSTEM_USER
-$IRODS_SYSTEM_GROUP
+mk_service_script()
+{
+  cat <<EOF | sed --file - /tmp/service.sh.template > /service.sh
+s/\$IRODS_IES/$(escape $IRODS_IES)/g
+s/\$IRODS_ZONE_PASSWORD/$(escape $IRODS_ZONE_PASSWORD)/g
+s/\$IRODS_SYSTEM_USER/$(escape $IRODS_SYSTEM_USER)/g
+s/\$IRODS_ZONE_PORT/$(escape $IRODS_ZONE_PORT)/g
 EOF
+}
+
 
 # configure irods
-sudo -i -u "$IRODS_SYSTEM_USER" "$PackagingDir"/setup_irods_configuration.sh <<EOF
+setup_irods_configuration()
+{
+  sudo -i -u "$IRODS_SYSTEM_USER" "$PackagingDir"/setup_irods_configuration.sh <<EOF
 $IRODS_ZONE_PORT
 $IRODS_FIRST_EPHEMERAL_PORT
 $IRODS_LAST_EPHEMERAL_PORT
@@ -38,19 +59,19 @@ $IRODS_SCHEMA_VALIDATION
 $IRODS_ZONE_USER
 yes
 EOF
+}
 
-mkdir --parents "$IRODS_DEFAULT_VAULT"
-chown "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$IRODS_DEFAULT_VAULT"
 
-# setup resource server script
-/tmp/setup_resource.sh
-
-# create bootstrap.sh
-cat <<EOF | sed --file - /tmp/service.sh.template > /service.sh
-s/\$IRODS_IES/$(escape $IRODS_IES)/g
-s/\$IRODS_ZONE_PASSWORD/$(escape $IRODS_ZONE_PASSWORD)/g
-s/\$IRODS_SYSTEM_USER/$(escape $IRODS_SYSTEM_USER)/g
-s/\$IRODS_ZONE_PORT/$(escape $IRODS_ZONE_PORT)/g
+# define service account for this installation
+setup_irods_service_account()
+{
+  "$PackagingDir"/setup_irods_service_account.sh <<EOF
+$IRODS_SYSTEM_USER
+$IRODS_SYSTEM_GROUP
 EOF
+}
 
-chmod a+rx /service.sh
+
+set -e
+
+main

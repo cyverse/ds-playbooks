@@ -7,6 +7,7 @@
 # IRODS_CONTROL_PLANE_KEY     The encryption key required for communicating with
 #                             the grid control plane.
 # IRODS_CONTROL_PLANE_PORT    The port on which the control plane operates.
+# IRODS_DEFAULT_RESOURCE      The name of the default resource to use
 # IRODS_DEFAULT_VAULT         The absolute path to the vault of the resource
 #                             server.
 # IRODS_FIRST_EPHEMERAL_PORT  The beginning of the port range available for
@@ -16,7 +17,6 @@
 # IRODS_IES                   The FQDN or IP address of the IES.
 # IRODS_LAST_EPHEMERAL_PORT   The end of the port range available for parallel
 #                             transfer and reconnections.
-# IRODS_LOCAL_RESOURCE        The name of the storage resource being served
 # IRODS_NEGOTIATION_KEY       The shared encryption key used by the zone in
 #                             advanced negotiation handshake a the beginning of
 #                             a client connection
@@ -149,7 +149,7 @@ populate_server_cfg()
 {
   set_cfg_field "$ServerCfg" string icat_host "$IRODS_IES"
   set_cfg_field "$ServerCfg" string zone_name "$IRODS_ZONE_NAME"
-  set_cfg_field "$ServerCfg" string default_resource_name "$IRODS_LOCAL_RESOURCE"
+  set_cfg_field "$ServerCfg" string default_resource_name "$IRODS_DEFAULT_RESOURCE"
   set_cfg_field "$ServerCfg" integer zone_port "$IRODS_ZONE_PORT"
   set_cfg_field "$ServerCfg" string zone_user "$IRODS_ZONE_USER"
   set_cfg_field "$ServerCfg" string zone_auth_scheme native

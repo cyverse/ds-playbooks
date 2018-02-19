@@ -4,6 +4,13 @@
 #  service (start|stop)
 #
 # This script starts or stops the IES server inside the container.
+#
+# It requires the following environment variables to be defined.
+#
+# DBMS_HOST            The FQDN or IP address of the PostgreSQL server
+# DBMS_PORT            The TCP port the PostgreSQL will listen on.
+# IRODS_SYSTEM_USER    The system user who executes iRODS
+# IRODS_ZONE_PASSWORD  The password used to authenticate the clerver user
 
 
 main()

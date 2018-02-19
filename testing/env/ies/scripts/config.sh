@@ -9,6 +9,7 @@
 #                             PostgreSQL.
 # DB_USER                     The DBMS user iRODS will use to connect to DB_NAME
 #                             DB.
+# DBMS_HOST                   The FQDN or IP address of the PostgreSQL server
 # DBMS_PORT                   The TCP port the PostgreSQL will listen on.
 # IRODS_CONTROL_PLANE_KEY     The encryption key required for communicating with
 #                             the grid control plane.

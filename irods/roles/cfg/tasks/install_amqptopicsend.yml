@@ -8,3 +8,4 @@
     src: amqptopicsend.py.j2
     dest: /var/lib/irods/iRODS/server/bin/cmd/amqptopicsend.py
     owner: irods
+    mode: u=rx

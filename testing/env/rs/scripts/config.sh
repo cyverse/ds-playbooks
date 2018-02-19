@@ -1,6 +1,37 @@
 #! /bin/bash
-TODO document
-TODO figure out setting default resource as distinct from local storage resource
+#
+# This script configures a resource server.
+#
+# It requires the following environment variables to be defined.
+#
+# IRODS_CONTROL_PLANE_KEY     The encryption key required for communicating with
+#                             the grid control plane.
+# IRODS_CONTROL_PLANE_PORT    The port on which the control plane operates.
+# IRODS_DEFAULT_VAULT         The absolute path to the vault of the resource
+#                             server.
+# IRODS_FIRST_EPHEMERAL_PORT  The beginning of the port range available for
+#                             parallel transfer and reconnections.
+# IRODS_HOST                  The FQDN or IP address of the server being
+#                             configured.
+# IRODS_IES                   The FQDN or IP address of the IES.
+# IRODS_LAST_EPHEMERAL_PORT   The end of the port range available for parallel
+#                             transfer and reconnections.
+# IRODS_LOCAL_RESOURCE        The name of the storage resource being served
+# IRODS_NEGOTIATION_KEY       The shared encryption key used by the zone in
+#                             advanced negotiation handshake a the beginning of
+#                             a client connection
+# IRODS_SCHEMA_VALIDATION     The URI for the schema used to validate the
+#                             configuration files or 'off'.
+# IRODS_SYSTEM_GROUP          The system group for the iRODS process
+# IRODS_SYSTEM_USER           The system user for the iRODS process
+# IRODS_ZONE_KEY              The shared secred used for authentication during
+#                             server-to-server communication
+# IRODS_ZONE_NAME             The name of the iRODS zone.
+# IRODS_ZONE_PASSWORD         The password used to authenticate the
+#                             IRODS_ZONE_USER user.
+# IRODS_ZONE_PORT             The main TCP port used by the zone for
+#                             communication.
+# IRODS_ZONE_USER             The main rodsadmin user.
 
 
 readonly CfgDir=/etc/irods

@@ -1,4 +1,7 @@
 #! /bin/bash
+TODO document
+TODO figure out setting default resource as distinct from local storage resource
+
 
 readonly CfgDir=/etc/irods
 readonly ServerCfg="$CfgDir"/server_config.json

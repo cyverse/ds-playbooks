@@ -19,7 +19,7 @@
 # IRODS_HOST                  The FQDN or IP address of the server being
 #                             configured.
 # IRODS_LAST_EPHEMERAL_PORT   The end of the port range available for parallel
-#                             transfer and reconnections.vim
+#                             transfer and reconnections.
 # IRODS_NEGOTIATION_KEY       The shared encryption key used by the zone in
 #                             advanced negotiation handshake a the beginning of
 #                             a client connection

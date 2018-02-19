@@ -9,3 +9,4 @@
     dest: /var/lib/irods/iRODS/server/bin/cmd/amqptopicsend.py
     owner: "{{ _irods_service_account_name }}"
     group: "{{ _irods_service_group_name }}"
+    mode: u=rx

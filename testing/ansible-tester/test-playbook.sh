@@ -1,4 +1,12 @@
 #! /bin/bash
+#
+# Usage:
+#  test-playbook PLAYBOOK
+#
+# Parameters:
+#  PLAYBOOK  the name of the playbook being tested.
+#
+# This program executes and ansible playbook on the test environment.
 
 
 main()

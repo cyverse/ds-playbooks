@@ -5,29 +5,9 @@
 #
 # PARAMETERS:
 #  INC_FILE  The absolute path to a file including the build time environment
-#            variables.
+#            variables. See README.md for details.
 #
-# Builds the four docker images with the provided configuration values.
-#
-# Here are the environment variables that must be exported from INC_FILE.
-#
-# DBMS_HOST                   The FQDN or IP address of the PostgreSQL server
-# ENV_NAME                    The docker-compose project name.
-# IRODS_DEFAULT_RESOURCE      The name of the default resource to use
-# IRODS_IES                   The FQDN or IP address of the IES.
-# IRODS_LAST_EPHEMERAL_PORT   The end of the port range available for parallel
-#                             transfer and reconnections.
-# IRODS_RS6_HOST              The FQDN or IP address of the server hosting the
-#                             CentOS 6 resource server
-# IRODS_RS6_NAME              The name of the resource hosted by IRODS_RS6_HOST
-# IRODS_RS7_HOST              The FQDN or IP address of the server hosting the
-#                             CentOS 7 resource server
-# IRODS_RS7_NAME              The name of the resource hosted by IRODS_RS7_HOST
-# IRODS_SCHEMA_VALIDATION     The URI for the schema used to validate the
-#                             configuration files or 'off'.
-# IRODS_VAULT                 The absolute path to the vault on the resource
-#                             servers
-# IRODS_ZONE_NAME             The name of the iRODS zone
+# Builds the five docker images with the provided configuration values.
 
 
 main()

@@ -1,4 +1,14 @@
 #! /bin/bash
+#
+# Usage:
+#  run PLAYBOOK_FOLDER [PLAYBOOK_NAME]
+#
+# Parameters:
+#  PLAYBOOK_FOLDER  the absolute path to the directory holding the playbook
+#  PLAYBOOK_NAME    the path to the playbook to test relative to PLAYBOOK_FOLDER
+#
+# This script runs a playbook with in the testing environment. If no playbook
+# is provided, it will attempt to run the playbook PLAYBOOK_FOLDER/main.yml
 
 
 main()

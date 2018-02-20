@@ -1,6 +1,8 @@
 ---
 - name: verify that pika is installed
-  shell: "{{ 'pip' if ansible_distribution_major_version >= 7 else 'pip2.6' }} show pika"
+  vars:
+    pip: "{{ 'pip' if ansible_distribution_major_version >= 7 else 'pip2.6' }}"
+  shell: "{{ pip }} show --disable-pip-version-check pika"
   changed_when: false
 
 - name: install amqptopicsend.py

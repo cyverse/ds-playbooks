@@ -1,4 +1,7 @@
 #! /bin/bash
+#
+# This script builds the Docker images that compose the testing environment and
+# the ansible-tester image.
 
 
 main()

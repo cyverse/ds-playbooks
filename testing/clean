@@ -1,4 +1,8 @@
 #! /bin/bash
+#
+# This script removes the images built by the build script. Specifically, it
+# deletes ansible-tester, all of the images composing env, and the base image
+# ansible-support.
 
 
 main()

@@ -102,7 +102,7 @@
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
   tasks:
-    - include: tasks/install_amqptopicsend.yml
+    - import_tasks: tasks/install_amqptopicsend.yml
 
 - name: set minimum free space for resource
   hosts: rs
@@ -110,7 +110,7 @@
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
   tasks:
-    - include: tasks/set_resc_free_space.yml
+    - import_tasks: tasks/set_resc_free_space.yml
 
     - name: set context
       with_items: "{{ _irods_storage_resources }}"

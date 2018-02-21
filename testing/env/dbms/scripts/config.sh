@@ -127,7 +127,7 @@ mk_cfg_sql()
 
   local id=9101
 
-  while IFS=: read -r -d ' ' name server vault
+  while IFS=: read -r name server vault
   do
     mk_resc_insert "$zone" "$id" "$name" "$server" "$vault" "$nowTs"
     ((id++))

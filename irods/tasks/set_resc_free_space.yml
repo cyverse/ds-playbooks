@@ -2,8 +2,9 @@
 - name: update free space estimate
   with_items: "{{ _irods_storage_resources }}"
   shell: |
-    if ! resc=$(iadmin lr '{{ item.name }}') || [ "$resc" = 'No rows found']
+    if ! resc=$(iadmin lr '{{ item.name }}') || [ "$resc" = 'No rows found' ]
     then
+      printf 'Resource {{ item.name }} does not exist\n' >&2
       exit 1
     fi
 

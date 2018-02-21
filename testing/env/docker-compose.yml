@@ -80,6 +80,24 @@ services:
     depends_on:
       - ies
 
+  volume_inspector:
+    image: centos:7
+    tty: true
+    volumes:
+      - "dbms_data:/volumes/dbms/data"
+      - "dbms_logs:/volumes/dbms/logs"
+      - "ies_cfg_clerver:/volumes/ies/cfg_clerver"
+      - "ies_cfg_svc:/volumes/ies/cfg_svc"
+      - "ies_logs:/volumes/ies/logs"
+      - "rs6_cfg_clerver:/volumes/rs6/cfg_clerver"
+      - "rs6_cfg_svc:/volumes/rs6/cfg_svc"
+      - "rs6_logs:/volumes/rs6/logs"
+      - "rs6_vault:/volumes/rs6/vault"
+      - "rs7_cfg_clerver:/volumes/rs7/cfg_clerver"
+      - "rs7_cfg_svc:/volumes/rs7/cfg_svc"
+      - "rs7_logs:/volumes/rs7/logs"
+      - "rs7_vault:/volumes/rs7/vault"
+
 volumes:
   dbms_data:
   dbms_logs:

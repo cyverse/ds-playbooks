@@ -42,7 +42,7 @@ main()
       local dcCmd='up -d'
       ;;
     stop)
-      local dcCmd=down
+      local dcCmd='down --volumes'
       ;;
     *)
       printf 'Unknown command "%s"\n' "$action" >&2

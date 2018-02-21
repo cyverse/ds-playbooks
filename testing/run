@@ -1,43 +1,134 @@
 #! /bin/bash
-#
-# Usage:
-#  run PLAYBOOK_FOLDER [PLAYBOOK_NAME]
-#
-# Parameters:
-#  PLAYBOOK_FOLDER  the absolute path to the directory holding the playbook
-#  PLAYBOOK_NAME    the path to the playbook to test relative to PLAYBOOK_FOLDER
-#
-# This script runs a playbook with in the testing environment. If no playbook
-# is provided, it will attempt to run the playbook PLAYBOOK_FOLDER/main.yml
+
+readonly ExecName=$(basename "$0")
+
+
+show_help()
+{
+  cat <<EOF
+
+$ExecName
+
+Usage:
+  $ExecName [options] <playbook_folder>
+
+test Data Store playbooks
+
+Parameters:
+  <playbook_folder>  the absolute path to the root directory for a collection of
+                     playbooks
+
+Options:
+  -p, --playbook <playbook>  the path to the playbook to test relative to
+                             <playbook_folder>.
+
+  -h, --help     show help and exit
+  -i, --inspect  after running the playbook, open shell that allows manual
+                 inspection of the configuration files, vaults, and logs
+
+Summary:
+This script runs a playbook with in the testing environment. If no playbook is
+provided, it will attempt to run the playbook <playbook_folder>/main.yml.
+EOF
+}
+
+
+readonly BaseDir=$(dirname $(readlink -f "$0"))
+readonly Cfg="$BaseDir"/config.inc
 
 
 main()
 {
-  local baseDir=$(dirname $(readlink -f "$0"))
+  local doInspect=false
+  local playbook=main.yml
+
+  if ! opts=$(getopt --name "$ExecName" --longoptions help,inspect,playbook: --options hip: -- "$@")
+  then
+    exit_with_help
+  fi
+
+  eval set -- "$opts"
+
+  while true
+  do
+    case "$1" in
+      -h|--help)
+        show_help
+        exit 0
+        ;;
+      -i|--inspect)
+        doInspect=true
+        shift
+        ;;
+      -p|--playbook)
+        playbook="$2"
+        shift 2
+        ;;
+      --)
+        shift
+        break
+        ;;
+      *)
+        exit_with_help
+        ;;
+    esac
+  done
 
   if [ "$#" -lt 1 ]
   then
-    printf 'The name of a folder holding the playbook is requred\n' >&2
-    return 1
+    exit_with_help
   fi
 
   local playbooks="$1"
-
-  if [ "$#" -ge 2 ]
-  then
-    local playbook="$2"
-  else
-    local playbook=main.yml
-  fi
-
-  local cfg="$baseDir"/config.inc
-
-  . "$cfg"
 
   if ! [[ "$playbooks" =~ ^/ ]]
   then
     playbooks="$(pwd)"/"$playbooks"
   fi
+
+  if ! verify_playbook_exists "$playbooks" "$playbook"
+  then
+    exit 1
+  fi
+
+  do_run "$doInspect" "$playbooks" "$playbook"
+}
+
+
+do_run()
+{
+  local doInspect="$1"
+  local playbooks="$2"
+  local playbook="$3"
+
+  if "$BaseDir"/env/controller "$Cfg" start
+  then
+    docker run --interactive --rm --tty \
+               --network "$ENV_NAME"_default --volume "$playbooks":/playbooks-under-test:ro \
+               ansible-tester "$playbook"
+
+    if [ "$?" -eq 0 -a "$doInspect" = true ]
+    then
+      printf 'Please verify that the playbooks worked as intented\n'
+      "$BaseDir"/env/inspect "$Cfg"
+    fi
+  fi
+
+  "$BaseDir"/env/controller "$Cfg" stop
+}
+
+
+exit_with_help()
+{
+  show_help >&2
+  exit 1
+}
+
+
+verify_playbook_exists()
+{
+  local playbooks="$1"
+  local playbook="$2"
 
   if ! [ -d "$playbooks" ]
   then
@@ -50,16 +141,9 @@ main()
     printf 'The playbook %s/%s does not exist\n' "$playbooks" "$playbook" >&2
     return 1
   fi
-
-  if "$baseDir"/env/controller "$cfg" start
-  then
-    docker run --interactive --rm --tty \
-               --network "$ENV_NAME"_default --volume "$playbooks":/playbooks-under-test:ro \
-               ansible-tester "$playbook"
-  fi
-
-  "$baseDir"/env/controller "$cfg" stop
 }
 
 
+set -e
+. "$Cfg"
 main "$@"

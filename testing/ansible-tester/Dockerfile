@@ -1,10 +1,8 @@
 FROM williamyeh/ansible:centos7
 MAINTAINER Tony Edgin @ CyVerse
 
-# TODO add psql
-
 RUN yum --assumeyes install \
-        python-dns wget \
+        postgresql python-dns wget \
         ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm && \
     yum clean all && \
     rm --force --recursive /var/cache/yum && \
@@ -32,5 +30,9 @@ ENV IRODS_PASSWORD=rods
 ENV IRODS_PORT=1247
 ENV IRODS_USER_NAME=rods
 ENV IRODS_ZONE_NAME=tempZone
+ENV PGDATABASE=ICAT
+ENV PGHOST=dbms
+ENV PGPASSWORD=testpassword
+ENV PGUSER=irods
 
 ENTRYPOINT [ "/test-playbook" ]

@@ -24,5 +24,4 @@ environment. `build` builds all the required images, and `clean` deletes them.
 environment. This script will bring up the environment, run the playbooks, and
 then tear down the environment.  
 
-__TODO modify run so that it doesn't tear down the environment. run doesn't
-support test validation yet.__
+__TODO add support for test validation yet.__

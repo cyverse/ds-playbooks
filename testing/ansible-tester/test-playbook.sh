@@ -16,19 +16,7 @@ main()
   local inspect="$1"
   local playbook="$2"
 
-  printf 'Waiting for environment to be ready\n'
-
-  if ansible-playbook --inventory-file=/inventory /wait-for-ready.yml > /dev/null
-  then
-    printf 'Checking playbook syntax\n'
-    ansible-playbook --syntax-check --inventory-file=/inventory /playbooks-under-test/"$playbook"
-
-    if [ "$?" -eq 0 ]
-    then
-      printf 'Running playbook\n'
-      ansible-playbook --inventory-file=/inventory /playbooks-under-test/"$playbook"
-    fi
-  fi
+  do_test /playbooks-under-test/"$playbook"
 
   if [ "$inspect" = true ]
   then
@@ -36,6 +24,47 @@ main()
     iinit "$IRODS_PASSWORD"
     (cd /volumes && bash)
   fi
+}
+
+
+do_test()
+{
+  local playbook="$1"
+
+  printf 'Waiting for environment to be ready\n'
+  if ! playbook /wait-for-ready.yml > /dev/null
+  then
+    return 1
+  fi
+
+  printf 'Checking playbook syntax\n'
+  if ! playbook --syntax-check "$playbook"
+  then
+    return 1
+  fi
+
+  printf 'Running playbook\n'
+  if ! playbook "$playbook"
+  then
+    return 1
+  fi
+
+  printf 'Checking idempotency\n'
+  playbook "$playbook" 2>&1 \
+    | sed --quiet '/^PLAY RECAP/ { s///; :a; n; /changed=\([^0]\|0.*failed=[^0]\)/p; ba; }' \
+    | if read
+      then
+        printf 'not idempotent\n'
+        return 1
+      fi
+}
+
+
+playbook()
+{
+  args="$@"
+
+  ansible-playbook --inventory-file=/inventory "$@"
 }
 
 

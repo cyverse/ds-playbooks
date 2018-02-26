@@ -20,8 +20,14 @@ main()
 
   if ansible-playbook --inventory-file=/inventory /wait-for-ready.yml > /dev/null
   then
-    printf 'Running playbook\n'
-    ansible-playbook --inventory-file=/inventory /playbooks-under-test/"$playbook"
+    printf 'Checking playbook syntax\n'
+    ansible-playbook --syntax-check --inventory-file=/inventory /playbooks-under-test/"$playbook"
+
+    if [ "$?" -eq 0 ]
+    then
+      printf 'Running playbook\n'
+      ansible-playbook --inventory-file=/inventory /playbooks-under-test/"$playbook"
+    fi
   fi
 
   if [ "$inspect" = true ]

@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# Usage:
+#  run INSPECT PLAYBOOKS PLAYBOOK
+#
+# Parameters:
+#  INSPECT    if this is `true`, a shell will be opened that allows access to
+#             the volumes in the env containers.
+#  PLAYBOOK   the name of the playbook being tested.
+#  PLAYBOOKS  the base directory for the set of playbooks containing PLAYBOOK.
+#
+# Envinroment Variables:
+# ENV_NAME         The docker environment to join
+# IRODS_IES        The FQDN or IP address of the iRODS IES to connect to
+# IRODS_ZONE_NAME  The name of the iRODS zone inside the testing environment
+
+
+main()
+{
+  local doInspect="$1"
+  local playbooks="$2"
+  local playbook="$3"
+
+  local network="$ENV_NAME"_default
+
+  docker run --interactive --rm --tty \
+             --env IRODS_HOST="$IRODS_IES"."$network" --env IRODS_ZONE_NAME="$IRODS_ZONE_NAME" \
+             --network "$network" \
+             --volume "$playbooks":/playbooks-under-test:ro \
+             --volume "$ENV_NAME"_dbms_data:/volumes/dbms/data:ro \
+             --volume "$ENV_NAME"_dbms_logs:/volumes/dbms/logs:ro \
+             --volume "$ENV_NAME"_ies_cfg_clerver:/volumes/ies/cfg_clerver:ro \
+             --volume "$ENV_NAME"_ies_cfg_svc:/volumes/ies/cfg_svc:ro \
+             --volume "$ENV_NAME"_ies_logs:/volumes/ies/logs:ro \
+             --volume "$ENV_NAME"_rs6_cfg_clerver:/volumes/rs6/cfg_clerver:ro \
+             --volume "$ENV_NAME"_rs6_cfg_svc:/volumes/rs6/cfg_svc:ro \
+             --volume "$ENV_NAME"_rs6_logs:/volumes/rs6/logs:ro \
+             --volume "$ENV_NAME"_rs6_vault:/volumes/rs6/vault:ro \
+             --volume "$ENV_NAME"_rs7_cfg_clerver:/volumes/rs7/cfg_clerver:ro \
+             --volume "$ENV_NAME"_rs7_cfg_svc:/volumes/rs7/cfg_svc:ro \
+             --volume "$ENV_NAME"_rs7_logs:/volumes/rs7/logs:ro \
+             --volume "$ENV_NAME"_rs7_vault:/volumes/rs7/vault:ro \
+             ansible-tester "$doInspect" "$playbook"
+}
+
+
+set -e
+
+main "$@"

@@ -16,7 +16,7 @@ main()
   local inspect="$1"
   local playbook="$2"
 
-  do_test /playbooks-under-test/"$playbook"
+  do_test "$playbook"
 
   if [ "$inspect" = true ]
   then
@@ -38,19 +38,25 @@ do_test()
   fi
 
   printf 'Checking playbook syntax\n'
-  if ! playbook --syntax-check "$playbook"
+  if ! playbook --syntax-check  /playbooks-under-test/"$playbook"
   then
     return 1
   fi
 
   printf 'Running playbook\n'
-  if ! playbook "$playbook"
+  if ! playbook /playbooks-under-test/"$playbook"
+  then
+    return 1
+  fi
+
+  printf 'Checking configuration\n'
+  if ! playbook /playbooks-under-test/tests/"$playbook"
   then
     return 1
   fi
 
   printf 'Checking idempotency\n'
-  playbook "$playbook" 2>&1 \
+  playbook  /playbooks-under-test/"$playbook" 2>&1 \
     | sed --quiet '/^PLAY RECAP/ { s///; :a; n; /changed=\([^0]\|0.*failed=[^0]\)/p; ba; }' \
     | if read
       then

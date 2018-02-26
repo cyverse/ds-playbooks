@@ -1,0 +1,23 @@
+---
+- name: test irod_cfg playbook
+  hosts: irods
+  tasks:
+    - name: Retrieve configuration files
+      stat:
+        path: /etc/irods/{{ item }}
+      register: response
+      failed_when: not response.stat.exists
+      with_items:
+        - aegis.re
+        - aegis-env.re
+        - bisque.re
+        - bisque-env.re
+        - coge.re
+        - ipc-amqp.re
+        - ipc-custom.re
+        - ipc-json.re
+        - ipc-logic.re
+        - ipc-uuid.re
+        - ipc-env.re
+        - sernec.re
+        - sernec-env.re

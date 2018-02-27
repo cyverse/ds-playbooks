@@ -24,6 +24,8 @@ main()
     iinit "$IRODS_PASSWORD"
     (cd /volumes && bash)
   fi
+
+  return 0
 }
 
 
@@ -73,7 +75,5 @@ playbook()
   ansible-playbook --inventory-file=/inventory "$@"
 }
 
-
-set -e
 
 main "$@"

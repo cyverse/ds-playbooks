@@ -35,6 +35,7 @@
         irods_cfg_client_server_policy: CS_NEG_REFUSE
         irods_cfg_default_hash_scheme: MD5
         irods_cfg_default_number_of_transfer_threads: "{{ _default_number_of_transfer_threads }}"
+        irods_cfg_default_resource_directory: "{{ _irods_default_vault }}"
         irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
         irods_cfg_environment_variables: "{{
           { 'IRODS_AMQP_URI': rabbitmq_uri } if inventory_hostname == _icat_host else

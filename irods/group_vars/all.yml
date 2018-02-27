@@ -35,6 +35,8 @@ _irods_default_repl_resource: "{{
 _irods_default_resource: "{{ irods_default_resource if irods_default_resource is defined else
                              'demoResc' }}"
 
+_irods_default_vault: "{{ irods_default_vault if irods_default_vault is defined else None }}"
+
 _irods_max_num_re_procs: "{{ irods_max_num_re_procs if irods_max_num_re_procs is defined else 4 }}"
 
 _irods_service_account_name: "{{

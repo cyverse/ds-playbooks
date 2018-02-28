@@ -1,7 +1,13 @@
 ---
-_bisque_irods_host: "{{ bisque_irods_host if bisque_irods_host is defined else None }}"
+_bisque_irods_host: "{{ bisque_irods_host if bisque_irods_host is defined else _icat_host }}"
+
+_bisque_password: "{{ bisque_password if bisque_password is defined else 'admin' }}"
 
 _bisque_projects: "{{ bisque_projects if bisque_projects is defined else [] }}"
+
+_bisque_url: "{{ bisque_url if bisque_url is defined else None }}"
+
+_bisque_user: "{{ bisque_user if bisque_user is defined else 'admin' }}"
 
 _dbms_password: "{{ dbms_password if dbms_password is defined else None }}"
 

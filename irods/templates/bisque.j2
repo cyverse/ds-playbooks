@@ -1,5 +1,5 @@
 [bqpath]
-bisque_host = {{ bisque_url }}
-bisque_admin_user = {{ bisque_user | default('admin') }}
-bisque_admin_pass = {{ bisque_password | default('admin') }}
+bisque_host = {{ _bisque_url }}
+bisque_admin_user = {{ _bisque_user }}
+bisque_admin_pass = {{ _bisque_password }}
 logfile = /var/log/bisque/bisque_ops.log

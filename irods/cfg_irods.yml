@@ -5,19 +5,18 @@
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: true
   tasks:
-    - when: _bisque_irods_host
-      block:
-        - name: install bisque_ops.py
-          get_url:
-            url: https://biodev.ece.ucsb.edu/projects/bisquik/browser/bisque/contrib/irods/bisque_ops/bisque_ops.py?format=txt
-            dest: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_ops.py"
-            mode: u=rx
+    - name: install bisque_ops.py
+      copy:
+        src: files/bisque_ops.py
+        dest: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_ops.py"
+        mode: u=rx
 
-        - name: place .bisque
-          template:
-            src: templates/bisque.j2
-            dest: "{{ ansible_env.HOME }}/.bisque"
-            mode: u=r
+    - name: place .bisque
+      when: _bisque_url is defined
+      template:
+        src: templates/bisque.j2
+        dest: "{{ ansible_env.HOME }}/.bisque"
+        mode: u=r
 
 - name: configure iRODS
   hosts: irods

@@ -40,9 +40,10 @@
   hosts: localhost
   gather_facts: false
   vars_files:
-    - vars/aegis_opts.yml
     - ../group_vars/all.yml
   vars:
+    irods_aegis_repl_resource: aegisReplication
+    irods_aegis_resource: aegisIngest
     aegis_env: "{{ lookup('template', '../templates/etc/irods/aegis-env.re.j2') }}"
   tasks:
     - name: verify params
@@ -55,9 +56,9 @@
   hosts: localhost
   gather_facts: false
   vars_files:
-    - vars/max_num_re_procs.yml
     - ../group_vars/all.yml
   vars:
+    irods_max_num_re_procs: 1
     ipc_env: "{{ lookup('template', '../templates/etc/irods/ipc-env.re.j2') }}"
   tasks:
     - name: verify ipc_MAX_NUM_RE_PROCS
@@ -69,9 +70,11 @@
   hosts: localhost
   gather_facts: false
   vars_files:
-    - vars/single_threaded_resources.yml
     - ../group_vars/all.yml
   vars:
+    single_threaded_resources:
+      - resource-1
+      - resource-2
     ipc_env: "{{ lookup('template', '../templates/etc/irods/ipc-env.re.j2') }}"
   tasks:
     - name: verify acSetNumThreads defined correctly in ipc-env.re
@@ -84,9 +87,9 @@
   hosts: localhost
   gather_facts: false
   vars_files:
-    - vars/bisque_irods_host.yml
     - ../group_vars/all.yml
   vars:
+    bisque_irods_host: custom.irods.host
     bisque_env: "{{ lookup('template', '../templates/etc/irods/bisque-env.re.j2') }}"
   tasks:
     - name: verify bisque_env
@@ -98,9 +101,17 @@
   hosts: localhost
   gather_facts: false
   vars_files:
-    - vars/sernec_perms.yml
     - ../group_vars/all.yml
   vars:
+    sernec_owners:
+      - own1
+      - own2
+    sernec_readers:
+      - read1
+      - read2
+    sernec_writers:
+      - write1
+      - write2
     sernec_env: "{{ lookup('template', '../templates/etc/irods/sernec-env.re.j2') }}"
   tasks:
     - name: verify sernec_env

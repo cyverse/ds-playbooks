@@ -5,11 +5,17 @@
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: true
   tasks:
-    - name: install bisque_ops.py
-      copy:
-        src: files/bisque_ops.py
-        dest: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_ops.py"
+    - name: install bisque_paths.py
+      get_url:
+        url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
+        dest: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_paths.py"
         mode: u=rx
+        validate_certs: no
+
+    - name: remove bisque_ops.py
+      file:
+        path: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_ops.py"
+        state: absent
 
     - name: place .bisque
       when: _bisque_url is defined

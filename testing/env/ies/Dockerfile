@@ -32,6 +32,7 @@ RUN yum --assumeyes install \
       ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm && \
     /tmp/config.sh && \
     pip install pika && \
+    touch /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py && \
     yum clean all && \
     rm --force --recursive /tmp/* /var/cache/yum
 

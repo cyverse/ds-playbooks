@@ -12,8 +12,6 @@
           write_priv: .*
           read_priv: .*
 
-- include: mk_vaults.yml
-
 - name: Install pika
   hosts: irods
   become: true

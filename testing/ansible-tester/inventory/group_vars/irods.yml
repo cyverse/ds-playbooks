@@ -1,11 +1,2 @@
 ---
-irods_port: 1247
-irods_service_account_name: irods
-irods_version: 4.1.10
-
 server_port_range_end: 20009
-
-
-admin_user: "{{ irods_service_account_name }}"
-
-irods_service_group_name: "{{ irods_service_account_name }}"

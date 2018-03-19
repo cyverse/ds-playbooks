@@ -1,0 +1,5 @@
+---
+- hosts: rs
+  tasks:
+    - debug:
+        msg: TODO implement

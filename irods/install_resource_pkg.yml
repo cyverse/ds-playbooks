@@ -6,17 +6,21 @@
       group_by:
         key: centos{{ ansible_distribution_major_version }}
 
+# For ansible 2.4.3 when a syntax-only run is performed this will generate a
+# warning because centos6 is a dynamically created group.
 - name: install resource package on CentOS 6 resource servers
   hosts: centos6
   become: true
   tasks:
-  - include: tasks/proxy_install.yml os=centos6 pkg=irods-resource
+  - include_tasks: tasks/proxy_install.yml os=centos6 pkg=irods-resource
 
+  # For ansible 2.4.3 when a syntax-only run is performed this will generate a
+  # warning because centos7 is a dynamically created group.
 - name: install resource package on CentOS 7 resource servers
   hosts: centos7
   become: true
   tasks:
-  - include: tasks/proxy_install.yml os=centos6 pkg=irods-resource
+  - include_tasks: tasks/proxy_install.yml os=centos6 pkg=irods-resource
 
 - name: ensure server account owns what it's supposed to
   hosts: rs:!ies:!unmanaged_systems

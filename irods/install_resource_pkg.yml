@@ -20,7 +20,7 @@
   hosts: centos7
   become: true
   tasks:
-  - include_tasks: tasks/proxy_install.yml os=centos6 pkg=irods-resource
+  - include_tasks: tasks/proxy_install.yml os=centos7 pkg=irods-resource
 
 - name: ensure server account owns what it's supposed to
   hosts: rs:!ies:!unmanaged_systems

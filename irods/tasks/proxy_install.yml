@@ -4,7 +4,7 @@
     list: "{{ pkg }}"
   register: result
 
-- when: result.results|count == 0 or result.results[0].version|version_compare(irods_version, '<')
+- when: result.results|count == 0 or result.results[0].version|version_compare(_irods_version, '<')
   block:
     # get_url doesn't seem to work for localhost downloads from FTP sites on ansible 2.1.1
     - name: Download package locally
@@ -12,16 +12,16 @@
       delegate_to: localhost
       shell: |
         wget --directory-prefix /tmp \
-             ftp://ftp.renci.org/pub/irods/releases/{{ irods_version }}/{{ os }}/{{ pkg }}-{{ irods_version }}-{{ os }}-x86_64.rpm
+             ftp://ftp.renci.org/pub/irods/releases/{{ _irods_version }}/{{ os }}/{{ pkg }}-{{ _irods_version }}-{{ os }}-x86_64.rpm
       args:
-        creates: /tmp/{{ pkg }}-{{ irods_version }}-{{ os }}-x86_64.rpm
+        creates: /tmp/{{ pkg }}-{{ _irods_version }}-{{ os }}-x86_64.rpm
         warn: false
 
     - name: upload package to resource server
       copy:
-        src: /tmp/{{ pkg }}-{{ irods_version }}-{{ os }}-x86_64.rpm
+        src: /tmp/{{ pkg }}-{{ _irods_version }}-{{ os }}-x86_64.rpm
         dest: /root
 
     - name: install package
       yum:
-        name: /root/{{ pkg }}-{{ irods_version }}-{{ os }}-x86_64.rpm
+        name: /root/{{ pkg }}-{{ _irods_version }}-{{ os }}-x86_64.rpm

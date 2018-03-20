@@ -1,5 +1,8 @@
 ---
-- hosts: rs
+- name: check to see if the correct version of the package is installed
+  hosts: rs
   tasks:
-    - debug:
-        msg: TODO implement
+    - name: Retrieve the info about irods-resource package
+      package:
+        name: irods-resource-4.1.10
+        state: present

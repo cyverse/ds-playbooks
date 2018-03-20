@@ -20,5 +20,5 @@
         group: "{{ _irods_service_group_name }}"
         comment: iRODS service
 
-- include: mk_vaults.yml
-- include: install_resource_pkg.yml
+- import_playbook: mk_vaults.yml
+- import_playbook: install_resource_pkg.yml

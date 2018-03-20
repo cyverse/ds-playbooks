@@ -6,16 +6,12 @@
 
 - when: result.results|count == 0 or result.results[0].version|version_compare(_irods_version, '<')
   block:
-    # get_url doesn't seem to work for localhost downloads from FTP sites on ansible 2.1.1
     - name: Download package locally
       run_once: true
       delegate_to: localhost
-      shell: |
-        wget --directory-prefix /tmp \
-             ftp://ftp.renci.org/pub/irods/releases/{{ _irods_version }}/{{ os }}/{{ pkg }}-{{ _irods_version }}-{{ os }}-x86_64.rpm
-      args:
-        creates: /tmp/{{ pkg }}-{{ _irods_version }}-{{ os }}-x86_64.rpm
-        warn: false
+      get_url:
+        url: ftp://ftp.renci.org/pub/irods/releases/{{ _irods_version }}/{{ os }}/{{ pkg }}-{{ _irods_version }}-{{ os }}-x86_64.rpm
+        dest: /tmp
 
     - name: upload package to resource server
       copy:

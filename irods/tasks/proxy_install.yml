@@ -3,6 +3,7 @@
   yum:
     list: "{{ pkg }}"
   register: result
+  fail_when: false
 
 - when: result.results|count == 0 or result.results[0].version|version_compare(_irods_version, '<')
   block:

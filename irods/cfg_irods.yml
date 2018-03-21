@@ -91,7 +91,7 @@
   hosts: ies
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
   become_user: "{{ _irods_service_account_name }}"
-  gather_facts: true
+  gather_facts: false
   tasks:
     - name: install bisque_ops.py
       copy:

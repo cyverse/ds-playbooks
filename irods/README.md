@@ -4,7 +4,7 @@ CyVerse DS iRODS Playbooks
 This is a collection of playbooks for deploying iRODS for the CyVerse Data Store.
 
 Variables
---------------
+---------
 
 None of these variables are required.
 
@@ -39,6 +39,7 @@ Variable                             | Default                          | Choice
 `server_port_range_end`              | 20199                            |         | the last address in the range of auxillary TCP and UDP ports
 `server_port_range_start`            | 20000                            |         | the first address in the range of auxillary TCP and UDP ports
 `single_threaded_resources`          | []                               |         | a list of resources that only support single threaded transfers
+`sysctl_kernel`                      | []                               |         | a list of sysctl kernel parameters to set for the IES, __see_below__
 `zone_key`                           | TEMPORARY_zone_key               |         | the zone key
 
 `irods_federate fields`
@@ -51,3 +52,12 @@ Variable          | Comments
 `negotiation_key` | the 32-byte encryption key of the federate
 `zone_key`        | the shared authentication secret of the federate
 `zone_name`       | the name of the federated zone
+
+`sysctl_kernel entry fields`
+
+All of them are required.
+
+Variable | Comments
+-------- | --------
+`name`   | The parameter name to modify
+`value`  | The new value to set

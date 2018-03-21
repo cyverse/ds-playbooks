@@ -3,6 +3,7 @@ export ENV_NAME=dstesting
 export DBMS_HOST="$ENV_NAME"_dbms_1
 
 export IRODS_IES="$ENV_NAME"_ies_1
+export IRODS_IES_SYSTEM_GROUP=irods_ies
 export IRODS_LAST_EPHEMERAL_PORT=20009
 export IRODS_RS6_NAME=rs_centos6
 export IRODS_RS7_NAME=rs_centos7

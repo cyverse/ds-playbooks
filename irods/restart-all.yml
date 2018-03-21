@@ -30,4 +30,3 @@
         name: irods
         pattern: irodsServer
         state: started
-

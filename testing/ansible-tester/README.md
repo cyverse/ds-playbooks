@@ -4,6 +4,40 @@ This folder contains the source for the `ansible-tester` Docker image. A
 container created from this image can be used to test a playbook against a
 simple Data Store setup.
 
+## Sets of Tests
+
+`ansible-tester` performs three sets tests in the order they are presented here.
+
+1. It performs a syntax check of the playbook under test.
+1. It runs the playbook under test and then runs any user provided tests on the same environment.
+1. It runs the playbook under test again, checking for idempotency.
+
+### User Provided Tests
+
+If any tests are to be performed on the environment after the first run of the
+playbook, they should be placed in a playbook with the same name as the playbook
+under test. This test playbook should be in a directory named `tests` that is in
+the same directory as the playbook under test. Here's an example.
+
+```
+parent-dir/
+  playbook.yml
+  tests/
+    playbook.yml
+```
+
+### Skipping Idempotency Checks
+
+If any play in the playbook is guaranteed to be non-idempotent, .e.g., a forced
+restart, `ansible-tester` would normally falsely fail the test. To let
+`ansible-tester` know that a play is non-idempotent, add the tag
+`non_idempotent` to this play, and it will be skipped when performing the
+idempotency check.
+
+## Testing environment
+
+_TODO document_
+
 ## Building the Image
 
 There are two convenience scripts for building the Docker image. `build` will

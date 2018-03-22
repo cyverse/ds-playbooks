@@ -33,32 +33,38 @@ do_test()
 {
   local playbook="$1"
 
+  local playbookPath=/playbooks-under-test/"$playbook"
+  local testPath=/playbooks-under-test/tests/"$playbook"
+
   printf 'Waiting for environment to be ready\n'
-  if ! playbook /wait-for-ready.yml > /dev/null
+  if ! run_playbook /wait-for-ready.yml > /dev/null
   then
     return 1
   fi
 
   printf 'Checking playbook syntax\n'
-  if ! playbook --syntax-check  /playbooks-under-test/"$playbook"
+  if ! run_playbook --syntax-check "$playbookPath"
   then
     return 1
   fi
 
   printf 'Running playbook\n'
-  if ! playbook /playbooks-under-test/"$playbook"
+  if ! run_playbook "$playbookPath"
   then
     return 1
   fi
 
-  printf 'Checking configuration\n'
-  if ! playbook /playbooks-under-test/tests/"$playbook"
+  if [ -e "$testPath" ]
   then
-    return 1
+    printf 'Checking configuration\n'
+    if ! run_playbook "$testPath"
+    then
+      return 1
+    fi
   fi
 
   printf 'Checking idempotency\n'
-  playbook  /playbooks-under-test/"$playbook" 2>&1 \
+  run_playbook --skip-tags non_idempotent "$playbookPath" 2>&1 \
     | sed --quiet '/^PLAY RECAP/ { s///; :a; n; /changed=\([^0]\|0.*failed=[^0]\)/p; ba; }' \
     | if read
       then
@@ -68,10 +74,8 @@ do_test()
 }
 
 
-playbook()
+run_playbook()
 {
-  args="$@"
-
   ansible-playbook --inventory-file=/inventory "$@"
 }
 

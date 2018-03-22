@@ -2,7 +2,7 @@ FROM williamyeh/ansible:centos7
 MAINTAINER Tony Edgin @ CyVerse
 
 RUN yum --assumeyes install \
-        postgresql python-dns wget \
+        git postgresql python-dns wget \
         ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm && \
     yum clean all && \
     rm --force --recursive /var/cache/yum && \

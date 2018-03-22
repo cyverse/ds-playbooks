@@ -1,6 +1,0 @@
----
-- name: test provision
-  hosts: ies
-  tasks:
-    - debug:
-        msg: TODO implement

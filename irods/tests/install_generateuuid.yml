@@ -1,6 +1,0 @@
----
-- name: test install_generateuuid
-  hosts: irods
-  tasks:
-    - debug:
-        msg: TODO implement

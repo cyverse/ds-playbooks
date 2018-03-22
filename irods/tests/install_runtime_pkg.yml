@@ -1,6 +1,0 @@
----
-- name: test install_runtime_pkg
-  hosts: irods
-  tasks:
-    - debug:
-        msg: TODO implement

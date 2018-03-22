@@ -49,7 +49,7 @@ do_test()
   fi
 
   printf 'Running playbook\n'
-  if ! run_playbook "$playbookPath"
+  if ! run_playbook --skip-tags no_testing "$playbookPath"
   then
     return 1
   fi
@@ -64,7 +64,7 @@ do_test()
   fi
 
   printf 'Checking idempotency\n'
-  run_playbook --skip-tags non_idempotent "$playbookPath" 2>&1 \
+  run_playbook --skip-tags 'no_testing, non_idempotent' "$playbookPath" 2>&1 \
     | sed --quiet '/^PLAY RECAP/ { s///; :a; n; /changed=\([^0]\|0.*failed=[^0]\)/p; ba; }' \
     | if read
       then

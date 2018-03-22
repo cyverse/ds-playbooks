@@ -28,11 +28,17 @@ parent-dir/
 
 ### Skipping Idempotency Checks
 
-If any play in the playbook is guaranteed to be non-idempotent, .e.g., a forced
+If any task in the playbook is guaranteed to be non-idempotent, .e.g., a forced
 restart, `ansible-tester` would normally falsely fail the test. To let
-`ansible-tester` know that a play is non-idempotent, add the tag
-`non_idempotent` to this play, and it will be skipped when performing the
+`ansible-tester` know that a task is non-idempotent, add the tag
+`non_idempotent` to this task, and it will be skipped when performing the
 idempotency check.
+
+### Skipping Certain Tasks
+
+Some tasks can't be run inside a Docker container, e.g., /etc/hosts can't be
+modified. Tag each of these tasks with `no_testing`, and those tasks will be
+skipped.
 
 ## Testing environment
 

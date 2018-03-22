@@ -21,5 +21,5 @@
         name: pika
         state: latest
 
-- include: provision.yml
-- include: cfg_irods.yml
+- import_playbook: provision.yml
+- import_playbook: cfg_irods.yml

@@ -16,7 +16,7 @@ _sciapps_USER = 'maizecode'
 
 
 sciapps_acPostProcForCollCreate {
-  ipc_ensureAccessOnCreateColl(_sciapps_USER, _sciapps_COLL, _sciapps_COLL, $collName);
+  ipc_ensureAccessOnCreateColl(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, $collName);
 }
 
 

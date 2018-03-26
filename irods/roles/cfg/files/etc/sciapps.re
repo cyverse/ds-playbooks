@@ -5,12 +5,18 @@
 # SciApps related rules
 
 _sciapps_COLL = 'sci_data'
-_sciapps_PERM = 'write'
+# XXX - Due to
+#       https://app.intercom.io/a/apps/tpwq3d9w/inbox/inbox/conversation/15307902609,
+#       the required permission is own. Please revert this when the issue has
+#       been resolved.
+#_sciapps_PERM = 'write'
+_sciapps_PERM = 'own'
+# XXX - ^^^
 _sciapps_USER = 'maizecode'
 
 
 sciapps_acPostProcForCollCreate {
-  ipc_ensureAccessOnCreateColl(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, $collName);
+  ipc_ensureAccessOnCreateColl(_sciapps_USER, _sciapps_COLL, _sciapps_COLL, $collName);
 }
 
 

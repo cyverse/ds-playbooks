@@ -1,4 +1,4 @@
-# VERSION 9
+# VERSION 10
 #
 # bisque.re
 #
@@ -203,7 +203,7 @@ _bisque_scheduleRm(*Client, *Path) {
 
 
 _bisque_handleNewObject(*Client, *Path) {
-  ipc_giveWriteAccessObj(_bisque_USER, *Path);
+  ipc_giveAccessObj(_bisque_USER, 'write', *Path);
   *perm = if _bisque_isInProjects(bisque_PROJECTS, *Path) then 'published' else 'private';
   _bisque_scheduleLn(*perm, *Client, *Path);
 }
@@ -212,7 +212,7 @@ _bisque_handleNewObject(*Client, *Path) {
 # Add a call to this rule from inside the acPostProcForCollCreate PEP.
 bisque_acPostProcForCollCreate {
   if (_bisque_isForBisque($userNameClient, $collName)) {
-    ipc_giveWriteAccessColl(_bisque_USER, $collName);
+    ipc_giveAccessColl(_bisque_USER, 'write', $collName);
   }
 }
 
@@ -241,7 +241,7 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 
   if (*type == '-c') {
     if (*forBisque) {
-      ipc_giveWriteAccessColl(_bisque_USER, *DestEntity);
+      ipc_giveAccessColl(_bisque_USER, 'write', *DestEntity);
     }
 
     foreach (*collPat in list(*DestEntity, *DestEntity ++ '/%')) {

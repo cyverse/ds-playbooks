@@ -1,29 +1,4 @@
 ---
-- name: configure bisque client
-  hosts: ies
-  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
-  become_user: "{{ _irods_service_account_name }}"
-  gather_facts: true
-  tasks:
-    - name: install bisque_paths.py
-      get_url:
-        url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
-        dest: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_paths.py"
-        mode: u=rx
-        validate_certs: no
-
-    - name: remove bisque_ops.py
-      file:
-        path: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_ops.py"
-        state: absent
-
-    - name: place .bisque
-      when: _bisque_url is defined
-      template:
-        src: templates/bisque.j2
-        dest: "{{ ansible_env.HOME }}/.bisque"
-        mode: u=r
-
 - name: configure iRODS
   hosts: irods
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
@@ -110,14 +85,31 @@
   tasks:
     - import_tasks: tasks/install_amqptopicsend.yml
 
+- name: configure bisque client
+  hosts: ies
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: true
+  tasks:
+    - name: install bisque_ops.py
+      copy:
+        src: files/bisque_ops.py
+        dest: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_ops.py"
+        mode: u=rx
+
+    - name: place .bisque
+      when: _bisque_url is defined
+      template:
+        src: templates/bisque.j2
+        dest: "{{ ansible_env.HOME }}/.bisque"
+        mode: u=r
+
 - name: set minimum free space for resource
   hosts: rs
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
   tasks:
-    - import_tasks: tasks/set_resc_free_space.yml
-
     - name: set context
       with_items: "{{ _irods_storage_resources }}"
       shell: |
@@ -132,6 +124,18 @@
         fi
 
         if ! iadmin modresc '{{ item.name }}' context '{{ item.context }}'
+        then
+          exit 1
+        fi
+
+        freeSpace=$(df --portability --block-size 1 '{{ item.vault }}' | tail -1 | awk '{ print $4 }')
+
+        if [ "$?" -ne 0 ]
+        then
+          exit 1
+        fi
+
+        if ! iadmin modresc '{{ item.name }}' freespace "$freeSpace"
         then
           exit 1
         fi

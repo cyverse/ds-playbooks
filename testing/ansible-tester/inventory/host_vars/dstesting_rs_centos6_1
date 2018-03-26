@@ -1,5 +1,5 @@
 ---
 irods_storage_resources:
   - name: rs_centos6
-    vault: /var/lib/irods/Vault
+    vault: "{{ _irods_default_vault }}"
     context: minimum_free_space_for_create_in_bytes=1048576

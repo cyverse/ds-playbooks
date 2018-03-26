@@ -15,7 +15,6 @@
   gather_facts: false
   tasks:
     - name: ensure /var/log/bisque exists
-      when: _bisque_irods_host
       file:
         path: /var/log/bisque
         state: directory

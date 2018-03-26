@@ -55,10 +55,13 @@ _bisque_isForBisque(*Author, *Path) =
 _bisque_mkIrodsUrl(*Path) = bisque_IRODS_URL_BASE ++ *Path
 
 
-_bisque_logMsg(*Msg) {
-  writeLine('serverLog', 'BISQUE: *Msg');
-}
-
+# XXX - Due to https://github.com/irods/irods/issues/3621, _bisque_logMsg has been inlined. Undo
+#       this after the next iRODS upgrade.
+#_bisque_logMsg(*Msg) {
+#  writeLine('serverLog', 'BISQUE: *Msg');
+#}
+_bisque_logMsg(*Msg) = writeLine('serverLog', 'BISQUE: *Msg')
+# XXX - ^^^
 
 # Tells BisQue to create a link for a given user to a data object.
 #

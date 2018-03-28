@@ -7,8 +7,8 @@ services:
 
   dbms:
     build:
-      context: ..
-      dockerfile: env/dbms/Dockerfile
+      context: .
+      dockerfile: dbms/Dockerfile
       args:
         IRODS_RESOURCES: "$IRODS_RS6_NAME:$IRODS_RS6_HOST:$IRODS_VAULT $IRODS_RS7_NAME:$IRODS_RS7_HOST:$IRODS_VAULT"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
@@ -19,8 +19,8 @@ services:
 
   ies:
     build:
-      context: ..
-      dockerfile: env/ies/Dockerfile
+      context: .
+      dockerfile: ies/Dockerfile
       args:
         DBMS_HOST: "$DBMS_HOST"
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
@@ -41,8 +41,8 @@ services:
 
   rs_centos6:
     build:
-      context: ..
-      dockerfile: env/rs/Dockerfile.centos6
+      context: .
+      dockerfile: rs/Dockerfile.centos6
       args:
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
         IRODS_DEFAULT_VAULT: "$IRODS_VAULT"
@@ -63,8 +63,8 @@ services:
 
   rs_centos7:
     build:
-      context: ..
-      dockerfile: env/rs/Dockerfile.centos7
+      context: .
+      dockerfile: rs/Dockerfile.centos7
       args:
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
         IRODS_DEFAULT_VAULT: "$IRODS_VAULT"

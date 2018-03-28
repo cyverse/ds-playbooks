@@ -2,7 +2,7 @@ FROM centos:6
 MAINTAINER Tony Edgin @ CyVerse
 
 COPY ansible-support/config.sh /tmp/ansible-support
-COPY env/ies/scripts/* /tmp/
+COPY ies/scripts/* /tmp/
 
 ARG DB_NAME=ICAT
 ARG DB_PASSWORD=testpassword

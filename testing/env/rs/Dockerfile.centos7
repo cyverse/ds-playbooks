@@ -2,7 +2,7 @@ FROM centos:7
 MAINTAINER Tony Edgin @ CyVerse
 
 COPY ansible-support/config.sh /tmp/ansible-support
-COPY env/rs/scripts/* /tmp/
+COPY rs/scripts/* /tmp/
 
 ARG IRODS_CONTROL_PLANE_KEY=TEMPORARY__32byte_ctrl_plane_key
 ARG IRODS_CONTROL_PLANE_PORT=1248

@@ -23,9 +23,9 @@ RUN /tmp/ansible-support 6 && \
        --login postgres && \
     mv /data/*.conf "$PGDATA"/
 
-COPY env/dbms/scripts/*.sql* /tmp/
-COPY env/dbms/scripts/config.sh /tmp/config
-COPY env/dbms/config/* "$PGDATA"/
+COPY dbms/scripts/*.sql* /tmp/
+COPY dbms/scripts/config.sh /tmp/config
+COPY dbms/config/* "$PGDATA"/
 
 ARG DB_NAME=ICAT
 ARG DB_PASSWORD=testpassword
@@ -54,7 +54,7 @@ EXPOSE "$DBMS_PORT"/tcp
 VOLUME /data /logs
 
 COPY ansible-support/entrypoint.sh /entrypoint
-COPY env/dbms/service.sh /
+COPY dbms/service.sh /
 
 ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/service.sh" ]

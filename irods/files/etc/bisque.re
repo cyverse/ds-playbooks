@@ -54,7 +54,6 @@ _bisque_isForBisque(*Author, *Path) =
 
 _bisque_mkIrodsUrl(*Path) = bisque_IRODS_URL_BASE ++ *Path
 
-
 _bisque_logMsg(*Msg) {
   writeLine('serverLog', 'BISQUE: *Msg');
 }
@@ -149,7 +148,50 @@ _bisque_scheduleLn(*Permission, *Client, *Path) {
   _bisque_logMsg("scheduling linking of *Path for *Client with permission *Permission");
 
   delay("<PLUSET>1s</PLUSET>") {
-    _bisque_Ln(*Permission, *Client, *Path);
+# XXX - Due to https://github.com/irods/irods/issues/3621, _bisque_Ln has been inlined. Undo this
+#       the next iRODS upgrade.
+#    _bisque_Ln(*Permission, *Client, *Path);
+    _bisque_logMsg("linking *Path for *Client with permission *Permission");
+
+    *pArg = execCmdArg(*Permission);
+    *aliasArg = execCmdArg(*Client);
+    *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
+    *argStr = '--alias *aliasArg -P *pArg ln *pathArg';
+    *status = errorcode(msiExecCmd("bisque_ops.py", *argStr, ipc_RE_HOST, "null", "null", *out));
+
+    if (*status != 0) {
+      msiGetStderrInExecCmdOut(*out, *resp);
+      _bisque_logMsg('FAILURE - *resp');
+      _bisque_logMsg('failed to link *Path for *Client with permission *Permission');
+      fail;
+    } else {
+      # bisque_ops.py exits normally even when an error occurs.
+
+      msiGetStderrInExecCmdOut(*out, *errMsg);
+
+      if (strlen(*errMsg) > 0) {
+        _bisque_logMsg(*errMsg);
+        _bisque_logMsg('failed to link *Path for *Client with permission *Permission');
+        fail;
+      }
+
+      msiGetStdoutInExecCmdOut(*out, *resp);
+      *props = split(trimr(triml(*resp, ' '), '/'), ' ')
+      msiStrArray2String(*props, *kvStr);
+      msiString2KeyValPair(*kvStr, *kvs);
+      msiGetValByKey(*kvs, 'resource_uniq', *qId);
+      *id = substr(*qId, 1, strlen(*qId) - 1);
+      msiGetValByKey(*kvs, 'uri', *qURI);
+      *uri = substr(*qURI, 1, strlen(*qURI) - 1);
+
+      msiString2KeyValPair(_bisque_ID_ATTR ++ '=' ++ *id ++ '%' ++ _bisque_URI_ATTR ++ '=' ++ *uri,
+                           *kv);
+
+      msiSetKeyValuePairsToObj(*kv, *Path, '-d');
+
+      _bisque_logMsg('linked *Path for *Client with permission *Permission');
+    }
+# XXX - ^^^
   }
 }
 

@@ -1,7 +1,8 @@
-FROM ansible-support:centos6
+FROM centos:6
 MAINTAINER Tony Edgin @ CyVerse
 
-COPY scripts/* /tmp/
+COPY ansible-support/config.sh /tmp/ansible-support
+COPY env/ies/scripts/* /tmp/
 
 ARG DB_NAME=ICAT
 ARG DB_PASSWORD=testpassword
@@ -25,7 +26,8 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 ARG IRODS_ZONE_USER=rods
 
-RUN yum --assumeyes install \
+RUN /tmp/ansible-support 6 && \
+    yum --assumeyes install \
       https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm && \
     yum --assumeyes install \
       ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm \
@@ -41,4 +43,7 @@ EXPOSE "$IRODS_ZONE_PORT"/tcp \
 
 VOLUME /etc/irods /var/lib/irods/iRODS/server/log /var/lib/irods/.irods
 
+COPY ansible-support/entrypoint.sh /entrypoint
+
+ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/service.sh" ]

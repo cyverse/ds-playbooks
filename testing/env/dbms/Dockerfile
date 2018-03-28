@@ -1,9 +1,13 @@
-FROM ansible-support:centos6
+FROM centos:6
 MAINTAINER Tony Edgin @ CyVerse
 
 ENV PGDATA /var/lib/pgsql/9.3
 
-RUN yum --assumeyes install \
+COPY ansible-support/config.sh /tmp/ansible-support
+
+RUN /tmp/ansible-support 6 && \
+    rm --force /tmp/ansible-support && \
+    yum --assumeyes install \
       https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm && \
     yum --assumeyes install postgresql93-server && \
     yum clean all && \
@@ -19,9 +23,9 @@ RUN yum --assumeyes install \
        --login postgres && \
     mv /data/*.conf "$PGDATA"/
 
-COPY scripts/*.sql* /tmp/
-COPY scripts/config.sh /tmp/config
-COPY config/* "$PGDATA"/
+COPY env/dbms/scripts/*.sql* /tmp/
+COPY env/dbms/scripts/config.sh /tmp/config
+COPY env/dbms/config/* "$PGDATA"/
 
 ARG DB_NAME=ICAT
 ARG DB_PASSWORD=testpassword
@@ -49,6 +53,8 @@ EXPOSE "$DBMS_PORT"/tcp
 
 VOLUME /data /logs
 
-COPY service.sh /
+COPY ansible-support/entrypoint.sh /entrypoint
+COPY env/dbms/service.sh /
 
+ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/service.sh" ]

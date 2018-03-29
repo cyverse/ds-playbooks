@@ -22,7 +22,7 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 ARG IRODS_ZONE_USER=rods
 
-RUN /tmp/ansible-support 7 && \
+RUN /tmp/ansible-support centos 7 && \
     yum --assumeyes install \
       ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos7/irods-resource-4.1.10-centos7-x86_64.rpm && \
     /tmp/config.sh && \

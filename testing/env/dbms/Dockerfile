@@ -5,7 +5,7 @@ ENV PGDATA /var/lib/pgsql/9.3
 
 COPY ansible-support/config.sh /tmp/ansible-support
 
-RUN /tmp/ansible-support 6 && \
+RUN /tmp/ansible-support centos 6 && \
     rm --force /tmp/ansible-support && \
     yum --assumeyes install \
       https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm && \

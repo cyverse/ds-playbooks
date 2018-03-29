@@ -1,9 +1,10 @@
-# VERSION 3
+# VERSION 4
 #
 # These are the rules related to UUIDs
 
+
 ipc_uuidGenerate {
-  *status = errorcode(msiExecCmd("generateuuid.sh", "", ipc_RE_HOST, "null", "null", *out));
+  *status = errorcode(msiExecCmd("generateuuid.sh", "", "null", "null", "null", *out));
   if (*status == 0) {
     msiGetStdoutInExecCmdOut(*out, *uuid);
     trimr(*uuid, "\n");

@@ -49,12 +49,16 @@
         irods_cfg_zone_user: "{{ _irods_clerver_user }}"
 
   tasks:
+    - name: add set-uuid command script
+      copy:
+        src: files/set-uuid
+        dest: /var/lib/irods/iRODS/server/bin/cmd/
+        mode: u=rx
+
     - name: place static config in /etc/irods
       copy:
         src: "{{ item }}"
         dest: /etc/irods/
-        owner: "{{ _irods_service_account_name }}"
-        group: "{{ _irods_service_group_name }}"
       with_fileglob:
         - "files/etc/*"
       notify:
@@ -64,8 +68,6 @@
       template:
         src: "{{ item }}"
         dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
-        owner: "{{ _irods_service_account_name }}"
-        group: "{{ _irods_service_group_name }}"
       with_fileglob:
         - "templates/etc/irods/*"
       notify:
@@ -94,7 +96,7 @@
     - name: install bisque_ops.py
       copy:
         src: files/bisque_ops.py
-        dest: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_ops.py"
+        dest: /var/lib/irods/iRODS/server/bin/cmd/
         mode: u=rx
 
     - name: place .bisque

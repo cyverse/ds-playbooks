@@ -16,5 +16,5 @@
     - name: install UUID generation cmd script
       get_url:
         url: https://raw.githubusercontent.com/cyverse/irods-cmd-scripts/master/generateuuid.sh
-        dest: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/generateuuid.sh"
+        dest: /var/lib/irods/iRODS/server/bin/cmd/
         mode: u=rx

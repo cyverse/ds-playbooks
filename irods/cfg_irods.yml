@@ -49,6 +49,12 @@
         irods_cfg_zone_user: "{{ _irods_clerver_user }}"
 
   tasks:
+    - name: add set-uuid command script
+      copy:
+        src: files/set-avu
+        dest: /var/lib/irods/iRODS/server/bin/cmd/
+        mode: u=rx
+
     - name: place static config in /etc/irods
       copy:
         src: "{{ item }}"

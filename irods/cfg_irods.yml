@@ -94,7 +94,7 @@
     - name: install bisque_ops.py
       copy:
         src: files/bisque_ops.py
-        dest: "{{ ansible_env.HOME }}/iRODS/server/bin/cmd/bisque_ops.py"
+        dest: /var/lib/irods/iRODS/server/bin/cmd/
         mode: u=rx
 
     - name: place .bisque

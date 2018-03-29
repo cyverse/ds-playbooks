@@ -15,7 +15,7 @@
         that:
           - ipc_env | search("ipc_AMQP_EPHEMERAL = true")
           - ipc_env | search("ipc_DEFAULT_REPL_RESC = 'demoResc'")
-          - ipc_env | search("ipc_RE_HOST = 'dstesting_ies_1'")
+          - ipc_env | search("ipc_RE_HOST = 'dstesting_ies_1.dstesting_default'")
           - ipc_env | search("ipc_MAX_NUM_RE_PROCS = 4")
 
     - name: verify constants expand correctly in aegis-env.re.j2
@@ -27,7 +27,7 @@
     - name: verify constants expand correctly in bisque-env.re.j2
       assert:
         that:
-          - bisque_env | search("bisque_IRODS_URL_BASE = 'irods://dstesting_ies_1'")
+          - bisque_env | search("bisque_IRODS_URL_BASE = 'irods://dstesting_ies_1.dstesting_default'")
 
     - name: verify sernec constants expand correctly in sernec-env.re.j2
       assert:
@@ -203,7 +203,7 @@
       assert:
         that:
           - hosts_config.host_entries[0].address_type == 'local'
-          - hosts_config.host_entries[0].addresses[0].address == 'dstesting_ies_1'
+          - hosts_config.host_entries[0].addresses[0].address == 'dstesting_ies_1.dstesting_default'
           - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
           - hosts_config.host_entries[0].addresses[2].address == 'alias-2'
 
@@ -227,7 +227,7 @@
                == 4'
           - server_config.default_resource_directory == None
           - server_config.default_resource_name == 'demoResc'
-          - server_config.icat_host == 'dstesting_ies_1'
+          - server_config.icat_host == 'dstesting_ies_1.dstesting_default'
           - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
           - server_config.re_rulebase_set[0].filename == 'ipc-custom'
           - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
@@ -237,7 +237,7 @@
           - server_config.zone_user == 'rods'
           - server_config.federation | length == 0
           - 'server_config.environment_variables.IRODS_AMQP_URI
-               == "amqp://guest:guest@dstesting_amqp_1:5672/%2F"'
+               == "amqp://guest:guest@dstesting_amqp_1.dstesting_default:5672/%2F"'
 
 - name: verify server_config.json contents on resource servers
   hosts: rs
@@ -259,7 +259,7 @@
                == 4'
           - server_config.default_resource_directory == '/var/lib/irods/Vault'
           - server_config.default_resource_name == 'demoResc'
-          - server_config.icat_host == 'dstesting_ies_1'
+          - server_config.icat_host == 'dstesting_ies_1.dstesting_default'
           - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
           - server_config.re_rulebase_set[0].filename == 'ipc-custom'
           - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'

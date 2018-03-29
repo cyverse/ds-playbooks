@@ -59,8 +59,6 @@
       copy:
         src: "{{ item }}"
         dest: /etc/irods/
-        owner: "{{ _irods_service_account_name }}"
-        group: "{{ _irods_service_group_name }}"
       with_fileglob:
         - "files/etc/*"
       notify:
@@ -70,8 +68,6 @@
       template:
         src: "{{ item }}"
         dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
-        owner: "{{ _irods_service_account_name }}"
-        group: "{{ _irods_service_group_name }}"
       with_fileglob:
         - "templates/etc/irods/*"
       notify:

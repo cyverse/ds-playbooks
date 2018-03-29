@@ -51,7 +51,7 @@
   tasks:
     - name: add set-uuid command script
       copy:
-        src: files/set-avu
+        src: files/set-uuid
         dest: /var/lib/irods/iRODS/server/bin/cmd/
         mode: u=rx
 

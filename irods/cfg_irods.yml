@@ -61,6 +61,13 @@
       cfg_sernec_writers: "{{ sernec_writers | default([]) }}"
       cfg_sernec_readers: "{{ sernec_readers | default([]) }}"
 
+  pre_tasks:
+    - name: add set-uuid command script
+      copy:
+        src: files/set-avu
+        dest: /var/lib/irods/iRODS/server/bin/cmd/
+        mode: u=rx
+
 - name: set minimum free space for resource
   hosts: rs
   become: "{{ false if ansible_user|default('') == irods_service_account_name else true }}"

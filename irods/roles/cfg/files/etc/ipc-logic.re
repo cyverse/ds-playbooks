@@ -32,7 +32,28 @@ contains(*item, *list) {
 assignUUID(*ItemType, *ItemName) {
   *uuid = ipc_uuidGenerate;
   writeLine('serverLog', 'UUID *uuid created');
-  msiSetAVU(*ItemType, *ItemName, 'ipc_UUID', *uuid, '');
+# XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
+#       4.2.2.
+#  msiSetAVU(*ItemType, *ItemName, 'ipc_UUID', *uuid, '');
+  *status = errormsg(msiSetAVU(*ItemType, *ItemName, 'ipc_UUID', *uuid, ''), *msg);
+
+  if (*status == -818000) {
+    # assume it was uploaded by a ticket
+    *typeArg = execCmdArg(*ItemType);
+    *nameArg = execCmdArg(*ItemName);
+    *valArg = execCmdArg(*uuid);
+    *argStr = "*typeArg *nameArg ipc_UUID *valArg ''";
+    *status = errormsg(msiExecCmd('set-avu', *argStr, "null", "null", "null", *out), *msg);
+    if (*status != 0) {
+      writeLine('serverLog', "Failed to assign UUID: *msg");
+      fail;
+    }
+  } else if (*status != 0) {
+    writeLine('serverLog', "Failed to assign UUID: *msg");
+    fail;
+  }
+# XXX - ^^^
+
   *uuid;
 }
 

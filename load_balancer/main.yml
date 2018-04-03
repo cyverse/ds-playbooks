@@ -12,7 +12,6 @@
         haproxy_global_nbproc: 1
         haproxy_global_tunes: []
         haproxy_default_errorfiles: []
-        haproxy_default_maxconn: 50
         haproxy_default_mode: tcp
         haproxy_default_options:
           - clitcpka
@@ -31,7 +30,7 @@
               binds:
                 - "*:{{ load_balancer_irods_proxy_port }}"
               servers:
-                - "{{ groups['ies'][0] }} {{ lookup('dig', groups['ies'][0]) }}:1247"
+                - "{{ groups['ies'][0] }} {{ lookup('dig', groups['ies'][0]) }}:1247 maxconn 50"
       notify:
         - reload haproxy
 
@@ -78,6 +77,3 @@
       service:
         name: rsyslog
         state: restarted
-
-# TODO Learn about performance tuning
-# TODO I'm still not sure about how minconn, maxconn and fullconn interact with connnection queuing

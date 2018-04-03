@@ -15,6 +15,7 @@
         haproxy_default_maxconn: 50
         haproxy_default_mode: tcp
         haproxy_default_options:
+          - clitcpka
           - dontlognull
           - tcplog
         haproxy_default_timeouts:

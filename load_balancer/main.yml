@@ -13,6 +13,7 @@
         haproxy_default_mode: tcp
         haproxy_default_options:
           - dontlognull
+          - tcplog
         haproxy_default_timeouts:
           - connect 10s
           - client 2h
@@ -25,8 +26,28 @@
                 - "*:{{ load_balancer_irods_proxy_port }}"
               servers:
                 - "{{ groups['ies'][0] }} {{ lookup('dig', groups['ies'][0]) }}:1247"
+      notify:
+        - reload haproxy
 
   tasks:
+    - name: configure rsyslog to listen on UDP socket
+      blockinfile:
+        path: /etc/rsyslog.conf
+        insertafter: '# Provides UDP syslog reception'
+        block: |
+          $ModLoad imudp
+          $UDPServerRun 514
+          $UDPServerAddress 127.0.0.1
+      notify:
+        - restart syslog
+
+    - name: place rsyslog config for haproxy
+      copy:
+        src: files/haproxy.conf
+        dest: /etc/rsyslog.d
+      notify:
+        - restart syslog
+
     - name: open iRODS proxy port
       lineinfile:
         path: /etc/sysconfig/iptables
@@ -36,11 +57,20 @@
         - restart firewall
 
   handlers:
+    - name: reload haproxy
+      service:
+        name: haproxy
+        state: reloaded
+
     - name: restart firewall
       service:
         name: iptables
         state: restarted
 
+    - name: restart syslog
+      service:
+        name: rsyslog
+        state: restarted
+
 # TODO Learn about security considerations
-# TODO configure haproxy to log to /var/log/haproxy.log
 # TODO Learn about performance tuning

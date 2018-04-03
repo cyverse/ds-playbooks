@@ -7,17 +7,17 @@
       vars:
         haproxy_firewalld: false
         haproxy_selinux: false
-        haproxy_global_maxconn: 256
         haproxy_global_tunes: []
         haproxy_default_errorfiles: []
-        haproxy_default_maxconn: 32
+        haproxy_default_maxconn: 50
         haproxy_default_mode: tcp
         haproxy_default_options:
           - dontlognull
         haproxy_default_timeouts:
-          - connect 5000ms
-          - client 50000ms
-          - server 50000ms
+          - connect 10s
+          - client 2h
+          - server 2h
+          - queue 2m
         haproxy_stats: false
         haproxy_listen:
           - irods:
@@ -44,5 +44,3 @@
 # TODO Learn about security considerations
 # TODO configure haproxy to log to /var/log/haproxy.log
 # TODO Learn about performance tuning
-# TODO figure out timeouts
-# TODO Tune maxconn for global and service

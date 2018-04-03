@@ -1,0 +1,3 @@
+---
+- name: uoi-io.haproxy
+  src: uoi-io.haproxy

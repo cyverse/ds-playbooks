@@ -7,6 +7,9 @@
       vars:
         haproxy_firewalld: false
         haproxy_selinux: false
+        haproxy_global_cpu_maps:
+          - 1 0
+        haproxy_global_nbproc: 1
         haproxy_global_tunes: []
         haproxy_default_errorfiles: []
         haproxy_default_maxconn: 50

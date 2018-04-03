@@ -20,9 +20,11 @@
           - tcplog
         haproxy_default_timeouts:
           - connect 10s
-          - client 2h
-          - server 2h
-          - queue 2m
+          - client 1d
+          - client-fin 2m
+          - queue 10m
+          - server 1d
+          - server-fin 2m
         haproxy_stats: false
         haproxy_listen:
           - irods:
@@ -78,3 +80,4 @@
         state: restarted
 
 # TODO Learn about performance tuning
+# TODO I'm still not sure about how minconn, maxconn and fullconn interact with connnection queuing

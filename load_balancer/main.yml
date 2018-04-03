@@ -32,7 +32,7 @@
       notify:
         - reload haproxy
 
-  tasks:
+  pre_tasks:
     - name: configure rsyslog to listen on UDP socket
       blockinfile:
         path: /etc/rsyslog.conf
@@ -51,6 +51,7 @@
       notify:
         - restart syslog
 
+  post_tasks:
     - name: open iRODS proxy port
       lineinfile:
         path: /etc/sysconfig/iptables
@@ -75,5 +76,4 @@
         name: rsyslog
         state: restarted
 
-# TODO Learn about security considerations
 # TODO Learn about performance tuning

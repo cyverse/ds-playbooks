@@ -20,11 +20,26 @@
           - server 50000ms
         haproxy_stats: false
         haproxy_listen:
-          - "irods":
+          - irods:
               binds:
                 - "*:{{ load_balancer_irods_proxy_port }}"
               servers:
                 - "{{ groups['ies'][0] }} {{ lookup('dig', groups['ies'][0]) }}:1247"
+
+  tasks:
+    - name: open iRODS proxy port
+      lineinfile:
+        path: /etc/sysconfig/iptables
+        line: -A INPUT -m state --state NEW -p tcp -s {{ load_balancer_irods_allowed_src }} --dport {{ load_balancer_irods_proxy_port }} -j ACCEPT
+        insertbefore: -A INPUT -j REJECT
+      notify:
+        - restart firewall
+
+  handlers:
+    - name: restart firewall
+      service:
+        name: iptables
+        state: restarted
 
 # TODO Learn about security considerations
 # TODO configure haproxy to log to /var/log/haproxy.log

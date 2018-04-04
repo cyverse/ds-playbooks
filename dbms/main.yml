@@ -6,6 +6,8 @@
     - role: jtyr.grub_cmdline
       grub_cmdline_add_args:
         - transparent_hugepage=never
+  tags:
+    - no_testing
 
 - name: Install postgresql server
   hosts: dbms
@@ -27,6 +29,4 @@
   gather_facts: false
   tasks:
     - name: initialize postgresql DBMS
-      command: /usr/pgsql-9.3/bin/initdb --auth ident --lc-collate C --locale en_US.UTF-8 --pgdata /var/lib/pgsql/9.3/data 
-
-
+      command: /usr/pgsql-9.3/bin/initdb --auth ident --lc-collate C --locale en_US.UTF-8 --pgdata /var/lib/pgsql/9.3/data

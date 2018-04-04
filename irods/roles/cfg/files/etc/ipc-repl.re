@@ -235,7 +235,9 @@ _createOrOverwrite(*Object, *IngestResc, *ReplResc) {
   if ($writeFlag == 0) {
     (*ingestName, *optional) = *IngestResc;
     (*replName, *optional) = *ReplResc;
-    _scheduleRepl(*Object, if $rescName == *replName then *ingestName else *replName);
+# XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
+#    _scheduleRepl(*Object, if $rescName == *replName then *ingestName else *replName);
+# XXX - ^^^
   } else {
     _scheduleSyncReplicas(*Object);
   }

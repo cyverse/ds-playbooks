@@ -2,7 +2,6 @@
 - name: Install packages required by ansible
   hosts: all:!unmanaged_systems
   become: true
-  gather_facts: true
   tasks:
     - name: install libselinux python support
       package:

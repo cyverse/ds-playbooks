@@ -37,12 +37,6 @@ RUN /tmp/ansible-support centos 6 && \
     yum clean all && \
     rm --force --recursive /tmp/* /var/cache/yum
 
-EXPOSE "$IRODS_ZONE_PORT"/tcp \
-       "$IRODS_FIRST_EPHEMERAL_PORT"-"$IRODS_LAST_EPHEMERAL_PORT"/tcp \
-       "$IRODS_FIRST_EPHEMERAL_PORT"-"$IRODS_LAST_EPHEMERAL_PORT"/udp
-
-VOLUME /etc/irods /var/lib/irods/iRODS/server/log /var/lib/irods/.irods
-
 COPY ansible-support/entrypoint.sh /entrypoint
 
 ENTRYPOINT [ "/entrypoint" ]

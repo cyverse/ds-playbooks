@@ -30,19 +30,6 @@ main()
              --env PGHOST="$DBMS_HOST" \
              --network "$network" \
              --volume "$playbooks":/playbooks-under-test:ro \
-             --volume "$ENV_NAME"_dbms_data:/volumes/dbms/data:ro \
-             --volume "$ENV_NAME"_dbms_logs:/volumes/dbms/logs:ro \
-             --volume "$ENV_NAME"_ies_cfg_clerver:/volumes/ies/cfg_clerver:ro \
-             --volume "$ENV_NAME"_ies_cfg_svc:/volumes/ies/cfg_svc:ro \
-             --volume "$ENV_NAME"_ies_logs:/volumes/ies/logs:ro \
-             --volume "$ENV_NAME"_rs6_cfg_clerver:/volumes/rs6/cfg_clerver:ro \
-             --volume "$ENV_NAME"_rs6_cfg_svc:/volumes/rs6/cfg_svc:ro \
-             --volume "$ENV_NAME"_rs6_logs:/volumes/rs6/logs:ro \
-             --volume "$ENV_NAME"_rs6_vault:/volumes/rs6/vault:ro \
-             --volume "$ENV_NAME"_rs7_cfg_clerver:/volumes/rs7/cfg_clerver:ro \
-             --volume "$ENV_NAME"_rs7_cfg_svc:/volumes/rs7/cfg_svc:ro \
-             --volume "$ENV_NAME"_rs7_logs:/volumes/rs7/logs:ro \
-             --volume "$ENV_NAME"_rs7_vault:/volumes/rs7/vault:ro \
              ansible-tester "$doInspect" "$playbook"
 }
 

@@ -1,7 +1,7 @@
 FROM centos:6
 MAINTAINER Tony Edgin @ CyVerse
 
-ENV PGDATA /var/lib/pgsql/9.3
+ARG PGDATA=/var/lib/pgsql/9.3/data
 
 COPY ansible-support/config.sh /tmp/ansible-support
 
@@ -12,16 +12,11 @@ RUN /tmp/ansible-support centos 6 && \
     yum --assumeyes install postgresql93-server && \
     yum clean all && \
     rm --force --recursive /var/cache/yum && \
-    mkdir /data /logs && \
-    chmod a+rwx /data /logs && \
-    chown postgres:postgres /data /logs && \
-    sed --in-place "s|^PGDATA=.*|PGDATA='$PGDATA'|" /var/lib/pgsql/.bash_profile && \
     su --command "/usr/pgsql-9.3/bin/initdb --auth ident \
                                             --lc-collate C \
                                             --locale en_US.UTF-8 \
-                                            --pgdata /data" \
-       --login postgres && \
-    mv /data/*.conf "$PGDATA"/
+                                            --pgdata '$PGDATA'" \
+       --login postgres
 
 COPY dbms/scripts/*.sql* /tmp/
 COPY dbms/scripts/config.sh /tmp/config
@@ -47,11 +42,7 @@ RUN chown postgres:postgres "$PGDATA"/* && \
                   export IRODS_ZONE_USER='$IRODS_ZONE_USER' && \
                   /tmp/config" \
        --login postgres && \
-    rm --force --recursive /tmp/* /logs/*
-
-EXPOSE "$DBMS_PORT"/tcp
-
-VOLUME /data /logs
+    rm --force --recursive /tmp/*
 
 COPY ansible-support/entrypoint.sh /entrypoint
 COPY dbms/service.sh /

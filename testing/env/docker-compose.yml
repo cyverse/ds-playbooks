@@ -15,9 +15,6 @@ services:
         IRODS_RESOURCES: "$IRODS_RS6_NAME:$IRODS_RS6_HOST:$IRODS_VAULT $IRODS_RS7_NAME:$IRODS_RS7_HOST:$IRODS_VAULT"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     tty: true
-    volumes:
-      - "dbms_data:/data"
-      - "dbms_logs:/logs"
 
   ies:
     build:
@@ -33,10 +30,6 @@ services:
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     hostname: "$IRODS_IES"
     tty: true
-    volumes:
-      - "ies_cfg_clerver:/var/lib/irods/.irods"
-      - "ies_cfg_svc:/etc/irods"
-      - "ies_logs:/var/lib/irods/iRODS/server/log"
     depends_on:
       - amqp
       - dbms
@@ -55,11 +48,6 @@ services:
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     hostname: "$IRODS_RS6_HOST"
     tty: true
-    volumes:
-      - "rs6_cfg_clerver:/var/lib/irods/.irods"
-      - "rs6_cfg_svc:/etc/irods"
-      - "rs6_logs:/var/lib/irods/iRODS/server/log"
-      - "rs6_vault:$IRODS_VAULT"
     depends_on:
       - ies
 
@@ -77,25 +65,5 @@ services:
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     hostname: "$IRODS_RS7_HOST"
     tty: true
-    volumes:
-      - "rs7_cfg_clerver:/var/lib/irods/.irods"
-      - "rs7_cfg_svc:/etc/irods"
-      - "rs7_logs:/var/lib/irods/iRODS/server/log"
-      - "rs7_vault:$IRODS_VAULT"
     depends_on:
       - ies
-
-volumes:
-  dbms_data:
-  dbms_logs:
-  ies_cfg_clerver:
-  ies_cfg_svc:
-  ies_logs:
-  rs6_cfg_svc:
-  rs6_cfg_clerver:
-  rs6_logs:
-  rs6_vault:
-  rs7_cfg_svc:
-  rs7_cfg_clerver:
-  rs7_logs:
-  rs7_vault:

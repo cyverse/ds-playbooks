@@ -34,9 +34,12 @@ main()
     install_centos_packages "$version"
   else
     install_debian_packages
+
+    # Allow root to login without a password
+    sed --in-place 's/nullok_secure/nullok/' /etc/pam.d/common-auth
   fi
 
-  # Allow root to have login without a password
+  # Remove root's password
   passwd -d root
 
   # Configure passwordless root ssh access

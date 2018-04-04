@@ -1,0 +1,2 @@
+---
+_rebootable: "{{ rebootable if rebootable is defined else true }}"

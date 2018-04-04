@@ -9,15 +9,8 @@
         name: /etc/yum.conf
         line: exclude=e2fsprogs.*
 
-    - when: _rebootable
-      block:
-        - name: remove urllib3
-          when: ansible_distribution_major_version == '6'
-          pip:
-            name: urllib3
-            state: absent
-
-        - name: upgrade system packages
-          package:
-            name: '*'
-            state: latest
+    - name: upgrade system packages
+      when: _rebootable
+      package:
+        name: '*'
+        state: latest

@@ -11,7 +11,6 @@ main()
 
   "$baseDir"/ansible-tester/clean
   "$baseDir"/env/clean "$baseDir"/config.inc
-  "$baseDir"/ansible-support/clean
 }
 
 

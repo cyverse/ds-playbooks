@@ -3,7 +3,9 @@ version: "2.0"
 
 services:
   amqp:
-    image: rabbitmq:3.5-management
+    build:
+      context: .
+      dockerfile: rabbitmq/Dockerfile
 
   dbms:
     build:

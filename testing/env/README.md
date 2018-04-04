@@ -11,8 +11,6 @@ turn hosts the ICAT DB. The `ies` container hosts the IES. The `rs_centos6`
 container hosts the resource server running on CentOS 6. Finally, the
 `rs_centos7` container hosts the resource server running on CentOS 7.
 
-__TODO finish the amqp image set up.__
-
 The environment is controlled by docker-compose, but there are three programs
 that simplify the usage of docker-compose. `build` can be used to create all of
 the images. `clean` can be used to delete all of the images. Finally,

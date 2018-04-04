@@ -1,2 +1,7 @@
 ---
+_nic_mtu: "{{ nic_mtu if nic_mtu is defined else None }}"
+_nic_txqueuelen: "{{ nic_txqueuelen if nic_txqueuelen is defined else None }}"
+
 _rebootable: "{{ rebootable if rebootable is defined else true }}"
+
+_sysctl_net: "{{ sysctl_net if sysctl_net is defined else [] }}"

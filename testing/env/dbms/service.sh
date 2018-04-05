@@ -21,8 +21,8 @@ main()
     printf 'Unknown command "%s"\n' "$action" >&2
     return 1
   fi
-
-  su --command "/usr/pgsql-9.3/bin/pg_ctl -w '$action'" --login postgres
+  
+  gosu postgres pg_ctl -w "$action"
 }
 
 

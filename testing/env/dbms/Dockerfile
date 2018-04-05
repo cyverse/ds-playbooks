@@ -1,22 +1,21 @@
-FROM centos:6
+FROM postgres:9.3
 MAINTAINER Tony Edgin @ CyVerse
 
-ARG PGDATA=/var/lib/pgsql/9.3/data
+# Since the provided value of PGDATA is mounted as a volume and given 777
+# permissions, pg_ctl cannot run during build time. The data directory location
+# needed to be changed.
+ENV PGDATA /var/lib/postgresql/alt_data
 
 COPY ansible-support/config.sh /tmp/ansible-support
 
-RUN /tmp/ansible-support centos 6 && \
-    rm --force /tmp/ansible-support && \
-    yum --assumeyes install \
-      https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm && \
-    yum --assumeyes install postgresql93-server && \
-    yum clean all && \
-    rm --force --recursive /var/cache/yum && \
-    su --command "/usr/pgsql-9.3/bin/initdb --auth ident \
-                                            --lc-collate C \
-                                            --locale en_US.UTF-8 \
-                                            --pgdata '$PGDATA'" \
-       --login postgres
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN /tmp/ansible-support debian jesse && \
+    apt-get autoremove --quiet --yes && \
+    apt-get clean --quiet && \
+    mkdir "$PGDATA" && \
+    chown postgres:postgres "$PGDATA" && \
+    gosu postgres initdb --auth ident --lc-collate C --locale en_US.UTF-8 --pgdata "$PGDATA"
 
 COPY dbms/scripts/*.sql* /tmp/
 COPY dbms/scripts/config.sh /tmp/config
@@ -32,17 +31,8 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_USER=rods
 
 RUN chown postgres:postgres "$PGDATA"/* && \
-    su --command "export DB_NAME='$DB_NAME' && \
-                  export DB_PASSWORD='$DB_PASSWORD' && \
-                  export DB_USER='$DB_USER' && \
-                  export DBMS_PORT='$DBMS_PORT' && \
-                  export IRODS_RESOURCES='$IRODS_RESOURCES' && \
-                  export IRODS_ZONE_NAME='$IRODS_ZONE_NAME' && \
-                  export IRODS_ZONE_PASSWORD='$IRODS_ZONE_PASSWORD' && \
-                  export IRODS_ZONE_USER='$IRODS_ZONE_USER' && \
-                  /tmp/config" \
-       --login postgres && \
-    rm --force --recursive /tmp/*
+    gosu postgres /tmp/config && \
+    rm --recursive /tmp/*
 
 COPY ansible-support/entrypoint.sh /entrypoint
 COPY dbms/service.sh /

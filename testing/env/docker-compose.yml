@@ -10,7 +10,7 @@ services:
   dbms:
     build:
       context: .
-      dockerfile: dbms/Dockerfile
+      dockerfile: postgresql/Dockerfile
       args:
         IRODS_RESOURCES: "$IRODS_RS6_NAME:$IRODS_RS6_HOST:$IRODS_VAULT $IRODS_RS7_NAME:$IRODS_RS7_HOST:$IRODS_VAULT"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"

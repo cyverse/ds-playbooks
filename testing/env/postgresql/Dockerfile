@@ -17,9 +17,9 @@ RUN /tmp/ansible-support debian jesse && \
     chown postgres:postgres "$PGDATA" && \
     gosu postgres initdb --auth ident --lc-collate C --locale en_US.UTF-8 --pgdata "$PGDATA"
 
-COPY dbms/scripts/*.sql* /tmp/
-COPY dbms/scripts/config.sh /tmp/config
-COPY dbms/config/* "$PGDATA"/
+COPY postgresql/scripts/*.sql* /tmp/
+COPY postgresql/scripts/config.sh /tmp/config
+COPY postgresql/config/* "$PGDATA"/
 
 ARG DB_NAME=ICAT
 ARG DB_PASSWORD=testpassword
@@ -35,7 +35,7 @@ RUN chown postgres:postgres "$PGDATA"/* && \
     rm --recursive /tmp/*
 
 COPY ansible-support/entrypoint.sh /entrypoint
-COPY dbms/service.sh /
+COPY postgresql/service.sh /
 
 ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/service.sh" ]

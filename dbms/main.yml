@@ -21,6 +21,8 @@
     - name: install postgresql server
       package:
         name: postgresql93-server
+  tags:
+    - no_testing
 
 - name: Initialize postgresql DBMS
   hosts: dbms
@@ -30,3 +32,5 @@
   tasks:
     - name: initialize postgresql DBMS
       command: /usr/pgsql-9.3/bin/initdb --auth ident --lc-collate C --locale en_US.UTF-8 --pgdata /var/lib/pgsql/9.3/data
+  tags:
+    - no_testing

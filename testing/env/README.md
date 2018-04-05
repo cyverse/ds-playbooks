@@ -4,12 +4,13 @@ This folder contains the source for a set of Docker images that are intended to
 create a iRODS grid to be used for testing the ansible playbooks that configure
 an iRODS grid.
 
-The environment consists of five containers. The `amqp` container hosts the
+The environment consists of size containers. The `amqp` container hosts the
 RabbitMQ broker that in turn hosts the `irods` exchange, where the Data Store
 publishes messages to. The `dbms` container hosts the PostgreSQL server that in
-turn hosts the ICAT DB. The `ies` container hosts the IES. The `rs_centos6`
-container hosts the resource server running on CentOS 6. Finally, the
-`rs_centos7` container hosts the resource server running on CentOS 7.
+turn hosts the ICAT DB. The `ies` container hosts the IES.  The `load_balancer`
+container hosts the HAProxy for the IES. The `rs_centos6` container hosts the
+resource server running on CentOS 6. Finally, the `rs_centos7` container hosts
+the resource server running on CentOS 7.
 
 The environment is controlled by docker-compose, but there are three programs
 that simplify the usage of docker-compose. `build` can be used to create all of

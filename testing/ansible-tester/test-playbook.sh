@@ -22,7 +22,7 @@ main()
   then
     printf 'Opening shell for inspection of volumes\n'
     iinit "$IRODS_PASSWORD"
-    (cd /volumes && bash)
+    bash
   fi
 
   return 0

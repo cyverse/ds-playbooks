@@ -77,3 +77,6 @@
       service:
         name: rsyslog
         state: restarted
+
+  tags:
+    - no_testing

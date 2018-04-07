@@ -45,7 +45,7 @@ main()
     return 1
   fi
 
-  imeta set "$type" "$name" ipc_UUID "$uuid"
+  imeta set "$type" "$path" ipc_UUID "$uuid"
 }
 
 

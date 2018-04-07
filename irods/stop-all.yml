@@ -1,8 +1,7 @@
 ---
 - name: stop resource servers
-  hosts: rs
+  hosts: rs:!ies
   become: true
-  gather_facts: true
   tasks:
     - name: stop resource servers
       service:
@@ -14,7 +13,6 @@
 - name: stop IES
   hosts: ies
   become: true
-  gather_facts: true
   tasks:
     - name: stop IES
       service:

@@ -3,20 +3,20 @@
   hosts: all:!unmanaged_systems
   become: true
   tasks:
-    - when: rebootable
+    - when: _rebootable
       block:
-      - name: reboot
-        shell: |
-          sleep 1
-          reboot
-        async: 1000000000
-        poll: 0
-        ignore_errors: true
+        - name: reboot
+          shell: |
+            sleep 1
+            reboot
+          async: 1000000000
+          poll: 0
+          ignore_errors: true
 
-      - name: wait for server to stop
-        become: false
-        local_action: wait_for host={{ inventory_hostname }} port={{ ansible_port }} state=stopped
+        - name: wait for server to stop
+          become: false
+          local_action: wait_for host={{ inventory_hostname }} port={{ ansible_port }} state=stopped
 
-      - name: verify server up
-        become: false
-        local_action: wait_for host={{ inventory_hostname }} port={{ ansible_port }} state=started
+        - name: verify server up
+          become: false
+          local_action: wait_for host={{ inventory_hostname }} port={{ ansible_port }} state=started

@@ -1,0 +1,9 @@
+---
+- name: testing install_resource_pkg
+  hosts: rs
+  become: true
+  tasks:
+    - name: check correct irods-resource package installed
+      package:
+        name: irods-resource-4.1.10
+        state: present

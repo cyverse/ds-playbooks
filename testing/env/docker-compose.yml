@@ -3,43 +3,48 @@ version: "2.0"
 
 services:
   amqp:
-    image: rabbitmq:3.5-management
+    build:
+      context: .
+      dockerfile: rabbitmq/Dockerfile
 
   dbms:
     build:
-      context: dbms
+      context: .
+      dockerfile: postgresql/Dockerfile
       args:
         IRODS_RESOURCES: "$IRODS_RS6_NAME:$IRODS_RS6_HOST:$IRODS_VAULT $IRODS_RS7_NAME:$IRODS_RS7_HOST:$IRODS_VAULT"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     tty: true
-    volumes:
-      - "dbms_data:/data"
-      - "dbms_logs:/logs"
 
   ies:
     build:
-      context: ies
+      context: .
+      dockerfile: ies/Dockerfile
       args:
         DBMS_HOST: "$DBMS_HOST"
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
         IRODS_HOST: "$IRODS_IES"
         IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
+        IRODS_SYSTEM_GROUP: "$IRODS_IES_SYSTEM_GROUP"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     hostname: "$IRODS_IES"
     tty: true
-    volumes:
-      - "ies_cfg_clerver:/var/lib/irods/.irods"
-      - "ies_cfg_svc:/etc/irods"
-      - "ies_logs:/var/lib/irods/iRODS/server/log"
     depends_on:
       - amqp
       - dbms
 
+  load_balancer:
+    build:
+      context: .
+      dockerfile: haproxy/Dockerfile
+    depends_on:
+      - ies
+
   rs_centos6:
     build:
-      context: rs
-      dockerfile: Dockerfile.centos6
+      context: .
+      dockerfile: rs/Dockerfile.centos6
       args:
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
         IRODS_DEFAULT_VAULT: "$IRODS_VAULT"
@@ -50,18 +55,13 @@ services:
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     hostname: "$IRODS_RS6_HOST"
     tty: true
-    volumes:
-      - "rs6_cfg_clerver:/var/lib/irods/.irods"
-      - "rs6_cfg_svc:/etc/irods"
-      - "rs6_logs:/var/lib/irods/iRODS/server/log"
-      - "rs6_vault:$IRODS_VAULT"
     depends_on:
       - ies
 
   rs_centos7:
     build:
-      context: rs
-      dockerfile: Dockerfile.centos7
+      context: .
+      dockerfile: rs/Dockerfile.centos7
       args:
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
         IRODS_DEFAULT_VAULT: "$IRODS_VAULT"
@@ -72,25 +72,5 @@ services:
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     hostname: "$IRODS_RS7_HOST"
     tty: true
-    volumes:
-      - "rs7_cfg_clerver:/var/lib/irods/.irods"
-      - "rs7_cfg_svc:/etc/irods"
-      - "rs7_logs:/var/lib/irods/iRODS/server/log"
-      - "rs7_vault:$IRODS_VAULT"
     depends_on:
       - ies
-
-volumes:
-  dbms_data:
-  dbms_logs:
-  ies_cfg_clerver:
-  ies_cfg_svc:
-  ies_logs:
-  rs6_cfg_svc:
-  rs6_cfg_clerver:
-  rs6_logs:
-  rs6_vault:
-  rs7_cfg_svc:
-  rs7_cfg_clerver:
-  rs7_logs:
-  rs7_vault:

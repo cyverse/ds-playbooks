@@ -55,6 +55,8 @@ _irods_service_group_name: "{{
 _irods_storage_resources: "{{
   irods_storage_resources if irods_storage_resources is defined else [] }}"
 
+_irods_version: "{{ irods_version if irods_version is defined else '4.1.11' }}"
+
 _negotiation_key: "{{ negotiation_key if negotiation_key is defined else None }}"
 
 _parallel_transfer_buffer_size: "{{
@@ -88,5 +90,7 @@ _server_port_range_start: "{{ server_port_range_start if server_port_range_start
 _single_threaded_resources: "{{
   single_threaded_resources if single_threaded_resources is defined else
   [] }}"
+
+_sysctl_kernel: "{{ sysctl_kernel if sysctl_kernel is defined else [] }}"
 
 _zone_key: "{{ zone_key if zone_key is defined else None }}"

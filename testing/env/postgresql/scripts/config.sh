@@ -27,7 +27,6 @@
 # TODO The current syntax of IRODS_RESOURCES doesn't allow spaces or colons in
 # vault path names. Please change its syntax.
 
-
 main()
 {
   local baseDir=$(dirname $(readlink -f "$0"))
@@ -39,13 +38,13 @@ main()
     > "$sqlData"
 
   printf 'Starting PostgreSQL server\n'
-  /usr/pgsql-9.3/bin/pg_ctl -w start > /dev/null
+  pg_ctl -w start > /dev/null
 
   printf 'Initializing %s database ...\n' "$DB_NAME"
   init_db "$DBMS_PORT" "$DB_NAME" "$DB_USER" "$DB_PASSWORD" "$sqlData"
 
   printf 'Stopping PostgreSQL server\n'
-  /usr/pgsql-9.3/bin/pg_ctl -w stop > /dev/null
+  pg_ctl -w stop > /dev/null
 }
 
 

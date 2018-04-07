@@ -7,7 +7,7 @@
       sysctl:
         name: kernel.{{ item.name }}
         value: "{{ item.value }}"
-      with_items: "{{ sysctl_kernel|default([]) }}"
+      with_items: "{{ _sysctl_kernel }}"
 
 - name: prepare for bisque_ops
   hosts: ies

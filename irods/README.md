@@ -4,7 +4,7 @@ CyVerse DS iRODS Playbooks
 This is a collection of playbooks for deploying iRODS for the CyVerse Data Store.
 
 Variables
---------------
+---------
 
 None of these variables are required.
 
@@ -24,6 +24,7 @@ Variable                             | Default                          | Choice
 `irods_default_repl_resource`        | `irods_default_resource`         |         | the default resource for replication
 `irods_default_resource`             | demoResc                         |         | the name of the default resource
 `irods_max_num_re_procs`             | 4                                |         | the maximum number of rule engine processes to run
+`irods_version`                      | 4.1.11                           |         | the version of iRODS to work with
 `negotiation_key`                    | TEMPORARY_32byte_negotiation_key |         | the negotiation key
 `parallel_transfer_buffer_size`      | 4                                |         | the transfer buffer size in MiB for each stream during parallel transfer
 `rabbitmq_ephemeral`                 | true                             |         | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
@@ -38,6 +39,7 @@ Variable                             | Default                          | Choice
 `server_port_range_end`              | 20199                            |         | the last address in the range of auxillary TCP and UDP ports
 `server_port_range_start`            | 20000                            |         | the first address in the range of auxillary TCP and UDP ports
 `single_threaded_resources`          | []                               |         | a list of resources that only support single threaded transfers
+`sysctl_kernel`                      | []                               |         | a list of sysctl kernel parameters to set for the IES, __see_below__
 `zone_key`                           | TEMPORARY_zone_key               |         | the zone key
 
 `irods_federate fields`
@@ -50,3 +52,12 @@ Variable          | Comments
 `negotiation_key` | the 32-byte encryption key of the federate
 `zone_key`        | the shared authentication secret of the federate
 `zone_name`       | the name of the federated zone
+
+`sysctl_kernel entry fields`
+
+All of them are required.
+
+Variable | Comments
+-------- | --------
+`name`   | The parameter name to modify
+`value`  | The new value to set

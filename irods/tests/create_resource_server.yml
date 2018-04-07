@@ -1,0 +1,23 @@
+---
+- name: verify that IES wasn't touched
+  hosts: ies
+  become: true
+  tasks:
+    - name: verify that irods isn't a group
+      shell: |
+        if grep --quiet --regexp '^irods:' /etc/group
+        then
+          exit 1
+        fi
+      changed_when: false
+
+- name: verify that the RS system user hasn't changed
+  hosts: rs
+  become: true
+  tasks:
+    - name: verify that the system user has correct comment
+      command: grep --quiet --regexp '^irods:[^:]*:[^:]*:[^:]*:iRODS Administrator:' /etc/passwd
+      changed_when: false
+
+- import_playbook: mk_vaults.yml
+- import_playbook: install_resource_pkg.yml

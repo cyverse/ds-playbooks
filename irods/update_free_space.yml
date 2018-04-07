@@ -4,4 +4,4 @@
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
-    - include: tasks/set_resc_free_space.yml
+    - import_tasks: tasks/set_resc_free_space.yml

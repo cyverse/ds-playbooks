@@ -43,6 +43,8 @@
         irods_cfg_server_control_plane_key: "{{ _server_control_plane_key }}"
         irods_cfg_server_port_range_end: "{{ _server_port_range_end }}"
         irods_cfg_server_port_range_start: "{{ _server_port_range_start }}"
+        irods_cfg_service_account_name: "{{ _irods_service_account_name }}"
+        irods_cfg_service_group_name: "{{ _irods_service_group_name }}"
         irods_cfg_transfer_buffer_size_for_parallel_transfer: "{{ _parallel_transfer_buffer_size }}"
         irods_cfg_zone_key: "{{ _zone_key }}"
         irods_cfg_zone_name: iplant
@@ -91,7 +93,7 @@
   hosts: ies
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
   become_user: "{{ _irods_service_account_name }}"
-  gather_facts: true
+  gather_facts: false
   tasks:
     - name: install bisque_ops.py
       copy:

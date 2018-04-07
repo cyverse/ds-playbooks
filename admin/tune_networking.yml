@@ -4,8 +4,8 @@
   become: true
   tasks:
     - name: group by virtualization type
-      group_by: 
-        key: "{{ 'physical' if ansible_virtualization_type == 'NA' 
+      group_by:
+        key: "{{ 'physical' if ansible_virtualization_type == 'NA'
                             or ansible_virtualization_type == 'kvm' else '' }}"
 
 - name: determine the NIC throughput and OS version for the physical servers
@@ -19,8 +19,8 @@
       changed_when: false
 
     - name: group by NIC speed
-      group_by: 
-        key: centos{{ ansible_distribution_major_version }}_{{ 
+      group_by:
+        key: centos{{ ansible_distribution_major_version }}_{{
                 '10G' if ethtool.stdout|int >= 10000 else
                 '1G'  if ethtool.stdout|int >= 1000 else '' }}
 
@@ -34,7 +34,7 @@
   gather_facts: false
   roles:
     - role: cyverse.ip
-      ip_link_mtu: "{{ nic_mtu }}"
+      ip_link_mtu: "{{ _nic_mtu }}"
 
 - name: tune txqueuelen
   hosts: physical
@@ -42,16 +42,15 @@
   gather_facts: false
   roles:
     - role: cyverse.ip
-      ip_link_txqueuelen: "{{ nic_txqueuelen }}"
+      ip_link_txqueuelen: "{{ _nic_txqueuelen }}"
 
 - name: tune TCP
   hosts: physical
   become: true
   gather_facts: false
   tasks:
-    - name: configure linux kernel 
+    - name: configure linux kernel
       sysctl:
         name: net.{{ item.name }}
         value: "{{ item.value }}"
-      with_items: "{{ sysctl_net }}"
-
+      with_items: "{{ _sysctl_net }}"

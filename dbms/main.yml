@@ -25,6 +25,24 @@
   gather_facts: false
   tasks:
     - name: Initialize
-      command: /usr/pgsql-9.3/bin/initdb --auth ident --lc-collate C --locale en_US.UTF-8 --pgdata /var/lib/pgsql/9.3/data
+      shell: |
+        # TODO - This only checks for the existence of the database. It should be modified to
+        # check whether or not the correct collate value is set.
+        if ! [ -e "$PGDATA"/PG_VERSION ]
+        then
+          /usr/pgsql-9.3/bin/initdb --auth ident \
+                                    --lc-collate C \
+                                    --locale en_US.UTF-8 \
+                                    --pgdata "$PGDATA"
+
+          if [ "$?" -ne 0 ]
+          then
+            exit 1
+          fi
+
+          printf 'changed'
+        fi
+      register: result
+      changed_when: result.stdout == 'changed'
   tags:
     - no_testing

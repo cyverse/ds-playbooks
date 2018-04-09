@@ -13,6 +13,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN /tmp/ansible-support debian jesse && \
     apt-get autoremove --quiet --yes && \
     apt-get clean --quiet && \
+    usermod --home /var/lib/postgresql postgres && \
     mkdir "$PGDATA" && \
     chown postgres:postgres "$PGDATA" && \
     gosu postgres initdb --auth ident --lc-collate C --locale en_US.UTF-8 --pgdata "$PGDATA"

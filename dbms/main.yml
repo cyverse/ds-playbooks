@@ -28,12 +28,12 @@
       shell: |
         # TODO - This only checks for the existence of the database. It should be modified to
         # check whether or not the correct collate value is set.
-        if ! [ -e "$PGDATA"/PG_VERSION ]
+        if ! [ -e /var/lib/pgsql/9.3/data/PG_VERSION ]
         then
           /usr/pgsql-9.3/bin/initdb --auth ident \
                                     --lc-collate C \
                                     --locale en_US.UTF-8 \
-                                    --pgdata "$PGDATA"
+                                    --pgdata /var/lib/pgsql/9.3/data
 
           if [ "$?" -ne 0 ]
           then

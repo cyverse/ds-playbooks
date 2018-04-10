@@ -1,0 +1,6 @@
+---
+- name: test stop-all
+  hosts: irods
+  tasks:
+    - debug:
+        msg: TODO implement

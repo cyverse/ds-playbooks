@@ -1,6 +1,6 @@
 ---
 - name: test tune_networking
-  hosts: all:!unmanaged_systems
+  hosts: physical
   tasks:
-    - debug:
-        msg: TODO implement
+    - fail:
+        msg: Detected a container as a physical machine

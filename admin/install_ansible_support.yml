@@ -2,7 +2,13 @@
 - name: Install packages required by ansible
   hosts: all:!unmanaged_systems
   become: true
+  gather_facts: false
   tasks:
+    - name: install dmidecode support
+      package:
+        name: dmidecode
+        state: present
+
     - name: install libselinux python support
       package:
         name: libselinux-python

@@ -69,7 +69,7 @@
 
     - name: upgrade msiSetAVU microservice
       copy:
-        src: irods-setavu-plugin/libraries/centos6/libmsiSetAVU.so
+        src: /tmp/irods-setavu-plugin/libraries/centos6/libmsiSetAVU.so
         dest: /var/lib/irods/plugins/microservices
         force: yes
         owner: "{{ _irods_service_account_name }}"
@@ -86,7 +86,7 @@
 
     - name: upgrade msiSetAVU microservice
       copy:
-        src: irods-setavu-plugin/libraries/centos7/libmsiSetAVU.so
+        src: /tmp/irods-setavu-plugin/libraries/centos7/libmsiSetAVU.so
         dest: /var/lib/irods/plugins/microservices
         force: yes
         owner: "{{ _irods_service_account_name }}"

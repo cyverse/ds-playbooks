@@ -1,6 +1,2 @@
 ---
-- name: test upgrade
-  hosts: irods
-  tasks:
-    - debug:
-        msg: TODO implement
+- import_playbook: stop-all.yml

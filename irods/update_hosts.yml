@@ -11,7 +11,9 @@
         block: |
           {% if inventory_hostname in groups['ies'] %}
           {% for d in groups['dbms'] %}
+          {% if inventory_hostname != d %}
           {{ lookup('dig', d) }} {{ d }}
+          {% endif %}
           {% endfor %}
           {% endif %}
           {% for i in groups['ies'] %}

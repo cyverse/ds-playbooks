@@ -1,0 +1,7 @@
+---
+- name: test restart_all
+  hosts: irods:!unmanaged_systems
+  become: true
+  tasks:
+    - debug:
+        msg: TODO implement

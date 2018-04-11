@@ -1,7 +1,7 @@
 ---
-- import_playbook: stop-all.yml
+- import_playbook: stop_all.yml
   tags:
-    # Because of the restart-all at the end, this task makes the playbook non-idempotent
+    # Because of the restart_all at the end, this task makes the playbook non-idempotent
     - non_idempotent
 
 - name: begin IES upgrade
@@ -94,4 +94,4 @@
   tags:
     - no_testing
 
-- import_playbook: restart-all.yml
+- import_playbook: restart_all.yml

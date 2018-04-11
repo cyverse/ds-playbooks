@@ -1,6 +1,6 @@
 ---
 - name: stop resource servers
-  hosts: rs:!ies
+  hosts: rs:!ies:!unmanaged_systems
   become: true
   tasks:
     - name: stop resource servers
@@ -25,7 +25,7 @@
     - non_idempotent
 
 - name: start resource servers
-  hosts: rs:!ies
+  hosts: rs:!ies:!unmanaged_systems
   become: true
   gather_facts: false
   tasks:

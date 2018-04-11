@@ -1,0 +1,13 @@
+---
+- name: test stop_all
+  hosts: irods:!unmanaged_systems
+  become: true
+  become_user: irods
+  tasks:
+    - shell: |
+        /var/lib/irods/iRODS/irodsctl status | grep --quiet 'No servers running'
+
+        if [ "$?" -ne 0 ]
+        then
+          exit 1
+        fi

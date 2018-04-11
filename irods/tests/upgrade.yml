@@ -1,2 +1,2 @@
 ---
-- import_playbook: stop-all.yml
+- import_playbook: install_resource_pkg.yml

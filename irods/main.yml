@@ -13,13 +13,13 @@
           read_priv: .*
 
 - name: Install pika
-  hosts: irods
+  hosts: ies
   become: true
   tasks:
     - name: ensure pika installed
       pip:
         name: pika
-        state: latest
+        state: present
 
 - import_playbook: provision.yml
 - import_playbook: cfg_irods.yml

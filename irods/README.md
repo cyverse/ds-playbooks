@@ -24,6 +24,7 @@ Variable                             | Default                          | Choice
 `irods_default_repl_resource`        | `irods_default_resource`         |         | the default resource for replication
 `irods_default_resource`             | demoResc                         |         | the name of the default resource
 `irods_max_num_re_procs`             | 4                                |         | the maximum number of rule engine processes to run
+`irods_other_host_entries`           | []                               |         | a list of other FQDNs to add to /etc/hosts
 `irods_version`                      | 4.1.11                           |         | the version of iRODS to work with
 `negotiation_key`                    | TEMPORARY_32byte_negotiation_key |         | the negotiation key
 `parallel_transfer_buffer_size`      | 4                                |         | the transfer buffer size in MiB for each stream during parallel transfer

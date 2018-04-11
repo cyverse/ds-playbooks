@@ -1,6 +1,6 @@
 ---
 - name: restart resource servers
-  hosts: rs:!ies
+  hosts: rs:!ies:!unmanaged_systems
   become: true
   tasks:
     - name: start resource servers again

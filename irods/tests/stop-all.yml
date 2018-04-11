@@ -1,6 +1,7 @@
 ---
 - name: test stop-all
-  hosts: irods
+  hosts: irods:!unmanaged_systems
+  become: true
   tasks:
     - debug:
         msg: TODO implement

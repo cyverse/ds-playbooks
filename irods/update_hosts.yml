@@ -29,5 +29,8 @@
           {% for f in _ds_federation %}
           {{ lookup('dig', f.icat_host) }} {{ f.icat_host }}
           {% endfor %}
+          {% for e in _irods_other_host_entries %}
+          {{ lookup('dig', e) }} {{ e }}
+          {% endfor %}
       tags:
         - no_testing

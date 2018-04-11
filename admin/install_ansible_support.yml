@@ -1,5 +1,5 @@
 ---
-- name: Install packages required by ansible
+- name: Install dmidecode required by ansible gather_facts
   hosts: all:!unmanaged_systems
   become: true
   gather_facts: false
@@ -9,9 +9,13 @@
         name: dmidecode
         state: present
 
+- name: Install required packages for ansible
+  hosts: all:!unmanaged_systems
+  become: true
+  tasks:
     - name: install libselinux python support
       package:
-        name: libselinux-python
+        name: "{{ 'libselinux-python' if ansible_distribution == 'CentOS' else 'python-selinux' }}"
         state: present
 
     - name: install pip

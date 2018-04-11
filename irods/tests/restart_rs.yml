@@ -1,6 +1,6 @@
 ---
-- name: test stop-all
-  hosts: irods:!unmanaged_systems
+- name: test restart_rs
+  hosts: rs:!ies:!unmanaged_systems
   become: true
   tasks:
     - debug:

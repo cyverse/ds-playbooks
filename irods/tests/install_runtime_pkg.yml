@@ -1,5 +1,5 @@
 ---
-- name: test restart-rs
+- name: test install_runtime_pkg
   hosts: all
   tasks:
     - debug:

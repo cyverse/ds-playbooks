@@ -45,6 +45,9 @@ _irods_default_vault: "{{ irods_default_vault if irods_default_vault is defined 
 
 _irods_max_num_re_procs: "{{ irods_max_num_re_procs if irods_max_num_re_procs is defined else 4 }}"
 
+_irods_other_host_entries: "{{ irods_other_host_entries if irods_other_host_entries is defined else
+                               [] }}"
+
 _irods_service_account_name: "{{
   irods_service_account_name if irods_service_account_name is defined else 'irods' }}"
 

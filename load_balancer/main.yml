@@ -55,10 +55,11 @@
 
   post_tasks:
     - name: open iRODS proxy port
-      lineinfile:
+      blockinfile:
         path: /etc/sysconfig/iptables
-        line: -A INPUT -m state --state NEW -p tcp -s {{ load_balancer_irods_allowed_src }} --dport {{ load_balancer_irods_proxy_port }} -j ACCEPT
         insertbefore: -A INPUT -j REJECT
+        marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
+        content: -A INPUT -m state --state NEW -p tcp -s {{ load_balancer_irods_allowed_src }} --dport {{ load_balancer_irods_proxy_port }} -j ACCEPT
       notify:
         - restart firewall
 

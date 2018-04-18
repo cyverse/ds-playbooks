@@ -26,14 +26,12 @@
           - server-fin 2m
         haproxy_stats: true
         haproxy_stats_address: '*'
-        haproxy_stats_port: 9001
+        haproxy_stats_port: 80
+        haproxy_stats_auth: false
         haproxy_stats_uri: /
-        haproxy_stats_user: haproxy-stats
-        haproxy_stats_password: password
         haproxy_stats_options:
-          - refresh 20s
+          - refresh 10s
           - show-legends
-          - show-node
           - hide-version
         haproxy_listen:
           - irods:
@@ -64,14 +62,14 @@
         - restart syslog
 
   post_tasks:
-    - name: open iRODS proxy port
+    - name: configure firewall
       blockinfile:
         path: /etc/sysconfig/iptables
         insertbefore: -A INPUT -j REJECT
         marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
         content: |
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _load_balancer_irods_proxy_port }} -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s 128.196.38.31 --dport 9001 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s 128.196.38.31 --dport 80 -j ACCEPT
       notify:
         - restart firewall
 

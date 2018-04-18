@@ -69,7 +69,7 @@
         marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
         content: |
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _load_balancer_irods_proxy_port }} -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s 128.196.38.31 --dport 80 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport 80 -j ACCEPT
       notify:
         - restart firewall
 

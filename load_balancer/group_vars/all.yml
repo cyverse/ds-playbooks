@@ -6,3 +6,7 @@ _load_balancer_irods_allowed_src: "{{
 _load_balancer_irods_proxy_port: "{{
   load_balancer_irods_proxy_port if load_balancer_irods_proxy_port is defined else
   1247 }}"
+
+_load_balancer_stats_allowed_src: "{{
+  load_balancer_stats_allowed_src if load_balancer_stats_allowed_src is defined else
+  '0.0.0.0/0' }}"

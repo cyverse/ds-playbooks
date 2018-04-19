@@ -1,2 +1,3 @@
 ---
 - import_playbook: install_resource_pkg.yml
+- import_playbook: restart_all.yml

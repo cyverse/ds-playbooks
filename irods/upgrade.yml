@@ -7,10 +7,9 @@
 - name: begin IES upgrade
   hosts: ies:!unmanaged_systems
   become: true
-  gather_facts: false
   vars:
     os: centos{{ ansible_distribution_major_version }}
-    pg_rpm: "{{ 'irods-database-plugin-postgres93' if ansible_distribution_major_version == 6 else
+    pg_rpm: "{{ 'irods-database-plugin-postgres93' if ansible_distribution_major_version|int == 6 else
                 'irods-database-plugin-postgres' }}"
     pg_rpm_ver: "{{ _irods_version | regex_replace('^4.') }}"
   tasks:

@@ -2,6 +2,9 @@
 - name: install HAPRoxy
   hosts: load_balancer
   become: true
+  vars:
+    server: "{{ groups['ies'][0] | regex_replace('\\..*') }}"
+    conn: "{{ lookup('dig', groups['ies'][0]) }}:1247"
   roles:
     - role: uoi-io.haproxy
       vars:
@@ -38,7 +41,7 @@
               binds:
                 - "*:{{ load_balancer_irods_proxy_port }}"
               servers:
-                - "{{ groups['ies'][0] }} {{ lookup('dig', groups['ies'][0]) }}:1247 maxconn 50"
+                - "{{ server }} {{ conn }} maxconn 50"
       notify:
         - reload haproxy
 

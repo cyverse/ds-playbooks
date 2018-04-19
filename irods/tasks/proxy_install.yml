@@ -1,24 +1,23 @@
 ---
-- name: check to see if package is installed
+- name: check to see if {{ pkg }} is installed
   yum:
     list: "{{ pkg }}"
   register: result
   failed_when: false
 
-- when: result.results|count == 0 or result.results[0].version|version_compare(_irods_version, '<')
+- when: result.results|count == 0 or result.results[0].version|version_compare(pkg_ver, '<')
   block:
-    - name: Download package locally
-      run_once: true
-      delegate_to: localhost
-      get_url:
-        url: ftp://ftp.renci.org/pub/irods/releases/{{ _irods_version }}/{{ os }}/{{ pkg }}-{{ _irods_version }}-{{ os }}-x86_64.rpm
-        dest: /tmp
+    - name: Download {{ pkg }} locally
+      local_action:
+        module: get_url
+        url: ftp://ftp.renci.org/pub/irods/releases/{{ _irods_version }}/{{ os }}/{{ pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm
+        dest: /tmp/{{ pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm
 
-    - name: upload package to resource server
+    - name: upload {{ pkg }} to server
       copy:
-        src: /tmp/{{ pkg }}-{{ _irods_version }}-{{ os }}-x86_64.rpm
-        dest: /root
+        src: /tmp/{{ pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm
+        dest: /root/{{ pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm
 
-    - name: install package
+    - name: install {{ pkg }}
       yum:
-        name: /root/{{ pkg }}-{{ _irods_version }}-{{ os }}-x86_64.rpm
+        name: /root/{{ pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm

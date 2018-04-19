@@ -1,6 +1,6 @@
 ---
 - name: testing install_resource_pkg
-  hosts: rs
+  hosts: rs:!ies:!unmanaged_systems
   become: true
   tasks:
     - name: check correct irods-resource package installed

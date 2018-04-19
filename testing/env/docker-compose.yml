@@ -16,19 +16,37 @@ services:
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     tty: true
 
-  ies:
+  ies_centos6:
     build:
       context: .
-      dockerfile: ies/Dockerfile
+      dockerfile: ies/Dockerfile.centos6
       args:
         DBMS_HOST: "$DBMS_HOST"
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
-        IRODS_HOST: "$IRODS_IES"
+        IRODS_HOST: "$IRODS_IES6_HOST"
         IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_SYSTEM_GROUP: "$IRODS_IES_SYSTEM_GROUP"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
-    hostname: "$IRODS_IES"
+    hostname: "$IRODS_IES6_HOST"
+    tty: true
+    depends_on:
+      - amqp
+      - dbms
+
+  ies_centos7:
+    build:
+      context: .
+      dockerfile: ies/Dockerfile.centos7
+      args:
+        DBMS_HOST: "$DBMS_HOST"
+        IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
+        IRODS_HOST: "$IRODS_IES7_HOST"
+        IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
+        IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
+        IRODS_SYSTEM_GROUP: "$IRODS_IES_SYSTEM_GROUP"
+        IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
+    hostname: "$IRODS_IES7_HOST"
     tty: true
     depends_on:
       - amqp
@@ -39,7 +57,7 @@ services:
       context: .
       dockerfile: haproxy/Dockerfile
     depends_on:
-      - ies
+      - ies_centos6
 
   rs_centos6:
     build:
@@ -49,14 +67,14 @@ services:
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
         IRODS_DEFAULT_VAULT: "$IRODS_VAULT"
         IRODS_HOST: "$IRODS_RS6_HOST"
-        IRODS_IES: "$IRODS_IES"
+        IRODS_IES: "$IRODS_IES6_HOST"
         IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     hostname: "$IRODS_RS6_HOST"
     tty: true
     depends_on:
-      - ies
+      - ies_centos6
 
   rs_centos7:
     build:
@@ -66,11 +84,11 @@ services:
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
         IRODS_DEFAULT_VAULT: "$IRODS_VAULT"
         IRODS_HOST: "$IRODS_RS7_HOST"
-        IRODS_IES: "$IRODS_IES"
+        IRODS_IES: "$IRODS_IES6_HOST"
         IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     hostname: "$IRODS_RS7_HOST"
     tty: true
     depends_on:
-      - ies
+      - ies_centos6

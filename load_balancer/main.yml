@@ -4,7 +4,7 @@
   become: true
   vars:
     server: "{{ groups['ies'][0] | regex_replace('\\..*') }}"
-    conn: "{{ lookup('dig', groups['ies'][0]) }}:1247"
+    server_ip: "{{ lookup('dig', groups['ies'][0]) }}"
   roles:
     - role: uoi-io.haproxy
       vars:
@@ -37,11 +37,16 @@
           - show-legends
           - hide-version
         haproxy_listen:
-          - irods:
+          - irods_main:
               binds:
-                - "*:{{ _load_balancer_irods_proxy_port }}"
+                - :{{ _load_balancer_irods_proxy_port }}
               servers:
-                - "{{ server }} {{ conn }} maxconn 50"
+                - "{{ server }} {{ server_ip }}:1247 maxconn 50"
+          - irods_reconn:
+              binds:
+                - :20000-20399
+              servers:
+                - "{{ server }} {{ server_ip }}"
       notify:
         - reload haproxy
 
@@ -72,6 +77,7 @@
         marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
         content: |
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _load_balancer_irods_proxy_port }} -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 20000:20399 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport 80 -j ACCEPT
       notify:
         - restart firewall

@@ -2,7 +2,9 @@
 - name: cyverse.irods-cfg
   src: CyVerse-Ansible.irods-cfg
   version: master
-                 
+
 - name: cyverse.rabbitmq-vhost
   src: CyVerse-Ansible.rabbitmq-vhost
 
+- name: uoi-io.haproxy
+  src: uoi-io.haproxy

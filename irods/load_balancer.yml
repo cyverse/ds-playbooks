@@ -44,7 +44,7 @@
                 - "{{ server }} {{ server_ip }}:1247 maxconn 50"
           - irods_reconn:
               binds:
-                - :20000-20399
+                - ":{{ _server_port_range_start }}-{{ _server_port_range_end }}"
               servers:
                 - "{{ server }} {{ server_ip }}"
       notify:
@@ -77,7 +77,7 @@
         marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
         content: |
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _load_balancer_irods_proxy_port }} -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 20000:20399 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _server_port_range_start }}:{{ _server_port_range_end }} -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport 80 -j ACCEPT
       notify:
         - restart firewall

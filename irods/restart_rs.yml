@@ -1,12 +1,10 @@
 ---
 - name: restart resource servers
-  hosts: rs:!ies:!unmanaged_systems
-  become: true
+  hosts: rs:!ies
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
   tasks:
-    - name: start resource servers again
-      service:
-        name: irods
-        pattern: irodsServer
-        state: restarted
+    - name: restart server
+      command: /var/lib/irods/iRODS/irodsctl restart
   tags:
     - non_idempotent

@@ -41,7 +41,7 @@
               binds:
                 - :{{ load_balancer_irods_proxy_port }}
               servers:
-                - "{{ server }} {{ server_ip }}:1247 maxconn 50"
+                - "{{ server }} {{ server_ip }}:1247 maxconn {{ load_balancer_irods_max_conn }}"
           - irods_reconn:
               binds:
                 - :{{ server_port_range_start }}-{{ server_port_range_end }}

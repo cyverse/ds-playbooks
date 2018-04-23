@@ -60,6 +60,18 @@ _irods_storage_resources: "{{
 
 _irods_version: "{{ irods_version if irods_version is defined else '4.1.11' }}"
 
+_load_balancer_irods_allowed_src: "{{
+  load_balancer_irods_allowed_src if load_balancer_irods_allowed_src is defined else
+  '0.0.0.0/0' }}"
+
+_load_balancer_irods_proxy_port: "{{
+  load_balancer_irods_proxy_port if load_balancer_irods_proxy_port is defined else
+  1247 }}"
+
+_load_balancer_stats_allowed_src: "{{
+  load_balancer_stats_allowed_src if load_balancer_stats_allowed_src is defined else
+  '0.0.0.0/0' }}"
+
 _negotiation_key: "{{ negotiation_key if negotiation_key is defined else None }}"
 
 _parallel_transfer_buffer_size: "{{
@@ -85,10 +97,10 @@ _sernec_writers: "{{ sernec_writers if sernec_writers is defined else [] }}"
 _server_control_plane_key: "{{ server_control_plane_key if server_control_plane_key is defined else
                                None }}"
 
-_server_port_range_end: "{{ server_port_range_end if server_port_range_end is defined else None }}"
+_server_port_range_end: "{{ server_port_range_end if server_port_range_end is defined else 20199 }}"
 
 _server_port_range_start: "{{ server_port_range_start if server_port_range_start is defined else
-                              None }}"
+                              20000 }}"
 
 _single_threaded_resources: "{{
   single_threaded_resources if single_threaded_resources is defined else

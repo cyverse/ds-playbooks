@@ -2,6 +2,9 @@
 - name: install HAPRoxy
   hosts: load_balancer
   become: true
+  vars:
+    server: "{{ groups['ies'][0] | regex_replace('\\..*') }}"
+    server_ip: "{{ lookup('dig', groups['ies'][0]) }}"
   roles:
     - role: uoi-io.haproxy
       vars:
@@ -24,13 +27,26 @@
           - queue 10m
           - server 1d
           - server-fin 2m
-        haproxy_stats: false
+        haproxy_stats: true
+        haproxy_stats_address: '*'
+        haproxy_stats_port: 80
+        haproxy_stats_auth: false
+        haproxy_stats_uri: /
+        haproxy_stats_options:
+          - refresh 10s
+          - show-legends
+          - hide-version
         haproxy_listen:
-          - irods:
+          - irods_main:
               binds:
-                - "*:{{ _load_balancer_irods_proxy_port }}"
+                - :{{ _load_balancer_irods_proxy_port }}
               servers:
-                - "{{ groups['ies'][0] }} {{ lookup('dig', groups['ies'][0]) }}:1247 maxconn 50"
+                - "{{ server }} {{ server_ip }}:1247 maxconn 50"
+          - irods_reconn:
+              binds:
+                - :{{ _server_port_range_start }}-{{ _server_port_range_end }}
+              servers:
+                - "{{ server }} {{ server_ip }}"
       notify:
         - reload haproxy
 
@@ -54,11 +70,15 @@
         - restart syslog
 
   post_tasks:
-    - name: open iRODS proxy port
-      lineinfile:
+    - name: configure firewall
+      blockinfile:
         path: /etc/sysconfig/iptables
-        line: -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _load_balancer_irods_proxy_port }} -j ACCEPT
         insertbefore: -A INPUT -j REJECT
+        marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
+        content: |
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _load_balancer_irods_proxy_port }} -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _server_port_range_start }}:{{ _server_port_range_end }} -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport 80 -j ACCEPT
       notify:
         - restart firewall
 

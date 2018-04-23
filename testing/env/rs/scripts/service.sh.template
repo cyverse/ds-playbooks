@@ -62,7 +62,7 @@ start()
 stop()
 {
   su --command '/var/lib/irods/iRODS/irodsctl stop' --login "$IRODS_SYSTEM_USER"
-  touch /var/lock/subsys/irods
+  rm /var/lock/subsys/irods
 }
 
 

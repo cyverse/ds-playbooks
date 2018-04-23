@@ -44,7 +44,7 @@
                 - "{{ server }} {{ server_ip }}:1247 maxconn {{ _load_balancer_irods_max_conn }}"
           - irods_reconn:
               binds:
-                - ":{{ _server_port_range_start }}-{{ _server_port_range_end }}"
+                - :{{ _server_port_range_start }}-{{ _server_port_range_end }}
               servers:
                 - "{{ server }} {{ server_ip }}"
       notify:

@@ -8,90 +8,64 @@
   hosts: ies:!unmanaged_systems
   become: true
   vars:
-    url_base: ftp://ftp.renci.org/pub/irods/releases/{{ _irods_version }}/centos6
-    pg_rpm_ver: "{{ _irods_version | regex_replace('^4.', '') }}"
-    pg_rpm: irods-database-plugin-postgres93-{{ pg_rpm_ver }}-centos6-x86_64.rpm
+    os: centos{{ ansible_distribution_major_version }}
+    pg_rpm: "{{ 'irods-database-plugin-postgres93' if ansible_distribution_major_version|int == 6 else
+                'irods-database-plugin-postgres' }}"
+    pg_rpm_ver: "{{ _irods_version | regex_replace('^4.') }}"
   tasks:
-    - name: Download Database plugin package
-      run_once: true
-      delegate_to: localhost
-      get_url:
-        url: "{{ url_base }}/{{ pg_rpm }}"
-        dest: /tmp
-
-    - name: download iRODS PostgreSQL plugin package
-      copy:
-        src: /tmp/{{ pg_rpm }}
-        dest: /root
-
-    - name: upgrade database plugin
-      yum:
-        name: /root/{{ pg_rpm }}
-
-    - include_tasks: tasks/proxy_install.yml os=centos6 pkg=irods-icat
+    - include_tasks: tasks/proxy_install.yml pkg={{ pg_rpm }} pkg_ver={{ pg_rpm_ver }}
+    - include_tasks: tasks/proxy_install.yml pkg=irods-icat pkg_ver={{ _irods_version }}
 
 - import_playbook: install_resource_pkg.yml
-- import_playbook: install_runtime_pkg.yml
 
-- name: Prepare for plugin upgrades
+- name: upgrade plugins
   hosts: irods:!unmanaged_systems
+  become: true
+  vars:
+    os: centos{{ ansible_distribution_major_version }}
   tasks:
-    - run_once: true
-      delegate_to: localhost
-      block:
-        - name: checkout irods-netcdf-build repo
-          git:
-            repo: https://github.com/cyverse/irods-netcdf-build.git
-            dest: /tmp/irods-netcdf-build
-            version: "{{ _irods_version }}"
+    - include_tasks: tasks/proxy_install.yml pkg=irods-runtime pkg_ver={{ _irods_version }}
 
-        - name: checkout msi-setavu-plugin repo
-          git:
-            repo: https://github.com/iPlantCollaborativeOpenSource/irods-setavu-plugin.git
-            dest: /tmp/irods-setavu-plugin
-            version: "{{ _irods_version }}"
+    - name: checkout irods-netcdf-build repo
+      run_once: true
+      local_action:
+        module: git
+        repo: https://github.com/cyverse/irods-netcdf-build.git
+        dest: /tmp/irods-netcdf-build
+        version: "{{ _irods_version }}"
 
+    - block:
+        - name: build irods-netcdf plugins
+          run_once: true
+          local_action: command /tmp/irods-netcdf-build/build
+
+        - include_tasks: tasks/upgrade_netcdf_plugins.yml repo_path=/tmp/irods-netcdf-build
+      tags:
+        # docker in docker is a no no.
+        - no_testing
+
+    - name: checkout msi-setavu-plugin repo
+      run_once: true
+      local_action:
+        module: git
+        repo: https://github.com/iPlantCollaborativeOpenSource/irods-setavu-plugin.git
+        dest: /tmp/irods-setavu-plugin
+        version: "{{ _irods_version }}"
+
+    - block:
         - name: build msiSetAVU plugin
-          command: /tmp/irods-setavu-plugin/build
-          tags:
-            - no_testing
+          run_once: true
+          local_action: command /tmp/irods-setavu-plugin/build
 
-    - name: group by OS version
-      group_by:
-        key: centos{{ ansible_distribution_major_version }}
-
-- name: Upgrade plugins on CentOS 6 servers
-  hosts: centos6
-  become: true
-  gather_facts: false
-  tasks:
-    - include_tasks: tasks/upgrade_netcdf_plugins.yml repo_path=/tmp/irods-netcdf-build os=centos6
-
-    - name: upgrade msiSetAVU microservice
-      copy:
-        src: /tmp/irods-setavu-plugin/libraries/centos6/libmsiSetAVU.so
-        dest: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
-        force: yes
-        owner: "{{ _irods_service_account_name }}"
-        group: "{{ _irods_service_group_name }}"
-  tags:
-    - no_testing
-
-- name: Upgrade plugins on CentOS 7 servers
-  hosts: centos7
-  become: true
-  gather_facts: false
-  tasks:
-    - include_tasks: tasks/upgrade_netcdf_plugins.yml repo_path=/tmp/irods-netcdf-build os=centos7
-
-    - name: upgrade msiSetAVU microservice
-      copy:
-        src: /tmp/irods-setavu-plugin/libraries/centos7/libmsiSetAVU.so
-        dest: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
-        force: yes
-        owner: "{{ _irods_service_account_name }}"
-        group: "{{ _irods_service_group_name }}"
-  tags:
-    - no_testing
+        - name: upgrade msiSetAVU microservice
+          copy:
+            src: /tmp/irods-setavu-plugin/libraries/{{ os }}/libmsiSetAVU.so
+            dest: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
+            force: yes
+            owner: "{{ _irods_service_account_name }}"
+            group: "{{ _irods_service_group_name }}"
+      tags:
+        # docker in docker is a no no.
+        - no_testing
 
 - import_playbook: restart_all.yml

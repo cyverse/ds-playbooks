@@ -49,11 +49,13 @@ start()
   exec 3<&-
   exec 3>&-
 
-  if ! service irods start
+  if ! su --command '/var/lib/irods/iRODS/irodsctl start' --login "$IRODS_SYSTEM_USER"
   then
     cat /var/lib/irods/iRODS/server/log/rodsLog* >&2
     return 1
   fi
+
+  touch /var/lock/subsys/irods
 
   printf 'Authenticating clerver user\n'
   su --command "iinit '$IRODS_ZONE_PASSWORD'" --login "$IRODS_SYSTEM_USER"
@@ -62,7 +64,8 @@ start()
 
 stop()
 {
-  service irods stop
+  su --command '/var/lib/irods/iRODS/irodsctl stop' --login "$IRODS_SYSTEM_USER"
+  rm /var/lock/subsys/irods
 }
 
 

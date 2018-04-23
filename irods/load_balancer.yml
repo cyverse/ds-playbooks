@@ -39,7 +39,7 @@
         haproxy_listen:
           - irods_main:
               binds:
-                - ":{{ _load_balancer_irods_proxy_port }}"
+                - :{{ _load_balancer_irods_proxy_port }}
               servers:
                 - "{{ server }} {{ server_ip }}:1247 maxconn 50"
           - irods_reconn:

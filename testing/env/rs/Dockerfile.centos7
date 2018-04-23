@@ -24,6 +24,7 @@ ARG IRODS_ZONE_USER=rods
 
 RUN /tmp/ansible-support centos 7 && \
     yum --assumeyes install \
+      which \
       ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos7/irods-resource-4.1.10-centos7-x86_64.rpm && \
     /tmp/config.sh && \
     yum clean all && \

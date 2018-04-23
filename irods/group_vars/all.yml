@@ -65,8 +65,8 @@ _load_balancer_irods_allowed_src: "{{
   '0.0.0.0/0' }}"
 
 _load_balancer_irods_max_conn: "{{
-    load_balancer_irods_max_conn if load_balancer_irods_max_conn is defined else
-    100 }}"
+  load_balancer_irods_max_conn if load_balancer_irods_max_conn is defined else
+  100 }}"
 
 _load_balancer_irods_proxy_port: "{{
   load_balancer_irods_proxy_port if load_balancer_irods_proxy_port is defined else

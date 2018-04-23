@@ -1,38 +1,28 @@
 ---
-- name: stop resource servers
-  hosts: rs:!ies:!unmanaged_systems
-  become: true
+- name: stop iRODS resource servers
+  hosts: rs:!ies
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
   tasks:
-    - name: stop resource servers
-      service:
-        name: irods
-        pattern: irodsServer
-        state: stopped
-      failed_when: false
-  tags:
-    - non_idempotent
+    - import_tasks: tasks/stop_irods.yml
 
 - name: restart IES
   hosts: ies
-  become: true
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
   tasks:
-    - name: restart IES
-      service:
-        name: irods
-        pattern: irodsServer
-        state: restarted
+    - name: restart server
+      command: /var/lib/irods/iRODS/irodsctl restart
   tags:
     - non_idempotent
 
 - name: start resource servers
-  hosts: rs:!ies:!unmanaged_systems
-  become: true
+  hosts: rs:!ies
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
   tasks:
-    - name: start resource servers
-      service:
-        name: irods
-        pattern: irodsServer
-        state: started
+    - name: start servers
+      command: /var/lib/irods/iRODS/irodsctl start
   tags:
     - non_idempotent

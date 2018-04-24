@@ -1,5 +1,6 @@
 ---
 - name: stop server
+  become_flags: '-i'
   shell: |
     if ! status=$(/var/lib/irods/iRODS/irodsctl status)
     then

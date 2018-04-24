@@ -3,6 +3,7 @@
   hosts: rs:!ies
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
   become_user: "{{ _irods_service_account_name }}"
+  become_flags: '-i'
   tasks:
     - name: restart server
       command: /var/lib/irods/iRODS/irodsctl restart

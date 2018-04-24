@@ -1,5 +1,5 @@
 ---
-_bisque_irods_host: "{{ bisque_irods_host if bisque_irods_host is defined else _icat_host }}"
+_bisque_irods_host: "{{ bisque_irods_host if bisque_irods_host is defined else _irods_ies }}"
 
 _bisque_password: "{{ bisque_password if bisque_password is defined else 'admin' }}"
 
@@ -15,16 +15,6 @@ _dbms_port: "{{ dbms_port if dbms_port is defined else None }}"
 
 _dbms_username: "{{ dbms_username if dbms_username is defined else None }}"
 
-_default_number_of_transfer_threads: "{{
-  default_number_of_transfer_threads if default_number_of_transfer_threads is defined else
-  None }}"
-
-_ds_federation: "{{ ds_federation if ds_federation is defined else [] }}"
-
-_host_aliases: "{{ host_aliases if host_aliases is defined else [] }}"
-
-_icat_host: "{{ icat_host if icat_host is defined else groups['ies'][0] }}"
-
 _irods_aegis_repl_resource: "{{
   irods_aegis_repl_resource if irods_aegis_repl_resource is defined else
   'aegisReplRes' }}"
@@ -33,6 +23,11 @@ _irods_aegis_resource: "{{ irods_aegis_resource if irods_aegis_resource is defin
                            'aegisIngestRes' }}"
 
 _irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else None }}"
+
+_irods_default_number_of_transfer_threads: "{{
+  irods_default_number_of_transfer_threads
+    if irods_default_number_of_transfer_threads is defined else
+  None }}"
 
 _irods_default_repl_resource: "{{
   irods_default_repl_resource if irods_default_repl_resource is defined else
@@ -43,7 +38,31 @@ _irods_default_resource: "{{ irods_default_resource if irods_default_resource is
 
 _irods_default_vault: "{{ irods_default_vault if irods_default_vault is defined else None }}"
 
+_irods_federation: "{{ irods_federation if irods_federation is defined else [] }}"
+
+_irods_host_aliases: "{{ irods_host_aliases if irods_host_aliases is defined else [] }}"
+
+_irods_ies: "{{ irods_ies if irods_ies is defined else groups['ies'][0] }}"
+
 _irods_max_num_re_procs: "{{ irods_max_num_re_procs if irods_max_num_re_procs is defined else 4 }}"
+
+_irods_negotiation_key: "{{ irods_negotiation_key if irods_negotiation_key is defined else None }}"
+
+_irods_parallel_transfer_buffer_size: "{{
+  irods_parallel_transfer_buffer_size if irods_parallel_transfer_buffer_size is defined else
+  None }}"
+
+_irods_server_port_range_end: "{{
+  irods_server_port_range_end if irods_server_port_range_end is defined else
+  None }}"
+
+_irods_server_port_range_start: "{{
+  irods_server_port_range_start if irods_server_port_range_start is defined else
+  None }}"
+
+_irods_server_control_plane_key: "{{
+  irods_server_control_plane_key if irods_server_control_plane_key is defined else
+  None }}"
 
 _irods_service_account_name: "{{
   irods_service_account_name if irods_service_account_name is defined else 'irods' }}"
@@ -57,11 +76,7 @@ _irods_storage_resources: "{{
 
 _irods_version: "{{ irods_version if irods_version is defined else '4.1.11' }}"
 
-_negotiation_key: "{{ negotiation_key if negotiation_key is defined else None }}"
-
-_parallel_transfer_buffer_size: "{{
-  parallel_transfer_buffer_size if parallel_transfer_buffer_size is defined else
-  None }}"
+_irods_zone_key: "{{ irods_zone_key if irods_zone_key is defined else None }}"
 
 _rabbitmq_ephemeral: "{{ rabbitmq_ephemeral if rabbitmq_ephemeral is defined else True }}"
 
@@ -79,18 +94,8 @@ _sernec_readers: "{{ sernec_readers if sernec_readers is defined else [] }}"
 
 _sernec_writers: "{{ sernec_writers if sernec_writers is defined else [] }}"
 
-_server_control_plane_key: "{{ server_control_plane_key if server_control_plane_key is defined else
-                               None }}"
-
-_server_port_range_end: "{{ server_port_range_end if server_port_range_end is defined else None }}"
-
-_server_port_range_start: "{{ server_port_range_start if server_port_range_start is defined else
-                              None }}"
-
 _single_threaded_resources: "{{
   single_threaded_resources if single_threaded_resources is defined else
   [] }}"
 
 _sysctl_kernel: "{{ sysctl_kernel if sysctl_kernel is defined else [] }}"
-
-_zone_key: "{{ zone_key if zone_key is defined else None }}"

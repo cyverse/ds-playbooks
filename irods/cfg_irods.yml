@@ -14,39 +14,41 @@
       vars:
         irods_cfg_client_server_policy: CS_NEG_REFUSE
         irods_cfg_default_hash_scheme: MD5
-        irods_cfg_default_number_of_transfer_threads: "{{ _default_number_of_transfer_threads }}"
+        irods_cfg_default_number_of_transfer_threads: "{{
+          _irods_default_number_of_transfer_threads }}"
         irods_cfg_default_resource_directory: "{{ _irods_default_vault }}"
         irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
         irods_cfg_environment_variables: "{{
-          { 'IRODS_AMQP_URI': rabbitmq_uri } if inventory_hostname == _icat_host else
+          { 'IRODS_AMQP_URI': rabbitmq_uri } if inventory_hostname == _irods_ies else
           {} }}"
-        irods_cfg_federation: "{{ _ds_federation }}"
+        irods_cfg_federation: "{{ _irods_federation }}"
         irods_cfg_host_entries: "{{ [
             {
               'address_type': 'local',
-              'addresses': ([inventory_hostname] + _host_aliases)
+              'addresses': ([inventory_hostname] + _irods_host_aliases)
             }
-          ] if (_host_aliases | count) > 0 else [] }}"
-        irods_cfg_icat: "{{ None if inventory_hostname != _icat_host else
+          ] if (_irods_host_aliases | count) > 0 else [] }}"
+        irods_cfg_icat: "{{ None if inventory_hostname != _irods_ies else
                             {
                               'db_host': dbms_host,
                               'db_password': _dbms_password,
                               'db_port': _dbms_port,
                               'db_username': _dbms_username
                             } }}"
-        irods_cfg_icat_host: "{{ _icat_host }}"
+        irods_cfg_icat_host: "{{ _irods_ies }}"
         irods_cfg_maximum_number_of_concurrent_rule_engine_server_processes: "{{
           _irods_max_num_re_procs }}"
-        irods_cfg_negotiation_key: "{{ _negotiation_key }}"
+        irods_cfg_negotiation_key: "{{ _irods_negotiation_key }}"
         irods_cfg_re_additional_rulebases:
           - ipc-custom
-        irods_cfg_server_control_plane_key: "{{ _server_control_plane_key }}"
-        irods_cfg_server_port_range_end: "{{ _server_port_range_end }}"
-        irods_cfg_server_port_range_start: "{{ _server_port_range_start }}"
+        irods_cfg_server_control_plane_key: "{{ _irods_server_control_plane_key }}"
+        irods_cfg_server_port_range_end: "{{ _irods_server_port_range_end }}"
+        irods_cfg_server_port_range_start: "{{ _irods_server_port_range_start }}"
         irods_cfg_service_account_name: "{{ _irods_service_account_name }}"
         irods_cfg_service_group_name: "{{ _irods_service_group_name }}"
-        irods_cfg_transfer_buffer_size_for_parallel_transfer: "{{ _parallel_transfer_buffer_size }}"
-        irods_cfg_zone_key: "{{ _zone_key }}"
+        irods_cfg_transfer_buffer_size_for_parallel_transfer: "{{
+          _irods_parallel_transfer_buffer_size }}"
+        irods_cfg_zone_key: "{{ _irods_zone_key }}"
         irods_cfg_zone_name: iplant
         irods_cfg_zone_user: "{{ _irods_clerver_user }}"
 

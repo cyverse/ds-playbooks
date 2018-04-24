@@ -26,7 +26,7 @@
           {{ lookup('dig', r) }} {{ r }}
           {% endif %}
           {% endfor %}
-          {% for f in _ds_federation %}
+          {% for f in _irods_federation %}
           {{ lookup('dig', f.icat_host) }} {{ f.icat_host }}
           {% endfor %}
       tags:

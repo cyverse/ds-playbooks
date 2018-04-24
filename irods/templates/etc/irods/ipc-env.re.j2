@@ -10,13 +10,13 @@ ipc_DEFAULT_RESC : string
 ipc_DEFAULT_RESC = '{{ _irods_default_resource }}'
 
 ipc_IES_IP : string
-ipc_IES_IP = '{{ lookup("dig", _icat_host) }}'
+ipc_IES_IP = '{{ lookup("dig", _irods_ies) }}'
 
 ipc_MAX_NUM_RE_PROCS : integer
 ipc_MAX_NUM_RE_PROCS = {{ _irods_max_num_re_procs }}
 
 ipc_RE_HOST : string
-ipc_RE_HOST = '{{ _icat_host }}'
+ipc_RE_HOST = '{{ _irods_ies }}'
 
 ipc_ZONE : string
 ipc_ZONE = 'iplant'

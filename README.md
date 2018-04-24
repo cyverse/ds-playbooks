@@ -1,3 +1,3 @@
-# ds-ansible
+# CyVerse DS Playbooks
 
-The git repo for holding the Data Store ansible playbooks
+This is a collection of playbooks for maintaining CyVerse's Data Store.

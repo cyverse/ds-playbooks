@@ -11,6 +11,10 @@ None of these variables are required.
 Variable                             | Default                          | Choices | Comments
 ------------------------------------ | -------------------------------- | ------- | --------
 `bisque_irods_host`                  | `icat_host`                      |         | The iRODS host to report to BisQue.
+`bisque_password`                    | admin                            |         | The password used to authenticate connections to BisQue
+`bisque_projects`                    | []                               |         | A list of projects that automatically publish to BisQue
+`bisque_url`                         |                                  |         | The URL for the BisQue server to connect to
+`bisque_user`                        | admin                            |         | The user to connect to BisQue as
 `dbms_password`                      | irods                            |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `dbms_port`                          | 5432                             |         | The TCP port the DBMS listens on.
 `dbms_username`                      | irods                            |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.
@@ -23,7 +27,11 @@ Variable                             | Default                          | Choice
 `irods_clerver_user`                 | rods                             |         | the rodsadmin user to be used by the server being configured
 `irods_default_repl_resource`        | `irods_default_resource`         |         | the default resource for replication
 `irods_default_resource`             | demoResc                         |         | the name of the default resource
+`irods_default_vault`                |                                  |         | the default path to the vault on the server being configured
 `irods_max_num_re_procs`             | 4                                |         | the maximum number of rule engine processes to run
+`irods_service_account_name`         | irods                            |         | the system account used to run the iRODS server processes
+`irods_service_group_name`           | `irods_service_account_name`     |         | the system group used to run the iRODS server processes
+`irods_storage_resources`            | []                               |         | a list of storage resources hosted on the server being configured, _see below_
 `irods_version`                      | 4.1.11                           |         | the version of iRODS to work with
 `negotiation_key`                    | TEMPORARY_32byte_negotiation_key |         | the negotiation key
 `parallel_transfer_buffer_size`      | 4                                |         | the transfer buffer size in MiB for each stream during parallel transfer
@@ -42,22 +50,32 @@ Variable                             | Default                          | Choice
 `sysctl_kernel`                      | []                               |         | a list of sysctl kernel parameters to set for the IES, __see_below__
 `zone_key`                           | TEMPORARY_zone_key               |         | the zone key
 
-`irods_federate fields`
+`irods_federate` entry fields
 
 All of them are required.
 
-Variable          | Comments
+Field             | Comments
 ----------------- | --------
 `icat_host`       | the hostname of the IES in the federate
 `negotiation_key` | the 32-byte encryption key of the federate
 `zone_key`        | the shared authentication secret of the federate
 `zone_name`       | the name of the federated zone
 
-`sysctl_kernel entry fields`
+`irods_storage_resource` entry fields
 
 All of them are required.
 
-Variable | Comments
+Field     | Comments
+--------- | --------
+`context` | The context to assign to the resource
+`name`    | The name of the storage resource
+`vault`   | The absolute path to the vault hold the files on this resource.
+
+`sysctl_kernel` entry fields
+
+All of them are required.
+
+Field | Comments
 -------- | --------
 `name`   | The parameter name to modify
 `value`  | The new value to set

@@ -9,7 +9,8 @@ simple Data Store setup.
 `ansible-tester` performs three sets tests in the order they are presented here.
 
 1. It performs a syntax check of the playbook under test.
-1. It runs the playbook under test and then runs any user provided tests on the same environment.
+1. It runs the playbook under test and then runs any user provided tests on the
+same environment.
 1. It runs the playbook under test again, checking for idempotency.
 
 ### User Provided Tests
@@ -40,10 +41,12 @@ Some tasks can't be run inside a Docker container, e.g., /etc/hosts can't be
 modified. Tag each of these tasks with `no_testing`, and those tasks will be
 skipped.
 
-## Testing environment
+## Testing Environment
 
-_TODO document_
-
+It assumes that the environment will be provided by `../env/docker-compose.yml`.
+See `inventory/` for more information about the state of the environment after
+any tests are run.
+ 
 ## Building the Image
 
 There are two convenience scripts for building the Docker image. `build` will

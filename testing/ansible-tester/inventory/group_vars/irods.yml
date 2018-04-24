@@ -1,4 +1,4 @@
 ---
 irods_version: 4.1.10
 
-server_port_range_end: 20009
+irods_server_port_range_end: 20009

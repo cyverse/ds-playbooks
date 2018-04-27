@@ -19,7 +19,7 @@
         irods_cfg_default_resource_directory: "{{ _irods_default_vault }}"
         irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
         irods_cfg_environment_variables: "{{
-          { 'IRODS_AMQP_URI': rabbitmq_uri } if inventory_hostname == _irods_ies else
+          { 'IRODS_AMQP_URI': rabbitmq_uri } if inventory_hostname in groups['ies'] else
           {} }}"
         irods_cfg_federation: "{{ _irods_federation }}"
         irods_cfg_host_entries: "{{ [
@@ -28,7 +28,7 @@
               'addresses': ([inventory_hostname] + _irods_host_aliases)
             }
           ] if (_irods_host_aliases | count) > 0 else [] }}"
-        irods_cfg_icat: "{{ None if inventory_hostname != _irods_ies else
+        irods_cfg_icat: "{{ None if inventory_hostname not in groups['ies'] else
                             {
                               'db_host': dbms_host,
                               'db_password': _dbms_password,

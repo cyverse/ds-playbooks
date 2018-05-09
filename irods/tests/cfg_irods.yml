@@ -165,8 +165,6 @@
 - name: verify irods_environment.json contents
   hosts: irods
   gather_facts: false
-  vars:
-    - server_config: "{{ lookup('file', '/etc/irods/server_config.json') }}"
   tasks:
     - name: retrieve irods_environment contents
       slurp:

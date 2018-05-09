@@ -41,6 +41,7 @@
         irods_cfg_negotiation_key: "{{ _irods_negotiation_key }}"
         irods_cfg_re_additional_rulebases:
           - ipc-custom
+          - ipc-housekeeping
         irods_cfg_server_control_plane_key: "{{ _irods_server_control_plane_key }}"
         irods_cfg_server_port_range_end: "{{ _irods_server_port_range_end }}"
         irods_cfg_server_port_range_start: "{{ _irods_server_port_range_start }}"

@@ -139,6 +139,7 @@
         - coge.re
         - ipc-amqp.re
         - ipc-custom.re
+        - ipc-housekeeping.re
         - ipc-json.re
         - ipc-logic.re
         - ipc-uuid.re
@@ -232,6 +233,7 @@
           - server_config.icat_host == 'dstesting_ies_centos6_1.dstesting_default'
           - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
           - server_config.re_rulebase_set[0].filename == 'ipc-custom'
+          - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'
           - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
           - server_config.server_port_range_end == 20009
           - server_config.server_port_range_start == 20000
@@ -281,6 +283,7 @@
           - server_config.icat_host == 'dstesting_ies_centos6_1.dstesting_default'
           - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
           - server_config.re_rulebase_set[0].filename == 'ipc-custom'
+          - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'
           - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
           - server_config.server_port_range_end == 20009
           - server_config.server_port_range_start == 20000

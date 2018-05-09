@@ -205,9 +205,13 @@
           - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
           - hosts_config.host_entries[0].addresses[2].address == 'alias-2'
 
-- name: verify server_config.json contents on IES
+- name: verify IES specific config file contents
   hosts: ies
   gather_facts: false
+  vars:
+    expected_driver: "{{
+      '/usr/pgsql-9.3/lib/psqlodbca.so' if ansible_distribution_major_version == '6' else
+      '/usr/lib64/psqlodbc.so'}}"
   tasks:
     - name: retrieve server_config contents
       slurp:
@@ -236,6 +240,23 @@
           - server_config.federation | length == 0
           - 'server_config.environment_variables.IRODS_AMQP_URI
                == "amqp://guest:guest@dstesting_amqp_1.dstesting_default:5672/%2F"'
+
+    - name: retrieve .odbc.ini contents
+      slurp:
+        src: /var/lib/irods/.odbc.ini
+      register: oEncoded
+
+    - set_fact:
+        odbc: "{{ oEncoded.content | b64decode }}"
+
+    - name: verify .odbc.ini contents
+      assert:
+        that:
+          - odbc | search('driver = ' ~ expected_driver | regex_escape)
+          - odbc | search('Database = ICAT' | regex_escape)
+          - odbc | search('Port = 5432' | regex_escape)
+          - odbc | search('Servername = dstesting_dbms_1.dstesting_default' | regex_escape)
+
 
 - name: verify server_config.json contents on resource servers
   hosts: rs

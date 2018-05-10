@@ -128,7 +128,10 @@
       stat:
         path: /etc/irods/{{ item }}
       register: response
-      failed_when: not response.stat.exists
+      failed_when: |
+         not response.stat.exists
+         or response.stat.pw_name != 'irods'
+         or not response.stat.rusr
       with_items:
         - hosts_config.json
         - server_config.json
@@ -157,7 +160,11 @@
       stat:
         path: /var/lib/irods/iRODS/server/bin/cmd/{{ item }}
       register: response
-      failed_when: not response.stat.exists
+      failed_when: |
+         not response.stat.exists
+         or response.stat.pw_name != 'irods'
+         or not response.stat.rusr
+         or not response.stat.xusr
       with_items:
         - delete-scheduled-rule
         - set-uuid

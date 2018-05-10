@@ -124,7 +124,7 @@
 - name: test common file deposition
   hosts: irods
   tasks:
-    - name: Retrieve configuration files
+    - name: check configuration files in place
       stat:
         path: /etc/irods/{{ item }}
       register: response
@@ -152,6 +152,15 @@
         path: /var/lib/irods/.irods/irods_environment.json
       register: response
       failed_when: not response.stat.exists
+
+    - name: Verify common command scripts are in place
+      stat:
+        path: /var/lib/irods/iRODS/server/bin/cmd/{{ item }}
+      register: response
+      failed_when: not response.stat.exists
+      with_items:
+        - delete-scheduled-rule
+        - set-uuid
 
 - name: test ies only file deposition
   hosts: ies

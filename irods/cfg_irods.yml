@@ -54,6 +54,12 @@
         irods_cfg_zone_user: "{{ _irods_clerver_user }}"
 
   tasks:
+    - name: add delete-scheduled-rule script
+      copy:
+        src: files/delete-scheduled-rule
+        dest: /var/lib/irods/iRODS/server/bin/cmd/delete-scheduled-rule
+        mode: u=rx
+        
     - name: add set-uuid command script
       copy:
         src: files/set-uuid

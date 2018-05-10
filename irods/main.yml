@@ -23,3 +23,15 @@
 
 - import_playbook: provision.yml
 - import_playbook: cfg_irods.yml
+
+- name: start quota usage computation
+  hosts: ies
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
+  tasks:
+    - name: start computation
+      run_once: true
+      command: irule '{ ipc_rescheduleQuotaUsageUpdate }' null ruleExecOut
+      register: results
+      changed_when: results.stdout == 'scheduling quota usage updates'

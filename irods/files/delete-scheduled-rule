@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# Removes a rule from the rule queue.
+#
+# USAGE:
+#  deleted-scheduled-rule ruleId
+#
+#  PARAMETERS:
+#   ruleId  The Id of the rule to dequeue
+
+
+main()
+{
+  if [ "$#" -lt 1 ]
+  then
+    printf 'The Id of the rule to dequeue must be provided\n' >&2
+    return 1
+  fi
+
+  local ruleId="$1"
+
+  iqdel "$ruleId"
+}
+
+
+set -e
+main "$@"

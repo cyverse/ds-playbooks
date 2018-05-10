@@ -54,22 +54,18 @@
         irods_cfg_zone_user: "{{ _irods_clerver_user }}"
 
   tasks:
-    - name: add delete-scheduled-rule script
+    - name: add common command scripts
       copy:
-        src: files/delete-scheduled-rule
-        dest: /var/lib/irods/iRODS/server/bin/cmd/delete-scheduled-rule
+        src: "{{ item }}"
+        dest: /var/lib/irods/iRODS/server/bin/cmd
         mode: u=rx
-        
-    - name: add set-uuid command script
-      copy:
-        src: files/set-uuid
-        dest: /var/lib/irods/iRODS/server/bin/cmd/
-        mode: u=rx
+      with_fileglob:
+        - "files/cmd-common/*"
 
     - name: place static config in /etc/irods
       copy:
         src: "{{ item }}"
-        dest: /etc/irods/
+        dest: /etc/irods
       with_fileglob:
         - "files/etc/*"
       notify:

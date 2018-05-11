@@ -48,11 +48,6 @@
           then
             exit 1
           fi
-
-          if ! iadmin moduser '{{ _de_job_irods_user }}' password ''
-          then
-            exit 1
-          fi
         fi
 
         if [ -n "$oldUser" ]
@@ -69,5 +64,24 @@
         then
           printf changed
         fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: ensure password is empty
+      when: _de_job_irods_user != ''
+      run_once: true
+      shell: |
+        if IRODS_USER_NAME='{{ _de_job_irods_user }}' IRODS_AUTHENTICATION_FILE=/dev/null \
+           iinit -e <<< '' > /dev/null
+        then
+          exit 0
+        fi
+
+        if ! iadmin moduser '{{ _de_job_irods_user }}' password ''
+        then
+          exit 1
+        fi
+
+        printf changed
       register: response
       changed_when: response.stdout == 'changed'

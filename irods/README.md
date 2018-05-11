@@ -17,6 +17,7 @@ Variable                                   | Default                          | 
 `dbms_password`                            | irods                            |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `dbms_port`                                | 5432                             |         | The TCP port the DBMS listens on.
 `dbms_username`                            | irods                            |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.
+`de_job_irods_user`                        |                                  |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
 `irods_aegis_repl_resource`                | aegisReplRes                     |         | the name of the aegis resource where replicas are written
 `irods_aegis_resource`                     | aegisIngestRes                   |         | the name of the aegis resource where newly uploaded files are written
 `irods_clerver_user`                       | rods                             |         | the rodsadmin user to be used by the server being configured

@@ -1,4 +1,4 @@
-# VERSION: 1
+# VERSION: 2
 #
 # All customizations done to the iRODS rule logic are placed in this file or
 # should be included by this file.
@@ -28,6 +28,7 @@
 @include 'aegis'
 @include 'bisque'
 @include 'coge'
+@include 'sanimal'
 @include 'sciapps'
 @include 'sernec'
 

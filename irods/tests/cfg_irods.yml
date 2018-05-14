@@ -34,7 +34,7 @@
     - name: verify constants expoand correctly in sanimal-env.re.j2
       assert:
         that:
-          - sanimal_env | search('sanimal_BASE_COLL = \n' | regex_escape)
+          - sanimal_env | search("sanimal_BASE_COLL = ''" | regex_escape)
 
     - name: verify sernec constants expand correctly in sernec-env.re.j2
       assert:

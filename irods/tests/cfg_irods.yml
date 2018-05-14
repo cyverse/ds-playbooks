@@ -31,7 +31,7 @@
         that:
           - bisque_env | search("bisque_IRODS_URL_BASE = 'irods://dstesting_ies_centos6_1.dstesting_default'")
 
-    - name: verify constants expoand correctly in sanimal-env.re.j2
+    - name: verify constants expand correctly in sanimal-env.re.j2
       assert:
         that:
           - sanimal_env | search("sanimal_BASE_COLL = ''" | regex_escape)

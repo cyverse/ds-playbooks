@@ -121,6 +121,9 @@ acPostProcForPut {
   *err = errormsg(coge_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
+  *err = errormsg(sanimal_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
   *err = errormsg(sciapps_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 

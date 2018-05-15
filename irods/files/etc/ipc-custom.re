@@ -18,6 +18,7 @@
 @include 'ipc-repl'
 @include 'ipc-services'
 
+
 # THIRD PARTY RULES
 #
 # Third party rule logic goes in its own file, and the file should be included
@@ -40,6 +41,12 @@ acBulkPutPostProcPolicy { ipc_acBulkPutPostProcPolicy }
 acCreateCollByAdmin(*ParColl, *ChildColl) {
   msiCreateCollByAdmin(*ParColl, *ChildColl);
   ipc_acCreateCollByAdmin(*ParColl, *ChildColl);
+}
+
+acCreateUser {
+  ON ($otherUserType == 'ds-service') {
+    ipc_acCreateUser;
+  }
 }
 
 acDataDeletePolicy {

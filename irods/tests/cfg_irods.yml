@@ -5,11 +5,11 @@
   vars_files:
     - ../group_vars/all.yml
   vars:
-    aegis_env: "{{ lookup('template', '../templates/etc/irods/aegis-env.re.j2') }}"
-    bisque_env: "{{ lookup('template', '../templates/etc/irods/bisque-env.re.j2') }}"
-    de_env: "{{ lookup('template', '../templates/etc/irods/de-env.re.j2') }}"
-    ipc_env: "{{ lookup('template', '../templates/etc/irods/ipc-env.re.j2') }}"
-    sernec_env: "{{ lookup('template', '../templates/etc/irods/sernec-env.re.j2') }}"
+    aegis_env: "{{ lookup('template', '../templates/etc/aegis-env.re.j2') }}"
+    bisque_env: "{{ lookup('template', '../templates/etc/bisque-env.re.j2') }}"
+    de_env: "{{ lookup('template', '../templates/etc/de-env.re.j2') }}"
+    ipc_env: "{{ lookup('template', '../templates/etc/ipc-env.re.j2') }}"
+    sernec_env: "{{ lookup('template', '../templates/etc/sernec-env.re.j2') }}"
   tasks:
     - name: verify constants expand correctly in ipc-env.re.j2
       assert:
@@ -50,7 +50,7 @@
   vars:
     irods_aegis_repl_resource: aegisReplication
     irods_aegis_resource: aegisIngest
-    aegis_env: "{{ lookup('template', '../templates/etc/irods/aegis-env.re.j2') }}"
+    aegis_env: "{{ lookup('template', '../templates/etc/aegis-env.re.j2') }}"
   tasks:
     - name: verify params
       assert:
@@ -65,7 +65,7 @@
     - ../group_vars/all.yml
   vars:
     irods_max_num_re_procs: 1
-    ipc_env: "{{ lookup('template', '../templates/etc/irods/ipc-env.re.j2') }}"
+    ipc_env: "{{ lookup('template', '../templates/etc/ipc-env.re.j2') }}"
   tasks:
     - name: verify ipc_MAX_NUM_RE_PROCS
       assert:
@@ -81,7 +81,7 @@
     single_threaded_resources:
       - resource-1
       - resource-2
-    ipc_env: "{{ lookup('template', '../templates/etc/irods/ipc-env.re.j2') }}"
+    ipc_env: "{{ lookup('template', '../templates/etc/ipc-env.re.j2') }}"
   tasks:
     - name: verify acSetNumThreads defined correctly in ipc-env.re
       assert:
@@ -96,7 +96,7 @@
     - ../group_vars/all.yml
   vars:
     bisque_irods_host: custom.irods.host
-    bisque_env: "{{ lookup('template', '../templates/etc/irods/bisque-env.re.j2') }}"
+    bisque_env: "{{ lookup('template', '../templates/etc/bisque-env.re.j2') }}"
   tasks:
     - name: verify bisque_env
       assert:
@@ -110,7 +110,7 @@
     - ../group_vars/all.yml
   vars:
     de_job_irods_user: de_job
-    de_env: "{{ lookup('template', '../templates/etc/irods/de-env.re.j2') }}"
+    de_env: "{{ lookup('template', '../templates/etc/de-env.re.j2') }}"
   tasks:
     - name: verify de-env.re is correct
       assert:
@@ -132,7 +132,7 @@
     sernec_writers:
       - write1
       - write2
-    sernec_env: "{{ lookup('template', '../templates/etc/irods/sernec-env.re.j2') }}"
+    sernec_env: "{{ lookup('template', '../templates/etc/sernec-env.re.j2') }}"
   tasks:
     - name: verify sernec_env
       assert:

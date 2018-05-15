@@ -37,7 +37,7 @@
             exit 1
           fi
 
-          if ! iadmin mkuser '{{ _de_job_irods_user }}' rodsuser
+          if ! iadmin mkuser '{{ _de_job_irods_user }}' ds-service
           then
             exit 1
           fi

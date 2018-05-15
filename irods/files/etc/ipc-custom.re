@@ -18,6 +18,7 @@
 @include 'ipc-repl'
 @include 'ipc-services'
 
+
 # THIRD PARTY RULES
 #
 # Third party rule logic goes in its own file, and the file should be included
@@ -28,7 +29,6 @@
 @include 'aegis'
 @include 'bisque'
 @include 'coge'
-@include 'de'
 @include 'sciapps'
 @include 'sernec'
 
@@ -43,8 +43,8 @@ acCreateCollByAdmin(*ParColl, *ChildColl) {
 }
 
 acCreateUser {
-  ON ($otherUserName == de_JOB_USER) {
-    de_acCreateUser;
+  ON ($otherUserType == 'ds-service') {
+    ipc_acCreateUser;
   }
 }
 

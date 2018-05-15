@@ -7,7 +7,6 @@
   vars:
     aegis_env: "{{ lookup('template', '../templates/etc/aegis-env.re.j2') }}"
     bisque_env: "{{ lookup('template', '../templates/etc/bisque-env.re.j2') }}"
-    de_env: "{{ lookup('template', '../templates/etc/de-env.re.j2') }}"
     ipc_env: "{{ lookup('template', '../templates/etc/ipc-env.re.j2') }}"
     sernec_env: "{{ lookup('template', '../templates/etc/sernec-env.re.j2') }}"
   tasks:
@@ -29,11 +28,6 @@
       assert:
         that:
           - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://dstesting_ies_centos6_1.dstesting_default'")
-
-    - name: verify constants expand correctly in de-env.re.j2
-      assert:
-        that:
-          - de_env is search("de_JOB_USER = ''" | regex_escape)
 
     - name: verify sernec constants expand correctly in sernec-env.re.j2
       assert:
@@ -103,20 +97,6 @@
         that:
          - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://custom.irods.host'")
 
-- name: test that custom job user name gets set correctly
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    de_job_irods_user: de_job
-    de_env: "{{ lookup('template', '../templates/etc/de-env.re.j2') }}"
-  tasks:
-    - name: verify de-env.re is correct
-      assert:
-        that:
-          - de_env is search("de_JOB_USER = 'de_job'")
-
 - name: test that sernec perm groups are generated correctly
   hosts: localhost
   gather_facts: false
@@ -160,8 +140,6 @@
         - bisque.re
         - bisque-env.re
         - coge.re
-        - de.re
-        - de-env.re
         - ipc-amqp.re
         - ipc-custom.re
         - ipc-json.re

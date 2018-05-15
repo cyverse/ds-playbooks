@@ -1,5 +1,9 @@
 ---
-- name: test main
+- import_playbook: provision.yml
+- import_playbook: cfg_irods.yml
+- import_playbook: de_usage.yml
+
+- name: continue testing main
   hosts: all
   tasks:
     - debug:

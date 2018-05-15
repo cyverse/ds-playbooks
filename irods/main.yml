@@ -35,7 +35,7 @@
       shell: |
         desc=$(iquest \
           '%s' \
-          "select TOKEN_VALUE2 where TOKEN_NAMESPACE = 'user_type' and TOKEN_NAME = 'service'")
+          "select TOKEN_VALUE2 where TOKEN_NAMESPACE = 'user_type' and TOKEN_NAME = 'ds-service'")
         exitCode="$?"
 
         if [ "$exitCode" -ne 0 ]
@@ -48,7 +48,7 @@
           exit 0
         fi
 
-        if ! iadmin at user_type service '' 'a service, not a person'
+        if ! iadmin at user_type ds-service '' 'a Data Store service'
         then
           exit 1
         fi
@@ -56,3 +56,5 @@
         printf changed
       register: response
       changed_when: response.stdout == 'changed'
+
+- import_playbook: de_usage.yml

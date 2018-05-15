@@ -411,6 +411,11 @@ cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) =
 #
 ipc_acBulkPutPostProcPolicy {  msiSetBulkPutPostProcPolicy('on'); }
 
+# Create a user for a Data Store service
+ipc_acCreateUser {
+  msiCreateUser ::: msiRollback;
+  msiCommit;
+}
 
 # Refuse SSL connections
 #

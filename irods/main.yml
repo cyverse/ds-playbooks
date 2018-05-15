@@ -23,3 +23,38 @@
 
 - import_playbook: provision.yml
 - import_playbook: cfg_irods.yml
+
+- name: create service user type
+  hosts: ies
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
+  tasks:
+    - name: ensure service user type exists
+      run_once: true
+      shell: |
+        desc=$(iquest \
+          '%s' \
+          "select TOKEN_VALUE2 where TOKEN_NAMESPACE = 'user_type' and TOKEN_NAME = 'ds-service'")
+        exitCode="$?"
+
+        if [ "$exitCode" -ne 0 ]
+        then
+          exit 1
+        fi
+
+        if ! [[ "$desc" =~ CAT_NO_ROWS_FOUND: ]]
+        then
+          exit 0
+        fi
+
+        if ! iadmin at user_type ds-service '' 'a Data Store service'
+        then
+          exit 1
+        fi
+
+        printf changed
+      register: response
+      changed_when: response.stdout == 'changed'
+
+- import_playbook: de_usage.yml

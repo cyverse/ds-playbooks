@@ -28,6 +28,7 @@
 @include 'aegis'
 @include 'bisque'
 @include 'coge'
+@include 'de'
 @include 'sciapps'
 @include 'sernec'
 
@@ -39,6 +40,12 @@ acBulkPutPostProcPolicy { ipc_acBulkPutPostProcPolicy }
 acCreateCollByAdmin(*ParColl, *ChildColl) {
   msiCreateCollByAdmin(*ParColl, *ChildColl);
   ipc_acCreateCollByAdmin(*ParColl, *ChildColl);
+}
+
+acCreateUser {
+  ON ($otherUserName == de_JOB_USER) {
+    de_acCreateUser;
+  }
 }
 
 acDataDeletePolicy {

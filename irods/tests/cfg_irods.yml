@@ -161,7 +161,7 @@
 - name: test common file deposition
   hosts: irods
   tasks:
-    - name: Retrieve configuration files
+    - name: check configuration files in place
       stat:
         path: /etc/irods/{{ item }}
       register: response
@@ -179,6 +179,7 @@
         - coge.re
         - ipc-amqp.re
         - ipc-custom.re
+        - ipc-housekeeping.re
         - ipc-json.re
         - ipc-logic.re
         - ipc-uuid.re
@@ -194,14 +195,18 @@
       register: response
       failed_when: not response.stat.exists
 
-    - name: Verify sanimal-ingest is in place
+    - name: Verify common command scripts are in place
       stat:
-        path: /var/lib/irods/iRODS/server/bin/cmd/sanimal-ingest
+        path: /var/lib/irods/iRODS/server/bin/cmd/{{ item }}
       register: response
       failed_when: |
         not response.stat.exists
         or response.stat.pw_name != 'irods'
         or not response.stat.xusr
+      with_items:
+        - delete-scheduled-rule
+        - set-uuid
+        - sanimal-ingest
 
 - name: test ies only file deposition
   hosts: ies
@@ -283,6 +288,7 @@
           - server_config.icat_host == 'dstesting_ies_centos6_1.dstesting_default'
           - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
           - server_config.re_rulebase_set[0].filename == 'ipc-custom'
+          - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'
           - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
           - server_config.server_port_range_end == 20009
           - server_config.server_port_range_start == 20000
@@ -332,6 +338,7 @@
           - server_config.icat_host == 'dstesting_ies_centos6_1.dstesting_default'
           - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
           - server_config.re_rulebase_set[0].filename == 'ipc-custom'
+          - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'
           - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
           - server_config.server_port_range_end == 20009
           - server_config.server_port_range_start == 20000

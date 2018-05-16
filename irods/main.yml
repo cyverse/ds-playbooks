@@ -34,4 +34,4 @@
       run_once: true
       command: irule '{ ipc_rescheduleQuotaUsageUpdate }' null ruleExecOut
       register: results
-      changed_when: results.stdout == 'scheduling quota usage updates'
+      changed_when: results.stdout == 'scheduled quota usage updates'

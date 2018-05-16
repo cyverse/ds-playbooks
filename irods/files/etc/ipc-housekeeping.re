@@ -48,7 +48,7 @@ ipc_rescheduleQuotaUsageUpdate {
   if (*scheduled) {
     writeLine('stdout', 'quota usage updates already scheduled');
   } else {
-    writeLine('stdout', 'scheduling quota usage updates');
     _ipc_scheduleQuotaUsageUpdate;
+    writeLine('stdout', 'scheduled quota usage updates');
   }
 }

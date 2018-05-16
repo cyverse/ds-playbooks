@@ -1,5 +1,7 @@
 ---
-- name: test main
+- import_playbook: provision.yml
+
+- name: continue testing main
   hosts: all
   tasks:
     - debug:

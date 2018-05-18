@@ -3,6 +3,7 @@
   hosts: irods
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
   become_user: "{{ _irods_service_account_name }}"
+  become_flags: '-i'
   vars:
     dbms_host: "{{ groups['dbms'][0] }}"
     rabbitmq_user_info: "{{ _rabbitmq_user }}:{{ _rabbitmq_password }}"
@@ -35,12 +36,14 @@
                               'db_port': _dbms_port,
                               'db_username': _dbms_username
                             } }}"
-        irods_cfg_icat_host: "{{ _irods_ies }}"
+        irods_cfg_icat_host: "{{ inventory_hostname if inventory_hostname in groups['ies'] else
+                                 _irods_ies }}"
         irods_cfg_maximum_number_of_concurrent_rule_engine_server_processes: "{{
           _irods_max_num_re_procs }}"
         irods_cfg_negotiation_key: "{{ _irods_negotiation_key }}"
         irods_cfg_re_additional_rulebases:
           - ipc-custom
+          - ipc-housekeeping
         irods_cfg_server_control_plane_key: "{{ _irods_server_control_plane_key }}"
         irods_cfg_server_port_range_end: "{{ _irods_server_port_range_end }}"
         irods_cfg_server_port_range_start: "{{ _irods_server_port_range_start }}"
@@ -53,17 +56,13 @@
         irods_cfg_zone_user: "{{ _irods_clerver_user }}"
 
   tasks:
-    - name: add sanimal command script
+    - name: add common command scripts
       copy:
-        src: files/sanimal-ingest
-        dest: /var/lib/irods/iRODS/server/bin/cmd/
+        src: "{{ item }}"
+        dest: /var/lib/irods/iRODS/server/bin/cmd
         mode: u=rx
-
-    - name: add set-uuid command script
-      copy:
-        src: files/set-uuid
-        dest: /var/lib/irods/iRODS/server/bin/cmd/
-        mode: u=rx
+      with_fileglob:
+        - "files/cmd-common/*"
 
     - name: place static config in /etc/irods
       copy:
@@ -85,11 +84,21 @@
       notify:
         - reload rules
 
+  pre_tasks:
+    - name: initialize flag
+      set_fact:
+        irods_cfg_made_changes: false
+
+  post_tasks:
+    - when: _restart_irods and irods_cfg_made_changes
+      include_tasks: tasks/restart_irods.yml
+
   handlers:
     - name: reload rules
       file:
         path: /etc/irods/core.re
         state: touch
+
 
 - name: Install AMQP publishing script
   hosts: ies
@@ -98,6 +107,7 @@
   gather_facts: false
   tasks:
     - import_tasks: tasks/install_amqptopicsend.yml
+
 
 - name: configure bisque client
   hosts: ies
@@ -117,6 +127,7 @@
         src: templates/bisque.j2
         dest: "{{ ansible_env.HOME }}/.bisque"
         mode: u=r
+
 
 - name: set minimum free space for resource
   hosts: rs

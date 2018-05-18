@@ -1,4 +1,12 @@
 ---
+- name: enable restarting of iRODS
+  hosts: irods
+  gather_facts: false
+  tasks:
+    - set_fact:
+        restart_irods: true
+
+
 - name: configure AMQP broker
   hosts: rabbitmq
   become: true
@@ -12,7 +20,8 @@
           write_priv: .*
           read_priv: .*
 
-- name: Install pika
+
+- name: install pika
   hosts: ies
   become: true
   tasks:
@@ -21,10 +30,12 @@
         name: pika
         state: present
 
+
 - import_playbook: provision.yml
 - import_playbook: cfg_irods.yml
 
-- name: create service user type
+
+- name: runtime tasks
   hosts: ies
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
   become_user: "{{ _irods_service_account_name }}"
@@ -56,5 +67,12 @@
         printf changed
       register: response
       changed_when: response.stdout == 'changed'
+
+    - name: start computation
+      run_once: true
+      command: irule '{ ipc_rescheduleQuotaUsageUpdate }' null ruleExecOut
+      register: results
+      changed_when: results.stdout == 'scheduled quota usage updates'
+
 
 - import_playbook: de_usage.yml

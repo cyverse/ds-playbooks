@@ -1,0 +1,11 @@
+---
+- when: inventory_hostname in groups['rs'] | difference(groups['ies'])
+  include_tasks: stop_irods.yml
+
+- name: restart ICAT enabled servers
+  when: inventory_hostname in groups['ies']
+  command: /var/lib/irods/iRODS/irodsctl restart
+
+- name: start resource servers
+  when: inventory_hostname in groups['rs'] | difference(groups['ies'])
+  command: /var/lib/irods/iRODS/irodsctl start

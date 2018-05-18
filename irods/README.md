@@ -49,12 +49,15 @@ Variable                                   | Default                          | 
 `rabbitmq_port`                            | 5672                             |         | The TCP port the RabbitMQ broker listens on
 `rabbitmq_user`                            | guest                            |         | The user iRODS uses to connect to the AMQP vhost
 `rabbitmq_vhost`                           | /                                |         | The AMQP vhost iRODS connects to
+`restart_irods`                            | false                            |         | iRODS can be restarted on the servers having config file changes, __see below__
 `sanimal_irods_base_coll`                  |                                            | The base iRODS collection used by Sanimal. If this isn't set, no sanimal rules will fire.
 `sernec_owners`                            | []                               |         | a list of users who get ownership of sernec collections
 `sernec_readers`                           | []                               |         | a list of users who get read access to sernec collections
 `sernec_writers`                           | []                               |         | a list of users who get write access to sernec collections
 `single_threaded_resources`                | []                               |         | a list of resources that only support single threaded transfers
 `sysctl_kernel`                            | []                               |         | a list of sysctl kernel parameters to set for the IES, __see_below__
+
+The `restart_irods` flag is ignored in the `main.yml` playbook.
 
 `irods_federatation` entry fields
 

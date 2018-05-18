@@ -1,6 +1,7 @@
 ---
 - name: test provision
-  hosts: all
+  hosts: localhost
+  gather_facts: false
   tasks:
     - debug:
         msg: TODO implement

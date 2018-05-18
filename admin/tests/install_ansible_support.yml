@@ -1,6 +1,7 @@
 ---
 - name: test install_ansible_support
-  hosts: all
+  hosts: localhost
+  gather_facts: false
   tasks:
     - debug:
         msg: TODO implement

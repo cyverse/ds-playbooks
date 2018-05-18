@@ -10,7 +10,6 @@
     rabbitmq_authority: "{{ rabbitmq_user_info }}@{{ groups['rabbitmq'][0] }}:{{ _rabbitmq_port }}"
     rabbitmq_path: /{{ _rabbitmq_vhost | replace('/', '%2F') }}
     rabbitmq_uri: amqp://{{ rabbitmq_authority }}{{ rabbitmq_path }}
-    rs_only: "{{ inventory_hostname in groups['rs'] | difference(groups['ies']) }}"
   roles:
     - role: cyverse.irods-cfg
       vars:
@@ -90,15 +89,7 @@
 
   post_tasks:
     - when: _restart_irods and irods_cfg_made_changes
-      block:
-        - when: rs_only
-          include_tasks: tasks/stop_irods.yml
-
-        - when: inventory_hostname in groups['ies']
-          command: /var/lib/irods/iRODS/irodsctl restart
-
-        - when: rs_only
-          command: /var/lib/irods/iRODS/irodsctl start
+      include_tasks: tasks/restart_irods.yml
 
   handlers:
     - name: reload rules

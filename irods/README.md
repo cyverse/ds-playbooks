@@ -48,6 +48,7 @@ Variable                                   | Default                          | 
 `rabbitmq_port`                            | 5672                             |         | The TCP port the RabbitMQ broker listens on
 `rabbitmq_user`                            | guest                            |         | The user iRODS uses to connect to the AMQP vhost
 `rabbitmq_vhost`                           | /                                |         | The AMQP vhost iRODS connects to
+`restart_irods`                            | false                            |         | If this is true, iRODS will be restarted on the servers having config file changes
 `sernec_owners`                            | []                               |         | a list of users who get ownership of sernec collections
 `sernec_readers`                           | []                               |         | a list of users who get read access to sernec collections
 `sernec_writers`                           | []                               |         | a list of users who get write access to sernec collections

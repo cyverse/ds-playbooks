@@ -1,4 +1,12 @@
 ---
+- name: enable restarting of iRODS
+  hosts: irods
+  gather_facts: false
+  tasks:
+    - set_fact:
+        restart_irods: true
+
+
 - name: configure AMQP broker
   hosts: rabbitmq
   become: true
@@ -12,7 +20,8 @@
           write_priv: .*
           read_priv: .*
 
-- name: Install pika
+
+- name: install pika
   hosts: ies
   become: true
   tasks:
@@ -21,9 +30,10 @@
         name: pika
         state: present
 
+
 - import_playbook: provision.yml
 - import_playbook: cfg_irods.yml
-- import_playbook: restart_all.yml
+
 
 - name: run-time initialization
   hosts: ies

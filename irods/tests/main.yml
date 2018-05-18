@@ -2,10 +2,25 @@
 - import_playbook: provision.yml
 - import_playbook: cfg_irods.yml
 
+
 - name: continue testing main
-  hosts: all
+  hosts: localhost
+  gather_facts: false
   tasks:
-    - debug:
+    - name: test enable restarting of iRODS
+      debug:
+        msg: TODO implement
+
+    - name: test configure AMQP broker
+      debug:
+        msg: TODO implemnt
+
+    - name: test install pika
+      debug:
+        msg: TODO implement
+
+    - name: test start quota usage computation
+      debug:
         msg: TODO implement
 
 - import_playbook: de_usage.yml

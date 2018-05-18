@@ -298,7 +298,8 @@
         src: /var/lib/irods/.odbc.ini
       register: oEncoded
 
-    - set_fact:
+    - name: decode .odbc.ini contents
+      set_fact:
         odbc: "{{ oEncoded.content | b64decode }}"
 
     - name: verify .odbc.ini contents
@@ -308,6 +309,22 @@
           - odbc is search('Database = ICAT' | regex_escape)
           - odbc is search('Port = 5432' | regex_escape)
           - odbc is search('Servername = dstesting_dbms_1.dstesting_default' | regex_escape)
+
+    - name: retrieve .pgpass contents
+      slurp:
+        src: /var/lib/irods/.pgpass
+      register: pEncoded
+
+    - name: decode .pgpass contents
+      set_fact:
+        pgpass: "{{ pEncoded.content | b64decode }}"
+
+    - name: verify .pgpass contents
+      assert:
+        that:
+          - "pgpass
+               is search('dstesting_dbms_1.dstesting_default:5432:ICAT:irods:testpassword'
+                         | regex_escape)"
 
 
 - name: verify server_config.json contents on resource servers

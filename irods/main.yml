@@ -12,6 +12,7 @@
           write_priv: .*
           read_priv: .*
 
+
 - name: Install pika
   hosts: ies
   become: true
@@ -21,9 +22,11 @@
         name: pika
         state: present
 
+
 - import_playbook: provision.yml
 - import_playbook: cfg_irods.yml
 - import_playbook: restart_all.yml
+
 
 - name: start quota usage computation
   hosts: ies

@@ -3,7 +3,7 @@
 # - name: open firewall for iRODS
 
 - name: setup iRODS service account
-  hosts: irods:!unmanaged_systems
+  hosts: rs:!unmanaged_systems
   become: true
   tasks:
     - name: create service group
@@ -18,7 +18,7 @@
         home: /var/lib/irods
         createhome: yes
         group: "{{ _irods_service_group_name }}"
-        comment: iRODS service
+        comment: iRODS Administrator
 
-- include: mk_vaults.yml
-- include: install_resource_pkg.yml
+- import_playbook: mk_vaults.yml
+- import_playbook: install_resource_pkg.yml

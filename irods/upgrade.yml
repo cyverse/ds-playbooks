@@ -1,157 +1,71 @@
 ---
-- name: download iRODS packages
-  hosts: all
-  gather_facts: false
-  tasks:
-    - run_once: true
-      delegate_to: localhost
-      block:
-        # get_url doesn't seem to work for localhost downloads from FTP sites
-        - name: Download ICAT Server package
-          shell: | 
-            wget --output-document /tmp/irods-icat-4.1.10-centos6-x86_64.rpm \
-                 ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm
-          args:
-            creates: /tmp/irods-icat-4.1.10-centos6-x86_64.rpm
+- import_playbook: stop_all.yml
+  tags:
+    # Because of the restart_all at the end, this task makes the playbook non-idempotent
+    - non_idempotent
 
-        - name: Download Database plugin package
-          shell: |
-            wget --output-document /tmp/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm \
-                 ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
-          args:
-            creates: /tmp/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
-
-        - name: Download resource server package
-          shell: |
-            wget --output-document /tmp/irods-resource-4.1.10-centos6-x86_64.rpm \
-                 ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-resource-4.1.10-centos6-x86_64.rpm
-          args:
-            creates: /tmp/irods-resource-4.1.10-centos6-x86_64.rpm
-
-        - name: Download runtime library package
-          shell: |
-            wget --output-document /tmp/irods-runtime-4.1.10-centos6-x86_64.rpm \
-                 ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-runtime-4.1.10-centos6-x86_64.rpm
-          args:
-            creates: /tmp/irods-runtime-4.1.10-centos6-x86_64.rpm
-
-- include: stop-all.yml
-
-- hosts: irods
+- name: begin IES upgrade
+  hosts: ies:!unmanaged_systems
   become: true
+  vars:
+    os: centos{{ ansible_distribution_major_version }}
+    pg_rpm: "{{ 'irods-database-plugin-postgres93' if ansible_distribution_major_version|int == 6 else
+                'irods-database-plugin-postgres' }}"
+    pg_rpm_ver: "{{ _irods_version | regex_replace('^4.') }}"
   tasks:
-    - name: remove old NetCDF iCommands
-      package:
-        name: irods-icommands-netcdf
-        state: absent
+    - include_tasks: tasks/proxy_install.yml pkg={{ pg_rpm }} pkg_ver={{ pg_rpm_ver }}
+    - include_tasks: tasks/proxy_install.yml pkg=irods-icat pkg_ver={{ _irods_version }}
 
-    - name: remove old NetCDF microservice plugin
-      package:
-        name: irods-microservice-plugin-netcdf
-        state: absent
-
-    - name: remove old NetCDF API plugin
-      package:
-        name: irods-api-plugin-netcdf
-        state: absent
-
-- name: upgrade iRODS on IES
-  hosts: ies
-  become: true
-  gather_facts: false
-  tasks:
-    - name: download iRODS ICAT package
-      copy:
-        src: /tmp/irods-icat-4.1.10-centos6-x86_64.rpm
-        dest: /root/irods-icat-4.1.10-centos6-x86_64.rpm
-
-    - name: download iRODS PostgreSQL plugin package
-      copy:
-        src: /tmp/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
-        dest: /root/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
-
-    - name: upgrade database plugin 
-      shell: |
-        version=$(rpm --query --queryformat '%{VERSION}' irods-database-plugin-postgres93)
-        if [ $? -ne 0 -o "$version" != 1.10 ]
-        then
-          yum install --assumeyes /root/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
-        fi
-        
-    - name: upgrade IES package
-      shell: |
-        version=$(rpm --query --queryformat '%{VERSION}' irods-icat)
-        if [ $? -ne 0 -o "$version" != 4.1.10 ]
-        then
-          yum install --assumeyes /root/irods-icat-4.1.10-centos6-x86_64.rpm
-        fi
-
-- name: upgrade iRODS on resource servers
-  hosts: rs:!ies
-  become: true
-  gather_facts: false
-  tasks:
-    - name: download iRODS resource server package
-      copy:
-        src: /tmp/irods-resource-4.1.10-centos6-x86_64.rpm
-        dest: /root/irods-resource-4.1.10-centos6-x86_64.rpm
-
-    - name: upgrade iRODS
-      shell: |
-        version=$(rpm --query --queryformat '%{VERSION}' irods-resource)
-        if [ $? -ne 0 -o "$version" != 4.1.10 ]
-        then
-          yum install --assumeyes /root/irods-resource-4.1.10-centos6-x86_64.rpm
-        fi
+- import_playbook: install_resource_pkg.yml
 
 - name: upgrade plugins
-  hosts: irods
+  hosts: irods:!unmanaged_systems
   become: true
+  vars:
+    os: centos{{ ansible_distribution_major_version }}
   tasks:
-    - name: download iRODS runtime libraries package
-      copy:
-        src: /tmp/irods-runtime-4.1.10-centos6-x86_64.rpm
-        dest: /root/irods-runtime-4.1.10-centos6-x86_64.rpm
+    - include_tasks: tasks/proxy_install.yml pkg=irods-runtime pkg_ver={{ _irods_version }}
 
-    - name: download NetCDF API plugin
-      copy:
-        src: irods-netcdf-build/packages/centos-6/irods-api-plugin-netcdf-1.0-centos6.rpm
-        dest: /root/irods-api-plugin-netcdf-1.0-centos6.rpm
+    - name: checkout irods-netcdf-build repo
+      run_once: true
+      local_action:
+        module: git
+        repo: https://github.com/cyverse/irods-netcdf-build.git
+        dest: /tmp/irods-netcdf-build
+        version: "{{ _irods_version }}"
 
-    - name: download NetCDF microservice plugin
-      copy:
-        src: irods-netcdf-build/packages/centos-6/irods-microservice-plugin-netcdf-1.0-centos6.rpm
-        dest: /root/irods-microservice-plugin-netcdf-1.0-centos6.rpm
+    - block:
+        - name: build irods-netcdf plugins
+          run_once: true
+          local_action: command /tmp/irods-netcdf-build/build
 
-    - name: download NetCDF iCommands
-      copy:
-        src: irods-netcdf-build/packages/centos-6/irods-icommands-netcdf-1.0-centos6.rpm
-        dest: /root/irods-icommands-netcdf-1.0-centos6.rpm
+        - include_tasks: tasks/upgrade_netcdf_plugins.yml repo_path=/tmp/irods-netcdf-build
+      tags:
+        # docker in docker is a no no.
+        - no_testing
 
-    - name: upgrade runtime
-      shell: |
-        version=$(rpm --query --queryformat '%{VERSION}' irods-runtime)
-        if [ $? -ne 0 -o "$version" != 4.1.10 ]
-        then
-          yum install --assumeyes /root/irods-runtime-4.1.10-centos6-x86_64.rpm
-        fi
+    - name: checkout msi-setavu-plugin repo
+      run_once: true
+      local_action:
+        module: git
+        repo: https://github.com/iPlantCollaborativeOpenSource/irods-setavu-plugin.git
+        dest: /tmp/irods-setavu-plugin
+        version: "{{ _irods_version }}"
 
-    - name: install NetCDF API
-      yum:
-        name: /root/irods-api-plugin-netcdf-1.0-centos6.rpm
+    - block:
+        - name: build msiSetAVU plugin
+          run_once: true
+          local_action: command /tmp/irods-setavu-plugin/build
 
-    - name: install NetCDF microservices
-      yum:
-        name: /root/irods-microservice-plugin-netcdf-1.0-centos6.rpm
-        
-    - name: install NetCDF iCommands
-      yum:
-        name: /root/irods-icommands-netcdf-1.0-centos6.rpm
+        - name: upgrade msiSetAVU microservice
+          copy:
+            src: /tmp/irods-setavu-plugin/libraries/{{ os }}/libmsiSetAVU.so
+            dest: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
+            force: yes
+            owner: "{{ _irods_service_account_name }}"
+            group: "{{ _irods_service_group_name }}"
+      tags:
+        # docker in docker is a no no.
+        - no_testing
 
-    - name: upgrade msiSetAVU microservice
-      copy:
-        src: irods-setavu-plugin/src/libmsiSetAVU.so
-        dest: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
-        owner: irods
-
-- include: restart-all.yml
+- import_playbook: restart_all.yml

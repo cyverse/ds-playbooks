@@ -33,6 +33,10 @@ main()
 
 start()
 {
+  # Ensure that the correct user owns everything in /var/lib/irods and /etc/irods
+  # If this isn't done, some of the ansible ownership tests will fail.
+  chown --recursive "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" /etc/irods /var/lib/irods
+
   until exec 3<> /dev/tcp/"$IRODS_IES"/"$IRODS_ZONE_PORT"
   do
     printf 'Waiting for IES\n'
@@ -50,12 +54,15 @@ start()
     cat /var/lib/irods/iRODS/server/log/rodsLog* >&2
     return 1
   fi
+
+  touch /var/lock/subsys/irods
 }
 
 
 stop()
 {
   su --command '/var/lib/irods/iRODS/irodsctl stop' --login "$IRODS_SYSTEM_USER"
+  rm /var/lock/subsys/irods
 }
 
 

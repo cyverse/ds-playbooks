@@ -1,0 +1,9 @@
+---
+_nic_mtu: "{{ nic_mtu if nic_mtu is defined else 1500 }}"
+_nic_txqueuelen: "{{ nic_txqueuelen if nic_txqueuelen is defined else 1000 }}"
+
+_rebootable: "{{ rebootable if rebootable is defined else true }}"
+
+_sysctl_net: "{{ sysctl_net if sysctl_net is defined else [] }}"
+
+_update_e2fsprogs: "{{ update_e2fsprogs if update_e2fsprogs is defined else true }}"

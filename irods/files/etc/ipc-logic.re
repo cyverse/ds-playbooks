@@ -42,8 +42,8 @@ assignUUID(*ItemType, *ItemName) {
     *typeArg = execCmdArg(*ItemType);
     *nameArg = execCmdArg(*ItemName);
     *valArg = execCmdArg(*uuid);
-    *argStr = "*typeArg *nameArg ipc_UUID *valArg ''";
-    *status = errormsg(msiExecCmd('set-avu', *argStr, "null", "null", "null", *out), *msg);
+    *argStr = "*typeArg *nameArg *valArg";
+    *status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
     if (*status != 0) {
       writeLine('serverLog', "Failed to assign UUID: *msg");
       fail;
@@ -411,6 +411,11 @@ cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) =
 #
 ipc_acBulkPutPostProcPolicy {  msiSetBulkPutPostProcPolicy('on'); }
 
+# Create a user for a Data Store service
+ipc_acCreateUser {
+  msiCreateUser ::: msiRollback;
+  msiCommit;
+}
 
 # Refuse SSL connections
 #

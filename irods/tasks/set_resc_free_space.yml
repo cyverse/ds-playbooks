@@ -24,3 +24,9 @@
     printf changed
   register: out
   changed_when: out.stdout == 'changed'
+  tags:
+      # Even though this is technically idempotent, file systems are constantly
+      # be changed by agents outside of this task. This means that a idempotency
+      # check will likely fail, because of the file system being modified
+      # between playbook runs by an external agent.
+    - non_idempotent

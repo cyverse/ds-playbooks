@@ -71,7 +71,8 @@ main()
   mk_irods_env
   ensure_ownership "$EnvCfg"
 
-  prepare_odbc > "$Odbc"
+  read -r -a drivers < <(/var/lib/irods/packaging/find_odbc_postgres.sh)
+  prepare_odbc "${drivers[0]}" > "$Odbc"
   ensure_ownership "$Odbc"
 
   printf '*:%d:%s:%s:%s\n' "$DBMS_PORT" "$DB_NAME" "$DB_USER" "$DB_PASSWORD" > "$PgPass"
@@ -186,9 +187,11 @@ populate_server_cfg()
 
 prepare_odbc()
 {
+  local driver="$1"
+
   cat <<EOINI
 [postgres]
-Driver=/usr/pgsql-9.3/lib/psqlodbc.so
+Driver=$driver
 Debug=0
 CommLog=0
 Servername=$DBMS_HOST

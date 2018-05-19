@@ -1,7 +1,8 @@
-FROM ansible-support:centos6
+FROM centos:6
 MAINTAINER Tony Edgin @ CyVerse
 
-COPY scripts/* /tmp/
+COPY ansible-support/config.sh /tmp/ansible-support
+COPY rs/scripts/* /tmp/
 
 ARG IRODS_CONTROL_PLANE_KEY=TEMPORARY__32byte_ctrl_plane_key
 ARG IRODS_CONTROL_PLANE_PORT=1248
@@ -21,16 +22,14 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 ARG IRODS_ZONE_USER=rods
 
-RUN yum --assumeyes install \
+RUN /tmp/ansible-support centos 6 && \
+    yum --assumeyes install \
       ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-resource-4.1.10-centos6-x86_64.rpm && \
     /tmp/config.sh && \
     yum clean all && \
     rm --force --recursive /tmp/* /var/cache/yum
 
-EXPOSE "$IRODS_ZONE_PORT"/tcp \
-       "$IRODS_FIRST_EPHEMERAL_PORT"-"$IRODS_LAST_EPHEMERAL_PORT"/tcp \
-       "$IRODS_FIRST_EPHEMERAL_PORT"-"$IRODS_LAST_EPHEMERAL_PORT"/udp
+COPY ansible-support/entrypoint.sh /entrypoint
 
-VOLUME "$IRODS_DEFAULT_VAULT" /etc/irods /var/lib/irods/iRODS/server/log /var/lib/irods/.irods
-
+ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/service.sh" ]

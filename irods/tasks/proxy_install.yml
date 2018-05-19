@@ -1,27 +1,23 @@
 ---
-- name: check to see if package is installed
+- name: check to see if {{ pkg }} is installed
   yum:
     list: "{{ pkg }}"
   register: result
+  failed_when: false
 
-- when: result.results|count == 0 or result.results[0].version|version_compare(irods_version, '<')
+- when: result.results is not defined or result.results|count == 0 or result.results[0].version|version_compare(pkg_ver, '<')
   block:
-    # get_url doesn't seem to work for localhost downloads from FTP sites on ansible 2.1.1
-    - name: Download package locally
-      run_once: true
-      delegate_to: localhost
-      shell: |
-        wget --directory-prefix /tmp \
-             ftp://ftp.renci.org/pub/irods/releases/{{ irods_version }}/{{ os }}/{{ pkg }}-{{ irods_version }}-{{ os }}-x86_64.rpm
-      args:
-        creates: /tmp/{{ pkg }}-{{ irods_version }}-{{ os }}-x86_64.rpm
-        warn: false
+    - name: Download {{ pkg }} locally
+      local_action:
+        module: get_url
+        url: ftp://ftp.renci.org/pub/irods/releases/{{ _irods_version }}/{{ os }}/{{ pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm
+        dest: /tmp/{{ pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm
 
-    - name: upload package to resource server
+    - name: upload {{ pkg }} to server
       copy:
-        src: /tmp/{{ pkg }}-{{ irods_version }}-{{ os }}-x86_64.rpm
-        dest: /root
+        src: /tmp/{{ pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm
+        dest: /root/{{ pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm
 
-    - name: install package
+    - name: install {{ pkg }}
       yum:
-        name: /root/{{ pkg }}-{{ irods_version }}-{{ os }}-x86_64.rpm
+        name: /root/{{ pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm

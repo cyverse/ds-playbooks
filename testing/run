@@ -86,6 +86,8 @@ main()
     playbooks="$(pwd)"/"$playbooks"
   fi
 
+  : ${playbook:=main.yml}
+
   if ! verify_playbook_exists "$playbooks" "$playbook"
   then
     exit 1

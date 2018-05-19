@@ -1,4 +1,4 @@
-# VERSION: 1
+# VERSION: 2
 #
 # All customizations done to the iRODS rule logic are placed in this file or
 # should be included by this file.
@@ -18,6 +18,7 @@
 @include 'ipc-repl'
 @include 'ipc-services'
 
+
 # THIRD PARTY RULES
 #
 # Third party rule logic goes in its own file, and the file should be included
@@ -28,6 +29,7 @@
 @include 'aegis'
 @include 'bisque'
 @include 'coge'
+@include 'sanimal'
 @include 'sciapps'
 @include 'sernec'
 
@@ -39,6 +41,12 @@ acBulkPutPostProcPolicy { ipc_acBulkPutPostProcPolicy }
 acCreateCollByAdmin(*ParColl, *ChildColl) {
   msiCreateCollByAdmin(*ParColl, *ChildColl);
   ipc_acCreateCollByAdmin(*ParColl, *ChildColl);
+}
+
+acCreateUser {
+  ON ($otherUserType == 'ds-service') {
+    ipc_acCreateUser;
+  }
 }
 
 acDataDeletePolicy {
@@ -119,6 +127,9 @@ acPostProcForPut {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sanimal_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sciapps_acPostProcForPut, *msg);

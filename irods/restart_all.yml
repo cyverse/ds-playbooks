@@ -1,0 +1,10 @@
+---
+- name: restart iRODS service
+  hosts: irods
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
+  become_flags: '-i'
+  tasks:
+    - import_tasks: tasks/restart_irods.yml
+  tags:
+    - non_idempotent

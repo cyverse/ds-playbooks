@@ -2,7 +2,7 @@
 # This playbook waits for all of the systems under test to become ready.
 
 - name: wait for testing systems
-  hosts: all:!unmanaged_systems:!localhost  # XXX Remove unmanged_systems when amqp is supported
+  hosts: all:!localhost
   gather_facts: false
   tasks:
     - name: wait for testing system to become reachable

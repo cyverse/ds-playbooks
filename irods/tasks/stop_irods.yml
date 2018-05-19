@@ -1,0 +1,22 @@
+---
+- name: stop server
+  become_flags: '-i'
+  shell: |
+    if ! status=$(/var/lib/irods/iRODS/irodsctl status)
+    then
+      printf '%s\n' "$status" >&2
+      exit 1
+    fi
+
+    if ! grep --quiet 'No servers running' <<<"$status"
+    then
+      if ! out=$(/var/lib/irods/iRODS/irodsctl stop 2>&1)
+      then
+        printf '%s\n' "$out" >&2
+        exit 1
+      fi
+
+      printf changed
+    fi
+  register: result
+  changed_when: result.stdout == 'changed'

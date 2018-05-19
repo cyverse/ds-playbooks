@@ -1,33 +1,17 @@
 ---
-- name: determine OS version
-  hosts: rs:!ies:!unmanaged_systems
-  tasks:
-    - name: group by OS version
-      group_by:
-        key: centos{{ ansible_distribution_major_version }}
-
-- name: install resource package on CentOS 6 resource servers
-  hosts: centos6
-  become: true
-  tasks:
-  - include: tasks/proxy_install.yml os=centos6 pkg=irods-resource
-
-- name: install resource package on CentOS 7 resource servers
-  hosts: centos7
-  become: true
-  tasks:
-  - include: tasks/proxy_install.yml os=centos6 pkg=irods-resource
-
-- name: ensure server account owns what it's supposed to
+- name: install resource server software
   hosts: rs:!ies:!unmanaged_systems
   become: true
+  vars:
+    os: centos{{ ansible_distribution_major_version }}
   tasks:
-    - name: ensure account own /var/lib/irods
+    - include_tasks: tasks/proxy_install.yml pkg=irods-resource pkg_ver={{ _irods_version }}
+
+    - name: ensure account owns /var/lib/irods
       file:
         path: /var/lib/irods
         owner: "{{ _irods_service_account_name }}"
         group: "{{ _irods_service_group_name }}"
-        mode: o-rwx
         recurse: yes
 
     - name: ensure account owns /etc/irods
@@ -35,5 +19,4 @@
         path: /etc/irods
         owner: "{{ _irods_service_account_name }}"
         group: "{{ _irods_service_group_name }}"
-        mode: o-rwx
         recurse: yes

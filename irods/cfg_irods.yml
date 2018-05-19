@@ -115,11 +115,17 @@
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
   tasks:
-    - name: install bisque_ops.py
-      copy:
-        src: files/bisque_ops.py
-        dest: /var/lib/irods/iRODS/server/bin/cmd/
+    - name: install bisque_paths.py
+      get_url:
+        validate_certs: no
+        url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
+        dest: /var/lib/irods/iRODS/server/bin/cmd/bisque_paths.py
         mode: u=rx
+
+    - name: remove bisque_ops.py
+      file:
+        path: /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py
+        state: absent
 
     - name: place .bisque
       when: _bisque_url is defined

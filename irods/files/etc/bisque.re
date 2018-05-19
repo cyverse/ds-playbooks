@@ -157,7 +157,7 @@ _bisque_scheduleLn(*Permission, *Client, *Path) {
     *aliasArg = execCmdArg(*Client);
     *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
     *argStr = '--alias *aliasArg -P *pArg ln *pathArg';
-    *status = errorcode(msiExecCmd("bisque_ops.py", *argStr, ipc_RE_HOST, "null", "null", *out));
+    *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
 
     if (*status != 0) {
       msiGetStderrInExecCmdOut(*out, *resp);
@@ -165,16 +165,6 @@ _bisque_scheduleLn(*Permission, *Client, *Path) {
       _bisque_logMsg('failed to link *Path for *Client with permission *Permission');
       fail;
     } else {
-      # bisque_ops.py exits normally even when an error occurs.
-
-      msiGetStderrInExecCmdOut(*out, *errMsg);
-
-      if (strlen(*errMsg) > 0) {
-        _bisque_logMsg(*errMsg);
-        _bisque_logMsg('failed to link *Path for *Client with permission *Permission');
-        fail;
-      }
-
       msiGetStdoutInExecCmdOut(*out, *resp);
       *props = split(trimr(triml(*resp, ' '), '/'), ' ')
       msiStrArray2String(*props, *kvStr);

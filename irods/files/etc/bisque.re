@@ -61,7 +61,7 @@ _bisque_logMsg(*Msg) {
 
 # Tells BisQue to create a link for a given user to a data object.
 #
-# bisque_ops.py --alias user ln -P permission /path/to/data.object
+# bisque_paths.py --alias user ln -P permission /path/to/data.object
 #
 _bisque_Ln(*Permission, *Client, *Path) {
   _bisque_logMsg("linking *Path for *Client with permission *Permission");
@@ -70,7 +70,7 @@ _bisque_Ln(*Permission, *Client, *Path) {
   *aliasArg = execCmdArg(*Client);
   *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
   *argStr = '--alias *aliasArg -P *pArg ln *pathArg';
-  *status = errorcode(msiExecCmd("bisque_ops.py", *argStr, ipc_RE_HOST, "null", "null", *out));
+  *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
@@ -78,16 +78,6 @@ _bisque_Ln(*Permission, *Client, *Path) {
     _bisque_logMsg('failed to link *Path for *Client with permission *Permission');
     fail;
   } else {
-    # bisque_ops.py exits normally even when an error occurs.
-
-    msiGetStderrInExecCmdOut(*out, *errMsg);
-
-    if (strlen(*errMsg) > 0) {
-      _bisque_logMsg(*errMsg);
-      _bisque_logMsg('failed to link *Path for *Client with permission *Permission');
-      fail;
-    }
-
     msiGetStdoutInExecCmdOut(*out, *resp);
     *props = split(trimr(triml(*resp, ' '), '/'), ' ')
     msiStrArray2String(*props, *kvStr);
@@ -109,7 +99,7 @@ _bisque_Ln(*Permission, *Client, *Path) {
 
 # Tells BisQue to change the path of a linked data object.
 #
-# bisque_ops.py --alias user mv /old/path/to/data.object /new/path/to/data.object
+# bisque_paths.py --alias user mv /old/path/to/data.object /new/path/to/data.object
 #
 _bisque_Mv(*Client, *OldPath, *NewPath) {
   _bisque_logMsg('moving link from *OldPath to *NewPath for *Client');
@@ -118,7 +108,7 @@ _bisque_Mv(*Client, *OldPath, *NewPath) {
   *oldPathArg = execCmdArg(_bisque_mkIrodsUrl(*OldPath));
   *newPathArg = execCmdArg(_bisque_mkIrodsUrl(*NewPath));
   *argStr = '--alias *aliasArg mv *oldPathArg *newPathArg';
-  *status = errorcode(msiExecCmd('bisque_ops.py', *argStr, ipc_RE_HOST, 'null', 'null', *out));
+  *status = errorcode(msiExecCmd('bisque_paths.py', *argStr, ipc_RE_HOST, 'null', 'null', *out));
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
@@ -126,16 +116,6 @@ _bisque_Mv(*Client, *OldPath, *NewPath) {
     _bisque_logMsg('failed to move link from *OldPath to *NewPath for *Client');
     fail;
   } else {
-    # bisque_ops.py exits normally even when an error occurs.
-
-    msiGetStderrInExecCmdOut(*out, *errMsg);
-
-    if (strlen(*errMsg) > 0) {
-      _bisque_logMsg(*errMsg);
-      _bisque_logMsg('failed to move link from *OldPath to *NewPath for *Client');
-      fail;
-    }
-
     _bisque_logMsg('moved link from *OldPath to *NewPath for *Client');
   }
 }
@@ -143,7 +123,7 @@ _bisque_Mv(*Client, *OldPath, *NewPath) {
 
 # Tells BisQue to remove a link to data object.
 #
-# bisque_ops.py --alias user rm /path/to/data.object
+# bisque_paths.py --alias user rm /path/to/data.object
 #
 _bisque_Rm(*Client, *Path) {
   _bisque_logMsg("Removing link from *Path for *Client");
@@ -151,7 +131,7 @@ _bisque_Rm(*Client, *Path) {
   *aliasArg = execCmdArg(*Client);
   *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
   *argStr = '--alias *aliasArg rm *pathArg';
-  *status = errorcode(msiExecCmd("bisque_ops.py", *argStr, ipc_RE_HOST, "null", "null", *out));
+  *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
@@ -159,16 +139,6 @@ _bisque_Rm(*Client, *Path) {
     _bisque_logMsg('failed to remove link to *Path for *Client');
     fail;
   } else {
-    # bisque_ops.py exits normally even when an error occurs.
-
-    msiGetStderrInExecCmdOut(*out, *errMsg);
-
-    if (strlen(*errMsg) > 0) {
-      _bisque_logMsg(*errMsg);
-      _bisque_logMsg('failed to remove link to *Path for *Client');
-      fail;
-    }
-
     _bisque_logMsg('removed link to *Path for *Client');
   }
 }
@@ -187,7 +157,7 @@ _bisque_scheduleLn(*Permission, *Client, *Path) {
     *aliasArg = execCmdArg(*Client);
     *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
     *argStr = '--alias *aliasArg -P *pArg ln *pathArg';
-    *status = errorcode(msiExecCmd("bisque_ops.py", *argStr, ipc_RE_HOST, "null", "null", *out));
+    *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
 
     if (*status != 0) {
       msiGetStderrInExecCmdOut(*out, *resp);
@@ -195,16 +165,6 @@ _bisque_scheduleLn(*Permission, *Client, *Path) {
       _bisque_logMsg('failed to link *Path for *Client with permission *Permission');
       fail;
     } else {
-      # bisque_ops.py exits normally even when an error occurs.
-
-      msiGetStderrInExecCmdOut(*out, *errMsg);
-
-      if (strlen(*errMsg) > 0) {
-        _bisque_logMsg(*errMsg);
-        _bisque_logMsg('failed to link *Path for *Client with permission *Permission');
-        fail;
-      }
-
       msiGetStdoutInExecCmdOut(*out, *resp);
       *props = split(trimr(triml(*resp, ' '), '/'), ' ')
       msiStrArray2String(*props, *kvStr);

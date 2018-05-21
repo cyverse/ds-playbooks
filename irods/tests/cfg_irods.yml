@@ -10,7 +10,6 @@
     ipc_env: "{{ lookup('template', '../templates/etc/ipc-env.re.j2') }}"
     sanimal_env: "{{ lookup('template', '../templates/etc/sanimal-env.re.j2') }}"
     sernec_env: "{{ lookup('template', '../templates/etc/sernec-env.re.j2') }}"
-
   tasks:
     - name: verify constants expand correctly in ipc-env.re.j2
       assert:
@@ -207,13 +206,13 @@
         path: /var/lib/irods/iRODS/server/bin/cmd/{{ item }}
       register: response
       failed_when: |
-         not response.stat.exists
-         or response.stat.pw_name != 'irods'
-         or not response.stat.rusr
-         or not response.stat.xusr
+        not response.stat.exists
+        or response.stat.pw_name != 'irods'
+        or not response.stat.xusr
       with_items:
         - delete-scheduled-rule
         - set-uuid
+        - sanimal-ingest
 
 
 - name: test ies only file deposition
@@ -226,6 +225,17 @@
       register: response
       failed_when: not response.stat.exists
 
+    - name: Verify that bisque_paths.py is in place
+      stat:
+        path: /var/lib/irods/iRODS/server/bin/cmd/bisque_paths.py
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: Verify that bisque_ops.py is not present
+      stat:
+        path: /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py
+      register: response
+      failed_when: response.stat.exists
 
 - name: verify irods_environment.json contents
   hosts: irods

@@ -9,7 +9,7 @@
         value: "{{ item.value }}"
       with_items: "{{ _sysctl_kernel }}"
 
-- name: prepare for bisque_ops
+- name: prepare for bisque_paths
   hosts: ies
   become: true
   gather_facts: false

@@ -1,7 +1,6 @@
 ---
 - import_playbook: provision.yml
 - import_playbook: cfg_irods.yml
-- import_playbook: de_usage.yml
 
 
 - name: continue testing main
@@ -23,3 +22,6 @@
     - name: test start quota usage computation
       debug:
         msg: TODO implement
+
+
+- import_playbook: de_usage.yml

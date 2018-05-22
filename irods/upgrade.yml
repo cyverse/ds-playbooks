@@ -33,6 +33,7 @@
         repo: https://github.com/cyverse/irods-netcdf-build.git
         dest: /tmp/irods-netcdf-build
         version: "{{ _irods_version }}"
+        force: true
 
     - block:
         - name: build irods-netcdf plugins
@@ -51,6 +52,7 @@
         repo: https://github.com/iPlantCollaborativeOpenSource/irods-setavu-plugin.git
         dest: /tmp/irods-setavu-plugin
         version: "{{ _irods_version }}"
+        force: true
 
     - block:
         - name: build msiSetAVU plugin

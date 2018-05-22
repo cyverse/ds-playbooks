@@ -5,7 +5,10 @@
   register: result
   failed_when: false
 
-- when: result.results is not defined or result.results|count == 0 or result.results[0].version|version_compare(pkg_ver, '<')
+- when: |
+    result.results is not defined or
+    result.results|count == 0 or
+    result.results[0].version is version_compare(pkg_ver, '<')
   block:
     - name: Download {{ pkg }} locally
       local_action:

@@ -1,17 +1,29 @@
 ---
+- name: test begin IES upgrade
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - name: test database plugin RPM updated
+      debug:
+        msg: TODO implement
+
+    - name: test ICAT RPM updated
+      debug:
+        msg: TODO implement
+
+
 - import_playbook: install_resource_pkg.yml
+
 
 - name: continue testing upgrade
   hosts: localhost
   gather_facts: false
   run_once: true
   tasks:
-    - name: test begin IES upgrade
-      debug:
-        msg: TODO implement
-
     - name: test upgrade plugins
       debug:
         msg: TODO implement
+
 
 - import_playbook: restart_all.yml

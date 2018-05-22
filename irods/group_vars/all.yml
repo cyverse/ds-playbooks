@@ -11,9 +11,9 @@ _bisque_user: "{{ bisque_user if bisque_user is defined else 'admin' }}"
 
 _dbms_password: "{{ dbms_password if dbms_password is defined else None }}"
 
-_dbms_port: "{{ dbms_port if dbms_port is defined else None }}"
+_dbms_port: "{{ dbms_port if dbms_port is defined else 5432 }}"
 
-_dbms_username: "{{ dbms_username if dbms_username is defined else None }}"
+_dbms_username: "{{ dbms_username if dbms_username is defined else 'irods' }}"
 
 _de_job_irods_user: "{{ de_job_irods_user if de_job_irods_user is defined else None }}"
 

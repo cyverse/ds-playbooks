@@ -32,6 +32,9 @@ main()
   if [ "$os" = centos ]
   then
     install_centos_packages "$version"
+
+    # Ensure iptables state file exists
+    touch /etc/sysconfig/iptables
   else
     install_debian_packages
 
@@ -71,7 +74,7 @@ install_centos_packages()
   rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
 
   yum --assumeyes install \
-    libselinux-python openssh-server python-pip python-requests python-virtualenv sudo
+    iptables libselinux-python openssh-server python-pip python-requests python-virtualenv sudo
 }
 
 

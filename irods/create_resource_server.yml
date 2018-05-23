@@ -3,11 +3,24 @@
   hosts: rs:!unmanaged_systems
   become: true
   tasks:
-    - name: configure firewall
+    - name: configure firewall for inter server communication
       blockinfile:
         path: /etc/sysconfig/iptables
         insertbefore: -A INPUT -j REJECT
-        marker: "# {mark} DS MANAGED BLOCK (iROODS zone:resource server)"
+        marker: "# {mark} DS MANAGED BLOCK (iRODS inter-service)"
+        content: |
+          -A INPUT -m state --state NEW -p tcp -s {{ item }} --dport 1247 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ item }} --dport 1248 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ item }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
+          -A INPUT -m state --state NEW -p udp -s {{ item }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
+        notify:
+          - restart firewall
+
+    - name: configure firewall for clients
+      blockinfile:
+        path: /etc/sysconfig/iptables
+        insertbefore: -A INPUT -j REJECT
+        marker: "# {mark} DS MANAGED BLOCK (resource server:client)"
         content: |
           -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_src }} --dport 1247 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_src }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT

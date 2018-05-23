@@ -31,6 +31,9 @@
     - no_testing
 
 
+- import_playbook: update_hosts.yml
+
+
 - name: setup iRODS service account
   hosts: rs:!unmanaged_systems
   become: true

@@ -32,5 +32,6 @@
           {% for e in _irods_other_host_entries %}
           {{ lookup('dig', e) }} {{ e }}
           {% endfor %}
-      tags:
-        - no_testing
+
+  tags:
+    - no_testing

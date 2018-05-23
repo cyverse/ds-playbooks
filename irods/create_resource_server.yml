@@ -1,6 +1,6 @@
 ---
-- name: configure firewall for iRODS resource server
-  hosts: rs:!unmanaged_systems
+- name: configure system
+  hosts: rs:!ies:!unmanaged_systems
   become: true
   tasks:
     - name: add firewall rules
@@ -20,25 +20,11 @@
           -A INPUT -m state --state NEW -p udp -s {{ _irods_allowed_clients }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
       notify:
         - restart firewall
+      tags:
+        - no_testing
 
-  handlers:
-    - name: restart firewall
-      service:
-        name: iptables
-        state: restarted
+    - import_tasks: tasks/update_hosts.yml
 
-  tags:
-    - no_testing
-
-
-- import_playbook: update_hosts.yml
-
-
-- name: setup iRODS service account
-  hosts: rs:!unmanaged_systems
-  become: true
-  gather_facts: false
-  tasks:
     - name: create service group
       group:
         name: "{{ _irods_service_group_name }}"
@@ -52,6 +38,12 @@
         createhome: yes
         group: "{{ _irods_service_group_name }}"
         comment: iRODS Administrator
+
+  handlers:
+    - name: restart firewall
+      service:
+        name: iptables
+        state: restarted
 
 
 - import_playbook: mk_vaults.yml

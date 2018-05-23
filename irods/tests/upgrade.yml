@@ -1,8 +1,7 @@
 ---
 - name: test begin IES upgrade
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+  hosts: ies:!unmanaged_systems
+  become: true
   tasks:
     - name: test database plugin RPM updated
       debug:
@@ -14,16 +13,5 @@
 
 
 - import_playbook: install_resource_pkg.yml
-
-
-- name: continue testing upgrade
-  hosts: localhost
-  gather_facts: false
-  run_once: true
-  tasks:
-    - name: test upgrade plugins
-      debug:
-        msg: TODO implement
-
-
+- import_playbook: install_plugins.yml
 - import_playbook: restart_all.yml

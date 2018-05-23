@@ -56,3 +56,4 @@
 
 - import_playbook: mk_vaults.yml
 - import_playbook: install_resource_pkg.yml
+- import_playbook: install_plugins.yml

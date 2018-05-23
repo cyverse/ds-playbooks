@@ -1,4 +1,22 @@
 ---
+- name: test configure firewall for iRODS resource server
+  hosts: rs:!unmanaged_systems
+  become: true
+  tasks:
+    - name: retrieve iptables contents
+      slurp:
+        src: /etc/sysconfig/iptables
+      register: iptEncoded
+
+    - name: decode iptables contents
+      set_fact:
+        iptables: "{{ iptEncoded | b64decode }}"
+
+    - name: verify contents
+      assert:
+        that:
+          - iptables is search('-A INPUT -m state --state NEW -p tcp -s 0.0.0.0/0 --dport 1247 -j ACCEPT' | regex_escape)
+
 - name: verify that IES wasn't touched
   hosts: ies
   become: true

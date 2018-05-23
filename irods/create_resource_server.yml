@@ -1,10 +1,24 @@
 ---
-# TODO implement
-# - name: open firewall for iRODS
+- name: configure firewall for iRODS resource server
+  hosts: rs:!unmanaged_systems
+  become: true
+  tasks:
+    - name: configure firewall
+      blockinfile:
+        path: /etc/sysconfig/iptables
+        insertbefore: -A INPUT -j REJECT
+        marker: "# {mark} DS MANAGED BLOCK (iROODS zone:resource server)"
+        content: |
+          -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_src }} --dport 1247 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_src }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
+          -A INPUT -m state --state NEW -p udp -s {{ _irods_allowed_src }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
+        notify:
+          - restart firewall
 
 - name: setup iRODS service account
   hosts: rs:!unmanaged_systems
   become: true
+  gather_facts: false
   tasks:
     - name: create service group
       group:

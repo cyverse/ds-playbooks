@@ -6,12 +6,12 @@
 # Parameter:
 #  SVC-SCRIPT  the absolute path to a service control script
 #
-# This script is the entrypoint used by docker when starting a ansible-support
-# based container. If a service control script is provided, it will be executed
-# with 'start' as an argument. After that, sshd is started. When TCP port 22
-# becomes responsive, any services started by the control script should be
-# ready. When a SIGTERM signal is received, sshd is terminated. If a control
-# script was provided, it is executed again but with 'stop' as its argument.
+# This script is the entrypoint used by docker when starting an env container.
+# If a service control script is provided, it will be executed with 'start' as
+# an argument. After that, sshd is started. When TCP port 22 becomes responsive,
+# any services started by the control script should be ready. When a SIGTERM
+# signal is received, sshd is terminated. If a control script was provided, it
+# is executed again but with 'stop' as its argument.
 #
 # A service control script should be able to start and stop any service other
 # than sshd provided by the container. It should accept 'start' and 'stop' as

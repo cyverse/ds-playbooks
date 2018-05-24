@@ -18,6 +18,12 @@
     - include_tasks: tasks/proxy_install.yml pkg=irods-icat pkg_ver={{ _irods_version }}
 
 
-- import_playbook: install_resource_pkg.yml
+- name: upgrade resource server package
+  hosts: rs:!ies:!unmanaged_systems
+  become: true
+  tasks:
+    - import_tasks: tasks/install_resource_pkg.yml
+
+
 - import_playbook: install_plugins.yml
 - import_playbook: restart_all.yml

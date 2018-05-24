@@ -47,5 +47,13 @@
 
 
 - import_playbook: mk_vaults.yml
-- import_playbook: install_resource_pkg.yml
+
+
+- name: install resource server package
+  hosts: rs:!ies:!unmanaged_systems
+  become: true
+  tasks:
+    - import_tasks: tasks/install_resource_pkg.yml
+
+
 - import_playbook: install_plugins.yml

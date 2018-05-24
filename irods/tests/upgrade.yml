@@ -4,14 +4,28 @@
   become: true
   tasks:
     - name: test database plugin RPM updated
-      debug:
-        msg: TODO implement
+      yum:
+        list: "{{
+          'irods-database-plugin-postgres93'
+            if inventory_hostname == 'dstesting_ies_centos6_1.dstesting_default' else
+          'irods-database-plugin-postgres' }}"
+      register: result
+      failed_when: |
+        result.results is not defined or
+        result.results|count != 1 or
+        result.results[0].version is version_compare('1.10', '!=')
 
     - name: test ICAT RPM updated
       debug:
         msg: TODO implement
 
 
-- import_playbook: install_resource_pkg.yml
+- name: test upgrade resource server package
+  hosts: rs:!ies:!unmanaged_systems
+  become: true
+  tasks:
+    - import_tasks: tasks/test_install_resource_pkg.yml
+
+
 - import_playbook: install_plugins.yml
 - import_playbook: restart_all.yml

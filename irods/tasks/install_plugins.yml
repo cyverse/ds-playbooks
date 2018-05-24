@@ -15,14 +15,42 @@
     force: true
 
 - block:
-    - name: build irods-netcdf plugins
+    - name: build iRODS NetCDF plugins
       run_once: true
-      local_action: command /tmp/irods-netcdf-build/build
+      delegate_to: localhost
+      command: /tmp/irods-netcdf-build/build
 
-    - include_tasks: upgrade_netcdf_plugins.yml
-      vars:
-        os: centos{{ ansible_distribution_major_version }}
-        repo_path: /tmp/irods-netcdf-build
+    - name: download NetCDF rpm
+      copy:
+        src: "/tmp/irods-netcdf-build/packages/centos{{ ansible_distribution_major_version }}/{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm"
+        dest: /root
+        force: yes
+      with_items:
+        - irods-api-plugin-netcdf
+        - irods-icommands-netcdf
+        - irods-microservice-plugin-netcdf
+
+# TODO Fix this. The following two tasks only need to be performed if the
+#      previous task caused a change
+#
+# The following two tasks make each other non-idempotent
+
+    - name: remove old iRODS NetCDF packages
+      package:
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - irods-microservice-plugin-netcdf
+        - irods-icommands-netcdf
+        - irods-api-plugin-netcdf
+
+    - name: install new NetCDF packages
+      yum:
+        name: /root/{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm
+      with_items:
+        - irods-api-plugin-netcdf
+        - irods-icommands-netcdf
+        - irods-microservice-plugin-netcdf
   tags:
     # docker in docker is a no no.
     - no_testing

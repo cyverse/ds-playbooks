@@ -1,7 +1,0 @@
----
-- name: test install plugins
-  hosts: irods:!unmanaged_systems
-  become: true
-  tasks:
-    - debug:
-        msg: TODO implement

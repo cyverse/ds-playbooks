@@ -1,0 +1,53 @@
+---
+- include_tasks: proxy_install.yml
+  vars:
+    os: centos{{ ansible_distribution_major_version }}
+    pkg: irods-runtime
+    pkg_ver: "{{ _irods_version }}"
+
+- name: checkout irods-netcdf-build repo
+  run_once: true
+  local_action:
+    module: git
+    repo: https://github.com/cyverse/irods-netcdf-build.git
+    dest: /tmp/irods-netcdf-build
+    version: "{{ _irods_version }}"
+    force: true
+
+- block:
+    - name: build irods-netcdf plugins
+      run_once: true
+      local_action: command /tmp/irods-netcdf-build/build
+
+    - include_tasks: upgrade_netcdf_plugins.yml
+      vars:
+        os: centos{{ ansible_distribution_major_version }}
+        repo_path: /tmp/irods-netcdf-build
+  tags:
+    # docker in docker is a no no.
+    - no_testing
+
+- name: checkout msi-setavu-plugin repo
+  run_once: true
+  local_action:
+    module: git
+    repo: https://github.com/iPlantCollaborativeOpenSource/irods-setavu-plugin.git
+    dest: /tmp/irods-setavu-plugin
+    version: "{{ _irods_version }}"
+    force: true
+
+- block:
+    - name: build msiSetAVU plugin
+      run_once: true
+      local_action: command /tmp/irods-setavu-plugin/build
+
+    - name: upgrade msiSetAVU microservice
+      copy:
+        src: /tmp/irods-setavu-plugin/libraries/centos{{ ansible_distribution_major_version }}/libmsiSetAVU.so
+        dest: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
+        force: yes
+        owner: "{{ _irods_service_account_name }}"
+        group: "{{ _irods_service_group_name }}"
+  tags:
+    # docker in docker is a no no.
+    - no_testing

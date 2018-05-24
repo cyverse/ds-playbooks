@@ -29,6 +29,4 @@
   become: true
   tasks:
     - import_tasks: tasks/test_install_resource_pkg.yml
-
-
-- import_playbook: install_plugins.yml
+    - import_tasks: tasks/test_install_plugins.yml

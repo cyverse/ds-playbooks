@@ -16,8 +16,13 @@
         result.results[0].version is version_compare('1.10', '!=')
 
     - name: test ICAT RPM updated
-      debug:
-        msg: TODO implement
+      yum:
+        list: irods-icat
+      register: result
+      failed_when: |
+        result.results is not defined or
+        result.results|count != 1 or
+        result.results[0].version is version_compare('4.1.10', '!=')
 
 
 - name: test upgrade resource server package
@@ -27,5 +32,12 @@
     - import_tasks: tasks/test_install_resource_pkg.yml
 
 
-- import_playbook: install_plugins.yml
+- name: test upgrade plugins
+  hosts: irods:!unmanaged_systems
+  become: true
+  gather_facts: false
+  tasks:
+    - import_tasks: tasks/test_install_plugins.yml
+
+
 - import_playbook: restart_all.yml

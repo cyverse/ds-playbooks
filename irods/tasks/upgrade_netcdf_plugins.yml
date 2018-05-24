@@ -14,10 +14,10 @@
     - irods-icommands-netcdf
     - irods-microservice-plugin-netcdf
 
-# TODO Fix this. The following two tasks only need to be performed if the 
+# TODO Fix this. The following two tasks only need to be performed if the
 #      previous task caused a change
 #
-# The following twp tasks make each other non-idempotent
+# The following two tasks make each other non-idempotent
 
 - name: remove old iRODS NetCDF packages
   package:

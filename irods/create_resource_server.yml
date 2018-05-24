@@ -52,8 +52,7 @@
 - name: install resource server package
   hosts: rs:!ies:!unmanaged_systems
   become: true
+  gather_facts: false
   tasks:
     - import_tasks: tasks/install_resource_pkg.yml
-
-
-- import_playbook: install_plugins.yml
+    - import_tasks: tasks/install_plugins.yml

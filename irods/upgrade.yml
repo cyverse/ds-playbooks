@@ -25,5 +25,12 @@
     - import_tasks: tasks/install_resource_pkg.yml
 
 
-- import_playbook: install_plugins.yml
+- name: upgrade plugins
+  hosts: irods:!unmanaged_systems
+  become: true
+  gather_facts: false
+  tasks:
+    - import_tasks: tasks/install_plugins.yml
+
+
 - import_playbook: restart_all.yml

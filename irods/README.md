@@ -32,6 +32,7 @@ Variable                                   | Default                          | 
 `irods_negotiation_key`                    | TEMPORARY_32byte_negotiation_key |         | the negotiation key
 `irods_other_host_entries`                 | []                               |         | a list of other FQDNs to add to /etc/hosts
 `irods_parallel_transfer_buffer_size`      | 4                                |         | the transfer buffer size in MiB for each stream during parallel transfer
+`irods_pire_resource`                      | pireRes                          |         | the name of the PIRE resource where newly uploaded files are written
 `irods_server_control_plane_key`           | TEMPORARY__32byte_ctrl_plane_key |         | the server control plane key
 `irods_server_port_range_end`              | 20199                            |         | the last address in the range of auxillary TCP and UDP ports
 `irods_server_port_range_start`            | 20000                            |         | the first address in the range of auxillary TCP and UDP ports

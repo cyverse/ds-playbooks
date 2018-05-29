@@ -258,6 +258,8 @@ replCopy {
   on (aegis_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
   }
+  on (pire_replBelongsTo(/$objPath)) {
+  }
 }
 replCopy {
   _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
@@ -278,9 +280,17 @@ replEntityRename(*SourceObject, *DestObject) {
       _scheduleMoves(*DestObject, aegis_replIngestResc, aegis_replReplResc);
     }
   }
+  on (pire_replBelongsTo(/*DestObject)) {
+    if (!pire_replBelongsTo(/*SourceObject)) {
+      _scheduleMoves(*DestObject, pire_replIngestResc, pire_replReplResc);
+    }
+  }
 }
 replEntityRename(*SourceObject, *DestObject) {
   if (aegis_replBelongsTo(/*SourceObject)) {
+    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
+  }
+  if (pire_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
 }
@@ -291,6 +301,8 @@ replEntityRename(*SourceObject, *DestObject) {
 replPut {
   on (aegis_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
+  }
+  on (pire_replBelongsTo(/$objPath)) {
   }
 }
 replPut {
@@ -305,6 +317,9 @@ replSetRescSchemeForCreate {
   on (aegis_replBelongsTo(/$objPath)) {
     _setDefaultResc(aegis_replIngestResc);
   }
+  on (pire_replBelongsTo(/$objPath)) {
+    _setDefaultResc(pire_replIngestResc);
+  }
 }
 replSetRescSchemeForCreate {
   _setDefaultResc(_defaultIngestResc);
@@ -317,6 +332,9 @@ replSetRescSchemeForCreate {
 replSetRescSchemeForRepl {
   on (aegis_replBelongsTo(/$objPath)) {
     _setDefaultResc(aegis_replReplResc);
+  }
+  on (pire_replBelongsTo(/$objPath)) {
+    _setDefaultResc(pire_replReplResc);
   }
 }
 replSetRescSchemeForRepl {

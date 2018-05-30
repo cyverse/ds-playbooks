@@ -1,8 +1,13 @@
 ---
-- name: test mk_storage_resources
+- name: test create storage resources
   hosts: rs
   become: true
   become_user: irods
   tasks:
-    - debug:
+    - name: test create vault directory
+      debug:
+        msg: TODO implement
+
+    - name: test define storage resource
+      debug:
         msg: TODO implement

@@ -6,13 +6,15 @@ main()
   local resc="$1"
   local server="$2"
   local vault="$3"
+  local context="$4"
 
   local rescType
   rescType=$(iquest '%s' "select RESC_TYPE_NAME where RESC_NAME = '$resc'")
 
   if [ "$rescType" = "CAT_NO_ROWS_FOUND: Nothing was found matching your query" ]
   then
-    iadmin mkresc "$resc" unixfilesystem "$server":"$vault"
+    iadmin mkresc "$resc" unixfilesystem "$server":"$vault" "$context"
+    iadmin modresc "$resc" status down
     printf changed
     return 0
   fi

@@ -20,5 +20,5 @@
         group: "{{ _irods_service_group_name }}"
         comment: iRODS Administrator
 
-- import_playbook: mk_vaults.yml
+- import_playbook: mk_storage_resources.yml
 - import_playbook: install_resource_pkg.yml

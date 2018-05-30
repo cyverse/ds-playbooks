@@ -19,5 +19,5 @@
       command: grep --quiet --regexp '^irods:[^:]*:[^:]*:[^:]*:iRODS Administrator:' /etc/passwd
       changed_when: false
 
-- import_playbook: mk_vaults.yml
+- import_playbook: mk_storage_resources.yml
 - import_playbook: install_resource_pkg.yml

@@ -1,0 +1,8 @@
+---
+- name: test mk_storage_resources
+  hosts: rs
+  become: true
+  become_user: irods
+  tasks:
+    - debug:
+        msg: TODO implement

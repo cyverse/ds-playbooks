@@ -108,7 +108,7 @@ _mvReplicas(*DataPath, *IngestResc, *ReplResc) {
       *rescName = *repl.DATA_RESC_NAME;
 
       if (*rescName != *ingestName && *rescName != *replName) {
-        msiDataObjTrim(*DataPath, *rescName, 'null', 'null', 'null', *status);
+        msiDataObjTrim(*DataPath, *rescName, 'null', '1', 'null', *status);
       }
     }
   }

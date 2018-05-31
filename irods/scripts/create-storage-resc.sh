@@ -13,7 +13,7 @@ main()
 
   if [ "$rescType" = "CAT_NO_ROWS_FOUND: Nothing was found matching your query" ]
   then
-    iadmin mkresc "$resc" unixfilesystem "$server":"$vault" "$context"
+    iadmin mkresc "$resc" unixfilesystem "$server":"$vault" "$context" > /dev/null
     iadmin modresc "$resc" status down
     printf changed
     return 0

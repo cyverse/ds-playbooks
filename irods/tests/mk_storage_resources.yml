@@ -5,8 +5,17 @@
   become_user: irods
   tasks:
     - name: test create vault directory
-      debug:
-        msg: TODO implement
+      stat:
+        path: "{{ item.vault }}"
+      register: response
+      failed_when: |
+        not response.stat.exists
+        or not response.stat.isdir
+        or response.stat.pw_name != 'irods'
+        or not response.stat.rusr
+        or not response.stat.wusr
+        or not response.stat.xusr
+      with_items: "{{ irods_storage_resources }}"
 
     - name: test define storage resource
       debug:

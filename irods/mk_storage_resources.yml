@@ -16,10 +16,10 @@
 
     - name: define storage resource
       script: |
-        scripts/create-storage-resc.sh {{ item.name }}
-                                       {{ inventory_hostname }}
-                                       {{ item.vault }}
-                                       {{ item.context }}
-      with_items: "{{ _irods_storage_resources }}"
+        scripts/create-storage-resc.sh '{{ item.name }}' \
+                                       '{{ inventory_hostname }}' \
+                                       '{{ item.vault }}' \
+                                       '{{ item.context }}'
       register: result
       changed_when: result.stdout == 'changed'
+      with_items: "{{ _irods_storage_resources }}"

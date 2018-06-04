@@ -11,6 +11,7 @@
         fi
       changed_when: false
 
+
 - name: verify that the RS system user hasn't changed
   hosts: rs
   become: true
@@ -19,5 +20,6 @@
       command: grep --quiet --regexp '^irods:[^:]*:[^:]*:[^:]*:iRODS Administrator:' /etc/passwd
       changed_when: false
 
-- import_playbook: mk_storage_resources.yml
+
 - import_playbook: install_resource_pkg.yml
+- import_playbook: mk_resources.yml

@@ -20,3 +20,12 @@
     - name: test define storage resource
       debug:
         msg: TODO implement
+
+
+- name: test create coordinating resources
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement

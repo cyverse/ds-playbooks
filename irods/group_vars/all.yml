@@ -59,7 +59,10 @@ _irods_parallel_transfer_buffer_size: "{{
 
 _irods_pire_resource: "{{ irods_pire_resource if irods_pire_resource is defined else
                           _irods_default_resource }}"
-                          
+
+_irods_resource_hierarchy: '{{ irods_resource_hierarchy if irods_resource_hierarchy is defined else
+                               [ { "name": "demoResc" } ] }}'
+
 _irods_server_port_range_end: "{{
   irods_server_port_range_end if irods_server_port_range_end is defined else
   20199 }}"

@@ -11,7 +11,7 @@ Variable                                   | Default                          | 
 ------------------------------------------ | -------------------------------- | ------- | --------
 `bisque_irods_host`                        | `irods_ies`                      |         | The iRODS host to report to BisQue.
 `bisque_password`                          | admin                            |         | The password used to authenticate connections to BisQue
-`bisque_projects`                          | []                               |         | A list of projects that automatically publish to BisQue
+`bisque_projects`                          | `[]`                             |         | A list of projects that automatically publish to BisQue
 `bisque_url`                               |                                  |         | The URL for the BisQue server to connect to
 `bisque_user`                              | admin                            |         | The user to connect to BisQue as
 `dbms_password`                            | irods                            |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
@@ -25,38 +25,39 @@ Variable                                   | Default                          | 
 `irods_default_repl_resource`              | `irods_default_resource`         |         | the default resource for replication
 `irods_default_resource`                   | demoResc                         |         | the name of the default resource
 `irods_default_vault`                      |                                  |         | the default path to the vault on the server being configured
-`irods_federation`                         | []                               |         | a list of other iRODS zones to federate with, _see below_
-`irods_host_aliases`                       | []                               |         | a list of other names and addresses used to refer to the host being configured.
+`irods_federation`                         | `[]`                             |         | a list of other iRODS zones to federate with, _see below_
+`irods_host_aliases`                       | `[]`                             |         | a list of other names and addresses used to refer to the host being configured.
 `irods_ies`                                | `group_vars['ies'][0]`           |         | the FQDN of the IES
 `irods_max_num_re_procs`                   | 4                                |         | the maximum number of rule engine processes to run
 `irods_negotiation_key`                    | TEMPORARY_32byte_negotiation_key |         | the negotiation key
 `irods_other_host_entries`                 | []                               |         | a list of other FQDNs to add to /etc/hosts
 `irods_parallel_transfer_buffer_size`      | 4                                |         | the transfer buffer size in MiB for each stream during parallel transfer
 `irods_pire_resource`                      | `irods_default_resource`         |         | the name of the PIRE resource where newly uploaded files are written
+`irods_resource_hierarchies`               | `[ { "name": "demoResc" } ]`     |         | the list of resource hierarchies that need to exist, _see below_
 `irods_server_control_plane_key`           | TEMPORARY__32byte_ctrl_plane_key |         | the server control plane key
 `irods_server_port_range_end`              | 20199                            |         | the last address in the range of auxillary TCP and UDP ports
 `irods_server_port_range_start`            | 20000                            |         | the first address in the range of auxillary TCP and UDP ports
 `irods_service_account_name`               | irods                            |         | the system account used to run the iRODS server processes
 `irods_service_group_name`                 | `irods_service_account_name`     |         | the system group used to run the iRODS server processes
-`irods_storage_resources`                  | []                               |         | a list of storage resources hosted on the server being configured, _see below_
+`irods_storage_resources`                  | `[]`                             |         | a list of storage resources hosted on the server being configured, _see below_
 `irods_version`                            | 4.1.11                           |         | the version of iRODS to work with
 `irods_zone_key`                           | TEMPORARY_zone_key               |         | the zone key
 `load_balancer_irods_allowed_src`          | 0.0.0.0/0                        |         | The network/mask for the clients allowed to access iRODS through the load balancer.
 `load_balancer_irods_max_conn`             | 100                              |         | The maximum number of concurrent connections to iRODS through the load balancer.
 `load_balancer_irods_proxy_port`           | 1247                             |         | The port the load balancer will listen on for connections to iRODS.
 `load_balancer_stats_allowed_src`          | 0.0.0.0/0                        |         | The network/mask for hosts allowed to see the HAProxy stats web page.
-`rabbitmq_ephemeral`                       | true                             |         | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
+`rabbitmq_ephemeral`                       | `true`                           |         | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
 `rabbitmq_password`                        | guest                            |         | The password iRODS uses to connect to the AMQP vhost
 `rabbitmq_port`                            | 5672                             |         | The TCP port the RabbitMQ broker listens on
 `rabbitmq_user`                            | guest                            |         | The user iRODS uses to connect to the AMQP vhost
 `rabbitmq_vhost`                           | /                                |         | The AMQP vhost iRODS connects to
-`restart_irods`                            | false                            |         | iRODS can be restarted on the servers having config file changes, __see below__
+`restart_irods`                            | `false`                          |         | iRODS can be restarted on the servers having config file changes, _see below_
 `sanimal_irods_base_coll`                  |                                            | The base iRODS collection used by Sanimal. If this isn't set, no sanimal rules will fire.
-`sernec_owners`                            | []                               |         | a list of users who get ownership of sernec collections
-`sernec_readers`                           | []                               |         | a list of users who get read access to sernec collections
-`sernec_writers`                           | []                               |         | a list of users who get write access to sernec collections
-`single_threaded_resources`                | []                               |         | a list of resources that only support single threaded transfers
-`sysctl_kernel`                            | []                               |         | a list of sysctl kernel parameters to set for the IES, __see_below__
+`sernec_owners`                            | `[]`                             |         | a list of users who get ownership of sernec collections
+`sernec_readers`                           | `[]`                             |         | a list of users who get read access to sernec collections
+`sernec_writers`                           | `[]`                             |         | a list of users who get write access to sernec collections
+`single_threaded_resources`                | `[]`                             |         | a list of resources that only support single threaded transfers
+`sysctl_kernel`                            | `[]`                             |         | a list of sysctl kernel parameters to set for the IES, _see_below_
 
 The `restart_irods` flag is ignored in the `main.yml` playbook.
 
@@ -70,6 +71,15 @@ Field             | Comments
 `negotiation_key` | the 32-byte encryption key of the federate
 `zone_key`        | the shared authentication secret of the federate
 `zone_name`       | the name of the federated zone
+
+`irods_resource_hierarchies` entry fields
+
+Field      | Required | Default | Comments
+---------- | -------- | ------- | --------
+`children` | no       | `[]`    | A list of child hierarchy definitions have the same form as an `irods_resource_hierarchies` entry
+`context`  | no       |         | A context to attach to this resource
+`name`     | yes      |         | The name of the resource
+`type`     | no       |         | For a coordinating resource, this is the type of resource. For a storage resource this should not be provided.
 
 `irods_storage_resource` entry fields
 

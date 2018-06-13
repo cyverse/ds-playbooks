@@ -24,6 +24,8 @@ _irods_aegis_repl_resource: "{{
 _irods_aegis_resource: "{{ irods_aegis_resource if irods_aegis_resource is defined else
                            'aegisIngestRes' }}"
 
+_irods_allowed_clients: "{{ irods_allowed_src if irods_allowed_src is defined else '0.0.0.0/0' }}"
+
 _irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else None }}"
 
 _irods_default_number_of_transfer_threads: "{{
@@ -88,7 +90,7 @@ _irods_zone_key: "{{ irods_zone_key if irods_zone_key is defined else None }}"
 
 _load_balancer_irods_allowed_src: "{{
   load_balancer_irods_allowed_src if load_balancer_irods_allowed_src is defined else
-  '0.0.0.0/0' }}"
+  _irods_allowed_clients }}"
 
 _load_balancer_irods_max_conn: "{{
   load_balancer_irods_max_conn if load_balancer_irods_max_conn is defined else

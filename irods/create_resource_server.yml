@@ -1,11 +1,30 @@
 ---
-# TODO implement
-# - name: open firewall for iRODS
-
-- name: setup iRODS service account
-  hosts: rs:!unmanaged_systems
+- name: configure system
+  hosts: rs:!ies:!unmanaged_systems
   become: true
   tasks:
+    - name: add firewall rules
+      blockinfile:
+        path: /etc/sysconfig/iptables
+        insertbefore: -A INPUT -j REJECT
+        marker: "# {mark} DS MANAGED BLOCK (irods)"
+        block: |
+          {% for i in groups['irods'] %}
+          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport 1247 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport 1248 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
+          -A INPUT -m state --state NEW -p udp -s {{ lookup('dig', i) }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
+          {% endfor %}
+          -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport 1247 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
+          -A INPUT -m state --state NEW -p udp -s {{ _irods_allowed_clients }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
+      notify:
+        - restart firewall
+      tags:
+        - no_testing
+
+    - import_tasks: tasks/update_hosts.yml
+
     - name: create service group
       group:
         name: "{{ _irods_service_group_name }}"
@@ -20,5 +39,20 @@
         group: "{{ _irods_service_group_name }}"
         comment: iRODS Administrator
 
+  handlers:
+    - name: restart firewall
+      service:
+        name: iptables
+        state: restarted
+
+
 - import_playbook: mk_vaults.yml
-- import_playbook: install_resource_pkg.yml
+
+
+- name: install resource server package
+  hosts: rs:!ies:!unmanaged_systems
+  become: true
+  gather_facts: false
+  tasks:
+    - import_tasks: tasks/install_resource_pkg.yml
+    - import_tasks: tasks/install_plugins.yml

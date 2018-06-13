@@ -1,0 +1,5 @@
+---
+- name: check correct irods-resource package installed
+  package:
+    name: irods-resource-4.1.10
+    state: present

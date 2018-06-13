@@ -1,7 +1,7 @@
 FROM centos:6
 MAINTAINER Tony Edgin @ CyVerse
 
-COPY ansible-support/config.sh /tmp/ansible-support
+COPY base/config.sh /tmp/base-config
 COPY rs/scripts/* /tmp/
 
 ARG IRODS_CONTROL_PLANE_KEY=TEMPORARY__32byte_ctrl_plane_key
@@ -22,14 +22,14 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 ARG IRODS_ZONE_USER=rods
 
-RUN /tmp/ansible-support centos 6 && \
+RUN /tmp/base-config centos 6 && \
     yum --assumeyes install \
       ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-resource-4.1.10-centos6-x86_64.rpm && \
     /tmp/config.sh && \
     yum clean all && \
     rm --force --recursive /tmp/* /var/cache/yum
 
-COPY ansible-support/entrypoint.sh /entrypoint
+COPY base/entrypoint.sh /entrypoint
 
 ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/service.sh" ]

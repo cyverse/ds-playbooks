@@ -1,0 +1,4 @@
+---
+- name: test install plugins
+  debug:
+    msg: TODO implement

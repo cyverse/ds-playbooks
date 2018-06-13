@@ -20,6 +20,7 @@ Variable                                   | Default                          | 
 `de_job_irods_user`                        |                                  |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
 `irods_aegis_repl_resource`                | aegisReplRes                     |         | the name of the aegis resource where replicas are written
 `irods_aegis_resource`                     | aegisIngestRes                   |         | the name of the aegis resource where newly uploaded files are written
+`irods_allowed_clients`                    | 0.0.0.0/0                        |         | The network/mask for the clients allowed to access iRODS.
 `irods_clerver_user`                       | rods                             |         | the rodsadmin user to be used by the server being configured
 `irods_default_number_of_transfer_threads` | 4                                |         | the default maximum number of transfer streams for parallel transfer
 `irods_default_repl_resource`              | `irods_default_resource`         |         | the default resource for replication
@@ -41,7 +42,7 @@ Variable                                   | Default                          | 
 `irods_storage_resources`                  | []                               |         | a list of storage resources hosted on the server being configured, _see below_
 `irods_version`                            | 4.1.11                           |         | the version of iRODS to work with
 `irods_zone_key`                           | TEMPORARY_zone_key               |         | the zone key
-`load_balancer_irods_allowed_src`          | 0.0.0.0/0                        |         | The network/mask for the clients allowed to access iRODS through the load balancer.
+`load_balancer_irods_allowed_src`          | `irods_allowed_clients`          |         | The network/mask for the clients allowed to access iRODS through the load balancer.
 `load_balancer_irods_max_conn`             | 100                              |         | The maximum number of concurrent connections to iRODS through the load balancer.
 `load_balancer_irods_proxy_port`           | 1247                             |         | The port the load balancer will listen on for connections to iRODS.
 `load_balancer_stats_allowed_src`          | 0.0.0.0/0                        |         | The network/mask for hosts allowed to see the HAProxy stats web page.

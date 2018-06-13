@@ -3,34 +3,4 @@
   hosts: irods:!unmanaged_systems
   become: true
   tasks:
-    - name: update /etc/hosts
-      blockinfile:
-        create: true
-        path: /etc/hosts
-        marker: '# {mark} DS MANAGED BLOCK'
-        block: |
-          {% if inventory_hostname in groups['ies'] %}
-          {% for d in groups['dbms'] %}
-          {% if inventory_hostname != d %}
-          {{ lookup('dig', d) }} {{ d }}
-          {% endif %}
-          {% endfor %}
-          {% endif %}
-          {% for i in groups['ies'] %}
-          {% if inventory_hostname != i %}
-          {{ lookup('dig', i) }} {{ i }}
-          {% endif %}
-          {% endfor %}
-          {% for r in groups['rs'] | difference(groups['ies']) %}
-          {% if inventory_hostname != r %}
-          {{ lookup('dig', r) }} {{ r }}
-          {% endif %}
-          {% endfor %}
-          {% for f in _irods_federation %}
-          {{ lookup('dig', f.icat_host) }} {{ f.icat_host }}
-          {% endfor %}
-          {% for e in _irods_other_host_entries %}
-          {{ lookup('dig', e) }} {{ e }}
-          {% endfor %}
-      tags:
-        - no_testing
+    - import_tasks: tasks/update_hosts.yml

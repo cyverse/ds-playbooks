@@ -56,3 +56,9 @@
   tasks:
     - import_tasks: tasks/install_resource_pkg.yml
     - import_tasks: tasks/install_plugins.yml
+
+
+- name: prepare uuid generation
+  hosts: rs
+  tasks:
+    - include_tasks: tasks/install_generateuuid.yml

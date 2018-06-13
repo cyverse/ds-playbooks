@@ -30,3 +30,28 @@
   tasks:
     - import_tasks: tasks/test_install_resource_pkg.yml
     - import_tasks: tasks/test_install_plugins.yml
+
+
+- name: test uuidd installed
+  hosts: rs:!unmanaged_systems
+  become: true
+  tasks:
+    - name: test uuidd rpm is present
+      yum:
+        list: uuidd
+      register: pkg
+      failed_when: pkg.results | selectattr("yumstate", "match", "installed") | list | length != 1
+
+
+- name: test generateuuid.sh installed
+  hosts: rs
+  become: true
+  tasks:
+    - name: verify generateuuid.sh present
+      stat:
+        path: /var/lib/irods/iRODS/server/bin/cmd/generateuuid.sh
+      register: response
+      failed_when: |
+        not response.stat.exists
+        or response.stat.pw_name != 'irods'
+        or not response.stat.xusr

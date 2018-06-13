@@ -13,8 +13,10 @@
     dest: /tmp/irods-netcdf-build
     version: "{{ _irods_version }}"
     force: true
+  register: response
 
-- block:
+- when: response is changed
+  block:
     - name: build iRODS NetCDF plugins
       run_once: true
       delegate_to: localhost

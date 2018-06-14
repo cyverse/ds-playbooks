@@ -5,6 +5,11 @@
   register: response
   failed_when: not response.stat.exists
   with_items:
+    - service_account.config
+    - core.dvm
+    - core.fnm
+    - core.re
+    - host_access_control_config.json
     - hosts_config.json
     - server_config.json
 
@@ -156,6 +161,7 @@
       assert:
         that:
           - hosts_config.host_entries[0].address_type == 'local'
-          - hosts_config.host_entries[0].addresses[0].address == 'dstesting_ies_centos6_1.dstesting_default'
+          - "hosts_config.host_entries[0].addresses[0].address
+              == 'dstesting_ies_centos6_1.dstesting_default'"
           - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
           - hosts_config.host_entries[0].addresses[2].address == 'alias-2'

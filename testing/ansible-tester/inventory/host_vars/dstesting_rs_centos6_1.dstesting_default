@@ -1,4 +1,8 @@
 ---
+irods_host_aliases:
+  - alias-1
+  - alias-2
+
 irods_storage_resources:
   - name: rs_centos6
     vault: "{{ _irods_default_vault }}"

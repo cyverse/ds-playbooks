@@ -24,11 +24,34 @@
       with_items: "{{ irods_storage_resources }}"
 
     - name: test define storage resource
+      run_once: true
       command: iquest '%s' "select RESC_NAME where RESC_TYPE_NAME = 'unixfilesystem'"
       register: response
       changed_when: false
       failed_when: |
         response.stdout_lines | symmetric_difference(expected_resources) | list | length > 0
+
+    - name: verify context is correct
+      shell: |
+        local context
+        if ! context=$(iquest '%s' "select RESC_CONTEXT where RESC_NAME = '{{ item.name }}'")
+        then
+          exit 1
+        fi
+
+        [ "$context" = '{{ item.context }}' ]
+      changed_when: false
+      with_items: "{{ irods_storage_resources }}"
+
+    - name: verify correct status
+      run_once: true
+      debug:
+        msg: TODO implement
+
+    - name: verify free space is initialized
+      run_once: true
+      debug:
+        msg: TODO implement
 
 
 - name: test create coordinating resources

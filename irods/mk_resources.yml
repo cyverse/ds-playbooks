@@ -21,7 +21,7 @@
                                        '{{ item.vault }}' \
                                        '{{ item.context }}'
       register: result
-      changed_when: result.stdout == 'changed'
+      changed_when: result.stdout == 'true'
       with_items: "{{ _irods_storage_resources }}"
 
 

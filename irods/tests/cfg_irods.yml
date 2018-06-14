@@ -194,27 +194,11 @@
         - sernec.re
         - sernec-env.re
 
-    - name: Verify common command scripts are in place
-      stat:
-        path: /var/lib/irods/iRODS/server/bin/cmd/{{ item }}
-      register: response
-      failed_when: not response.stat.exists
-      with_items:
-        - delete-scheduled-rule
-        - set-uuid
-        - sanimal-ingest
 
-
-- name: test ies only file deposition
+- name: test bisque cmd script in place
   hosts: ies
   gather_facts: false
   tasks:
-    - name: Verify that amqptopicsend.py is in place
-      stat:
-        path: /var/lib/irods/iRODS/server/bin/cmd/amqptopicsend.py
-      register: response
-      failed_when: not response.stat.exists
-
     - name: Verify that bisque_paths.py is in place
       stat:
         path: /var/lib/irods/iRODS/server/bin/cmd/bisque_paths.py
@@ -224,16 +208,5 @@
     - name: Verify that bisque_ops.py is not present
       stat:
         path: /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py
-      register: response
-      failed_when: response.stat.exists
-
-
-- name: test resource servers don't have ampqtopicsend.py
-  hosts: rs
-  gather_facts: false
-  tasks:
-    - name: Verify that amqptopicsend.py is not in place
-      stat:
-        path: /var/lib/irods/iRODS/server/bin/cmd/amqptopicsend.py
       register: response
       failed_when: response.stat.exists

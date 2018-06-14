@@ -2,6 +2,17 @@
 # These tasks set the fact irods_cfg_made_changes to true if any changes were
 # made.
 
+- name: add common command scripts
+  copy:
+    src: "{{ item }}"
+    dest: /var/lib/irods/iRODS/server/bin/cmd
+    mode: u+x
+  with_fileglob:
+    - "files/cmd-common/*"
+
+- when: inventory_hostname in groups['ies']
+  import_tasks: install_amqptopicsend.yml
+
 - name: generate configuration files
   import_role:
     name: cyverse.irods-cfg

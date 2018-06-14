@@ -13,18 +13,32 @@
     - hosts_config.json
     - server_config.json
 
-- name: verify database_config.json isn't on resource servers
-  when: inventory_hostname not in groups['ies']
-  stat:
-    path: /etc/irods/database_config.json
-  register: response
-  failed_when: response.stat.exists
-
 - name: Verify irods_environment.json is in place
   stat:
     path: /var/lib/irods/.irods/irods_environment.json
   register: response
   failed_when: not response.stat.exists
+
+- name: Verify common command scripts are in place
+  stat:
+    path: /var/lib/irods/iRODS/server/bin/cmd/{{ item }}
+  register: response
+  failed_when: not response.stat.exists
+  with_items:
+    - delete-scheduled-rule
+    - set-uuid
+    - sanimal-ingest
+
+- name: Verify IES only files only on IES
+  stat:
+    path: "{{ item }}"
+  register: response
+  failed_when: response.stat.exists == (inventory_hostname in groups['ies'])
+  with_items:
+    - /etc/irods/database_config.json
+    - /var/lib/irods/iRODS/server/bin/cmd/amqptopicsend.py
+    - /var/lib/irods/.odbc.ini
+    - /var/lib/irods/.pgpass
 
 - name: retrieve encoded irods_environment.json
   slurp:

@@ -11,14 +11,6 @@
 
     - include_tasks: tasks/cfg_irods.yml
 
-    - name: add common command scripts
-      copy:
-        src: "{{ item }}"
-        dest: /var/lib/irods/iRODS/server/bin/cmd
-        mode: u+x
-      with_fileglob:
-        - "files/cmd-common/*"
-
     - name: place static config in /etc/irods
       copy:
         src: "{{ item }}"
@@ -48,15 +40,6 @@
       file:
         path: /etc/irods/core.re
         state: touch
-
-
-- name: Install AMQP publishing script
-  hosts: ies
-  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
-  become_user: "{{ _irods_service_account_name }}"
-  gather_facts: false
-  tasks:
-    - import_tasks: tasks/install_amqptopicsend.yml
 
 
 - name: configure bisque client

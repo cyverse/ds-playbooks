@@ -1,0 +1,161 @@
+---
+- name: check common configuration files in place
+  stat:
+    path: /etc/irods/{{ item }}
+  register: response
+  failed_when: not response.stat.exists
+  with_items:
+    - hosts_config.json
+    - server_config.json
+
+- name: verify database_config.json isn't on resource servers
+  when: inventory_hostname not in groups['ies']
+  stat:
+    path: /etc/irods/database_config.json
+  register: response
+  failed_when: response.stat.exists
+
+- name: Verify irods_environment.json is in place
+  stat:
+    path: /var/lib/irods/.irods/irods_environment.json
+  register: response
+  failed_when: not response.stat.exists
+
+- name: retrieve encoded irods_environment.json
+  slurp:
+    src: /var/lib/irods/.irods/irods_environment.json
+  register: ieEncoded
+
+- name: decode irods_environment.json
+  set_fact:
+    irods_environment: "{{ ieEncoded.content | b64decode }}"
+
+- name: verify irods_environment.json has correct contents
+  assert:
+    that:
+      - irods_environment.irods_client_server_negotiation == 'request_server_negotiation'
+      - irods_environment.irods_client_server_policy == 'CS_NEG_REFUSE'
+      - irods_environment.irods_default_hash_scheme == 'MD5'
+      - irods_environment.irods_default_resource == 'rs_centos6'
+      - irods_environment.irods_server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
+      - irods_environment.irods_user_name == 'rods'
+      - irods_environment.irods_zone_name == 'iplant'
+
+- when: inventory_hostname in groups['ies']
+  vars:
+    expected_driver: "{{
+      '/usr/pgsql-9.3/lib/psqlodbca.so' if ansible_distribution_major_version == '6' else
+      '/usr/lib64/psqlodbc.so'}}"
+  block:
+    - name: retrieve encoded server_config.json
+      slurp:
+        src: /etc/irods/server_config.json
+      register: scEncoded
+
+    - name: decode server_config.json
+      set_fact:
+        server_config: "{{ scEncoded.content | b64decode }}"
+
+    - name: verify server_config.json has correct contents
+      assert:
+        that:
+          - server_config.advanced_settings.default_number_of_transfer_threads == 4
+          - 'server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes
+               == 4'
+          - server_config.default_resource_directory == None
+          - server_config.default_resource_name == 'rs_centos6'
+          - server_config.icat_host == inventory_hostname
+          - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
+          - server_config.re_rulebase_set[0].filename == 'ipc-custom'
+          - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'
+          - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
+          - server_config.server_port_range_end == 20009
+          - server_config.server_port_range_start == 20000
+          - server_config.zone_key == 'TEMPORARY_zone_key'
+          - server_config.zone_user == 'rods'
+          - server_config.federation | length == 0
+          - 'server_config.environment_variables.IRODS_AMQP_URI
+               == "amqp://guest:guest@dstesting_amqp_1.dstesting_default:5672/%2F"'
+
+    - name: retrieve encoded .odbc.ini
+      slurp:
+        src: /var/lib/irods/.odbc.ini
+      register: oEncoded
+
+    - name: decode .odbc.ini
+      set_fact:
+        odbc: "{{ oEncoded.content | b64decode }}"
+
+    - name: verify .odbc.ini contents
+      assert:
+        that:
+          - odbc is search('driver = ' ~ expected_driver | regex_escape)
+          - odbc is search('Database = ICAT' | regex_escape)
+          - odbc is search('Port = 5432' | regex_escape)
+          - odbc is search('Servername = dstesting_dbms_1.dstesting_default' | regex_escape)
+
+    - name: retrieve encoded .pgpass
+      slurp:
+        src: /var/lib/irods/.pgpass
+      register: pEncoded
+
+    - name: decode .pgpass
+      set_fact:
+        pgpass: "{{ pEncoded.content | b64decode }}"
+
+    - name: verify .pgpass contents
+      assert:
+        that:
+          - "pgpass
+               is search('dstesting_dbms_1.dstesting_default:5432:ICAT:irods:testpassword'
+                         | regex_escape)"
+
+- when: inventory_hostname in groups['rs']
+  block:
+    - name: retrieve encoded server_config.json
+      slurp:
+        src: /etc/irods/server_config.json
+      register: scEncoded
+
+    - name: decode server_config.json
+      set_fact:
+        server_config: "{{ scEncoded.content | b64decode }}"
+
+    - name: verify server_config.json has correct contents
+      assert:
+        that:
+          - server_config.advanced_settings.default_number_of_transfer_threads == 4
+          - 'server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes
+               == 4'
+          - server_config.default_resource_directory == '/var/lib/irods/Vault'
+          - server_config.default_resource_name == 'rs_centos6'
+          - server_config.icat_host == 'dstesting_ies_centos6_1.dstesting_default'
+          - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
+          - server_config.re_rulebase_set[0].filename == 'ipc-custom'
+          - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'
+          - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
+          - server_config.server_port_range_end == 20009
+          - server_config.server_port_range_start == 20000
+          - server_config.zone_key == 'TEMPORARY_zone_key'
+          - server_config.zone_user == 'rods'
+          - server_config.federation | length == 0
+          - server_config.environment_variables == {}
+
+- when: inventory_hostname == 'dstesting_ies_centos6_1.dstesting_default'
+  block:
+    - name: retrieve encoded hosts_config.json
+      slurp:
+        src: /etc/irods/hosts_config.json
+      register: hcEncoded
+
+    - name: decode hosts_config.json
+      set_fact:
+        hosts_config: "{{ hcEncoded.content | b64decode }}"
+
+    - name: verify hosts_config.json contents
+      assert:
+        that:
+          - hosts_config.host_entries[0].address_type == 'local'
+          - hosts_config.host_entries[0].addresses[0].address == 'dstesting_ies_centos6_1.dstesting_default'
+          - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
+          - hosts_config.host_entries[0].addresses[2].address == 'alias-2'

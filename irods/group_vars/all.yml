@@ -36,7 +36,7 @@ _irods_default_repl_resource: "{{
   _irods_default_resource }}"
 
 _irods_default_resource: "{{ irods_default_resource if irods_default_resource is defined else
-                             'demoResc' }}"
+                             _irods_resource_hierarchies[0].name }}"
 
 _irods_default_vault: "{{ irods_default_vault if irods_default_vault is defined else None }}"
 

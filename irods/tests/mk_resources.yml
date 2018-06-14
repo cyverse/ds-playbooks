@@ -3,6 +3,12 @@
   hosts: rs
   become: true
   become_user: irods
+  vars:
+    expected_resources:
+      - bundleResc
+      - pire
+      - rs_centos6
+      - rs_centos7
   tasks:
     - name: test create vault directory
       stat:
@@ -18,8 +24,11 @@
       with_items: "{{ irods_storage_resources }}"
 
     - name: test define storage resource
-      debug:
-        msg: TODO implement
+      command: iquest '%s' "select RESC_NAME where RESC_TYPE_NAME = 'unixfilesystem'"
+      register: response
+      changed_when: false
+      failed_when: |
+        response.stdout_lines | symmetric_difference(expected_resources) | list | length > 0
 
 
 - name: test create coordinating resources

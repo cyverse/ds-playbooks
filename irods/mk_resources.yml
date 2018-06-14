@@ -34,4 +34,4 @@
     - script: scripts/create-resc-hierarchy.sh '{{ item | to_json }}'
       register: result
       changed_when: result.stdout == 'changed'
-      with_items: "{{ _irods_resource_hierarchy }}"
+      with_items: "{{ _irods_resource_hierarchies }}"

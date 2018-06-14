@@ -14,7 +14,7 @@
   become_user: "{{ _irods_service_account_name }}"
   tasks:
     - name: install UUID generation cmd script
-      get_url:
-        url: https://raw.githubusercontent.com/cyverse/irods-cmd-scripts/master/generateuuid.sh
+      copy:
+        src: files/cmd-common/generateuuid.sh
         dest: /var/lib/irods/iRODS/server/bin/cmd/generateuuid.sh
-        mode: u=rx
+        mode: u+x

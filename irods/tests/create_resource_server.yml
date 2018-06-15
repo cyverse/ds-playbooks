@@ -1,6 +1,6 @@
 ---
-- name: verify that IES wasn't touched
-  hosts: ies
+- name: verify that IES and unmanaged systems weren't touched
+  hosts: ies:unmanaged_systems
   become: true
   tasks:
     - name: verify that irods isn't a group
@@ -11,13 +11,22 @@
         fi
       changed_when: false
 
+
 - name: verify that the RS system user hasn't changed
-  hosts: rs
+  hosts: rs:!ies:!unmanaged_systems
   become: true
   tasks:
     - name: verify that the system user has correct comment
       command: grep --quiet --regexp '^irods:[^:]*:[^:]*:[^:]*:iRODS Administrator:' /etc/passwd
       changed_when: false
 
+
 - import_playbook: mk_vaults.yml
-- import_playbook: install_resource_pkg.yml
+
+
+- name: test install resource server package
+  hosts: rs:!ies:!unmanaged_systems
+  become: true
+  tasks:
+    - import_tasks: tasks/test_install_resource_pkg.yml
+    - import_tasks: tasks/test_install_plugins.yml

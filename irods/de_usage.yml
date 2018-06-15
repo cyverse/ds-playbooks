@@ -1,87 +1,17 @@
 ---
-- name: create user for DE jobs
+- name: Customize for DE
   hosts: ies
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
   become_user: "{{ _irods_service_account_name }}"
+  run_once: true
   tasks:
-    - name: create account
-      run_once: true
-      shell: |
-        changed=false
-
-        if ! oldUser=$(iquest '%s' "select USER_NAME where USER_INFO = 'DE job'")
-        then
-          exit 1
-        fi
-
-        if [[ "$oldUser" =~ CAT_NO_ROWS_FOUND: ]]
-        then
-          oldUser=
-        fi
-
-        if [ '{{ _de_job_irods_user }}' = "$oldUser" ]
-        then
-          exit 0
-        fi
-
-        if [ -n '{{ _de_job_irods_user }}' ]
-        then
-          if ! userInfo=$(iadmin lu '{{ _de_job_irods_user }}')
-          then
-            exit 1
-          fi
-
-          if [ "$userInfo" != 'No rows found' ]
-          then
-            printf '{{ _de_job_irods_user }} is already in use\n' >&2
-            exit 1
-          fi
-
-          if ! iadmin mkuser '{{ _de_job_irods_user }}' ds-service
-          then
-            exit 1
-          fi
-
-          changed=true
-
-          if ! iadmin moduser '{{ _de_job_irods_user }}' info 'DE job'
-          then
-            exit 1
-          fi
-        fi
-
-        if [ -n "$oldUser" ]
-        then
-          if ! iadmin rmuser "$oldUser"
-          then
-            exit 1
-          fi
-
-          changed=true
-        fi
-
-        if [ "$changed" = true ]
-        then
-          printf changed
-        fi
+    - name: create user for DE jobs
+      when: _de_job_irods_user is defined
+      script: scripts/create-de-jobs-user.sh '{{ _de_job_irods_user }}'
       register: response
-      changed_when: response.stdout == 'changed'
+      changed_when: response.stdout == 'true'
 
-    - name: ensure password is empty
-      when: _de_job_irods_user != ''
-      run_once: true
-      shell: |
-        if IRODS_USER_NAME='{{ _de_job_irods_user }}' IRODS_AUTHENTICATION_FILE=/dev/null \
-           iinit -e <<< '' > /dev/null
-        then
-          exit 0
-        fi
-
-        if ! iadmin moduser '{{ _de_job_irods_user }}' password ''
-        then
-          exit 1
-        fi
-
-        printf changed
+    - name: create jobs staging collection
+      script: scripts/create-jobs-staging-coll.sh
       register: response
-      changed_when: response.stdout == 'changed'
+      changed_when: response.stdout == 'true'

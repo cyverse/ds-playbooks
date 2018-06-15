@@ -120,7 +120,7 @@
         validate_certs: no
         url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
         dest: /var/lib/irods/iRODS/server/bin/cmd
-        mode: u=rx
+        mode: u+wx
         force: true
       tags:
         # This may not be needed in ansible 2.5

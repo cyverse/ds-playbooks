@@ -9,7 +9,7 @@
 - name: install generateuuid.sh
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
   become_user: "{{ _irods_service_account_name }}"
-  get_url:
-    url: https://raw.githubusercontent.com/cyverse/irods-cmd-scripts/master/generateuuid.sh
+  copy:
+    src: files/cmd-common/generateuuid.sh
     dest: /var/lib/irods/iRODS/server/bin/cmd/generateuuid.sh
-    mode: u=rx
+    mode: u+x

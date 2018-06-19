@@ -8,6 +8,7 @@
     aegis_env: "{{ lookup('template', '../templates/etc/aegis-env.re.j2') }}"
     bisque_env: "{{ lookup('template', '../templates/etc/bisque-env.re.j2') }}"
     ipc_env: "{{ lookup('template', '../templates/etc/ipc-env.re.j2') }}"
+    pire_env: "{{ lookup('template', '../templates/etc/pire-env.re.j2') }}"
     sanimal_env: "{{ lookup('template', '../templates/etc/sanimal-env.re.j2') }}"
     sernec_env: "{{ lookup('template', '../templates/etc/sernec-env.re.j2') }}"
   tasks:
@@ -30,6 +31,11 @@
       assert:
         that:
           - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://dstesting_ies_centos6_1.dstesting_default'")
+
+    - name: verify constants expand correctly in pire-env.re.j2
+      assert:
+        that:
+          - pire_env is search("pire_RESC = 'demoResc'")
 
     - name: verify constants expand correctly in sanimal-env.re.j2
       assert:
@@ -139,6 +145,21 @@
          - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://custom.irods.host'")
 
 
+- name: test PIRE params are set correctly
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    irods_pire_resource: pireRes
+    pire_env: "{{ lookup('template', '../templates/etc/pire-env.re.j2') }}"
+  tasks:
+    - name: verify params
+      assert:
+        that:
+          - pire_env is search("pire_RESC = 'pireRes'")
+
+
 - name: test that sernec perm groups are generated correctly
   hosts: localhost
   gather_facts: false
@@ -189,6 +210,8 @@
         - ipc-logic.re
         - ipc-uuid.re
         - ipc-env.re
+        - pire.re
+        - pire-env.re
         - sanimal.re
         - sanimal-env.re
         - sernec.re

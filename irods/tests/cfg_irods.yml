@@ -200,6 +200,7 @@
         or response.stat.pw_name != 'irods'
         or not response.stat.rusr
       with_items:
+        - de.re
         - hosts_config.json
         - server_config.json
         - aegis.re

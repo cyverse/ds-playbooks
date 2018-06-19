@@ -5,6 +5,24 @@
   register: response
   failed_when: not response.stat.exists
   with_items:
+    - aegis.re
+    - aegis-env.re
+    - bisque.re
+    - bisque-env.re
+    - coge.re
+    - ipc-amqp.re
+    - ipc-custom.re
+    - ipc-env.re
+    - ipc-housekeeping.re
+    - ipc-json.re
+    - ipc-logic.re
+    - ipc-uuid.re
+    - pire.re
+    - pire-env.re
+    - sanimal.re
+    - sanimal-env.re
+    - sernec.re
+    - sernec-env.re
     - service_account.config
     - core.dvm
     - core.fnm

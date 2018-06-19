@@ -1,6 +1,7 @@
 ---
 # These tasks set the fact irods_cfg_made_changes to true if any changes were
 # made.
+# These tasks also call the reload rules handler if a rules file changed
 
 - name: add common command scripts
   copy:
@@ -12,6 +13,26 @@
 
 - when: inventory_hostname in groups['ies']
   import_tasks: install_amqptopicsend.yml
+
+- name: place dynamic rule bases in /etc/irods
+  template:
+    src: "{{ item }}"
+    dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
+    mode: u+r
+  with_fileglob:
+    - "templates/etc/*"
+  notify:
+    - reload rules
+
+- name: place static config in /etc/irods
+  copy:
+    src: "{{ item }}"
+    dest: /etc/irods/{{ item | basename }}
+    mode: u+r
+  with_fileglob:
+    - "files/etc/*"
+  notify:
+    - reload rules
 
 - name: generate configuration files
   import_role:

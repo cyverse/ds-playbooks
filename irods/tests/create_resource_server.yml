@@ -27,6 +27,7 @@
 - name: test install resource server package
   hosts: rs:!ies:!unmanaged_systems
   become: true
+  gather_facts: false
   tasks:
     - import_tasks: tasks/test_install_resource_pkg.yml
     - import_tasks: tasks/test_install_plugins.yml
@@ -56,4 +57,13 @@
         or response.stat.pw_name != 'irods'
         or not response.stat.xusr
 
+
+- import_playbook: rule_templates.yml
+
+
+- name: test irods config file placement
+  hosts: rs
+  become: true
+  gather_facts: false
+  tasks:
     - include_tasks: tasks/test_cfg_irods.yml

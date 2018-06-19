@@ -1,0 +1,185 @@
+---
+- name: test the default variables populate the configs correctly
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    aegis_env: "{{ lookup('template', '../templates/etc/aegis-env.re.j2') }}"
+    bisque_env: "{{ lookup('template', '../templates/etc/bisque-env.re.j2') }}"
+    ipc_env: "{{ lookup('template', '../templates/etc/ipc-env.re.j2') }}"
+    pire_env: "{{ lookup('template', '../templates/etc/pire-env.re.j2') }}"
+    sanimal_env: "{{ lookup('template', '../templates/etc/sanimal-env.re.j2') }}"
+    sernec_env: "{{ lookup('template', '../templates/etc/sernec-env.re.j2') }}"
+  tasks:
+    - name: verify constants expand correctly in ipc-env.re.j2
+      assert:
+        that:
+          - ipc_env is search("ipc_AMQP_EPHEMERAL = true")
+          - ipc_env is search("ipc_DEFAULT_REPL_RESC = 'demoResc'")
+          - ipc_env is search("ipc_DEFAULT_RESC = 'demoResc'")
+          - ipc_env is search("ipc_MAX_NUM_RE_PROCS = 4")
+          - ipc_env is search("ipc_RE_HOST = 'dstesting_ies_centos6_1.dstesting_default'")
+
+    - name: verify constants expand correctly in aegis-env.re.j2
+      assert:
+        that:
+          - aegis_env is search("aegis_INGEST_RESC = 'aegisIngestRes'")
+          - aegis_env is search("aegis_REPL_RESC = 'aegisReplRes'")
+
+    - name: verify constants expand correctly in bisque-env.re.j2
+      assert:
+        that:
+          - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://dstesting_ies_centos6_1.dstesting_default'")
+
+    - name: verify constants expand correctly in pire-env.re.j2
+      assert:
+        that:
+          - pire_env is search("pire_RESC = 'demoResc'")
+
+    - name: verify constants expand correctly in sanimal-env.re.j2
+      assert:
+        that:
+          - sanimal_env | search("sanimal_BASE_COLL = ''" | regex_escape)
+
+    - name: verify sernec constants expand correctly in sernec-env.re.j2
+      assert:
+        that:
+         - sernec_env is search('sernec_OWNERS = list()' | regex_escape)
+         - sernec_env is search('sernec_WRITERS = list()' | regex_escape)
+         - sernec_env is search('sernec_READERS = list()' | regex_escape)
+
+
+- name: test aegis params are set correctly
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    irods_aegis_repl_resource: aegisReplication
+    irods_aegis_resource: aegisIngest
+    aegis_env: "{{ lookup('template', '../templates/etc/aegis-env.re.j2') }}"
+  tasks:
+    - name: verify params
+      assert:
+        that:
+          - aegis_env is search("aegis_INGEST_RESC = 'aegisIngest'")
+          - aegis_env is search("aegis_REPL_RESC = 'aegisReplication'")
+
+- name: test that custom default resc set correctly in ipc-env.re
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    irods_default_resource: custom
+    ipc_env: "{{ lookup('template', '../templates/etc/ipc-env.re.j2') }}"
+  tasks:
+    - name: verify resource constants
+      assert:
+        that:
+          - ipc_env is search("ipc_DEFAULT_REPL_RESC = 'custom'")
+          - ipc_env is search("ipc_DEFAULT_RESC = 'custom'")
+
+- name: test that custom default replication resc set correctly in ipc-env.re
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    irods_default_repl_resource: custom
+    ipc_env: "{{ lookup('template', '../templates/etc/ipc-env.re.j2') }}"
+  tasks:
+    - name: verify resource constants
+      assert:
+        that:
+          - ipc_env is search("ipc_DEFAULT_REPL_RESC = 'custom'")
+          - ipc_env is search("ipc_DEFAULT_RESC = 'demoResc'")
+
+
+- name: test that ipc_MAX_NUM_RE_PROCS set correctly in ipc-env.re
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    irods_max_num_re_procs: 1
+    ipc_env: "{{ lookup('template', '../templates/etc/ipc-env.re.j2') }}"
+  tasks:
+    - name: verify ipc_MAX_NUM_RE_PROCS
+      assert:
+        that:
+          - ipc_env is search("ipc_MAX_NUM_RE_PROCS = 1")
+
+
+- name: test that single threaded resources are correctly added to ipc-env.re
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    single_threaded_resources:
+      - resource-1
+      - resource-2
+    ipc_env: "{{ lookup('template', '../templates/etc/ipc-env.re.j2') }}"
+  tasks:
+    - name: verify acSetNumThreads defined correctly in ipc-env.re
+      assert:
+        that:
+          - ipc_env is search("ON($rescName == 'resource-1' && $clientAddr == ipc_IES_IP)" | regex_escape)
+          - ipc_env is search("ON($rescName == 'resource-2' && $clientAddr == ipc_IES_IP)" | regex_escape)
+
+
+- name: test that bisque-env.re gets generated correctly with a bisque iRODS host is provided
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    bisque_irods_host: custom.irods.host
+    bisque_env: "{{ lookup('template', '../templates/etc/bisque-env.re.j2') }}"
+  tasks:
+    - name: verify bisque_env
+      assert:
+        that:
+         - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://custom.irods.host'")
+
+
+- name: test PIRE params are set correctly
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    irods_pire_resource: pireRes
+    pire_env: "{{ lookup('template', '../templates/etc/pire-env.re.j2') }}"
+  tasks:
+    - name: verify params
+      assert:
+        that:
+          - pire_env is search("pire_RESC = 'pireRes'")
+
+
+- name: test that sernec perm groups are generated correctly
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    sernec_owners:
+      - own1
+      - own2
+    sernec_readers:
+      - read1
+      - read2
+    sernec_writers:
+      - write1
+      - write2
+    sernec_env: "{{ lookup('template', '../templates/etc/sernec-env.re.j2') }}"
+  tasks:
+    - name: verify sernec_env
+      assert:
+        that:
+         - sernec_env is search('sernec_OWNERS = list("own1", "own2")' | regex_escape)
+         - sernec_env is search('sernec_WRITERS = list("write1", "write2")' | regex_escape)
+         - sernec_env is search('sernec_READERS = list("read1", "read2")' | regex_escape)

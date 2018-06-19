@@ -70,11 +70,10 @@
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
   tasks:
-    - name: initialize flag
-      set_fact:
-        irods_cfg_made_changes: false
-
     - include_tasks: tasks/cfg_irods.yml
 
-    - when: _restart_irods and irods_cfg_made_changes
-      import_tasks: tasks/restart_irods.yml
+  handlers:
+    - name: reload rules
+      file:
+        path: /etc/irods/core.re
+        state: touch

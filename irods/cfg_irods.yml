@@ -11,26 +11,6 @@
 
     - include_tasks: tasks/cfg_irods.yml
 
-    - name: place static config in /etc/irods
-      copy:
-        src: "{{ item }}"
-        dest: /etc/irods/{{ item | basename }}
-        mode: u+r
-      with_fileglob:
-        - "files/etc/*"
-      notify:
-        - reload rules
-
-    - name: place dynamic rule bases in /etc/irods
-      template:
-        src: "{{ item }}"
-        dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
-        mode: u+r
-      with_fileglob:
-        - "templates/etc/*"
-      notify:
-        - reload rules
-
   post_tasks:
     - when: _restart_irods and irods_cfg_made_changes
       import_tasks: tasks/restart_irods.yml

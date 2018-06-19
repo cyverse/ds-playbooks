@@ -1,4 +1,4 @@
-# VERSION 10
+# VERSION 11
 #
 # bisque.re
 #
@@ -69,7 +69,7 @@ _bisque_Ln(*Permission, *Client, *Path) {
   *pArg = execCmdArg(*Permission);
   *aliasArg = execCmdArg(*Client);
   *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
-  *argStr = '--alias *aliasArg -P *pArg ln *pathArg';
+  *argStr = '--alias *aliasArg ln -P *pArg *pathArg';
   *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
 
   if (*status != 0) {
@@ -156,7 +156,7 @@ _bisque_scheduleLn(*Permission, *Client, *Path) {
     *pArg = execCmdArg(*Permission);
     *aliasArg = execCmdArg(*Client);
     *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
-    *argStr = '--alias *aliasArg -P *pArg ln *pathArg';
+    *argStr = '--alias *aliasArg ln -P *pArg *pathArg';
     *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
 
     if (*status != 0) {

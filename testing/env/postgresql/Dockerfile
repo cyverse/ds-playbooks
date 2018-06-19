@@ -6,11 +6,11 @@ MAINTAINER Tony Edgin @ CyVerse
 # needed to be changed.
 ENV PGDATA /var/lib/postgresql/alt_data
 
-COPY ansible-support/config.sh /tmp/ansible-support
+COPY base/config.sh /tmp/base-config
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN /tmp/ansible-support debian jesse && \
+RUN /tmp/base-config debian jesse && \
     apt-get autoremove --quiet --yes && \
     apt-get clean --quiet && \
     usermod --home /var/lib/postgresql postgres && \
@@ -35,7 +35,7 @@ RUN chown postgres:postgres "$PGDATA"/* && \
     gosu postgres /tmp/config && \
     rm --recursive /tmp/*
 
-COPY ansible-support/entrypoint.sh /entrypoint
+COPY base/entrypoint.sh /entrypoint
 COPY postgresql/service.sh /
 
 ENTRYPOINT [ "/entrypoint" ]

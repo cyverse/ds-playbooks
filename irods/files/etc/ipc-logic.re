@@ -239,7 +239,11 @@ sendAvuCopy(*SourceItemType, *TargetItemType, *Source, *Target) =
                                    ipc_jsonString('destination', *Target)))
   in sendMsg(getEntityType(*TargetItemType) ++ '.metadata.cp', *msg)
 
-ensureAdminOwner(*Item) = msiSetACL('default', 'own', 'rodsadmin', *Item)
+resolveAdminPerm(*Item) = if *Item like regex '^/[^/]*(/[^/]*)?$' then 'write' else 'own'
+
+setAdminGroupPerm(*Item) {
+  msiSetACL('default', resolveAdminPerm(*Item), 'rodsadmin', *Item);
+}
 
 canModProtectedAVU(*User) {
   *canMod = false;
@@ -307,7 +311,7 @@ removePrefix(*orig, *prefixes) {
 # The logic for handling a newly created data object.
 #
 createData(*Path) {
-  *err = errormsg(ensureAdminOwner(*Path), *msg);
+  *err = errormsg(setAdminGroupPerm(*Path), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(msiDataObjChksum(*Path, 'forceChksum=', *chksum), *msg);
@@ -320,7 +324,7 @@ createData(*Path) {
 # The logic for handling a modified data object.
 #
 modifyData(*Path) {
-  *err = errormsg(ensureAdminOwner(*Path), *msg);
+  *err = errormsg(setAdminGroupPerm(*Path), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(msiDataObjChksum(*Path, 'forceChksum=', *chksum), *msg);
@@ -432,17 +436,18 @@ ipc_acSetNumThreads { msiSetNumThreads('default', 'default', 'default'); }
 ipc_acSetReServerNumProc { msiSetReServerNumProc(str(ipc_MAX_NUM_RE_PROCS)); }
 
 
-# This rule makes the admin group owner of a collection when a collection is created by an
-# administrative means, i.e. iadmin mkuser. It also pushes a collection.add message into the irods
-# exchange.
+# This rule sets the rodsadin group permission of a collection when a collection
+# is created by an administrative means, i.e. iadmin mkuser. It also pushes a
+# collection.add message into the irods exchange.
 #
 ipc_acCreateCollByAdmin(*ParColl, *ChildColl) {
-  *Coll = '*ParColl/*ChildColl';
+  *coll = '*ParColl/*ChildColl';
+  *perm = resolveAdminPerm(*coll);
 
-  *err = errormsg(msiSetACL('default', 'admin:own', 'rodsadmin', *Coll), *msg);
+  *err = errormsg(msiSetACL('default', 'admin:*perm', 'rodsadmin', *coll), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(sendCollectionAdd(assignUUID('-c', *Coll), *Coll), *msg);
+  *err = errormsg(sendCollectionAdd(assignUUID('-c', *coll), *coll), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
@@ -460,9 +465,11 @@ ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
 # type rodsadmin.
 #
 ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
-  if (*UserName == 'rodsadmin' && *AccessLevel != 'own' && !canModProtectedAVU($userNameClient)) {
-    cut;
-    failmsg(-830000, 'IPLANT ERROR:  attempt to remove ownership from admin user.');
+  if (*UserName == 'rodsadmin') {
+    if (!(*AccessLevel like 'admin:*') && *AccessLevel != resolveAdminPerm(*Path)) {
+      cut;
+      failmsg(-830000, 'IPLANT ERROR:  attempt to alter admin user permission.');
+    }
   }
 }
 
@@ -470,7 +477,7 @@ ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zo
 # collections created when a TAR file is expanded. (i.e. ibun -x)
 #
 ipc_acPostProcForCollCreate {
-  *err = errormsg(ensureAdminOwner($collName), *msg);
+  *err = errormsg(setAdminGroupPerm($collName), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sendCollectionAdd(assignUUID('-c', $collName), $collName), *msg);

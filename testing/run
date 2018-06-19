@@ -15,7 +15,7 @@ Usage:
 test Data Store playbooks
 
 Parameters:
-  <playbook_folder>  the absolute path to the root directory for a collection of
+  <playbook_folder>  the path to the root directory for a collection of
                      playbooks
 
 Options:
@@ -87,6 +87,11 @@ main()
   fi
 
   : ${playbook:=main.yml}
+
+  if [[ "$playbook" != *.* ]]
+  then
+    playbook="$playbook".yml
+  fi
 
   if ! verify_playbook_exists "$playbooks" "$playbook"
   then

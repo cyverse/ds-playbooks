@@ -1,14 +1,13 @@
 FROM centos:7
 MAINTAINER Tony Edgin @ CyVerse
 
-COPY ansible-support/config.sh /tmp/ansible-support
+COPY base/config.sh /tmp/base-config
 
-RUN /tmp/ansible-support centos 7 && \
-    yum install --assumeyes iptables rsyslog && \
+RUN /tmp/base-config centos 7 && \
+    yum install --assumeyes rsyslog && \
     yum clean all && \
-    rm --recursive /tmp/* /var/cache/yum && \
-    touch /etc/sysconfig/iptables
+    rm --recursive /tmp/* /var/cache/yum
 
-COPY ansible-support/entrypoint.sh /entrypoint
+COPY base/entrypoint.sh /entrypoint
 
 ENTRYPOINT [ "/entrypoint" ]

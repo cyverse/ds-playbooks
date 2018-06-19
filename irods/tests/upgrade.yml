@@ -1,29 +1,43 @@
 ---
 - name: test begin IES upgrade
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+  hosts: ies:!unmanaged_systems
+  become: true
   tasks:
     - name: test database plugin RPM updated
-      debug:
-        msg: TODO implement
+      yum:
+        list: "{{
+          'irods-database-plugin-postgres93'
+            if inventory_hostname == 'dstesting_ies_centos6_1.dstesting_default' else
+          'irods-database-plugin-postgres' }}"
+      register: result
+      failed_when: |
+        result.results is not defined or
+        result.results|count != 1 or
+        result.results[0].version is version_compare('1.10', '!=')
 
     - name: test ICAT RPM updated
-      debug:
-        msg: TODO implement
+      yum:
+        list: irods-icat
+      register: result
+      failed_when: |
+        result.results is not defined or
+        result.results|count != 1 or
+        result.results[0].version is version_compare('4.1.10', '!=')
 
 
-- import_playbook: install_resource_pkg.yml
-
-
-- name: continue testing upgrade
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+- name: test upgrade resource server package
+  hosts: rs:!ies:!unmanaged_systems
+  become: true
   tasks:
-    - name: test upgrade plugins
-      debug:
-        msg: TODO implement
+    - import_tasks: tasks/test_install_resource_pkg.yml
+
+
+- name: test upgrade plugins
+  hosts: irods:!unmanaged_systems
+  become: true
+  gather_facts: false
+  tasks:
+    - import_tasks: tasks/test_install_plugins.yml
 
 
 - import_playbook: restart_all.yml

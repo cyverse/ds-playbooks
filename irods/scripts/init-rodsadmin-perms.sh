@@ -72,27 +72,20 @@ SELECT a.object_id, t.token_name
   WHERE a.user_id = (SELECT user_id FROM r_user_main WHERE user_name = 'rodsadmin')
     AND t.token_namespace = 'access_type';
 
-CREATE INDEX rodsadmin_perms_idx ON rodsadmin_perms (object_id, perm);
+CREATE INDEX rodsadmin_perms_idx ON rodsadmin_perms (object_id);
 
-CREATE TEMPORARY TABLE all_entities (id, path, perm) AS
-SELECT
-    coll_id,
-    coll_name,
-    CASE WHEN parent_coll_name ~ '^/[^/]*$' THEN 'modify object' ELSE 'own' END
-  FROM r_coll_main
-  WHERE coll_type != 'linkPoint'
-UNION ALL SELECT DISTINCT
-    d.data_id,
-    c.coll_name || '/' || d.data_name,
-    CASE WHEN c.coll_name ~ '^[^/]*$' THEN 'modify object' ELSE 'own' END
-  FROM r_coll_main AS c JOIN r_data_main AS d ON d.coll_id = c.coll_id;
+CREATE TEMPORARY TABLE all_entities (id, path) AS
+SELECT coll_id, coll_name FROM r_coll_main
+UNION SELECT d.data_id, c.coll_name || '/' || d.data_name
+  FROM r_data_main AS d JOIN r_coll_main AS c ON c.coll_id = d.coll_id;
 
-CREATE INDEX all_entites_id_idx ON all_entities(id, perm);
+CREATE INDEX all_entities_idx ON all_entities(id);
 
-SELECT a.perm, a.path
-  FROM all_entities AS a
-  WHERE NOT EXISTS (
-    SELECT r.object_id FROM rodsadmin_perms AS r WHERE r.object_id = a.id AND r.perm = a.perm);
+CREATE TEMPORARY TABLE all_with_perms (path, actual_perm, expected_perm) AS
+SELECT a.path, r.perm, CASE WHEN a.path ~ '^/iplant/[^/]*/.*' THEN 'own' ELSE 'modify object' END
+FROM all_entities AS a LEFT JOIN rodsadmin_perms AS r ON r.object_id = a.id;
+
+SELECT expected_perm, path FROM all_with_perms WHERE actual_perm != expected_perm;
 
 ROLLBACK;
 SQL

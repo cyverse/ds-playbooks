@@ -258,6 +258,9 @@ replCopy {
   on (aegis_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
   }
+  on (de_replBelongsTo(/$objPath)) {
+    _createOrOverwrite($objPath, de_replIngestResc, de_replReplResc);
+  }
   on (pire_replBelongsTo(/$objPath)) {
   }
 }
@@ -279,6 +282,8 @@ replEntityRename(*SourceObject, *DestObject) {
     if (!aegis_replBelongsTo(/*SourceObject)) {
       _scheduleMoves(*DestObject, aegis_replIngestResc, aegis_replReplResc);
     }
+  }
+  on (de_replBelongsTo(/*DestObject)) {
   }
   on (pire_replBelongsTo(/*DestObject)) {
     if (!pire_replBelongsTo(/*SourceObject)) {
@@ -302,6 +307,9 @@ replPut {
   on (aegis_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
   }
+  on (de_replBelongsTo(/$objPath)) {
+    _createOrOverwrite($objPath, de_replIngestResc, de_replReplResc);
+  }
   on (pire_replBelongsTo(/$objPath)) {
   }
 }
@@ -316,6 +324,9 @@ replPut {
 replSetRescSchemeForCreate {
   on (aegis_replBelongsTo(/$objPath)) {
     _setDefaultResc(aegis_replIngestResc);
+  }
+  on (de_replBelongsTo(/$objPath)) {
+    _setDefaultResc(de_replIngestResc);
   }
   on (pire_replBelongsTo(/$objPath)) {
     _setDefaultResc(pire_replIngestResc);
@@ -332,6 +343,9 @@ replSetRescSchemeForCreate {
 replSetRescSchemeForRepl {
   on (aegis_replBelongsTo(/$objPath)) {
     _setDefaultResc(aegis_replReplResc);
+  }
+  on (de_replBelongsTo(/$objPath)) {
+    _setDefaultResc(de_replReplResc);
   }
   on (pire_replBelongsTo(/$objPath)) {
     _setDefaultResc(pire_replReplResc);

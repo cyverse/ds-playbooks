@@ -29,6 +29,7 @@
 @include 'aegis'
 @include 'bisque'
 @include 'coge'
+@include 'de'
 @include 'pire'
 @include 'sanimal'
 @include 'sciapps'

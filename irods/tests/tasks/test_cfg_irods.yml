@@ -26,7 +26,7 @@
   failed_when: not response.stat.exists
   with_items:
     - delete-scheduled-rule
-    - generateuuid.sh
+    - generateuuid
     - set-uuid
     - sanimal-ingest
 

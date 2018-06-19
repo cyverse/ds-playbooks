@@ -6,10 +6,16 @@
     name: uuidd
     state: present
 
-- name: install generateuuid.sh
-  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+- become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
   become_user: "{{ _irods_service_account_name }}"
-  copy:
-    src: files/cmd-common/generateuuid.sh
-    dest: /var/lib/irods/iRODS/server/bin/cmd/generateuuid.sh
-    mode: u+x
+  block:
+    - name: install generateuuid
+      copy:
+        src: files/cmd-common/generateuuid
+        dest: /var/lib/irods/iRODS/server/bin/cmd/generateuuid
+        mode: u+x
+
+    - name: remove generateuuid.sh
+      file:
+        path: /var/lib/irods/iRODS/server/bin/cmd/generateuuid.sh
+        state: absent

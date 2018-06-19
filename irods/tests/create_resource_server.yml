@@ -43,13 +43,13 @@
       failed_when: pkg.results | selectattr("yumstate", "match", "installed") | list | length != 1
 
 
-- name: test generateuuid.sh installed
+- name: test generateuuid installed
   hosts: rs
   become: true
   tasks:
-    - name: verify generateuuid.sh present
+    - name: verify generateuuid present
       stat:
-        path: /var/lib/irods/iRODS/server/bin/cmd/generateuuid.sh
+        path: /var/lib/irods/iRODS/server/bin/cmd/generateuuid
       register: response
       failed_when: |
         not response.stat.exists

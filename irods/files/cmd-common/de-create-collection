@@ -30,21 +30,35 @@ main()
     return 1
   fi
 
-  assign_metadata "$collPath" "$execId" "$appId"
-}
+  local avus
+  avus=$(iquest '%s %s' \
+                "select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '$collPath'" \
+            2> /dev/null)
 
+  if [[ "$avus" =~ CAT_NO_ROWS_FOUND: ]]
+  then
+    avus=
+  fi
 
-assign_metadata()
-{
-  local collPath="$1"
-  local execId="$2"
-  local appId="$3"
+  if [ -n "$execId" ]
+  then
+    local avu="ipc-execution-id $execId"
 
-  imeta > /dev/null \
-<<EOF
-adda -c "$collPath" ipc-execution-id "$execId" UUID
-adda -c "$collPath" ipc-analysis-id "$appId" UUID
-EOF
+    if ! [[ "$avus" =~ $avu ]]
+    then
+      imeta adda -c "$collPath" ipc-execution-id "$execId" UUID
+    fi
+  fi
+
+  if [ -n "$appId" ]
+  then
+    local avu="ipc-analysis-id $appId"
+
+    if ! [[ "$avus" =~ $avu ]]
+    then
+      imeta adda -c "$collPath" ipc-analysis-id "$appId" UUID
+    fi
+  fi
 }
 
 

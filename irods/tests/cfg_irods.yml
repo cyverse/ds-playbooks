@@ -237,6 +237,7 @@
         or response.stat.pw_name != 'irods'
         or not response.stat.xusr
       with_items:
+        - de-create-collection
         - delete-scheduled-rule
         - generateuuid.sh
         - set-uuid

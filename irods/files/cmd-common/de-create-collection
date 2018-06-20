@@ -33,7 +33,7 @@ main()
   local avus
   avus=$(iquest '%s %s' \
                 "select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '$collPath'" \
-            2> /dev/null)
+           2> /dev/null)
 
   if [[ "$avus" =~ CAT_NO_ROWS_FOUND: ]]
   then

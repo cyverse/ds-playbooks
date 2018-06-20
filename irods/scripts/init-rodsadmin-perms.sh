@@ -85,7 +85,9 @@ CREATE TEMPORARY TABLE all_with_perms (path, actual_perm, expected_perm) AS
 SELECT a.path, r.perm, CASE WHEN a.path ~ '^/iplant/[^/]*/.*' THEN 'own' ELSE 'modify object' END
 FROM all_entities AS a LEFT JOIN rodsadmin_perms AS r ON r.object_id = a.id;
 
-SELECT expected_perm, path FROM all_with_perms WHERE actual_perm != expected_perm;
+SELECT expected_perm, path
+FROM all_with_perms 
+WHERE actual_perm != expected_perm OR actual_perm IS NULL;
 
 ROLLBACK;
 SQL

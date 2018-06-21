@@ -42,29 +42,38 @@ de_replReplResc = de_replIngestResc
 
 de_acPostProcForCollCreate {
   if ($collName like regex '^' ++ _de_JOBS_BASE ++ '/[^/]+/.+') {
-    *jobId = elem(split($collName, '/'), 2);
-    *stagingColl = _de_JOBS_BASE ++ '/*jobId';
-    *query = select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '*stagingColl';
+    *stagingRelPath = triml($collName, _de_JOBS_BASE ++ '/');
+    *jobId = elem(split(*stagingRelPath, '/'), 0);
+    *jobStagingBase = _de_JOBS_BASE ++ '/*jobId';
+    *creator = '';
+    *jobArchiveBase = '';
+    *appId = '';
+    *query = select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '*jobStagingBase';
 
     foreach (*res in *query) {
       if (*res.META_COLL_ATTR_NAME == 'ipc-creator') {
         *creator = *res.META_COLL_ATTR_VALUE;
       } else if (res.META_COLL_ATTR_NAME == 'ipc-real-output') {
-        *archiveColl = *res.META_COLL_ATTR_VALUE;
+        *jobArchiveBase = *res.META_COLL_ATTR_VALUE;
       } else if (*res.META_COLL_ATTR_NAME == 'ipc-analysis-id') {
         *appId = *res.META_COLL_ATTR_VALUE;
       }
     }
 
-    writeLine('serverLog', 'DE: staging collection = *stagingColl');
-    writeLine('serverLog', 'DE: archive collection = *archiveColl');
-    writeLine('serverLog', 'DE: creator = *creator');
-    writeLine('serverLog', 'DE: app Id = *appId');
-    writeLine('serverLog', 'DE: execution Id = *jobId');
-    # TODO part 2
-    # TODO part 3
-    # TODO part 4
-    # TODO part 5
+    if (*creator != '' && *jobArchiveColl != '') {
+      if ($collName like regex '^*jobStagingBase/[^/]+$') {
+        *clientArg = execCmdArg(*Creator);
+        *collArg = execCmdArg(*jobArchiveBase);
+        *execArg = execCmdArg(*jobId);
+        *appArg = execCmdArg(*appId);
+        *args = "*clientArg *collArg *execArg *appArg";
+        msiExecCmd("de-create-collection", *args, "null", "null", "null", *out);
+      }
+
+      # TODO part 3
+      # TODO part 4
+      # TODO part 5
+    }
   }
 }
 

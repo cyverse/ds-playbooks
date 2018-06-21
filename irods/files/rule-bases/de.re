@@ -61,18 +61,20 @@ de_acPostProcForCollCreate {
     }
 
     if (*creator != '' && *jobArchiveColl != '') {
+      *archivePath = '*jobArchiveBase/' ++ triml(*stagingRelPath, '*jobId/');
+      *clientArg = execCmdArg(*Creator);
+      *execArg = execCmdArg(*jobId);
+      *appArg = execCmdArg(*appId);
+
       if ($collName like regex '^*jobStagingBase/[^/]+$') {
-        *clientArg = execCmdArg(*Creator);
-        *collArg = execCmdArg(*jobArchiveBase);
-        *execArg = execCmdArg(*jobId);
-        *appArg = execCmdArg(*appId);
-        *args = "*clientArg *collArg *execArg *appArg";
-        msiExecCmd("de-create-collection", *args, "null", "null", "null", *out);
+        *baseCollArg = execCmdArg(*jobArchiveBase);
+        *baseArgs = "*clientArg *baseCollArg *execArg *appArg";
+        msiExecCmd("de-create-collection", *baseArgs, "null", "null", "null", *out);
       }
 
-      # TODO part 3
-      # TODO part 4
-      # TODO part 5
+      *collArg = execCmdArg(*archivePath);
+      *args = "*clientArg *collArg *execArg *appArg";
+      msiExecCmd("de-create-collection", *args, "null", "null", "null", *out);
     }
   }
 }

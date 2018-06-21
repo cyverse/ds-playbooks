@@ -1,7 +1,56 @@
 # DE project policy
 # include this file from with ipc-custom.re
 
-_de_JOBS_BASE = '/' ++ ipc_ZONE ++ '/jobs'
+_de_STAGING_BASE = '/' ++ ipc_ZONE ++ '/jobs'
+
+
+_de_inStaging(*Object) = *Object like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+/.+';
+
+
+_de_createArchiveColl(*Coll, *Creator, *AppId, *JobId) {
+  *clientArg = execCmdArg(*Creator);
+  *collArg = execCmdArg(*Coll);
+  *execArg = execCmdArg(*JobId);
+  *appArg = execCmdArg(*AppId);
+  *argsStr = '*clientArg *collArg *execArg *appArg';
+
+  *status = errormsg(msiExecCmd('de-create-collection', *argStr, 'null', 'null', 'null', *out),
+                     *msg);
+
+  if (*status < 0) {
+    writeLine('serverLog', 'DE: Failed to create archive collection: *msg');
+  }
+}
+
+
+_de_createArchiveCollFor(*StagingColl) {
+  *stagingRelPath = triml(*StagingColl, _de_STAGING_BASE ++ '/');
+  *jobId = elem(split(*stagingRelPath, '/'), 0);
+  *jobStagingBase = _de_STAGING_BASE ++ '/*jobId';
+  *creator = '';
+  *jobArchiveBase = '';
+  *appId = '';
+  *query = select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '*jobStagingBase';
+
+  foreach (*res in *query) {
+    if (*res.META_COLL_ATTR_NAME == 'ipc-creator') {
+      *creator = *res.META_COLL_ATTR_VALUE;
+    } else if (res.META_COLL_ATTR_NAME == 'ipc-real-output') {
+      *jobArchiveBase = *res.META_COLL_ATTR_VALUE;
+    } else if (*res.META_COLL_ATTR_NAME == 'ipc-analysis-id') {
+      *appId = *res.META_COLL_ATTR_VALUE;
+    }
+  }
+
+  if (*creator != '' && *jobArchiveBase != '') {
+    if (*stagingRelPath like regex '^*jobId/[^/]+$') {
+      _de_createArchiveColl(*jobArchiveBase, *creator, *appId, *jobId);
+    }
+
+    *archiveColl = '*jobArchiveBase/' ++ triml(*stagingRelPath, '*jobId/');
+    _de_createArchiveColl(*archiveColl, *creator, *appId, *jobId);
+  }
+}
 
 
 # Determines if the provided collection or data object is in the DE staging area
@@ -14,7 +63,7 @@ _de_JOBS_BASE = '/' ++ ipc_ZONE ++ '/jobs'
 #  false
 #
 de_replBelongsTo : path -> boolean
-de_replBelongsTo(*Entity) = str(*Entity) like _de_JOBS_BASE ++ '/*'
+de_replBelongsTo(*Entity) = str(*Entity) like _de_STAGING_BASE ++ '/*'
 
 
 # Returns the resource where newly ingested files will be stored
@@ -41,44 +90,18 @@ de_replReplResc = de_replIngestResc
 
 
 de_acPostProcForCollCreate {
-  if ($collName like regex '^' ++ _de_JOBS_BASE ++ '/[^/]+/.+') {
-    *stagingRelPath = triml($collName, _de_JOBS_BASE ++ '/');
-    *jobId = elem(split(*stagingRelPath, '/'), 0);
-    *jobStagingBase = _de_JOBS_BASE ++ '/*jobId';
-    *creator = '';
-    *jobArchiveBase = '';
-    *appId = '';
-    *query = select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '*jobStagingBase';
-
-    foreach (*res in *query) {
-      if (*res.META_COLL_ATTR_NAME == 'ipc-creator') {
-        *creator = *res.META_COLL_ATTR_VALUE;
-      } else if (res.META_COLL_ATTR_NAME == 'ipc-real-output') {
-        *jobArchiveBase = *res.META_COLL_ATTR_VALUE;
-      } else if (*res.META_COLL_ATTR_NAME == 'ipc-analysis-id') {
-        *appId = *res.META_COLL_ATTR_VALUE;
-      }
-    }
-
-    if (*creator != '' && *jobArchiveColl != '') {
-      *archivePath = '*jobArchiveBase/' ++ triml(*stagingRelPath, '*jobId/');
-      *clientArg = execCmdArg(*Creator);
-      *execArg = execCmdArg(*jobId);
-      *appArg = execCmdArg(*appId);
-
-      if ($collName like regex '^*jobStagingBase/[^/]+$') {
-        *baseCollArg = execCmdArg(*jobArchiveBase);
-        *baseArgs = "*clientArg *baseCollArg *execArg *appArg";
-        msiExecCmd("de-create-collection", *baseArgs, "null", "null", "null", *out);
-      }
-
-      *collArg = execCmdArg(*archivePath);
-      *args = "*clientArg *collArg *execArg *appArg";
-      msiExecCmd("de-create-collection", *args, "null", "null", "null", *out);
-    }
+  if (_de_inStaging($collPath)) {
+    _de_createArchiveCollFor($collPath);
   }
 }
 
 
-# TODO implement
-de_acPostProcForObjRename(*SourceObject, *DestObject) {}
+de_acPostProcForObjRename(*SourceObject, *DestObject) {
+  if (_de_inStaging(*DestObject)) {
+    msiGetObjType(*DestObject, *type);
+
+    if (*type == '-c') {
+      _de_createArchiveCollFor(*DestObject);
+    }
+  }
+}

@@ -43,16 +43,29 @@
       changed_when: false
       with_items: "{{ irods_storage_resources }}"
 
-    - name: verify correct status
-      run_once: true
-      debug:
-        msg: TODO implement
+    - name: verify status has been initialized
+      shell: |
+        local status
+        if ! status=$(iquest '%s' "select RESC_STATUS where RESC_NAME = '{{ item.name }}'")
+        then
+          exit 1
+        fi
+
+        [ -n "$status" ]
+      changed_when: false
+      with_items: "{{ irods_storage_resources }}"
 
     - name: verify free space is initialized
-      run_once: true
-      debug:
-        msg: TODO implement
+      shell: |
+        local freeSpace
+        if ! freeSpace=$(iquest '%s' "select RESC_FREE_SPACE where RESC_NAME = '{{ item.name }}'")
+        then
+          exit 1
+        fi
 
+        [ -n "$freeSpace" ]
+      changed_when: false
+      with_items: "{{ irods_storage_resources }}"
 
 - name: test create coordinating resources
   hosts: localhost

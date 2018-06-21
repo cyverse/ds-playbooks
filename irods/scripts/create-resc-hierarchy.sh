@@ -87,7 +87,7 @@ create_hierarchy()
   local def="$*"
 
   local type
-  type=$(jq --raw-output '.type // ""' <<< "$def")
+  type=$(jq --raw-output '.type // empty' <<< "$def")
 
   if [ -n "$type" ]
   then
@@ -95,11 +95,11 @@ create_hierarchy()
     name=$(jq --raw-output .name <<< "$def")
 
     local context
-    context=$(jq --raw-output '.context // ""' <<< "$def")
+    context=$(jq --raw-output '.context // empty' <<< "$def")
 
     create_coord_resc "$name" "$type" "$context"
 
-    jq --compact-output --raw-output 'if .children then .children[] else "" end' <<< "$def" \
+    jq --compact-output --raw-output 'if .children then .children[] else empty end' <<< "$def" \
       | create_and_add_children "$name"
   fi
 }

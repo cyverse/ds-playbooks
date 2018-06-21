@@ -1,8 +1,7 @@
 ---
-- name: create storage resources
-  hosts: rs
-  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
-  become_user: "{{ _irods_service_account_name }}"
+- name: create vaults
+  hosts: rs:!unmanaged_systems
+  become: true
   tasks:
     - name: create vault directory
       file:
@@ -14,6 +13,12 @@
         state: directory
       with_items: "{{ _irods_storage_resources }}"
 
+
+- name: create storage resources
+  hosts: rs
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tasks:
     - name: define storage resource
       script: |
         scripts/create-storage-resc.sh '{{ item.name }}' \

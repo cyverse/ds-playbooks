@@ -4,7 +4,7 @@
 _de_STAGING_BASE = '/' ++ ipc_ZONE ++ '/jobs'
 
 
-_de_inStaging(*Object) = *Object like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+/.+';
+_de_inStaging(*Object) = *Object like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+/.+'
 
 
 _de_createArchiveColl(*Coll, *Creator, *AppId, *JobId) {
@@ -12,13 +12,15 @@ _de_createArchiveColl(*Coll, *Creator, *AppId, *JobId) {
   *collArg = execCmdArg(*Coll);
   *execArg = execCmdArg(*JobId);
   *appArg = execCmdArg(*AppId);
-  *argsStr = '*clientArg *collArg *execArg *appArg';
+  *argStr = '*clientArg *collArg *execArg *appArg';
 
   *status = errormsg(msiExecCmd('de-create-collection', *argStr, 'null', 'null', 'null', *out),
                      *msg);
 
   if (*status < 0) {
     writeLine('serverLog', 'DE: Failed to create archive collection: *msg');
+    msiGetStderrInExecCmdOut(*out, *errMsg);
+    writeLine('serverLog', 'DE: *errMsg');
   }
 }
 
@@ -35,7 +37,7 @@ _de_createArchiveCollFor(*StagingColl) {
   foreach (*res in *query) {
     if (*res.META_COLL_ATTR_NAME == 'ipc-creator') {
       *creator = *res.META_COLL_ATTR_VALUE;
-    } else if (res.META_COLL_ATTR_NAME == 'ipc-real-output') {
+    } else if (*res.META_COLL_ATTR_NAME == 'ipc-real-output') {
       *jobArchiveBase = *res.META_COLL_ATTR_VALUE;
     } else if (*res.META_COLL_ATTR_NAME == 'ipc-analysis-id') {
       *appId = *res.META_COLL_ATTR_VALUE;
@@ -90,8 +92,8 @@ de_replReplResc = de_replIngestResc
 
 
 de_acPostProcForCollCreate {
-  if (_de_inStaging($collPath)) {
-    _de_createArchiveCollFor($collPath);
+  if (_de_inStaging($collName)) {
+    _de_createArchiveCollFor($collName);
   }
 }
 

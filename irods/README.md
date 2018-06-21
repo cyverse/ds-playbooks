@@ -82,7 +82,7 @@ Field      | Required | Default | Comments
 `name`     | yes      |         | The name of the resource
 `type`     | no       |         | For a coordinating resource, this is the type of resource. For a storage resource this should not be provided.
 
-`irods_storage_resource` entry fields
+`irods_storage_resources` entry fields
 
 All of them are required.
 

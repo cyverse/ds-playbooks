@@ -59,9 +59,6 @@ _irods_parallel_transfer_buffer_size: "{{
   irods_parallel_transfer_buffer_size if irods_parallel_transfer_buffer_size is defined else
   None }}"
 
-_irods_pire_resource: "{{ irods_pire_resource if irods_pire_resource is defined else
-                          _irods_default_resource }}"
-
 _irods_resource_hierarchies: '{{
   irods_resource_hierarchies
     if irods_resource_hierarchies is defined and irods_resource_hierarchies|length > 0 else
@@ -108,6 +105,9 @@ _load_balancer_irods_proxy_port: "{{
 _load_balancer_stats_allowed_src: "{{
   load_balancer_stats_allowed_src if load_balancer_stats_allowed_src is defined else
   '0.0.0.0/0' }}"
+
+_pire_resource_hierarchy: "{{ pire_resource_hierarchy if pire_resource_hierarchy is defined else
+                              _irods_resource_hierarchies[0] }}"
 
 _rabbitmq_ephemeral: "{{ rabbitmq_ephemeral if rabbitmq_ephemeral is defined else True }}"
 

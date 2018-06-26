@@ -151,7 +151,8 @@
   vars_files:
     - ../group_vars/all.yml
   vars:
-    irods_pire_resource: pireRes
+    pire_resource_hierarchy:
+      name: pireRes
     pire_env: "{{ lookup('template', '../templates/etc/pire-env.re.j2') }}"
   tasks:
     - name: verify params

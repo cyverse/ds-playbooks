@@ -33,7 +33,6 @@ Variable                                   | Default                            
 `irods_negotiation_key`                    | TEMPORARY_32byte_negotiation_key     |         | the negotiation key
 `irods_other_host_entries`                 | []                                   |         | a list of other FQDNs to add to /etc/hosts
 `irods_parallel_transfer_buffer_size`      | 4                                    |         | the transfer buffer size in MiB for each stream during parallel transfer
-`irods_pire_resource`                      | `irods_default_resource`             |         | the name of the PIRE resource where newly uploaded files are written
 `irods_resource_hierarchies`               | `[ { "name": "demoResc" } ]`         |         | the list of resource hierarchies that need to exist, _see below_
 `irods_server_control_plane_key`           | TEMPORARY__32byte_ctrl_plane_key     |         | the server control plane key
 `irods_server_port_range_end`              | 20199                                |         | the last address in the range of auxillary TCP and UDP ports
@@ -47,6 +46,7 @@ Variable                                   | Default                            
 `load_balancer_irods_max_conn`             | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer.
 `load_balancer_irods_proxy_port`           | 1247                                 |         | The port the load balancer will listen on for connections to iRODS.
 `load_balancer_stats_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for hosts allowed to see the HAProxy stats web page.
+`pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource server used by the PIRE project
 `rabbitmq_ephemeral`                       | `true`                               |         | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
 `rabbitmq_password`                        | guest                                |         | The password iRODS uses to connect to the AMQP vhost
 `rabbitmq_port`                            | 5672                                 |         | The TCP port the RabbitMQ broker listens on

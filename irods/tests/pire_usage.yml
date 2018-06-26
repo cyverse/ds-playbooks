@@ -1,0 +1,8 @@
+---
+- name: test pire_usage
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement

@@ -5,7 +5,7 @@
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - script: scripts/create-resc-hierarchy.sh '{{ item | to_json }}'
-      register: result
-      changed_when: result.stdout == 'changed'
+    - include_tasks: tasks/mk_resource_hierarchy.yml
+      vars:
+        hierarchy: "{{ item }}"
       with_items: "{{ _irods_resource_hierarchies }}"

@@ -1,5 +1,5 @@
 ---
-- name: test create storage resources
+- name: test mk_storage_resources
   hosts: rs
   become: true
   become_user: irods
@@ -66,11 +66,3 @@
         [ -n "$freeSpace" ]
       changed_when: false
       with_items: "{{ irods_storage_resources }}"
-
-- name: test create coordinating resources
-  hosts: localhost
-  gather_facts: false
-  run_once: true
-  tasks:
-    - debug:
-        msg: TODO implement

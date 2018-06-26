@@ -29,4 +29,5 @@
     - import_tasks: tasks/test_install_plugins.yml
 
 
-- import_playbook: mk_resources.yml
+- import_playbook: mk_storage_resources.yml
+- import_playbook: mk_resource_hierarchies.yml

@@ -1,0 +1,11 @@
+---
+- name: create coordinating resources
+  hosts: ies
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
+  run_once: true
+  tasks:
+    - script: scripts/create-resc-hierarchy.sh '{{ item | to_json }}'
+      register: result
+      changed_when: result.stdout == 'changed'
+      with_items: "{{ _irods_resource_hierarchies }}"

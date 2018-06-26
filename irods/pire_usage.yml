@@ -1,0 +1,10 @@
+---
+- name: ensure pire group exists
+  hosts: ies
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
+  run_once: true
+  tasks:
+    - name: ensure pire group exists
+      irods_mkgroup:
+        name: pire

@@ -12,5 +12,5 @@
         hierarchy: "{{ _pire_resource_hierarchy }}"
 
     - name: ensure pire group exists
-      irods_mkgroup:
+      irods_group:
         name: pire

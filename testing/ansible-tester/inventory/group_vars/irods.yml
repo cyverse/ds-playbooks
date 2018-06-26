@@ -8,7 +8,9 @@ irods_version: 4.1.10
 irods_resource_hierarchies:
   - name: rs_centos6
   - name: rs_centos7
-  - name: pireRes
-    type: passthru
-    children:
-      - name: pire
+
+pire_resource_hierarchy:
+  name: pireRes
+  type: passthru
+  children:
+    - name: pire

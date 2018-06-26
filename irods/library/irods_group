@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# An ansible module for creating a user group in iRODS.
+# An ansible module for managing a user group in iRODS.
 #
 # Module Name:
-#  irods_mkgroup
+#  irods_group
 #
 # Required Variables
 #  name: The name of the group to create.

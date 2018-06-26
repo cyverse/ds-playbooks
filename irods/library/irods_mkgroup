@@ -1,0 +1,81 @@
+#!/bin/bash
+#
+# An ansible module for creating a user group in iRODS.
+#
+# Module Name:
+#  irods_mkgroup
+#
+# Required Variables
+#  name: The name of the group to create.
+
+
+main()
+{
+  local varFile="$1"
+
+  local name
+  . "$varFile"
+
+  if [ -z "$name" ]
+  then
+    fail "variable 'name' must be defined"
+  fi
+
+  local changed=false
+
+  local id
+  if ! id=$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = '$name'")
+  then
+    fail "couldn't connect to iRODS"
+  fi
+
+  if [[ "$id" =~ ^CAT_NO_ROWS_FOUND ]]
+  then
+    local errMsg
+    if ! errMsg=$(iadmin mkgroup "$name" 2>&1)
+    then
+      fail "$errMsg"
+    fi
+
+    changed=true
+  fi
+
+  printf '{"changed": %s}' "$changed"
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  local msgLen=${#msg}
+
+  local escMsg
+  local i
+  for (( i=0; i<msgLen; i++ ))
+  do
+    local c="${msg:$i:1}"
+
+    local escC
+    if [ "$c" \< ' ' ]
+    then
+      printf -v escC '\\u00%02x' \'"$c"
+    elif [ "$c" = \\ ]
+    then
+      escC=\\\\
+    elif [ "$c" = \" ]
+    then
+      escC=\\\"
+    else
+      escC="$c"
+    fi
+
+    escMsg="$escMsg""$escC"
+  done
+
+  printf '{"failed": true, "msg": "%s"}' "$escMsg"
+  exit 1
+}
+
+
+main "$@"

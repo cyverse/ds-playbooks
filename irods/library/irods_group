@@ -19,12 +19,9 @@ main()
   local changed=false
 
   local id
-  if ! id=$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = '$name'")
-  then
-    fail "couldn't connect to iRODS"
-  fi
+  id=$(quest "select USER_GROUP_ID where USER_GROUP_NAME = '$name'")
 
-  if [[ "$id" =~ ^CAT_NO_ROWS_FOUND ]]
+  if [ -z "$id" ]
   then
     local errMsg
     if ! errMsg=$(iadmin mkgroup "$name" 2>&1)
@@ -70,6 +67,23 @@ fail()
 
   printf '{"failed": true, "msg": "%s"}' "$escMsg"
   exit 1
+}
+
+
+quest()
+{
+  local query"$*"
+
+  local response
+  if ! response=$(iquest '%s' "$query")
+  then
+    fail "couldn't connect to iRODS"
+  fi
+
+  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
+  then
+    printf '%s' "$response"
+  fi
 }
 
 

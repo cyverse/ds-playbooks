@@ -13,13 +13,8 @@ main()
 {
   local varFile="$1"
 
-  local name
   . "$varFile"
-
-  if [ -z "$name" ]
-  then
-    fail "variable 'name' must be defined"
-  fi
+  require name
 
   local changed=false
 
@@ -75,6 +70,17 @@ fail()
 
   printf '{"failed": true, "msg": "%s"}' "$escMsg"
   exit 1
+}
+
+
+require()
+{
+  local var="$1"
+
+  if [ -z "${!var}" ]
+  then
+    fail "variable '$var' must be defined"
+  fi
 }
 
 

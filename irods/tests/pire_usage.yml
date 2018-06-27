@@ -1,5 +1,7 @@
 ---
-- name: test pire_usage
+- import_playbook: mk_storage_resources.yml
+
+- name: test Configure IES for PIRE
   hosts: localhost
   gather_facts: false
   run_once: true

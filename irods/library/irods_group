@@ -32,7 +32,8 @@ main()
     changed=true
   fi
 
-  printf '{"changed": %s}' "$changed"
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}'
 }
 
 
@@ -40,39 +41,16 @@ fail()
 {
   local msg="$*"
 
-  local msgLen=${#msg}
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}'
 
-  local escMsg
-  local i
-  for (( i=0; i<msgLen; i++ ))
-  do
-    local c="${msg:$i:1}"
-
-    local escC
-    if [ "$c" \< ' ' ]
-    then
-      printf -v escC '\\u00%02x' \'"$c"
-    elif [ "$c" = \\ ]
-    then
-      escC=\\\\
-    elif [ "$c" = \" ]
-    then
-      escC=\\\"
-    else
-      escC="$c"
-    fi
-
-    escMsg="$escMsg""$escC"
-  done
-
-  printf '{"failed": true, "msg": "%s"}' "$escMsg"
   exit 1
 }
 
 
 quest()
 {
-  local query"$*"
+  local query="$*"
 
   local response
   if ! response=$(iquest '%s' "$query")

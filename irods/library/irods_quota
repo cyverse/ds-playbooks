@@ -1,0 +1,117 @@
+#!/bin/bash
+#
+# An ansible module for setting quotas in iRODS
+#
+# Module Name:
+#  irods_quota
+#
+# Required Variables:
+#  subject   the user or group to receive the quota
+#  resource  the resource the quota is on.  'total' means all resources
+#  quota     the allowed data volume in bytes to allow. '0' means no quota
+
+
+main()
+{
+  local varFile="$1"
+
+  . "$varFile"
+
+  local var
+  for var in subject resource quota
+  do
+    require "$var"
+  done
+
+  local currentQuota
+  currentQuota=$(current_quota "$subject" "$resource")
+
+  if [ "$currentQuota" != "$quota" ]
+  then
+    local errMsg
+    if ! errMsg=$(iadmin suq "$subject" "$resource" "$quota" 2>&1)
+    then
+      fail $errMsg
+    fi
+
+    succeed true
+  fi
+
+  succeed false
+}
+
+
+current_quota()
+{
+  local subject="$1"
+  local resource="$2"
+
+  local quota
+  if [ "$resource" = total ]
+  then
+    quota=$(quest "select QUOTA_LIMIT where QUOTA_USER_NAME = '$subject'")
+  else
+    quota=$(quest "select QUOTA_LIMIT
+                   where QUOTA_USER_NAME = '$subject' and QUOTA_RESC_NAME = '$resource'")
+  fi
+
+  if [ -z "$quota" ]
+  then
+    quota=0
+  fi
+
+  printf '%s' "$quota"
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}'
+
+  exit 1
+}
+
+
+quest()
+{
+  local query="$*"
+
+  local response
+  if ! response=$(iquest '%s' "$query")
+  then
+    fail "couldn't connect to iRODS"
+  fi
+
+  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
+  then
+    printf '%s' "$response"
+  fi
+}
+
+
+require()
+{
+  local var="$1"
+
+  if [ -z "${!var}" ]
+  then
+    fail "variable '$var' must be defined"
+  fi
+}
+
+
+succeed()
+{
+  local changed="$1"
+
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}'
+
+  exit 0
+}
+
+
+main "$@"

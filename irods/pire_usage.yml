@@ -1,6 +1,7 @@
 ---
 - import_playbook: mk_storage_resources.yml
 
+
 - name: Configure IES for PIRE
   hosts: ies
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
@@ -14,3 +15,9 @@
     - name: ensure pire group exists
       irods_group:
         name: pire
+
+    - name: TEST STUB - for irods_quota
+      irods_quota:
+        subject: pire
+        resource: pireRes
+        quota: 3495253

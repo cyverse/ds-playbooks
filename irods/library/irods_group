@@ -5,7 +5,7 @@
 # Module Name:
 #  irods_group
 #
-# Required Variables
+# Required Variables:
 #  name: The name of the group to create.
 
 

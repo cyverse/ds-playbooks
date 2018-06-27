@@ -1,9 +1,11 @@
 ---
 - import_playbook: mk_storage_resources.yml
 
+
 - name: test Configure IES for PIRE
-  hosts: localhost
-  gather_facts: false
+  hosts: ies
+  become: true
+  become_user: irods
   run_once: true
   tasks:
     - debug:

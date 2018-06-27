@@ -1,7 +1,6 @@
 ---
 - name: enable restarting of iRODS
   hosts: irods
-  gather_facts: false
   tasks:
     - set_fact:
         restart_irods: true
@@ -10,7 +9,6 @@
 - name: configure AMQP broker
   hosts: rabbitmq
   become: true
-  gather_facts: false
   roles:
     - role: cyverse.rabbitmq-vhost
       rabbitmq_vhost_name: "{{ _rabbitmq_vhost }}"
@@ -24,6 +22,7 @@
 - name: install pika
   hosts: ies
   become: true
+  gather_facts: false
   tasks:
     - name: ensure pika installed
       pip:
@@ -40,9 +39,9 @@
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
+  run_once: true
   tasks:
     - name: ensure service user type exists
-      run_once: true
       shell: |
         desc=$(iquest \
           '%s' \
@@ -68,8 +67,12 @@
       register: response
       changed_when: response.stdout == 'changed'
 
+    - name: TEST STUB for irods_move
+      irods_move:
+        source: /iplant/home/public
+        destination: /iplant/home/shared
+
     - name: start quota usage computation
-      run_once: true
       command: irule '{ ipc_rescheduleQuotaUsageUpdate }' null ruleExecOut
       register: results
       changed_when: results.stdout == 'scheduled quota usage updates'

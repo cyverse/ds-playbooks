@@ -1,26 +1,41 @@
 ---
+- name: test enable restarting of iRODS
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement
+
+
+- name: test configure AMQP broker
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implemnt
+
+
+- name: test install pika
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement
+
+
 - import_playbook: provision.yml
 - import_playbook: cfg_irods.yml
 
 
-- name: continue testing main
+- name: test run-time initialization
   hosts: localhost
   gather_facts: false
+  run_once: true
   tasks:
-    - name: test enable restarting of iRODS
-      debug:
-        msg: TODO implement
-
-    - name: test configure AMQP broker
-      debug:
-        msg: TODO implemnt
-
-    - name: test install pika
-      debug:
-        msg: TODO implement
-
-    - name: test start quota usage computation
-      debug:
+    - debug:
         msg: TODO implement
 
 

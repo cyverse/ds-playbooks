@@ -1,0 +1,112 @@
+#! /bin/bash
+#
+# An ansible module for creating a collection
+#
+# Module Name:
+#  irods_collection
+#
+# Required Variables:
+#  name: the name of the collection to create
+#
+# Optional Variables:
+#  parents:  Whether or not to create the parent collections as well the default
+#            is false.
+
+
+main()
+{
+  local varFile="$1"
+
+  local name
+  local parents
+  . "$varFile"
+
+  require name
+
+  : "${parents=false}"
+  parents="${parents,,}"
+
+  if [ "$parents" != true -a "$parents" != false ]
+  then
+    fail "'parents' must be 'true' or 'false'"
+  fi
+  
+  local id
+  id=$(quest "select COLL_ID where COLL_NAME = '$name'")
+
+  if [ -n "$id" ]
+  then
+    succeed false
+  fi
+
+  local errMsg
+  if [ "$parents" = true ]
+  then
+    if ! errMsg=$(imkdir -p "$name")
+    then
+      fail "$errMsg"
+    fi
+  else
+    if ! errMsg=$(imkdir "$name")
+    then
+      fail "$errMsg"
+    fi
+  fi
+
+  succeed true
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}'
+
+  exit 1
+}
+
+
+quest()
+{
+  local query="$*"
+
+  local response
+  if ! response=$(iquest '%s' "$query")
+  then
+    fail "couldn't connect to iRODS"
+  fi
+
+  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
+  then
+    printf '%s' "$response"
+  fi
+}
+
+
+require()
+{
+  local var="$1"
+
+  if [ -z "${!var}" ]
+  then
+    fail "variable '$var' must be defined"
+  fi
+}
+
+
+succeed()
+{
+  local changed="$1"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}'
+
+  exit 0
+}
+
+
+main "$@"

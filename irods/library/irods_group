@@ -13,6 +13,7 @@ main()
 {
   local varFile="$1"
 
+  local name
   . "$varFile"
   require name
 
@@ -38,6 +39,7 @@ fail()
 {
   local msg="$*"
 
+  # shellcheck disable=SC2016
   jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
      '{failed: true, msg: $msg}'
 
@@ -77,6 +79,7 @@ succeed()
 {
   local changed="$1"
 
+  # shellcheck disable=SC2016
   jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
      '{changed: ($changed == "true")}'
 

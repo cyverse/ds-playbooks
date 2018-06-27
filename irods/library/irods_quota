@@ -31,7 +31,7 @@ main()
     local errMsg
     if ! errMsg=$(iadmin suq "$subject" "$resource" "$quota" 2>&1)
     then
-      fail $errMsg
+      fail "$errMsg"
     fi
 
     succeed true
@@ -68,6 +68,7 @@ fail()
 {
   local msg="$*"
 
+  # shellcheck disable=SC2016
   jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
      '{failed: true, msg: $msg}'
 
@@ -107,6 +108,7 @@ succeed()
 {
   local changed="$1"
 
+  # shellcheck disable=SC2016
   jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
      '{changed: ($changed == "true")}'
 

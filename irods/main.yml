@@ -67,7 +67,7 @@
       register: response
       changed_when: response.stdout == 'changed'
 
-    - name: TEST STUB for irods_move
+    - name: ensure public group's home is /iplant/home/shared
       irods_move:
         source: /iplant/home/public
         destination: /iplant/home/shared

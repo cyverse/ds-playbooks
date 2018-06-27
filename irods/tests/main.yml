@@ -1,8 +1,6 @@
 ---
 - name: test enable restarting of iRODS
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+  hosts: irods
   tasks:
     - debug:
         msg: TODO implement

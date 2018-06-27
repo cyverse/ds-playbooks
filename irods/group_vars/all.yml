@@ -106,6 +106,8 @@ _load_balancer_stats_allowed_src: "{{
   load_balancer_stats_allowed_src if load_balancer_stats_allowed_src is defined else
   '0.0.0.0/0' }}"
 
+_pire_quota: "{{ pire_quota if pire_quota is defined else 0 }}"
+
 _pire_resource_hierarchy: "{{ pire_resource_hierarchy if pire_resource_hierarchy is defined else
                               _irods_resource_hierarchies[0] }}"
 

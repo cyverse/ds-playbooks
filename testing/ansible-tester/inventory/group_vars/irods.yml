@@ -9,6 +9,8 @@ irods_resource_hierarchies:
   - name: rs_centos6
   - name: rs_centos7
 
+pire_quota: 5000000
+
 pire_resource_hierarchy:
   name: pireRes
   type: passthru

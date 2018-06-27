@@ -8,5 +8,14 @@
   become_user: irods
   run_once: true
   tasks:
-    - debug:
+    - name: test make PIRE resource hierarchy
+      debug:
+        msg: TODO implement
+
+    - name: test ensure pire group exists
+      debug:
+        msg: TODO implement
+
+    - name: test set the quota for the pire group
+      debug:
         msg: TODO implement

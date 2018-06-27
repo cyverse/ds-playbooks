@@ -16,8 +16,8 @@
       irods_group:
         name: pire
 
-    - name: TEST STUB - for irods_quota
+    - name: set the quota for the pire group
       irods_quota:
         subject: pire
-        resource: pireRes
-        quota: 3495253
+        resource: "{{ _pire_resource_hierarchy.name }}"
+        quota: "{{ _pire_quota }}"

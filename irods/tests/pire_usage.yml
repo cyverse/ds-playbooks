@@ -9,13 +9,22 @@
   run_once: true
   tasks:
     - name: test make PIRE resource hierarchy
-      debug:
-        msg: TODO implement
+      shell: |
+        printf -v expHier 'pireRes:passthru\n└── pire'
+        actHier=$(ilsresc pireRes)
+        [ "$actHier" = "$expHier" ]
+      changed_when: false
 
     - name: test ensure pire group exists
+      shell: |
+        response=$(iquest "select USER_GROUP_ID where USER_GROUP_NAME = 'pire'")
+        ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
+      changed_when: false
+      
+    - name: test set the quota for the pire group
       debug:
         msg: TODO implement
 
-    - name: test set the quota for the pire group
+    - name: test create project collection
       debug:
         msg: TODO implement

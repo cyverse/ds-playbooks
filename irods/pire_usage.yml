@@ -21,3 +21,8 @@
         subject: pire
         resource: "{{ _pire_resource_hierarchy.name }}"
         quota: "{{ _pire_quota }}"
+
+    - name: create project collection
+      irods_collection:
+        name: /iplant/home/shared/eht
+        parents: true

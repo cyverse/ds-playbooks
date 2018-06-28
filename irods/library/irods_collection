@@ -6,7 +6,7 @@
 #  irods_collection
 #
 # Required Variables:
-#  name: the name of the collection to create
+#  name  the absolute path to the collection to create
 #
 # Optional Variables:
 #  parents:  Whether or not to create the parent collections as well the default
@@ -30,7 +30,7 @@ main()
   then
     fail "'parents' must be 'true' or 'false'"
   fi
-  
+
   local id
   id=$(quest "select COLL_ID where COLL_NAME = '$name'")
 
@@ -54,18 +54,6 @@ main()
   fi
 
   succeed true
-}
-
-
-fail()
-{
-  local msg="$*"
-
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
-     '{failed: true, msg: $msg}'
-
-  exit 1
 }
 
 
@@ -97,16 +85,31 @@ require()
 }
 
 
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
 succeed()
 {
   local changed="$1"
 
   # shellcheck disable=SC2016
   jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
-     '{changed: ($changed == "true")}'
+     '{changed: ($changed == "true")}' \
+    >&2
 
   exit 0
 }
 
 
-main "$@"
+set -e
+main "$@" 2>&1

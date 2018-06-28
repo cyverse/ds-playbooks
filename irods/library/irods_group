@@ -6,7 +6,7 @@
 #  irods_group
 #
 # Required Variables:
-#  name: The name of the group to create.
+#  name  The name of the group to create.
 
 
 main()
@@ -32,18 +32,6 @@ main()
   fi
 
   succeed false
-}
-
-
-fail()
-{
-  local msg="$*"
-
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
-     '{failed: true, msg: $msg}'
-
-  exit 1
 }
 
 
@@ -75,16 +63,31 @@ require()
 }
 
 
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
 succeed()
 {
   local changed="$1"
 
   # shellcheck disable=SC2016
   jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
-     '{changed: ($changed == "true")}'
+     '{changed: ($changed == "true")}' \
+    >&2
 
   exit 0
 }
 
 
-main "$@"
+set -e
+main "$@" 2>&1

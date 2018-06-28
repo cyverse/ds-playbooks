@@ -7,7 +7,7 @@
 #
 # Required Variables:
 #  subject   the user or group to receive the quota
-#  resource  the resource the quota is on.  'total' means all resources
+#  resource  the resource the quota is on. 'total' means all resources
 #  quota     the allowed data volume in bytes to allow. '0' means no quota
 
 
@@ -64,18 +64,6 @@ current_quota()
 }
 
 
-fail()
-{
-  local msg="$*"
-
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
-     '{failed: true, msg: $msg}'
-
-  exit 1
-}
-
-
 quest()
 {
   local query="$*"
@@ -104,16 +92,31 @@ require()
 }
 
 
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
 succeed()
 {
   local changed="$1"
 
   # shellcheck disable=SC2016
   jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
-     '{changed: ($changed == "true")}'
+     '{changed: ($changed == "true")}' \
+    >&2
 
   exit 0
 }
 
 
-main "$@"
+set -e
+main "$@" 2>&1

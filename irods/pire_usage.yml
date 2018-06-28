@@ -26,3 +26,12 @@
       irods_collection:
         name: /iplant/home/shared/eht
         parents: true
+
+    - name: TEST STUB - irods_permission
+      irods_permission:
+        subject: rodsadmin
+        permission: own
+        object: /iplant/home/shared/eht
+      register: response
+      failed_when: |
+        response.msg != 'TODO determine if /iplant/home/shared/eht is a collection or data object'

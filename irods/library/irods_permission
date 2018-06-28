@@ -1,0 +1,133 @@
+#!/bin/bash
+#
+# An ansible module for assigning permissions to data objects and collections
+#
+# Module Name:
+#  irods_permission
+#
+# Required Variables:
+#  subject     the user or group receiving the permission
+#  permission  the permission being received (null|read|write|own)
+#  object      the absolute path to the collection or data object being granted
+#              permission on
+#
+# Optional Variables:
+#  recursive   if the object is a collection, whether or not the subject should
+#              be granted the same permission on everything in the collection.
+#              The default is false.
+
+
+main()
+{
+  local varFile="$1"
+
+  local subject
+  local permission
+  local object
+  local recursive
+  . "$varFile"
+
+  local var
+  for var in subject permission object
+  do
+    require "$var"
+  done
+
+  permission="${permission,,}"
+
+  : "${recursive=false}"
+  recursive="${recursive,,}"
+
+  if [ "$recursive" = true ]
+  then
+    fail TODO implement recursive version
+  else
+    local currentPerm
+    currentPerm=$(current_permission "$subject" "$object")
+  fi
+
+  fail TODO determine if permission is changing
+
+# If no permissions are changing
+# succeed false
+# Else change permission(s)
+# succeed true
+}
+
+
+current_permission()
+{
+  local subject="$1"
+  local object="$2"
+
+  fail TODO determine if "$object" is a collection or data object
+
+#  local permission
+# If is collection
+## XXX - This can't bee done due to https://github.com/irods/irods/issues/2337.
+##       It is still present in 4.2.3.
+##  permission=$(quest "select COLL_ACCESS_NAME
+##                      where COLL_NAME = '$object' and USER_NAME = '$subject'")
+#TODO provide workaround for determining what permission a user has on a collection
+## XXX - ^^^
+# Else if is data object
+# TODO determine permission on data object
+}
+
+
+quest()
+{
+  local query="$*"
+
+  local response
+  if ! response=$(iquest '%s' "$query")
+  then
+    fail "couldn't connect to iRODS"
+  fi
+
+  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
+  then
+    printf '%s' "$response"
+  fi
+}
+
+
+require()
+{
+  local var="$1"
+
+  if [ -z "${!var}" ]
+  then
+    fail "variable '$var' must be defined"
+  fi
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
+succeed()
+{
+  local changed="$1"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}' \
+    >&2
+
+  exit 0
+}
+
+
+set -e
+main "$@" 2>&1

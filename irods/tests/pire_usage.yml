@@ -20,10 +20,15 @@
         response=$(iquest "select USER_GROUP_ID where USER_GROUP_NAME = 'pire'")
         ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
       changed_when: false
-      
+
     - name: test set the quota for the pire group
-      debug:
-        msg: TODO implement
+      shell: |
+        quota=$(iquest \
+          '%s' \
+          "select QUOTA_LIMIT where QUOTA_USER_NAME = 'pire' and QUOTA_RESC_NAME = 'pireRes'")
+
+        [ "$quota" -eq 5000000 ]
+      changed_when: false
 
     - name: test create project collection
       debug:

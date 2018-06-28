@@ -6,7 +6,7 @@
 #  irods_collection
 #
 # Required Variables:
-#  name  the absolute path to the collection to create
+#  path  the absolute path to the collection to create
 #
 # Optional Variables:
 #  parents:  Whether or not to create the parent collections as well the default
@@ -17,11 +17,11 @@ main()
 {
   local varFile="$1"
 
-  local name
+  local path
   local parents
   . "$varFile"
 
-  require name
+  require path
 
   : "${parents=false}"
   parents="${parents,,}"
@@ -32,7 +32,7 @@ main()
   fi
 
   local id
-  id=$(quest "select COLL_ID where COLL_NAME = '$name'")
+  id=$(quest "select COLL_ID where COLL_NAME = '$path'")
 
   if [ -n "$id" ]
   then
@@ -42,12 +42,12 @@ main()
   local errMsg
   if [ "$parents" = true ]
   then
-    if ! errMsg=$(imkdir -p "$name")
+    if ! errMsg=$(imkdir -p "$path")
     then
       fail "$errMsg"
     fi
   else
-    if ! errMsg=$(imkdir "$name")
+    if ! errMsg=$(imkdir "$path")
     then
       fail "$errMsg"
     fi

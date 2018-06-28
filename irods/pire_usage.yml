@@ -24,7 +24,7 @@
 
     - name: create project collection
       irods_collection:
-        name: /iplant/home/shared/eht
+        path: /iplant/home/shared/eht
         parents: true
 
     - name: TEST STUB - irods_permission

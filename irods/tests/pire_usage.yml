@@ -31,5 +31,5 @@
       changed_when: false
 
     - name: test create project collection
-      debug:
-        msg: TODO implement
+      shell: ils /iplant/home/shared/eht &> /dev/null
+      changed_when: false

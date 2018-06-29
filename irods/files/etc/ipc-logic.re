@@ -468,7 +468,7 @@ ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zo
   if (*UserName == 'rodsadmin') {
     if (!(*AccessLevel like 'admin:*') && *AccessLevel != resolveAdminPerm(*Path)) {
       cut;
-      failmsg(-830000, 'IPLANT ERROR:  attempt to alter admin user permission.');
+      failmsg(-830000, 'CYVERSE ERROR:  attempt to alter admin user permission.');
     }
   }
 }

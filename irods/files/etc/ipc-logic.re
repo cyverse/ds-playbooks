@@ -355,7 +355,7 @@ avuProtected(*ItemType, *ItemName, *Attribute) {
 ensureAVUEditable(*ItemType, *ItemName, *A, *V, *U) {
   if (avuProtected(*ItemType, *ItemName, *A) && !canModProtectedAVU($userNameProxy)) {
     cut;
-    failmsg(-830000, 'IPLANT ERROR:  attempt to alter protected AVU <*A, *V, *U>');
+    failmsg(-830000, 'CYVERSE ERROR:  attempt to alter protected AVU <*A, *V, *U>');
   }
 }
 
@@ -602,7 +602,7 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *So
 
     # fail to prevent iRODS from also copying the protected metadata
     cut;
-    failmsg(0, 'IPLANT SUCCESS:  Successfully copied the unprotected metadata.');
+    failmsg(0, 'CYVERSE SUCCESS:  Successfully copied the unprotected metadata.');
   }
 }
 

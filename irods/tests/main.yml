@@ -1,8 +1,7 @@
 ---
 - name: test configure AMQP broker
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+  hosts: rabbitmq
+  become: true
   tasks:
     - debug:
         msg: TODO implemnt

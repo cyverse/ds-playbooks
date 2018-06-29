@@ -69,9 +69,9 @@ quest()
   local query="$*"
 
   local response
-  if ! response=$(iquest --no-page '%s' "$query")
+  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
   then
-    fail "couldn't connect to iRODS"
+    fail "$response"
   fi
 
   if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]

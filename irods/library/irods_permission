@@ -43,44 +43,206 @@ main()
 
   if [ "$objectType" = 'data object' ]
   then
-    local currentPerm
-    currentPerm=$(data_permission "$subject" "$object")
-
-    if [ "$currenPerm" = "$permission" ]
+    if test_data_correct "$subject" "$permission" "$object"
     then
       succeed false
     fi
 
-    local errMsg
-    if ! errMsg=$(ichmod -M "$permission" "$subject" "$object")
-    then
-      fail "$errMsg"
-    fi
-
-    succeed true
-  else
-    local currentPerm
-    currentPerm=$(collection_permission "$subject" "$object")
-
-    if [ "$currenPerm" = "$permission" -a "$recursive" = false ]
+    set_permission "$subject" "$permission" "$object"
+  elif [ "$recursive" = false ]
+  then
+    if test_coll_correct "$subject" "$permission" "$object"
     then
       succeed false
     fi
-XXX This is broken from here down
-    if [ "$recursive" = true ]
-    then
 
-
-    fi
-    local errMsg
-    if ! errMsg=$(ichmod -M "$permission" "$subject" "$object")
-    then
-      fail "$errMsg"
-    fi
-
-    succeed true
+    set_permission "$subject" "$permission" "$object"
   else
-    succeed true
+    if test_coll_correct "$subject" "$permission" "$object" \
+       && test_members_correct "$subject" "$permission" "$object"
+    then
+      succeed false
+    fi
+
+    set_perm_recursive "$subject" "$permission" "$object"
+  fi
+
+  succeed true
+}
+
+
+query_perm()
+{
+  local perm="$1"
+
+  local queryPerm
+  case "$perm" in
+    read)
+      queryPerm='read object'
+      ;;
+    write)
+      queryPerm='modify object'
+      ;;
+    *)
+      queryPerm="$perm"
+      ;;
+  esac
+
+  printf '%s' "$queryPerm"
+}
+
+
+set_perm_recursive()
+{
+  local subject="$1"
+  local permission"$2"
+  local collection="$3"
+
+  local errMsg
+  if ! errMsg=$(ichmod -M -r "$permission" "$subject" "$collection")
+  then
+    fail "$errMsg"
+  fi
+}
+
+
+set_permission()
+{
+  local subject="$1"
+  local permission"$2"
+  local object="$3"
+
+  local errMsg
+  if ! errMsg=$(ichmod -M "$permission" "$subject" "$object")
+  then
+    fail "$errMsg"
+  fi
+}
+
+
+test_coll_correct()
+{
+  local subject="$1"
+  local permission="$2"
+  local collPath="$3"
+
+  local queryPerm
+  queryPerm=$(query_perm "$permission")
+
+  local currentPerm
+# XXX - This can't bee done due to https://github.com/irods/irods/issues/2337.
+#       It is still present in 4.2.3.
+# currentPerm=$(quest \
+#   "select COLL_ACCESS_NAME where COLL_ID = '$objectId' and USER_NAME = '$subject'")
+  local subjectId
+  subjectId=$(quest "select USER_ID where USER_NAME = '$subject'")
+
+  currentPerm=$(quest \
+    "select COLL_ACCESS_NAME where COLL_NAME = '$collPath' and COLL_ACCESS_USER_ID = '$subjectId'")
+# XXX - ^^^
+  [ "${currentPerm:-null}" = "$queryPerm" ]
+}
+
+
+test_data_correct()
+{
+  local subject="$1"
+  local permission="$2"
+  local dataPath="$3"
+
+  local queryPerm
+  queryPerm=$(query_perm "$permission")
+
+  local collPath
+  collPath=$(dirname "$dataPath")
+
+  local dataName
+  dataName=$(basename "$dataPath")
+
+  local currentPerm
+  currentPerm=$(quest \
+    "select DATA_ACCESS_NAME
+     where COLL_NAME = '$collPath' and DATA_NAME = '$dataName' and USER_NAME = '$subject'")
+
+  [ "${currentPerm:-null}" = "$queryPerm" ]
+}
+
+
+test_members_correct()
+{
+  local subject="$1"
+  local permission="$2"
+  local parentColl="$3"
+
+  if [ "$permission" = null ]
+  then
+    # subject should have no permission entries for anything under parentColl
+
+    local collCount
+# XXX - This can't bee done due to https://github.com/irods/irods/issues/2337.
+#       It is still present in 4.2.3.
+#   collCount=$(quest \
+#     "select count(COLL_ACCESS_COLL_ID)
+#      where COLL_NAME like '$parentColl/%' and USER_NAME = '$subject'")
+    local subjectId
+    subjectId=$(quest "select USER_ID where USER_NAME = '$subject'")
+
+    collCount=$(quest \
+      "select count(COLL_ACCESS_COLL_ID)
+       where COLL_NAME like '$parentColl/%' and COLL_ACCESS_USER_ID = '$subjectId'")
+# XXX - ^^^
+
+    if [ "$collCount" -ne 0 ]
+    then
+      false
+    fi
+
+    local fileCount
+    fileCount=$(quest \
+      "select count(DATA_ACCESS_DATA_ID)
+       where COLL_NAME like '$parentColl/%' and USER_NAME = '$subject'")
+
+    [ "$fileCount" -eq 0 ]
+  else
+    local queryPerm
+    queryPerm=$(query_perm "$permission")
+
+    local collCount
+    collCount=$(quest "select count(COLL_ID) where COLL_NAME like '$parentColl/%'")
+
+    local correctCollCnt
+# XXX - This can't bee done due to https://github.com/irods/irods/issues/2337.
+#       It is still present in 4.2.3.
+#   correctCollCnt=$(quest \
+#     "select count(COLL_ID)
+#      where COLL_NAME like '$parentColl/%'
+#        and USER_NAME = '$subject'
+#        and COLL_ACCESS_NAME = '$queryPerm'")
+    local subjectId
+    subjectId=$(quest "select USER_ID where USER_NAME = '$subject'")
+
+    correctCollCnt=$(quest \
+      "select count(COLL_ID)
+       where COLL_NAME like '$parentColl/%'
+         and COLL_ACCESS_USER_ID = '$subjectId'
+         and COLL_ACCESS_NAME = '$queryPerm'")
+# XXX - ^^^
+
+    if [ "$correctCollCnt" -lt "$collCount" ]
+    then
+      false
+    fi
+
+    local fileCount
+    fileCount=$(quest "select count(DATA_ID) where COLL_NAME like '$parentColl/%'")
+
+    correctFileCnt=$(quest \
+      "select count(DATA_ID)
+       where COLL_NAME like '$parentColl/%'
+         and USER_NAME = '$subject'
+         and DATA_ACCESS_NAME = '$queryPerm'")
+
+    [ "$correctFileCnt" -ge "$fileCount" ]
   fi
 }
 
@@ -101,110 +263,14 @@ type()
 }
 
 
-collection_permission()
-{
-  local subject="$1"
-  local collPath="$2"
-
-  local permission
-# XXX - This can't bee done due to https://github.com/irods/irods/issues/2337.
-#       It is still present in 4.2.3.
-# permission=$(quest
-#   "select COLL_ACCESS_NAME where COLL_ID = '$objectId' and USER_NAME = '$subject'")
-  local subjectId
-  subjectId=$(quest "select USER_ID where USER_NAME = '$subject'")
-
-  permission=$(quest
-    "select COLL_ACCESS_NAME where COLL_NAME = '$collPath' and COLL_ACCESS_USER_ID = '$subjectId'")
-# XXX - ^^^
-
-  if [ -z "$permission" ]
-  then
-    permission=null
-  fi
-
-  printf '%s' "$permission"
-}
-
-
-data_permission()
-{
-  local subject="$1"
-  local dataPath="$2"
-
-  local collPath
-  collPath=$(dirname "$dataPath")
-
-  local dataName
-  dataName=$(basename "$dataPath")
-
-  local permission
-  permission=$(quest
-    "select DATA_ACCESS_NAME
-     where COLL_NAME = '$collPath' and DATA_NAME = '$dataName' and USER_NAME = '$subject'")
-  fi
-
-  if [ -z "$permission" ]
-  then
-    permission=null
-  fi
-
-  TODO map rest of permissions
-  printf '%s' "$permission"
-}
-
-
-count_permissions()
-{
-  local subject="$1"
-  local permission="$2"
-  local parentColl="$3"
-
-  if [ "$permission" != null ]
-  then
-    local collCount
-    collCount=$(quest \
-      "select count(COLL_ID)
-       where COLL_NAME like '$parentColl/%'
-         and USER_NAME = '$subject'
-         and COLL_ACCESS_NAME = '$permission'")
-
-    local dataCount
-    dataCount=$(quest \
-                  "select DATA_ID
-                   where COLL_NAME like '$parentColl/%'
-                     and USER_NAME = '$subject'
-                     and DATA_ACCESS_NAME = '$permission'" \
-      | wc --lines)
-
-    printf '%s' $((collCount + dataCount))
-  else
-    local allCollCount
-    allCollCount=$(iquest "select count(COLL_ID) where COLL_NAME like '$parentColl/%'")
-
-    local permCollCount
-    permCollCount=$(iquest \
-      "select count(COLL_ACCESS_COLL_ID)
-       where COLL_NAME like '$parentColl/%' and USER_NAME = '$subject'")
-
-    local collCount=$((allCollCount - permCollCount))
-
-    local allDataCount
-    allDataCount=$(iquest "select DATA_ID where COLL_NAME like '$parentColl/$'" | wc --lines)
-
-    fail TODO compute permDataCount and dataCount and return total
-  fi
-}
-
-
 quest()
 {
   local query="$*"
 
   local response
-  if ! response=$(iquest --no-page '%s' "$query")
+  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
   then
-    fail "couldn't connect to iRODS"
+    fail "$response"
   fi
 
   if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]

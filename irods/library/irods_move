@@ -89,7 +89,7 @@ quest()
   local query="$*"
 
   local response
-  if ! response=$(iquest '%s' "$query")
+  if ! response=$(iquest --no-page '%s' "$query")
   then
     fail "couldn't connect to iRODS"
   fi

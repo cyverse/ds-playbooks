@@ -38,40 +38,162 @@ main()
   : "${recursive=false}"
   recursive="${recursive,,}"
 
-  if [ "$recursive" = true ]
+  local objectType
+  objectType=$(type "$object")
+
+  if [ "$objectType" = 'data object' ]
   then
-    fail TODO implement recursive version
+    local currentPerm
+    currentPerm=$(data_permission "$subject" "$object")
+
+    if [ "$currenPerm" = "$permission" ]
+    then
+      succeed false
+    fi
+
+    local errMsg
+    if ! errMsg=$(ichmod -M "$permission" "$subject" "$object")
+    then
+      fail "$errMsg"
+    fi
+
+    succeed true
   else
     local currentPerm
-    currentPerm=$(current_permission "$subject" "$object")
+    currentPerm=$(collection_permission "$subject" "$object")
+
+    if [ "$currenPerm" = "$permission" -a "$recursive" = false ]
+    then
+      succeed false
+    fi
+XXX This is broken from here down
+    if [ "$recursive" = true ]
+    then
+
+
+    fi
+    local errMsg
+    if ! errMsg=$(ichmod -M "$permission" "$subject" "$object")
+    then
+      fail "$errMsg"
+    fi
+
+    succeed true
+  else
+    succeed true
   fi
-
-  fail TODO determine if permission is changing
-
-# If no permissions are changing
-# succeed false
-# Else change permission(s)
-# succeed true
 }
 
 
-current_permission()
+type()
+{
+  local object="$1"
+
+  local collId
+  collId=$(quest "select COLL_ID where COLL_NAME = '$object'")
+
+  if [ -n "$collId" ]
+  then
+    printf collection
+  else
+    printf 'data object'
+  fi
+}
+
+
+collection_permission()
 {
   local subject="$1"
-  local object="$2"
+  local collPath="$2"
 
-  fail TODO determine if "$object" is a collection or data object
+  local permission
+# XXX - This can't bee done due to https://github.com/irods/irods/issues/2337.
+#       It is still present in 4.2.3.
+# permission=$(quest
+#   "select COLL_ACCESS_NAME where COLL_ID = '$objectId' and USER_NAME = '$subject'")
+  local subjectId
+  subjectId=$(quest "select USER_ID where USER_NAME = '$subject'")
 
-#  local permission
-# If is collection
-## XXX - This can't bee done due to https://github.com/irods/irods/issues/2337.
-##       It is still present in 4.2.3.
-##  permission=$(quest "select COLL_ACCESS_NAME
-##                      where COLL_NAME = '$object' and USER_NAME = '$subject'")
-#TODO provide workaround for determining what permission a user has on a collection
-## XXX - ^^^
-# Else if is data object
-# TODO determine permission on data object
+  permission=$(quest
+    "select COLL_ACCESS_NAME where COLL_NAME = '$collPath' and COLL_ACCESS_USER_ID = '$subjectId'")
+# XXX - ^^^
+
+  if [ -z "$permission" ]
+  then
+    permission=null
+  fi
+
+  printf '%s' "$permission"
+}
+
+
+data_permission()
+{
+  local subject="$1"
+  local dataPath="$2"
+
+  local collPath
+  collPath=$(dirname "$dataPath")
+
+  local dataName
+  dataName=$(basename "$dataPath")
+
+  local permission
+  permission=$(quest
+    "select DATA_ACCESS_NAME
+     where COLL_NAME = '$collPath' and DATA_NAME = '$dataName' and USER_NAME = '$subject'")
+  fi
+
+  if [ -z "$permission" ]
+  then
+    permission=null
+  fi
+
+  TODO map rest of permissions
+  printf '%s' "$permission"
+}
+
+
+count_permissions()
+{
+  local subject="$1"
+  local permission="$2"
+  local parentColl="$3"
+
+  if [ "$permission" != null ]
+  then
+    local collCount
+    collCount=$(quest \
+      "select count(COLL_ID)
+       where COLL_NAME like '$parentColl/%'
+         and USER_NAME = '$subject'
+         and COLL_ACCESS_NAME = '$permission'")
+
+    local dataCount
+    dataCount=$(quest \
+                  "select DATA_ID
+                   where COLL_NAME like '$parentColl/%'
+                     and USER_NAME = '$subject'
+                     and DATA_ACCESS_NAME = '$permission'" \
+      | wc --lines)
+
+    printf '%s' $((collCount + dataCount))
+  else
+    local allCollCount
+    allCollCount=$(iquest "select count(COLL_ID) where COLL_NAME like '$parentColl/%'")
+
+    local permCollCount
+    permCollCount=$(iquest \
+      "select count(COLL_ACCESS_COLL_ID)
+       where COLL_NAME like '$parentColl/%' and USER_NAME = '$subject'")
+
+    local collCount=$((allCollCount - permCollCount))
+
+    local allDataCount
+    allDataCount=$(iquest "select DATA_ID where COLL_NAME like '$parentColl/$'" | wc --lines)
+
+    fail TODO compute permDataCount and dataCount and return total
+  fi
 }
 
 
@@ -80,7 +202,7 @@ quest()
   local query="$*"
 
   local response
-  if ! response=$(iquest '%s' "$query")
+  if ! response=$(iquest --no-page '%s' "$query")
   then
     fail "couldn't connect to iRODS"
   fi

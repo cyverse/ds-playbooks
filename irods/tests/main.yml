@@ -1,11 +1,4 @@
 ---
-- name: test enable restarting of iRODS
-  hosts: irods
-  tasks:
-    - debug:
-        msg: TODO implement
-
-
 - name: test configure AMQP broker
   hosts: localhost
   gather_facts: false

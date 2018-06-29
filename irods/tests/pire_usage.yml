@@ -33,3 +33,7 @@
     - name: test create project collection
       shell: ils /iplant/home/shared/eht &> /dev/null
       changed_when: false
+
+    - name: test ensure pire owns everything in the project collection
+      shell: ils -A /iplant/home/shared/eht | grep --quiet 'pire#iplant:own'
+      changed_when: false

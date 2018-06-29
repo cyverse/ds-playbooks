@@ -27,7 +27,7 @@
         path: /iplant/home/shared/eht
         parents: true
 
-    - name: TEST STUB - irods_permission
+    - name: ensure pire owns everything in the project collection
       irods_permission:
         subject: pire
         permission: own

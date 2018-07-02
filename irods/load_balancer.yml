@@ -6,7 +6,7 @@
     server: "{{ groups['ies'][0] | regex_replace('\\..*') }}"
     server_ip: "{{ lookup('dig', groups['ies'][0]) }}"
   roles:
-    - role: uoi-io.haproxy
+    - role: uoi_io.haproxy
       vars:
         haproxy_firewalld: false
         haproxy_selinux: false

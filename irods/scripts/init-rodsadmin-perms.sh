@@ -25,22 +25,24 @@
 # our iRODS IES run on CentOS 6, this script should be modified to use this
 # instead of relying on the stdout of gather_changes to pass up the exit status.
 
-ChangedSomething=false
+set -eu
+
+
+readonly Changes=$(mktemp)
 
 
 finish_up()
 {
   local exitCode="$?"
 
-  printf %s "$ChangedSomething"
+  rm --force "$Changes"
   exit "$exitCode"
 }
+trap finish_up EXIT
 
 
 main()
 {
-  trap finish_up EXIT
-
   if [ "$#" -lt 3 ]
   then
     printf 'requires three input parameters\n' >&2
@@ -51,7 +53,25 @@ main()
   local dbmsPort="$2"
   local dbUser="$3"
 
-  set_permissions < <(gather_changes "$dbmsHost" "$dbmsPort" "$dbUser")
+  gather_changes "$dbmsHost" "$dbmsPort" "$dbUser" > "$Changes"
+
+  if [ -s "$Changes" ]
+  then
+    set_permissions write < "$Changes"
+    set_permissions own < "$Changes"
+    printf true
+  else
+    printf false
+  fi
+}
+
+
+extract_path()
+{
+  while IFS=\| read -r -d '' perm path
+  do
+    printf '%s\x00' "$path"
+  done
 }
 
 
@@ -85,32 +105,29 @@ CREATE TEMPORARY TABLE all_with_perms (path, actual_perm, expected_perm) AS
 SELECT a.path, r.perm, CASE WHEN a.path ~ '^/iplant/[^/]*/.*' THEN 'own' ELSE 'modify object' END
 FROM all_entities AS a LEFT JOIN rodsadmin_perms AS r ON r.object_id = a.id;
 
-SELECT expected_perm, path FROM all_with_perms WHERE actual_perm != expected_perm;
+SELECT expected_perm, path FROM all_with_perms WHERE actual_perm IS DISTINCT FROM expected_perm;
 
 ROLLBACK;
 SQL
-
-  local rc="$?"
-  printf '%s' "$rc"
 }
 
 
 set_permissions()
 {
-  local ec=0
+  local perm="$1"
 
-  local perm
-  local path
-  while IFS=\| read -r -d '' perm path || {  ec="$perm" && break; }
-  do
-    ichmod -M "${perm/modify object/write}" rodsadmin "$path"
-    ec="$?"
-    ChangedSomething=true
-  done
+  local permLabel
+  if [ "$perm" = write ]
+  then
+    permLabel='modify object'
+  else
+    permLabel=own
+  fi
 
-  return "$ec"
+  grep --null-data --regexp "^$permLabel" \
+    | extract_path \
+    | xargs --no-run-if-empty --null ichmod -M "$perm" rodsadmin
 }
 
 
-set -u
 main "$@"

@@ -1,0 +1,65 @@
+#!/bin/bash
+#
+# Creates a collection as a given user for a given DE app execution
+#
+# USAGE:
+#  create-collection clientUser collPath analId execId
+#
+# PARAMETERS:
+#  clientUser  The iRODS user name of the client to create a collection as
+#  collPath    The logical path to the collection to create
+#  execId      The Id of the DE app execution that is generating the collection
+#  appId       The Id of the DE app that was executed
+
+
+main()
+{
+  if [ "$#" -lt 4 ]
+  then
+    printf 'Too few input parameters\n' >&2
+    return 1
+  fi
+
+  local clientUser="$1"
+  local collPath="$2"
+  local execId="$3"
+  local appId="$4"
+
+  if ! clientUserName="$clientUser" imkdir -p "$collPath"
+  then
+    return 1
+  fi
+
+  local avus
+  avus=$(iquest '%s %s' \
+                "select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '$collPath'" \
+           2> /dev/null)
+
+  if [[ "$avus" =~ CAT_NO_ROWS_FOUND: ]]
+  then
+    avus=
+  fi
+
+  if [ -n "$execId" ]
+  then
+    local avu="ipc-execution-id $execId"
+
+    if ! [[ "$avus" =~ $avu ]]
+    then
+      imeta adda -c "$collPath" ipc-execution-id "$execId" UUID
+    fi
+  fi
+
+  if [ -n "$appId" ]
+  then
+    local avu="ipc-analysis-id $appId"
+
+    if ! [[ "$avus" =~ $avu ]]
+    then
+      imeta adda -c "$collPath" ipc-analysis-id "$appId" UUID
+    fi
+  fi
+}
+
+
+main "$@"

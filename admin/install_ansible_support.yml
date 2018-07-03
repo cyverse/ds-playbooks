@@ -9,26 +9,18 @@
         name: dmidecode
         state: present
 
+
 - name: Install required packages for ansible
   hosts: all:!unmanaged_systems
   become: true
   tasks:
-    - name: install libselinux python support
+    - name: install packages
       package:
-        name: "{{ 'libselinux-python' if ansible_distribution == 'CentOS' else 'python-selinux' }}"
+        name: "{{ item }}"
         state: present
-
-    - name: install pip
-      package:
-        name: python-pip
-        state: present
-
-    - name: install requests
-      package:
-        name: python-requests
-        state: present
-
-    - name: install virtualenv
-      package:
-        name: python-virtualenv
-        state: present
+      with_items:
+        - jq
+        - "{{ 'libselinux-python' if ansible_distribution == 'CentOS' else 'python-selinux' }}"
+        - python-pip
+        - python-requests
+        - python-virtualenv

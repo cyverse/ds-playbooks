@@ -46,9 +46,6 @@
         state: restarted
 
 
-- import_playbook: mk_vaults.yml
-
-
 - name: install resource server package
   hosts: rs:!ies:!unmanaged_systems
   become: true
@@ -56,3 +53,7 @@
   tasks:
     - import_tasks: tasks/install_resource_pkg.yml
     - import_tasks: tasks/install_plugins.yml
+
+
+- import_playbook: mk_storage_resources.yml
+- import_playbook: mk_resource_hierarchies.yml

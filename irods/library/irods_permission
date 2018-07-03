@@ -1,0 +1,321 @@
+#!/bin/bash
+#
+# An ansible module for assigning permissions to data objects and collections
+#
+# Module Name:
+#  irods_permission
+#
+# Required Variables:
+#  subject     the user or group receiving the permission
+#  permission  the permission being received (null|read|write|own)
+#  object      the absolute path to the collection or data object being granted
+#              permission on
+#
+# Optional Variables:
+#  recursive   if the object is a collection, whether or not the subject should
+#              be granted the same permission on everything in the collection.
+#              The default is false.
+
+
+main()
+{
+  local varFile="$1"
+
+  local subject
+  local permission
+  local object
+  local recursive
+  . "$varFile"
+
+  local var
+  for var in subject permission object
+  do
+    require "$var"
+  done
+
+  permission="${permission,,}"
+
+  : "${recursive=false}"
+  recursive="${recursive,,}"
+
+  local objectType
+  objectType=$(type "$object")
+
+  if [ "$objectType" = 'data object' ]
+  then
+    if test_data_correct "$subject" "$permission" "$object"
+    then
+      succeed false
+    fi
+
+    set_permission "$subject" "$permission" "$object"
+  elif [ "$recursive" = false ]
+  then
+    if test_coll_correct "$subject" "$permission" "$object"
+    then
+      succeed false
+    fi
+
+    set_permission "$subject" "$permission" "$object"
+  else
+    if test_coll_correct "$subject" "$permission" "$object" \
+       && test_members_correct "$subject" "$permission" "$object"
+    then
+      succeed false
+    fi
+
+    set_perm_recursive "$subject" "$permission" "$object"
+  fi
+
+  succeed true
+}
+
+
+query_perm()
+{
+  local perm="$1"
+
+  local queryPerm
+  case "$perm" in
+    read)
+      queryPerm='read object'
+      ;;
+    write)
+      queryPerm='modify object'
+      ;;
+    *)
+      queryPerm="$perm"
+      ;;
+  esac
+
+  printf '%s' "$queryPerm"
+}
+
+
+set_perm_recursive()
+{
+  local subject="$1"
+  local permission"$2"
+  local collection="$3"
+
+  local errMsg
+  if ! errMsg=$(ichmod -M -r "$permission" "$subject" "$collection")
+  then
+    fail "$errMsg"
+  fi
+}
+
+
+set_permission()
+{
+  local subject="$1"
+  local permission"$2"
+  local object="$3"
+
+  local errMsg
+  if ! errMsg=$(ichmod -M "$permission" "$subject" "$object")
+  then
+    fail "$errMsg"
+  fi
+}
+
+
+test_coll_correct()
+{
+  local subject="$1"
+  local permission="$2"
+  local collPath="$3"
+
+  local queryPerm
+  queryPerm=$(query_perm "$permission")
+
+  local currentPerm
+# XXX - This can't bee done due to https://github.com/irods/irods/issues/2337.
+#       It is still present in 4.2.3.
+# currentPerm=$(quest \
+#   "select COLL_ACCESS_NAME where COLL_ID = '$objectId' and USER_NAME = '$subject'")
+  local subjectId
+  subjectId=$(quest "select USER_ID where USER_NAME = '$subject'")
+
+  currentPerm=$(quest \
+    "select COLL_ACCESS_NAME where COLL_NAME = '$collPath' and COLL_ACCESS_USER_ID = '$subjectId'")
+# XXX - ^^^
+  [ "${currentPerm:-null}" = "$queryPerm" ]
+}
+
+
+test_data_correct()
+{
+  local subject="$1"
+  local permission="$2"
+  local dataPath="$3"
+
+  local queryPerm
+  queryPerm=$(query_perm "$permission")
+
+  local collPath
+  collPath=$(dirname "$dataPath")
+
+  local dataName
+  dataName=$(basename "$dataPath")
+
+  local currentPerm
+  currentPerm=$(quest \
+    "select DATA_ACCESS_NAME
+     where COLL_NAME = '$collPath' and DATA_NAME = '$dataName' and USER_NAME = '$subject'")
+
+  [ "${currentPerm:-null}" = "$queryPerm" ]
+}
+
+
+test_members_correct()
+{
+  local subject="$1"
+  local permission="$2"
+  local parentColl="$3"
+
+  if [ "$permission" = null ]
+  then
+    # subject should have no permission entries for anything under parentColl
+
+    local collCount
+# XXX - This can't bee done due to https://github.com/irods/irods/issues/2337.
+#       It is still present in 4.2.3.
+#   collCount=$(quest \
+#     "select count(COLL_ACCESS_COLL_ID)
+#      where COLL_NAME like '$parentColl/%' and USER_NAME = '$subject'")
+    local subjectId
+    subjectId=$(quest "select USER_ID where USER_NAME = '$subject'")
+
+    collCount=$(quest \
+      "select count(COLL_ACCESS_COLL_ID)
+       where COLL_NAME like '$parentColl/%' and COLL_ACCESS_USER_ID = '$subjectId'")
+# XXX - ^^^
+
+    if [ "$collCount" -ne 0 ]
+    then
+      false
+    fi
+
+    local fileCount
+    fileCount=$(quest \
+      "select count(DATA_ACCESS_DATA_ID)
+       where COLL_NAME like '$parentColl/%' and USER_NAME = '$subject'")
+
+    [ "$fileCount" -eq 0 ]
+  else
+    local queryPerm
+    queryPerm=$(query_perm "$permission")
+
+    local collCount
+    collCount=$(quest "select count(COLL_ID) where COLL_NAME like '$parentColl/%'")
+
+    local correctCollCnt
+# XXX - This can't bee done due to https://github.com/irods/irods/issues/2337.
+#       It is still present in 4.2.3.
+#   correctCollCnt=$(quest \
+#     "select count(COLL_ID)
+#      where COLL_NAME like '$parentColl/%'
+#        and USER_NAME = '$subject'
+#        and COLL_ACCESS_NAME = '$queryPerm'")
+    local subjectId
+    subjectId=$(quest "select USER_ID where USER_NAME = '$subject'")
+
+    correctCollCnt=$(quest \
+      "select count(COLL_ID)
+       where COLL_NAME like '$parentColl/%'
+         and COLL_ACCESS_USER_ID = '$subjectId'
+         and COLL_ACCESS_NAME = '$queryPerm'")
+# XXX - ^^^
+
+    if [ "$correctCollCnt" -lt "$collCount" ]
+    then
+      false
+    fi
+
+    local fileCount
+    fileCount=$(quest "select count(DATA_ID) where COLL_NAME like '$parentColl/%'")
+
+    correctFileCnt=$(quest \
+      "select count(DATA_ID)
+       where COLL_NAME like '$parentColl/%'
+         and USER_NAME = '$subject'
+         and DATA_ACCESS_NAME = '$queryPerm'")
+
+    [ "$correctFileCnt" -ge "$fileCount" ]
+  fi
+}
+
+
+type()
+{
+  local object="$1"
+
+  local collId
+  collId=$(quest "select COLL_ID where COLL_NAME = '$object'")
+
+  if [ -n "$collId" ]
+  then
+    printf collection
+  else
+    printf 'data object'
+  fi
+}
+
+
+quest()
+{
+  local query="$*"
+
+  local response
+  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
+  then
+    fail "$response"
+  fi
+
+  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
+  then
+    printf '%s' "$response"
+  fi
+}
+
+
+require()
+{
+  local var="$1"
+
+  if [ -z "${!var}" ]
+  then
+    fail "variable '$var' must be defined"
+  fi
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
+succeed()
+{
+  local changed="$1"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}' \
+    >&2
+
+  exit 0
+}
+
+
+set -e
+main "$@" 2>&1

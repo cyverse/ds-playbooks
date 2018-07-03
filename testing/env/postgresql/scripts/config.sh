@@ -149,7 +149,7 @@ INSERT INTO R_RESC_MAIN (
   free_space, free_space_ts, resc_info, r_comment, resc_status, create_ts,    modify_ts)
 VALUES (
   $rescId, '$rescName', '$zoneName', 'unixfilesystem', 'cache',         '$server', '$vault',
-  '',         '',            '',        '',        '',          '0$createTs', '0$createTs');
+  '',         '',            '',        '',        'up',        '0$createTs', '0$createTs');
 EOF
 }
 

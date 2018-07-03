@@ -113,6 +113,8 @@ acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *Source
 # NOTE: The camelcasing is inconsistent here
 acPreprocForRmColl { ipc_acPreprocForRmColl; }
 
+pep_resource_resolve_hierarchy_pre(*OUT) { pire_resource_resolve_hierarchy_pre(*OUT); }
+
 
 # POST-PROC RULE HOOKS
 #
@@ -129,6 +131,9 @@ acPostProcForPut {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(pire_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sanimal_acPostProcForPut, *msg);
@@ -151,6 +156,9 @@ acPostProcForCopy {
   *err = errormsg(coge_acPostProcForCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
+  *err = errormsg(pire_acPostProcForCopy, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
   *err = errormsg(sciapps_acPostProcForCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
@@ -169,6 +177,9 @@ acPostProcForCollCreate {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(pire_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sciapps_acPostProcForCollCreate, *msg);
@@ -201,6 +212,9 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(pire_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sciapps_acPostProcForObjRename(*SourceObject, *DestObject), *msg);

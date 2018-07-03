@@ -1,0 +1,142 @@
+#!/bin/bash
+#
+# An ansible module for renaming a data object or collection. To ensure
+# idempotency, if the source doesn't exist, but the destination does, it is
+# assumed that the move already happened and the module succeeds.
+#
+# Module Name
+#  irods_move
+#
+# Required Variables
+#  source       the current absolute path to the collection or data object
+#  destination  the new absolute path to the collection or data object
+
+
+main()
+{
+  local varFile="$1"
+
+  local source
+  local destination
+  . "$varFile"
+
+  local var
+  for var in source destination
+  do
+    require "$var"
+  done
+
+  local sourceId
+  sourceId=$(id "$source")
+
+  if [ -n "$sourceId" -a "$destination" = "$source" ]
+  then
+    succeed false
+  fi
+
+  local destinationId
+  destinationId=$(id "$destination")
+
+  if [ -z "$sourceId" ]
+  then
+    if [ -n "$destinationId" ]
+    then
+      succeed false
+    fi
+
+    fail "'$source' doesn't exist"
+  fi
+
+  if [ -n "$destinationId" ]
+  then
+    fail "'$destination' already exists"
+  fi
+
+  local errMsg
+  if ! errMsg=$(imv "$source" "$destination" 2>&1)
+  then
+    fail "$errMsg"
+  fi
+
+  succeed true
+}
+
+
+id()
+{
+  local entity="$1"
+
+  local entityId
+  entityId=$(quest "select COLL_ID where COLL_NAME = '$entity'")
+
+  if [ -z "$entityId" ]
+  then
+    local parentColl
+    parentColl=$(dirname "$entity")
+
+    local dataName
+    dataName=$(basename "$entity")
+
+    entityId=$(quest "select DATA_ID where COLL_NAME = '$parentColl' and DATA_NAME = '$dataName'")
+  fi
+
+  printf '%s' "$entityId"
+}
+
+
+quest()
+{
+  local query="$*"
+
+  local response
+  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
+  then
+    fail "$response"
+  fi
+
+  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
+  then
+    printf '%s' "$response"
+  fi
+}
+
+
+require()
+{
+  local var="$1"
+
+  if [ -z "${!var}" ]
+  then
+    fail "variable '$var' must be defined"
+  fi
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
+succeed()
+{
+  local changed="$1"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}' \
+    >&2
+
+  exit 0
+}
+
+
+set -e
+main "$@" 2>&1

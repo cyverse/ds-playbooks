@@ -1,7 +1,11 @@
 ---
 irods_storage_resources:
+  - name: pire
+    vault: /var/lib/irods/pire_vault
+    context: minimum_free_space_for_create_in_bytes=1048576
+
   - name: rs_centos6
-    vault: "{{ _irods_default_vault }}"
+    vault: "{{ irods_default_vault }}"
     context: minimum_free_space_for_create_in_bytes=1048576
 
 rebootable: false

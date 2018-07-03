@@ -1,0 +1,8 @@
+---
+# PARAMETERS:
+#  hierarchy  the resource hiearchy to create
+
+- name: create resource hierarchy
+  script: scripts/create-resc-hierarchy.sh '{{ hierarchy | to_json }}'
+  register: result
+  changed_when: result.stdout == 'changed'

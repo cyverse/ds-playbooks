@@ -1,0 +1,36 @@
+---
+- import_playbook: mk_storage_resources.yml
+
+
+- name: Configure IES for PIRE
+  hosts: ies
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
+  run_once: true
+  tasks:
+    - include_tasks: tasks/mk_resource_hierarchy.yml
+      vars:
+        hierarchy: "{{ _pire_resource_hierarchy }}"
+
+    - name: ensure pire group exists
+      irods_group:
+        name: pire
+
+    - name: set the quota for the pire group
+      irods_quota:
+        subject: pire
+        resource: "{{ _pire_resource_hierarchy.name }}"
+        quota: "{{ _pire_quota }}"
+
+    - name: create project collection
+      irods_collection:
+        path: /iplant/home/shared/eht
+        parents: true
+
+    - name: ensure pire owns everything in the project collection
+      irods_permission:
+        subject: pire
+        permission: own
+        object: /iplant/home/shared/eht
+        recursive: true
+      register: response

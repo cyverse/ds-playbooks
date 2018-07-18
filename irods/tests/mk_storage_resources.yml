@@ -33,7 +33,6 @@
 
     - name: verify context is correct
       shell: |
-        local context
         if ! context=$(iquest '%s' "select RESC_CONTEXT where RESC_NAME = '{{ item.name }}'")
         then
           exit 1
@@ -45,7 +44,6 @@
 
     - name: verify status has been initialized
       shell: |
-        local status
         if ! status=$(iquest '%s' "select RESC_STATUS where RESC_NAME = '{{ item.name }}'")
         then
           exit 1
@@ -57,7 +55,6 @@
 
     - name: verify free space is initialized
       shell: |
-        local freeSpace
         if ! freeSpace=$(iquest '%s' "select RESC_FREE_SPACE where RESC_NAME = '{{ item.name }}'")
         then
           exit 1

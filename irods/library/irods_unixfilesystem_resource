@@ -1,94 +1,195 @@
 #!/bin/bash
-
-Changed=false
-
-
-notify_changed()
-{
-  printf '%s' "$Changed"
-}
-trap notify_changed EXIT
+#
+# An ansible module for creating an iRODS Unix filesystem storage resource
+#
+# Module Name:
+#  irods_unixfilesystem_resource
+#
+# Required Variables:
+#  name   the name of the resource
+#  host   the FQDN of the resource server hosting this resource
+#  vault  the absolute path to the root directory of the vault
+#
+# Optional Variables:
+#  context          any context to attach to this resource
+#  status           starting status 'up' or 'down'
+#  init_free_space  whether or not to initialize freespace
 
 
 main()
 {
-  local resc="$1"
-  local server="$2"
-  local vault="$3"
-  local context="$4"
+  local varFile="$1"
 
-  local rescType
-  rescType=$(iquest '%s' "select RESC_TYPE_NAME where RESC_NAME = '$resc'")
+  local name
+  local host
+  local vault
+  local context
+  local status
+  local init_free_space
+  . "$varFile"
 
-  if [ "$rescType" = "CAT_NO_ROWS_FOUND: Nothing was found matching your query" ]
+  require name
+  require host
+  require vault
+
+  : "${status=up}"
+
+  : "${init_free_space=false}"
+  init_free_space="${init_free_space,,}"
+
+  if [ "$init_free_space" != true -a "$init_free_space" != false ]
   then
-    define_resource "$resc" "$server" "$vault" "$context"
+    fail "'init_free_space must be 'true' or 'false'"
+  fi
+
+  local id
+  id=$(quest_resc "$name" RESC_ID)
+
+  if [ -z "$id" ]
+  then
+    define_resource "$name" "$host" "$vault" "$context" "$status" "$init_free_space"
+    succeed true
+  elif verify_resource "$name" "$host" "$vault" "$context"
+  then
+    succeed false
   else
-    update_resource "$resc" "$server" "$vault" "$context"
+    fail "$name already exists with a different configuration"
   fi
 }
 
 
 define_resource()
 {
-  local resc="$1"
-  local server="$2"
+  local name="$1"
+  local host="$2"
   local vault="$3"
   local context="$4"
+  local status="$5"
+  local initFreeSpace="$6"
 
-  iadmin mkresc "$resc" unixfilesystem "$server":"$vault" "$context" > /dev/null
-  Changed=true
-  iadmin modresc "$resc" status down
-  set_free_space "$resc" "$vault"
-}
+  local errMsg
 
-
-set_free_space()
-{
-  local resc="$1"
-  local vault="$2"
-
-  local freeSpace
-  freeSpace=$(df --portability --block-size 1 "$vault" | tail -1 | awk '{ print $4 }')
-  iadmin modresc "$resc" freespace "$freeSpace"
-  Changed=true
-}
-
-
-update_resource()
-{
-  local resc="$1"
-  local server="$2"
-  local vault="$3"
-  local context="$4"
-
-  local rescLoc
-  rescLoc=$(iquest '%s:%s' "select RESC_LOC, RESC_VAULT_PATH where RESC_NAME = '$resc'")
-
-  if [ "$rescType" != unixfilesystem -o "$rescLoc" != "$server":"$vault" ]
+  if ! errMsg=$(iadmin mkresc "$name" 'unix file system' "$host":"$vault" "$context" 2>&1)
   then
-    printf '%s exists with incorrect definition "%s %s"\n' "$resc" "$rescType" "$rescLoc" >&2
-    return 1
+    fail "$errMsg"
   fi
+
+  if ! errMsg=$(iadmin modresc "$name" status "$status")
+  then
+    iadmin rmresc "$name" &> /dev/null
+    fail "$errMsg"
+  fi
+
+  if [ "$initFreeSpace" = true ]
+  then
+    local freeSpace
+    freeSpace=$(get_free_space "$vault")
+
+    if ! errMsg=$(iadmin modresc "$name" freespace "$freeSpace")
+    then
+      iadmin rmresc "$name" &> /dev/null
+      fail "$errMsg"
+    fi
+  fi
+}
+
+
+get_free_space()
+{
+  local vault="$1"
+
+  df --portability --block-size 1 "$vault" | tail -1 | awk '{ print $4 }'
+}
+
+
+quest_resc()
+{
+  local name="$1"
+  local parameter="$2"
+
+  quest "select $parameter where RESC_NAME = '$name'"
+}
+
+
+verify_resource()
+{
+  local name="$1"
+  local host="$2"
+  local vault="$3"
+  local context="$4"
+
+  local currentType
+  currentType=$(quest_resc "$name" RESC_TYPE_NAME)
+
+  local currentHost
+  currentHost=$(quest_resc "$name" RESC_LOC)
+
+  local currentVault
+  currentVault=$(quest_resc "$name" RESC_VAULT_PATH)
 
   local currentContext
-  currentContext=$(iadmin lr "$resc" | sed --quiet 's/^resc_context: //p')
+  currentContext=$(quest_resc "$name" RESC_CONTEXT)
 
-  if [ "$context" != "$currentContext" ]
+  [ "$currentType" = 'unix file system' -o "$currentType" = unixfilesystem ] \
+    && [ "$currentHost" = "$host" ] \
+    && [ "$currentVault" = "$vault" ] \
+    && [ "$currentContext" = "$context" ]
+}
+
+
+quest()
+{
+  local query="$*"
+
+  local response
+  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
   then
-    iadmin modresc "$resc" context "$context"
-    Changed=true
+    fail "$response"
   fi
 
-  local freeSpace
-  freeSpace=$(iquest '%s' "select RESC_FREE_SPACE where RESC_NAME = '$resc'")
-
-  if [ -z "$freeSpace" ]
+  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
   then
-    set_free_space "$resc" "$vault"
+    printf '%s' "$response"
   fi
 }
 
 
-set -eu -o pipefail
-main "$@"
+require()
+{
+  local var="$1"
+
+  if [ -z "${!var}" ]
+  then
+    fail "variable '$var' must be defined"
+  fi
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
+succeed()
+{
+  local changed="$1"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}' \
+    >&2
+
+  exit 0
+}
+
+
+set -e
+main "$@" 2>&1

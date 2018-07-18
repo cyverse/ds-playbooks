@@ -20,11 +20,11 @@
   become_user: "{{ _irods_service_account_name }}"
   tasks:
     - name: define storage resource
-      script: |
-        scripts/create-storage-resc.sh '{{ item.name }}' \
-                                       '{{ inventory_hostname }}' \
-                                       '{{ item.vault }}' \
-                                       '{{ item.context }}'
-      register: result
-      changed_when: result.stdout == 'true'
+      irods_unixfilesystem_resource:
+        name: "{{ item.name }}"
+        host: "{{ inventory_hostname }}"
+        vault: "{{ item.vault }}"
+        context: "{{ item.context }}"
+        status: down
+        init_free_space: true
       with_items: "{{ _irods_storage_resources }}"

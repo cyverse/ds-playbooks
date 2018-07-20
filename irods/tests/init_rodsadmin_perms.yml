@@ -1,0 +1,10 @@
+---
+- name: test init_rodsadmin_perms
+  hosts: ies
+  become: true
+  become_user: irods
+  run_once: true
+  tasks:
+    - name: test initialize perms
+      debug:
+        msg: TODO implement

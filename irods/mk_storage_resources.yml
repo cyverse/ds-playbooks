@@ -1,0 +1,30 @@
+---
+- name: create vaults
+  hosts: rs:!unmanaged_systems
+  become: true
+  tasks:
+    - name: create vault directory
+      file:
+        path: "{{ item.vault }}"
+        follow: yes
+        owner: "{{ _irods_service_account_name }}"
+        group: "{{ _irods_service_group_name }}"
+        mode: 'u=rwx'
+        state: directory
+      with_items: "{{ _irods_storage_resources }}"
+
+
+- name: create storage resources
+  hosts: rs
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tasks:
+    - name: define storage resource
+      irods_unixfilesystem_resource:
+        name: "{{ item.name }}"
+        host: "{{ inventory_hostname }}"
+        vault: "{{ item.vault }}"
+        context: "{{ item.context }}"
+        status: down
+        init_free_space: true
+      with_items: "{{ _irods_storage_resources }}"

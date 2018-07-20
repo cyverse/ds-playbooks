@@ -64,13 +64,15 @@ do_test()
   fi
 
   printf 'Checking idempotency\n'
-  run_playbook --skip-tags 'no_testing, non_idempotent' "$playbookPath" 2>&1 \
-    | sed --quiet '/^PLAY RECAP/ { s///; :a; n; /changed=\([^0]\|0.*failed=[^0]\)/p; ba; }' \
-    | if read
-      then
-        printf 'not idempotent\n'
-        return 1
-      fi
+
+  local idempotencyRes
+  idempotencyRes=$(run_playbook --skip-tags 'no_testing, non_idempotent' "$playbookPath" 2>&1)
+
+  if grep --quiet --regexp '^\(changed\|failed\):' <<< "$idempotencyRes"
+  then
+    printf '%s\n' "$idempotencyRes"
+    return 1
+  fi
 }
 
 
@@ -80,4 +82,5 @@ run_playbook()
 }
 
 
+set -u -o pipefail
 main "$@"

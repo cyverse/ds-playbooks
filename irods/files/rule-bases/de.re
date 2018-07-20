@@ -4,7 +4,10 @@
 _de_STAGING_BASE = '/' ++ ipc_ZONE ++ '/jobs'
 
 
-_de_inStaging(*Object) = *Object like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+/.+'
+_de_inStagedJob(*Object) = *Object like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+/.+'
+
+
+_de_inStaging(*Entity) = str(*Entity) like _de_STAGING_BASE ++ '/*'
 
 
 _de_createArchiveColl(*Coll, *Creator, *AppId, *JobId) {
@@ -65,7 +68,7 @@ _de_createArchiveCollFor(*StagingColl) {
 #  false
 #
 de_replBelongsTo : path -> boolean
-de_replBelongsTo(*Entity) = str(*Entity) like _de_STAGING_BASE ++ '/*'
+de_replBelongsTo(*Entity) = _de_inStaging(*Entity)
 
 
 # Returns the resource where newly ingested files will be stored
@@ -100,7 +103,7 @@ de_acPreProcForObjRename(*SourceObject, *DestObject) {
 }
 
 de_acPostProcForCollCreate {
-  if (_de_inStaging($collName)) {
+  if (_de_inStagedJob($collName)) {
     _de_createArchiveCollFor($collName);
   }
 }

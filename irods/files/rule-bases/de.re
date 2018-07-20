@@ -91,19 +91,16 @@ de_replReplResc : string * boolean
 de_replReplResc = de_replIngestResc
 
 
-de_acPostProcForCollCreate {
-  if (_de_inStaging($collName)) {
-    _de_createArchiveCollFor($collName);
+# Verifies that a collection or data object isn't being moved within the staging
+#  area.
+de_acPreProcForObjRename(*SourceObject, *DestObject) {
+  if (_de_inStaging(*SourceObject) || _de_inStaging(*DestObject)) {
+    failmsg(-350000, "CYVERSE ERROR:  attempt to move entity within DE's staging area");
   }
 }
 
-
-de_acPostProcForObjRename(*SourceObject, *DestObject) {
-  if (_de_inStaging(*DestObject)) {
-    msiGetObjType(*DestObject, *type);
-
-    if (*type == '-c') {
-      _de_createArchiveCollFor(*DestObject);
-    }
+de_acPostProcForCollCreate {
+  if (_de_inStaging($collName)) {
+    _de_createArchiveCollFor($collName);
   }
 }

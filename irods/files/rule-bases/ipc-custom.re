@@ -110,6 +110,10 @@ acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *Source
                                     *TargetItemName);
 }
 
+acPreProcForObjRename(*SourceObject, *DestObject) {
+  de_acPreProcForObjRename(*SourceObject, *DestObject);
+}
+
 # NOTE: The camelcasing is inconsistent here
 acPreprocForRmColl { ipc_acPreprocForRmColl; }
 
@@ -177,6 +181,9 @@ acPostProcForCollCreate {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(de_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(pire_acPostProcForCollCreate, *msg);

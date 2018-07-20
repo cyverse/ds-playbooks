@@ -98,6 +98,7 @@ de_replReplResc = de_replIngestResc
 #  area.
 de_acPreProcForObjRename(*SourceObject, *DestObject) {
   if (_de_inStaging(*SourceObject) || _de_inStaging(*DestObject)) {
+    cut;
     failmsg(-350000, "CYVERSE ERROR:  attempt to move entity within DE's staging area");
   }
 }

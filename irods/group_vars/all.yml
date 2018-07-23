@@ -9,7 +9,7 @@ _bisque_url: "{{ bisque_url if bisque_url is defined else None }}"
 
 _bisque_user: "{{ bisque_user if bisque_user is defined else 'admin' }}"
 
-_caliope_irods_base_coll: "{{ caliope_irods_base_coll if caliope_irods_base_coll is defined else
+_calliope_irods_base_coll: "{{ calliope_irods_base_coll if calliope_irods_base_coll is defined else
                               None }}"
 
 _dbms_password: "{{ dbms_password if dbms_password is defined else None }}"

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Usage: caliope-ingest ZONE UPLOADER TARFILE
+# Usage: calliope-ingest ZONE UPLOADER TARFILE
 #
 # ZONE is the iRODS zone. UPLOADER is the iRODS username of the user who
 # uploaded the TAR file to be processed. UPLOADER must belong to ZONE. TARFILE

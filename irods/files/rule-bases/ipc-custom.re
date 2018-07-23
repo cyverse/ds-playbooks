@@ -28,6 +28,7 @@
 
 @include 'aegis'
 @include 'bisque'
+@include 'caliope'
 @include 'coge'
 @include 'de'
 @include 'pire'
@@ -132,6 +133,9 @@ acPostProcForPut {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(bisque_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(caliope_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForPut, *msg);

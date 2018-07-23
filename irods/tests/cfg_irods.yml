@@ -8,6 +8,7 @@
     expected_bisque_irods_url: irods://dstesting_ies_centos6_1.dstesting_default
     aegis_env: "{{ lookup('template', '../templates/rule-bases/aegis-env.re.j2') }}"
     bisque_env: "{{ lookup('template', '../templates/rule-bases/bisque-env.re.j2') }}"
+    caliope_env: "{{ lookup('template', '../templates/rule-bases/caliope-env.re.j2') }}"
     ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
     pire_env: "{{ lookup('template', '../templates/rule-bases/pire-env.re.j2') }}"
     sanimal_env: "{{ lookup('template', '../templates/rule-bases/sanimal-env.re.j2') }}"
@@ -32,6 +33,11 @@
       assert:
         that:
           - bisque_env is search("bisque_IRODS_URL_BASE = '" ~ expected_bisque_irods_url ~ "'")
+
+    - name: verify constants expand correctly in caliope-env.re.j2
+      assert:
+        that:
+          - caliope_env | search("caliope_BASE_COLL = ''" | regex_escape)
 
     - name: verify constants expand correctly in pire-env.re.j2
       assert:
@@ -145,7 +151,22 @@
     - name: verify bisque_env
       assert:
         that:
-         - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://custom.irods.host'")
+          - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://custom.irods.host'")
+
+
+- name: test that caliope-env.re gets generated correctly when a base collection is provided
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    caliope_irods_base_coll: /zone/caliope/base
+    caliope_env: "{{ lookup('template', '../templates/rule-bases/caliope-env.re.j2') }}"
+  tasks:
+    - name: verify caliope_env
+      assert:
+        that:
+          - caliope_env is search("caliope_BASE_COLL = '/zone/caliope/base'")
 
 
 - name: test PIRE params are set correctly
@@ -208,6 +229,8 @@
         - aegis-env.re
         - bisque.re
         - bisque-env.re
+        - caliope.re
+        - caliope-env.re
         - coge.re
         - ipc-amqp.re
         - ipc-custom.re
@@ -238,6 +261,7 @@
         or response.stat.pw_name != 'irods'
         or not response.stat.xusr
       with_items:
+        - caliope-ingest
         - de-create-collection
         - delete-scheduled-rule
         - generateuuid.sh

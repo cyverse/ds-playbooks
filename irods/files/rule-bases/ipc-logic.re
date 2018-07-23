@@ -626,7 +626,7 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
 # This rule ensures that only the non-protected AVUs are copied from one item to another.
 ipc_acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *SourceItemName,
                                   *TargetItemName) {
-  if (!canModProtectedAVU($userNameProxy)) {
+  if (!canModProtectedAVU($userNameClient)) {
     if (*SourceItemType == '-c') {
       cpUnprotectedCollAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
     } else if (*SourceItemType == '-d') {

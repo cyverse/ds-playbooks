@@ -364,8 +364,8 @@ avuProtected(*ItemType, *ItemName, *Attribute) {
 
 # Verifies that an attribute can be modified. If it can't it fails and sends an error message to
 # the caller.
-ensureAVUEditable(*ItemType, *ItemName, *A, *V, *U) {
-  if (avuProtected(*ItemType, *ItemName, *A) && !canModProtectedAVU($userNameProxy)) {
+ensureAVUEditable(*Editor, *ItemType, *ItemName, *A, *V, *U) {
+  if (avuProtected(*ItemType, *ItemName, *A) && !canModProtectedAVU(*Editor)) {
     cut;
     failmsg(-830000, 'CYVERSE ERROR:  attempt to alter protected AVU <*A, *V, *U>');
   }
@@ -614,13 +614,48 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
   *newValue = getNewAVUSetting(*AValue, 'v:', *newArgs);
   *newUnit = getNewAVUSetting(*origUnit, 'u:', *newArgs);
 
-  ensureAVUEditable(*ItemType, *ItemName, *AName, *AValue, *origUnit);
-  ensureAVUEditable(*ItemType, *ItemName, *newName, *newValue, *newUnit);
+  ensureAVUEditable($userNameClient, *ItemType, *ItemName, *AName, *AValue, *origUnit);
+  ensureAVUEditable($userNameClient, *ItemType, *ItemName, *newName, *newValue, *newUnit);
 }
 
 # This rule checks that AVU being added, set or removed isn't a protected one.
+# Only rodsadmin users are allowed to add, remove or update protected AVUs.
 ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
-  ensureAVUEditable(*ItemType, *ItemName, *AName, *AValue, *AUnit);
+  if (contains(*Option, list('add', 'addw', 'rm', 'rmw'))) {
+    ensureAVUEditable($userNameClient, *ItemType, *ItemName, *AName, *AValue, *AUnit);
+  } else if (*Option == 'set') {
+    if (*ItemType == '-c') {
+      *query =
+        SELECT META_COLL_ATTR_ID WHERE COLL_NAME == *ItemName AND META_COLL_ATTR_NAME == *AName;
+    } else if (*ItedType == '-d') {
+      msiSplitPath(*ItemName, *collPath, *dataName);
+
+      *query =
+        SELECT META_DATA_ATTR_ID
+        WHERE COLL_NAME == *collPath AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *AName;
+    } else if (*ItemType == '-r') {
+      *query =
+        SELECT META_RESC_ATTR_ID WHERE RESC_NAME == *ItemName AND META_RESC_ATTR_NAME == *AName;
+    } else if (*ItemType == '-u') {
+      *query =
+        SELECT META_USER_ATTR_ID WHERE USER_NAME == *ItemName AND META_USER_ATTR_NAME == *AName;
+    } else {
+      writeLine('serverLog', 'unknown imeta item type "*ItemType"');
+      fail;
+    }
+
+    *exists = false;
+
+    foreach (*record in *query) {
+      *exists = true;
+      break;
+    }
+
+    *authenticatee = if *exists then $userNameClient else $userNameProxy;
+    ensureAVUEditable(*authenticatee, *ItemType, *ItemName, *AName, *AValue, *AUnit);
+  } else if (*Option != 'adda') {
+    writeLine('serverLog', 'unknown imeta option "*Option"');
+  }
 }
 
 # This rule ensures that only the non-protected AVUs are copied from one item to another.

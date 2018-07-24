@@ -10,7 +10,6 @@
 COLLECTION_TYPE = 'collection'
 DATA_OBJECT_TYPE = 'data-object'
 RESOURCE_TYPE = 'resource'
-RESOURCE_GROUP_TYPE = 'resource-group'
 USER_TYPE = 'user'
 
 
@@ -124,7 +123,6 @@ getEntityType(*ItemType) =
   match *ItemType with
     | '-c' => COLLECTION_TYPE
     | '-d' => DATA_OBJECT_TYPE
-    | '-g' => RESOURCE_GROUP_TYPE
     | '-r' => RESOURCE_TYPE
     | '-u' => USER_TYPE
 
@@ -405,15 +403,6 @@ cpUnprotectedRescAVUs(*Resc, *TargetType, *TargetName) =
                         *avu.META_RESC_ATTR_VALUE, *avu.META_RESC_ATTR_UNITS);
   }
 
-# Copies the unprotected AVUs from a given resource group to the given item.
-cpUnprotectedRescGrpAVUs(*Grp, *TargetType, *TargetName) =
-  foreach (*avu in SELECT META_RESC_GROUP_ATTR_NAME, META_RESC_GROUP_ATTR_VALUE,
-                          META_RESC_GROUP_ATTR_UNITS
-                     WHERE RESC_GROUP_NAME == *Grp) {
-    setAVUIfUnprotected(*TargetType, *TargetName, *avu.META_RESC_GROUP_ATTR_NAME,
-                        *avu.META_RESC_GROUP_ATTR_VALUE, *avu.META_RESC_GROUP_ATTR_UNITS);
-  }
-
 # Copies the unprotected AVUs from a given user to the given item.
 cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) =
   foreach (*avu in SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
@@ -666,8 +655,6 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *So
       cpUnprotectedCollAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
     } else if (*SourceItemType == '-d') {
       cpUnprotectedDataObjAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
-    } else if (*SourceItemType == '-g') {
-      cpUnprotectedRescGrpAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
     } else if (*SourceItemType == '-r') {
       cpUnprotectedRescAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
     } else if (*SourceItemType == '-u') {
@@ -727,14 +714,12 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *S
   *source = match *SourceItemType with
               | '-c' => retrieveCollectionUUID(*SourceItemName)
               | '-d' => retrieveDataUUID(*SourceItemName)
-              | '-g' => *SourceItemName
               | '-r' => *SourceItemName
               | '-u' => *SourceItemName;
 
   *target = match *TargetItemType with
               | '-c' => retrieveCollectionUUID(*TargetItemName)
               | '-d' => retrieveDataUUID(*TargetItemName)
-              | '-g' => *TargetItemName
               | '-r' => *TargetItemName
               | '-u' => *TargetItemName;
 

@@ -13,6 +13,10 @@ RESOURCE_TYPE = 'resource'
 RESOURCE_GROUP_TYPE = 'resource-group'
 USER_TYPE = 'user'
 
+
+_ipc_atRest(*Path) = !(*Path like '/' ++ ipc_ZONE ++ '/jobs/*')
+
+
 getTimestamp() {
   msiGetSystemTime(*timestamp, 'human')
   *timestamp
@@ -137,14 +141,20 @@ sendDataObjectOpen(*Data) =
                                    ipc_jsonString('timestamp', getTimestamp())))
   in sendMsg(DATA_OBJECT_TYPE ++ '.open', *msg)
 
-sendDataObjectAdd(*Data) =
-  let *msg = ipc_jsonDocument(list(mkAuthorField(),
-                                   mkEntityField(*Data),
-                                   mkPathField($objPath),
-                                   mkUserObject('creator', $userNameClient, $rodsZoneClient),
-                                   ipc_jsonNumber('size', $dataSize),
-                                   ipc_jsonString('type', $dataType)))
-  in sendMsg(DATA_OBJECT_TYPE ++ '.add', *msg)
+_ipc_sendDataObjectAdd(*Data, *Path, *Size, *Type) {
+  *msg = ipc_jsonDocument(list(mkAuthorField(),
+                               mkEntityField(*Data),
+                               mkPathField(*Path),
+                               mkUserObject('creator', $userNameClient, $rodsZoneClient),
+                               ipc_jsonNumber('size', *Size),
+                               ipc_jsonString('type', *Type)));
+
+  sendMsg(DATA_OBJECT_TYPE ++ '.add', *msg);
+}
+
+_ipc_sendDataObjectAdd(*Data) {
+  _ipc_sendDataObjectAdd(*Data, $objPath, $dataSize, $dataType);
+}
 
 sendCollectionInheritModified(*Recursive, *Inherit, *Collection) =
   let *msg = ipc_jsonDocument(list(mkAuthorField(),
@@ -317,8 +327,10 @@ createData(*Path) {
   *err = errormsg(msiDataObjChksum(*Path, 'forceChksum=', *chksum), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(sendDataObjectAdd(assignUUID('-d', *Path)), *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
+  if (_ipc_atRest(*Path)) {
+    *err = errormsg(_ipc_sendDataObjectAdd(assignUUID('-d', *Path)), *msg);
+    if (*err < 0) { writeLine('serverLog', *msg); }
+  }
 }
 
 # The logic for handling a modified data object.
@@ -335,8 +347,8 @@ modifyData(*Path) {
   if (*uuid != '') {
     *err = errormsg(sendDataObjectMod(*uuid), *msg);
     if (*err < 0) { writeLine('serverLog', *msg); }
-  } else {
-    *err = errormsg(sendDataObjectAdd(assignUUID('-d', *Path)), *msg);
+  } else if (_ipc_atRest(*Path)) {
+    *err = errormsg(_ipc_sendDataObjectAdd(assignUUID('-d', *Path)), *msg);
     if (*err < 0) { writeLine('serverLog', *msg); }
   }
 }
@@ -355,7 +367,7 @@ avuProtected(*ItemType, *ItemName, *Attribute) {
 ensureAVUEditable(*ItemType, *ItemName, *A, *V, *U) {
   if (avuProtected(*ItemType, *ItemName, *A) && !canModProtectedAVU($userNameProxy)) {
     cut;
-    failmsg(-830000, 'IPLANT ERROR:  attempt to alter protected AVU <*A, *V, *U>');
+    failmsg(-830000, 'CYVERSE ERROR:  attempt to alter protected AVU <*A, *V, *U>');
   }
 }
 
@@ -447,8 +459,10 @@ ipc_acCreateCollByAdmin(*ParColl, *ChildColl) {
   *err = errormsg(msiSetACL('default', 'admin:*perm', 'rodsadmin', *coll), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(sendCollectionAdd(assignUUID('-c', *coll), *coll), *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
+  if (_ipc_atRest(*coll)) {
+    *err = errormsg(sendCollectionAdd(assignUUID('-c', *coll), *coll), *msg);
+    if (*err < 0) { writeLine('serverLog', *msg); }
+  }
 }
 
 # This rule pushes a collection.rm message into the irods exchange.
@@ -468,7 +482,7 @@ ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zo
   if (*UserName == 'rodsadmin') {
     if (!(*AccessLevel like 'admin:*') && *AccessLevel != resolveAdminPerm(*Path)) {
       cut;
-      failmsg(-830000, 'IPLANT ERROR:  attempt to alter admin user permission.');
+      failmsg(-830000, 'CYVERSE ERROR:  attempt to alter admin user permission.');
     }
   }
 }
@@ -480,8 +494,10 @@ ipc_acPostProcForCollCreate {
   *err = errormsg(setAdminGroupPerm($collName), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(sendCollectionAdd(assignUUID('-c', $collName), $collName), *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
+  if (_ipc_atRest($collName)) {
+    *err = errormsg(sendCollectionAdd(assignUUID('-c', $collName), $collName), *msg);
+    if (*err < 0) { writeLine('serverLog', *msg); }
+  }
 }
 
 ipc_acPostProcForOpen {
@@ -532,11 +548,34 @@ ipc_acPostProcForModifyDataObjMeta {
 ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   msiGetObjType(*DestEntity, *type);
   *uuid = retrieveUUID(*type, *DestEntity);
+
   if (*uuid != '') {
     if (*type == '-c') {
       sendEntityMove(COLLECTION_TYPE, *uuid, *SrcEntity, *DestEntity);
     } else if (*type == '-d') {
       sendEntityMove(DATA_OBJECT_TYPE, *uuid, *SrcEntity, *DestEntity);
+    }
+  } else if (_ipc_atRest(*DestEntity)) {
+    if (*type == '-c') {
+      *err = errormsg(sendCollectionAdd(assignUUID('-c', *DestEntity), *DestEntity), *msg);
+      if (*err < 0) { writeLine('serverLog', *msg); }
+    } else if (*type == '-d') {
+      *uuid = assignUUID('-d', *DestEntity);
+      msiSplitPath(*DestEntity, *collPath, *dataName);
+
+      *sent = false;
+
+      foreach (*res in select order_asc(DATA_SIZE), DATA_TYPE_NAME
+                       where COLL_NAME = '*collPath' and DATA_NAME = '*dataName') {
+        if (!*sent) {
+          *err = errormsg(
+            _ipc_sendDataObjectAdd(*uuid, *DestEntity, *res.DATA_SIZE, *res.DATA_TYPE_NAME),
+            *msg);
+
+          if (*err < 0) { writeLine('serverLog', *msg); }
+          *sent = true;
+        }
+      }
     }
   }
 }
@@ -602,7 +641,7 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *So
 
     # fail to prevent iRODS from also copying the protected metadata
     cut;
-    failmsg(0, 'IPLANT SUCCESS:  Successfully copied the unprotected metadata.');
+    failmsg(0, 'CYVERSE SUCCESS:  Successfully copied the unprotected metadata.');
   }
 }
 

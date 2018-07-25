@@ -1,0 +1,65 @@
+---
+- name: test mk_storage_resources
+  hosts: rs
+  become: true
+  become_user: irods
+  vars:
+    expected_resources:
+      - bundleResc
+      - pire
+      - rs_centos6
+      - rs_centos7
+  tasks:
+    - name: test create vault directory
+      stat:
+        path: "{{ item.vault }}"
+      register: response
+      failed_when: |
+        not response.stat.exists
+        or not response.stat.isdir
+        or response.stat.pw_name != 'irods'
+        or not response.stat.rusr
+        or not response.stat.wusr
+        or not response.stat.xusr
+      with_items: "{{ irods_storage_resources }}"
+
+    - name: test define storage resource
+      run_once: true
+      command: iquest '%s' "select RESC_NAME where RESC_TYPE_NAME = 'unixfilesystem'"
+      register: response
+      changed_when: false
+      failed_when: |
+        response.stdout_lines | symmetric_difference(expected_resources) | list | length > 0
+
+    - name: verify context is correct
+      shell: |
+        if ! context=$(iquest '%s' "select RESC_CONTEXT where RESC_NAME = '{{ item.name }}'")
+        then
+          exit 1
+        fi
+
+        [ "$context" = '{{ item.context }}' ]
+      changed_when: false
+      with_items: "{{ irods_storage_resources }}"
+
+    - name: verify status has been initialized
+      shell: |
+        if ! status=$(iquest '%s' "select RESC_STATUS where RESC_NAME = '{{ item.name }}'")
+        then
+          exit 1
+        fi
+
+        [ -n "$status" ]
+      changed_when: false
+      with_items: "{{ irods_storage_resources }}"
+
+    - name: verify free space is initialized
+      shell: |
+        if ! freeSpace=$(iquest '%s' "select RESC_FREE_SPACE where RESC_NAME = '{{ item.name }}'")
+        then
+          exit 1
+        fi
+
+        [ -n "$freeSpace" ]
+      changed_when: false
+      with_items: "{{ irods_storage_resources }}"

@@ -1,0 +1,115 @@
+#! /bin/bash
+#
+# An ansible module for creating a collection
+#
+# Module Name:
+#  irods_collection
+#
+# Required Variables:
+#  path  the absolute path to the collection to create
+#
+# Optional Variables:
+#  parents:  Whether or not to create the parent collections as well the default
+#            is false.
+
+
+main()
+{
+  local varFile="$1"
+
+  local path
+  local parents
+  . "$varFile"
+
+  require path
+
+  : "${parents=false}"
+  parents="${parents,,}"
+
+  if [ "$parents" != true -a "$parents" != false ]
+  then
+    fail "'parents' must be 'true' or 'false'"
+  fi
+
+  local id
+  id=$(quest "select COLL_ID where COLL_NAME = '$path'")
+
+  if [ -n "$id" ]
+  then
+    succeed false
+  fi
+
+  local errMsg
+  if [ "$parents" = true ]
+  then
+    if ! errMsg=$(imkdir -p "$path")
+    then
+      fail "$errMsg"
+    fi
+  else
+    if ! errMsg=$(imkdir "$path")
+    then
+      fail "$errMsg"
+    fi
+  fi
+
+  succeed true
+}
+
+
+quest()
+{
+  local query="$*"
+
+  local response
+  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
+  then
+    fail "$response"
+  fi
+
+  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
+  then
+    printf '%s' "$response"
+  fi
+}
+
+
+require()
+{
+  local var="$1"
+
+  if [ -z "${!var}" ]
+  then
+    fail "variable '$var' must be defined"
+  fi
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
+succeed()
+{
+  local changed="$1"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}' \
+    >&2
+
+  exit 0
+}
+
+
+set -e
+main "$@" 2>&1

@@ -71,7 +71,7 @@ install_centos_packages()
   rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
 
   yum --assumeyes install \
-    libselinux-python openssh-server python-pip python-requests python-virtualenv sudo
+    jq libselinux-python openssh-server python-pip python-requests python-virtualenv sudo
 }
 
 
@@ -81,7 +81,7 @@ install_debian_packages()
   apt-get install --no-install-recommends --quiet --yes apt-utils
 
   apt-get install --no-install-recommends --quiet --yes \
-    openssh-server python-pip python-selinux python-virtualenv sudo
+    jq openssh-server python-pip python-selinux python-virtualenv sudo
 }
 
 

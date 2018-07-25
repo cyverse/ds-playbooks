@@ -46,9 +46,6 @@
         state: restarted
 
 
-- import_playbook: mk_vaults.yml
-
-
 - name: install resource server package
   hosts: rs:!ies:!unmanaged_systems
   become: true
@@ -77,3 +74,7 @@
       file:
         path: /etc/irods/core.re
         state: touch
+
+
+- import_playbook: mk_storage_resources.yml
+- import_playbook: mk_resource_hierarchies.yml

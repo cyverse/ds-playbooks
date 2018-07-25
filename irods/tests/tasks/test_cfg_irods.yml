@@ -3,13 +3,17 @@
   stat:
     path: /etc/irods/{{ item }}
   register: response
-  failed_when: not response.stat.exists
+  failed_when: |
+    not response.stat.exists
+    or response.stat.pw_name != 'irods'
+    or not response.stat.rusr
   with_items:
     - aegis.re
     - aegis-env.re
     - bisque.re
     - bisque-env.re
     - coge.re
+    - de.re
     - ipc-amqp.re
     - ipc-custom.re
     - ipc-env.re
@@ -41,8 +45,12 @@
   stat:
     path: /var/lib/irods/iRODS/server/bin/cmd/{{ item }}
   register: response
-  failed_when: not response.stat.exists
+  failed_when:  |
+    not response.stat.exists
+    or response.stat.pw_name != 'irods'
+    or not response.stat.xusr
   with_items:
+    - de-create-collection
     - delete-scheduled-rule
     - generateuuid
     - set-uuid

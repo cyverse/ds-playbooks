@@ -5,8 +5,8 @@
 # USAGE:
 #  deleted-scheduled-rule ruleId
 #
-#  PARAMETERS:
-#   ruleId  The Id of the rule to dequeue
+# PARAMETERS:
+#  ruleId  The Id of the rule to dequeue
 
 
 main()

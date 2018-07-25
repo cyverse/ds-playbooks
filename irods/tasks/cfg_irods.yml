@@ -20,7 +20,7 @@
     dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
     mode: u+r
   with_fileglob:
-    - "templates/etc/*"
+    - "templates/rule-bases/*"
   notify:
     - reload rules
 
@@ -30,7 +30,7 @@
     dest: /etc/irods/{{ item | basename }}
     mode: u+r
   with_fileglob:
-    - "files/etc/*"
+    - "files/rule-bases/*"
   notify:
     - reload rules
 

@@ -21,9 +21,6 @@
       changed_when: false
 
 
-- import_playbook: mk_vaults.yml
-
-
 - name: test install resource server package
   hosts: rs:!ies:!unmanaged_systems
   become: true
@@ -67,3 +64,7 @@
   gather_facts: false
   tasks:
     - include_tasks: tasks/test_cfg_irods.yml
+
+
+- import_playbook: mk_storage_resources.yml
+- import_playbook: mk_resource_hierarchies.yml

@@ -1,6 +1,0 @@
----
-- name: test mk_vaults
-  hosts: rs
-  tasks:
-    - debug:
-        msg: TODO implement

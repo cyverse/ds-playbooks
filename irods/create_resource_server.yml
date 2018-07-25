@@ -69,6 +69,11 @@
   tasks:
     - include_tasks: tasks/cfg_irods.yml
 
+    - name: initialize resource server connection to IES
+      irods_clerver_auth:
+        ies: "{{ groups['ies'][0] }}"
+        password: "{{ _irods_clerver_password }}"
+
   handlers:
     - name: reload rules
       file:

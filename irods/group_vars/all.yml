@@ -26,6 +26,9 @@ _irods_aegis_resource: "{{ irods_aegis_resource if irods_aegis_resource is defin
 
 _irods_allowed_clients: "{{ irods_allowed_src if irods_allowed_src is defined else '0.0.0.0/0' }}"
 
+_irods_clerver_password: "{{ irods_clerver_password if irods_clerver_password is defined else
+                             'rods' }}"
+
 _irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else None }}"
 
 _irods_default_number_of_transfer_threads: "{{

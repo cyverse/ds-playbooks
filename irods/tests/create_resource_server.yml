@@ -65,6 +65,12 @@
   tasks:
     - include_tasks: tasks/test_cfg_irods.yml
 
+    - name: verify that clerver auth file exists
+      stat:
+        path: /var/lib/irods/.irods/.irodsA
+      register: response
+      failed_when: not response.stat.exists or response.stat.pw_name != 'irods'
+
 
 - import_playbook: mk_storage_resources.yml
 - import_playbook: mk_resource_hierarchies.yml

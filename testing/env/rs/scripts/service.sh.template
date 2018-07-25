@@ -35,34 +35,40 @@ start()
 {
   # Ensure that the correct user owns everything in /var/lib/irods and /etc/irods
   # If this isn't done, some of the ansible ownership tests will fail.
-  chown --recursive "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" /etc/irods /var/lib/irods
-
-  until exec 3<> /dev/tcp/"$IRODS_IES"/"$IRODS_ZONE_PORT"
-  do
-    printf 'Waiting for IES\n'
-    sleep 1
-  done 2> /dev/null
-
-  exec 3<&-
-  exec 3>&-
-
-  printf 'Authenticating clerver user\n'
-  su --command "IRODS_HOST='$IRODS_IES' iinit '$IRODS_ZONE_PASSWORD'" --login "$IRODS_SYSTEM_USER"
-
-  if ! su --command '/var/lib/irods/iRODS/irodsctl start' --login "$IRODS_SYSTEM_USER"
+  if [ -e /var/lib/irods/.irods/irods_environment.json ]
   then
-    cat /var/lib/irods/iRODS/server/log/rodsLog* >&2
-    return 1
-  fi
+    chown --recursive "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" /etc/irods /var/lib/irods
 
-  touch /var/lock/subsys/irods
+    until exec 3<> /dev/tcp/"$IRODS_IES"/"$IRODS_ZONE_PORT"
+    do
+      printf 'Waiting for IES\n'
+      sleep 1
+    done 2> /dev/null
+
+    exec 3<&-
+    exec 3>&-
+
+    printf 'Authenticating clerver user\n'
+    su --command "IRODS_HOST='$IRODS_IES' iinit '$IRODS_ZONE_PASSWORD'" --login "$IRODS_SYSTEM_USER"
+
+    if ! su --command '/var/lib/irods/iRODS/irodsctl start' --login "$IRODS_SYSTEM_USER"
+    then
+      cat /var/lib/irods/iRODS/server/log/rodsLog* >&2
+      return 1
+    fi
+
+    touch /var/lock/subsys/irods
+  fi
 }
 
 
 stop()
 {
-  su --command '/var/lib/irods/iRODS/irodsctl stop' --login "$IRODS_SYSTEM_USER"
-  rm /var/lock/subsys/irods
+  if su --command imiscsvrinfo --login "$IRODS_SYSTEM_USER" >& /dev/null
+  then
+    su --command '/var/lib/irods/iRODS/irodsctl stop' --login "$IRODS_SYSTEM_USER"
+    rm --force /var/lock/subsys/irods
+  fi
 }
 
 

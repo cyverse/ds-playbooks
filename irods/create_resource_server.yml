@@ -83,3 +83,15 @@
 
 - import_playbook: mk_storage_resources.yml
 - import_playbook: mk_resource_hierarchies.yml
+
+
+- name: bring up all resources
+  hosts: rs
+  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tasks:
+    - name: bring up storage storage resource and parents
+      irods_resource_up:
+        resource: "{{ item.name }}"
+        status: up
+      with_items: "{{ _irods_storage_resources }}"

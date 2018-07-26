@@ -1,59 +1,51 @@
 #!/bin/bash
 #
-# An ansible module for creating a collection
+# An ansible module for changing the status of a resource and all of its parents
+# to up.
 #
 # Module Name:
-#  irods_collection
+#  irods_resource_up
 #
 # Required Variables:
-#  path  the absolute path to the collection to create
-#
-# Optional Variables:
-#  parents:  Whether or not to create the parent collections as well the default
-#            is false.
+#  resource  the resource to modify
 
 
 main()
 {
   local varFile="$1"
 
-  local path
-  local parents
+  local resource
   . "$varFile"
 
-  require path
+  require resource
 
-  : "${parents=false}"
-  parents="${parents,,}"
+  local changed=false
 
-  if [ "$parents" != true -a "$parents" != false ]
-  then
-    fail "'parents' must be 'true' or 'false'"
-  fi
+  while [ -n "$resource" ]
+  do
+    local currentStatus
+    currentStatus=$(quest "select RESC_STATUS where RESC_NAME = '$resource'")
 
-  local id
-  id=$(quest "select COLL_ID where COLL_NAME = '$path'")
-
-  if [ -n "$id" ]
-  then
-    succeed false
-  fi
-
-  local errMsg
-  if [ "$parents" = true ]
-  then
-    if ! errMsg=$(imkdir -p "$path")
+    if [ -z "$currentStatus" ]
     then
-      fail "$errMsg"
+      fail "'$resource' doesn't exist"
     fi
-  else
-    if ! errMsg=$(imkdir "$path")
-    then
-      fail "$errMsg"
-    fi
-  fi
 
-  succeed true
+    if [ "$currentStatus" != up ]
+    then
+      local errMsg
+      if ! errMsg=$(iadmin modresc "$resource" status up 2>&1)
+      then
+        fail "$errMsg"
+      fi
+
+      changed=true
+    fi
+
+    resource=$(quest "select RESC_PARENT where RESC_NAME = '$resource'")
+  done
+
+  succeed "$changed"
 }
 
 

@@ -21,6 +21,7 @@ Variable                                   | Default                            
 `irods_aegis_repl_resource`                | aegisReplRes                         |         | the name of the aegis resource where replicas are written
 `irods_aegis_resource`                     | aegisIngestRes                       |         | the name of the aegis resource where newly uploaded files are written
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
+`irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | rods                                 |         | the rodsadmin user to be used by the server being configured
 `irods_default_number_of_transfer_threads` | 4                                    |         | the default maximum number of transfer streams for parallel transfer
 `irods_default_repl_resource`              | `irods_default_resource`             |         | the default resource for replication

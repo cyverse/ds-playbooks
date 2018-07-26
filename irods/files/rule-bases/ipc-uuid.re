@@ -4,7 +4,7 @@
 
 
 ipc_uuidGenerate {
-  *status = errorcode(msiExecCmd("generateuuid.sh", "", "null", "null", "null", *out));
+  *status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
   if (*status == 0) {
     msiGetStdoutInExecCmdOut(*out, *uuid);
     trimr(*uuid, "\n");

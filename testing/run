@@ -35,12 +35,12 @@ EOF
 
 readonly BaseDir=$(dirname $(readlink -f "$0"))
 readonly Cfg="$BaseDir"/config.inc
+readonly DefaultPlaybook=main.yml
 
 
 main()
 {
   local doInspect=false
-  local playbook=main.yml
 
   if ! opts=$(getopt --name "$ExecName" --longoptions help,inspect,playbook: --options hip: -- "$@")
   then
@@ -61,7 +61,7 @@ main()
         shift
         ;;
       -p|--playbook)
-        playbook="$2"
+        local playbookInput="$2"
         shift 2
         ;;
       --)
@@ -86,14 +86,8 @@ main()
     playbooks="$(pwd)"/"$playbooks"
   fi
 
-  : ${playbook:=main.yml}
-
-  if [[ "$playbook" != *.* ]]
-  then
-    playbook="$playbook".yml
-  fi
-
-  if ! verify_playbook_exists "$playbooks" "$playbook"
+  local playbook
+  if ! playbook=$(resolve_playbook "$playbooks" "$playbookInput")
   then
     exit 1
   fi
@@ -124,7 +118,7 @@ exit_with_help()
 }
 
 
-verify_playbook_exists()
+resolve_playbook()
 {
   local playbooks="$1"
   local playbook="$2"
@@ -135,11 +129,20 @@ verify_playbook_exists()
     return 1
   fi
 
+  : ${playbook:=$DefaultPlaybook}
+
+  if [[ "$playbook" != *.* ]]
+  then
+    playbook="$playbook".yml
+  fi
+
   if ! [ -f "$playbooks"/"$playbook" ]
   then
     printf 'The playbook %s/%s does not exist\n' "$playbooks" "$playbook" >&2
     return 1
   fi
+
+  printf '%s' "$playbook"
 }
 
 

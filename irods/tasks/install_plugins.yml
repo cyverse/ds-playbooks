@@ -42,8 +42,10 @@
     dest: /tmp/irods-setavu-plugin
     version: "{{ _irods_version }}"
     force: true
+  register: response
 
-- block:
+- when: response is changed
+  block:
     - name: build msiSetAVU plugin
       run_once: true
       local_action: command /tmp/irods-setavu-plugin/build
@@ -52,7 +54,6 @@
       copy:
         src: /tmp/irods-setavu-plugin/libraries/centos{{ ansible_distribution_major_version }}/libmsiSetAVU.so
         dest: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
-        force: yes
         owner: "{{ _irods_service_account_name }}"
         group: "{{ _irods_service_group_name }}"
   tags:

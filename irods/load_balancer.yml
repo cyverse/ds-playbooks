@@ -3,8 +3,11 @@
   hosts: load_balancer
   become: true
   vars:
-    server: "{{ groups['ies'][0] | regex_replace('\\..*') }}"
-    server_ip: "{{ lookup('dig', groups['ies'][0]) }}"
+    ies: "{{ groups['ies'][0] }}"
+    server: "{{ ies | regex_replace('\\..*') }}"
+    server_ip: "{{ lookup('dig', ies) }}"
+    reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
+    reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
   roles:
     - role: uoi-io.haproxy
       vars:
@@ -44,7 +47,7 @@
                 - "{{ server }} {{ server_ip }}:1247 maxconn {{ _load_balancer_irods_max_conn }}"
           - irods_reconn:
               binds:
-                - :{{ _irods_server_port_range_start }}-{{ _irods_server_port_range_end }}
+                - :{{ reconn_ports_start }}-{{ reconn_ports_end }}
               servers:
                 - "{{ server }} {{ server_ip }}"
       notify:
@@ -78,7 +81,7 @@
         marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
         content: |
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _load_balancer_irods_proxy_port }} -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport 80 -j ACCEPT
       notify:
         - restart firewall

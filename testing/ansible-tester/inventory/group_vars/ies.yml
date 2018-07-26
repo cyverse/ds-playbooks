@@ -1,2 +1,5 @@
 ---
+irods_server_port_range_end: 19999
+irods_server_port_range_start: 19990
+
 irods_service_group_name: irods_ies

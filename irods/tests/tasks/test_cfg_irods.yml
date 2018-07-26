@@ -12,6 +12,8 @@
     - aegis-env.re
     - bisque.re
     - bisque-env.re
+    - calliope.re
+    - calliope-env.re
     - coge.re
     - de.re
     - ipc-amqp.re
@@ -50,6 +52,7 @@
     or response.stat.pw_name != 'irods'
     or not response.stat.xusr
   with_items:
+    - calliope-ingest
     - de-create-collection
     - delete-scheduled-rule
     - generateuuid

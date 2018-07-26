@@ -74,6 +74,10 @@
         ies: "{{ groups['ies'][0] }}"
         password: "{{ _irods_clerver_password }}"
 
+  post_tasks:
+    - name: start iRODS
+      irods_start:
+
   handlers:
     - name: reload rules
       file:
@@ -89,6 +93,7 @@
   hosts: rs
   become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
   become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
   tasks:
     - name: bring up storage storage resource and parents
       irods_resource_up:

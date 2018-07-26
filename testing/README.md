@@ -3,6 +3,9 @@
 This folder contains the test harness for the DS playbooks. It consists of a
 simplified Data Store and a playbook runner.
 
+__TODO__ Multiple testing environments need to be created for different
+situations.
+
 ## The Environment
 
 The environment consists of seven containers. The `amqp` container hosts the

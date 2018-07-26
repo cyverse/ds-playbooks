@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 #
 # An ansible module for changing the status of a resource and all of its parents
 # to up.

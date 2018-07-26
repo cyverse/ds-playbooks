@@ -12,9 +12,7 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 
 RUN /tmp/base-config centos 7 && \
-    yum --assumeyes install \
-      which \
-      ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos7/irods-resource-4.1.10-centos7-x86_64.rpm && \
+    yum --assumeyes install which && \
     /tmp/prep-svc-script && \
     yum clean all && \
     rm --force --recursive /tmp/* /var/cache/yum

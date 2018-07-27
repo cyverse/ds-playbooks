@@ -616,7 +616,7 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
     if (*ItemType == '-c') {
       *query =
         SELECT META_COLL_ATTR_ID WHERE COLL_NAME == *ItemName AND META_COLL_ATTR_NAME == *AName;
-    } else if (*ItedType == '-d') {
+    } else if (*ItemType == '-d') {
       msiSplitPath(*ItemName, *collPath, *dataName);
 
       *query =

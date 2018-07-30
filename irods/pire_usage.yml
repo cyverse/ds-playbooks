@@ -8,8 +8,7 @@
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - include_tasks: tasks/mk_resource_hierarchy.yml
-      vars:
+    - irods_resource_hierarchy:
         hierarchy: "{{ _pire_resource_hierarchy }}"
 
     - name: ensure pire group exists

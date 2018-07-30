@@ -1,18 +1,39 @@
 #!/bin/bash
-
-Changed=false
+#
+# An ansible module for creating the coordinating resource portion of a
+# resource hiearchy.
+#
+# Module Name:
+#  irods_resource_hierarchy
+#
+# Required Variables:
+#  hierarchy  a YAML object decribing the hiearchy to create. See below.
+#
+# Here's the structure of the YAML object defining a resource hierarchy.
+#
+# Field    | Required | Default | Comments
+# -------- | -------- | ------- | --------
+# name     | yes      |         | The name of the resource
+# children | no       | []      | A list of child hierarchy definitions having
+#          |          |         |   the same structure as the parent object
+# context  | no       |         | A context to attach to this resource
+# type     | no       |         | For a coordinating resource, this is the type
+#          |          |         |   of resource. For a storage resource this
+#          |          |         |   should not be provided.
 
 
 main()
 {
-  local hierDef="$*"
+  local varFile="$1"
 
-  create_hierarchy "$hierDef"
+  local hierarchy
+  . "$varFile"
 
-  if [ "$Changed" = true ]
-  then
-    printf changed
-  fi
+  require hierarchy
+
+  local changed=false
+  changed=$(create_hierarchy "$hierarchy")
+  succeed "$changed"
 }
 
 
@@ -22,21 +43,25 @@ add_child()
   local child="$2"
 
   local curParent
-  curParent=$(iquest '%s' "select RESC_PARENT where RESC_NAME = '$child'")
+  curParent=$(quest "select RESC_PARENT where RESC_NAME = '$child'")
+
+  local added=false
 
   if [ -z "$curParent" ]
   then
-    iadmin addchildtoresc "$parent" "$child"
-    Changed=true
-  elif [ "$curParent" = "CAT_NO_ROWS_FOUND: Nothing was found matching your query" ]
-  then
-    printf 'child %s doesn""t exist\n' "$child" >&2
-    return 1
+    local errMsg
+    if ! errMsg=$(iadmin addchildtoresc "$parent" "$child" 2>&1)
+    then
+      fail "$errMsg"
+    fi
+
+    added=true
   elif [ "$curParent" != "$parent" ]
   then
-    printf 'The current parent of %s is %s, not %s\n' "$child" "$curParent" "$parent" >&2
-    return 1
+    fail "The current parent of $child is $curParent, not $parent"
   fi
+
+  printf '%s' "$added"
 }
 
 
@@ -44,19 +69,30 @@ create_and_add_children()
 {
   local parentName="$1"
 
+  local changed=false
+
   local childDef
   while IFS= read -r childDef
   do
     if [ -n "$childDef" ]
     then
-      create_hierarchy "$childDef"
+      local hierCreated
+      hierCreated=$(create_hierarchy "$childDef")
 
       local childName
       childName=$(jq --raw-output .name <<< "$childDef")
 
-      add_child "$parentName" "$childName"
+      local childAdded
+      childAdded=$(add_child "$parentName" "$childName")
+
+      if [ "$hierCreated" = true -o "$childAdded" = true ]
+      then
+        changed=true
+      fi
     fi
   done
+
+  printf '%s' "$created"
 }
 
 
@@ -67,43 +103,122 @@ create_coord_resc()
   local context="$3"
 
   local curType
-  curType=$(iquest '%s' "select RESC_TYPE_NAME where RESC_NAME = '$name'")
+  curType=$(quest "select RESC_TYPE_NAME where RESC_NAME = '$name'")
 
-  if [ "$curType" = "CAT_NO_ROWS_FOUND: Nothing was found matching your query" ]
+  if [ -z "$curType" ]
   then
-    iadmin mkresc "$name" "$type" '' "$context" > /dev/null
-    iadmin modresc "$name" status down
-    Changed=true
+    local errMsg
+
+    if ! errMsg=$(iadmin mkresc "$name" "$type" '' "$context" 2>&1)
+    then
+      fail "$errMsg"
+
+    fi
+
+    if ! errMsg=$(iadmin modresc "$name" status down 2>&1)
+    then
+      fail "$errMsg"
+    fi
+
+    printf true
   elif [ "$curType" != "$type" ]
   then
-    printf '%s exists with incorrect type %s\n' "$name" "$type" >&2
-    return 1
+    fail "$name exists with incorrect type $type"
+  else
+    printf false
   fi
 }
 
 
 create_hierarchy()
 {
-  local def="$*"
+  local hierarchy="$1"
+
+  local changed=false
 
   local type
-  type=$(jq --raw-output '.type // empty' <<< "$def")
+  type=$(jq --raw-output '.type // empty' <<< "$hierarchy")
 
   if [ -n "$type" ]
   then
     local name
-    name=$(jq --raw-output .name <<< "$def")
+    name=$(jq --raw-output .name <<< "$hierarchy")
 
     local context
-    context=$(jq --raw-output '.context // empty' <<< "$def")
+    context=$(jq --raw-output '.context // empty' <<< "$hierarchy")
 
-    create_coord_resc "$name" "$type" "$context"
+    local created
+    created=$(create_coord_resc "$name" "$type" "$context")
 
-    jq --compact-output --raw-output 'if .children then .children[] else empty end' <<< "$def" \
-      | create_and_add_children "$name"
+    local childrenCreated
+    childrenCreated=$(jq --compact-output --raw-output \
+                         'if .children then .children[] else empty end' \
+                        <<< "$hierarchy" \
+                        | create_and_add_children "$name")
+
+   if [ "$created" = true -o "$childrenCreated" = true ]
+   then
+     changed=true
+   fi
+  fi
+
+  printf '%s' "$changed"
+}
+
+
+quest()
+{
+  local query="$*"
+
+  local response
+  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
+  then
+    fail "$response"
+  fi
+
+  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
+  then
+    printf '%s' "$response"
   fi
 }
 
 
-set -eu -o pipefail
-main "$*"
+require()
+{
+  local var="$1"
+
+  if [ -z "${!var}" ]
+  then
+    fail "variable '$var' must be defined"
+  fi
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
+succeed()
+{
+  local changed="$1"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}' \
+    >&2
+
+  exit 0
+}
+
+
+set -e
+main "$@" 2>&1

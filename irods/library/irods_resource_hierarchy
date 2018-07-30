@@ -23,6 +23,8 @@
 
 # WANT_JSON
 
+Changed=false
+
 
 main()
 {
@@ -32,9 +34,8 @@ main()
   hierarchy=$(jq --raw-output '.hierarchy' < "$varFile")
   require hierarchy
 
-  local changed=false
-  changed=$(create_hierarchy "$hierarchy")
-  succeed "$changed"
+  create_hierarchy "$hierarchy"
+  succeed "$Changed"
 }
 
 
@@ -46,8 +47,6 @@ add_child()
   local curParent
   curParent=$(quest "select RESC_PARENT where RESC_NAME = '$child'")
 
-  local added=false
-
   if [ -z "$curParent" ]
   then
     local errMsg
@@ -56,13 +55,11 @@ add_child()
       fail "$errMsg"
     fi
 
-    added=true
+    Changed=true
   elif [ "$curParent" != "$parent" ]
   then
     fail "The current parent of $child is $curParent, not $parent"
   fi
-
-  printf '%s' "$added"
 }
 
 
@@ -70,30 +67,19 @@ create_and_add_children()
 {
   local parentName="$1"
 
-  local changed=false
-
   local childDef
   while IFS= read -r childDef
   do
     if [ -n "$childDef" ]
     then
-      local hierCreated
-      hierCreated=$(create_hierarchy "$childDef")
+      create_hierarchy "$childDef"
 
       local childName
       childName=$(jq --raw-output .name <<< "$childDef")
 
-      local childAdded
-      childAdded=$(add_child "$parentName" "$childName")
-
-      if [ "$hierCreated" = true -o "$childAdded" = true ]
-      then
-        changed=true
-      fi
+      add_child "$parentName" "$childName"
     fi
   done
-
-  printf '%s' "$created"
 }
 
 
@@ -113,7 +99,6 @@ create_coord_resc()
     if ! errMsg=$(iadmin mkresc "$name" "$type" '' "$context" 2>&1)
     then
       fail "$errMsg"
-
     fi
 
     if ! errMsg=$(iadmin modresc "$name" status down 2>&1)
@@ -121,12 +106,10 @@ create_coord_resc()
       fail "$errMsg"
     fi
 
-    printf true
+    Changed=true
   elif [ "$curType" != "$type" ]
   then
     fail "$name exists with incorrect type $type"
-  else
-    printf false
   fi
 }
 
@@ -141,8 +124,6 @@ create_hierarchy()
     fail "invalid resource hierarchy definition - $hierarchy"
   fi
 
-  local changed=false
-
   if [ -n "$type" ]
   then
     local name
@@ -151,19 +132,13 @@ create_hierarchy()
     local context
     context=$(jq --raw-output '.context // empty' <<< "$hierarchy")
 
-    local created
-    created=$(create_coord_resc "$name" "$type" "$context")
+    create_coord_resc "$name" "$type" "$context"
+    
+    local children
+    children=$(jq --compact-output --raw-output 'if .children then .children[] else empty end' \
+                 <<< "$hierarchy")
 
-    local childrenCreated
-    childrenCreated=$(jq --compact-output --raw-output \
-                         'if .children then .children[] else empty end' \
-                        <<< "$hierarchy" \
-                        | create_and_add_children "$name")
-
-   if [ "$created" = true -o "$childrenCreated" = true ]
-   then
-     changed=true
-   fi
+    create_and_add_children "$name" <<< "$children"
   fi
 
   printf '%s' "$changed"

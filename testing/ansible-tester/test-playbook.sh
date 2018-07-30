@@ -1,12 +1,14 @@
 #! /bin/bash
 #
 # Usage:
-#  test-playbook INSPECT PLAYBOOK
+#  test-playbook INSPECT PRETTY PLAYBOOK
 #
 # Parameters:
 #  INSPECT   if this is `true`, a shell will be opened that allows access to the
 #            volumes in the env containers.
 #  PLAYBOOK  the name of the playbook being tested.
+#  PRETTY    if this is `true`, more info is dumped and newlines in ouput are
+#            expanded.
 #
 # This program executes and ansible playbook on the test environment.
 
@@ -14,7 +16,13 @@
 main()
 {
   local inspect="$1"
-  local playbook="$2"
+  local pretty="$2"
+  local playbook="$3"
+
+  if [ "$pretty" = true ]
+  then
+    export ANSIBLE_STDOUT_CALLBACK=minimal
+  fi
 
   do_test "$playbook"
 

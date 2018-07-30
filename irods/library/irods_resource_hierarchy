@@ -21,14 +21,15 @@
 #          |          |         |   of resource. For a storage resource this
 #          |          |         |   should not be provided.
 
+# WANT_JSON
+
 
 main()
 {
   local varFile="$1"
 
   local hierarchy
-  . "$varFile"
-
+  hierarchy=$(jq --raw-output '.hierarchy' < "$varFile")
   require hierarchy
 
   local changed=false
@@ -134,10 +135,13 @@ create_hierarchy()
 {
   local hierarchy="$1"
 
-  local changed=false
-
   local type
-  type=$(jq --raw-output '.type // empty' <<< "$hierarchy")
+  if ! type=$(jq --raw-output '.type // empty' <<< "$hierarchy")
+  then
+    fail "invalid resource hierarchy definition - $hierarchy"
+  fi
+
+  local changed=false
 
   if [ -n "$type" ]
   then

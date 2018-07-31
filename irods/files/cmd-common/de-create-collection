@@ -3,7 +3,7 @@
 # Creates a collection as a given user for a given DE app execution
 #
 # USAGE:
-#  create-collection clientUser collPath analId execId
+#  de-create-collection clientUser collPath analId execId
 #
 # PARAMETERS:
 #  clientUser  The iRODS user name of the client to create a collection as

@@ -37,13 +37,93 @@
 @include 'sernec'
 
 
+# EXCLUSIVE RULES
+#
+# For events occur that should belong to one and only one project,
+# the following rules may be extended with ON conditions.
+
+exclusive_acCreateCollByAdmin(*ParColl, *ChildColl) {
+  ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl);
+}
+
+exclusive_acPostProcForCollCreate {
+  *err = errormsg(ipc_archive_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(bisque_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(coge_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(de_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(pire_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sciapps_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sernec_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+}
+
+exclusive_acPostProcForCopy {
+  *err = errormsg(ipc_archive_acPostProcForCopy, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(bisque_acPostProcForCopy, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(coge_acPostProcForCopy, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(pire_acPostProcForCopy, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sciapps_acPostProcForCopy, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sernec_acPostProcForCopy, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+}
+
+exclusive_acPostProcForPut {
+  *err = errormsg(ipc_archive_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(bisque_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(calliope_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(coge_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(pire_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sanimal_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sciapps_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+}
+
+
 # POLICIES
 
 acBulkPutPostProcPolicy { ipc_acBulkPutPostProcPolicy }
 
 acCreateCollByAdmin(*ParColl, *ChildColl) {
   msiCreateCollByAdmin(*ParColl, *ChildColl);
-  ipc_acCreateCollByAdmin(*ParColl, *ChildColl);
+
+  *err = errmsg(ipc_acCreateCollByAdmin(*ParColl, *ChildColl), *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  exclusive_acCreateCollByAdmin(*ParColl, *ChildColl);
 }
 
 acCreateUser {
@@ -132,23 +212,7 @@ acPostProcForPut {
   *err = errormsg(ipc_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(bisque_acPostProcForPut, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(calliope_acPostProcForPut, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(coge_acPostProcForPut, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(pire_acPostProcForPut, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(sanimal_acPostProcForPut, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(sciapps_acPostProcForPut, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
+  exclusive_acPostProcForPut;
 
   *err = errormsg(replPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
@@ -158,46 +222,18 @@ acPostProcForCopy {
   *err = errormsg(ipc_acPostProcForCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(bisque_acPostProcForCopy, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(coge_acPostProcForCopy, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(pire_acPostProcForCopy, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(sciapps_acPostProcForCopy, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(sernec_acPostProcForCopy, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
+  exclusive_acPostProcForCopy;
 
   *err = errormsg(replCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
+
 acPostProcForCollCreate {
   *err = errormsg(ipc_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(bisque_acPostProcForCollCreate, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(coge_acPostProcForCollCreate, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(de_acPostProcForCollCreate, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(pire_acPostProcForCollCreate, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(sciapps_acPostProcForCollCreate, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(sernec_acPostProcForCollCreate, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
+  exclusive_acPostProcForCollCreate;
 }
 
 acPostProcForOpen {

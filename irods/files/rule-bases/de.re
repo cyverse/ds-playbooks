@@ -24,6 +24,8 @@ _de_createArchiveColl(*Coll, *Creator, *AppId, *JobId) {
     writeLine('serverLog', 'DE: Failed to create archive collection: *msg');
     msiGetStderrInExecCmdOut(*out, *errMsg);
     writeLine('serverLog', 'DE: *errMsg');
+    cut;
+    failmsg(*status, *errMsg);
   }
 }
 

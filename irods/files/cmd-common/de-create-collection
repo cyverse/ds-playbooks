@@ -6,7 +6,7 @@
 #  de-create-collection clientUser collPath analId execId
 #
 # PARAMETERS:
-#  clientUser  The iRODS user name of the client to create a collection as
+#  clientUser
 #  collPath    The logical path to the collection to create
 #  execId      The Id of the DE app execution that is generating the collection
 #  appId       The Id of the DE app that was executed
@@ -30,35 +30,42 @@ main()
     return 1
   fi
 
-  local avus
-  avus=$(iquest '%s %s' \
-                "select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '$collPath'" \
-           2> /dev/null)
+  local kvs
+  kvs=$(query_kvs "$collPath")
 
-  if [[ "$avus" =~ CAT_NO_ROWS_FOUND: ]]
+  if [[ "$kvs" =~ CAT_NO_ROWS_FOUND: ]]
   then
-    avus=
+    kvs=
   fi
 
-  if [ -n "$execId" ]
-  then
-    local avu="ipc-execution-id $execId"
+  local execKV=ipc-execution-id="$execId"
 
-    if ! [[ "$avus" =~ $avu ]]
+  if ! [[ "$kvs" =~ $execKV ]]
+  then
+    if ! imeta adda -c "$collPath" ipc-execution-id "$execId" UUID 2>&1
     then
-      imeta adda -c "$collPath" ipc-execution-id "$execId" UUID
+      printf 'WARN: Unable to assign execution Id %s to collection %s\n' "$execId" "$collPath"
     fi
   fi
 
-  if [ -n "$appId" ]
-  then
-    local avu="ipc-analysis-id $appId"
+  local appKV=ipc-analysis-id="$appId"
 
-    if ! [[ "$avus" =~ $avu ]]
+  if ! [[ "$kvs" =~ $appKV ]]
+  then
+    if ! imeta adda -c "$collPath" ipc-analysis-id "$appId" UUID 2>&1
     then
-      imeta adda -c "$collPath" ipc-analysis-id "$appId" UUID
+      printf 'WARN: Unable to assign app Id %s to collection %s\n' "$appId" "$collPath"
     fi
   fi
+}
+
+
+query_kvs()
+{
+  local collPath="$1"
+
+  iquest '%s=%s' "select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '$collPath'" \
+    2> /dev/null
 }
 
 

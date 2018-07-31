@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# Moves a data object from the DE staging area to a given place as a given user
+# for a given DE app execution.
+#
+# USAGE:
+#  de-archive-data
+#
+# PARAMETERS:
+#  clientUser   The iRODS user name of the client who owns the data
+#  stagePath    The staging path of the object being moved.
+#  archivePath  The path to where the object is moved.
+#  execId       The Id of the DE app execution that is generating the data
+#               object
+#  appId        The Id of the DE app that was executed
+
+
+main()
+{
+  if [ "$#" -lt 4 ]
+  then
+    printf 'Too few input parameters\n' >&2
+    return 1
+  fi
+
+  local clientUser="$1"
+  local stagePath="$2"
+  local archivePath="$3"
+  local execId="$4"
+  local appId="$5"
+
+  if ! clientUserName="$clientUser" icp -K -Q "$stagePath" "$archivePath"
+  then
+    return 1
+  fi
+
+  if ! imeta adda -d "$archivePath" ipc-execution-id "$execId" UUID 2>&1
+  then
+    printf 'WARN: Unable to assign execution Id %s to object %s\n' "$execId" "$archivePath"
+  fi
+
+  if ! imeta adda -d "$archivePath" ipc-analysis-id "$appId" UUID 2>&1
+  then
+    printf 'WARN: Unable to assign app Id %s to object %s\n' "$appId" "$archivePath"
+  fi
+
+  if ! irm -f "$stagePath" 2>&1
+  then
+    printf 'WARN: Unable to remove staged object %s\n' "$stagePath"
+  fi
+}
+
+
+main "$@"

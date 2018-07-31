@@ -1,28 +1,11 @@
 ---
+- import_playbook: update_firewall.yml
+
+
 - name: configure system
   hosts: rs:!ies:!unmanaged_systems
   become: true
   tasks:
-    - name: add firewall rules
-      blockinfile:
-        path: /etc/sysconfig/iptables
-        insertbefore: -A INPUT -j REJECT
-        marker: "# {mark} DS MANAGED BLOCK (irods)"
-        block: |
-          {% for i in groups['irods'] %}
-          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport 1247 -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport 1248 -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
-          -A INPUT -m state --state NEW -p udp -s {{ lookup('dig', i) }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
-          {% endfor %}
-          -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport 1247 -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
-          -A INPUT -m state --state NEW -p udp -s {{ _irods_allowed_clients }} --dport {{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }} -j ACCEPT
-      notify:
-        - restart firewall
-      tags:
-        - no_testing
-
     - import_tasks: tasks/update_hosts.yml
 
     - name: create service group
@@ -38,12 +21,6 @@
         createhome: yes
         group: "{{ _irods_service_group_name }}"
         comment: iRODS Administrator
-
-  handlers:
-    - name: restart firewall
-      service:
-        name: iptables
-        state: restarted
 
 
 - name: install resource server package

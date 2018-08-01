@@ -2,12 +2,13 @@
 - import_playbook: update_firewall.yml
 
 
-- name: configure system
+- import_playbook: update_hosts.yml
+
+
+- name: create service account
   hosts: rs:!ies:!unmanaged_systems
   become: true
   tasks:
-    - import_tasks: tasks/update_hosts.yml
-
     - name: create service group
       group:
         name: "{{ _irods_service_group_name }}"

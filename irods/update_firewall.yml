@@ -11,12 +11,14 @@
         insertbefore: -A INPUT -j REJECT
         marker: "# {mark} DS MANAGED BLOCK (irods)"
         block: |
-          {% for i in groups['irods'] | difference(inventory_hostname | list) %}
+          {% for i in groups['irods'] %}
+          {% if inventory_hostname != i %}
           -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport 1247 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport 1248 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport {{ ports }} -j ACCEPT
-          {% if i is in(groups['rs']) %}
+          {% if inventory_hosntname is in(groups['rs']) %}
           -A INPUT -m state --state NEW -p udp -s {{ lookup('dig', i) }} --dport {{ ports }} -j ACCEPT
+          {% endif %}
           {% endif %}
           {% endfor %}
           -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport 1247 -j ACCEPT

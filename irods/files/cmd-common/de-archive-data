@@ -29,6 +29,11 @@ main()
   local execId="$4"
   local appId="$5"
 
+  if ! ichmod -M read "$clientUser" "$stagePath" 2>&1
+  then
+    printf 'WARN: Unable to give %s read access to %s\n' "$clientUser" "$stagePath"
+  fi
+  
   if ! clientUserName="$clientUser" icp -K -Q "$stagePath" "$archivePath"
   then
     return 1

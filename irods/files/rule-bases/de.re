@@ -10,12 +10,13 @@ _de_inStagedJob(*Object) = *Object like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+
 _de_inStaging(*Entity) = str(*Entity) like _de_STAGING_BASE ++ '/*'
 
 
-_de_createArchiveColl(*Coll, *Creator, *AppId, *JobId) {
+_de_createArchiveColl(*ArchiveColl, *StageColl, *Creator, *AppId, *JobId) {
   *clientArg = execCmdArg(*Creator);
-  *collArg = execCmdArg(*Coll);
+  *stageArg = execCmdArg(*StageColl);
+  *archiveArg = execCmdArg(*ArchiveColl);
   *execArg = execCmdArg(*JobId);
   *appArg = execCmdArg(*AppId);
-  *argStr = '*clientArg *collArg *execArg *appArg';
+  *argStr = '*clientArg *stageArg *archiveArg *execArg *appArg';
 
   *status = errormsg(msiExecCmd('de-create-collection', *argStr, 'null', 'null', 'null', *out),
                      *msg);
@@ -52,11 +53,11 @@ _de_createArchiveCollFor(*StagingColl) {
 
     if (*creator != '' && *jobArchiveBase != '') {
       if (*stagingRelPath like regex '^*jobId/[^/]+$') {
-        _de_createArchiveColl(*jobArchiveBase, *creator, *appId, *jobId);
+        _de_createArchiveColl(*jobArchiveBase, *jobStagingBase, *creator, *appId, *jobId);
       }
 
       *archiveColl = '*jobArchiveBase/' ++ triml(*stagingRelPath, '*jobId/');
-      _de_createArchiveColl(*archiveColl, *creator, *appId, *jobId);
+      _de_createArchiveColl(*archiveColl, *StagingColl, *creator, *appId, *jobId);
     }
   }
 }

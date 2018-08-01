@@ -56,9 +56,6 @@ exclusive_acPostProcForCollCreate {
   *err = errormsg(coge_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(de_acPostProcForCollCreate, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
   *err = errormsg(pire_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 

@@ -122,13 +122,13 @@ exclusive_acPostProcForCollCreate {
 }
 
 
-exclusive_adPostProcForCopy {
+exclusive_acPostProcForCopy {
   on (_de_inStaging($objPath)) {
   }
 }
 
 
-exclusive_adPostProcForPut {
+exclusive_acPostProcForPut {
   on (_de_inStaging($objPath)) {
   }
 }

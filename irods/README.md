@@ -44,6 +44,7 @@ Variable                                   | Default                            
 `irods_storage_resources`                  | `[]`                                 |         | a list of storage resources hosted on the server being configured, _see below_
 `irods_version`                            | 4.1.11                               |         | the version of iRODS to work with
 `irods_zone_key`                           | TEMPORARY_zone_key                   |         | the zone key
+`irods_zone_name`                          | tempZone                             |         | the name of the zone
 `load_balancer_irods_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS through the load balancer.
 `load_balancer_irods_max_conn`             | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer.
 `load_balancer_irods_proxy_port`           | 1247                                 |         | The port the load balancer will listen on for connections to iRODS.

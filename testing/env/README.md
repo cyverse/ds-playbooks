@@ -52,7 +52,7 @@ export IRODS_SCHEMA_VALIDATION=off
 export IRODS_VAULT=/var/lib/irods/Vault
 
 # The name of the iRODS zone
-export IRODS_ZONE_NAME=iplant
+export IRODS_ZONE_NAME=testing
 
 # The name of the default resource to use
 export IRODS_DEFAULT_RESOURCE="$IRODS_RS6_NAME"

@@ -1,6 +1,6 @@
 #! /bin/bash
 #
-# This script ensures that the collection /iplant/jobs exists.
+# This script ensures that the staging collection exists.
 #
 # Usage:
 #  create-jobs-staging-coll.sh
@@ -23,17 +23,25 @@ finish_up()
 
 main()
 {
+  if [ "$#" -lt 1 ]
+  then
+    printf 'requires one input parameter\n' >&2
+    return 1
+  fi
+  
+  local zone="$1"
+
   trap finish_up EXIT
 
   local resp
-  if ! resp=$(iquest "select COLL_ID where COLL_NAME = '/iplant/jobs'")
+  if ! resp=$(iquest "select COLL_ID where COLL_NAME = '/$zone/jobs'")
   then
     return 1
   fi
 
   if [[ "$resp" =~ CAT_NO_ROWS_FOUND ]]
   then
-    if ! imkdir /iplant/jobs
+    if ! imkdir /"$zone"/jobs
     then
       return 1
     fi

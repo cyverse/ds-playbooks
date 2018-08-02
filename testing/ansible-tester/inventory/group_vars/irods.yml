@@ -7,7 +7,7 @@ irods_resource_hierarchies:
   - name: rs_centos7
 irods_server_port_range_end: 20009
 irods_version: 4.1.10
-irods_zone_name: iplant
+irods_zone_name: testing
 
 pire_quota: 5000000
 

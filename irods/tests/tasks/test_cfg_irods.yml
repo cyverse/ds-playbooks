@@ -85,7 +85,7 @@
       - irods_environment.irods_default_resource == 'rs_centos6'
       - irods_environment.irods_server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
       - irods_environment.irods_user_name == 'rods'
-      - irods_environment.irods_zone_name == 'iplant'
+      - irods_environment.irods_zone_name == 'testing'
 
 - when: inventory_hostname in groups['ies']
   vars:

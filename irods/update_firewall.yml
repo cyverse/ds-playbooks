@@ -21,6 +21,11 @@
           {% endif %}
           {% endif %}
           {% endfor %}
+          {% for f in _irods_federation %}
+          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', f.icat_host) }} --dport 1247 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', f.icat_host) }} --dport {{ ports }} -j ACCEPT
+          -A INPUT -m state --state NEW -p udp -s {{ lookup('dig', f.icat_host) }} --dport {{ ports }} -j ACCEPT
+          {% endfor %}
           -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport 1247 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport {{ ports }} -j ACCEPT
           {% if inventory_hostname is in(groups['rs']) %}

@@ -81,5 +81,5 @@
     irods_cfg_transfer_buffer_size_for_parallel_transfer: "{{
       _irods_parallel_transfer_buffer_size }}"
     irods_cfg_zone_key: "{{ _irods_zone_key }}"
-    irods_cfg_zone_name: iplant
+    irods_cfg_zone_name: "{{ _irods_zone_name }}"
     irods_cfg_zone_user: "{{ _irods_clerver_user }}"

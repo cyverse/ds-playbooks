@@ -5,6 +5,18 @@
   become_user: irods
   run_once: true
   tasks:
-    - name: test initialize perms
+    - name: verify that rodsadmin has write permission on /
+      debug:
+        msg: TODO implement
+
+    - name: verify that rodsadmin has write permission on /iplant
+      debug:
+        msg: TODO implement
+
+    - name: verify that rodsadmin has write permission on /iplant/*
+      debug:
+        msg: TODO implement
+
+    - name: verify that rodsadmin has own permission on /iplant/*/**
       debug:
         msg: TODO implement

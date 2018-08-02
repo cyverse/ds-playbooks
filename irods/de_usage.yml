@@ -13,4 +13,4 @@
 
     - name: create jobs staging collection
       irods_collection:
-        path: /iplant/jobs
+        path: /{{ _irods_zone_name }}/jobs

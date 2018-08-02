@@ -31,6 +31,8 @@
 
 
 - import_playbook: provision.yml
+
+
 - import_playbook: cfg_irods.yml
 
 
@@ -67,10 +69,10 @@
       register: response
       changed_when: response.stdout == 'changed'
 
-    - name: ensure public group's home is /iplant/home/shared
+    - name: ensure public group's home is correct
       irods_move:
-        source: /iplant/home/public
-        destination: /iplant/home/shared
+        source: /{{ _irods_zone_name }}/home/public
+        destination: /{{ _irods_zone_name }}/home/shared
 
     - name: start quota usage computation
       command: irule '{ ipc_rescheduleQuotaUsageUpdate }' null ruleExecOut

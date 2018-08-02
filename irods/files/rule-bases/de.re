@@ -10,12 +10,13 @@ _de_inStagedJob(*Object) = *Object like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+
 _de_inStaging(*Entity) = str(*Entity) like _de_STAGING_BASE ++ '/*'
 
 
-_de_createArchiveColl(*Coll, *Creator, *AppId, *JobId) {
+_de_createArchiveColl(*ArchiveColl, *StageColl, *Creator, *AppId, *JobId) {
   *clientArg = execCmdArg(*Creator);
-  *collArg = execCmdArg(*Coll);
+  *stageArg = execCmdArg(*StageColl);
+  *archiveArg = execCmdArg(*ArchiveColl);
   *execArg = execCmdArg(*JobId);
   *appArg = execCmdArg(*AppId);
-  *argStr = '*clientArg *collArg *execArg *appArg';
+  *argStr = '*clientArg *stageArg *archiveArg *execArg *appArg';
 
   *status = errormsg(msiExecCmd('de-create-collection', *argStr, 'null', 'null', 'null', *out),
                      *msg);
@@ -24,36 +25,40 @@ _de_createArchiveColl(*Coll, *Creator, *AppId, *JobId) {
     writeLine('serverLog', 'DE: Failed to create archive collection: *msg');
     msiGetStderrInExecCmdOut(*out, *errMsg);
     writeLine('serverLog', 'DE: *errMsg');
+    cut;
+    failmsg(*status, *errMsg);
   }
 }
 
 
 _de_createArchiveCollFor(*StagingColl) {
-  *stagingRelPath = triml(*StagingColl, _de_STAGING_BASE ++ '/');
-  *jobId = elem(split(*stagingRelPath, '/'), 0);
-  *jobStagingBase = _de_STAGING_BASE ++ '/*jobId';
-  *creator = '';
-  *jobArchiveBase = '';
-  *appId = '';
-  *query = select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '*jobStagingBase';
+  if (_de_inStagedJob(*StagingColl)) {
+    *stagingRelPath = triml(*StagingColl, _de_STAGING_BASE ++ '/');
+    *jobId = elem(split(*stagingRelPath, '/'), 0);
+    *jobStagingBase = _de_STAGING_BASE ++ '/*jobId';
+    *creator = '';
+    *jobArchiveBase = '';
+    *appId = '';
+    *query = select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '*jobStagingBase';
 
-  foreach (*res in *query) {
-    if (*res.META_COLL_ATTR_NAME == 'ipc-creator') {
-      *creator = *res.META_COLL_ATTR_VALUE;
-    } else if (*res.META_COLL_ATTR_NAME == 'ipc-real-output') {
-      *jobArchiveBase = *res.META_COLL_ATTR_VALUE;
-    } else if (*res.META_COLL_ATTR_NAME == 'ipc-analysis-id') {
-      *appId = *res.META_COLL_ATTR_VALUE;
-    }
-  }
-
-  if (*creator != '' && *jobArchiveBase != '') {
-    if (*stagingRelPath like regex '^*jobId/[^/]+$') {
-      _de_createArchiveColl(*jobArchiveBase, *creator, *appId, *jobId);
+    foreach (*res in *query) {
+      if (*res.META_COLL_ATTR_NAME == 'ipc-creator') {
+        *creator = *res.META_COLL_ATTR_VALUE;
+      } else if (*res.META_COLL_ATTR_NAME == 'ipc-real-output') {
+        *jobArchiveBase = *res.META_COLL_ATTR_VALUE;
+      } else if (*res.META_COLL_ATTR_NAME == 'ipc-analysis-id') {
+        *appId = *res.META_COLL_ATTR_VALUE;
+      }
     }
 
-    *archiveColl = '*jobArchiveBase/' ++ triml(*stagingRelPath, '*jobId/');
-    _de_createArchiveColl(*archiveColl, *creator, *appId, *jobId);
+    if (*creator != '' && *jobArchiveBase != '') {
+      if (*stagingRelPath like regex '^*jobId/[^/]+$') {
+        _de_createArchiveColl(*jobArchiveBase, *jobStagingBase, *creator, *appId, *jobId);
+      }
+
+      *archiveColl = '*jobArchiveBase/' ++ triml(*stagingRelPath, '*jobId/');
+      _de_createArchiveColl(*archiveColl, *StagingColl, *creator, *appId, *jobId);
+    }
   }
 }
 
@@ -103,8 +108,28 @@ de_acPreProcForObjRename(*SourceObject, *DestObject) {
   }
 }
 
-de_acPostProcForCollCreate {
-  if (_de_inStagedJob($collName)) {
+
+exclusive_acCreateCollByAdmin(*ParColl, *ChildColl) {
+  on (_de_inStaging(*ParColl/*ChildColl)) {
+    _de_createArchiveCollFor(*ParColl/*ChildColl);
+  }
+}
+
+
+exclusive_acPostProcForCollCreate {
+  on (_de_inStaging($collName)) {
     _de_createArchiveCollFor($collName);
+  }
+}
+
+
+exclusive_acPostProcForCopy {
+  on (_de_inStaging($objPath)) {
+  }
+}
+
+
+exclusive_acPostProcForPut {
+  on (_de_inStaging($objPath)) {
   }
 }

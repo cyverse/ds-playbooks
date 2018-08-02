@@ -262,6 +262,7 @@
         or not response.stat.xusr
       with_items:
         - calliope-ingest
+        - de-archive-data
         - de-create-collection
         - delete-scheduled-rule
         - generateuuid.sh

@@ -13,9 +13,6 @@ RESOURCE_TYPE = 'resource'
 USER_TYPE = 'user'
 
 
-_ipc_atRest(*Path) = !(*Path like '/' ++ ipc_ZONE ++ '/jobs/*')
-
-
 getTimestamp() {
   msiGetSystemTime(*timestamp, 'human')
   *timestamp
@@ -318,25 +315,18 @@ removePrefix(*orig, *prefixes) {
 
 # The logic for handling a newly created data object.
 #
-createData(*Path) {
+_ipc_createData(*Path) {
   *err = errormsg(setAdminGroupPerm(*Path), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(msiDataObjChksum(*Path, 'forceChksum=', *chksum), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
-
-  if (_ipc_atRest(*Path)) {
-    *err = errormsg(_ipc_sendDataObjectAdd(assignUUID('-d', *Path)), *msg);
-    if (*err < 0) { writeLine('serverLog', *msg); }
-  }
 }
+
 
 # The logic for handling a modified data object.
 #
-modifyData(*Path) {
-  *err = errormsg(setAdminGroupPerm(*Path), *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
+_ipc_modifyData(*Path) {
   *err = errormsg(msiDataObjChksum(*Path, 'forceChksum=', *chksum), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
@@ -345,11 +335,27 @@ modifyData(*Path) {
   if (*uuid != '') {
     *err = errormsg(sendDataObjectMod(*uuid), *msg);
     if (*err < 0) { writeLine('serverLog', *msg); }
-  } else if (_ipc_atRest(*Path)) {
-    *err = errormsg(_ipc_sendDataObjectAdd(assignUUID('-d', *Path)), *msg);
-    if (*err < 0) { writeLine('serverLog', *msg); }
   }
 }
+
+
+_ipc_createOrModifyData(*Path, *IsNew) {
+  if (*IsNew) {
+    _ipc_createData(*Path);
+  } else {
+    _ipc_modifyData(*Path);
+  }
+}
+
+
+_ipc_createOrModifyArchiveData(*Path, *IsNew) {
+  if (*IsNew) {
+    _ipc_sendDataObjectAdd(assignUUID('-d', *Path));
+  } else if (retrieveDataUUID(*Path) == '') {
+    _ipc_sendDataObjectAdd(assignUUID('-d', *Path));
+  }
+}
+
 
 # Indicates whether or not an AVU is protected
 avuProtected(*ItemType, *ItemName, *Attribute) {
@@ -444,14 +450,12 @@ ipc_acSetReServerNumProc { msiSetReServerNumProc(str(ipc_MAX_NUM_RE_PROCS)); }
 ipc_acCreateCollByAdmin(*ParColl, *ChildColl) {
   *coll = '*ParColl/*ChildColl';
   *perm = resolveAdminPerm(*coll);
+  msiSetACL('default', 'admin:*perm', 'rodsadmin', *coll);
+}
 
-  *err = errormsg(msiSetACL('default', 'admin:*perm', 'rodsadmin', *coll), *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  if (_ipc_atRest(*coll)) {
-    *err = errormsg(sendCollectionAdd(assignUUID('-c', *coll), *coll), *msg);
-    if (*err < 0) { writeLine('serverLog', *msg); }
-  }
+ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl) {
+  *coll = '*ParColl/*ChildColl';
+  sendCollectionAdd(assignUUID('-c', *coll), *coll);
 }
 
 # This rule pushes a collection.rm message into the irods exchange.
@@ -480,13 +484,14 @@ ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zo
 # collections created when a TAR file is expanded. (i.e. ibun -x)
 #
 ipc_acPostProcForCollCreate {
-  *err = errormsg(setAdminGroupPerm($collName), *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
+  setAdminGroupPerm($collName);
+}
 
-  if (_ipc_atRest($collName)) {
-    *err = errormsg(sendCollectionAdd(assignUUID('-c', $collName), $collName), *msg);
-    if (*err < 0) { writeLine('serverLog', *msg); }
-  }
+# This rule ensures that archival collections are given a UUID and an AMQP
+# message is published indicating the collection is created.
+#
+ipc_archive_acPostProcForCollCreate {
+  sendCollectionAdd(assignUUID('-c', $collName), $collName);
 }
 
 ipc_acPostProcForOpen {
@@ -544,52 +549,53 @@ ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
     } else if (*type == '-d') {
       sendEntityMove(DATA_OBJECT_TYPE, *uuid, *SrcEntity, *DestEntity);
     }
-  } else if (_ipc_atRest(*DestEntity)) {
-    if (*type == '-c') {
-      *err = errormsg(sendCollectionAdd(assignUUID('-c', *DestEntity), *DestEntity), *msg);
-      if (*err < 0) { writeLine('serverLog', *msg); }
-    } else if (*type == '-d') {
-      *uuid = assignUUID('-d', *DestEntity);
-      msiSplitPath(*DestEntity, *collPath, *dataName);
+  }
+  if (*type == '-c') {
+    *err = errormsg(sendCollectionAdd(assignUUID('-c', *DestEntity), *DestEntity), *msg);
+    if (*err < 0) { writeLine('serverLog', *msg); }
+  } else if (*type == '-d') {
+    *uuid = assignUUID('-d', *DestEntity);
+    msiSplitPath(*DestEntity, *collPath, *dataName);
 
-      *sent = false;
+    *sent = false;
 
-      foreach (*res in select order_asc(DATA_SIZE), DATA_TYPE_NAME
-                       where COLL_NAME = '*collPath' and DATA_NAME = '*dataName') {
-        if (!*sent) {
-          *err = errormsg(
-            _ipc_sendDataObjectAdd(*uuid, *DestEntity, *res.DATA_SIZE, *res.DATA_TYPE_NAME),
-            *msg);
+    foreach (*res in select order_asc(DATA_SIZE), DATA_TYPE_NAME
+                     where COLL_NAME = '*collPath' and DATA_NAME = '*dataName') {
+      if (!*sent) {
+        *err = errormsg(
+          _ipc_sendDataObjectAdd(*uuid, *DestEntity, *res.DATA_SIZE, *res.DATA_TYPE_NAME),
+          *msg);
 
-          if (*err < 0) { writeLine('serverLog', *msg); }
-          *sent = true;
-        }
+        if (*err < 0) { writeLine('serverLog', *msg); }
+        *sent = true;
       }
     }
   }
 }
 
+
 # This rule ensures that a checksum is computed for every uploaded data object. It also sends
 # data object changes messages to the irods topic exchange.
 #
 ipc_acPostProcForPut {
-  if ($writeFlag == 0) {
-    createData($objPath);
-  } else {
-    modifyData($objPath);
-  }
+  _ipc_createOrModifyData($objPath, $writeFlag == 0);
 }
+
+ipc_archive_acPostProcForPut {
+  _ipc_createOrModifyArchiveData($objPath, $writeFlag == 0);
+}
+
 
 # This rule sends a data object copied message to the message exchange for the data object being
 # copied. If the target data object already exists, a data object modified message will be sent
 # instead.
 #
 ipc_acPostProcForCopy {
-  if ($writeFlag == 0) {
-    createData($objPath);
-  } else {
-    modifyData($objPath);
-  }
+  _ipc_createOrModifyData($objPath, $writeFlag == 0);
+}
+
+ipc_archive_acPostProcForCopy {
+  _ipc_createOrModifyArchiveData($objPath, $writeFlag == 0);
 }
 
 # This rule checks that AVU being modified isn't a protected one.

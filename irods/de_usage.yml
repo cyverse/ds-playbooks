@@ -12,6 +12,5 @@
       changed_when: response.stdout == 'true'
 
     - name: create jobs staging collection
-      script: scripts/create-jobs-staging-coll.sh iplant
-      register: response
-      changed_when: response.stdout == 'true'
+      irods_collection:
+        path: /iplant/jobs

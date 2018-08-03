@@ -4,10 +4,10 @@
 _de_STAGING_BASE = '/' ++ ipc_ZONE ++ '/jobs'
 
 
-_de_inStagedJob(*Object) = *Object like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+/.+'
+_de_inStagedJob(*Path) = *Path like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+/.+'
 
 
-_de_inStaging(*Entity) = str(*Entity) like _de_STAGING_BASE ++ '/*'
+_de_inStaging(*Path) = str(*Path) like _de_STAGING_BASE ++ '/*'
 
 
 _de_getJobInfo(*StagingRelPath) =
@@ -56,7 +56,7 @@ _de_createArchiveCollFor(*StagingColl) {
     *jobInfo = _de_getJobInfo(*stagingRelPath);
 
     if (*jobInfo.creator != '' && *jobInfo.archiveBase != '') {
-      if (*stagingRelPath like regex '^' ++ *jobInfo.id ++ '/[^/]+$') {
+      if (*stagingRelPath like regex '^' ++ *jobInfo.id ++ '/[^/]+') {
         *jobStagingBase = _de_STAGING_BASE ++ '/' ++ *info.id;
 
         _de_createArchiveColl(*jobInfo.archiveBase, *jobStagingBase, *jobInfo.creator,
@@ -118,6 +118,7 @@ de_acPreProcForObjRename(*SourceObject, *DestObject) {
 }
 
 
+
 exclusive_acCreateCollByAdmin(*ParColl, *ChildColl) {
   on (_de_inStaging(*ParColl/*ChildColl)) {
     _de_createArchiveCollFor(*ParColl/*ChildColl);
@@ -134,12 +135,11 @@ exclusive_acPostProcForCollCreate {
 
 exclusive_acPostProcForCopy {
   on (_de_inStaging($objPath)) {
-    # TODO error out
+    cut;
+    failmsg(-350000, "CYVERSE ERROR:  cannot copy files within DE's staging area");
   }
 }
 
-# TODO implement pep_resource_resolve_hierarchy_pre to prevent files from being
-# uploaded to /zone/jobs.
 
 exclusive_acPostProcForPut {
   on (_de_inStagedJob($objPath)) {
@@ -166,5 +166,13 @@ exclusive_acPostProcForPut {
         failmsg(*status, *errMsg);
       }
     }
+  }
+}
+
+
+pep_resource_resolve_hierarchy_pre(*OUT) {
+  on ($KVPairs.logical_path like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+') {
+    cut;
+    failmsg(-350000, "CYVERSE ERROR:  cannot put files into " ++ _de_STAGING_BASE);
   }
 }

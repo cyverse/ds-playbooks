@@ -87,8 +87,8 @@ pire_acPostProcForPut {
 
 
 # Restrict the PIRE resource to files in the PIRE collection
-pire_resource_resolve_hierarchy_pre(*OUT) {
-  if ($KVPairs.resc_hier == pire_RESC && !_pire_isForPIRE($KVPairs.logical_path)) {
+pep_resource_resolve_hierarchy_pre(*OUT) {
+  on ($KVPairs.resc_hier == pire_RESC && !_pire_isForPIRE($KVPairs.logical_path)) {
     *msg = 'CYVERSE ERROR:  ' ++ pire_RESC ++ ' usage is limited to the EHT collection, '
            ++ str(pire_BASE_COLL);
 

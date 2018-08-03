@@ -117,7 +117,7 @@ acBulkPutPostProcPolicy { ipc_acBulkPutPostProcPolicy }
 acCreateCollByAdmin(*ParColl, *ChildColl) {
   msiCreateCollByAdmin(*ParColl, *ChildColl);
 
-  *err = errmsg(ipc_acCreateCollByAdmin(*ParColl, *ChildColl), *msg);
+  *err = errormsg(ipc_acCreateCollByAdmin(*ParColl, *ChildColl), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   exclusive_acCreateCollByAdmin(*ParColl, *ChildColl);

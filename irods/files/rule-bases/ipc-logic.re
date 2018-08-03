@@ -616,8 +616,8 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
 # This rule checks that AVU being added, set or removed isn't a protected one.
 # Only rodsadmin users are allowed to add, remove or update protected AVUs.
 ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
-  if (contains(*Option, list('add', 'addw', 'rm', 'rmw'))) {
-    ensureAVUEditable($userNameClient, *ItemType, *ItemName, *AName, *AValue, *AUnit);
+  if (*Option == 'add' || *Option == 'addw') {
+    ensureAVUEditable($userNameProxy, *ItemType, *ItemName, *AName, *AValue, *AUnit);
   } else if (*Option == 'set') {
     if (*ItemType == '-c') {
       *query =
@@ -648,6 +648,8 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
 
     *authenticatee = if *exists then $userNameClient else $userNameProxy;
     ensureAVUEditable(*authenticatee, *ItemType, *ItemName, *AName, *AValue, *AUnit);
+  } else if (*Option == 'rm' || *Option == 'rmw') {
+    ensureAVUEditable($userNameClient, *ItemType, *ItemName, *AName, *AValue, *AUnit);
   } else if (*Option != 'adda') {
     writeLine('serverLog', 'unknown imeta option "*Option"');
   }

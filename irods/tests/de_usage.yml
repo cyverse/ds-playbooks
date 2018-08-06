@@ -47,6 +47,6 @@
         fi
       changed_when: false
 
-    - name: verify that /iplant/jobs exists
-      command: ils /iplant/jobs
+    - name: verify that /testing/jobs exists
+      command: ils /testing/jobs
       changed_when: false

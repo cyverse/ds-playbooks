@@ -1,0 +1,92 @@
+#!/bin/bash
+#
+# An ansible module for initializing the clerver connection to the IES.
+#
+# Module Name:
+#  irods_clerver_auth
+#
+# Required Variables:
+#  password  the password used by the clerver to connect to the IES
+#
+# Optional Variables:
+#  ies  The FQDN for the IES. If this isn't provided, it is assume that the
+#       local host is the IES.
+
+
+main()
+{
+  local varFile="$1"
+
+  local ies
+  local password
+  . "$varFile"
+
+  require password
+
+  local authFile
+  authFile=$(iinit -l | sed --quiet 's/^NOTICE: irods_authentication_file - //p')
+
+  if [ -z "$authFile" ]
+  then
+    authFile="$HOME"/.irods/.irodsA
+  fi
+
+  if [ -e "$authFile" ]
+  then
+    succeed false
+  fi
+
+  if [ -n "$ies" ]
+  then
+    export IRODS_HOST="$ies"
+  fi
+
+  local errMsg
+  if ! errMsg=$(iinit "$password" 2>&1)
+  then
+    fail "$errMsg"
+  fi
+
+  succeed true
+}
+
+
+require()
+{
+  local var="$1"
+
+  if [ -z "${!var}" ]
+  then
+    fail "variable '$var' must be defined"
+  fi
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
+succeed()
+{
+  local changed="$1"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}' \
+    >&2
+
+  exit 0
+}
+
+
+set -e
+main "$@" 2>&1

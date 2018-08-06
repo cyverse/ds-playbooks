@@ -9,7 +9,7 @@ export IRODS_RS6_NAME=rs_centos6
 export IRODS_RS7_NAME=rs_centos7
 export IRODS_SCHEMA_VALIDATION=off
 export IRODS_VAULT=/var/lib/irods/Vault
-export IRODS_ZONE_NAME=iplant
+export IRODS_ZONE_NAME=testing
 
 export IRODS_DEFAULT_RESOURCE="$IRODS_RS6_NAME"
 export IRODS_IES6_HOST="$ENV_NAME"_ies_centos6_1."$DOMAIN"

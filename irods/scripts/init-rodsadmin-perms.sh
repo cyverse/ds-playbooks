@@ -15,6 +15,7 @@
 #  DBMS_HOST  The domain name of the ICAT DBMS server
 #  DBMS_PORT  The TCP port on DBMS_HOST where the DBMS listens
 #  DB_USER    The DB user to used to connect to the ICAT
+#  ZONE       The iRODS zone being modified
 #
 # Returns:
 #  It writes 'true' to standard output if at least one permission was changed,
@@ -43,17 +44,18 @@ trap finish_up EXIT
 
 main()
 {
-  if [ "$#" -lt 3 ]
+  if [ "$#" -lt 4 ]
   then
-    printf 'requires three input parameters\n' >&2
+    printf 'requires four input parameters\n' >&2
     return 1
   fi
 
   local dbmsHost="$1"
   local dbmsPort="$2"
   local dbUser="$3"
+  local zone="$4"
 
-  gather_changes "$dbmsHost" "$dbmsPort" "$dbUser" > "$Changes"
+  gather_changes "$dbmsHost" "$dbmsPort" "$dbUser" "$zone" > "$Changes"
 
   if [ -s "$Changes" ]
   then
@@ -80,10 +82,11 @@ gather_changes()
   local host="$1"
   local port="$2"
   local user="$3"
+  local zone="$4"
 
   psql --no-align --quiet --record-separator-zero --tuples-only --host "$host" --port "$port" \
        ICAT "$user" \
-    <<'SQL'
+    <<SQL
 BEGIN;
 
 CREATE TEMPORARY TABLE rodsadmin_perms (object_id, perm) AS
@@ -102,7 +105,7 @@ UNION SELECT d.data_id, c.coll_name || '/' || d.data_name
 CREATE INDEX all_entities_idx ON all_entities(id);
 
 CREATE TEMPORARY TABLE all_with_perms (path, actual_perm, expected_perm) AS
-SELECT a.path, r.perm, CASE WHEN a.path ~ '^/iplant/[^/]*/.*' THEN 'own' ELSE 'modify object' END
+SELECT a.path, r.perm, CASE WHEN a.path ~ '^/$zone/[^/]*/.*' THEN 'own' ELSE 'modify object' END
 FROM all_entities AS a LEFT JOIN rodsadmin_perms AS r ON r.object_id = a.id;
 
 SELECT expected_perm, path FROM all_with_perms WHERE actual_perm IS DISTINCT FROM expected_perm;

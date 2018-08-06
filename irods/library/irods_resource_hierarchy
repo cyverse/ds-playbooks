@@ -1,0 +1,203 @@
+#!/bin/bash
+#
+# An ansible module for creating the coordinating resource portion of a
+# resource hiearchy.
+#
+# Module Name:
+#  irods_resource_hierarchy
+#
+# Required Variables:
+#  hierarchy  a YAML object decribing the hiearchy to create. See below.
+#
+# Here's the structure of the YAML object defining a resource hierarchy.
+#
+# Field    | Required | Default | Comments
+# -------- | -------- | ------- | --------
+# name     | yes      |         | The name of the resource
+# children | no       | []      | A list of child hierarchy definitions having
+#          |          |         |   the same structure as the parent object
+# context  | no       |         | A context to attach to this resource
+# type     | no       |         | For a coordinating resource, this is the type
+#          |          |         |   of resource. For a storage resource this
+#          |          |         |   should not be provided.
+
+# WANT_JSON
+
+Changed=false
+
+
+main()
+{
+  local varFile="$1"
+
+  local hierarchy
+  hierarchy=$(jq --raw-output '.hierarchy' < "$varFile")
+  require hierarchy
+
+  create_hierarchy "$hierarchy"
+  succeed "$Changed"
+}
+
+
+add_child()
+{
+  local parent="$1"
+  local child="$2"
+
+  local curParent
+  curParent=$(quest "select RESC_PARENT where RESC_NAME = '$child'")
+
+  if [ -z "$curParent" ]
+  then
+    local errMsg
+    if ! errMsg=$(iadmin addchildtoresc "$parent" "$child" 2>&1)
+    then
+      fail "$errMsg"
+    fi
+
+    Changed=true
+  elif [ "$curParent" != "$parent" ]
+  then
+    fail "The current parent of $child is $curParent, not $parent"
+  fi
+}
+
+
+create_and_add_children()
+{
+  local parentName="$1"
+
+  local childDef
+  while IFS= read -r childDef
+  do
+    if [ -n "$childDef" ]
+    then
+      create_hierarchy "$childDef"
+
+      local childName
+      childName=$(jq --raw-output .name <<< "$childDef")
+
+      add_child "$parentName" "$childName"
+    fi
+  done
+}
+
+
+create_coord_resc()
+{
+  local name="$1"
+  local type="$2"
+  local context="$3"
+
+  local curType
+  curType=$(quest "select RESC_TYPE_NAME where RESC_NAME = '$name'")
+
+  if [ -z "$curType" ]
+  then
+    local errMsg
+
+    if ! errMsg=$(iadmin mkresc "$name" "$type" '' "$context" 2>&1)
+    then
+      fail "$errMsg"
+    fi
+
+    if ! errMsg=$(iadmin modresc "$name" status down 2>&1)
+    then
+      fail "$errMsg"
+    fi
+
+    Changed=true
+  elif [ "$curType" != "$type" ]
+  then
+    fail "$name exists with incorrect type $type"
+  fi
+}
+
+
+create_hierarchy()
+{
+  local hierarchy="$1"
+
+  local type
+  if ! type=$(jq --raw-output '.type // empty' <<< "$hierarchy")
+  then
+    fail "invalid resource hierarchy definition - $hierarchy"
+  fi
+
+  if [ -n "$type" ]
+  then
+    local name
+    name=$(jq --raw-output .name <<< "$hierarchy")
+
+    local context
+    context=$(jq --raw-output '.context // empty' <<< "$hierarchy")
+
+    create_coord_resc "$name" "$type" "$context"
+    
+    local children
+    children=$(jq --compact-output --raw-output 'if .children then .children[] else empty end' \
+                 <<< "$hierarchy")
+
+    create_and_add_children "$name" <<< "$children"
+  fi
+
+  printf '%s' "$changed"
+}
+
+
+quest()
+{
+  local query="$*"
+
+  local response
+  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
+  then
+    fail "$response"
+  fi
+
+  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
+  then
+    printf '%s' "$response"
+  fi
+}
+
+
+require()
+{
+  local var="$1"
+
+  if [ -z "${!var}" ]
+  then
+    fail "variable '$var' must be defined"
+  fi
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
+succeed()
+{
+  local changed="$1"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}' \
+    >&2
+
+  exit 0
+}
+
+
+set -e
+main "$@" 2>&1

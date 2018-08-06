@@ -1,0 +1,43 @@
+---
+- name: update the firewall
+  hosts: irods:!unmanaged_systems
+  become: true
+  vars:
+    ports: "{{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }}"
+  tasks:
+    - name: add firewall rules
+      blockinfile:
+        path: /etc/sysconfig/iptables
+        insertbefore: -A INPUT -j REJECT
+        marker: "# {mark} DS MANAGED BLOCK (irods)"
+        block: |
+          {% for i in groups['irods'] %}
+          {% if inventory_hostname != i %}
+          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport 1247 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport 1248 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport {{ ports }} -j ACCEPT
+          {% if inventory_hostname is in(groups['rs']) %}
+          -A INPUT -m state --state NEW -p udp -s {{ lookup('dig', i) }} --dport {{ ports }} -j ACCEPT
+          {% endif %}
+          {% endif %}
+          {% endfor %}
+          {% for f in _irods_federation %}
+          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', f.icat_host) }} --dport 1247 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', f.icat_host) }} --dport {{ ports }} -j ACCEPT
+          -A INPUT -m state --state NEW -p udp -s {{ lookup('dig', f.icat_host) }} --dport {{ ports }} -j ACCEPT
+          {% endfor %}
+          -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport 1247 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport {{ ports }} -j ACCEPT
+          {% if inventory_hostname is in(groups['rs']) %}
+          -A INPUT -m state --state NEW -p udp -s {{ _irods_allowed_clients }} --dport {{ ports }} -j ACCEPT
+          {% endif %}
+      notify:
+        - restart firewall
+      tags:
+        - no_testing
+
+  handlers:
+    - name: restart firewall
+      service:
+        name: iptables
+        state: restarted

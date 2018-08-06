@@ -29,6 +29,9 @@ _irods_aegis_resource: "{{ irods_aegis_resource if irods_aegis_resource is defin
 
 _irods_allowed_clients: "{{ irods_allowed_src if irods_allowed_src is defined else '0.0.0.0/0' }}"
 
+_irods_clerver_password: "{{ irods_clerver_password if irods_clerver_password is defined else
+                             'rods' }}"
+
 _irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else None }}"
 
 _irods_default_number_of_transfer_threads: "{{
@@ -92,6 +95,8 @@ _irods_storage_resources: "{{
 _irods_version: "{{ irods_version if irods_version is defined else '4.1.11' }}"
 
 _irods_zone_key: "{{ irods_zone_key if irods_zone_key is defined else None }}"
+
+_irods_zone_name: "{{ irods_zone_name if irods_zone_name is defined else 'tempZone' }}"
 
 _load_balancer_irods_allowed_src: "{{
   load_balancer_irods_allowed_src if load_balancer_irods_allowed_src is defined else

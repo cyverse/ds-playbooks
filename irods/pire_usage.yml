@@ -8,8 +8,7 @@
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - include_tasks: tasks/mk_resource_hierarchy.yml
-      vars:
+    - irods_resource_hierarchy:
         hierarchy: "{{ _pire_resource_hierarchy }}"
 
     - name: ensure pire group exists
@@ -24,13 +23,13 @@
 
     - name: create project collection
       irods_collection:
-        path: /iplant/home/shared/eht
+        path: /{{ _irods_zone_name }}/home/shared/eht
         parents: true
 
     - name: ensure pire owns everything in the project collection
       irods_permission:
         subject: pire
         permission: own
-        object: /iplant/home/shared/eht
+        object: /{{ _irods_zone_name }}/home/shared/eht
         recursive: true
       register: response

@@ -17,7 +17,7 @@ _de_getJobInfo(*StagingRelPath) =
   let *info.archiveBase = '' in
   let *stagingBase = _de_STAGING_BASE ++ '/' ++ *info.id in
   let *_ = foreach(*res in select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE
-                           where COLL_NAME = *jobStagingBase) {
+                           where COLL_NAME = *stagingBase) {
              if (*res.META_COLL_ATTR_NAME == 'ipc-creator') {
                *info.creator = *res.META_COLL_ATTR_VALUE;
              } else if (*res.META_COLL_ATTR_NAME == 'ipc-real-output') {
@@ -116,7 +116,6 @@ de_acPreProcForObjRename(*SourceObject, *DestObject) {
     failmsg(-350000, "CYVERSE ERROR:  attempt to move entity within DE's staging area");
   }
 }
-
 
 
 exclusive_acCreateCollByAdmin(*ParColl, *ChildColl) {

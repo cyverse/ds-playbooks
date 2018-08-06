@@ -5,6 +5,18 @@
   become_user: irods
   run_once: true
   tasks:
-    - name: test initialize perms
+    - name: verify that rodsadmin has write permission on /
+      shell: ils -A / | grep --quiet 'g:rodsadmin#testing:modify object'
+      changed_when: false
+
+    - name: verify that rodsadmin has write permission on the zone collection
+      debug:
+        msg: TODO implement
+
+    - name: verify that rodsadmin has write permission on zone coll members
+      debug:
+        msg: TODO implement
+
+    - name: verify that rodsadmin has own permission on everthing else
       debug:
         msg: TODO implement

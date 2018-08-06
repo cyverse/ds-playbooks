@@ -1,0 +1,85 @@
+---
+# These tasks set the fact irods_cfg_made_changes to true if any changes were
+# made.
+# These tasks also call the reload rules handler if a rules file changed
+
+- name: add common command scripts
+  copy:
+    src: "{{ item }}"
+    dest: /var/lib/irods/iRODS/server/bin/cmd
+    mode: u+x
+  with_fileglob:
+    - "files/cmd-common/*"
+
+- when: inventory_hostname in groups['ies']
+  import_tasks: install_amqptopicsend.yml
+
+- name: place dynamic rule bases in /etc/irods
+  template:
+    src: "{{ item }}"
+    dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
+    mode: u+r
+  with_fileglob:
+    - "templates/rule-bases/*"
+  notify:
+    - reload rules
+
+- name: place static config in /etc/irods
+  copy:
+    src: "{{ item }}"
+    dest: /etc/irods/{{ item | basename }}
+    mode: u+r
+  with_fileglob:
+    - "files/rule-bases/*"
+  notify:
+    - reload rules
+
+- name: generate configuration files
+  import_role:
+    name: cyverse.irods-cfg
+  vars:
+    dbms_host: "{{ groups['dbms'][0] }}"
+    rabbitmq_user_info: "{{ _rabbitmq_user }}:{{ _rabbitmq_password }}"
+    rabbitmq_authority: "{{ rabbitmq_user_info }}@{{ groups['rabbitmq'][0] }}:{{ _rabbitmq_port }}"
+    rabbitmq_path: /{{ _rabbitmq_vhost | replace('/', '%2F') }}
+    rabbitmq_uri: amqp://{{ rabbitmq_authority }}{{ rabbitmq_path }}
+    irods_cfg_client_server_policy: CS_NEG_REFUSE
+    irods_cfg_default_hash_scheme: MD5
+    irods_cfg_default_number_of_transfer_threads: "{{ _irods_default_number_of_transfer_threads }}"
+    irods_cfg_default_resource_directory: "{{ _irods_default_vault }}"
+    irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
+    irods_cfg_environment_variables: "{{
+      { 'IRODS_AMQP_URI': rabbitmq_uri } if inventory_hostname in groups['ies'] else
+      {} }}"
+    irods_cfg_federation: "{{ _irods_federation }}"
+    irods_cfg_host_entries: "{{ [
+        {
+          'address_type': 'local',
+          'addresses': ([inventory_hostname] + _irods_host_aliases)
+        }
+      ] if (_irods_host_aliases | count) > 0 else [] }}"
+    irods_cfg_icat: "{{ None if inventory_hostname not in groups['ies'] else
+                        {
+                          'db_host': dbms_host,
+                          'db_password': _dbms_password,
+                          'db_port': _dbms_port,
+                          'db_username': _dbms_username
+                        } }}"
+    irods_cfg_icat_host: "{{ inventory_hostname if inventory_hostname in groups['ies'] else
+                             _irods_ies }}"
+    irods_cfg_maximum_number_of_concurrent_rule_engine_server_processes: "{{
+      _irods_max_num_re_procs }}"
+    irods_cfg_negotiation_key: "{{ _irods_negotiation_key }}"
+    irods_cfg_re_additional_rulebases:
+      - ipc-custom
+      - ipc-housekeeping
+    irods_cfg_server_control_plane_key: "{{ _irods_server_control_plane_key }}"
+    irods_cfg_server_port_range_end: "{{ _irods_server_port_range_end }}"
+    irods_cfg_server_port_range_start: "{{ _irods_server_port_range_start }}"
+    irods_cfg_service_account_name: "{{ _irods_service_account_name }}"
+    irods_cfg_service_group_name: "{{ _irods_service_group_name }}"
+    irods_cfg_transfer_buffer_size_for_parallel_transfer: "{{
+      _irods_parallel_transfer_buffer_size }}"
+    irods_cfg_zone_key: "{{ _irods_zone_key }}"
+    irods_cfg_zone_name: "{{ _irods_zone_name }}"
+    irods_cfg_zone_user: "{{ _irods_clerver_user }}"

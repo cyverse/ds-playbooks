@@ -20,7 +20,7 @@ ipc_RE_HOST : string
 ipc_RE_HOST = '{{ _irods_ies }}'
 
 ipc_ZONE : string
-ipc_ZONE = 'iplant'
+ipc_ZONE = '{{ _irods_zone_name }}'
 
 
 {% if _single_threaded_resources|length > 0 %}

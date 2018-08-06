@@ -22,6 +22,8 @@ Options:
   -p, --playbook <playbook>  the path to the playbook to test relative to
                              <playbook_folder>.
 
+  -P, --pretty   more information will be output and newlines will be expanded
+                 in that output.
   -h, --help     show help and exit
   -i, --inspect  after running the playbook, open shell that allows manual
                  inspection of the configuration files, vaults, and logs
@@ -35,18 +37,16 @@ EOF
 
 readonly BaseDir=$(dirname $(readlink -f "$0"))
 readonly Cfg="$BaseDir"/config.inc
+readonly DefaultPlaybook=main.yml
 
 
 main()
 {
   local doInspect=false
-  local playbook=main.yml
+  local pretty=false
 
-  if ! opts=$(getopt --name "$ExecName" --longoptions help,inspect,playbook: --options hip: -- "$@")
-  then
-    exit_with_help
-  fi
-
+  local opts
+  opts=$(parse_cmd_line "$@")
   eval set -- "$opts"
 
   while true
@@ -61,8 +61,12 @@ main()
         shift
         ;;
       -p|--playbook)
-        playbook="$2"
+        local playbookInput="$2"
         shift 2
+        ;;
+      -P|--pretty)
+        pretty=true
+        shift
         ;;
       --)
         shift
@@ -79,38 +83,26 @@ main()
     exit_with_help
   fi
 
-  local playbooks="$1"
+  local playbooks
+  playbooks=$(resolve_playbook_dir "$1")
 
-  if ! [[ "$playbooks" =~ ^/ ]]
-  then
-    playbooks="$(pwd)"/"$playbooks"
-  fi
+  local playbook
+  playbook=$(resolve_playbook "$playbooks" "$playbookInput")
 
-  : ${playbook:=main.yml}
-
-  if [[ "$playbook" != *.* ]]
-  then
-    playbook="$playbook".yml
-  fi
-
-  if ! verify_playbook_exists "$playbooks" "$playbook"
-  then
-    exit 1
-  fi
-
-  do_run "$doInspect" "$playbooks" "$playbook"
+  do_run "$doInspect" "$pretty" "$playbooks" "$playbook"
 }
 
 
 do_run()
 {
   local doInspect="$1"
-  local playbooks="$2"
-  local playbook="$3"
+  local pretty="$2"
+  local playbooks="$3"
+  local playbook="$4"
 
   if "$BaseDir"/env/controller "$Cfg" start
   then
-    "$BaseDir"/ansible-tester/run "$doInspect" "$playbooks" "$playbook"
+    "$BaseDir"/ansible-tester/run "$doInspect" "$pretty" "$playbooks" "$playbook"
   fi
 
   "$BaseDir"/env/controller "$Cfg" stop
@@ -124,22 +116,63 @@ exit_with_help()
 }
 
 
-verify_playbook_exists()
+parse_cmd_line()
+{
+  local opts
+  opts=$(getopt --longoptions help,inspect,playbook:,pretty \
+                --options hip:P \
+                --name "$ExecName" \
+                -- \
+                "$@")
+  local ret="$?"
+
+  if [ "$ret" -ne 0 ]
+  then
+    exit_with_help
+  fi
+
+  printf '%s' "$opts"
+}
+
+
+resolve_playbook()
 {
   local playbooks="$1"
   local playbook="$2"
 
-  if ! [ -d "$playbooks" ]
+  : ${playbook:=$DefaultPlaybook}
+
+  if [[ "$playbook" != *.* ]]
   then
-    printf '%s is not a directory\n' "$playbooks" >&2
-    return 1
+    playbook="$playbook".yml
   fi
 
   if ! [ -f "$playbooks"/"$playbook" ]
   then
     printf 'The playbook %s/%s does not exist\n' "$playbooks" "$playbook" >&2
-    return 1
+    exit 1
   fi
+
+  printf '%s' "$playbook"
+}
+
+
+resolve_playbook_dir()
+{
+  local playbooks="$1"
+
+  if ! [[ "$playbooksInput" =~ ^/ ]]
+  then
+    playbooks="$(pwd)"/"$playbooks"
+  fi
+
+  if ! [ -d "$playbooks" ]
+  then
+    printf '%s is not a directory\n' "$playbooks" >&2
+    exit 1
+  fi
+
+  printf '%s' "$playbooks"
 }
 
 

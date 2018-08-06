@@ -19,9 +19,9 @@ _bisque_determineSrc(*BaseSrcColl, *BaseDestColl, *DestEntity) =
     ++ substr(*dest, strlen(_bisque_stripTrailingSlash(*BaseDestColl)), strlen(*dest))
 
 _bisque_getHomeUser(*Path) =
-  if *Path like regex '^/iplant/home/shared($|/.*)' then ''
-  else if *Path like regex '^/iplant/home/[^/]+/.+' then elem(split(*Path, '/'), 2)
-  else if *Path like regex '/iplant/trash/home/[^/]+/.+' then elem(split(*Path, '/'), 3)
+  if *Path like regex '^/' ++ ipc_ZONE ++ '/home/shared($|/.*)' then ''
+  else if *Path like regex '^/' ++ ipc_ZONE ++ '/home/[^/]+/.+' then elem(split(*Path, '/'), 2)
+  else if *Path like regex '^/' ++ ipc_ZONE ++ '/trash/home/[^/]+/.+' then elem(split(*Path, '/'), 3)
   else ''
 
 _bisque_getClient(*Author, *Path) =

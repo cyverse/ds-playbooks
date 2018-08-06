@@ -67,9 +67,6 @@ main()
 
   mk_irods_env
   ensure_ownership "$EnvCfg"
-
-  prepare_svc_script > /service.sh
-  chmod a+rx /service.sh
 }
 
 
@@ -80,18 +77,6 @@ ensure_ownership()
   chown "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$fsEntity"
   chmod u+rw "$fsEntity"
   chmod go= "$fsEntity"
-}
-
-
-# escapes / and \ for sed script
-escape()
-{
-  local var="$*"
-
-  # Escape \ first to avoid escaping the escape character, i.e. avoid / -> \/ -> \\/
-  var="${var//\\/\\\\}"
-
-  printf '%s' "${var//\//\\/}"
 }
 
 
@@ -106,8 +91,11 @@ get_cfg_field()
 
 mk_irods_env()
 {
-  local algorithm=$(get_cfg_field "$ServerCfg" server_control_plane_encryption_algorithm)
-  local numRounds=$(get_cfg_field "$ServerCfg" server_control_plane_encryption_num_hash_rounds)
+  local algorithm
+  algorithm=$(get_cfg_field "$ServerCfg" server_control_plane_encryption_algorithm)
+
+  local numRounds
+  numRounds=$(get_cfg_field "$ServerCfg" server_control_plane_encryption_num_hash_rounds)
 
   printf '{}' > "$EnvCfg"
   set_cfg_field "$EnvCfg" string irods_client_server_negotiation request_server_negotiation
@@ -153,17 +141,6 @@ populate_server_cfg()
   set_cfg_field "$ServerCfg" integer zone_port "$IRODS_ZONE_PORT"
   set_cfg_field "$ServerCfg" string zone_user "$IRODS_ZONE_USER"
   set_cfg_field "$ServerCfg" string zone_auth_scheme native
-}
-
-
-prepare_svc_script()
-{
-  cat <<EOF | sed --file - /tmp/service.sh.template
-s/\$IRODS_IES/$(escape $IRODS_IES)/g
-s/\$IRODS_ZONE_PASSWORD/$(escape $IRODS_ZONE_PASSWORD)/g
-s/\$IRODS_SYSTEM_USER/$(escape $IRODS_SYSTEM_USER)/g
-s/\$IRODS_ZONE_PORT/$(escape $IRODS_ZONE_PORT)/g
-EOF
 }
 
 

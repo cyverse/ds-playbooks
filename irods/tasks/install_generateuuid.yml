@@ -1,0 +1,21 @@
+---
+- name: install uuidd
+  when: inventory_hostname not in groups['unmanaged_systems']
+  become: true
+  package:
+    name: uuidd
+    state: present
+
+- become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become_user: "{{ _irods_service_account_name }}"
+  block:
+    - name: install generateuuid
+      copy:
+        src: files/cmd-common/generateuuid
+        dest: /var/lib/irods/iRODS/server/bin/cmd/generateuuid
+        mode: u+x
+
+    - name: remove generateuuid.sh
+      file:
+        path: /var/lib/irods/iRODS/server/bin/cmd/generateuuid.sh
+        state: absent

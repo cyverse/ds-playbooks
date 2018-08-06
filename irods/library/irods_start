@@ -1,0 +1,59 @@
+#!/bin/bash
+#
+# An ansible module for ensuring iRODS is started
+#
+# Module Name:
+#  irods_start
+
+
+main()
+{
+  local statusMsg
+  if ! statusMsg=$(/var/lib/irods/iRODS/irodsctl status)
+  then
+    fail failed to determine if iRODS is already running
+  fi
+
+  if ! grep --quiet 'No servers running' <<<"$statusMsg"
+  then
+    succeed false
+  fi
+
+  local errMsg
+  if ! errMsg=$(/var/lib/irods/iRODS/irodsctl start 2>&1)
+  then
+    fail "$errMsg"
+  fi
+
+  succeed true
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
+succeed()
+{
+  local changed="$1"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}' \
+    >&2
+
+  exit 0
+}
+
+
+set -e
+main 2>&1

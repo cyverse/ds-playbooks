@@ -7,10 +7,11 @@
       when: not _update_e2fsprogs
       lineinfile:
         name: /etc/yum.conf
-        line: exclude=e2fsprogs.*
+        line: exclude=e2fsprogs* libcom_err-* libss-*
 
     - name: upgrade system packages
       when: _rebootable
       package:
         name: '*'
         state: latest
+ 

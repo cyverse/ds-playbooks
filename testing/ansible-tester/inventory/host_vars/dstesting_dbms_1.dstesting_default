@@ -1,2 +1,3 @@
 ---
+# Base image doesn't support package updates
 rebootable: false

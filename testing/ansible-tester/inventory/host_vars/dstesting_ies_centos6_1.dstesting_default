@@ -2,5 +2,3 @@
 irods_host_aliases:
   - alias-1
   - alias-2
-
-rebootable: false

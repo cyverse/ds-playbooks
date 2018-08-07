@@ -5,6 +5,16 @@
     pkg: irods-runtime
     pkg_ver: "{{ _irods_version }}"
 
+# XXX - This is a bug in the git module. It will be fixed in ansible 2.7
+- name: remove previous irods-netcdf-build repo
+  run_once: true
+  local_action:
+    module: file
+    name: /tmp/irods-netcdf-build
+    state: absent
+  tags:
+    - non_idempotent
+
 - name: checkout irods-netcdf-build repo
   run_once: true
   local_action:
@@ -14,7 +24,7 @@
     version: "{{ _irods_version }}"
     force: true
   register: response
-
+    
 - when: response is changed
   block:
     - name: build iRODS NetCDF plugins
@@ -33,6 +43,16 @@
   tags:
     # docker in docker is a no no.
     - no_testing
+
+# XXX - This is a bug in the git module. It will be fixed in ansible 2.7
+- name: remove previous msi-setavu-plugin repo
+  run_once: true
+  local_action:
+    module: file
+    name: /tmp/irods-setavu-plugin
+    state: absent
+  tags:
+    - non_idempotent
 
 - name: checkout msi-setavu-plugin repo
   run_once: true

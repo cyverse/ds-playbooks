@@ -6,7 +6,7 @@
     name: uuidd
     state: present
 
-- become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+- become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   block:
     - name: install generateuuid

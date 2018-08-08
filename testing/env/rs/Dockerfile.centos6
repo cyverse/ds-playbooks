@@ -26,6 +26,7 @@ RUN /tmp/base-config centos 6 && \
     yum --assumeyes install \
       ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-resource-4.1.10-centos6-x86_64.rpm && \
     /tmp/config.sh && \
+    usermod --append --groups "$IRODS_SYSTEM_GROUP" root && \
     yum clean all && \
     rm --force --recursive /tmp/* /var/cache/yum
 

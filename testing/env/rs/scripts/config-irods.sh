@@ -54,6 +54,8 @@ main()
   mk_svc_account
   ensure_ownership "$SvcAccount"
 
+  usermod --append --groups "$IRODS_SYSTEM_GROUP" root
+
   setup_irods_configuration
 
   mkdir --parents "$IRODS_DEFAULT_VAULT"

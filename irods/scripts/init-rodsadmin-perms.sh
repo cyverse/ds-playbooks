@@ -106,7 +106,8 @@ CREATE INDEX all_entities_idx ON all_entities(id);
 
 CREATE TEMPORARY TABLE all_with_perms (path, actual_perm, expected_perm) AS
 SELECT a.path, r.perm, CASE WHEN a.path ~ '^/$zone/[^/]*/.*' THEN 'own' ELSE 'modify object' END
-FROM all_entities AS a LEFT JOIN rodsadmin_perms AS r ON r.object_id = a.id;
+FROM all_entities AS a LEFT JOIN rodsadmin_perms AS r ON r.object_id = a.id
+WHERE a.path ~ '^/($zone(/.*)?)?\$';
 
 SELECT expected_perm, path FROM all_with_perms WHERE actual_perm IS DISTINCT FROM expected_perm;
 

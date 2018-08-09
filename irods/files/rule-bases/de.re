@@ -4,10 +4,54 @@
 _de_STAGING_BASE = '/' ++ ipc_ZONE ++ '/jobs'
 
 
-_de_inStagedJob(*Object) = *Object like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+/.+'
+_de_inStagedJob(*Path) = *Path like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+/.+'
 
 
-_de_inStaging(*Entity) = str(*Entity) like _de_STAGING_BASE ++ '/*'
+_de_inStaging(*Path) = str(*Path) like _de_STAGING_BASE ++ '/*'
+
+
+_de_getJobInfo(*StagingRelPath) =
+  let *info.id = elem(split(*StagingRelPath, '/'), 0) in
+  let *info.creator = '' in
+  let *info.appId = '' in
+  let *info.archiveBase = '' in
+  let *stagingBase = _de_STAGING_BASE ++ '/' ++ *info.id in
+  let *_ = foreach(*res in select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE
+                           where COLL_NAME = *stagingBase) {
+             if (*res.META_COLL_ATTR_NAME == 'ipc-creator') {
+               *info.creator = *res.META_COLL_ATTR_VALUE;
+             } else if (*res.META_COLL_ATTR_NAME == 'ipc-real-output') {
+               *info.archiveBase = *res.META_COLL_ATTR_VALUE;
+             } else if (*res.META_COLL_ATTR_NAME == 'ipc-analysis-id') {
+               *info.appId = *res.META_COLL_ATTR_VALUE;
+             }
+           } in
+  *info
+
+
+_de_archiveData(*StagingPath) {
+  *stagingRelPath = triml(*StagingPath, _de_STAGING_BASE ++ '/');
+  *jobInfo = _de_getJobInfo(*stagingRelPath);
+
+  if (*jobInfo.creator != '' && *jobInfo.archiveBase != '') {
+    *archiveObj = *jobInfo.archiveBase ++ '/' ++ triml(*stagingRelPath, *jobInfo.id ++ '/');
+    *clientArg = execCmdArg(*jobInfo.creator);
+    *stageArg = execCmdArg(*StagingPath);
+    *archiveArg = execCmdArg(*archiveObj);
+    *execArg = execCmdArg(*jobInfo.id);
+    *appArg = execCmdArg(*jobInfo.appId);
+    *argStr = '*clientArg *stageArg *archiveArg *execArg *appArg';
+    *status = errormsg(msiExecCmd('de-archive-data', *argStr, 'null', 'null', 'null', *out), *msg);
+
+    if (*status < 0) {
+      writeLine('serverLog', 'DE: Failed to archive data object: *msg');
+      msiGetStderrInExecCmdOut(*out, *errMsg);
+      writeLine('serverLog', 'DE: *errMsg');
+      cut;
+      failmsg(*status, *errMsg);
+    }
+  }
+}
 
 
 _de_createArchiveColl(*ArchiveColl, *StageColl, *Creator, *AppId, *JobId) {
@@ -34,30 +78,20 @@ _de_createArchiveColl(*ArchiveColl, *StageColl, *Creator, *AppId, *JobId) {
 _de_createArchiveCollFor(*StagingColl) {
   if (_de_inStagedJob(*StagingColl)) {
     *stagingRelPath = triml(*StagingColl, _de_STAGING_BASE ++ '/');
-    *jobId = elem(split(*stagingRelPath, '/'), 0);
-    *jobStagingBase = _de_STAGING_BASE ++ '/*jobId';
-    *creator = '';
-    *jobArchiveBase = '';
-    *appId = '';
-    *query = select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '*jobStagingBase';
+    *jobInfo = _de_getJobInfo(*stagingRelPath);
 
-    foreach (*res in *query) {
-      if (*res.META_COLL_ATTR_NAME == 'ipc-creator') {
-        *creator = *res.META_COLL_ATTR_VALUE;
-      } else if (*res.META_COLL_ATTR_NAME == 'ipc-real-output') {
-        *jobArchiveBase = *res.META_COLL_ATTR_VALUE;
-      } else if (*res.META_COLL_ATTR_NAME == 'ipc-analysis-id') {
-        *appId = *res.META_COLL_ATTR_VALUE;
-      }
-    }
+    if (*jobInfo.creator != '' && *jobInfo.archiveBase != '') {
+      if (*stagingRelPath like regex '^' ++ *jobInfo.id ++ '/[^/]+') {
+        *jobStagingBase = _de_STAGING_BASE ++ '/' ++ *info.id;
 
-    if (*creator != '' && *jobArchiveBase != '') {
-      if (*stagingRelPath like regex '^*jobId/[^/]+$') {
-        _de_createArchiveColl(*jobArchiveBase, *jobStagingBase, *creator, *appId, *jobId);
+        _de_createArchiveColl(*jobInfo.archiveBase, *jobStagingBase, *jobInfo.creator,
+                              *jobInfo.appId, *jobInfo.Id);
       }
 
-      *archiveColl = '*jobArchiveBase/' ++ triml(*stagingRelPath, '*jobId/');
-      _de_createArchiveColl(*archiveColl, *StagingColl, *creator, *appId, *jobId);
+      *archiveColl = *jobInfo.archiveBase ++ '/' ++ triml(*stagingRelPath, *jobInfo.id ++ '/');
+
+      _de_createArchiveColl(*archiveColl, *StagingColl, *jobInfo.creator, *jobInfo.appId,
+                            *jobInfo.id);
     }
   }
 }
@@ -124,12 +158,22 @@ exclusive_acPostProcForCollCreate {
 
 
 exclusive_acPostProcForCopy {
-  on (_de_inStaging($objPath)) {
+  on (_de_inStagedJob($objPath)) {
+    _de_archiveData($objPath);
   }
 }
 
 
 exclusive_acPostProcForPut {
-  on (_de_inStaging($objPath)) {
+  on (_de_inStagedJob($objPath)) {
+    _de_archiveData($objPath);
+  }
+}
+
+
+pep_resource_resolve_hierarchy_pre(*OUT) {
+  on ($KVPairs.logical_path like regex '^' ++ _de_STAGING_BASE ++ '/[^/]+') {
+    cut;
+    failmsg(-350000, "CYVERSE ERROR:  cannot put files into " ++ _de_STAGING_BASE);
   }
 }

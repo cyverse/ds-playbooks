@@ -119,8 +119,8 @@
           - server_config.re_rulebase_set[0].filename == 'ipc-custom'
           - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'
           - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
-          - server_config.server_port_range_end == 20009
-          - server_config.server_port_range_start == 20000
+          - server_config.server_port_range_end == 19999
+          - server_config.server_port_range_start == 19990
           - server_config.zone_key == 'TEMPORARY_zone_key'
           - server_config.zone_user == 'rods'
           - server_config.federation | length == 0

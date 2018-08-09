@@ -110,6 +110,9 @@ exclusive_acPostProcForPut {
 }
 
 
+pep_resource_resolve_hierarchy_pre(*OUT) {}
+
+
 # POLICIES
 
 acBulkPutPostProcPolicy { ipc_acBulkPutPostProcPolicy }
@@ -194,8 +197,6 @@ acPreProcForObjRename(*SourceObject, *DestObject) {
 
 # NOTE: The camelcasing is inconsistent here
 acPreprocForRmColl { ipc_acPreprocForRmColl; }
-
-pep_resource_resolve_hierarchy_pre(*OUT) { pire_resource_resolve_hierarchy_pre(*OUT); }
 
 
 # POST-PROC RULE HOOKS

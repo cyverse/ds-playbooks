@@ -22,11 +22,11 @@ Options:
   -p, --playbook <playbook>  the path to the playbook to test relative to
                              <playbook_folder>.
 
-  -P, --pretty   more information will be output and newlines will be expanded
-                 in that output.
   -h, --help     show help and exit
   -i, --inspect  after running the playbook, open shell that allows manual
                  inspection of the configuration files, vaults, and logs
+  -P, --pretty   more information will be output and newlines will be expanded
+                 in that output.
 
 Summary:
 This script runs a playbook with in the testing environment. If no playbook is

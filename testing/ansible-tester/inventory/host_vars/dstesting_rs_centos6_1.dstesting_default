@@ -1,4 +1,7 @@
 ---
+irods_default_dir_mode: '0770'
+irods_default_file_mode: '0660'
+
 irods_host_aliases:
   - alias-1
   - alias-2

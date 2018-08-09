@@ -36,6 +36,12 @@ _irods_clerver_password: "{{ irods_clerver_password if irods_clerver_password is
 
 _irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else None }}"
 
+_irods_default_dir_mode: "{{ irods_default_dir_mode if irods_default_dir_mode is defined else
+                             '0750' }}"
+
+_irods_default_file_mode: "{{ irods_default_file_mode if irods_default_file_mode is defined else
+                              '0600' }}"
+                              
 _irods_default_number_of_transfer_threads: "{{
   irods_default_number_of_transfer_threads
     if irods_default_number_of_transfer_threads is defined else

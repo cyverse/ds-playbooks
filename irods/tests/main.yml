@@ -3,7 +3,12 @@
   hosts: rabbitmq
   become: true
   tasks:
-    - debug:
+    - name: test vhost name is correct
+      debug:
+        msg: TODO implemnt
+
+    - name: test vhost users are correct
+      debug:
         msg: TODO implemnt
 
 
@@ -18,6 +23,24 @@
 
 - import_playbook: provision.yml
 - import_playbook: cfg_irods.yml
+
+
+- name: test start iRODS on IES
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement
+
+
+- name: test start iRODS on resource servers
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement
 
 
 - name: test run-time initialization

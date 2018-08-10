@@ -36,6 +36,26 @@
 - import_playbook: cfg_irods.yml
 
 
+- name: start iRODS on IES
+  hosts: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
+  tasks:
+    - name: start iRODS
+      irods_start:
+
+
+- name: start iRODS on resource servers
+  hosts: rs:!ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
+  tasks:
+    - name: start iRODS
+      irods_start:
+
+
 - name: run-time initialization
   hosts: ies
   become: "{{ _become_svc_acnt }}"

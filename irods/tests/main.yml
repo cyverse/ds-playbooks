@@ -4,8 +4,8 @@
   become: true
   tasks:
     - name: test vhost name is correct
-      debug:
-        msg: TODO implemnt
+      command: rabbitmqctl list_permissions -p /
+      changed_when: false
 
     - name: test vhost users are correct
       debug:

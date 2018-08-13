@@ -1,7 +1,7 @@
 ---
 - name: restart iRODS service
   hosts: irods
-  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   become_flags: '-i'
   tasks:

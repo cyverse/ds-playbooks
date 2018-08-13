@@ -4,32 +4,14 @@
 
 - name: Configure IES for PIRE
   hosts: ies
-  become: "{{ false if ansible_user|default('') == _irods_service_account_name else true }}"
+  become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
     - irods_resource_hierarchy:
         hierarchy: "{{ _pire_resource_hierarchy }}"
 
-    - name: ensure pire group exists
-      irods_group:
-        name: pire
-
-    - name: set the quota for the pire group
-      irods_quota:
-        subject: pire
-        resource: "{{ _pire_resource_hierarchy.name }}"
-        quota: "{{ _pire_quota }}"
-
     - name: create project collection
       irods_collection:
         path: /{{ _irods_zone_name }}/home/shared/eht
         parents: true
-
-    - name: ensure pire owns everything in the project collection
-      irods_permission:
-        subject: pire
-        permission: own
-        object: /{{ _irods_zone_name }}/home/shared/eht
-        recursive: true
-      register: response

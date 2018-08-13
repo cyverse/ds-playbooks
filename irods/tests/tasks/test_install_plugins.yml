@@ -1,4 +1,20 @@
 ---
-- name: test install plugins
+- name: test irods-runtime installed
+  debug:
+    msg: TODO implement
+
+- name: test remove previous irods-netcdf-build repo
+  debug:
+    msg: TODO implement
+
+- name: test checkout irods-netcdf-build repo
+  debug:
+    msg: TODO implement
+
+- name: test remove previous msi-setavu-plugin repo
+  debug:
+    msg: TODO implement
+
+- name: test checkout msi-setavu-plugin repo
   debug:
     msg: TODO implement

@@ -9,6 +9,7 @@ None of these variables are required.
 
 Variable                                   | Default                              | Choices | Comments
 ------------------------------------------ | ------------------------------------ | ------- | --------
+`become_svc_acnt`                          | true                                           | whether or not to perform actions normally performed by the service account as the service account
 `bisque_irods_host`                        | `irods_ies`                          |         | The iRODS host to report to BisQue.
 `bisque_password`                          | admin                                |         | The password used to authenticate connections to BisQue
 `bisque_projects`                          | `[]`                                 |         | A list of projects that automatically publish to BisQue
@@ -24,6 +25,8 @@ Variable                                   | Default                            
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
 `irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | rods                                 |         | the rodsadmin user to be used by the server being configured
+`irods_default_dir_mode`                   | 0750                                 |         | the default permissions assigned to newly created directories in the vault
+`irods_default_file_mode`                  | 0600                                 |         | the default permissions assigned to newly created files in the vault
 `irods_default_number_of_transfer_threads` | 4                                    |         | the default maximum number of transfer streams for parallel transfer
 `irods_default_repl_resource`              | `irods_default_resource`             |         | the default resource for replication
 `irods_default_resource`                   | `irods_resource_hierarchies[0].name` |         | the name of the default resource

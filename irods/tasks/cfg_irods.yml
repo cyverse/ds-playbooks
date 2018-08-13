@@ -44,6 +44,8 @@
     rabbitmq_path: /{{ _rabbitmq_vhost | replace('/', '%2F') }}
     rabbitmq_uri: amqp://{{ rabbitmq_authority }}{{ rabbitmq_path }}
     irods_cfg_client_server_policy: CS_NEG_REFUSE
+    irods_cfg_default_dir_mode: "{{ _irods_default_dir_mode }}"
+    irods_cfg_default_file_mode: "{{ _irods_default_file_mode }}"
     irods_cfg_default_hash_scheme: MD5
     irods_cfg_default_number_of_transfer_threads: "{{ _irods_default_number_of_transfer_threads }}"
     irods_cfg_default_resource_directory: "{{ _irods_default_vault }}"

@@ -10,8 +10,8 @@
       changed_when: false
 
     - name: verify that rodsadmin has write permission on the zone collection
-      debug:
-        msg: TODO implement
+      shell: ils -A /testing | grep --quiet 'g:rodsadmin#testing:modify object'
+      changed_when: false
 
     - name: verify that rodsadmin has write permission on zone coll members
       debug:

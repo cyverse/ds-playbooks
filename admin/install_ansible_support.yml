@@ -1,12 +1,22 @@
 ---
 - name: Install dmidecode required by ansible gather_facts
-  hosts: all:!unmanaged_systems
+  hosts: localhost:all:!unmanaged_systems
   become: true
   gather_facts: false
   tasks:
     - name: install dmidecode support
       package:
         name: dmidecode
+        state: present
+
+
+- name: Install git on master
+  hosts: localhost
+  become: true
+  tasks:
+    - name: install git
+      package:
+        name: git
         state: present
 
 

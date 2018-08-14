@@ -1,0 +1,4 @@
+---
+- name: install {{ pkg }}
+  yum:
+    name: https://files.renci.org/pub/irods/releases/{{ _irods_version }}/{{ os }}/{{ pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm

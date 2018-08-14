@@ -1,5 +1,13 @@
 ---
-- name: check correct irods-resource package installed
-  package:
-    name: irods-resource-4.1.10
-    state: present
+- include_tasks: test_pkg_installed.yml
+  vars:
+    pkg: irods-resource
+    version: '4.1.10'
+
+- name: test account owns /var/lib/irods
+  debug:
+    msg: TODO implement
+
+- name: test account owns /etc/irods
+  debug:
+    msg: TODO implement

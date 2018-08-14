@@ -14,8 +14,8 @@
                 'irods-database-plugin-postgres' }}"
     pg_rpm_ver: "{{ _irods_version | regex_replace('^4.') }}"
   tasks:
-    - include_tasks: tasks/proxy_install.yml pkg={{ pg_rpm }} pkg_ver={{ pg_rpm_ver }}
-    - include_tasks: tasks/proxy_install.yml pkg=irods-icat pkg_ver={{ _irods_version }}
+    - include_tasks: tasks/install_irods_pkg.yml pkg={{ pg_rpm }} pkg_ver={{ pg_rpm_ver }}
+    - include_tasks: tasks/install_irods_pkg.yml pkg=irods-icat pkg_ver={{ _irods_version }}
 
 
 - name: upgrade resource server package

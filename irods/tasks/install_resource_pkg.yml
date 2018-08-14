@@ -1,5 +1,5 @@
 ---
-- include_tasks: proxy_install.yml
+- include_tasks: install_irods_pkg.yml
   vars:
     os: centos{{ ansible_distribution_major_version }}
     pkg: irods-resource

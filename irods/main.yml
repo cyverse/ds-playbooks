@@ -66,30 +66,9 @@
   run_once: true
   tasks:
     - name: ensure service user type exists
-      shell: |
-        desc=$(iquest \
-          '%s' \
-          "select TOKEN_VALUE2 where TOKEN_NAMESPACE = 'user_type' and TOKEN_NAME = 'ds-service'")
-        exitCode="$?"
-
-        if [ "$exitCode" -ne 0 ]
-        then
-          exit 1
-        fi
-
-        if ! [[ "$desc" =~ CAT_NO_ROWS_FOUND: ]]
-        then
-          exit 0
-        fi
-
-        if ! iadmin at user_type ds-service '' 'a Data Store service'
-        then
-          exit 1
-        fi
-
-        printf changed
-      register: response
-      changed_when: response.stdout == 'changed'
+      irods_user_type:
+        type: ds-service
+        description: a Data Store service
 
     - name: ensure public group's home is correct
       irods_move:

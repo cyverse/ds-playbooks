@@ -8,8 +8,12 @@
       changed_when: false
 
     - name: test vhost users are correct
-      debug:
-        msg: TODO implemnt
+      shell: |
+        rabbitmqctl list_user_permissions guest \
+          | grep \
+              --quiet \
+              --regexp '^/[[:blank:]][[:blank:]]*\.\*[[:blank:]][[:blank:]]*\.\*[[:blank:]][[:blank:]]*\.\*'
+      changed_when: false
 
 
 - name: test install pika

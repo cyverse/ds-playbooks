@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly ExecName=$(basename "$0")
+readonly ExecName=$(readlink --canonicalize "$0")
 
 
 show_help()
@@ -19,9 +19,9 @@ Parameters:
                      playbooks
 
 Options:
-  -I, --inventory <inventory>  the name of the inventory to use
-  -p, --playbook  <playbook>   the path to the playbook to test relative to
-                               <playbook_folder>.
+  -I, --inventory-hosts <hosts>  the name of the inventory hosts file to use
+  -p, --playbook  <playbook>     the path to the playbook to test relative to
+                                 <playbook_folder>.
 
   -h, --help     show help and exit
   -i, --inspect  after running the playbook, open shell that allows manual
@@ -30,24 +30,23 @@ Options:
                  in that output.
 
 Summary:
-This script runs a playbook with in the testing environment. If no invetory is
-provided, it will use the 'default' inventory. If no playbook is provided, it 
+This script runs a playbook with in the testing environment. If no inventory
+hosts file is provided, it will use 'hosts-all'. If no playbook is provided, it
 will attempt to run the playbook <playbook_folder>/main.yml.
 EOF
 }
 
 
-readonly ExecName=$(readlink --canonicalize "$0")
 readonly BaseDir=$(dirname "$ExecName")
 readonly Cfg="$BaseDir"/config.inc
-readonly DefaultInventory=default
+readonly DefaultHosts=hosts-all
 readonly DefaultPlaybook=main.yml
 
 
 main()
 {
   local doInspect=false
-  local inventory="$DefaultInventory"
+  local hosts="$DefaultHosts"
   local pretty=false
 
   local opts
@@ -61,8 +60,8 @@ main()
         show_help
         exit 0
         ;;
-      -I|--inventory)
-        inventory="$2"
+      -I|--inventory-hosts)
+        hosts="$2"
         shift 2
         ;;
       -i|--inspect)
@@ -98,7 +97,7 @@ main()
   local playbook
   playbook=$(resolve_playbook "$playbooks" "$playbookInput")
 
-  do_run "$doInspect" "$pretty" "$playbooks" "$playbook" "$inventory"
+  do_run "$doInspect" "$pretty" "$playbooks" "$playbook" "$hosts"
 }
 
 
@@ -108,11 +107,11 @@ do_run()
   local pretty="$2"
   local playbooks="$3"
   local playbook="$4"
-  local inventory="$5"
+  local hosts="$5"
 
   if "$BaseDir"/env/controller "$Cfg" start
   then
-    "$BaseDir"/ansible-tester/run "$doInspect" "$pretty" "$playbooks" "$playbook" "$inventory"
+    "$BaseDir"/ansible-tester/run "$doInspect" "$pretty" "$playbooks" "$playbook" "$hosts"
   fi
 
   "$BaseDir"/env/controller "$Cfg" stop
@@ -129,7 +128,7 @@ exit_with_help()
 parse_cmd_line()
 {
   local opts
-  opts=$(getopt --longoptions help,inspect,inventory:,playbook:,pretty \
+  opts=$(getopt --longoptions help,inspect,inventory-hosts:,playbook:,pretty \
                 --options hiI:p:P \
                 --name "$ExecName" \
                 -- \
@@ -188,7 +187,7 @@ resolve_playbook_dir()
 
 set -e
 
-# shellcheck source=config.inc
+# shellcheck disable=SC1091
 . "$Cfg"
 
 main "$@"

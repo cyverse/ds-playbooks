@@ -1,0 +1,12 @@
+---
+- name: ensure project collections exist
+  hosts: ies:!unmanaged_systems
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  run_once: true
+  tasks:
+    - name: ensure project collections exist
+      when: _irods_calliope_project_coll != ''
+      irods_collection:
+        path: "{{ _irods_calliope_project_coll }}/collections"
+        parents: true

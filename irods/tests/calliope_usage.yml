@@ -1,0 +1,14 @@
+---
+- name: test ensure project collections exist
+  hosts: ies
+  become: true
+  become_user: irods
+  run_once: true
+  tasks:
+    - name: test ensure project collections exist
+      shell: |
+        resp=$(iquest \
+                 "select COLL_ID where COLL_NAME = '/testing/home/shared/calliope/collections'")
+
+        ! [[ "$resp" =~ ^CAT_NO_ROWS_FOUND ]]
+      changed_when: false

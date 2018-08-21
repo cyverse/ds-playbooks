@@ -9,8 +9,8 @@
 #  path  the absolute path to the collection to create
 #
 # Optional Variables:
-#  parents:  Whether or not to create the parent collections as well the default
-#            is false.
+#  parents:  Whether or not to create the parent collections as well. The
+#            default is false.
 
 
 main()

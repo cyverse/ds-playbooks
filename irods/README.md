@@ -15,7 +15,6 @@ Variable                                   | Default                            
 `bisque_projects`                          | `[]`                                 |         | A list of projects that automatically publish to BisQue
 `bisque_url`                               |                                      |         | The URL for the BisQue server to connect to
 `bisque_user`                              | admin                                |         | The user to connect to BisQue as
-`calliope_irods_base_coll`                 |                                      |         | The base iRODS collection used by Calliope. If this isn't set, no Calliope rules will fire.
 `dbms_password`                            | irods                                |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `dbms_port`                                | 5432                                 |         | The TCP port the DBMS listens on.
 `dbms_username`                            | irods                                |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.
@@ -23,6 +22,7 @@ Variable                                   | Default                            
 `irods_aegis_repl_resource`                | aegisReplRes                         |         | the name of the aegis resource where replicas are written
 `irods_aegis_resource`                     | aegisIngestRes                       |         | the name of the aegis resource where newly uploaded files are written
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
+`irods_calliope_project_coll`              |                                      |         | The base iRODS collection used by Calliope for published data. If this isn't set, no Calliope rules will fire.
 `irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | rods                                 |         | the rodsadmin user to be used by the server being configured
 `irods_default_dir_mode`                   | 0750                                 |         | the default permissions assigned to newly created directories in the vault

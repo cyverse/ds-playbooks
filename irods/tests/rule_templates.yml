@@ -162,13 +162,13 @@
   vars_files:
     - ../group_vars/all.yml
   vars:
-    calliope_irods_base_coll: /zone/calliope/base
+    irods_calliope_project_coll: /zone/calliope
     calliope_env: "{{ lookup('template', '../templates/rule-bases/calliope-env.re.j2') }}"
   tasks:
     - name: verify calliope-env
       assert:
         that:
-          - calliope_env is search("calliope_BASE_COLL = '/zone/calliope/base'")
+          - calliope_env is search("calliope_BASE_COLL = '/zone/calliope'")
 
 
 - name: test PIRE params are set correctly

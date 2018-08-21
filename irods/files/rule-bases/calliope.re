@@ -32,8 +32,8 @@ _calliope_ingest(*Uploader, *TarPath) {
 
 
 calliope_acPostProcForPut {
-  if (str(calliope_BASE_COLL) != '') {
-    if ($objPath like regex '^' ++ str(calliope_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
+  if (str(calliope_PROJECT_COLL) != '') {
+    if ($objPath like regex '^' ++ str(calliope_PROJECT_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
       _calliope_logMsg('scheduling ingest of $objPath for $userNameClient');
 
       delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>") {

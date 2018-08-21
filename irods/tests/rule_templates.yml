@@ -37,7 +37,7 @@
     - name: verify constants expand correctly in calliope-env.re.j2
       assert:
         that:
-          - calliope_env is search("calliope_BASE_COLL = ''" | regex_escape)
+          - calliope_env is search("calliope_PROJECT_COLL = ''" | regex_escape)
 
     - name: verify constants expand correctly in pire-env.re.j2
       assert:
@@ -168,7 +168,7 @@
     - name: verify calliope-env
       assert:
         that:
-          - calliope_env is search("calliope_BASE_COLL = '/zone/calliope'")
+          - calliope_env is search("calliope_PROJECT_COLL = '/zone/calliope'")
 
 
 - name: test PIRE params are set correctly

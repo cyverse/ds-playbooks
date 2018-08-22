@@ -20,13 +20,13 @@ Parameters:
 
 Options:
   -I, --inventory-hosts <hosts>  the name of the inventory hosts file to use
-  -p, --playbook  <playbook>     the path to the playbook to test relative to
+  -P, --playbook  <playbook>     the path to the playbook to test relative to
                                  <playbook_folder>.
 
   -h, --help     show help and exit
   -i, --inspect  after running the playbook, open shell that allows manual
                  inspection of the configuration files, vaults, and logs
-  -P, --pretty   more information will be output and newlines will be expanded
+  -p, --pretty   more information will be output and newlines will be expanded
                  in that output.
 
 Summary:
@@ -68,13 +68,13 @@ main()
         doInspect=true
         shift
         ;;
-      -P|--pretty)
-        pretty=true
-        shift
-        ;;
-      -p|--playbook)
+      -P|--playbook)
         local playbookInput="$2"
         shift 2
+        ;;
+      -p|--pretty)
+        pretty=true
+        shift
         ;;
       --)
         shift
@@ -129,7 +129,7 @@ parse_cmd_line()
 {
   local opts
   opts=$(getopt --longoptions help,inspect,inventory-hosts:,playbook:,pretty \
-                --options hiI:p:P \
+                --options hiI:P:p \
                 --name "$ExecName" \
                 -- \
                 "$@")

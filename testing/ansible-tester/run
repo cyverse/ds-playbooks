@@ -1,15 +1,16 @@
 #!/bin/bash
 #
 # Usage:
-#  run INSPECT PRETTY PLAYBOOKS PLAYBOOK
+#  run INSPECT PRETTY PLAYBOOKS PLAYBOOK INVENTORY
 #
 # Parameters:
 #  INSPECT    if this is `true`, a shell will be opened that allows access to
 #             the volumes in the env containers.
 #  PLAYBOOK   the name of the playbook being tested.
 #  PLAYBOOKS  the base directory for the set of playbooks containing PLAYBOOK.
-#  PRETTY    if this is `true`, more info is dumped and newlines in ouput are
-#            expanded.
+#  PRETTY     if this is `true`, more info is dumped and newlines in ouput are
+#             expanded.
+#  HOSTS      the inventory hosts to test against
 #
 # Envinroment Variables:
 #  DBMS_HOST        The hostname of the PostgreSQL server to connect to
@@ -24,6 +25,7 @@ main()
   local pretty="$2"
   local playbooks="$3"
   local playbook="$4"
+  local hosts="$5"
 
   docker run --interactive --rm --tty \
              --env IRODS_HOST="$IRODS_IES6_HOST" \
@@ -31,7 +33,7 @@ main()
              --env PGHOST="$DBMS_HOST" \
              --network "$DOMAIN" \
              --volume "$playbooks":/playbooks-under-test:ro \
-             ansible-tester "$doInspect" "$pretty" "$playbook"
+             ansible-tester "$doInspect" "$pretty" "$playbook" "$hosts"
 }
 
 

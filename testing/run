@@ -1,6 +1,6 @@
-#! /bin/bash
+#!/bin/bash
 
-readonly ExecName=$(basename "$0")
+readonly ExecName=$(readlink --canonicalize "$0")
 
 
 show_help()
@@ -19,30 +19,34 @@ Parameters:
                      playbooks
 
 Options:
-  -p, --playbook <playbook>  the path to the playbook to test relative to
-                             <playbook_folder>.
+  -I, --inventory-hosts <hosts>  the name of the inventory hosts file to use
+  -P, --playbook  <playbook>     the path to the playbook to test relative to
+                                 <playbook_folder>.
 
   -h, --help     show help and exit
   -i, --inspect  after running the playbook, open shell that allows manual
                  inspection of the configuration files, vaults, and logs
-  -P, --pretty   more information will be output and newlines will be expanded
+  -p, --pretty   more information will be output and newlines will be expanded
                  in that output.
 
 Summary:
-This script runs a playbook with in the testing environment. If no playbook is
-provided, it will attempt to run the playbook <playbook_folder>/main.yml.
+This script runs a playbook with in the testing environment. If no inventory
+hosts file is provided, it will use 'hosts-all'. If no playbook is provided, it
+will attempt to run the playbook <playbook_folder>/main.yml.
 EOF
 }
 
 
-readonly BaseDir=$(dirname $(readlink -f "$0"))
+readonly BaseDir=$(dirname "$ExecName")
 readonly Cfg="$BaseDir"/config.inc
+readonly DefaultHosts=hosts-all
 readonly DefaultPlaybook=main.yml
 
 
 main()
 {
   local doInspect=false
+  local hosts="$DefaultHosts"
   local pretty=false
 
   local opts
@@ -56,15 +60,19 @@ main()
         show_help
         exit 0
         ;;
+      -I|--inventory-hosts)
+        hosts="$2"
+        shift 2
+        ;;
       -i|--inspect)
         doInspect=true
         shift
         ;;
-      -p|--playbook)
+      -P|--playbook)
         local playbookInput="$2"
         shift 2
         ;;
-      -P|--pretty)
+      -p|--pretty)
         pretty=true
         shift
         ;;
@@ -89,7 +97,7 @@ main()
   local playbook
   playbook=$(resolve_playbook "$playbooks" "$playbookInput")
 
-  do_run "$doInspect" "$pretty" "$playbooks" "$playbook"
+  do_run "$doInspect" "$pretty" "$playbooks" "$playbook" "$hosts"
 }
 
 
@@ -99,10 +107,11 @@ do_run()
   local pretty="$2"
   local playbooks="$3"
   local playbook="$4"
+  local hosts="$5"
 
   if "$BaseDir"/env/controller "$Cfg" start
   then
-    "$BaseDir"/ansible-tester/run "$doInspect" "$pretty" "$playbooks" "$playbook"
+    "$BaseDir"/ansible-tester/run "$doInspect" "$pretty" "$playbooks" "$playbook" "$hosts"
   fi
 
   "$BaseDir"/env/controller "$Cfg" stop
@@ -119,8 +128,8 @@ exit_with_help()
 parse_cmd_line()
 {
   local opts
-  opts=$(getopt --longoptions help,inspect,playbook:,pretty \
-                --options hip:P \
+  opts=$(getopt --longoptions help,inspect,inventory-hosts:,playbook:,pretty \
+                --options hiI:P:p \
                 --name "$ExecName" \
                 -- \
                 "$@")
@@ -140,7 +149,7 @@ resolve_playbook()
   local playbooks="$1"
   local playbook="$2"
 
-  : ${playbook:=$DefaultPlaybook}
+  : "${playbook:=$DefaultPlaybook}"
 
   if [[ "$playbook" != *.* ]]
   then
@@ -161,7 +170,7 @@ resolve_playbook_dir()
 {
   local playbooks="$1"
 
-  if ! [[ "$playbooksInput" =~ ^/ ]]
+  if ! [[ "$playbooks" =~ ^/ ]]
   then
     playbooks="$(pwd)"/"$playbooks"
   fi
@@ -177,5 +186,8 @@ resolve_playbook_dir()
 
 
 set -e
+
+# shellcheck disable=SC1091
 . "$Cfg"
+
 main "$@"

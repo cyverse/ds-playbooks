@@ -12,20 +12,23 @@
         rabbitmqctl list_user_permissions guest \
           | grep \
               --quiet \
-              --regexp '^/[[:blank:]][[:blank:]]*\.\*[[:blank:]][[:blank:]]*\.\*[[:blank:]][[:blank:]]*\.\*'
+              --regexp \
+                '^/[[:blank:]][[:blank:]]*\.\*[[:blank:]][[:blank:]]*\.\*[[:blank:]][[:blank:]]*\.\*'
       changed_when: false
 
 
 - name: test install pika
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+  hosts: ies
+  become: true
   tasks:
-    - debug:
+    - name: test ensure pika installed
+      debug:
         msg: TODO implement
 
 
 - import_playbook: provision.yml
+
+
 - import_playbook: cfg_irods.yml
 
 

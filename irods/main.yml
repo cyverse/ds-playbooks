@@ -75,6 +75,10 @@
         source: /{{ _irods_zone_name }}/home/public
         destination: /{{ _irods_zone_name }}/home/shared
 
+    - name: ensure anonymous user exists
+      irods_user:
+        name: anonymous
+
     - name: start quota usage computation
       command: irule '{ ipc_rescheduleQuotaUsageUpdate }' null ruleExecOut
       register: results

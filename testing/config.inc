@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export ENV_NAME=dstesting
 export DOMAIN="$ENV_NAME"_default
 

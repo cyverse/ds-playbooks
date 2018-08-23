@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 #
 # Usage:
 #  test-playbook INSPECT PRETTY PLAYBOOK
@@ -9,6 +9,7 @@
 #  PLAYBOOK  the name of the playbook being tested.
 #  PRETTY    if this is `true`, more info is dumped and newlines in ouput are
 #            expanded.
+#  HOSTS     the inventory hosts to test against
 #
 # This program executes and ansible playbook on the test environment.
 
@@ -18,13 +19,14 @@ main()
   local inspect="$1"
   local pretty="$2"
   local playbook="$3"
+  local hosts="$4"
 
   if [ "$pretty" = true ]
   then
     export ANSIBLE_STDOUT_CALLBACK=minimal
   fi
 
-  do_test "$playbook"
+  do_test "$playbook" "$hosts"
 
   if [ "$inspect" = true ]
   then
@@ -40,24 +42,26 @@ main()
 do_test()
 {
   local playbook="$1"
+  local hosts="$2"
 
+  local inventory=/inventory/"$hosts"
   local playbookPath=/playbooks-under-test/"$playbook"
   local testPath=/playbooks-under-test/tests/"$playbook"
 
   printf 'Waiting for environment to be ready\n'
-  if ! run_playbook /wait-for-ready.yml > /dev/null
+  if ! ansible-playbook --inventory-file "$inventory" /wait-for-ready.yml > /dev/null
   then
     return 1
   fi
 
   printf 'Checking playbook syntax\n'
-  if ! run_playbook --syntax-check "$playbookPath"
+  if ! ansible-playbook --syntax-check --inventory-file "$inventory" "$playbookPath"
   then
     return 1
   fi
 
   printf 'Running playbook\n'
-  if ! run_playbook --skip-tags no_testing "$playbookPath"
+  if ! ansible-playbook --inventory-file "$inventory" --skip-tags no_testing "$playbookPath"
   then
     return 1
   fi
@@ -65,7 +69,7 @@ do_test()
   if [ -e "$testPath" ]
   then
     printf 'Checking configuration\n'
-    if ! run_playbook "$testPath"
+    if ! ansible-playbook --inventory-file "$inventory" "$testPath"
     then
       return 1
     fi
@@ -74,19 +78,16 @@ do_test()
   printf 'Checking idempotency\n'
 
   local idempotencyRes
-  idempotencyRes=$(run_playbook --skip-tags 'no_testing, non_idempotent' "$playbookPath" 2>&1)
+  idempotencyRes=$(ansible-playbook --inventory-file "$inventory" \
+                                    --skip-tags 'no_testing, non_idempotent' \
+                                    "$playbookPath" \
+                     2>&1)
 
   if grep --quiet --regexp '^\(changed\|failed\):' <<< "$idempotencyRes"
   then
     printf '%s\n' "$idempotencyRes"
     return 1
   fi
-}
-
-
-run_playbook()
-{
-  ansible-playbook --inventory-file=/inventory "$@"
 }
 
 

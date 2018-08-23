@@ -1,0 +1,211 @@
+#!/bin/bash
+#
+# An ansible module for managing iRODS users. At the moment, it can only create
+# them.
+#
+# Module Name:
+#  irods_user
+#
+# Required Variables:
+#  name  the name of the user to create
+#
+# Optional Variables:
+#  info      Some text to assign to the user entry's info field.
+#  password  the new user's password
+#  type      The type of user to create. rodsuser by default
+
+# WANT_JSON
+
+
+main()
+{
+  local varFile="$1"
+
+  local name
+  local info
+  local password
+  local type
+
+  name=$(read_field "$varFile" name)
+  info=$(read_field "$varFile" info '')
+  type=$(read_field "$varFile" type rodsuser)
+
+  local pwFieldType
+
+  if ! pwFieldType=$(jq --raw-output '.password | type' < "$varFile" 2>&1)
+  then
+    fail "$pwFieldType"
+  fi
+
+  if [ "$pwFieldType" != null ]
+  then
+    password=$(read_field "$varFile" password '')
+    ensure_user_exists "$name" "$type" "$info" "$password"
+  else
+    ensure_user_exists "$name" "$type" "$info"
+  fi
+}
+
+
+ensure_user_exists()
+{
+  local name="$1"
+  local type="$2"
+  local info="$3"
+
+  if [ "$#" -ge 4 ]
+  then
+    local password="$4"
+  fi
+
+  local id
+  id=$(quest "select USER_ID where USER_NAME = '$name'")
+
+  if [ -n "$id" ]
+  then
+    verify_same_user "$id" "$type" "$info"
+
+    if [ -n "${password+set}" ]
+    then
+      verify_same_password "$name" "$password"
+    fi
+  fi
+
+  local errMsg
+
+  if ! errMsg=$(iadmin mkuser "$name" "$type" 2>&1)
+  then
+    fail "$errMsg"
+  fi
+
+  if ! errMsg=$(iadmin moduser "$name" info "$info" 2>&1)
+  then
+    iadmin rmuser "$name"
+    fail "$errMsg"
+  fi
+
+  if [ -n "${password+set}" ]
+  then
+    if ! errMsg=$(iadmin moduser "$name" password "$password" 2>&1)
+    then
+      iadmin rmuser "$name"
+      fail "$errMsg"
+    fi
+  fi
+
+  succeed true
+}
+
+
+verify_same_password()
+{
+  local name="$1"
+  local password="$2"
+
+  if ! IRODS_AUTHENTICATION_FILE=/dev/null IRODS_USER_NAME="$name" iinit "$password" &> /dev/null
+  then
+    fail "$name already exists with a different password"
+  fi
+}
+
+
+verify_same_user()
+{
+  local id="$1"
+  local type="$2"
+  local info="$3"
+
+  local currentType
+  currentType=$(quest "select USER_TYPE where USER_ID = '$id'")
+
+  if [ "$type" != "$currentType" ]
+  then
+    fail "$name already exists as a $currentType"
+  fi
+
+  local currentInfo
+  currentInfo=$(quest "select USER_INFO where USER_ID = '$id'")
+
+  if [ "$info" != "$currentInfo" ]
+  then
+    fail "$name already exists with info '$currentInfo'"
+  fi
+
+  succeed false
+}
+
+
+quest()
+{
+  local query="$*"
+
+  local response
+  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
+  then
+    fail "$response"
+  fi
+
+  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
+  then
+    printf '%s' "$response"
+  fi
+}
+
+
+read_field()
+{
+  local varFile="$1"
+  local field="$2"
+
+  local defaultValue
+  if [ "$#" -ge 3 ]
+  then
+    defaultValue="$3"
+  fi
+
+  local value
+  if ! value=$(jq --raw-output ".$field // empty" < "$varFile" 2>&1)
+  then
+    fail "$value"
+  elif [ -z "$value" ]
+  then
+    if [ -n "${defaultValue+set}" ]
+    then
+      value="$defaultValue"
+    else
+      fail "variable '$field' must be defined"
+    fi
+  fi
+
+  printf '%s' "$value"
+}
+
+
+fail()
+{
+  local msg="$*"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
+     '{failed: true, msg: $msg}' \
+    >&2
+
+  exit 1
+}
+
+
+succeed()
+{
+  local changed="$1"
+
+  # shellcheck disable=SC2016
+  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
+     '{changed: ($changed == "true")}' \
+    >&2
+
+  exit 0
+}
+
+
+set -e
+main "$@" 2>&1

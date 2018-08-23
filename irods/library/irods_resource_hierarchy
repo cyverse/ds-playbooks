@@ -31,8 +31,7 @@ main()
   local varFile="$1"
 
   local hierarchy
-  hierarchy=$(jq --raw-output '.hierarchy' < "$varFile")
-  require hierarchy
+  hierarchy=$(read_field "$varFile" hierarchy)
 
   create_hierarchy "$hierarchy"
   succeed "$Changed"
@@ -133,7 +132,7 @@ create_hierarchy()
     context=$(jq --raw-output '.context // empty' <<< "$hierarchy")
 
     create_coord_resc "$name" "$type" "$context"
-    
+
     local children
     children=$(jq --compact-output --raw-output 'if .children then .children[] else empty end' \
                  <<< "$hierarchy")
@@ -162,14 +161,32 @@ quest()
 }
 
 
-require()
+read_field()
 {
-  local var="$1"
+  local varFile="$1"
+  local field="$2"
 
-  if [ -z "${!var}" ]
+  local defaultValue
+  if [ "$#" -ge 3 ]
   then
-    fail "variable '$var' must be defined"
+    defaultValue="$3"
   fi
+
+  local value
+  if ! value=$(jq --raw-output ".$field // empty" < "$varFile" 2>&1)
+  then
+    fail "$value"
+  elif [ -z "$value" ]
+  then
+    if [ "${defaultValue:-}" ]
+    then
+      value="$defaultValue"
+    else
+      fail "variable '$field' must be defined"
+    fi
+  fi
+
+  printf '%s' "$value"
 }
 
 

@@ -7,8 +7,10 @@
 #  irods_user_type
 #
 # Required Variables:
-#  type
-#  description
+#  type  the type of user to create
+#
+# Optional Variables:
+#  description  the description of the user type
 
 # WANT_JSON
 
@@ -18,15 +20,14 @@ main()
   local varFile="$1"
 
   local type
-  type=$(jq --raw-output '.type' < "$varFile")
-  require type 
-
   local description
-  description=$(jq --raw-output '.description // empty' < "$varFile")
-  
+
+  type=$(read_field "$varFile" type)
+  description=$(read_field "$varFile" description '')
+
   local id
   id=$(quest "select TOKEN_ID where TOKEN_NAMESPACE = 'user_type' and TOKEN_NAME = '$type'")
-  
+
   if [ -z "$id" ]
   then
     local errMsg
@@ -37,7 +38,7 @@ main()
 
     succeed true
   fi
- 
+
   local currentDesc
   currentDesc=$(quest "select TOKEN_VALUE2 where TOKEN_ID = '$id'")
 
@@ -67,14 +68,32 @@ quest()
 }
 
 
-require()
+read_field()
 {
-  local var="$1"
+  local varFile="$1"
+  local field="$2"
 
-  if [ -z "${!var}" ]
+  local defaultValue
+  if [ "$#" -ge 3 ]
   then
-    fail "variable '$var' must be defined"
+    defaultValue="$3"
   fi
+
+  local value
+  if ! value=$(jq --raw-output ".$field // empty" < "$varFile" 2>&1)
+  then
+    fail "$value"
+  elif [ -z "$value" ]
+  then
+    if [ "${defaultValue:-}" ]
+    then
+      value="$defaultValue"
+    else
+      fail "variable '$field' must be defined"
+    fi
+  fi
+
+  printf '%s' "$value"
 }
 
 

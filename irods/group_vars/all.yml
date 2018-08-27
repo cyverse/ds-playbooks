@@ -41,7 +41,7 @@ _irods_default_dir_mode: "{{ irods_default_dir_mode if irods_default_dir_mode is
 
 _irods_default_file_mode: "{{ irods_default_file_mode if irods_default_file_mode is defined else
                               '0600' }}"
-                              
+
 _irods_default_number_of_transfer_threads: "{{
   irods_default_number_of_transfer_threads
     if irods_default_number_of_transfer_threads is defined else
@@ -153,3 +153,5 @@ _single_threaded_resources: "{{
   [] }}"
 
 _sysctl_kernel: "{{ sysctl_kernel if sysctl_kernel is defined else [] }}"
+
+_webdav_host: "{{ webdav_host if webdav_host is defined else 'localhost' }}"

@@ -66,6 +66,7 @@ Variable                                   | Default                            
 `sernec_writers`                           | `[]`                                 |         | a list of users who get write access to sernec collections
 `single_threaded_resources`                | `[]`                                 |         | a list of resources that only support single threaded transfers
 `sysctl_kernel`                            | `[]`                                 |         | a list of sysctl kernel parameters to set for the IES, _see_below_
+`webdav_host`                              | localhost                            |         | The FQDN or IP address of the WebDAV host
 
 The `restart_irods` flag is ignored in the `main.yml` playbook.
 

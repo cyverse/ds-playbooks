@@ -4,8 +4,8 @@
   become: true
   vars:
     ies: "{{ groups['ies'][0] }}"
-    server: "{{ ies | regex_replace('\\..*') }}"
-    server_ip: "{{ lookup('dig', ies) }}"
+    ies_server: "{{ ies | regex_replace('\\..*') }}"
+    ies_ip: "{{ lookup('dig', ies) }}"
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
     per_backend_maxconn: "{{ _load_balancer_irods_max_conn | int / 2 }}"
@@ -53,16 +53,22 @@
         haproxy_backend:
           - irods_single_conn:
               servers:
-                - "{{ server }} {{ server_ip }}:1247 maxconn {{ per_backend_maxconn }}"
+                - "{{ ies_server }} {{ ies_ip }}:1247 maxconn {{ per_backend_maxconn }}"
           - irods_extra_conn:
               servers:
-                - "{{ server }} {{ server_ip }}:1247 maxconn {{ per_backend_maxconn }}"
+                - "{{ ies_server }} {{ ies_ip }}:1247 maxconn {{ per_backend_maxconn }}"
         haproxy_listen:
           - irods_reconn:
               binds:
                 - :{{ reconn_ports_start }}-{{ reconn_ports_end }}
               servers:
-                - "{{ server }} {{ server_ip }}"
+                - "{{ ies_server }} {{ ies_ip }}"
+          - webdav_https:
+              binds:
+                - 443
+              servers:
+                - webdav {{ lookup('dig', _webdav_host) }}
+                
       notify:
         - reload haproxy
 

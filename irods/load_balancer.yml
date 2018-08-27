@@ -65,10 +65,9 @@
                 - "{{ ies_server }} {{ ies_ip }}"
           - webdav_https:
               binds:
-                - 443
+                - :443
               servers:
                 - webdav {{ lookup('dig', _webdav_host) }}
-                
       notify:
         - reload haproxy
 

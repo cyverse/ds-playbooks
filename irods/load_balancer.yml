@@ -8,6 +8,7 @@
     server_ip: "{{ lookup('dig', ies) }}"
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
+    per_backend_maxconn: "{{ _load_balancer_irods_max_conn | int / 2 }}"
   roles:
     - role: uoi-io.haproxy
       vars:
@@ -52,10 +53,10 @@
         haproxy_backend:
           - irods_single_conn:
               servers:
-                - "{{ server }} {{ server_ip }}:1247 maxconn {{ _load_balancer_irods_max_conn }}"
+                - "{{ server }} {{ server_ip }}:1247 maxconn {{ per_backend_maxconn }}"
           - irods_extra_conn:
               servers:
-                - "{{ server }} {{ server_ip }}:1247 maxconn {{ _load_balancer_irods_max_conn }}"
+                - "{{ server }} {{ server_ip }}:1247 maxconn {{ per_backend_maxconn }}"
         haproxy_listen:
           - irods_reconn:
               binds:

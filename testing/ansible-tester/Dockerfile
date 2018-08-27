@@ -3,7 +3,7 @@ MAINTAINER Tony Edgin @ CyVerse
 
 RUN yum --assumeyes install \
         git postgresql python-dns wget \
-        ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm && \
+        https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm && \
     yum clean all && \
     rm --force --recursive /var/cache/yum && \
     mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test /root/.ssh

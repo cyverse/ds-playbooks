@@ -29,8 +29,8 @@ ARG IRODS_ZONE_USER=rods
 RUN /tmp/base-config centos 7 && \
     yum --assumeyes install \
       python-pika which \
-      ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos7/irods-icat-4.1.10-centos7-x86_64.rpm \
-      ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos7/irods-database-plugin-postgres-1.10-centos7-x86_64.rpm && \
+      https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icat-4.1.10-centos7-x86_64.rpm \
+      https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-database-plugin-postgres-1.10-centos7-x86_64.rpm && \
     /tmp/config.sh && \
     yum clean all && \
     rm --force --recursive /tmp/* /var/cache/yum

@@ -30,8 +30,8 @@ RUN /tmp/base-config centos 6 && \
     yum --assumeyes install \
       https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm && \
     yum --assumeyes install \
-      ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm \
-      ftp://ftp.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm && \
+      https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm \
+      https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm && \
     /tmp/config.sh && \
     pip install pika && \
     touch /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py && \

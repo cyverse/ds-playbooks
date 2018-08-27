@@ -43,8 +43,9 @@
           - irods_main:
               binds:
                 - :{{ _load_balancer_irods_proxy_port }}
-              "stick-table": tyoe ip size 100k store conn_cur
-              "tcp-request": connection track-sc0 src
+              stick_table: type ip size 100k store conn_cur
+              tcp_requests:
+                - connection track-sc0 src
               use_backends:
                 - irods_extra_conn if { src_conn_cur ge 2 }
               default_backend: irods_single_conn

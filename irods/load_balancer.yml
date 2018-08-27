@@ -39,12 +39,23 @@
           - refresh 10s
           - show-legends
           - hide-version
-        haproxy_listen:
+        haproxy_frontend:
           - irods_main:
               binds:
                 - :{{ _load_balancer_irods_proxy_port }}
+              "stick-table": tyoe ip size 100k store conn_cur
+              "tcp-request": connection track-sc0 src
+              use_backends:
+                - irods_extra_conn if { src_conn_cur ge 2 }
+              default_backend: irods_single_conn
+        haproxy_backend:
+          - irods_single_conn:
               servers:
                 - "{{ server }} {{ server_ip }}:1247 maxconn {{ _load_balancer_irods_max_conn }}"
+          - irods_extra_conn:
+              servers:
+                - "{{ server }} {{ server_ip }}:1247 maxconn {{ _load_balancer_irods_max_conn }}"
+        haproxy_listen:
           - irods_reconn:
               binds:
                 - :{{ reconn_ports_start }}-{{ reconn_ports_end }}

@@ -51,7 +51,8 @@
                 - irods_extra_conn if { src_conn_cur ge 2 }
               default_backend: irods_single_conn
           - webdav_http:
-              binds: 80
+              binds:
+                - :80
               mode: http
               redirect: scheme https code 301
         haproxy_backend:

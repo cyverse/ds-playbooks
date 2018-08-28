@@ -50,6 +50,10 @@
               use_backends:
                 - irods_extra_conn if { src_conn_cur ge 2 }
               default_backend: irods_single_conn
+          - webdav_http:
+              binds: 80
+              mode: http
+              redirect: scheme https code 301
         haproxy_backend:
           - irods_single_conn:
               servers:
@@ -101,6 +105,7 @@
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _load_balancer_irods_proxy_port }} -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 443 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 80 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport 81 -j ACCEPT
       notify:
         - restart firewall

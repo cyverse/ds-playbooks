@@ -549,25 +549,26 @@ ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
     } else if (*type == '-d') {
       sendEntityMove(DATA_OBJECT_TYPE, *uuid, *SrcEntity, *DestEntity);
     }
-  }
-  if (*type == '-c') {
-    *err = errormsg(sendCollectionAdd(assignUUID('-c', *DestEntity), *DestEntity), *msg);
-    if (*err < 0) { writeLine('serverLog', *msg); }
-  } else if (*type == '-d') {
-    *uuid = assignUUID('-d', *DestEntity);
-    msiSplitPath(*DestEntity, *collPath, *dataName);
+  } else {
+    if (*type == '-c') {
+      *err = errormsg(sendCollectionAdd(assignUUID('-c', *DestEntity), *DestEntity), *msg);
+      if (*err < 0) { writeLine('serverLog', *msg); }
+    } else if (*type == '-d') {
+      *uuid = assignUUID('-d', *DestEntity);
+      msiSplitPath(*DestEntity, *collPath, *dataName);
 
-    *sent = false;
+      *sent = false;
 
-    foreach (*res in select order_asc(DATA_SIZE), DATA_TYPE_NAME
-                     where COLL_NAME = '*collPath' and DATA_NAME = '*dataName') {
-      if (!*sent) {
-        *err = errormsg(
-          _ipc_sendDataObjectAdd(*uuid, *DestEntity, *res.DATA_SIZE, *res.DATA_TYPE_NAME),
-          *msg);
+      foreach (*res in select order_asc(DATA_SIZE), DATA_TYPE_NAME
+                       where COLL_NAME = '*collPath' and DATA_NAME = '*dataName') {
+        if (!*sent) {
+          *err = errormsg(
+            _ipc_sendDataObjectAdd(*uuid, *DestEntity, *res.DATA_SIZE, *res.DATA_TYPE_NAME),
+            *msg);
 
-        if (*err < 0) { writeLine('serverLog', *msg); }
-        *sent = true;
+          if (*err < 0) { writeLine('serverLog', *msg); }
+          *sent = true;
+        }
       }
     }
   }

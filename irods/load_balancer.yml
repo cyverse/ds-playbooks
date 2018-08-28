@@ -4,10 +4,11 @@
   become: true
   vars:
     ies: "{{ groups['ies'][0] }}"
-    server: "{{ ies | regex_replace('\\..*') }}"
-    server_ip: "{{ lookup('dig', ies) }}"
+    ies_server: "{{ ies | regex_replace('\\..*') }}"
+    ies_ip: "{{ lookup('dig', ies) }}"
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
+    per_backend_maxconn: "{{ _load_balancer_irods_max_conn | int / 2 }}"
   roles:
     - role: uoi-io.haproxy
       vars:
@@ -32,24 +33,46 @@
           - server-fin 2m
         haproxy_stats: true
         haproxy_stats_address: '*'
-        haproxy_stats_port: 80
+        haproxy_stats_port: 81
         haproxy_stats_auth: false
         haproxy_stats_uri: /
         haproxy_stats_options:
           - refresh 10s
           - show-legends
           - hide-version
-        haproxy_listen:
+        haproxy_frontend:
           - irods_main:
               binds:
                 - :{{ _load_balancer_irods_proxy_port }}
+              stick_table: type ip size 100k store conn_cur
+              tcp_requests:
+                - connection track-sc0 src
+              use_backends:
+                - irods_extra_conn if { src_conn_cur ge 2 }
+              default_backend: irods_single_conn
+          - webdav_http:
+              binds:
+                - :80
+              mode: http
+              redirect: scheme https code 301
+        haproxy_backend:
+          - irods_single_conn:
               servers:
-                - "{{ server }} {{ server_ip }}:1247 maxconn {{ _load_balancer_irods_max_conn }}"
+                - "{{ ies_server }} {{ ies_ip }}:1247 maxconn {{ per_backend_maxconn }}"
+          - irods_extra_conn:
+              servers:
+                - "{{ ies_server }} {{ ies_ip }}:1247 maxconn {{ per_backend_maxconn }}"
+        haproxy_listen:
           - irods_reconn:
               binds:
                 - :{{ reconn_ports_start }}-{{ reconn_ports_end }}
               servers:
-                - "{{ server }} {{ server_ip }}"
+                - "{{ ies_server }} {{ ies_ip }}"
+          - webdav_https:
+              binds:
+                - :443
+              servers:
+                - webdav {{ lookup('dig', _webdav_host) }}
       notify:
         - reload haproxy
 
@@ -82,7 +105,9 @@
         content: |
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _load_balancer_irods_proxy_port }} -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport 80 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 443 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 80 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport 81 -j ACCEPT
       notify:
         - restart firewall
 

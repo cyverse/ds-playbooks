@@ -14,6 +14,8 @@ _bisque_user: "{{ bisque_user if bisque_user is defined else 'admin' }}"
 _calliope_irods_base_coll: "{{ calliope_irods_base_coll if calliope_irods_base_coll is defined else
                               None }}"
 
+_ctrl_machine_tmpdir: "{{ ctrl_machine_tmpdir if ctrl_machine_tmpdir is defined else '/tmp' }}"
+
 _dbms_password: "{{ dbms_password if dbms_password is defined else None }}"
 
 _dbms_port: "{{ dbms_port if dbms_port is defined else 5432 }}"
@@ -41,7 +43,7 @@ _irods_default_dir_mode: "{{ irods_default_dir_mode if irods_default_dir_mode is
 
 _irods_default_file_mode: "{{ irods_default_file_mode if irods_default_file_mode is defined else
                               '0600' }}"
-                              
+
 _irods_default_number_of_transfer_threads: "{{
   irods_default_number_of_transfer_threads
     if irods_default_number_of_transfer_threads is defined else

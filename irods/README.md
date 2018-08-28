@@ -16,6 +16,7 @@ Variable                                   | Default                            
 `bisque_url`                               |                                      |         | The URL for the BisQue server to connect to
 `bisque_user`                              | admin                                |         | The user to connect to BisQue as
 `calliope_irods_base_coll`                 |                                      |         | The base iRODS collection used by Calliope. If this isn't set, no Calliope rules will fire.
+`ctrl_machine_tmpdir`                      | `/tmp`                               |         | the location of the tmp folder on the ansible control machine
 `dbms_password`                            | irods                                |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `dbms_port`                                | 5432                                 |         | The TCP port the DBMS listens on.
 `dbms_username`                            | irods                                |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.

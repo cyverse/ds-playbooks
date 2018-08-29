@@ -33,7 +33,7 @@
           - server-fin 2m
         haproxy_stats: true
         haproxy_stats_address: '*'
-        haproxy_stats_port: 81
+        haproxy_stats_port: "{{ _load_balancer_stats_port }}"
         haproxy_stats_auth: false
         haproxy_stats_uri: /
         haproxy_stats_options:
@@ -107,7 +107,7 @@
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 443 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 80 -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport 81 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport {{ _load_balanacer_stats_port }} -j ACCEPT
       notify:
         - restart firewall
 

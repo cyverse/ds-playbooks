@@ -65,6 +65,7 @@ Variable                                   | Default                            
 `load_balancer_irods_max_conn`             | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer.
 `load_balancer_irods_proxy_port`           | 1247                                 |         | The port the load balancer will listen on for connections to iRODS.
 `load_balancer_stats_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for hosts allowed to see the HAProxy stats web page.
+`load_balancer_stats_port`                 | 81                                   |         | The TCP port used to retrieve HAProxy stats
 `pire_quota`                               | 0                                    |         | The quota for the PIRE project. A `0` means no quota.
 `pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource server used by the PIRE project
 `rabbitmq_ephemeral`                       | `true`                               |         | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker

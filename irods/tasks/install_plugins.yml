@@ -8,6 +8,7 @@
 # XXX - This is a bug in the git module. It will be fixed in ansible 2.7
 - name: remove previous irods-netcdf-build repo
   run_once: true
+  become: false
   local_action:
     module: file
     name: "{{ _ctrl_machine_tmpdir }}/irods-netcdf-build"
@@ -17,6 +18,7 @@
 
 - name: checkout irods-netcdf-build repo
   run_once: true
+  become: false
   local_action:
     module: git
     repo: https://github.com/cyverse/irods-netcdf-build.git
@@ -30,6 +32,7 @@
     - name: build iRODS NetCDF plugins
       run_once: true
       delegate_to: localhost
+      become: false
       command: "{{ _ctrl_machine_tmpdir }}/irods-netcdf-build/build"
 
     - include_tasks: install_netcdf_plugin.yml
@@ -47,6 +50,7 @@
 # XXX - This is a bug in the git module. It will be fixed in ansible 2.7
 - name: remove previous msi-setavu-plugin repo
   run_once: true
+  become: false
   local_action:
     module: file
     name: "{{ _ctrl_machine_tmpdir }}/irods-setavu-plugin"
@@ -56,6 +60,7 @@
 
 - name: checkout msi-setavu-plugin repo
   run_once: true
+  become: false
   local_action:
     module: git
     repo: https://github.com/iPlantCollaborativeOpenSource/irods-setavu-plugin.git
@@ -68,6 +73,7 @@
   block:
     - name: build msiSetAVU plugin
       run_once: true
+      become: false
       local_action: command {{ _ctrl_machine_tmpdir }}/irods-setavu-plugin/build
 
     - name: upgrade msiSetAVU microservice

@@ -28,7 +28,8 @@ RUN /tmp/base-config centos 6 && \
     /tmp/config-irods.sh && \
     /tmp/prep-svc-script.sh && \
     yum clean all && \
-    rm --force --recursive /tmp/* /var/cache/yum
+    rm --force --recursive /tmp/* /var/cache/yum && \
+    mkdir --parents --mode 777 /var/lib/irods/.ansible/tmp
 
 COPY base/entrypoint.sh /entrypoint
 

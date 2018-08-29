@@ -7,6 +7,19 @@ This is a collection of playbooks for deploying iRODS for the CyVerse Data Store
 
 None of these variables are required.
 
+### Control Machine Variables
+
+These variables should be overriden on the command line.
+
+Variable              | Default | Choices | Comments
+--------------------- | ------- | ------- | --------
+`ctrl_machine_tmpdir` | `/tmp`  |         | the location of the tmp folder on the ansible control machine
+
+
+### Inventory Variables
+
+These variables should be overridden in the inventory files.
+
 Variable                                   | Default                              | Choices | Comments
 ------------------------------------------ | ------------------------------------ | ------- | --------
 `become_svc_acnt`                          | true                                           | whether or not to perform actions normally performed by the service account as the service account
@@ -16,7 +29,6 @@ Variable                                   | Default                            
 `bisque_url`                               |                                      |         | The URL for the BisQue server to connect to
 `bisque_user`                              | admin                                |         | The user to connect to BisQue as
 `calliope_irods_base_coll`                 |                                      |         | The base iRODS collection used by Calliope. If this isn't set, no Calliope rules will fire.
-`ctrl_machine_tmpdir`                      | `/tmp`                               |         | the location of the tmp folder on the ansible control machine
 `dbms_password`                            | irods                                |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `dbms_port`                                | 5432                                 |         | The TCP port the DBMS listens on.
 `dbms_username`                            | irods                                |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.

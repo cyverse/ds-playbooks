@@ -107,7 +107,7 @@
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 443 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 80 -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport {{ _load_balanacer_stats_port }} -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport {{ _load_balancer_stats_port }} -j ACCEPT
       notify:
         - restart firewall
 

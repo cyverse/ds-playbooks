@@ -8,19 +8,21 @@
 # XXX - This is a bug in the git module. It will be fixed in ansible 2.7
 - name: remove previous irods-netcdf-build repo
   run_once: true
+  become: false
   local_action:
     module: file
-    name: /tmp/irods-netcdf-build
+    name: "{{ _ctrl_machine_tmpdir }}/irods-netcdf-build"
     state: absent
   tags:
     - non_idempotent
 
 - name: checkout irods-netcdf-build repo
   run_once: true
+  become: false
   local_action:
     module: git
     repo: https://github.com/cyverse/irods-netcdf-build.git
-    dest: /tmp/irods-netcdf-build
+    dest: "{{ _ctrl_machine_tmpdir }}/irods-netcdf-build"
     version: "{{ _irods_version }}"
     force: true
   register: response
@@ -30,7 +32,8 @@
     - name: build iRODS NetCDF plugins
       run_once: true
       delegate_to: localhost
-      command: /tmp/irods-netcdf-build/build
+      become: false
+      command: "{{ _ctrl_machine_tmpdir }}/irods-netcdf-build/build"
 
     - include_tasks: install_netcdf_plugin.yml
       args:
@@ -47,19 +50,21 @@
 # XXX - This is a bug in the git module. It will be fixed in ansible 2.7
 - name: remove previous msi-setavu-plugin repo
   run_once: true
+  become: false
   local_action:
     module: file
-    name: /tmp/irods-setavu-plugin
+    name: "{{ _ctrl_machine_tmpdir }}/irods-setavu-plugin"
     state: absent
   tags:
     - non_idempotent
 
 - name: checkout msi-setavu-plugin repo
   run_once: true
+  become: false
   local_action:
     module: git
     repo: https://github.com/iPlantCollaborativeOpenSource/irods-setavu-plugin.git
-    dest: /tmp/irods-setavu-plugin
+    dest: "{{ _ctrl_machine_tmpdir }}/irods-setavu-plugin"
     version: "{{ _irods_version }}"
     force: true
   register: response
@@ -68,11 +73,12 @@
   block:
     - name: build msiSetAVU plugin
       run_once: true
-      local_action: command /tmp/irods-setavu-plugin/build
+      become: false
+      local_action: command {{ _ctrl_machine_tmpdir }}/irods-setavu-plugin/build
 
     - name: upgrade msiSetAVU microservice
       copy:
-        src: /tmp/irods-setavu-plugin/libraries/centos{{ ansible_distribution_major_version }}/libmsiSetAVU.so
+        src: "{{ _ctrl_machine_tmpdir }}/irods-setavu-plugin/libraries/centos{{ ansible_distribution_major_version }}/libmsiSetAVU.so"
         dest: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
         owner: "{{ _irods_service_account_name }}"
         group: "{{ _irods_service_group_name }}"

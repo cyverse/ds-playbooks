@@ -4,6 +4,5 @@
     list: "{{ pkg }}"
   register: result
   failed_when: |
-    result.results is not defined or
-    result.results|count != 1 or
+    result.results | selectattr("yumstate", 'equalto', "installed") | list | count != 1 or
     result.results[0].version is version_compare(version, '!=')

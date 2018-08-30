@@ -5,6 +5,15 @@
 @include "calliope-env"
 
 
+_calliope_inColl(*RootPattern, *Path) =
+  *Path like regex '^' ++ *RootPattern ++ '/collections/[^/]+/uploads/[^/]*\\.tar$'
+
+
+_calliope_isForCalliope(*Path) =
+  _calliope_inColl(str(calliope_PROJECT_COLL), *Path) ||
+  _calliope_inColl('/' ++ ipc_ZONE ++ '/home/[^/]+/calliope_data', *Path)
+
+
 _calliope_logMsg(*Msg) {
   writeLine('serverLog', 'CALLIOPE: *Msg');
 }
@@ -33,7 +42,7 @@ _calliope_ingest(*Uploader, *TarPath) {
 
 calliope_acPostProcForPut {
   if (str(calliope_PROJECT_COLL) != '') {
-    if ($objPath like regex '^' ++ str(calliope_PROJECT_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
+    if (_calliope_isForCalliope($objPath)) {
       _calliope_logMsg('scheduling ingest of $objPath for $userNameClient');
 
       delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>") {

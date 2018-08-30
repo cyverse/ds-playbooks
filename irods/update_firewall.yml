@@ -5,11 +5,6 @@
   vars:
     ports: "{{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }}"
   tasks:
-    - name: detect if iptables is being used
-      yum:
-        list: iptables
-      register: result
-
     - name: add firewall rules
       when: result.results | selectattr('yumstate', 'equalto', 'installed') | list | count > 0
       blockinfile:
@@ -39,11 +34,13 @@
           {% endif %}
       notify:
         - restart firewall
-      tags:
-        - no_testing
 
   handlers:
     - name: restart firewall
       service:
         name: iptables
         state: restarted
+
+  tags:
+    - firewall
+    - no_testing

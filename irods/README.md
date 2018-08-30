@@ -3,22 +3,16 @@
 This is a collection of playbooks for deploying iRODS for the CyVerse Data Store.
 
 
+## Tags
+
+* `firewall` for tasks related to firewall configuration
+* `no_testing` for tasks that shouldn't be run within the containerized testing environment
+* `non_idempotent` for tasks that aren't idempotent
+
+
 ## Variables
 
 None of these variables are required.
-
-### Control Machine Variables
-
-These variables should be overriden on the command line.
-
-Variable              | Default | Choices | Comments
---------------------- | ------- | ------- | --------
-`ctrl_machine_tmpdir` | `/tmp`  |         | the location of the tmp folder on the ansible control machine
-
-
-### Inventory Variables
-
-These variables should be overridden in the inventory files.
 
 Variable                                   | Default                              | Choices | Comments
 ------------------------------------------ | ------------------------------------ | ------- | --------

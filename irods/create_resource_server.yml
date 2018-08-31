@@ -1,27 +1,5 @@
 ---
-- import_playbook: update_firewall.yml
-
-
-- import_playbook: update_hosts.yml
-
-
-- name: create service account
-  hosts: rs:!ies:!unmanaged_systems
-  become: true
-  tasks:
-    - name: create service group
-      group:
-        name: "{{ _irods_service_group_name }}"
-        system: yes
-
-    - name: create service account
-      user:
-        name: "{{ _irods_service_account_name }}"
-        system: yes
-        home: /var/lib/irods
-        createhome: yes
-        group: "{{ _irods_service_group_name }}"
-        comment: iRODS Administrator
+- import_playbook: prep_for_irods.yml
 
 
 - name: install resource server package
@@ -31,12 +9,6 @@
   tasks:
     - import_tasks: tasks/install_resource_pkg.yml
     - import_tasks: tasks/install_plugins.yml
-
-
-- name: prepare uuid generation
-  hosts: rs
-  tasks:
-    - include_tasks: tasks/install_generateuuid.yml
 
 
 - name: configure iRODS

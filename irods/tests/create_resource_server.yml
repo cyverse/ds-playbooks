@@ -1,24 +1,5 @@
 ---
-- name: verify that IES and unmanaged systems weren't touched
-  hosts: ies:unmanaged_systems
-  become: true
-  tasks:
-    - name: verify that irods isn't a group
-      shell: |
-        if grep --quiet --regexp '^irods:' /etc/group
-        then
-          exit 1
-        fi
-      changed_when: false
-
-
-- name: verify that the RS system user hasn't changed
-  hosts: rs:!ies:!unmanaged_systems
-  become: true
-  tasks:
-    - name: verify that the system user has correct comment
-      command: grep --quiet --regexp '^irods:[^:]*:[^:]*:[^:]*:iRODS Administrator:' /etc/passwd
-      changed_when: false
+- import_playbook: prep_for_irods.yml
 
 
 - name: test install resource server package
@@ -28,31 +9,6 @@
   tasks:
     - import_tasks: tasks/test_install_resource_pkg.yml
     - import_tasks: tasks/test_install_plugins.yml
-
-
-- name: test uuidd installed
-  hosts: rs:!unmanaged_systems
-  become: true
-  tasks:
-    - name: test uuidd rpm is present
-      yum:
-        list: uuidd
-      register: pkg
-      failed_when: pkg.results | selectattr("yumstate", "match", "installed") | list | length != 1
-
-
-- name: test generateuuid installed
-  hosts: rs
-  become: true
-  tasks:
-    - name: verify generateuuid present
-      stat:
-        path: /var/lib/irods/iRODS/server/bin/cmd/generateuuid
-      register: response
-      failed_when: |
-        not response.stat.exists
-        or response.stat.pw_name != 'irods'
-        or not response.stat.xusr
 
 
 - import_playbook: rule_templates.yml

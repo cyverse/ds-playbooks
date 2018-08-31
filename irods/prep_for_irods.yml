@@ -1,0 +1,29 @@
+---
+- import_playbook: update_firewall.yml
+
+
+- import_playbook: update_hosts.yml
+
+
+- name: setup up prerequisites
+  hosts: irods:!unmanaged_systems
+  become: true
+  tasks:
+    - name: install uuidd
+      package:
+        name: uuidd
+        state: present
+
+    - name: create service group
+      group:
+        name: "{{ _irods_service_group_name }}"
+        system: yes
+
+    - name: create service account
+      user:
+        name: "{{ _irods_service_account_name }}"
+        system: yes
+        home: /var/lib/irods
+        createhome: yes
+        group: "{{ _irods_service_group_name }}"
+        comment: iRODS Administrator

@@ -36,11 +36,6 @@
         mode: u+wx
         force: true
 
-    - name: remove bisque_ops.py
-      file:
-        path: /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py
-        state: absent
-
     - name: place .bisque
       when: _bisque_url is defined
       template:

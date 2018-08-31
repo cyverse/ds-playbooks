@@ -19,9 +19,3 @@
         path: /var/lib/irods/iRODS/server/bin/cmd/bisque_paths.py
       register: response
       failed_when: not response.stat.exists
-
-    - name: Verify that bisque_ops.py is not present
-      stat:
-        path: /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py
-      register: response
-      failed_when: response.stat.exists

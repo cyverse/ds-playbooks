@@ -35,9 +35,6 @@
         dest: /var/lib/irods/iRODS/server/bin/cmd
         mode: u+wx
         force: true
-      tags:
-        # This may not be needed in ansible 2.5
-        - non_idempotent
 
     - name: remove bisque_ops.py
       file:

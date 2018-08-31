@@ -20,25 +20,3 @@
       file:
         path: /etc/irods/core.re
         state: touch
-
-
-- name: configure bisque client
-  hosts: ies
-  become: "{{ _become_svc_acnt }}"
-  become_user: "{{ _irods_service_account_name }}"
-  gather_facts: false
-  tasks:
-    - name: install bisque_paths.py
-      get_url:
-        validate_certs: no
-        url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
-        dest: /var/lib/irods/iRODS/server/bin/cmd
-        mode: u+wx
-        force: true
-
-    - name: place .bisque
-      when: _bisque_url is defined
-      template:
-        src: templates/bisque.j2
-        dest: "{{ ansible_env.HOME }}/.bisque"
-        mode: u=r

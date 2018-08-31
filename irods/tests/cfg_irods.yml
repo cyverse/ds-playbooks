@@ -8,14 +8,3 @@
   become_user: irods
   tasks:
     - include_tasks: tasks/test_cfg_irods.yml
-
-
-- name: test bisque cmd script in place
-  hosts: ies
-  gather_facts: false
-  tasks:
-    - name: Verify that bisque_paths.py is in place
-      stat:
-        path: /var/lib/irods/iRODS/server/bin/cmd/bisque_paths.py
-      register: response
-      failed_when: not response.stat.exists

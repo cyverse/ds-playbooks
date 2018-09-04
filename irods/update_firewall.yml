@@ -16,7 +16,7 @@
           -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport 1247 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport 1248 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ lookup('dig', i) }} --dport {{ ports }} -j ACCEPT
-          {% if inventory_hostname is in(groups['rs']) %}
+          {% if inventory_hostname in groups['rs'] %}
           -A INPUT -m state --state NEW -p udp -s {{ lookup('dig', i) }} --dport {{ ports }} -j ACCEPT
           {% endif %}
           {% endif %}
@@ -28,7 +28,7 @@
           {% endfor %}
           -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport 1247 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport {{ ports }} -j ACCEPT
-          {% if inventory_hostname is in(groups['rs']) %}
+          {% if inventory_hostname in groups['rs'] %}
           -A INPUT -m state --state NEW -p udp -s {{ _irods_allowed_clients }} --dport {{ ports }} -j ACCEPT
           {% endif %}
       notify:

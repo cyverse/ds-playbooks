@@ -36,8 +36,7 @@ RUN /tmp/base-config centos 6 && \
     pip install pika && \
     touch /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py && \
     yum clean all && \
-    rm --force --recursive /tmp/* /var/cache/yum && \
-    mkdir --parents --mode 777 /var/lib/irods/.ansible/tmp
+    rm --force --recursive /tmp/* /var/cache/yum
 
 COPY base/entrypoint.sh /entrypoint
 

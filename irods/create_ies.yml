@@ -1,0 +1,8 @@
+---
+- import_playbook: prep_for_irods.yml
+
+
+# TODO install IES packages
+# TODO enable restarting of IES
+# TODO configure iRODS
+# TODO add other tasks from other playbooks

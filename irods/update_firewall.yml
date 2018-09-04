@@ -6,7 +6,6 @@
     ports: "{{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }}"
   tasks:
     - name: add firewall rules
-      when: result.results | selectattr('yumstate', 'equalto', 'installed') | list | count > 0
       blockinfile:
         path: /etc/sysconfig/iptables
         insertbefore: -A INPUT -j REJECT

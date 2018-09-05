@@ -8,18 +8,25 @@
   gather_facts: false
   tasks:
     - import_tasks: tasks/install_resource_pkg.yml
-    
+
     - import_tasks: tasks/install_plugins.yml
 
 
-- name: enable restarting of resource server
-  hosts: rs
-  tasks:
-    - set_fact:
-        restart_irods: true
-
-
 - import_playbook: cfg_irods.yml
+
+
+- name: bootstrap iRODS start
+  hosts: rs
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tasks:
+    - name: initialize resource server connection to IES
+      irods_clerver_auth:
+        ies: "{{ groups['ies'][0] }}"
+        password: "{{ _irods_clerver_password }}"
+
+    - name: start iRODS
+      irods_start:
 
 
 - import_playbook: mk_storage_resources.yml

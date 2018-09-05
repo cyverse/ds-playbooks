@@ -15,6 +15,20 @@
 - import_playbook: cfg_irods.yml
 
 
+- name: test bootstrap iRODS start
+  hosts: rs
+  become: true
+  become_user: irods
+  tasks:
+    - name: test initialize resource server connection to IES
+      stat:
+        path: /var/lib/irods/.irods/.irodsA
+      register: response
+      failed_when: not response.stat.exists
+
+    - import_tasks: tasks/test_irods_running.yml
+
+
 - import_playbook: mk_storage_resources.yml
 
 

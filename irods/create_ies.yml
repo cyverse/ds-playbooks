@@ -2,7 +2,13 @@
 - import_playbook: prep_for_irods.yml
 
 
-# TODO install IES packages
-# TODO enable restarting of IES
+- name: install IES packages
+  hosts: ies:!unmanaged_systems
+  become: true
+  tasks:
+    - import_tasks: tasks/install_ies_pkgs.yml
+
+
+# TODO install plugins
 # TODO configure iRODS
 # TODO add other tasks from other playbooks

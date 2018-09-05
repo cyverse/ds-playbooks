@@ -1,0 +1,8 @@
+---
+- name: test account owns /var/lib/irods
+  shell: '! [ $(find /var/lib/irods -not -user irods -print -quit) ]'
+  changed_when: false
+
+- name: test account owns /etc/irods
+  debug:
+    msg: TODO implement

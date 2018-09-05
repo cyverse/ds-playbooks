@@ -1,0 +1,9 @@
+---
+- import_playbook: prep_for_irods.yml
+
+
+- name: test install IES packages
+  hosts: ies:!unmanaged_systems
+  become: true
+  tasks:
+    - import_tasks: tasks/test_install_ies_pkgs.yml

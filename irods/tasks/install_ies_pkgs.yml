@@ -11,3 +11,5 @@
     os: centos{{ ansible_distribution_major_version }}
     pkg: irods-icat
     pkg_ver: "{{ _irods_version }}"
+
+- import_tasks: ensure_irods_ownership.yml

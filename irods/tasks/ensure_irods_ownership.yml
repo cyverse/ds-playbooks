@@ -1,0 +1,14 @@
+---
+- name: ensure account owns /var/lib/irods
+  file:
+    path: /var/lib/irods
+    owner: "{{ _irods_service_account_name }}"
+    group: "{{ _irods_service_group_name }}"
+    recurse: yes
+
+- name: ensure account owns /etc/irods
+  file:
+    path: /etc/irods
+    owner: "{{ _irods_service_account_name }}"
+    group: "{{ _irods_service_group_name }}"
+    recurse: yes

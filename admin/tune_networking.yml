@@ -6,7 +6,8 @@
     - name: group by virtualization type
       group_by:
         key: "{{ 'physical' if ansible_virtualization_type == 'NA'
-                            or ansible_virtualization_type == 'kvm' else '' }}"
+                            or ansible_virtualization_type == 'kvm' else
+                 'virtual' }}"
 
 - name: determine the NIC throughput and OS version for the physical servers
   hosts: physical

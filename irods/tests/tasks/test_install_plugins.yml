@@ -4,18 +4,18 @@
     pkg: irods-runtime
     version: 4.1.10
 
-- name: test remove previous irods-netcdf-build repo
-  debug:
-    msg: TODO implement
-
 - name: test checkout irods-netcdf-build repo
-  debug:
-    msg: TODO implement
-
-- name: test remove previous msi-setavu-plugin repo
-  debug:
-    msg: TODO implement
+  run_once: true
+  become: false
+  local_action:
+    module: stat
+    path: /tmp/irods-netcdf-build
+  register: response
+  failed_when: not response.stat.exists
 
 - name: test checkout msi-setavu-plugin repo
-  debug:
+  run_once: true
+  become: false
+  local_action:
+    module: debug
     msg: TODO implement

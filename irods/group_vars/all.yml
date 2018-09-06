@@ -14,6 +14,8 @@ _bisque_user: "{{ bisque_user if bisque_user is defined else 'admin' }}"
 _calliope_irods_base_coll: "{{ calliope_irods_base_coll if calliope_irods_base_coll is defined else
                               None }}"
 
+_ctrl_machine_tmpdir: "{{ ctrl_machine_tmpdir if ctrl_machine_tmpdir is defined else '/tmp' }}"
+
 _dbms_password: "{{ dbms_password if dbms_password is defined else None }}"
 
 _dbms_port: "{{ dbms_port if dbms_port is defined else 5432 }}"
@@ -21,6 +23,8 @@ _dbms_port: "{{ dbms_port if dbms_port is defined else 5432 }}"
 _dbms_username: "{{ dbms_username if dbms_username is defined else 'irods' }}"
 
 _de_job_irods_user: "{{ de_job_irods_user if de_job_irods_user is defined else None }}"
+
+_firewall_chain: "{{ firewall_chain if firewall_chain is defined else 'INPUT' }}"
 
 _irods_aegis_repl_resource: "{{
   irods_aegis_repl_resource if irods_aegis_repl_resource is defined else
@@ -121,6 +125,9 @@ _load_balancer_irods_proxy_port: "{{
 _load_balancer_stats_allowed_src: "{{
   load_balancer_stats_allowed_src if load_balancer_stats_allowed_src is defined else
   '0.0.0.0/0' }}"
+
+_load_balancer_stats_port: "{{ load_balancer_stats_port if load_balancer_stats_port is defined else
+                               81 }}"
 
 _pire_quota: "{{ pire_quota if pire_quota is defined else 0 }}"
 

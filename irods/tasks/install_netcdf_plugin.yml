@@ -1,7 +1,7 @@
 ---
 - name: download {{ plugin }} rpm
   copy:
-    src: /tmp/irods-netcdf-build/packages/centos{{ ansible_distribution_major_version }}/{{ rpm }}
+    src: "{{ _ctrl_machine_tmpdir }}/irods-netcdf-build/packages/centos{{ ansible_distribution_major_version }}/{{ rpm }}"
     dest: /root/{{ rpm }}
   register: plugin_rpm
 

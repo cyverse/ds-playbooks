@@ -3,6 +3,13 @@
 This is a collection of playbooks for deploying iRODS for the CyVerse Data Store.
 
 
+## Tags
+
+* `firewall` for tasks related to firewall configuration
+* `no_testing` for tasks that shouldn't be run within the containerized testing environment
+* `non_idempotent` for tasks that aren't idempotent
+
+
 ## Variables
 
 None of these variables are required.
@@ -20,6 +27,7 @@ Variable                                   | Default                            
 `dbms_port`                                | 5432                                 |         | The TCP port the DBMS listens on.
 `dbms_username`                            | irods                                |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `de_job_irods_user`                        |                                      |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
+`firewall_chain`                           | INPUT                                |         | The iptables chain managing authorizing iRODS connections
 `irods_aegis_repl_resource`                | aegisReplRes                         |         | the name of the aegis resource where replicas are written
 `irods_aegis_resource`                     | aegisIngestRes                       |         | the name of the aegis resource where newly uploaded files are written
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
@@ -52,6 +60,7 @@ Variable                                   | Default                            
 `load_balancer_irods_max_conn`             | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer.
 `load_balancer_irods_proxy_port`           | 1247                                 |         | The port the load balancer will listen on for connections to iRODS.
 `load_balancer_stats_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for hosts allowed to see the HAProxy stats web page.
+`load_balancer_stats_port`                 | 81                                   |         | The TCP port used to retrieve HAProxy stats
 `pire_quota`                               | 0                                    |         | The quota for the PIRE project. A `0` means no quota.
 `pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource server used by the PIRE project
 `rabbitmq_ephemeral`                       | `true`                               |         | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker

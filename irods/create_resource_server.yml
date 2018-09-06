@@ -1,5 +1,5 @@
 ---
-- import_playbook: update_firewall.yml
+- import_playbook: firewall.yml
 
 
 - import_playbook: update_hosts.yml

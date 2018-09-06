@@ -21,8 +21,9 @@
         haproxy_default_errorfiles: []
         haproxy_default_mode: tcp
         haproxy_default_options:
-          - tcpka
           - dontlognull
+          - log-separate-errors
+          - tcpka
           - tcplog
         haproxy_default_timeouts:
           - connect 10s

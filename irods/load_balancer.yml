@@ -21,7 +21,7 @@
         haproxy_default_errorfiles: []
         haproxy_default_mode: tcp
         haproxy_default_options:
-          - clitcpka
+          - tcpka
           - dontlognull
           - tcplog
         haproxy_default_timeouts:

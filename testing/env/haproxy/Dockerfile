@@ -4,7 +4,7 @@ MAINTAINER Tony Edgin @ CyVerse
 COPY base/config.sh /tmp/base-config
 
 RUN /tmp/base-config centos 7 && \
-    yum install --assumeyes rsyslog && \
+    yum install --assumeyes iptables rsyslog && \
     yum clean all && \
     rm --recursive /tmp/* /var/cache/yum
 

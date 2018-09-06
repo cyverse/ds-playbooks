@@ -1,7 +1,17 @@
 ---
-- name: test install_ansible_support
-  hosts: all:!unmanaged_systems
-  become: true
+- name: test install dmidecode required by ansible gather_facts
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement
+
+
+- name: test install required packages for ansible
+  hosts: localhost
+  gather_facts: false
+  run_once: true
   tasks:
     - debug:
         msg: TODO implement

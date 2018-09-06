@@ -1,5 +1,5 @@
 ---
-- name: Install dmidecode required by ansible gather_facts
+- name: install dmidecode required by ansible gather_facts
   hosts: all:!unmanaged_systems
   become: true
   gather_facts: false
@@ -10,7 +10,7 @@
         state: present
 
 
-- name: Install required packages for ansible
+- name: install required packages for ansible
   hosts: all:!unmanaged_systems
   become: true
   tasks:
@@ -21,6 +21,7 @@
       with_items:
         - jq
         - "{{ 'libselinux-python' if ansible_distribution == 'CentOS' else 'python-selinux' }}"
+        - "{{ 'pyOpenSSL' if ansible_distribution  == 'CentOS' else 'python-openssl' }}"
         - python-pip
         - python-requests
         - python-virtualenv

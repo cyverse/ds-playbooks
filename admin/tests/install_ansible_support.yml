@@ -1,8 +1,7 @@
 ---
 - name: test install dmidecode required by ansible gather_facts
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+  hosts: all:!unmanaged_systems
+  become: true
   tasks:
     - debug:
         msg: TODO implement

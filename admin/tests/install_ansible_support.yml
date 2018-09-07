@@ -3,7 +3,8 @@
   hosts: all:!unmanaged_systems
   become: true
   tasks:
-    - debug:
+    - name: test install dmidcode support
+      debug:
         msg: TODO implement
 
 

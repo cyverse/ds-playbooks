@@ -49,4 +49,3 @@
     - name: install pyOpenSSL
       pip:
         name: pyOpenSSL
-        version: 0.15

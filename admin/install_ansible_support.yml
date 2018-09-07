@@ -9,7 +9,6 @@
         name: dmidecode
         state: present
 
-
 - name: install required packages for ansible
   hosts: all:!unmanaged_systems
   become: true
@@ -20,6 +19,7 @@
         state: present
       with_items:
         - jq
+        - openssl
         - python-pip
         - python-requests
         - python-virtualenv

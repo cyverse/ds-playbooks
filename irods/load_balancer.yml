@@ -76,8 +76,68 @@
                 - webdav {{ lookup('dig', _webdav_host) }}
       notify:
         - reload haproxy
+      tags:
+        - no_testing
 
   pre_tasks:
+    - name: disable notifcations for testing
+      set_fact:
+        notifications_enabled: true
+      tags:
+        - no_testing
+
+    - name: generate an OpennSSL private key for Let's Encrypt
+      openssl_privatekey:
+        path: /etc/pki/tls/private/account.key
+
+    - name: generate an OpenSSL private key for CSR
+      openssl_privatekey:
+        path: /etc/pki/tls/private/localhost.key
+
+    - name: generate on OpenSSL CSR
+      openssl_csr:
+        path: /etc/pki/tls/private/localhost.csr
+        privatekey_path: /etc/pki/tls/private/localhost.key
+
+# TODO learn how Let's Encrypt works
+
+    - name: Create a challenge for the load_balancer host using an account key
+      letsencrypt:
+        account_email: core-sw@cyverse.org
+        account_key_src: /etc/pki/tls/private/account.key
+        acme_directory: https://acme-v01.api.letsencrypt.org/directory
+        csr: /etc/pki/tls/private/localhost.csr
+        dest: /etc/pki/tls/certs/localhost.crt
+      register: challenge
+
+    - debug:
+        var: challenge
+
+    - fail:
+
+    - letsencrypt:
+        account_key_src: /etc/pki/tls/private/account.key
+        csr: /etc/pki/tls/private/localhost.csr
+        dest: /etc/pki/tls/certs/localhost.crt
+        fullchain_dest: /etc/pki/tls/certs/localhost-fullchain.crt
+        chain_dest: /etc/pki/tls/certs/localhost-intermediate.crt
+        data: ''
+
+# See https://www.digitalocean.com/community/tutorials/how-to-secure-haproxy-with-let-s-encrypt-on-centos-7
+# TODO certbot certonly --standalone --preferred-challenges http --http-01-port 80 -d moby.cyverse.org
+#      < core-sw@cyverse.org
+#      < Agree
+#      < No
+#      > /etc/letsencrypt/live/moby.cyverse.org
+#      > 2018-12-05
+
+
+# TODO mkdir -p /etc/haproxy/certs
+# TODO cat /etc/letsencrypt/live/moby.cyverse.org/fullchain.pem /etc/letsencrypt/live/moby.cyverse.org/privkey.pem > /etc/haproxy/certs/moby.cyverse.org.pem
+# TODO update /etc/happroxy/haproxy.cfo
+#      * global: tune.ssl.default-dh-param 2048
+#      * listen stats: bind *:81 ssl crt /etc/haproxy/certs/moby.cyverse.org.pem
+
     - name: configure rsyslog to listen on UDP socket
       blockinfile:
         path: /etc/rsyslog.conf
@@ -90,7 +150,7 @@
       notify:
         - restart syslog
 
-    - name: place rsyslog config for haproxy
+    - name: place rsyslog config for HAproxy
       copy:
         src: files/haproxy.conf
         dest: /etc/rsyslog.d
@@ -111,22 +171,24 @@
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport {{ _load_balancer_stats_port }} -j ACCEPT
       notify:
         - restart firewall
+      tags:
+        - no_testing
 
   handlers:
     - name: reload haproxy
+      when: notifications_enabled is defined
       service:
         name: haproxy
         state: reloaded
 
     - name: restart firewall
+      when: notifications_enabled is defined
       service:
         name: iptables
         state: restarted
 
     - name: restart syslog
+      when: notifications_enabled is defined
       service:
         name: rsyslog
         state: restarted
-
-  tags:
-    - no_testing

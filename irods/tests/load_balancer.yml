@@ -1,0 +1,24 @@
+---
+- name: test install HAProxy
+  hosts: load_balancer
+  become: true
+  tasks:
+    - name: test generate an OpenSSL private key for CSR
+      stat:
+        path: /etc/pki/tls/private/localhost.key
+      register: result
+      failed_when: not result.stat.exists
+
+    - name: test generate an OpenSSL CSR
+      stat:
+        path: /etc/pki/tls/private/localhost.csr
+      register: result
+      failed_when: not result.stat.exists
+
+    - name: test configure rsyslog to listen on UDP socket
+      debug:
+        msg: TODO implement
+
+    - name: test place rsyslog config for HAProxy
+      debug:
+        msg: TODO implement

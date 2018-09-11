@@ -48,10 +48,13 @@
           - queue 10m
           - server 1d
           - server-fin 2m
-        haproxy_ssl_certificate: "{{ cert }}"
         haproxy_stats: true
         haproxy_stats_address: '*'
-        haproxy_stats_port: "{{ _load_balancer_stats_port }}"
+
+# XXX - As of  uoi-io/ansible-haproxy version
+# 2d0213a2c5b3ef10d2e4abea9ac29e19611e0090 (2017/06/06), there is no support for
+# having the stats endpoint use HTTPS. This hack works around this limitation.
+        haproxy_stats_port: "{{ _load_balancer_stats_port }} ssl crt {{ cert }}"
         haproxy_stats_auth: false
         haproxy_stats_uri: /
         haproxy_stats_options:

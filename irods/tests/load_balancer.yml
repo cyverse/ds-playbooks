@@ -3,21 +3,16 @@
   hosts: load_balancer
   become: true
   tasks:
-    - name: test generate an OpenSSL private key for CSR
-      stat:
-        path: /etc/pki/tls/private/localhost.key
-      register: result
-      failed_when: not result.stat.exists
-
-    - name: test generate an OpenSSL CSR
-      stat:
-        path: /etc/pki/tls/private/localhost.csr
-      register: result
-      failed_when: not result.stat.exists
-
     - name: test configure rsyslog to listen on UDP socket
-      debug:
-        msg: TODO implement
+      shell: |
+        printf -v expSettings '$ModLoad imudp\n$UDPServerRun 514\n$UDPServerAddress 127.0.0.1'
+
+        actSettings=$(sed --quiet \
+                          '/^# BEGIN DS MANAGED BLOCK (load_balancer)/{N;N;N;s/^[^\n]*\n//;p}' \
+                          /etc/rsyslog.conf)
+
+        [ "$actSettings" = "$expSettings" ]
+      changed_when: false
 
     - name: test place rsyslog config for HAProxy
       debug:

@@ -6,5 +6,8 @@
 - name: cyverse.rabbitmq-vhost
   src: cyverse-ansible.rabbitmq-vhost
 
+- name: geerlingguy.certbot
+  src: geerlingguy.certbot
+
 - name: uoi-io.haproxy
   src: uoi-io.haproxy

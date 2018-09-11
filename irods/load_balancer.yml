@@ -13,7 +13,7 @@
   roles:
     - role: geerlingguy.certbot
       vars:
-        certbot_auto_renew_user: haproxy
+        certbot_auto_renew_user: root
         certbot_create_if_missing: true
         certbot_admin_email: "{{ _load_balancer_admin_email }}"
         certbot_certs:

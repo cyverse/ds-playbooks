@@ -55,7 +55,8 @@
 # 2d0213a2c5b3ef10d2e4abea9ac29e19611e0090 (2017/06/06), there is no support for
 # having the stats endpoint use HTTPS. This hack works around this limitation.
         haproxy_stats_port: "{{ _load_balancer_stats_port }} ssl crt {{ cert }}"
-        haproxy_stats_auth: false
+        haproxy_stats_user: "{{ _load_balancer_stats_user }}"
+        haproxy_stats_password: "{{ _load_balancer_stats_password }}"
         haproxy_stats_uri: /
         haproxy_stats_options:
           - refresh 10s

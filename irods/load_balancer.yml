@@ -9,22 +9,8 @@
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
     per_backend_maxconn: "{{ (_load_balancer_irods_max_conn | int / 2) | int }}"
-    cert: /etc/pki/tls/certs/haproxy.pem
+    cert: /etc/haproxy/certs/cyverse_pem.pem
   roles:
-    - role: geerlingguy.certbot
-      vars:
-        certbot_auto_renew_user: root
-        certbot_create_if_missing: true
-        certbot_admin_email: "{{ _load_balancer_admin_email }}"
-        certbot_certs:
-          - domains:
-              - "{{ inventory_hostname }}"
-        certbot_create_standalone_stop_services:
-          - haproxy
-          - iptables
-      tags:
-        - no_testing
-
     - role: uoi-io.haproxy
       vars:
         haproxy_firewalld: false
@@ -54,7 +40,7 @@
 # XXX - As of  uoi-io/ansible-haproxy version
 # 2d0213a2c5b3ef10d2e4abea9ac29e19611e0090 (2017/06/06), there is no support for
 # having the stats endpoint use HTTPS. This hack works around this limitation.
-        haproxy_stats_port: "{{ _load_balancer_stats_port }} ssl crt {{ cert }}"
+        haproxy_stats_port: "{{ _load_balancer_stats_port }} ssl crt {{ _load_balancer_stats_certificate }}"
         haproxy_stats_user: "{{ _load_balancer_stats_user }}"
         haproxy_stats_password: "{{ _load_balancer_stats_password }}"
         haproxy_stats_uri: /
@@ -139,30 +125,6 @@
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport {{ _load_balancer_stats_port }} -j ACCEPT
       notify:
         - restart firewall
-      tags:
-        - no_testing
-
-  post_tasks:
-    - name: Combine fullchain and private certs
-      shell: |
-        cat /etc/letsencrypt/live/'{{ inventory_hostname }}'/fullchain.pem \
-            /etc/letsencrypt/live/'{{ inventory_hostname }}'/privkey.pem \
-          > '{{ cert }}'.tmp
-
-        if ! diff '{{ cert }}' '{{ cert }}'.tmp &> /dev/null
-        then
-          mv --force '{{ cert }}'.tmp '{{ cert }}'
-          printf changed
-        fi
-      register: result
-      changed_when: result.stdout == 'changed'
-      tags:
-        - no_testing
-
-    - name: Restrict permissions on combined cert
-      file:
-        path: "{{ cert }}"
-        mode: go-rwx
       tags:
         - no_testing
 

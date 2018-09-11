@@ -9,6 +9,7 @@
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
     per_backend_maxconn: "{{ (_load_balancer_irods_max_conn | int / 2) | int }}"
+    cert: /etc/pki/tls/certs/haproxy.pem
   roles:
     - role: geerlingguy.certbot
       vars:
@@ -31,7 +32,8 @@
         haproxy_global_cpu_maps:
           - 1 0
         haproxy_global_nbproc: 1
-        haproxy_global_tunes: []
+        haproxy_global_tunes:
+          - tune.ssl.default-dh-param: 2048
         haproxy_default_errorfiles: []
         haproxy_default_mode: tcp
         haproxy_default_options:
@@ -46,6 +48,7 @@
           - queue 10m
           - server 1d
           - server-fin 2m
+        haproxy_ssl_certificate: "{{ cert }}"
         haproxy_stats: true
         haproxy_stats_address: '*'
         haproxy_stats_port: "{{ _load_balancer_stats_port }}"
@@ -132,6 +135,30 @@
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport {{ _load_balancer_stats_port }} -j ACCEPT
       notify:
         - restart firewall
+      tags:
+        - no_testing
+
+  post_tasks:
+    - name: Combine fullchain and private certs
+      shell: |
+        cat /etc/letsencrypt/live/'{{ inventory_hostname }}'/fullchain.pem \
+            /etc/letsencrypt/live/'{{ inventory_hostname }}'/privkey.pem \
+          > '{{ cert }}'.tmp
+
+        if ! diff '{{ cert }}' '{{ cert }}'.tmp &> /dev/null
+        then
+          mv --force '{{ cert }}'.tmp '{{ cert }}'
+          printf changed
+        fi
+      register: result
+      changed_when: result.stdout == 'changed'
+      tags:
+        - no_testing
+
+    - name: Restrict permissions on combined cert
+      file:
+        path: "{{ cert }}"
+        mode: go-rwx
       tags:
         - no_testing
 

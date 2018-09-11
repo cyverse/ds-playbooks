@@ -15,5 +15,7 @@
       changed_when: false
 
     - name: test place rsyslog config for HAProxy
-      debug:
-        msg: TODO implement
+      stat:
+        path: /etc/rsyslog.d/haproxy.conf
+      register: result
+      failed_when: not result.stat.exists

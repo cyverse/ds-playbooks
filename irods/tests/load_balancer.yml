@@ -1,0 +1,21 @@
+---
+- name: test install HAProxy
+  hosts: load_balancer
+  become: true
+  tasks:
+    - name: test configure rsyslog to listen on UDP socket
+      shell: |
+        printf -v expSettings '$ModLoad imudp\n$UDPServerRun 514\n$UDPServerAddress 127.0.0.1'
+
+        actSettings=$(sed --quiet \
+                          '/^# BEGIN DS MANAGED BLOCK (load_balancer)/{N;N;N;s/^[^\n]*\n//;p}' \
+                          /etc/rsyslog.conf)
+
+        [ "$actSettings" = "$expSettings" ]
+      changed_when: false
+
+    - name: test place rsyslog config for HAProxy
+      stat:
+        path: /etc/rsyslog.d/haproxy.conf
+      register: result
+      failed_when: not result.stat.exists

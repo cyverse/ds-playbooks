@@ -5,4 +5,4 @@
   register: result
   failed_when: |
     result.results | selectattr("yumstate", 'equalto', "installed") | list | count != 1 or
-    result.results[0].version is version_compare(version, '!=')
+    version is defined and result.results[0].version is version_compare(version, '!=')

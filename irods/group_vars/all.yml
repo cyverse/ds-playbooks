@@ -126,8 +126,19 @@ _load_balancer_stats_allowed_src: "{{
   load_balancer_stats_allowed_src if load_balancer_stats_allowed_src is defined else
   '0.0.0.0/0' }}"
 
+_load_balancer_stats_certificate: "{{
+  load_balancer_stats_certificate if load_balancer_stats_certificate is defined else 
+  '/etc/haproxy/cert/stats.pem' }}"
+
 _load_balancer_stats_port: "{{ load_balancer_stats_port if load_balancer_stats_port is defined else
                                81 }}"
+
+_load_balancer_stats_user: "{{ load_balancer_stats_user if load_balancer_stats_user is defined else
+                               'haproxy-stats' }}"
+
+_load_balancer_stats_password: "{{
+  load_balancer_stats_password if load_balancer_stats_password is defined else
+  'B1Gp4sSw0rD!!' }}"
 
 _pire_quota: "{{ pire_quota if pire_quota is defined else 0 }}"
 

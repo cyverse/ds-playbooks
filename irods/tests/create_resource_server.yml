@@ -27,6 +27,7 @@
   gather_facts: false
   tasks:
     - import_tasks: tasks/test_install_resource_pkg.yml
+
     - import_tasks: tasks/test_install_plugins.yml
 
 
@@ -63,7 +64,7 @@
   become: true
   gather_facts: false
   tasks:
-    - include_tasks: tasks/test_cfg_irods.yml
+    - import_tasks: tasks/test_cfg_irods.yml
 
     - name: verify that clerver auth file exists
       stat:
@@ -73,6 +74,8 @@
 
 
 - import_playbook: mk_storage_resources.yml
+
+
 - import_playbook: mk_resource_hierarchies.yml
 
 

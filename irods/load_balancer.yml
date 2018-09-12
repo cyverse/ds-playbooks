@@ -62,7 +62,8 @@
               binds:
                 - :80
               mode: http
-              redirect: scheme https code 301
+              redirects:
+                - scheme https code 301
         haproxy_backend:
           - irods_single_conn:
               servers:

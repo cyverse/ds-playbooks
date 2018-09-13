@@ -14,4 +14,7 @@
 - import_playbook: cfg_irods.yml
 
 
+- import_playbook: bisque_usage.yml
+
+
 # TODO add other tasks from other playbooks

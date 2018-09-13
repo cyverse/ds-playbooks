@@ -1,8 +1,8 @@
 ---
+- import_playbook: provision.yml
+
+
 - import_playbook: prep_for_irods.yml
-
-
-- import_playbook: install_pika.yml
 
 
 - name: install IES packages

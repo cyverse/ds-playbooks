@@ -8,7 +8,8 @@
   tasks:
     - import_tasks: tasks/install_ies_pkgs.yml
 
+    - import_tasks: tasks/install_plugins.yml
 
-# TODO install plugins
+
 # TODO configure iRODS
 # TODO add other tasks from other playbooks

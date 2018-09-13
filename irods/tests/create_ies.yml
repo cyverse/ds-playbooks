@@ -7,3 +7,5 @@
   become: true
   tasks:
     - import_tasks: tasks/test_install_ies_pkgs.yml
+
+    - import_tasks: tasks/test_install_plugins.yml

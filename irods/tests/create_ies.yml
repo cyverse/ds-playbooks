@@ -9,3 +9,6 @@
     - import_tasks: tasks/test_install_ies_pkgs.yml
 
     - import_tasks: tasks/test_install_plugins.yml
+
+
+- import_playbook: cfg_irods.yml

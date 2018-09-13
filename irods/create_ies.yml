@@ -11,5 +11,7 @@
     - import_tasks: tasks/install_plugins.yml
 
 
-# TODO configure iRODS
+- import_playbook: cfg_irods.yml
+
+
 # TODO add other tasks from other playbooks

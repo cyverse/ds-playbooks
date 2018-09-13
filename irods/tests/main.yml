@@ -17,13 +17,7 @@
       changed_when: false
 
 
-- name: test install pika
-  hosts: ies
-  become: true
-  tasks:
-    - name: test ensure pika installed
-      debug:
-        msg: TODO implement
+- import_playbook: install_pika.yml
 
 
 - import_playbook: provision.yml

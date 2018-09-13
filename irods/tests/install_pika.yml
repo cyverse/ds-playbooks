@@ -1,0 +1,8 @@
+---
+- name: test install pika
+  hosts: ies
+  become: true
+  tasks:
+    - name: test ensure pika installed
+      command: pip --disable-pip-version-check show pika
+      changed_when: false

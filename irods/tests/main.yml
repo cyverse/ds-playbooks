@@ -17,9 +17,6 @@
       changed_when: false
 
 
-- import_playbook: install_pika.yml
-
-
 - import_playbook: provision.yml
 
 

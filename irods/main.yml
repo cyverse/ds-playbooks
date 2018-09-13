@@ -19,9 +19,6 @@
           read_priv: .*
 
 
-- import_playbook: install_pika.yml
-
-
 - import_playbook: provision.yml
 
 

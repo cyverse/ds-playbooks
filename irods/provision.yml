@@ -9,6 +9,10 @@
         value: "{{ item.value }}"
       with_items: "{{ _sysctl_kernel }}"
 
+
+- import_playbook: install_pika.yml
+
+
 - name: prepare for bisque_paths
   hosts: ies
   become: true

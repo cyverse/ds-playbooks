@@ -74,21 +74,3 @@
 
 
 - import_playbook: mk_storage_resources.yml
-
-
-- import_playbook: mk_resource_hierarchies.yml
-
-
-- name: test bring up all resources
-  hosts: ies
-  become: true
-  become_user: irods
-  gather_facts: false
-  run_once: true
-  tasks:
-    - name: verify all resources are up
-      command: |
-        iquest '%s' "select count(RESC_ID) where RESC_STATUS != 'up' and RESC_NAME != 'bundleResc'"
-      register: response
-      changed_when: false
-      failed_when: response.stdout != '0'

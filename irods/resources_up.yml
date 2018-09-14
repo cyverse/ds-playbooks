@@ -1,0 +1,11 @@
+---
+- name: bring up all resources
+  hosts: rs
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tasks:
+    - name: bring up storage storage resource and parents
+      irods_resource_up:
+        resource: "{{ item.name }}"
+        status: up
+      with_items: "{{ _irods_storage_resources }}"

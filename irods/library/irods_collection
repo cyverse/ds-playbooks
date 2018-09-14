@@ -60,7 +60,7 @@ main()
     fi
   elif [ "$state" = absent ]
   then
-    if exists "$path"
+    if ! exists "$path"
     then
       succeed false
     fi

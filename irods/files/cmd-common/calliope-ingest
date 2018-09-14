@@ -15,6 +15,10 @@
 #
 # This script assumes that the executor of this script is authenicated as a
 # rodsadmin user.
+#
+# XXX - This is a work around to the problem of not being able to extract the
+#       user permissions of a collection. See
+#       https://github.com/irods/irods/issues/2337.
 
 
 main()
@@ -29,7 +33,12 @@ main()
   local tarName
   tarName=$(basename "$tarFile" .tar)
 
-  local coll="$parentColl"/"${tarName%-*}"
+  local coll="$parentColl"/"$tarName"
+
+  if [[ "$coll" =~ -[0-9]+$ ]]
+  then
+    coll="${coll%-*}"
+  fi
 
   if ! clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"
   then

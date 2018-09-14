@@ -11,9 +11,6 @@ _bisque_url: "{{ bisque_url if bisque_url is defined else None }}"
 
 _bisque_user: "{{ bisque_user if bisque_user is defined else 'admin' }}"
 
-_calliope_irods_base_coll: "{{ calliope_irods_base_coll if calliope_irods_base_coll is defined else
-                              None }}"
-
 _ctrl_machine_tmpdir: "{{ ctrl_machine_tmpdir if ctrl_machine_tmpdir is defined else '/tmp' }}"
 
 _dbms_password: "{{ dbms_password if dbms_password is defined else None }}"
@@ -127,7 +124,7 @@ _load_balancer_stats_allowed_src: "{{
   '0.0.0.0/0' }}"
 
 _load_balancer_stats_certificate: "{{
-  load_balancer_stats_certificate if load_balancer_stats_certificate is defined else 
+  load_balancer_stats_certificate if load_balancer_stats_certificate is defined else
   '/etc/haproxy/cert/stats.pem' }}"
 
 _load_balancer_stats_port: "{{ load_balancer_stats_port if load_balancer_stats_port is defined else

@@ -9,12 +9,3 @@
 
 
 - import_playbook: install_pika.yml
-
-
-- name: test prepare for bisque_paths
-  hosts: localhost
-  gather_facts: false
-  run_once: true
-  tasks:
-    - debug:
-        msg: TODO implement

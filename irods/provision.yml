@@ -11,17 +11,3 @@
 
 
 - import_playbook: install_pika.yml
-
-
-- name: prepare for bisque_paths
-  hosts: ies
-  become: true
-  gather_facts: false
-  tasks:
-    - name: ensure /var/log/bisque exists
-      file:
-        path: /var/log/bisque
-        state: directory
-        owner: "{{ _irods_service_account_name }}"
-        group: "{{ _irods_service_group_name }}"
-        mode: u=rwx

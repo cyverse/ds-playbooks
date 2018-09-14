@@ -1,4 +1,13 @@
 ---
+- name: test prepare for bisque_paths
+  hosts: ies
+  become: true
+  tasks:
+    - name: test ensure /var/log/bisque exists
+      debug:
+        msg: TODO implement
+
+
 - name: test bisque cmd script in place
   hosts: ies
   tasks:

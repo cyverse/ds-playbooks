@@ -11,6 +11,8 @@
 # Optional Variables:
 #  parents:  Whether or not to create the parent collections as well. The
 #            default is false.
+#  state:    Indicates if the collection should be `present` or `absent`. The
+#            default is present.
 
 # WANT_JSON
 
@@ -27,34 +29,60 @@ main()
   parents=$(jq --raw-output '.parents // false' < "$varFile")
   parents="${parents,,}"
 
-  if [ "$parents" != true -a "$parents" != false ]
+  if [ "$parents" != true ] && [ "$parents" != false ]
   then
     fail "'parents' must be 'true' or 'false'"
   fi
 
-  local id
-  id=$(quest "select COLL_ID where COLL_NAME = '$path'")
+  local state
+  state=$(jq --raw-output '.state // "present"' < "$varFile")
+  state="${state,,}"
 
-  if [ -n "$id" ]
+  if [ "$state" = present ]
   then
-    succeed false
-  fi
+    if exists "$path"
+    then
+      succeed false
+    fi
 
-  local errMsg
-  if [ "$parents" = true ]
+    local errMsg
+    if [ "$parents" = true ]
+    then
+      if ! errMsg=$(imkdir -p "$path" 2>&1)
+      then
+        fail "$errMsg"
+      fi
+    else
+      if ! errMsg=$(imkdir "$path" 2>&1)
+      then
+        fail "$errMsg"
+      fi
+    fi
+  elif [ "$state" = absent ]
   then
-    if ! errMsg=$(imkdir -p "$path" 2>&1)
+    if exists "$path"
+    then
+      succeed false
+    fi
+
+    local errMsg
+    if ! errMsg=$(irm -f -r "$path" 2>&1)
     then
       fail "$errMsg"
     fi
   else
-    if ! errMsg=$(imkdir "$path" 2>&1)
-    then
-      fail "$errMsg"
-    fi
+    fail "'state' must be 'present' or 'absent'"
   fi
 
   succeed true
+}
+
+
+exists()
+{
+  local path="$1"
+
+  [[ -n $(quest "select COLL_ID where COLL_NAME = '$path'") ]]
 }
 
 

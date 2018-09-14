@@ -22,7 +22,6 @@ Variable                                   | Default                            
 `irods_aegis_repl_resource`                | aegisReplRes                         |         | the name of the aegis resource where replicas are written
 `irods_aegis_resource`                     | aegisIngestRes                       |         | the name of the aegis resource where newly uploaded files are written
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
-`irods_calliope_project_coll`              |                                      |         | The base iRODS collection used by Calliope for published data. If this isn't set, no Calliope rules will fire.
 `irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | rods                                 |         | the rodsadmin user to be used by the server being configured
 `irods_default_dir_mode`                   | 0750                                 |         | the default permissions assigned to newly created directories in the vault

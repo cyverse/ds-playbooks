@@ -8,7 +8,6 @@
     expected_bisque_irods_url: irods://dstesting_ies_centos6_1.dstesting_default
     aegis_env: "{{ lookup('template', '../templates/rule-bases/aegis-env.re.j2') }}"
     bisque_env: "{{ lookup('template', '../templates/rule-bases/bisque-env.re.j2') }}"
-    calliope_env: "{{ lookup('template', '../templates/rule-bases/calliope-env.re.j2') }}"
     ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
     pire_env: "{{ lookup('template', '../templates/rule-bases/pire-env.re.j2') }}"
     sanimal_env: "{{ lookup('template', '../templates/rule-bases/sanimal-env.re.j2') }}"
@@ -33,11 +32,6 @@
       assert:
         that:
           - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://dstesting_ies_centos6_1.dstesting_default'")
-
-    - name: verify constants expand correctly in calliope-env.re.j2
-      assert:
-        that:
-          - calliope_env is search("calliope_PROJECT_COLL = ''" | regex_escape)
 
     - name: verify constants expand correctly in pire-env.re.j2
       assert:
@@ -154,21 +148,6 @@
       assert:
         that:
          - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://custom.irods.host'")
-
-
-- name: test that calliope-env.re gets generated correctly when a base collection is provided
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    irods_calliope_project_coll: /zone/calliope
-    calliope_env: "{{ lookup('template', '../templates/rule-bases/calliope-env.re.j2') }}"
-  tasks:
-    - name: verify calliope-env
-      assert:
-        that:
-          - calliope_env is search("calliope_PROJECT_COLL = '/zone/calliope'")
 
 
 - name: test PIRE params are set correctly

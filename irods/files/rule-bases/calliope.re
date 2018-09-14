@@ -1,17 +1,13 @@
-# VERSION 1
+# VERSION 2
 #
 # These are the custom rules for the Calliope project
 
-@include "calliope-env"
+
+_calliope_TAR_REGEX =
+  '^/' ++ ipc_ZONE ++ '/home/[^/]+/calliope_data/collections/[^/]+/uploads/[^/]*\\.tar$'
 
 
-_calliope_inColl(*RootPattern, *Path) =
-  *Path like regex '^' ++ *RootPattern ++ '/collections/[^/]+/uploads/[^/]*\\.tar$'
-
-
-_calliope_isForCalliope(*Path) =
-  _calliope_inColl(str(calliope_PROJECT_COLL), *Path) ||
-  _calliope_inColl('/' ++ ipc_ZONE ++ '/home/[^/]+/calliope_data', *Path)
+_calliope_isForCalliope(*Path) = *Path like regex _calliope_TAR_REGEX
 
 
 _calliope_logMsg(*Msg) {
@@ -41,13 +37,11 @@ _calliope_ingest(*Uploader, *TarPath) {
 
 
 calliope_acPostProcForPut {
-  if (str(calliope_PROJECT_COLL) != '') {
-    if (_calliope_isForCalliope($objPath)) {
-      _calliope_logMsg('scheduling ingest of $objPath for $userNameClient');
+  if (_calliope_isForCalliope($objPath)) {
+    _calliope_logMsg('scheduling ingest of $objPath for $userNameClient');
 
-      delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>") {
-        _calliope_ingest($userNameClient, $objPath);
-      }
+    delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>") {
+      _calliope_ingest($userNameClient, $objPath);
     }
   }
 }

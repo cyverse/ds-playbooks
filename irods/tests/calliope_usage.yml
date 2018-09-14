@@ -1,14 +1,24 @@
 ---
-- name: test ensure project collections exist
+- name: test ensure calliope-env.re has been removed
+  hosts: irods
+  become: true
+  become_user: irods
+  tasks:
+    - name: test ensure calliope-env.re has been removed
+      stat:
+        path: /etc/irods/calliope-env.re
+      register: result
+      failed_when: not result.stat.exists
+
+
+- name: test ensure project collections doesn't exist
   hosts: ies
   become: true
   become_user: irods
   run_once: true
   tasks:
-    - name: test ensure project collections exist
+    - name: test ensure project collections doesn't exist
       shell: |
-        resp=$(iquest \
-                 "select COLL_ID where COLL_NAME = '/testing/home/shared/calliope/collections'")
-
-        ! [[ "$resp" =~ ^CAT_NO_ROWS_FOUND ]]
+        resp=$(iquest "select COLL_ID where COLL_NAME = '/testing/home/shared/calliope'")
+        [[ "$resp" =~ ^CAT_NO_ROWS_FOUND ]]
       changed_when: false

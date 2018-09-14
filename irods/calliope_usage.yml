@@ -1,12 +1,23 @@
 ---
-- name: ensure project collections exist
-  hosts: ies:!unmanaged_systems
+- name: ensure calliope-env.re has been removed
+  hosts: irods
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
+  tasks:
+    - name: ensure calliope-env.re has been removed
+      file:
+        path: /etc/irods/calliope-env.re
+        state: absent
+
+
+- name: ensure project collection doesn't exist
+  hosts: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
   run_once: true
   tasks:
-    - name: ensure project collections exist
-      when: _irods_calliope_project_coll != ''
+    - name: ensure project collection doesn't exist
       irods_collection:
-        path: "{{ _irods_calliope_project_coll }}/collections"
-        parents: true
+        path: /{{ _irods_zone_name }}/home/shared/calliope
+        state: absent

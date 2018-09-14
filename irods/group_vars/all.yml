@@ -28,10 +28,6 @@ _irods_aegis_resource: "{{ irods_aegis_resource if irods_aegis_resource is defin
 
 _irods_allowed_clients: "{{ irods_allowed_src if irods_allowed_src is defined else '0.0.0.0/0' }}"
 
-_irods_calliope_project_coll: "{{
-  irods_calliope_project_coll if irods_calliope_project_coll is defined else
-  None }}"
-
 _irods_clerver_password: "{{ irods_clerver_password if irods_clerver_password is defined else
                              'rods' }}"
 

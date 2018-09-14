@@ -33,7 +33,12 @@ main()
   local tarName
   tarName=$(basename "$tarFile" .tar)
 
-  local coll="$parentColl"/"${tarName%-*}"
+  local coll="$parentColl"/"$tarName"
+
+  if [[ "$coll" =~ -[0-9]+$ ]]
+  then
+    coll="${coll%-*}"
+  fi
 
   if ! clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"
   then

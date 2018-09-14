@@ -8,7 +8,7 @@
       stat:
         path: /etc/irods/calliope-env.re
       register: result
-      failed_when: not result.stat.exists
+      failed_when: result.stat.exists
 
 
 - name: test ensure project collections doesn't exist

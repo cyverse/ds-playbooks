@@ -1,11 +1,12 @@
 ---
-- name: test configure linux kernel on IES
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+- name: test provision IES
+  hosts: ies
+  become: true
   tasks:
-    - debug:
+    - name: test ensure pika installed
+      command: pip --disable-pip-version-check show pika
+      changed_when: false
+
+    - name: test configure linux kernel
+      debug:
         msg: TODO implement
-
-
-- import_playbook: install_pika.yml

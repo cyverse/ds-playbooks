@@ -1,9 +1,0 @@
----
-- name: install pika
-  hosts: ies
-  become: true
-  tasks:
-    - name: ensure pika installed
-      pip:
-        name: pika
-        state: present

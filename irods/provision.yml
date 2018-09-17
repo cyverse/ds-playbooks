@@ -1,7 +1,32 @@
 ---
-- name: provision IES
+- name: provision for iRODS
+  hosts: irods:!unmanaged_systems
+  become: true
+  tasks:
+    - name: install uuidd
+      package:
+        name: uuidd
+        state: present
+
+    - name: create service group
+      group:
+        name: "{{ _irods_service_group_name }}"
+        system: yes
+
+    - name: create service account
+      user:
+        name: "{{ _irods_service_account_name }}"
+        system: yes
+        home: /var/lib/irods
+        createhome: yes
+        group: "{{ _irods_service_group_name }}"
+        comment: iRODS Administrator
+
+
+- name: provision additional for IES
   hosts: ies
   become: true
+  gather_facts: false
   tasks:
     - name: ensure pika installed
       pip:
@@ -13,3 +38,9 @@
         name: kernel.{{ item.name }}
         value: "{{ item.value }}"
       with_items: "{{ _sysctl_kernel }}"
+
+
+- import_playbook: update_hosts.yml
+
+
+- import_playbook: update_firewall.yml

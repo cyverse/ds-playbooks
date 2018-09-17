@@ -2,9 +2,6 @@
 - import_playbook: provision.yml
 
 
-- import_playbook: prep_for_irods.yml
-
-
 - name: test install IES packages
   hosts: ies
   become: true

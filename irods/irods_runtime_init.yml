@@ -3,7 +3,7 @@
   hosts: ies
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
-  gather_facts: false
+  become_flags: '-i'
   run_once: true
   tasks:
     - name: ensure service user type exists
@@ -16,6 +16,13 @@
         source: /{{ _irods_zone_name }}/home/public
         destination: /{{ _irods_zone_name }}/home/shared
 
+    - name: initialize perms
+      script: scripts/init-rodsadmin-perms.sh '{{ groups['dbms'][0] }}' '{{ _dbms_port }}' '{{ _dbms_username }}' '{{ _irods_zone_name }}'
+      register: response
+      changed_when: response.stdout == 'true'
+      tags:
+        - init_rodsadmin_perms
+        
     - name: ensure anonymous user exists
       irods_user:
         name: anonymous

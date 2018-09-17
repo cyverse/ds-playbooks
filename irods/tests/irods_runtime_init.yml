@@ -5,5 +5,40 @@
   become_user: irods
   run_once: true
   tasks:
-    - debug:
+    - name: test ensure service user type exists
+      shell: |
+        resp = $(iquest \
+                   "select TOKEN_ID where TOKEN_NAMESPACE = 'user_type'
+                                    and TOKEN_NAME = 'ds-service'
+                                    and TOKEN_VALUE2 = 'a Data Store service'")
+
+        ! [[ "$resp" =~ ^CAT_NO_ROWS_FOUND ]]
+      changed_when: false
+
+    - name: test ensure public group's home is correct
+      debug:
+        msg: TODO implement
+
+    - name: test ensure anonymous user exists
+      debug:
+        msg: TODO implement
+
+    - name: verify that rodsadmin has write permission on /
+      shell: ils -A / | grep --quiet 'g:rodsadmin#testing:modify object'
+      changed_when: false
+
+    - name: verify that rodsadmin has write permission on the zone collection
+      shell: ils -A /testing | grep --quiet 'g:rodsadmin#testing:modify object'
+      changed_when: false
+
+    - name: verify that rodsadmin has write permission on zone coll members
+      debug:
+        msg: TODO implement
+
+    - name: verify that rodsadmin has own permission on everthing else
+      debug:
+        msg: TODO implement
+
+    - name: test start quota usage computation
+      debug:
         msg: TODO implement

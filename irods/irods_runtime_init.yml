@@ -1,0 +1,26 @@
+---
+- name: run-time initialization
+  hosts: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
+  run_once: true
+  tasks:
+    - name: ensure service user type exists
+      irods_user_type:
+        type: ds-service
+        description: a Data Store service
+
+    - name: ensure public group's home is correct
+      irods_move:
+        source: /{{ _irods_zone_name }}/home/public
+        destination: /{{ _irods_zone_name }}/home/shared
+
+    - name: ensure anonymous user exists
+      irods_user:
+        name: anonymous
+
+    - name: start quota usage computation
+      command: irule '{ ipc_rescheduleQuotaUsageUpdate }' null ruleExecOut
+      register: results
+      changed_when: results.stdout == 'scheduled quota usage updates'

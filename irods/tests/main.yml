@@ -41,13 +41,7 @@
         msg: TODO implement
 
 
-- name: test run-time initialization
-  hosts: localhost
-  gather_facts: false
-  run_once: true
-  tasks:
-    - debug:
-        msg: TODO implement
+- import_playbook: irods_runtime_init.yml
 
 
 - import_playbook: de_usage.yml

@@ -1,0 +1,9 @@
+---
+- name: test run-time initialization
+  hosts: ies
+  become: true
+  become_user: irods
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement

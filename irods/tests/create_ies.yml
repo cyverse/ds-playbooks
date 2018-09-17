@@ -17,4 +17,7 @@
 - import_playbook: cfg_irods.yml
 
 
+- import_playbook: irods_runtime_init.yml
+
+
 - import_playbook: bisque_usage.yml

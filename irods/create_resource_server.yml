@@ -24,6 +24,7 @@
   gather_facts: false
   tasks:
     - import_tasks: tasks/install_resource_pkg.yml
+    
     - import_tasks: tasks/install_plugins.yml
 
 
@@ -37,6 +38,7 @@
   hosts: rs
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
+  become_flags: '-i'
   gather_facts: false
   tasks:
     - include_tasks: tasks/cfg_irods.yml

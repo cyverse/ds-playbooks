@@ -82,10 +82,10 @@ _de_createArchiveCollFor(*StagingColl) {
 
     if (*jobInfo.creator != '' && *jobInfo.archiveBase != '') {
       if (*stagingRelPath like regex '^' ++ *jobInfo.id ++ '/[^/]+') {
-        *jobStagingBase = _de_STAGING_BASE ++ '/' ++ *info.id;
+        *jobStagingBase = _de_STAGING_BASE ++ '/' ++ *jobInfo.id;
 
         _de_createArchiveColl(*jobInfo.archiveBase, *jobStagingBase, *jobInfo.creator,
-                              *jobInfo.appId, *jobInfo.Id);
+                              *jobInfo.appId, *jobInfo.id);
       }
 
       *archiveColl = *jobInfo.archiveBase ++ '/' ++ triml(*stagingRelPath, *jobInfo.id ++ '/');

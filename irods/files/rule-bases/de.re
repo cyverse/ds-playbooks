@@ -29,31 +29,6 @@ _de_getJobInfo(*StagingRelPath) =
   *info
 
 
-_de_archiveData(*StagingPath) {
-  *stagingRelPath = triml(*StagingPath, _de_STAGING_BASE ++ '/');
-  *jobInfo = _de_getJobInfo(*stagingRelPath);
-
-  if (*jobInfo.creator != '' && *jobInfo.archiveBase != '') {
-    *archiveObj = *jobInfo.archiveBase ++ '/' ++ triml(*stagingRelPath, *jobInfo.id ++ '/');
-    *clientArg = execCmdArg(*jobInfo.creator);
-    *stageArg = execCmdArg(*StagingPath);
-    *archiveArg = execCmdArg(*archiveObj);
-    *execArg = execCmdArg(*jobInfo.id);
-    *appArg = execCmdArg(*jobInfo.appId);
-    *argStr = '*clientArg *stageArg *archiveArg *execArg *appArg';
-    *status = errormsg(msiExecCmd('de-archive-data', *argStr, 'null', 'null', 'null', *out), *msg);
-
-    if (*status < 0) {
-      writeLine('serverLog', 'DE: Failed to archive data object: *msg');
-      msiGetStderrInExecCmdOut(*out, *errMsg);
-      writeLine('serverLog', 'DE: *errMsg');
-      cut;
-      failmsg(*status, *errMsg);
-    }
-  }
-}
-
-
 _de_createArchiveColl(*ArchiveColl, *StageColl, *Creator, *AppId, *JobId) {
   *clientArg = execCmdArg(*Creator);
   *stageArg = execCmdArg(*StageColl);
@@ -71,6 +46,38 @@ _de_createArchiveColl(*ArchiveColl, *StageColl, *Creator, *AppId, *JobId) {
     writeLine('serverLog', 'DE: *errMsg');
     cut;
     failmsg(*status, *errMsg);
+  }
+}
+
+
+_de_archiveData(*StagingPath) {
+  *stagingRelPath = triml(*StagingPath, _de_STAGING_BASE ++ '/');
+  *jobInfo = _de_getJobInfo(*stagingRelPath);
+
+  if (*jobInfo.creator != '' && *jobInfo.archiveBase != '') {
+    if (*stagingRelPath like regex '^' ++ *jobInfo.id ++ '/[^/]+') {
+      *jobStagingBase = _de_STAGING_BASE ++ '/' ++ *jobInfo.id;
+
+      _de_createArchiveColl(*jobInfo.archiveBase, *jobStagingBase, *jobInfo.creator,
+                            *jobInfo.appId, *jobInfo.id);
+    }
+
+    *archiveObj = *jobInfo.archiveBase ++ '/' ++ triml(*stagingRelPath, *jobInfo.id ++ '/');
+    *clientArg = execCmdArg(*jobInfo.creator);
+    *stageArg = execCmdArg(*StagingPath);
+    *archiveArg = execCmdArg(*archiveObj);
+    *execArg = execCmdArg(*jobInfo.id);
+    *appArg = execCmdArg(*jobInfo.appId);
+    *argStr = '*clientArg *stageArg *archiveArg *execArg *appArg';
+    *status = errormsg(msiExecCmd('de-archive-data', *argStr, 'null', 'null', 'null', *out), *msg);
+
+    if (*status < 0) {
+      writeLine('serverLog', 'DE: Failed to archive data object: *msg');
+      msiGetStderrInExecCmdOut(*out, *errMsg);
+      writeLine('serverLog', 'DE: *errMsg');
+      cut;
+      failmsg(*status, *errMsg);
+    }
   }
 }
 

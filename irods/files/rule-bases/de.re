@@ -78,6 +78,8 @@ _de_archiveData(*StagingPath) {
       cut;
       failmsg(*status, *errMsg);
     }
+  } else {
+    writeLine('serverLog', 'DE: Missing required metadata - skipping archive of *StagingPath');
   }
 }
 
@@ -99,6 +101,8 @@ _de_createArchiveCollFor(*StagingColl) {
 
       _de_createArchiveColl(*archiveColl, *StagingColl, *jobInfo.creator, *jobInfo.appId,
                             *jobInfo.id);
+    } else {
+      writeLine('serverLog', 'DE: Missing required metadata - skipping archive of *StagingColl');
     }
   }
 }

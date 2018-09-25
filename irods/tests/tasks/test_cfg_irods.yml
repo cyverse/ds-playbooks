@@ -13,7 +13,6 @@
     - bisque.re
     - bisque-env.re
     - calliope.re
-    - calliope-env.re
     - coge.re
     - de.re
     - ipc-amqp.re

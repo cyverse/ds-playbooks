@@ -1,6 +1,8 @@
 ---
 de_job_irods_user: de_job
 
+irods_calliope_project_coll: /testing/home/shared/calliope
+
 irods_default_repl_resource: rs_centos7
 irods_resource_hierarchies:
   - name: rs_centos6

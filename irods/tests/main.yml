@@ -24,11 +24,12 @@
 
 
 - name: test start iRODS on IES
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+  hosts: ies
+  become: true
+  become_user: irods
   tasks:
-    - debug:
+    - name: test start iRODS
+      debug:
         msg: TODO implement
 
 
@@ -44,7 +45,7 @@
 - import_playbook: irods_runtime_init.yml
 
 
-- import_playbook: de_usage.yml
-
-
 - import_playbook: bisque_usage.yml
+
+
+- import_playbook: de_usage.yml

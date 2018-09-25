@@ -14,6 +14,15 @@
 - import_playbook: cfg_irods.yml
 
 
+- name: test start iRODS on IES
+  hosts: ies
+  become: true
+  become_user: irods
+  gather_facts: false
+  tasks:
+    - import_tasks: tasks/test_irods_running.yml
+
+
 - import_playbook: irods_runtime_init.yml
 
 

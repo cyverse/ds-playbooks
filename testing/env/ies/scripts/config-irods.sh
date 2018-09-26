@@ -77,9 +77,6 @@ main()
 
   printf '*:%d:%s:%s:%s\n' "$DBMS_PORT" "$DB_NAME" "$DB_USER" "$DB_PASSWORD" > "$PgPass"
   ensure_ownership "$PgPass"
-
-  prepare_svc_script > /service.sh
-  chmod a+rx /service.sh
 }
 
 
@@ -90,18 +87,6 @@ ensure_ownership()
   chown "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$fsEntity"
   chmod u+rw "$fsEntity"
   chmod go= "$fsEntity"
-}
-
-
-# escapes / and \ for sed script
-escape()
-{
-  local var="$*"
-
-  # Escape \ first to avoid escaping the escape character, i.e. avoid / -> \/ -> \\/
-  var="${var//\\/\\\\}"
-
-  printf '%s' "${var//\//\\/}"
 }
 
 
@@ -200,17 +185,6 @@ ReadOnly=no
 Ksqo=0
 Port=$DBMS_PORT
 EOINI
-}
-
-
-prepare_svc_script()
-{
-  cat <<EOF | sed --file - /tmp/service.sh.template
-s/\$DBMS_HOST/$(escape $DBMS_HOST)/g
-s/\$DBMS_PORT/$(escape $DBMS_PORT)/g
-s/\$IRODS_SYSTEM_USER/$(escape $IRODS_SYSTEM_USER)/g
-s/\$IRODS_ZONE_PASSWORD/$(escape $IRODS_ZONE_PASSWORD)/g
-EOF
 }
 
 

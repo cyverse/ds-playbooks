@@ -3,7 +3,8 @@
 # Usage:
 #  service (start|stop)
 #
-# This script starts or stops the resource server inside the container.
+# This script starts or stops the resource server inside the container if there
+# is one.
 
 
 main()

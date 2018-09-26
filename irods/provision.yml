@@ -1,23 +1,51 @@
 ---
-- name: configure linux kernel on IES
-  hosts: ies
+- name: provision for iRODS
+  hosts: irods:!unmanaged_systems
   become: true
   tasks:
+    - name: install which
+      package:
+        name: which
+        state: present
+
+    - name: install uuidd
+      package:
+        name: uuidd
+        state: present
+
+    - name: create service group
+      group:
+        name: "{{ _irods_service_group_name }}"
+        system: yes
+
+    - name: create service account
+      user:
+        name: "{{ _irods_service_account_name }}"
+        system: yes
+        home: /var/lib/irods
+        createhome: yes
+        group: "{{ _irods_service_group_name }}"
+        comment: iRODS Administrator
+
+
+- name: provision additional for IES
+  hosts: ies
+  become: true
+  gather_facts: false
+  tasks:
+    - name: ensure pika installed
+      pip:
+        name: pika
+        state: present
+
     - name: configure linux kernel
       sysctl:
         name: kernel.{{ item.name }}
         value: "{{ item.value }}"
       with_items: "{{ _sysctl_kernel }}"
 
-- name: prepare for bisque_paths
-  hosts: ies
-  become: true
-  gather_facts: false
-  tasks:
-    - name: ensure /var/log/bisque exists
-      file:
-        path: /var/log/bisque
-        state: directory
-        owner: "{{ _irods_service_account_name }}"
-        group: "{{ _irods_service_group_name }}"
-        mode: u=rwx
+
+- import_playbook: update_hosts.yml
+
+
+- import_playbook: firewall.yml

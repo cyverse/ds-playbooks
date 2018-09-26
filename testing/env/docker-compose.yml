@@ -40,17 +40,9 @@ services:
       dockerfile: ies/Dockerfile.centos7
       args:
         DBMS_HOST: "$DBMS_HOST"
-        IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
-        IRODS_HOST: "$IRODS_IES7_HOST"
-        IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
-        IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_SYSTEM_GROUP: "$IRODS_IES_SYSTEM_GROUP"
-        IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     hostname: "$IRODS_IES7_HOST"
     tty: true
-    depends_on:
-      - amqp
-      - dbms
 
   load_balancer:
     build:
@@ -86,5 +78,3 @@ services:
         IRODS_IES: "$IRODS_IES6_HOST"
     hostname: "$IRODS_RS7_HOST"
     tty: true
-    depends_on:
-      - ies_centos6

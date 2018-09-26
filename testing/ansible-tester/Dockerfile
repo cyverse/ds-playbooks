@@ -17,8 +17,7 @@ COPY test-playbook.sh /test-playbook
 RUN chmod --recursive go-rwx /root/.ssh && \
     chmod u+x /test-playbook
 
-COPY inventory/hosts-all /inventory
-COPY inventory/hosts-configured /inventory
+COPY inventory/* /inventory/
 COPY inventory/host_vars/* /inventory/host_vars/
 COPY inventory/group_vars/* /inventory/group_vars/
 COPY wait-for-ready.yml /

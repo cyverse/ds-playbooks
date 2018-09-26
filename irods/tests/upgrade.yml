@@ -3,18 +3,7 @@
   hosts: ies:!unmanaged_systems
   become: true
   tasks:
-    - include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: "{{
-          'irods-database-plugin-postgres93'
-            if inventory_hostname == 'dstesting_ies_centos6_1.dstesting_default' else
-          'irods-database-plugin-postgres' }}"
-        version: '1.10'
-
-    - include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: irods-icat
-        version: '4.1.10'
+    - import_tasks: tasks/test_install_ies_pkgs.yml
 
 
 - name: test upgrade resource server package

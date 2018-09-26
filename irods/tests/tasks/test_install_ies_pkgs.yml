@@ -1,0 +1,15 @@
+---
+- include_tasks: test_pkg_installed.yml
+  vars:
+    pkg: irods-icat
+    version: '4.1.10'
+
+- include_tasks: test_pkg_installed.yml
+  vars:
+    pkg: "{{
+      'irods-database-plugin-postgres93'
+        if inventory_hostname == 'dstesting_ies_centos6_1.dstesting_default' else
+      'irods-database-plugin-postgres' }}"
+    version: '1.10'
+
+- import_tasks: test_irods_ownership.yml

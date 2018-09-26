@@ -1,0 +1,13 @@
+---
+- name: verify that all servers are up
+  shell: |
+    if ! status=$(/var/lib/irods/iRODS/irodsctl status)
+    then
+      exit 1
+    fi
+
+    if grep --quiet 'No servers running' <<<"$status"
+    then
+      exit 1
+    fi
+  changed_when: false

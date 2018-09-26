@@ -1,0 +1,36 @@
+---
+- import_playbook: provision.yml
+
+
+- name: install IES packages
+  hosts: ies
+  become: true
+  tasks:
+    - import_tasks: tasks/install_ies_pkgs.yml
+
+    - import_tasks: tasks/install_plugins.yml
+
+
+- import_playbook: cfg_irods.yml
+
+
+- name: start iRODS on IES
+  hosts: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  become_flags: '-i'
+  gather_facts: false
+  tasks:
+    - name: start iRODS
+      irods_start:
+
+    - name: authenticate clerver
+      irods_clerver_auth:
+        ies: "{{ inventory_hostname }}"
+        password: "{{ _irods_clerver_password }}"
+
+
+- import_playbook: irods_runtime_init.yml
+
+
+- import_playbook: bisque_usage.yml

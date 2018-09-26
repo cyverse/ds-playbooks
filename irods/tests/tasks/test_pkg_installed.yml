@@ -1,4 +1,8 @@
 ---
+# Tests than an CentOS package is installed
+#
+# pkg      The name of the package
+# version  (optional) The package version that should be installed
 - name: check correct {{ pkg }} package installed
   yum:
     list: "{{ pkg }}"

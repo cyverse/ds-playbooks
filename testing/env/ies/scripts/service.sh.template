@@ -3,13 +3,19 @@
 # Usage:
 #  service (start|stop)
 #
-# This script starts or stops the IES server inside the container.
+# This script starts or stops the IES server inside the container if there is
+# one.
 #
-# It requires the following environment variables to be defined.
+# It requires the following environment variable to be defined.
+#
+# IRODS_SYSTEM_USER  the system user who executes iRODS
+#
+# If there is an IES inside the cotainer when it starts, the following
+# additional environment variables need to be defined.
 #
 # DBMS_HOST            The FQDN or IP address of the PostgreSQL server
 # DBMS_PORT            The TCP port the PostgreSQL will listen on.
-# IRODS_SYSTEM_USER    The system user who executes iRODS
+# IRODS_SYSTEM_GROUP   The default group of the service account
 # IRODS_ZONE_PASSWORD  The password used to authenticate the clerver user
 
 
@@ -40,32 +46,42 @@ main()
 
 start()
 {
-  until exec 3<> /dev/tcp/"$DBMS_HOST"/"$DBMS_PORT"
-  do
-    printf 'Waiting for DBMS\n'
-    sleep 1
-  done 2> /dev/null
-
-  exec 3<&-
-  exec 3>&-
-
-  if ! su --command '/var/lib/irods/iRODS/irodsctl start' --login "$IRODS_SYSTEM_USER"
+  # Ensure that the correct user owns everything in /var/lib/irods and /etc/irods
+  # If this isn't done, some of the ansible ownership tests will fail.
+  if [ -e /var/lib/irods/.irods/irods_environment.json ]
   then
-    cat /var/lib/irods/iRODS/server/log/rodsLog* >&2
-    return 1
+    chown --recursive "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" /etc/irods /var/lib/irods
+
+    until exec 3<> /dev/tcp/"$DBMS_HOST"/"$DBMS_PORT"
+    do
+      printf 'Waiting for DBMS\n'
+      sleep 1
+    done 2> /dev/null
+
+    exec 3<&-
+    exec 3>&-
+
+    if ! su --command '/var/lib/irods/iRODS/irodsctl start' --login "$IRODS_SYSTEM_USER"
+    then
+      cat /var/lib/irods/iRODS/server/log/rodsLog* >&2
+      return 1
+    fi
+
+    touch /var/lock/subsys/irods
+
+    printf 'Authenticating clerver user\n'
+    su --command "iinit '$IRODS_ZONE_PASSWORD'" --login "$IRODS_SYSTEM_USER"
   fi
-
-  touch /var/lock/subsys/irods
-
-  printf 'Authenticating clerver user\n'
-  su --command "iinit '$IRODS_ZONE_PASSWORD'" --login "$IRODS_SYSTEM_USER"
 }
 
 
 stop()
 {
-  su --command '/var/lib/irods/iRODS/irodsctl stop' --login "$IRODS_SYSTEM_USER"
-  rm /var/lock/subsys/irods
+  if su --command imiscsvrinfo --login "$IRODS_SYSTEM_USER" >& /dev/null
+  then
+    su --command '/var/lib/irods/iRODS/irodsctl stop' --login "$IRODS_SYSTEM_USER"
+    rm /var/lock/subsys/irods
+  fi
 }
 
 

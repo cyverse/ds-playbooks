@@ -227,9 +227,3 @@
                   == 'dstesting_rs_centos6_1.dstesting_default'"
               - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
               - hosts_config.host_entries[0].addresses[2].address == 'alias-2'
-
-    - name: verify that clerver auth file exists
-      stat:
-        path: /var/lib/irods/.irods/.irodsA
-      register: response
-      failed_when: not response.stat.exists or response.stat.pw_name != 'irods'

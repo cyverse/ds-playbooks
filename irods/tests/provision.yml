@@ -3,11 +3,13 @@
   hosts: irods:!unmanaged_systems
   become: true
   tasks:
-    - name: test uuidd rpm is present
-      yum:
-        list: uuidd
-      register: pkg
-      failed_when: pkg.results | selectattr("yumstate", "match", "installed") | list | length != 1
+    - include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: which
+
+    - include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: uuidd
 
     - name: test create service group
       debug:

@@ -3,6 +3,11 @@
   hosts: irods:!unmanaged_systems
   become: true
   tasks:
+    - name: install which
+      package:
+        name: which
+        state: present
+
     - name: install uuidd
       package:
         name: uuidd

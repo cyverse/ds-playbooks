@@ -23,7 +23,7 @@
       stat:
         path: /var/lib/irods/.irods/.irodsA
       register: response
-      failed_when: not response.stat.exists
+      failed_when: not response.stat.exists or response.stat.pw_name != 'irods'
 
     - import_tasks: tasks/test_irods_running.yml
 

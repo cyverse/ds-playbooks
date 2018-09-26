@@ -24,6 +24,11 @@
     - name: start iRODS
       irods_start:
 
+    - name: authenticate clerver
+      irods_clerver_auth:
+        ies: "{{ inventory_hostname }}"
+        password: "{{ _irods_clerver_password }}"
+
 
 - import_playbook: irods_runtime_init.yml
 

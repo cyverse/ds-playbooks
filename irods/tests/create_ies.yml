@@ -22,6 +22,12 @@
   tasks:
     - import_tasks: tasks/test_irods_running.yml
 
+    - name: verify that clerver auth file exists
+      stat:
+        path: /var/lib/irods/.irods/.irodsA
+      register: response
+      failed_when: not response.stat.exists or response.stat.pw_name != 'irods'
+
 
 - import_playbook: irods_runtime_init.yml
 

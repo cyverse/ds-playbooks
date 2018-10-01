@@ -1,0 +1,22 @@
+---
+- name: test prepare for bisque_paths
+  hosts: ies
+  become: true
+  tasks:
+    - name: test ensure /var/log/bisque exists
+      debug:
+        msg: TODO implement
+
+
+- name: test bisque cmd script in place
+  hosts: ies
+  tasks:
+    - name: Verify that bisque_paths.py is in place
+      stat:
+        path: /var/lib/irods/iRODS/server/bin/cmd/bisque_paths.py
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test place .bisque
+      debug:
+        msg: TODO implement

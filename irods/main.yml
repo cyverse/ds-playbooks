@@ -19,17 +19,6 @@
           read_priv: .*
 
 
-- name: install pika
-  hosts: ies
-  become: true
-  gather_facts: false
-  tasks:
-    - name: ensure pika installed
-      pip:
-        name: pika
-        state: present
-
-
 - import_playbook: provision.yml
 
 
@@ -41,7 +30,6 @@
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   become_flags: '-i'
-  gather_facts: false
   tasks:
     - name: start iRODS
       irods_start:
@@ -58,31 +46,10 @@
       irods_start:
 
 
-- name: run-time initialization
-  hosts: ies
-  become: "{{ _become_svc_acnt }}"
-  become_user: "{{ _irods_service_account_name }}"
-  gather_facts: false
-  run_once: true
-  tasks:
-    - name: ensure service user type exists
-      irods_user_type:
-        type: ds-service
-        description: a Data Store service
+- import_playbook: irods_runtime_init.yml
 
-    - name: ensure public group's home is correct
-      irods_move:
-        source: /{{ _irods_zone_name }}/home/public
-        destination: /{{ _irods_zone_name }}/home/shared
 
-    - name: ensure anonymous user exists
-      irods_user:
-        name: anonymous
-
-    - name: start quota usage computation
-      command: irule '{ ipc_rescheduleQuotaUsageUpdate }' null ruleExecOut
-      register: results
-      changed_when: results.stdout == 'scheduled quota usage updates'
+- import_playbook: bisque_usage.yml
 
 
 - import_playbook: de_usage.yml

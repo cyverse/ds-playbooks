@@ -1,7 +1,36 @@
 ---
-- name: test provision
-  hosts: localhost
+- name: test provision for iRODS
+  hosts: irods:!unmanaged_systems
+  become: true
+  vars:
+    group_name: "{{ 'irods_ies' if inventory_hostname in groups['ies'] else 'irods' }}"
+  tasks:
+    - include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: which
+
+    - include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: uuidd
+
+    - name: test create service group
+      command: grep --quiet --regexp '^{{ group_name }}:x:[0-9]*:' /etc/group
+      changed_when: false
+
+    - name: verify that the system user has correct comment
+      command: grep --quiet --regexp '^irods:[^:]*:[^:]*:[^:]*:iRODS Administrator:' /etc/passwd
+      changed_when: false
+
+
+- name: test provision additional for IES
+  hosts: ies
+  become: true
   gather_facts: false
   tasks:
-    - debug:
+    - name: test ensure pika installed
+      command: pip --disable-pip-version-check show pika
+      changed_when: false
+
+    - name: test configure linux kernel
+      debug:
         msg: TODO implement

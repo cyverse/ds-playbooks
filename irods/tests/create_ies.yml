@@ -2,11 +2,11 @@
 - import_playbook: provision.yml
 
 
-- name: test install resource server package
-  hosts: rs:!ies:!unmanaged_systems
+- name: test install IES packages
+  hosts: ies
   become: true
   tasks:
-    - import_tasks: tasks/test_install_resource_pkg.yml
+    - import_tasks: tasks/test_install_ies_pkgs.yml
 
     - import_tasks: tasks/test_install_plugins.yml
 
@@ -14,18 +14,22 @@
 - import_playbook: cfg_irods.yml
 
 
-- name: test bootstrap iRODS start
-  hosts: rs
+- name: test start iRODS on IES
+  hosts: ies
   become: true
   become_user: irods
+  gather_facts: false
   tasks:
-    - name: test initialize resource server connection to IES
+    - import_tasks: tasks/test_irods_running.yml
+
+    - name: verify that clerver auth file exists
       stat:
         path: /var/lib/irods/.irods/.irodsA
       register: response
       failed_when: not response.stat.exists or response.stat.pw_name != 'irods'
 
-    - import_tasks: tasks/test_irods_running.yml
+
+- import_playbook: irods_runtime_init.yml
 
 
-- import_playbook: mk_storage_resources.yml
+- import_playbook: bisque_usage.yml

@@ -17,15 +17,6 @@
       changed_when: false
 
 
-- name: test install pika
-  hosts: ies
-  become: true
-  tasks:
-    - name: test ensure pika installed
-      debug:
-        msg: TODO implement
-
-
 - import_playbook: provision.yml
 
 
@@ -33,11 +24,12 @@
 
 
 - name: test start iRODS on IES
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+  hosts: ies
+  become: true
+  become_user: irods
   tasks:
-    - debug:
+    - name: test start iRODS
+      debug:
         msg: TODO implement
 
 
@@ -50,13 +42,10 @@
         msg: TODO implement
 
 
-- name: test run-time initialization
-  hosts: localhost
-  gather_facts: false
-  run_once: true
-  tasks:
-    - debug:
-        msg: TODO implement
+- import_playbook: irods_runtime_init.yml
+
+
+- import_playbook: bisque_usage.yml
 
 
 - import_playbook: de_usage.yml

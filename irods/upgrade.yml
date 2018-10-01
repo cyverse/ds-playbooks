@@ -8,14 +8,8 @@
 - name: begin IES upgrade
   hosts: ies:!unmanaged_systems
   become: true
-  vars:
-    os: centos{{ ansible_distribution_major_version }}
-    pg_rpm: "{{ 'irods-database-plugin-postgres93' if ansible_distribution_major_version|int == 6 else
-                'irods-database-plugin-postgres' }}"
-    pg_rpm_ver: "{{ _irods_version | regex_replace('^4.') }}"
   tasks:
-    - include_tasks: tasks/install_irods_pkg.yml pkg={{ pg_rpm }} pkg_ver={{ pg_rpm_ver }}
-    - include_tasks: tasks/install_irods_pkg.yml pkg=irods-icat pkg_ver={{ _irods_version }}
+    - import_tasks: tasks/install_ies_pkgs.yml
 
 
 - name: upgrade resource server package

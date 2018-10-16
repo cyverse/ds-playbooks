@@ -28,8 +28,11 @@ ARG IRODS_ZONE_USER=rods
 
 RUN /tmp/base-config centos 6 && \
     yum --assumeyes install \
+      epel-release \
       https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm && \
+    rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6 && \
     yum --assumeyes install \
+      jq libselinux-python python-pip python-requests python-virtualenv \
       https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm \
       https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm && \
     pip install pika && \

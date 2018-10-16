@@ -14,6 +14,12 @@
   hosts: all:!unmanaged_systems
   become: true
   tasks:
+    - name: install EPEL repo
+      when: ansible_distribution == 'CentOS'
+      package:
+        name: epel-release
+        state: present
+
     - name: install packages
       package:
         name: "{{ item }}"

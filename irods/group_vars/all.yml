@@ -109,8 +109,8 @@ _load_balancer_irods_allowed_src: "{{
   load_balancer_irods_allowed_src if load_balancer_irods_allowed_src is defined else
   _irods_allowed_clients }}"
 
-_load_balancer_irods_max_conn: "{{
-  load_balancer_irods_max_conn if load_balancer_irods_max_conn is defined else
+_load_balancer_irods_extra_max_conn: "{{
+  load_balancer_irods_extra_max_conn if load_balancer_irods_extra_max_conn is defined else
   100 }}"
 
 _load_balancer_irods_proxy_port: "{{

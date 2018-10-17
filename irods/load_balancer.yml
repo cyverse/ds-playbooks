@@ -106,12 +106,17 @@
       notify:
         - restart syslog
 
-    - name: place rsyslog config for HAproxy
+    - name: place rsyslog config for HAProxy
       copy:
-        src: files/haproxy.conf
+        src: files/rsyslog.d/haproxy.conf
         dest: /etc/rsyslog.d
       notify:
         - restart syslog
+
+    - name: place logrotate config for HAProxy
+      copy:
+        src: files/logrotate.d/haproxy
+        dest: /etc/logrotate.d
 
     - name: configure firewall
       blockinfile:

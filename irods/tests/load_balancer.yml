@@ -19,3 +19,9 @@
         path: /etc/rsyslog.d/haproxy.conf
       register: result
       failed_when: not result.stat.exists
+
+    - name: test place logrotate config for HAProxy
+      stat:
+        path: /etc/logrotate.d/haproxy
+      register: result
+      failed_when: not result.stat.exists

@@ -11,7 +11,7 @@
   become: false
   local_action:
     module: file
-    name: "{{ _ctrl_machine_tmpdir }}/irods-netcdf-build"
+    name: /tmp/irods-netcdf-build
     state: absent
   tags:
     - non_idempotent
@@ -22,7 +22,7 @@
   local_action:
     module: git
     repo: https://github.com/cyverse/irods-netcdf-build.git
-    dest: "{{ _ctrl_machine_tmpdir }}/irods-netcdf-build"
+    dest: /tmp/irods-netcdf-build
     version: "{{ _irods_version }}"
     force: true
   register: response
@@ -33,7 +33,7 @@
       run_once: true
       delegate_to: localhost
       become: false
-      command: "{{ _ctrl_machine_tmpdir }}/irods-netcdf-build/build"
+      command: /tmp/irods-netcdf-build/build
 
     - include_tasks: install_netcdf_plugin.yml
       args:
@@ -53,7 +53,7 @@
   become: false
   local_action:
     module: file
-    name: "{{ _ctrl_machine_tmpdir }}/irods-setavu-plugin"
+    name: /tmp/irods-setavu-plugin
     state: absent
   tags:
     - non_idempotent
@@ -64,7 +64,7 @@
   local_action:
     module: git
     repo: https://github.com/iPlantCollaborativeOpenSource/irods-setavu-plugin.git
-    dest: "{{ _ctrl_machine_tmpdir }}/irods-setavu-plugin"
+    dest: /tmp/irods-setavu-plugin
     version: "{{ _irods_version }}"
     force: true
   register: response
@@ -74,11 +74,11 @@
     - name: build msiSetAVU plugin
       run_once: true
       become: false
-      local_action: command {{ _ctrl_machine_tmpdir }}/irods-setavu-plugin/build
+      local_action: command /tmp/irods-setavu-plugin/build
 
     - name: upgrade msiSetAVU microservice
       copy:
-        src: "{{ _ctrl_machine_tmpdir }}/irods-setavu-plugin/libraries/centos{{ ansible_distribution_major_version }}/libmsiSetAVU.so"
+        src: "/tmp/irods-setavu-plugin/libraries/centos{{ ansible_distribution_major_version }}/libmsiSetAVU.so"
         dest: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
         owner: "{{ _irods_service_account_name }}"
         group: "{{ _irods_service_group_name }}"

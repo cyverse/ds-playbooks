@@ -19,6 +19,8 @@
   hosts: rs
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
+  become_flags: '-i'
+  gather_facts: false
   tasks:
     - name: initialize resource server connection to IES
       irods_clerver_auth:
@@ -30,19 +32,3 @@
 
 
 - import_playbook: mk_storage_resources.yml
-
-
-- import_playbook: mk_resource_hierarchies.yml
-
-
-- name: bring up all resources
-  hosts: rs
-  become: "{{ _become_svc_acnt }}"
-  become_user: "{{ _irods_service_account_name }}"
-  gather_facts: false
-  tasks:
-    - name: bring up storage storage resource and parents
-      irods_resource_up:
-        resource: "{{ item.name }}"
-        status: up
-      with_items: "{{ _irods_storage_resources }}"

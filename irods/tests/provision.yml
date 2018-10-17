@@ -2,6 +2,8 @@
 - name: test provision for iRODS
   hosts: irods:!unmanaged_systems
   become: true
+  vars:
+    group_name: "{{ 'irods_ies' if inventory_hostname in groups['ies'] else 'irods' }}"
   tasks:
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
@@ -12,8 +14,8 @@
         pkg: uuidd
 
     - name: test create service group
-      debug:
-        msg: TODO implement
+      command: grep --quiet --regexp '^{{ group_name }}:x:[0-9]*:' /etc/group
+      changed_when: false
 
     - name: verify that the system user has correct comment
       command: grep --quiet --regexp '^irods:[^:]*:[^:]*:[^:]*:iRODS Administrator:' /etc/passwd

@@ -12,8 +12,12 @@ ARG IRODS_SYSTEM_USER=irods
 ARG IRODS_ZONE_PASSWORD=rods
 
 RUN /tmp/base-config centos 7 && \
+    yum install --assumeyes epel-release && \
+    rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7 && \
+    yum install --assumeyes jq python-pip python-setuptools && \
     /tmp/prep-svc-script && \
-    rm --force /tmp/*
+    yum clean all && \
+    rm --force --recursive /tmp/* /var/cache/yum
 
 COPY base/entrypoint.sh /entrypoint
 

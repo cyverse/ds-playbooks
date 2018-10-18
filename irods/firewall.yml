@@ -12,19 +12,21 @@
         marker: "# {mark} DS MANAGED BLOCK (irods)"
         block: |
           {% for i in groups['irods'] %}
+          {% set addr = i if i|ipaddr else lookup('dig', i) %}
           {% if inventory_hostname != i %}
-          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ i if i|ipaddr else lookup('dig', i) }} --dport 1247 -j ACCEPT
-          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ i if i|ipaddr else lookup('dig', i) }} --dport 1248 -j ACCEPT
-          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ i if i|ipaddr else lookup('dig', i) }} --dport {{ ports }} -j ACCEPT
+          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport 1247 -j ACCEPT
+          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport 1248 -j ACCEPT
+          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport {{ ports }} -j ACCEPT
           {% if inventory_hostname in groups['rs'] %}
           -A {{ _firewall_chain }} -m state --state NEW -p udp -s {{ i if i|ipaddr else lookup('dig', i) }} --dport {{ ports }} -j ACCEPT
           {% endif %}
           {% endif %}
           {% endfor %}
           {% for f in _irods_federation %}
-          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ f.icat_host if f.icat_host|ipaddr else lookup('dig', f.icat_host) }} --dport 1247 -j ACCEPT
-          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ f.icat_host if f.icat_host|ipaddr else lookup('dig', f.icat_host) }} --dport {{ ports }} -j ACCEPT
-          -A {{ _firewall_chain }} -m state --state NEW -p udp -s {{ f.icat_host if f.icat_host|ipaddr else lookup('dig', f.icat_host) }} --dport {{ ports }} -j ACCEPT
+          {% set f_addr = f.icat_host if f.icat_host|ipaddr else lookup('dig', f.icat_host) %}
+          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ f_addr }} --dport 1247 -j ACCEPT
+          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ f_addr }} --dport {{ ports }} -j ACCEPT
+          -A {{ _firewall_chain }} -m state --state NEW -p udp -s {{ f_addr }} --dport {{ ports }} -j ACCEPT
           {% endfor %}
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport 1247 -j ACCEPT
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport {{ ports }} -j ACCEPT

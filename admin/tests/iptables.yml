@@ -1,0 +1,12 @@
+---
+- name: test initialize iptables
+  hosts: all:!unmanaged_systems
+  become: true
+  tasks:
+    - name: test install iptables-services package
+      when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int >= 7
+      yum:
+        list: iptables-services
+      register: result
+      failed_when: |
+        result.results | selectattr("yumstate", 'equalto', "installed") | list | count != 1

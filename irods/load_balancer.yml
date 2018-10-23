@@ -66,14 +66,21 @@
           - irods_single_conn:
               options:
                 - tcp-check
-              tcp_check:
+              tcp_checks:
+                - connect
                 - 'send PING\n'
                 - 'expect string `<MsgHeader_PI>\n<type>RODS_VERSION</type>`'
               servers:
-                - "{{ ies_server }} {{ ies_ip }}:1247"
+                - "{{ ies_server }} {{ ies_ip }}:1247 check"
           - irods_extra_conn:
+              options:
+                - tcp-check
+              tcp_checks:
+                - connect
+                - 'send PING\n'
+                - 'expect string `<MsgHeader_PI>\n<type>RODS_VERSION</type>`'
               servers:
-                - "{{ ies_server }} {{ ies_ip }}:1247 maxconn {{ _load_balancer_irods_extra_max_conn }}"
+                - "{{ ies_server }} {{ ies_ip }}:1247 check maxconn {{ _load_balancer_irods_extra_max_conn }}"
         haproxy_listen:
           - irods_reconn:
               binds:

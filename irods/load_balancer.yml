@@ -90,8 +90,12 @@
           - webdav_https:
               binds:
                 - :443
+              options:
+                - httpchk HEAD /dav/iplant/commons/cyverse_curated
+              http_checks:
+                - expect status 200
               servers:
-                - webdav {{ lookup('dig', _webdav_host) }}
+                - webdav {{ lookup('dig', _webdav_host) }} check check-ssl verify none
       notify:
         - reload haproxy
       tags:

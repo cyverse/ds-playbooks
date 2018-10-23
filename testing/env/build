@@ -28,6 +28,7 @@ main()
 
   . "$cfg"
 
+  docker build --file "$baseDir"/base/Dockerfile --tag test-env-base "$baseDir"
   docker-compose --file "$baseDir"/docker-compose.yml --project-name "$ENV_NAME" build
 }
 

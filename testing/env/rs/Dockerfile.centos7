@@ -1,7 +1,5 @@
-FROM centos:7
-MAINTAINER Tony Edgin @ CyVerse
+FROM test-env-base
 
-COPY base/config.sh /tmp/base-config
 COPY rs/scripts/service.sh.template /tmp/
 COPY rs/scripts/prep-svc-script.sh /tmp/prep-svc-script
 
@@ -11,11 +9,7 @@ ARG IRODS_SYSTEM_USER=irods
 ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 
-RUN /tmp/base-config centos 7 && \
-    /tmp/prep-svc-script && \
-    rm --force  /tmp/*
+RUN /tmp/prep-svc-script && \
+    rm --force /tmp/*
 
-COPY base/entrypoint.sh /entrypoint
-
-ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/service.sh" ]

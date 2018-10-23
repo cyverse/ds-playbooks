@@ -64,6 +64,11 @@
                 - scheme https code 301
         haproxy_backend:
           - irods_single_conn:
+              options:
+                - tcp-check
+              tcp_check:
+                - 'send PING\n'
+                - 'expect string `<MsgHeader_PI>\n<type>RODS_VERSION</type>`'
               servers:
                 - "{{ ies_server }} {{ ies_ip }}:1247"
           - irods_extra_conn:

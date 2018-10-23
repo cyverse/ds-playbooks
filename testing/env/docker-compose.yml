@@ -7,6 +7,9 @@ services:
       context: .
       dockerfile: rabbitmq/Dockerfile
 
+  apache:
+    image: test-env-base
+
   dbms:
     build:
       context: .
@@ -49,6 +52,7 @@ services:
       context: .
       dockerfile: haproxy/Dockerfile
     depends_on:
+      - apache
       - ies_centos6
 
   rs_centos6:

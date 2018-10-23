@@ -19,5 +19,8 @@ dstesting_load_balancer_1.dstesting_default
 [rabbitmq]
 dstesting_amqp_1.dstesting_default
 
+[webdav]
+dstesting_apache_1.dstesting_default
+
 [unmanaged_systems]
 dstesting_amqp_1.dstesting_default

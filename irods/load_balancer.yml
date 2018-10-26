@@ -17,6 +17,7 @@
           - 1 0
         haproxy_global_nbproc: 1
         haproxy_global_tunes:
+          - spread-checks: 2
           - tune.ssl.default-dh-param: 2048
         haproxy_default_errorfiles: []
         haproxy_default_mode: tcp
@@ -66,21 +67,27 @@
           - irods_single_conn:
               options:
                 - tcp-check
+              servers:
+                - "{{ ies_server }} {{ ies_ip }}:1247 check inter 20s"
               tcp_checks:
                 - connect
-                - 'send PING\n'
+                - send-binary 0000006e
+                - send <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>216</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option></option></StartupPack_PI>
                 - 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>'
-              servers:
-                - "{{ ies_server }} {{ ies_ip }}:1247 check"
+                - send-binary 0000006f
+                - send <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
           - irods_extra_conn:
               options:
                 - tcp-check
+              servers:
+                - "{{ ies_server }} {{ ies_ip }}:1247 check inter 20s maxconn {{ _load_balancer_irods_extra_max_conn }}"
               tcp_checks:
                 - connect
-                - 'send PING\n'
+                - send-binary 0000006e
+                - send <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>216</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option></option></StartupPack_PI>
                 - 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>'
-              servers:
-                - "{{ ies_server }} {{ ies_ip }}:1247 check maxconn {{ _load_balancer_irods_extra_max_conn }}"
+                - send-binary 0000006f
+                - send <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
         haproxy_listen:
           - irods_reconn:
               binds:
@@ -91,7 +98,7 @@
               binds:
                 - :443
               options:
-                - httpchk HEAD /dav/iplant/commons/cyverse_curated
+                - httpchk OPTIONS /
               http_checks:
                 - expect status 200
               servers:

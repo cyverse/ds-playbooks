@@ -17,8 +17,8 @@
           - 1 0
         haproxy_global_nbproc: 1
         haproxy_global_tunes:
-          - tune.ssl.default-dh-param: 2048
           - spread-checks: 2
+          - tune.ssl.default-dh-param: 2048
         haproxy_default_errorfiles: []
         haproxy_default_mode: tcp
         haproxy_default_options:

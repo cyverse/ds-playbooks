@@ -53,7 +53,7 @@
                 - :{{ _load_balancer_irods_proxy_port }}
               stick_table: type ip size 100k store conn_cur
               tcp_requests:
-                - connection track-sc0 src
+                - connection track-sc0 src if !{ src {{ lookup('dig', _webdav_host) }} }
               use_backends:
                 - irods_extra_conn if { src_conn_cur ge 2 }
               default_backend: irods_single_conn

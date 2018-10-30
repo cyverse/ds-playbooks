@@ -1,0 +1,49 @@
+---
+- name: install WebDAV server
+  hosts: webdav
+  become: true
+  roles:
+    - role: geerlingguy.apache
+      vars:
+        apache_global_vhost_settings: |
+          LoadModule log_forensic_module_modules/mod_log_forensic.so
+          LoadModule unique_id_module modules/mod_unique_id.so
+
+          <IfModule log_forensic_module>
+            ForensicLog /var/log/httpd/forensic_log
+          </IfModule>
+
+          <IfModule log_config_module>
+            LogFormat "%h %t \"%r\" %>s %b %D %L %{forensic-id}n" forensic
+            CustomLog "logs/access_log" forensic
+          </IfModule>
+
+          CacheRoot {{ _webdav_cache_dir }}
+          CacheDirLevels 2
+          CacheDirLength 1
+          CacheMaxFileSize {{ _webdav_cache_max_file_size }}
+#  tasks:
+# TODO do the following
+# Prepare for caching and cache rotation
+# Set up TLS stuff
+# Update iptables
+
+    # - include_tasks: tasks/install_irods_pkg.yml
+    #   vars:
+    #     os: centos{{ ansible_distribution_major_version }}
+    #     pkg: irods-icommands
+    #     pkg_ver: "{{ _irods_version }}"
+    #
+    # - include_tasks: tasks/install_irods_pkg.yml
+    #   vars:
+    #     os: centos{{ ansible_distribution_major_version }}
+    #     pkg: irods-runtime
+    #     pkg_ver: "{{ _irods_version }}"
+    #
+    # - name: install davrods
+    #   yum:
+    #     name: https://github.com/UtrechtUniversity/davrods/releases/download/4.1_1.4.1/davrods-4.1_1.4.1-1.el7.centos.x86_64.rpm
+
+# TODO do the following
+# Update httpd vhost configuration to the way davrods.cyverse.org is currently
+# Update the iRODS environemt file.

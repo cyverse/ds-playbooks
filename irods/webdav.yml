@@ -25,7 +25,20 @@
       tags:
         - no_testing
 
-  tasks:
+  pre_tasks:
+    - include_tasks: tasks/install_irods_pkg.yml
+      vars:
+        os: centos{{ ansible_distribution_major_version }}
+        pkg: irods-icommands
+        pkg_ver: "{{ _irods_version }}"
+
+    - include_tasks: tasks/install_irods_pkg.yml
+      vars:
+        os: centos{{ ansible_distribution_major_version }}
+        pkg: irods-runtime
+        pkg_ver: "{{ _irods_version }}"
+
+  post_tasks:
     - name: configure htcacheclean
       template:
         src: templates/htcacheclean.j2
@@ -51,6 +64,14 @@
       tags:
         - no_testing
 
+    - name: install davrods
+      yum:
+        name: https://github.com/UtrechtUniversity/davrods/releases/download/4.1_1.4.1/davrods-4.1_1.4.1-1.el7.centos.x86_64.rpm
+      notify:
+        - restart apache
+      tags:
+        - no_testing
+
   handlers:
     - name: restart htcacheclean
       service:
@@ -58,26 +79,6 @@
         state: restarted
 
 # TODO do the following
-# Prepare for caching and cache rotation
-# Set up TLS stuff
-# Update iptables
-
-    # - include_tasks: tasks/install_irods_pkg.yml
-    #   vars:
-    #     os: centos{{ ansible_distribution_major_version }}
-    #     pkg: irods-icommands
-    #     pkg_ver: "{{ _irods_version }}"
-    #
-    # - include_tasks: tasks/install_irods_pkg.yml
-    #   vars:
-    #     os: centos{{ ansible_distribution_major_version }}
-    #     pkg: irods-runtime
-    #     pkg_ver: "{{ _irods_version }}"
-    #
-    # - name: install davrods
-    #   yum:
-    #     name: https://github.com/UtrechtUniversity/davrods/releases/download/4.1_1.4.1/davrods-4.1_1.4.1-1.el7.centos.x86_64.rpm
-
-# TODO do the following
 # Update httpd vhost configuration to the way davrods.cyverse.org is currently
 # Update the iRODS environemt file.
+# Update iptables

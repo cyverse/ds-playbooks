@@ -8,7 +8,9 @@ services:
       dockerfile: rabbitmq/Dockerfile
 
   apache:
-    image: test-env-base
+    build:
+      context: .
+      dockerfile: apache/Dockerfile
 
   dbms:
     build:

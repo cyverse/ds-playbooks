@@ -173,5 +173,3 @@ _webdav_cache_dir: "{{ webdav_cache_dir if webdav_cache_dir is defined else
 _webdav_cache_max_file_size: "{{
   webdav_cache_max_file_size if webdav_cache_max_file_size is defined else
   1000000 }}"
-
-_webdav_host: "{{ webdav_host if webdav_host is defined else 'localhost' }}"

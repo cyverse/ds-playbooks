@@ -95,7 +95,7 @@
               http_checks:
                 - expect status 200
               servers:
-                - webdav {{ lookup('dig', _webdav_host) }} check check-ssl verify none
+                - webdav {{ lookup('dig', groups['webdav'][0]) }} check check-ssl verify none
       notify:
         - reload haproxy
       tags:

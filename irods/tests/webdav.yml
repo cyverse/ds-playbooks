@@ -3,20 +3,22 @@
   hosts: webdav
   become: true
   tasks:
-    - include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: httpd
+    - name: test create apache systemd service dependencies directory
+      stat:
+        path: /etc/systemd/system/httpd.service.requires
+      register: response
+      failed_when: not (response.stat.exists and response.stat.isdir)
 
-    - include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: irods-icommands
-        version: '4.1.10'
-
-    - include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: irods-runtime
-        version: '4.1.10'
-
-    - include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: davrods
+    # - include_tasks: tasks/test_pkg_installed.yml
+    #   vars:
+    #     pkg: irods-icommands
+    #     version: '4.1.10'
+    #
+    # - include_tasks: tasks/test_pkg_installed.yml
+    #   vars:
+    #     pkg: irods-runtime
+    #     version: '4.1.10'
+    #
+    # - include_tasks: tasks/test_pkg_installed.yml
+    #   vars:
+    #     pkg: davrods

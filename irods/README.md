@@ -79,6 +79,7 @@ Variable                                   | Default                            
 `sysctl_kernel`                            | `[]`                                 |         | a list of sysctl kernel parameters to set for the IES, _see_below_
 `webdav_cache_dir`                         | `/var/cache/httpd/proxy`             |         | the directory apache will use for the WebDAV cache
 `webdav_cache_max_file_size`               | 1000000                              |         | the maximum size in bytes of the largest WebDAV file apache will cache
+`webdav_cache_size`                        | 100                                  |         | the maximum size in megabytes the cache can be
 
 The `restart_irods` flag is ignored in the `main.yml` playbook.
 

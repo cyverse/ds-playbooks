@@ -22,7 +22,41 @@
           CacheDirLevels 2
           CacheDirLength 1
           CacheMaxFileSize {{ _webdav_cache_max_file_size }}
-#  tasks:
+      tags:
+        - no_testing
+
+  tasks:
+    - name: configure htcacheclean
+      template:
+        src: templates/htcacheclean.j2
+        dest: /etc/sysconfig/htcacheclean
+      notify:
+        - restart htcacheclean
+      tags:
+        - no_testing
+
+    - name: create apache systemd service dependencies directory
+      file:
+        path: /etc/systemd/system/httpd.service.requires
+        recurse: true
+        state: directory
+
+    - name: ensure htcacheclean runs when apache run
+      file:
+        path: /etc/systemd/system/httpd.service.requires
+        src: /usr/lib/systemd/system/htcacheclean.service
+        state: link
+      notify:
+        - restart apache
+      tags:
+        - no_testing
+
+  handlers:
+    - name: restart htcacheclean
+      service:
+        name: htcacheclean
+        state: restarted
+
 # TODO do the following
 # Prepare for caching and cache rotation
 # Set up TLS stuff

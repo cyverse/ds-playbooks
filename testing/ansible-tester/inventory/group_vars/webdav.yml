@@ -1,3 +1,4 @@
 ---
 webdav_cache_dir: /cache_vol
 webdav_cache_max_file_size: 500000
+webdav_cache_size: 500

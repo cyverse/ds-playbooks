@@ -5,23 +5,48 @@
   roles:
     - role: geerlingguy.apache
       vars:
-        apache_global_vhost_settings: |
-          LoadModule log_forensic_module_modules/mod_log_forensic.so
-          LoadModule unique_id_module modules/mod_unique_id.so
-
-          <IfModule log_forensic_module>
-            ForensicLog /var/log/httpd/forensic_log
-          </IfModule>
-
-          <IfModule log_config_module>
-            LogFormat "%h %t \"%r\" %>s %b %D %L %{forensic-id}n" forensic
-            CustomLog "logs/access_log" forensic
-          </IfModule>
-
-          CacheRoot {{ _webdav_cache_dir }}
-          CacheDirLevels 2
-          CacheDirLength 1
-          CacheMaxFileSize {{ _webdav_cache_max_file_size }}
+        apache_ssl_cipher_suite: "HIGH:3DES:!aNULL:!MD5:!SEED:!IDEA"
+        apache_vhosts_ssl:
+          - servername: "{{ inventory_hostname }}"
+            certificate_file: "{{ _webdav_tls_cert_file }}"
+            certificate_key_file: "{{ _webdav_tls_key_file }}"
+            certificate_chain_file: "{{ _webdav_tls_chain_file }}"
+            locations:
+              - dav_zone_location: commons/community_released
+                irods_zone_root: home/shared
+                location_redirect:
+                  from: commons_repo/curated
+                  to: commons/cyverse_curated
+                authenticated: false
+                client_cache_expire: 604800
+                server_cache_default_expire: 2592000
+                server_cache_max_expire: 31536000
+                davrods_html_head: community-head.html
+              - dav_zone_location: commons/cyverse_curated
+                irods_zone_root: home/shared/commons_repo/curated
+                authenticated: false
+                client_cache_expire: 604800
+                server_cache_default_expire: 2592000
+                server_cache_max_expire: 31536000
+                davrods_html_head: curated-head.html
+              - dav_zone_location: home
+                irods_zone_root: home
+                location_redirect:
+                  from: shared
+                  to: projects
+                authenticated: true
+                client_cache_expire: 86400
+                server_cache_default_expire: 604800
+                server_cache_max_expire: 2592000
+                davrods_html_head: home-head.html
+              - dav_zone_location: projects
+                irods_zone_root: projects
+                authenticated: true
+                client_cache_expire: 86400
+                server_cache_default_expire: 604800
+                server_cache_max_expire: 2592000
+                davrods_html_head: projects-head.html
+        apache_vhosts_template: ../../templates/vhosts.conf.j2
       tags:
         - no_testing
 

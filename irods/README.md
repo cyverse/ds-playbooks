@@ -22,6 +22,7 @@ Variable                                   | Default                            
 `bisque_projects`                          | `[]`                                 |         | A list of projects that automatically publish to BisQue
 `bisque_url`                               |                                      |         | The URL for the BisQue server to connect to
 `bisque_user`                              | admin                                |         | The user to connect to BisQue as
+`canonical_hostname`                       | `irods_ies`                          |         | The external FQDN used to access the data store services
 `dbms_password`                            | irods                                |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `dbms_port`                                | 5432                                 |         | The TCP port the DBMS listens on.
 `dbms_username`                            | irods                                |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.
@@ -80,6 +81,9 @@ Variable                                   | Default                            
 `webdav_cache_dir`                         | `/var/cache/httpd/proxy`             |         | the directory apache will use for the WebDAV cache
 `webdav_cache_max_file_size`               | 1000000                              |         | the maximum size in bytes of the largest WebDAV file apache will cache
 `webdav_cache_size`                        | 100                                  |         | the maximum size in megabytes the cache can be
+`webdav_tls_cert_file`                     | `/etc/ssl/certs/dummy.crt`           |         | The TLS certificate file used for encrypted communication
+`weddav_tls_chain_file`                    | `/etc/ssl/certs/dummy-chain.crt`     |         | The TLS certificate chain file used for encrypted communication
+`webdav_tls_key_file`                      | `/etc/ssl/certs/dummy.key`           |         | The TLS key file used for encrypted communication
 
 The `restart_irods` flag is ignored in the `main.yml` playbook.
 

@@ -11,6 +11,8 @@ _bisque_url: "{{ bisque_url if bisque_url is defined else None }}"
 
 _bisque_user: "{{ bisque_user if bisque_user is defined else 'admin' }}"
 
+_canonical_hostname: "{{ canonical_hostname if canonical_hostname is defined else _irods_ies }}"
+
 _dbms_password: "{{ dbms_password if dbms_password is defined else None }}"
 
 _dbms_port: "{{ dbms_port if dbms_port is defined else 5432 }}"
@@ -175,3 +177,12 @@ _webdav_cache_max_file_size: "{{
   1000000 }}"
 
 _webdav_cache_size: "{{ webdav_cache_size if webdav_cache_size is defined else 100 }}"
+
+_webdav_tls_cert_file: "{{ webdav_tls_cert_file if webdav_tls_cert_file is defined else
+                           '/etc/ssl/certs/dummy.crt' }}"
+
+_webdav_tls_chain_file: "{{ webdav_tls_chain_file if webdav_tls_chain_file is defined else
+                            '/etc/ssl/certs/dummy-chain.crt' }}"
+
+_webdav_tls_key_file: "{{ webdav_tls_key_file if webdav_tls_key_file is defined else
+                          '/etc/ssl/certs/dummy.key' }}"

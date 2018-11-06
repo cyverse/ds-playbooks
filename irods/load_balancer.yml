@@ -157,15 +157,10 @@
       tags:
         - no_testing
 
-  post_tasks:
     - name: install VIP list
       template:
         src: templates/vip.lst.j2
         dest: /etc/haproxy/vip.lst
-      notify:
-        - reload haproxy
-      tags:
-        - no_testing
 
   handlers:
     - name: reload haproxy

@@ -30,7 +30,7 @@
           - connect 10s
           - client 1d
           - client-fin 2m
-          - queue 10m
+          - queue 2m
           - server 1d
           - server-fin 2m
         haproxy_stats: true

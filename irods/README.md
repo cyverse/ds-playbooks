@@ -58,6 +58,7 @@ Variable                                   | Default                            
 `load_balancer_irods_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS through the load balancer.
 `load_balancer_irods_estra_max_conn`       | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer for connections coming from jobs.
 `load_balancer_irods_proxy_port`           | 1247                                 |         | The port the load balancer will listen on for connections to iRODS.
+`load_balancer_irods_vip_srcs`             | `[]`                                           | A list of IP address ranges that aren't considered for queuing.
 `load_balancer_stats_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for hosts allowed to see the HAProxy stats web page.
 `load_balancer_stats_certificate`          | /etc/haproxy/certs/stats.pem         |         | The TLS certificate used by the stats endpoint
 `load_balancer_stats_password`             | B1Gp4sSw0rD!!                        |         | The password used to authetnicate access to the stats service

@@ -51,6 +51,7 @@
           - irods_main:
               binds:
                 - :{{ _load_balancer_irods_proxy_port }}
+              rate_limit_sessions: 10
               stick_table: type ip size 100k store conn_cur
               acls:
                 - vip-src src -f /etc/haproxy/vip.lst
@@ -70,7 +71,7 @@
               options:
                 - tcp-check
               servers:
-                - "{{ ies_server }} {{ ies_ip }}:1247 check inter 20s"
+                - "{{ ies_server }} {{ ies_ip }}:1247 check inter 20s maxconn"
               tcp_checks:
                 - connect
                 - send-binary 0000006e

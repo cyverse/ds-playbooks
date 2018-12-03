@@ -1,0 +1,57 @@
+{% import 'location.j2' as location %}
+# The virtual hosts for the Data Store WebDAV server
+
+{{ apache_global_vhost_settings | default('') | trim }}
+{# Set up HTTP virtual hosts #}
+{% for vhost in apache_vhosts | default([]) %}
+
+{%   if vhost.comment is defined %}
+# {{ vhost.comment | wordwrap(78, True, '\n# ') }}
+{%   endif %}
+<VirtualHost {{ vhost.listen_ip | default(apache_listen_ip) }}:{{ apache_listen_port }}>
+  ServerName {{ vhost.servername }}
+{%   if vhost.extra_parameters is defined %}
+
+  {{ vhost.extra_parameters | trim | indent(2) }}
+{%   endif %}
+{%   for loc in vhost.locations | default([]) %}
+
+  {{ location.mk(loc) | indent(2) }}
+{%   endfor %}
+</VirtualHost>
+{% endfor -%}
+
+{# Set up SSL VirtualHosts #}
+{% for vhost in apache_vhosts_ssl | default([]) %}
+
+{%   if apache_ignore_missing_ssl_certificate
+     or apache_ssl_certificates.results[loop.index0].stat.exists %}
+{%     if vhost.comment is defined %}
+# {{ vhost.comment | wordwrap(78, True, '\n# ') }}
+{%     endif %}
+<VirtualHost {{ vhost.listen_ip | default(apache_listen_ip) }}:{{ apache_listen_port_ssl }}>
+  ServerName {{ vhost.servername }}
+
+  SSLEngine on
+  SSLProtocol {{ apache_ssl_protocol }}
+  SSLCipherSuite {{ apache_ssl_cipher_suite }}
+  SSLHonorCipherOrder On
+{%     if apache_vhosts_version == "2.4" %}
+  SSLCompression off
+{%     endif %}
+  SSLCertificateFile {{ vhost.certificate_file }}
+  SSLCertificateKeyFile {{ vhost.certificate_key_file }}
+{%     if vhost.certificate_chain_file is defined %}
+  SSLCertificateChainFile {{ vhost.certificate_chain_file }}
+{%     endif %}
+{%     if vhost.extra_parameters is defined %}
+
+  {{ vhost.extra_parameters | trim | indent(2) }}
+{%     endif %}
+{%     for loc in vhost.locations | default([]) %}
+
+  {{ location.mk(loc) | indent(2) }}
+{%     endfor %}
+</VirtualHost>
+{%   endif %}
+{% endfor %}

@@ -6,47 +6,193 @@
     - role: geerlingguy.apache
       vars:
         apache_ssl_cipher_suite: "HIGH:3DES:!aNULL:!MD5:!SEED:!IDEA"
+        apache_global_vhost_settings: |
+          LoadModule log_forensic_module_modules/mod_log_forensic.so
+          LoadModule proxy_html_module modules/mod_proxy_html.so
+          LoadModule unique_id_module modules/mod_unique_id.so
+
+          ForensicLog "logs/forensic_log"
+
+          CacheRoot {{ _webdav_cache_dir }}
+          CacheDirLevels 2
+          CacheDirLength 1
+          CacheMaxFileSize {{ _webdav_cache_max_file_size }}
+        apache_vhosts:
+          - servername: "{{ inventory_hostname }}"
+            extra_parameters: |
+              Redirect permanent / https://{{ inventory_hostname }}/
+            comment: Redirect HTTP to HTTPS
+          - servername: 127.0.0.1
+            listen_ip: 127.0.0.1
+            extra_parameters: |
+              CacheQuickHandler off
+              CacheEnable disk /dav
+              CacheLock on
+              CacheLockPath /tmp/mod_cache-lock
+              CacheLockMaxAge 5
+              CacheHeader on
+              CacheIgnoreHeaders Set-Cookie
+              CacheLastModifiedFactor 0.5
+
+              ExpiresActive on
+
+              Header merge Cache-Control public
+              Header set Access-Control-Allow-Headers "Range"
+              Header set Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+              Header set Access-Control-Allow-Origin "*"
+            comment: The WebDAV host
+            locations:
+              - path: /dav/{{ _irods_zone_name }}/commons/community_released
+                comment: Anonymous read-only access to the community released data
+                extra_parameters: |
+                  RedirectPermanent \
+                    /dav/{{ _irods_zone_name }}/commons/community_released/commons_repo/curated \
+                    /dav/{{ _irods_zone_name }}/commons/cyverse_curated
+
+                  DirectoryIndex disabled
+
+                  AuthType None
+
+                  Require all granted
+
+                  Dav davrods-nolocks
+
+                  DavRodsEnvFile /etc/httpd/irods/irods_environment.json
+                  DavRodsServer {{ _canonical_hostname }} {{ _canonical_irods_port }}
+                  DavRodsZone {{ _irods_zone_name }}
+                  DavRodsAnonymousMode On
+                  DavRodsAnonymousLogin "anonymous" ""
+                  DavRodsExposedRoot /{{ _irods_zone_name }}/home/shared
+                  DavRodsRxBufferKbs 32768
+                  DavRodsHtmlHead /etc/httpd/irods/community-head.html
+
+                  CacheDefaultExpire 2592000
+                  CacheMaxExpire 31536000
+
+                  ExpiresDefault "access plus 10080 minutes"
+              - path: /dav/{{ _irods_zone_name }}/commons/cyverse_curated
+                comment: Anonymous read-only access to the data curated by CyVerse
+                extra_parameters: |
+                  DirectoryIndex disabled
+
+                  AuthType None
+
+                  Require all granted
+
+                  Dav davrods-nolocks
+
+                  DavRodsEnvFile /etc/httpd/irods/irods_environment.json
+                  DavRodsServer {{ _canonical_hostname }} {{ _canonical_irods_port }}
+                  DavRodsZone {{ _irods_zone_name }}
+                  DavRodsAnonymousMode On
+                  DavRodsAnonymousLogin "anonymous" ""
+                  DavRodsExposedRoot /{{ _irods_zone_name }}/home/shared/commons_repo/curated
+                  DavRodsRxBufferKbs 32768
+                  DavRodsHtmlHead /etc/httpd/irods/curated-head.html
+
+                  CacheDefaultExpire 2592000
+                  CacheMaxExpire 31536000
+
+                  ExpiresDefault "access plus 10080 minutes"
+              - path: /dav/{{ _irods_zone_name }}/home
+                comment: Authenticated read-write access to the home collection
+                extra_parameters: |
+                  RedirectPermanent /dav/{{ _irods_zone_name }}/home/shared \
+                                    /dav/{{ _irods_zone_name }}/projects
+
+                  <RequireAll)
+                    Require expr \
+                      %{REQUEST_URI} !~ m#^/dav/{{ _irods_zone_name }}/home(/[^/]*/?)?$# \
+                      || %{REMOTE_USER} != "anonymous"
+
+                    Require valid-user
+                  </RequireAll>
+
+                  DirectoryIndex disabled
+
+                  AuthType Basic
+                  AuthName CyVerse
+                  AuthBasicProvider irods
+
+                  Dav davrods-locallock
+
+                  DavDepthInfinity on
+                  DavRodsEnvFile /etc/httpd/irods/irods_environment.json
+                  DavRodsServer {{ _canonical_hostname }} {{ _canonical_irods_port }}
+                  DavRodsZone {{ _irods_zone_name }}
+                  DavRodsExposedRoot Home
+                  DavRodsHtmlHead /etc/httpd/irods/home-head.html
+
+                  CacheDefaultExpire 604800
+                  CacheMaxExpire 2592000
+
+                  ExpiresDefault "access plus 1440 minutes"
+              - path: /dav/{{ _irods_zone_name }}/projects
+                comment: Authenticated read-write access to the project folders
+                extra_parameters: |
+                  DirectoryIndex disabled
+
+                  AuthType Basic
+                  AuthName CyVerse
+                  AuthBasicProvider irods
+
+                  Dav davrods-locallock
+
+                  DavDepthInfinity on
+                  DavRodsEnvFile /etc/httpd/irods/irods_environment.json
+                  DavRodsServer {{ _canonical_hostname }} {{ _canonical_irods_port }}
+                  DavRodsZone {{ _irods_zone_name }}
+                  DavRodsExposedRoot /{{ _irods_zone_name }}/home/shared
+                  DavRodsHtmlHead /etc/httpd/irods/projects-head.html
+
+                  CacheDefaultExpire 604800
+                  CacheMaxExpire 2592000
+
+                  ExpiresDefault "access plus 1440 minutes"
         apache_vhosts_ssl:
           - servername: "{{ inventory_hostname }}"
             certificate_file: "{{ _webdav_tls_cert_file }}"
             certificate_key_file: "{{ _webdav_tls_key_file }}"
             certificate_chain_file: "{{ _webdav_tls_chain_file }}"
+            extra_parameters: |
+              ErrorLog logs/ssl_error_log
+
+              CustomLog logs/ssl_access_log forensic
+              CustomLog logs/ssl_request_log "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b %{forensic-id}n"
+
+              LogLevel warn
+
+              BrowserMatch "MSIE [2-5]" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0
+
+              <If "%{HTTP:Range} == 'bytes=0-'">
+                # Remove the range header if requesting the whole file so that the response will
+                # still be cached.
+                RequestHeader unset Range
+              </If>
+              <Elseif "-n %{HTTP:Range}">
+                # To prevent davrods from crashing, tell it not to cache partial responses
+                RequestHeader merge Cache-Control no-store
+              </Elseif>
+
+              ProxyPreserveHost On
+              ProxyHTMLEnable On
+              ProxyHTMLLinks a href
+              ProxyHTMLLinks base href
+            comment: This proxy handles TLS, corrects requests, enables caching, and anonymous access for XMLHttpRequests
             locations:
-              - dav_zone_location: commons/community_released
-                irods_zone_root: home/shared
-                location_redirect:
-                  from: commons_repo/curated
-                  to: commons/cyverse_curated
-                authenticated: false
-                client_cache_expire: 604800
-                server_cache_default_expire: 2592000
-                server_cache_max_expire: 31536000
-                davrods_html_head: community-head.html
-              - dav_zone_location: commons/cyverse_curated
-                irods_zone_root: home/shared/commons_repo/curated
-                authenticated: false
-                client_cache_expire: 604800
-                server_cache_default_expire: 2592000
-                server_cache_max_expire: 31536000
-                davrods_html_head: curated-head.html
-              - dav_zone_location: home
-                irods_zone_root: home
-                location_redirect:
-                  from: shared
-                  to: projects
-                authenticated: true
-                client_cache_expire: 86400
-                server_cache_default_expire: 604800
-                server_cache_max_expire: 2592000
-                davrods_html_head: home-head.html
-              - dav_zone_location: projects
-                irods_zone_root: projects
-                authenticated: true
-                client_cache_expire: 86400
-                server_cache_default_expire: 604800
-                server_cache_max_expire: 2592000
-                davrods_html_head: projects-head.html
-        apache_vhosts_template: ../../templates/vhosts.conf.j2
+              - path: /dav
+                extra_parameters: |
+                  ProxyPass http://127.0.0.1:{{ apache_listen_port }}/dav
+                  ProxyPassReverse http://127.0.0.1:{{ apache_listen_port }}/dav
+              - path: /dav-anon
+                extra_parameters: |
+                  # The base64 encoding of anonymous is YW5vbnltb3Vz
+                  RequestHeader set Authorization "Basic YW5vbnltb3Vz"
+
+                  ProxyPass http://127.0.0.1:{{ apache_listen_port }}/dav
+                  ProxyPassReverse http://127.0.0.1:{{ apache_listen_port }}/dav
+                  ProxyHTMLURLMap '^(.*)/dav $1/dav-anon [R]'
+        apache_vhosts_template: ../../templates/webdav/vhosts.conf.j2
       tags:
         - no_testing
 
@@ -66,7 +212,7 @@
   post_tasks:
     - name: configure htcacheclean
       template:
-        src: templates/htcacheclean.j2
+        src: templates/webdav/htcacheclean.j2
         dest: /etc/sysconfig/htcacheclean
       notify:
         - restart htcacheclean
@@ -104,6 +250,5 @@
         state: restarted
 
 # TODO do the following
-# Update httpd vhost configuration to the way davrods.cyverse.org is currently
 # Update the iRODS environemt file.
 # Update iptables

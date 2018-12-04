@@ -36,7 +36,7 @@
       command: /tmp/irods-netcdf-build/build
 
     - include_tasks: install_netcdf_plugin.yml
-      args:
+      vars:
         plugin: "{{ item }}"
         rpm: "{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm"
       with_items:

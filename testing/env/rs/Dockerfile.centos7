@@ -1,5 +1,4 @@
 FROM centos:7
-MAINTAINER Tony Edgin @ CyVerse
 
 COPY base/config.sh /tmp/base-config
 COPY rs/scripts/service.sh.template /tmp/
@@ -12,8 +11,10 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 
 RUN /tmp/base-config centos 7 && \
+    yum install --assumeyes jq && \
     /tmp/prep-svc-script && \
-    rm --force  /tmp/*
+    yum clean all && \
+    rm --force --recursive /tmp/* /var/cache/yum
 
 COPY base/entrypoint.sh /entrypoint
 

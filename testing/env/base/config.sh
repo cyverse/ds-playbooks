@@ -67,6 +67,8 @@ install_centos_packages()
   local version="$1"
 
   rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
+  yum --assumeyes install epel-release
+  rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
   yum --assumeyes install openssh-server sudo
 }
 

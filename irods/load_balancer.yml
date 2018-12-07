@@ -51,7 +51,7 @@
           - irods_main:
               binds:
                 - :{{ _load_balancer_irods_proxy_port }}
-              rate_limit_sessions: 10
+              rate_limit_sessions: 18
               stick_table: type ip size 100k store conn_cur
               acls:
                 - vip-src src -f /etc/haproxy/vip.lst

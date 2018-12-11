@@ -33,7 +33,7 @@ _irods_allowed_clients: "{{ irods_allowed_src if irods_allowed_src is defined el
 _irods_clerver_password: "{{ irods_clerver_password if irods_clerver_password is defined else
                              'rods' }}"
 
-_irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else None }}"
+_irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else 'rods' }}"
 
 _irods_default_dir_mode: "{{ irods_default_dir_mode if irods_default_dir_mode is defined else
                              '0750' }}"
@@ -120,7 +120,7 @@ _load_balancer_irods_proxy_port: "{{
 _load_balancer_irods_vip_srcs: "{{
   load_balancer_irods_vip_srcs if load_balancer_irods_vip_srcs is defined else
   [] }}"
-  
+
 _load_balancer_stats_allowed_src: "{{
   load_balancer_stats_allowed_src if load_balancer_stats_allowed_src is defined else
   '0.0.0.0/0' }}"

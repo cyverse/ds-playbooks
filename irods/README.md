@@ -16,7 +16,7 @@ None of these variables are required.
 
 Variable                                   | Default                              | Choices | Comments
 ------------------------------------------ | ------------------------------------ | ------- | --------
-`become_svc_acnt`                          | true                                           | whether or not to perform actions normally performed by the service account as the service account
+`become_svc_acnt`                          | true                                 |         | whether or not to perform actions normally performed by the service account as the service account
 `bisque_irods_host`                        | `irods_ies`                          |         | The iRODS host to report to BisQue.
 `bisque_password`                          | admin                                |         | The password used to authenticate connections to BisQue
 `bisque_projects`                          | `[]`                                 |         | A list of projects that automatically publish to BisQue

@@ -5,6 +5,7 @@
   become_user: irods
   vars:
     expected_resources:
+      - avra
       - bundleResc
       - pire
       - rs_centos6

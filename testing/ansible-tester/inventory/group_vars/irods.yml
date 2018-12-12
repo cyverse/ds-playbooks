@@ -1,4 +1,14 @@
 ---
+avra_base_collection: /testing/home/shared/avra
+
+avra_manager: avra_mgr
+
+avra_resource_hierarchy:
+  name: avraRes
+  type: passthru
+  children:
+    - name: avra
+
 de_job_irods_user: de_job
 
 irods_calliope_project_coll: /testing/home/shared/calliope

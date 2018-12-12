@@ -1,0 +1,24 @@
+---
+- import_playbook: mk_storage_resources.yml
+
+
+- name: test Configure IES for Avra
+  hosts: ies
+  become: true
+  become_user: irods
+  run_once: true
+  tasks:
+    - name: test make Avra resource hierarchy
+      shell: |
+        printf -v expHier 'avraRes:passthru\n└── avra'
+        actHier=$(ilsresc avraRes)
+        [ "$actHier" = "$expHier" ]
+      changed_when: false
+
+    - name: test create project collection
+      shell: ils /testing/home/shared/avra &> /dev/null
+      changed_when: false
+
+    - name: verify that project collection has correct owner
+      shell: ils -A /testing/home/shared/avra | sed --quiet 2p | grep --quiet avra_mgr#testing:own
+      changed_when: false

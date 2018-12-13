@@ -18,9 +18,14 @@
 
 
 - name: test install required packages for ansible
-  hosts: localhost
+  hosts: all:!unmanaged_systems
+  become: true
   gather_facts: false
-  run_once: true
   tasks:
-    - debug:
+    - name: test install EPEL repository on CentOS machines
+      debug:
+        msg: TODO implement
+
+    - name: test install packages
+      debug:
         msg: TODO implement

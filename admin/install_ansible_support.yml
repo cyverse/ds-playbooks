@@ -14,13 +14,21 @@
   hosts: all:!unmanaged_systems
   become: true
   tasks:
+    - name: install EPEL repository on CentOS machines
+      when: ansible_distribution == 'CentOS'
+      package:
+        name: epel-release
+        state: present
+
     - name: install packages
       package:
         name: "{{ item }}"
         state: present
       with_items:
         - jq
-        - python-pip
+        - "{{ 'python2-pip' if ansible_distribution == 'CentOS'
+                            and ansible_distribution_version is version ('7', '>=') else
+              'python-pip' }}"
         - python-requests
         - python-virtualenv
         - "{{ 'python-selinux' if ansible_distribution == 'Debian' else 'libselinux-python' }}"

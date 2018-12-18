@@ -12,6 +12,7 @@ insert into R_USER_MAIN values (9002,'public','rodsgroup','ZONE_NAME_TEMPLATE','
 
 /* users */
 insert into R_USER_MAIN values (9010,'ADMIN_NAME_TEMPLATE','rodsadmin','ZONE_NAME_TEMPLATE','','','1170000000','1170000000');
+insert into R_USER_MAIN values (9011,'avra_mgr','rodsuser','ZONE_NAME_TEMPLATE','','Avra project manager','1170000000','1170000000');
 
 /* group membership */
 insert into R_USER_GROUP values (9001,9010,'1170000000','1170000000');

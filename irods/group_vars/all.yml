@@ -1,4 +1,11 @@
 ---
+_avra_base_collection: "{{ avra_base_collection if avra_base_collection is defined else None }}"
+
+_avra_manager: "{{ avra_manager if avra_manager is defined else _irods_clerver_user }}"
+
+_avra_resource_hierarchy: "{{ avra_resource_hierarchy if avra_resource_hierarchy is defined else
+                              _irods_resource_hierarchies[0] }}"
+
 _become_svc_acnt: "{{ become_svc_acnt if become_svc_acnt is defined else true }}
 "
 _bisque_irods_host: "{{ bisque_irods_host if bisque_irods_host is defined else _irods_ies }}"

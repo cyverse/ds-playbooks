@@ -7,6 +7,10 @@ irods_host_aliases:
   - alias-2
 
 irods_storage_resources:
+  - name: avra
+    vault: /var/lib/irods/avra_vault
+    context: minimum_free_space_for_create_in_bytes=1048576
+
   - name: pire
     vault: /var/lib/irods/pire_vault
     context: minimum_free_space_for_create_in_bytes=1048576

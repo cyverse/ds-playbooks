@@ -1,0 +1,26 @@
+---
+- import_playbook: mk_storage_resources.yml
+
+
+- name: Configure IES for Avra
+  hosts: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  run_once: true
+  tasks:
+    - when: _avra_base_collection != ''
+      block:
+        - name: create avra resource
+          irods_resource_hierarchy:
+            hierarchy: "{{ _avra_resource_hierarchy }}"
+
+        - name: create project collection
+          irods_collection:
+            path: "{{ _avra_base_collection }}"
+            parents: true
+
+        - name: assign owner to project collection
+          irods_permission:
+            subject: "{{ _avra_manager }}"
+            permission: own
+            object: "{{ _avra_base_collection }}"

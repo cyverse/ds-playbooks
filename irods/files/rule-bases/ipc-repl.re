@@ -258,6 +258,8 @@ replCopy {
   on (aegis_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
   }
+  on (avra_replBelongsTo(/$objPath)) {
+  }
   on (de_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, de_replIngestResc, de_replReplResc);
   }
@@ -283,6 +285,11 @@ replEntityRename(*SourceObject, *DestObject) {
       _scheduleMoves(*DestObject, aegis_replIngestResc, aegis_replReplResc);
     }
   }
+  on (avra_replBelongsTo(/*DestObject)) {
+    if (!avra_replBelongsTo(/*SourceObject)) {
+      _scheduleMoves(*DestObject, avra_replIngestResc, avra_replReplResc);
+    }
+  }
   on (de_replBelongsTo(/*DestObject)) {
   }
   on (pire_replBelongsTo(/*DestObject)) {
@@ -293,6 +300,9 @@ replEntityRename(*SourceObject, *DestObject) {
 }
 replEntityRename(*SourceObject, *DestObject) {
   if (aegis_replBelongsTo(/*SourceObject)) {
+    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
+  }
+  if (avra_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
   if (pire_replBelongsTo(/*SourceObject)) {
@@ -306,6 +316,8 @@ replEntityRename(*SourceObject, *DestObject) {
 replPut {
   on (aegis_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
+  }
+  on (avra_replBelongsTo(/$objPath)) {
   }
   on (de_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, de_replIngestResc, de_replReplResc);
@@ -325,6 +337,9 @@ replSetRescSchemeForCreate {
   on (aegis_replBelongsTo(/$objPath)) {
     _setDefaultResc(aegis_replIngestResc);
   }
+  on (avra_replBelongsTo(/$objPath)) {
+    _setDefaultResc(avra_replIngestResc);
+  }
   on (de_replBelongsTo(/$objPath)) {
     _setDefaultResc(de_replIngestResc);
   }
@@ -343,6 +358,9 @@ replSetRescSchemeForCreate {
 replSetRescSchemeForRepl {
   on (aegis_replBelongsTo(/$objPath)) {
     _setDefaultResc(aegis_replReplResc);
+  }
+  on (avra_replBelongsTo(/$objPath)) {
+    _setDefaultResc(avra_replReplResc);
   }
   on (de_replBelongsTo(/$objPath)) {
     _setDefaultResc(de_replReplResc);

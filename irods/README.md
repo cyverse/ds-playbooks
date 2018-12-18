@@ -16,6 +16,9 @@ None of these variables are required.
 
 Variable                                   | Default                              | Choices | Comments
 ------------------------------------------ | ------------------------------------ | ------- | --------
+`avra_base_collection`                     |                                      |         | The base collection for the Avra project. If it isn't present no Avra rules will fire.
+`avra_manager`                             | `irods_clerver_user`                 |         | The iRODS user who is responsible for Avra data.
+`avra_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the Avra project
 `become_svc_acnt`                          | true                                 |         | whether or not to perform actions normally performed by the service account as the service account
 `bisque_irods_host`                        | `irods_ies`                          |         | The iRODS host to report to BisQue.
 `bisque_password`                          | admin                                |         | The password used to authenticate connections to BisQue
@@ -65,7 +68,7 @@ Variable                                   | Default                            
 `load_balancer_stats_port`                 | 81                                   |         | The TCP port used to retrieve HAProxy stats
 `load_balancer_stats_user`                 | haproxy-stats                        |         | The user to authenticate as to access the stats service
 `pire_quota`                               | 0                                    |         | The quota for the PIRE project. A `0` means no quota.
-`pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource server used by the PIRE project
+`pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
 `rabbitmq_ephemeral`                       | `true`                               |         | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
 `rabbitmq_password`                        | guest                                |         | The password iRODS uses to connect to the AMQP vhost
 `rabbitmq_port`                            | 5672                                 |         | The TCP port the RabbitMQ broker listens on

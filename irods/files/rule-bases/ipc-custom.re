@@ -27,6 +27,7 @@
 # hook that will call the custome rule.
 
 @include 'aegis'
+@include 'avra'
 @include 'bisque'
 @include 'calliope'
 @include 'coge'

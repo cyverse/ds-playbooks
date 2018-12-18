@@ -22,7 +22,7 @@
   become: true
   gather_facts: false
   tasks:
-    - name: test install EPEL repo
+    - name: test install EPEL repository on CentOS machines
       debug:
         msg: TODO implement
 

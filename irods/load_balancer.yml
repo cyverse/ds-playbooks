@@ -30,7 +30,7 @@
           - connect 10s
           - client 1d
           - client-fin 2m
-          - queue 5m
+          - queue {{ _load_balancer_queue_timeout }}s
           - server 1d
           - server-fin 2m
         haproxy_stats: true

@@ -71,7 +71,7 @@
               options:
                 - tcp-check
               servers:
-                - "{{ ies_server }} {{ ies_ip }}:1247 check inter 20s maxconn 200"
+                - "{{ ies_server }} {{ ies_ip }}:1247 check inter 20s maxconn {{ _load_balancer_irods_single_max_conn }}"
               tcp_checks:
                 - connect
                 - send-binary 0000006e

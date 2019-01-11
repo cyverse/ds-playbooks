@@ -32,10 +32,14 @@
         haproxy_default_timeouts:
           - connect 10s
           - client 1d
-          - client-fin 2m
           - queue {{ _load_balancer_queue_timeout }}s
           - server 1d
-          - server-fin 2m
+
+# client-fin and server-fin need to be less than conntrack's TCP FIN_WAIT
+# timeout, usually 2m.
+          - client-fin 1m
+          - server-fin 1m
+
         haproxy_stats: true
         haproxy_stats_address: '*'
 
@@ -43,6 +47,7 @@
 # 2d0213a2c5b3ef10d2e4abea9ac29e19611e0090 (2017/06/06), there is no support for
 # having the stats endpoint use HTTPS. This hack works around this limitation.
         haproxy_stats_port: "{{ _load_balancer_stats_port }} ssl crt {{ _load_balancer_stats_certificate }}"
+
         haproxy_stats_user: "{{ _load_balancer_stats_user }}"
         haproxy_stats_password: "{{ _load_balancer_stats_password }}"
         haproxy_stats_uri: /

@@ -11,6 +11,8 @@ _bisque_url: "{{ bisque_url if bisque_url is defined else None }}"
 
 _bisque_user: "{{ bisque_user if bisque_user is defined else 'admin' }}"
 
+_build_dir: "{{ build_dir if build_dir is defined else '/tmp' }}"
+
 _dbms_password: "{{ dbms_password if dbms_password is defined else None }}"
 
 _dbms_port: "{{ dbms_port if dbms_port is defined else 5432 }}"
@@ -120,7 +122,7 @@ _load_balancer_irods_proxy_port: "{{
 _load_balancer_irods_vip_srcs: "{{
   load_balancer_irods_vip_srcs if load_balancer_irods_vip_srcs is defined else
   [] }}"
-  
+
 _load_balancer_stats_allowed_src: "{{
   load_balancer_stats_allowed_src if load_balancer_stats_allowed_src is defined else
   '0.0.0.0/0' }}"

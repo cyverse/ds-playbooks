@@ -22,6 +22,7 @@ Variable                                   | Default                            
 `bisque_projects`                          | `[]`                                 |         | A list of projects that automatically publish to BisQue
 `bisque_url`                               |                                      |         | The URL for the BisQue server to connect to
 `bisque_user`                              | admin                                |         | The user to connect to BisQue as
+`build_dir`                                | /tmp                                 |         | The directory used for building artifacts for deployment
 `dbms_password`                            | irods                                |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `dbms_port`                                | 5432                                 |         | The TCP port the DBMS listens on.
 `dbms_username`                            | irods                                |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.

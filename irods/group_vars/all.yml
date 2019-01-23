@@ -43,6 +43,8 @@ _irods_default_dir_mode: "{{ irods_default_dir_mode if irods_default_dir_mode is
 _irods_default_file_mode: "{{ irods_default_file_mode if irods_default_file_mode is defined else
                               '0600' }}"
 
+_irods_default_hash_scheme: MD5
+
 _irods_default_number_of_transfer_threads: "{{
   irods_default_number_of_transfer_threads
     if irods_default_number_of_transfer_threads is defined else

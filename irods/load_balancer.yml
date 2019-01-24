@@ -150,21 +150,50 @@
         src: files/logrotate.d/haproxy
         dest: /etc/logrotate.d
 
-    - name: configure firewall
+# TODO remove this once its been executed in all environments
+    - name: remove old iptables block
+      blockinfile:
+        path: /etc/sysconfig/iptables
+        marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
+        state: absent
+      notify:
+        - restart firewall
+
+    - name: disable conntrack for proxied connections
+      blockinfile:
+        path: /etc/sysconfig/iptables
+        marker: "# {mark} DS MANAGED BLOCK (load_balancer raw)"
+        block: |
+          *raw
+          :PREROUTING ACCEPT
+          -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport 443 -j NOTRACK
+          -A PREROUTING -s {{ lookup('dig', _webdav_host) }} -p tcp --sport 443 -j NOTRACK
+          -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _load_balancer_irods_proxy_port }} -j NOTRACK
+          -A PREROUTING -s {{ ies_ip }} -p tcp --sport 1247 -j NOTRACK
+          -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
+          -A PREROUTING -s {{ ies_ip }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
+          :OUTPUT ACCEPT
+          -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport 443 -j NOTRACK
+          -A OUTPUT -d {{ lookup('dig', _webdav_host) }} -p tcp --dport 443 -j NOTRACK
+          -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _load_balancer_irods_proxy_port }} -j NOTRACK
+          -A OUTPUT -d {{ ies_ip }} -p tcp --dport 1247 -j NOTRACK
+          -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
+          -A OUTPUT -d {{ ies_ip }} -p tcp --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
+          COMMIT
+      notify:
+        - restart firewall
+
+    - name: open firewall for relevant connections
       blockinfile:
         path: /etc/sysconfig/iptables
         insertbefore: -A INPUT -j REJECT
-        marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
-        content: |
-          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ _load_balancer_irods_proxy_port }} -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 443 -j ACCEPT
+        marker: "# {mark} DS MANAGED BLOCK (load_balancer filter)"
+        block: |
+          -A INPUT -m state --state UNTRACKED -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 80 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport {{ _load_balancer_stats_port }} -j ACCEPT
       notify:
         - restart firewall
-      tags:
-        - no_testing
 
     - name: install VIP list
       template:

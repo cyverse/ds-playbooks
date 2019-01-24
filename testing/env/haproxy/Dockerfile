@@ -1,14 +1,13 @@
 FROM centos:7
-MAINTAINER Tony Edgin @ CyVerse
 
 COPY base/config.sh /tmp/base-config
 
-RUN /tmp/base-config centos 7 && \
-    yum install --assumeyes iptables openssl rsyslog && \
-    pip --disable-pip-version-check install pyOpenSSL && \
-    mkdir --parents /etc/haproxy && \
-    yum clean all && \
-    rm --recursive /tmp/* /var/cache/yum
+RUN /tmp/base-config centos 7
+RUN rm --force /tmp/base-config
+RUN yum install --assumeyes iptables openssl rsyslog
+RUN pip --disable-pip-version-check install pyOpenSSL
+RUN touch /etc/sysconfig/iptables
+RUN mkdir /etc/haproxy
 
 COPY base/entrypoint.sh /entrypoint
 

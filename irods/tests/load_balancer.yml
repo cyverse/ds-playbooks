@@ -26,9 +26,11 @@
       register: result
       failed_when: not result.stat.exists
 
-    - name: test disable conntrack for proxied connections
-      debug:
-        msg: TODO implement
+    - name: test iptables raw table definition
+      script: scripts/check-haproxy-iptables-raw.awk
+                --assign IES_IP={{ lookup('dig', 'dstesting_ies_centos6_1.dstesting_default') }}
+                /etc/sysconfig/iptables
+      changed_when: false
 
     - name: test open firewall for relevant connections
       debug:

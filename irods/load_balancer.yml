@@ -8,6 +8,7 @@
     ies_ip: "{{ lookup('dig', ies) }}"
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
+    webdav_ip: "{{ lookup('dig', _webdav_host) }}"
   roles:
     - role: uoi-io.haproxy
       vars:
@@ -113,7 +114,7 @@
               http_checks:
                 - expect status 200
               servers:
-                - webdav {{ lookup('dig', _webdav_host) }} check check-ssl verify none
+                - webdav {{ webdav_ip }} check check-ssl verify none
       notify:
         - reload haproxy
       tags:
@@ -158,14 +159,14 @@
           *raw
           :PREROUTING ACCEPT
           -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport 443 -j NOTRACK
-          -A PREROUTING -s {{ lookup('dig', _webdav_host) }} -p tcp --sport 443 -j NOTRACK
+          -A PREROUTING -s {{ webdav_ip }} -p tcp --sport 443 -j NOTRACK
           -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _load_balancer_irods_proxy_port }} -j NOTRACK
           -A PREROUTING -s {{ ies_ip }} -p tcp --sport 1247 -j NOTRACK
           -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
           -A PREROUTING -s {{ ies_ip }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
           :OUTPUT ACCEPT
           -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport 443 -j NOTRACK
-          -A OUTPUT -d {{ lookup('dig', _webdav_host) }} -p tcp --dport 443 -j NOTRACK
+          -A OUTPUT -d {{ webdav_ip }} -p tcp --dport 443 -j NOTRACK
           -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _load_balancer_irods_proxy_port }} -j NOTRACK
           -A OUTPUT -d {{ ies_ip }} -p tcp --dport 1247 -j NOTRACK
           -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK

@@ -26,11 +26,6 @@
       register: result
       failed_when: not result.stat.exists
 
-# TODO remove this once its been executed in all environments
-    - name: test remove old iptables block
-      debug:
-        msg: TODO implement
-
     - name: test disable conntrack for proxied connections
       debug:
         msg: TODO implement

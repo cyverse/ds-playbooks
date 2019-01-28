@@ -150,15 +150,6 @@
         src: files/logrotate.d/haproxy
         dest: /etc/logrotate.d
 
-# TODO remove this once its been executed in all environments
-    - name: remove old iptables block
-      blockinfile:
-        path: /etc/sysconfig/iptables
-        marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
-        state: absent
-      notify:
-        - restart firewall
-
     - name: disable conntrack for proxied connections
       blockinfile:
         path: /etc/sysconfig/iptables

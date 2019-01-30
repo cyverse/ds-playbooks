@@ -12,8 +12,9 @@
         pkg: uuidd
 
     - name: test create service group
-      debug:
-        msg: TODO implement
+      when: inventory_hostname == 'dstesting_ies_centos7_1.dstesting_default'
+      command: grep --quiet --regexp '^irods_ies:' /etc/group
+      changed_when: false
 
     - name: verify that the system user has correct comment
       command: grep --quiet --regexp '^irods:[^:]*:[^:]*:[^:]*:iRODS Administrator:' /etc/passwd

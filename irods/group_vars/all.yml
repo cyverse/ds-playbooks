@@ -24,6 +24,8 @@ _dbms_username: "{{ dbms_username if dbms_username is defined else 'irods' }}"
 
 _de_job_irods_user: "{{ de_job_irods_user if de_job_irods_user is defined else None }}"
 
+_firewall_chain: "{{ firewall_chain if firewall_chain is defined else 'INPUT' }}"
+
 _irods_aegis_repl_resource: "{{
   irods_aegis_repl_resource if irods_aegis_repl_resource is defined else
   'aegisReplRes' }}"
@@ -126,7 +128,7 @@ _load_balancer_stats_allowed_src: "{{
 
 _load_balancer_stats_port: "{{ load_balancer_stats_port if load_balancer_stats_port is defined else
                                81 }}"
-                               
+
 _pire_quota: "{{ pire_quota if pire_quota is defined else 0 }}"
 
 _pire_resource_hierarchy: "{{ pire_resource_hierarchy if pire_resource_hierarchy is defined else

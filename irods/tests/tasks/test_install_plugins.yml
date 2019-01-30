@@ -17,5 +17,7 @@
   run_once: true
   become: false
   local_action:
-    module: debug
-    msg: TODO implement
+    module: stat
+    path: /tmp/irods-setavu-plugin
+  register: response
+  failed_when: not response.stat.exists

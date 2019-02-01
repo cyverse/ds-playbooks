@@ -26,7 +26,7 @@
       register: result
       failed_when: not result.stat.exists
 
-    - name: test iptables raw table definition
+    - name: test iptables rules
       script: scripts/check-haproxy-iptables-raw.awk
                 --assign IES_IP={{ lookup('dig', 'dstesting_ies_centos6_1.dstesting_default') }}
                 /etc/sysconfig/iptables

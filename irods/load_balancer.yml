@@ -5,10 +5,10 @@
   vars:
     ies: "{{ groups['ies'][0] }}"
     ies_server: "{{ ies | regex_replace('\\..*') }}"
-    ies_ip: "{{ lookup('dig', ies) }}"
+    ies_ip: "{{ ies if ies|ipaddr else lookup('dig', ies) }}"
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
-    webdav_ip: "{{ lookup('dig', _webdav_host) }}"
+    webdav_ip: "{{ _webdav_host if _webdav_host|ipaddr else lookup('dig', _webdav_host) }}"
   roles:
     - role: uoi-io.haproxy
       vars:
@@ -180,8 +180,8 @@
         marker: "# {mark} DS MANAGED BLOCK (load_balancer filter)"
         block: |
           -A INPUT -m state --state UNTRACKED -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 80 -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport {{ _load_balancer_stats_port }} -j ACCEPT
+          -A INPUT -m state --state NEW -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport 80 -j ACCEPT
+          -A INPUT -m state --state NEW -s {{ _load_balancer_stats_allowed_src }} -p tcp --dport {{ _load_balancer_stats_port }} -j ACCEPT
       notify:
         - restart firewall
 

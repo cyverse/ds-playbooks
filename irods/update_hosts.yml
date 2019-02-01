@@ -11,26 +11,30 @@
         block: |
           {% if inventory_hostname in groups['ies'] %}
           {% for d in groups['dbms'] %}
-          {% if inventory_hostname != d %}
+          {% if inventory_hostname != d and not d|ipaddr %}
           {{ lookup('dig', d) }} {{ d }}
           {% endif %}
           {% endfor %}
           {% endif %}
           {% for i in groups['ies'] %}
-          {% if inventory_hostname != i %}
+          {% if inventory_hostname != i and not i|ipaddr %}
           {{ lookup('dig', i) }} {{ i }}
           {% endif %}
           {% endfor %}
           {% for r in groups['rs'] | difference(groups['ies']) %}
-          {% if inventory_hostname != r %}
+          {% if inventory_hostname != r and not r|ipaddr %}
           {{ lookup('dig', r) }} {{ r }}
           {% endif %}
           {% endfor %}
           {% for f in _irods_federation %}
+          {% if not f|ipaddr %}
           {{ lookup('dig', f.icat_host) }} {{ f.icat_host }}
+          {% endif %}
           {% endfor %}
           {% for e in _irods_other_host_entries %}
+          {% if not e|ipaddr %}
           {{ lookup('dig', e) }} {{ e }}
+          {% endif %}
           {% endfor %}
       tags:
         - no_testing

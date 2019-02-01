@@ -32,10 +32,6 @@
                 /etc/sysconfig/iptables
       changed_when: false
 
-    - name: test open firewall for relevant connections
-      debug:
-        msg: TODO implement
-
     - name: verify vip file is in place
       stat:
         path: /etc/haproxy/vip.lst

@@ -71,7 +71,7 @@
                 - 'send PING\n'
                 - 'expect string `<MsgHeader_PI>\n<type>RODS_VERSION</type>`'
               servers:
-                - "{{ ies_server }} {{ ies_ip }}:1247 check"
+                - "{{ ies_server }} {{ ies_ip }}:1247 check maxconn {{ _load_balancer_irods_single_max_conn }}"
           - irods_extra_conn:
               options:
                 - tcp-check

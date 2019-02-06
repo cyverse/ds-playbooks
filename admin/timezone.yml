@@ -1,0 +1,8 @@
+---
+- name: ensure correct timezone
+  hosts: all:!unmanaged_systems
+  become: true
+  tasks:
+    - name: make Mountain Standard Time
+      timezone:
+        name: America/Phoenix

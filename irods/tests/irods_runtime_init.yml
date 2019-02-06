@@ -15,13 +15,17 @@
         ! [[ "$resp" =~ ^CAT_NO_ROWS_FOUND ]]
       changed_when: false
 
-    - name: test ensure public group's home is correct
+    - name: verify /zone/home/public doesn't exist
       debug:
         msg: TODO implement
 
-    - name: test ensure anonymous user exists
+    - name: verify /zone/home/shared does exist
       debug:
         msg: TODO implement
+        
+    - name: test ensure CyVerse curated collection base collection exists
+      command: ils /testing/home/shared/commons_repo/curated
+      changed_when: false
 
     - name: verify that rodsadmin has write permission on /
       shell: ils -A / | grep --quiet 'g:rodsadmin#testing:modify object'
@@ -36,6 +40,10 @@
         msg: TODO implement
 
     - name: verify that rodsadmin has own permission on everthing else
+      debug:
+        msg: TODO implement
+
+    - name: test ensure anonymous user exists
       debug:
         msg: TODO implement
 

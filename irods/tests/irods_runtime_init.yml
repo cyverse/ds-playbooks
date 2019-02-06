@@ -16,8 +16,10 @@
       changed_when: false
 
     - name: verify /zone/home/public doesn't exist
-      debug:
-        msg: TODO implement
+      command: ils /testing/home/public
+      register: response
+      changed_when: false
+      failed_when: response is succeeded
 
     - name: verify /zone/home/shared does exist
       debug:

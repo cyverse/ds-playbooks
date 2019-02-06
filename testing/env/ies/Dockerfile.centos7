@@ -2,7 +2,7 @@ FROM test-env-base
 
 RUN yum install --assumeyes epel-release
 RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-RUN yum install --assumeyes jq python-pip python-setuptools systemd
+RUN yum install --assumeyes jq python-pip python-setuptools
 
 COPY ies/scripts/prep-svc-script.sh /tmp/prep-svc-script
 COPY ies/scripts/service.sh.template /tmp/

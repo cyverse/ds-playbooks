@@ -167,6 +167,9 @@ populate_server_cfg()
 
   # Remove default resource directory
   sed --in-place '/"default_resource_directory"/d' "$ServerCfg"
+
+  # Inject ipc-housekeeping.re stub rules
+  jq '.re_rulebase_set[1].filename |= "ipc-housekeeping"' "$ServerCfg" | sponge "$ServerCfg"
 }
 
 

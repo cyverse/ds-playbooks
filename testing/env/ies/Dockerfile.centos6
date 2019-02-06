@@ -1,7 +1,20 @@
 FROM centos:6
-MAINTAINER Tony Edgin @ CyVerse
 
 COPY base/config.sh /tmp/base-config
+
+RUN /tmp/base-config centos 6
+RUN yum --assumeyes install \
+      epel-release \
+      https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm
+RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
+RUN yum --assumeyes install \
+      jq libselinux-python moreutils python-pip python-requests python-virtualenv \
+      https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm \
+      https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
+RUN pip install pika
+RUN touch /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py
+
+COPY ies/config/ipc-housekeeping.re /etc/irods/
 COPY ies/scripts/* /tmp/
 
 ARG DB_NAME=ICAT
@@ -26,21 +39,8 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 ARG IRODS_ZONE_USER=rods
 
-RUN /tmp/base-config centos 6 && \
-    yum --assumeyes install \
-      epel-release \
-      https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm && \
-    rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6 && \
-    yum --assumeyes install \
-      jq libselinux-python python-pip python-requests python-virtualenv \
-      https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm \
-      https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm && \
-    pip install pika && \
-    /tmp/config-irods.sh && \
-    touch /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py && \
-    /tmp/prep-svc-script.sh && \
-    yum clean all && \
-    rm --force --recursive /tmp/* /var/cache/yum
+RUN /tmp/config-irods.sh
+RUN /tmp/prep-svc-script.sh
 
 COPY base/entrypoint.sh /entrypoint
 

@@ -30,9 +30,3 @@
         - python-requests
         - python-virtualenv
         - "{{ 'python-selinux' if ansible_distribution == 'Debian' else 'libselinux-python' }}"
-
-    - name: install systemd on CentOS 7
-      when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '7'
-      package:
-        name: systemd
-        state: present

@@ -1,7 +1,11 @@
 FROM test-env-base
 
-COPY ies/scripts/service.sh.template /tmp/
+RUN yum install --assumeyes epel-release
+RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+RUN yum install --assumeyes jq python-pip python-setuptools systemd
+
 COPY ies/scripts/prep-svc-script.sh /tmp/prep-svc-script
+COPY ies/scripts/service.sh.template /tmp/
 
 ARG DBMS_HOST=dbms
 ARG DBMS_PORT=5432
@@ -9,11 +13,6 @@ ARG IRODS_SYSTEM_GROUP=irods
 ARG IRODS_SYSTEM_USER=irods
 ARG IRODS_ZONE_PASSWORD=rods
 
-RUN yum install --assumeyes epel-release && \
-    rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7 && \
-    yum install --assumeyes jq python-pip python-setuptools && \
-    /tmp/prep-svc-script && \
-    yum clean all && \
-    rm --force --recursive /tmp/* /var/cache/yum
+RUN /tmp/prep-svc-script
 
 CMD [ "/service.sh" ]

@@ -22,7 +22,7 @@
     - name: verify /zone/home/shared does exist
       debug:
         msg: TODO implement
-        
+
     - name: test ensure CyVerse curated collection base collection exists
       command: ils /testing/home/shared/commons_repo/curated
       changed_when: false
@@ -46,6 +46,24 @@
     - name: test ensure anonymous user exists
       debug:
         msg: TODO implement
+
+    - name: verify anonymous user has read access to zone collection
+      shell: ils -A /testing | grep --quiet 'anonymous#testing:read object'
+      changed_when: false
+
+    - name: verify anonymous user has read access to home collection
+      shell: ils -A /testing/home | grep --quiet 'anonymous#testing:read object'
+      changed_when: false
+
+    - name: verify anonymous user has read access to public collection
+      shell: ils -A /testing/home/shared | grep --quiet 'anonymous#testing:read object'
+      changed_when: false
+
+    - name: verify anonymous user has read access to CyVerse curated collection
+      shell: |
+        ils -A /testing/home/shared/commons_repo/curated \
+          | grep --quiet 'anonymous#testing:read object'
+      changed_when: false
 
     - name: test start quota usage computation
       debug:

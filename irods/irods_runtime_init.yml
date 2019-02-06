@@ -32,6 +32,17 @@
       irods_user:
         name: anonymous
 
+    - name: ensure anonymous user has read access to required collections
+      irods_permission:
+        subject: anonymous
+        permission: read
+        object: "{{ item }}"
+      with_items:
+        - /{{ _irods_zone_name }}
+        - /{{ _irods_zone_name }}/home
+        - /{{ _irods_zone_name }}/home/shared
+        - /{{ _irods_zone_name }}/home/shared/commons_repo/curated
+
     - name: start quota usage computation
       command: irule '{ ipc_rescheduleQuotaUsageUpdate }' null ruleExecOut
       register: results

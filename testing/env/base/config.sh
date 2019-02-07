@@ -67,7 +67,7 @@ install_centos_packages()
   local version="$1"
 
   rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
-  yum --assumeyes install openssh-server sudo
+  yum --assumeyes install libselinux-python openssh-server sudo
 }
 
 

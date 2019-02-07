@@ -1,7 +1,14 @@
 FROM centos:6
-MAINTAINER Tony Edgin @ CyVerse
 
 COPY base/config.sh /tmp/base-config
+
+RUN /tmp/base-config centos 6
+RUN yum --assumeyes install epel-release
+RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
+RUN yum --assumeyes install \
+      jq python-pip python-requests python-virtualenv \
+      https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-resource-4.1.10-centos6-x86_64.rpm
+
 COPY rs/scripts/* /tmp/
 
 ARG IRODS_CONTROL_PLANE_KEY=TEMPORARY__32byte_ctrl_plane_key
@@ -22,16 +29,8 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 ARG IRODS_ZONE_USER=rods
 
-RUN /tmp/base-config centos 6 && \
-    yum --assumeyes install epel-release && \
-    rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6 && \
-    yum --assumeyes install \
-      jq libselinux-python python-pip python-requests python-virtualenv \
-      https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-resource-4.1.10-centos6-x86_64.rpm && \
-    /tmp/config-irods.sh && \
-    /tmp/prep-svc-script.sh && \
-    yum clean all && \
-    rm --force --recursive /tmp/* /var/cache/yum
+RUN /tmp/config-irods.sh
+RUN /tmp/prep-svc-script.sh
 
 COPY base/entrypoint.sh /entrypoint
 

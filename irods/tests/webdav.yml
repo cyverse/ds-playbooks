@@ -1,8 +1,74 @@
 ---
-- name: test install WebDAV server
+- name: test WebDAV template expansion
+  hosts: localhost
+  run_once: true
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+    - vars/webdav.yml
+  vars:
+    commons_index: "{{ lookup('template', '../templates/webdav/commons-index.html.j2') }}"
+    dav_index: "{{ lookup('template', '../templates/webdav/dav-index.html.j2') }}"
+    head: "{{ lookup('template', '../templates/webdav/head.html.j2') }}"
+    htcacheclean: "{{ lookup('template', '../templates/webdav/htcacheclean.j2') }}"
+    zone_index: "{{ lookup('template', '../templates/webdav/zone-index.html.j2') }}"
+  tasks:
+    - name: verify commons-index.html expands correctly
+      assert:
+        that:
+          - commons_index is search('{{ item }}')
+      with_items:
+        - <title>Index of /tempZone/commons/ on tempZone</title>
+        - <base href="/dav/tempZone/commons/"/>
+        - <a href="/dav/tempZone/">tempZone/</a>
+        - <a href="/dav/{{ _irods_zone_name }}/commons/">commons/</a>
+        - <span class="zone-name">{{ _irods_zone_name }}</span>
+
+    - name: verify dav-index.html expands correctly
+      assert:
+        that:
+          - dav_index is search('{{ item }}')
+      with_items:
+        - <a href="tempZone/commons/community_released/">
+        - <a href="tempZone/commons/cyverse_curated/">CyVerse curated data access</a>
+        - <a href="tempZone/projects/">Project data access</a>
+        - <a href="tempZone/home/">User data access</a>
+
+    - name: verify head.html expands correctly
+      assert:
+        that:
+          - head is search('/\* Style for the testing/base/ davrods \*/')
+          - "head is search('content: \"/testing/base/\";')"
+
+    - name: verify htcacheclean expands correctly
+      assert:
+        that:
+          - htcacheclean is search('CACHE_ROOT=/var/cache/httpd/proxy')
+          - htcacheclean is search('LIMIT=100M')
+
+    - name: verify zone-index.html expands correctly
+      assert:
+        that:
+          - zone_index is search('{{ item }}')
+      with_items:
+        - <title>Index of /tempZone on tempZone</title>
+        - <base href="/dav/tempZone/"/>
+        - <a href="/dav/tempZone/">tempZone/</a>
+        - <span class="zone-name">tempZone</span>
+
+
+- name: test WebDAV server deposition
   hosts: webdav
   become: true
   tasks:
+    - include_tasks: tasks/test_pkg_installed.yml
+      with_items:
+        - mod_proxy_html
+        - mod_ssl
+        - davrods
+      loop_control:
+        loop_var: pkg
+
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: irods-icommands
@@ -13,8 +79,54 @@
         pkg: irods-runtime
         version: '4.1.10'
 
-    - name: test create apache systemd service dependencies directory
+    - debug:
+        msg: TODO configure irods connection
+
+    - name: test add davrods directory listing heads
       stat:
-        path: /etc/systemd/system/httpd.service.requires
+        path: /etc/httpd/irods/{{ item }}
+      with_items:
+        - home-head.html
+        - projects-head.html
+        - community-head.html
+        - curated-head.html
+
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test create content directories
+      stat:
+        path: /var/www/html/dav/tempZone/commons
       register: response
       failed_when: not (response.stat.exists and response.stat.isdir)
+
+    - name: test add root web page
+      stat:
+        path: /var/www/html/{{ item }}
+      with_items:
+        - index.html
+        - dav/index.html
+        - dav/tempZone/index.html
+        - dav/tempZone/commons/index.html
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test create directory for cache
+      stat:
+        path: /cache_vol
+      register: response
+      failed_when: |
+        not response.stat.exists or
+        not response.stat.isdir or
+        response.stat.pw_name != 'apache' or
+        response.stat.gr_name != 'apache'
+
+    - name: test ensure htcacheclean runs when apache run
+      stat:
+        path: /etc/systemd/system/httpd.service.requires/htcacheclean.service
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test open HTTP connection in firewall
+      script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables
+      changed_when: false

@@ -1,5 +1,5 @@
 ---
-- name: install WebDAV server
+- name: Install and configure apache
   hosts: webdav
   become: true
   roles:
@@ -20,7 +20,7 @@
         apache_vhosts:
           - servername: "{{ inventory_hostname }}"
             extra_parameters: |
-              Redirect permanent / https://{{ inventory_hostname }}/
+              RedirectPermanent / https://{{ inventory_hostname }}/
             comment: Redirect HTTP to HTTPS
           - servername: 127.0.0.1
             listen_ip: 127.0.0.1
@@ -174,29 +174,56 @@
                 RequestHeader merge Cache-Control no-store
               </Elseif>
 
+              ProxyErrorOverride On
               ProxyPreserveHost On
+
               ProxyHTMLEnable On
               ProxyHTMLLinks a href
               ProxyHTMLLinks base href
+
+              Header edit Location ^http: https:
             comment: This proxy handles TLS, corrects requests, enables caching, and anonymous access for XMLHttpRequests
             locations:
               - path: /dav
                 extra_parameters: |
-                  ProxyPass http://127.0.0.1:{{ apache_listen_port }}/dav
-                  ProxyPassReverse http://127.0.0.1:{{ apache_listen_port }}/dav
+                  ProxyPass http://127.0.0.1/dav
+                  ProxyPassReverse http://127.0.0.1/dav
+
+                  ProxyHTMLURLMap ^http:(//[^/]+/dav/) https:$1 [R]
+              # TODO consider moving this into 127.0.0.1 vhost it might simplify the URL rewrites
+              # TODO consider using ansible to generate separate davrods services for /dav-anon
               - path: /dav-anon
                 extra_parameters: |
+                  # TODO have ansible generate this
                   # The base64 encoding of anonymous is YW5vbnltb3Vz
                   RequestHeader set Authorization "Basic YW5vbnltb3Vz"
 
-                  ProxyPass http://127.0.0.1:{{ apache_listen_port }}/dav
-                  ProxyPassReverse http://127.0.0.1:{{ apache_listen_port }}/dav
-                  ProxyHTMLURLMap '^(.*)/dav $1/dav-anon [R]'
+                  ProxyPass http://127.0.0.1/dav
+                  ProxyPassReverse http://127.0.0.1/dav
+
+                  ProxyHTMLURLMap ^http:(//[^/]+/dav/) https:$1 [lR]
+                  ProxyHTMLURLMap ^((https://)?[^/]*)/dav/ $1/dav-anon/ [R]
+
+                  Header edit Location ^(.*)/dav $1/dav-anon
         apache_vhosts_template: ../../templates/webdav/vhosts.conf.j2
       tags:
         - no_testing
 
   pre_tasks:
+    - name: enable notifcations when not testing
+      set_fact:
+        notifications_enabled: true
+      tags:
+        - no_testing
+
+    - name: install mod_proxy_html
+      package:
+        name: mod_proxy_html
+
+    - name: install mod_ssl
+      package:
+        name: mod_ssl
+
     - include_tasks: tasks/install_irods_pkg.yml
       vars:
         os: centos{{ ansible_distribution_major_version }}
@@ -209,6 +236,58 @@
         pkg: irods-runtime
         pkg_ver: "{{ _irods_version }}"
 
+    - name: install davrods
+      yum:
+        name: https://github.com/UtrechtUniversity/davrods/releases/download/4.1_1.4.1/davrods-4.1_1.4.1-1.el7.centos.x86_64.rpm
+
+# Update the iRODS environment file. (use irods-cfg role)
+    - name: configure irods connection
+      debug:
+        msg: TODO implement
+
+    - include_tasks: tasks/mk_webdav_dir_head.yml
+      vars:
+        head_dav_base: "{{ _irods_zone_name }}/{{ item.base }}"
+        head_file: "{{ item.file }}"
+      with_items:
+        - { file: "home-head.html", base: "home" }
+        - { file: "projects-head.html", base: "projects" }
+        - { file: "community-head.html", base: "commons/community_released" }
+        - { file: "curated-head.html", base: "commons/cyverse_curated" }
+
+    - name: create content directories
+      file:
+        path: /var/www/html/dav/{{ _irods_zone_name }}/commons
+        recurse: true
+        state: directory
+
+    - name: add root web page
+      copy:
+        src: files/webdav/index.html
+        dest: /var/www/html/index.html
+
+    - name: add dav web page
+      template:
+        src: templates/webdav/dav-index.html.j2
+        dest: /var/www/html/dav/index.html
+
+    - name: add zone web page
+      template:
+        src: templates/webdav/zone-index.html.j2
+        dest: /var/www/html/dav/{{ _irods_zone_name }}/index.html
+
+    - name: add commons web page
+      template:
+        src: templates/webdav/commons-index.html.j2
+        dest: /var/www/html/dav/{{ _irods_zone_name }}/commons/index.html
+
+    - name: create directory for cache
+      file:
+        path: "{{ _webdav_cache_dir }}"
+        state: directory
+        owner: apache
+        group: apache
+
   post_tasks:
     - name: configure htcacheclean
       template:
@@ -216,8 +295,6 @@
         dest: /etc/sysconfig/htcacheclean
       notify:
         - restart htcacheclean
-      tags:
-        - no_testing
 
     - name: create apache systemd service dependencies directory
       file:
@@ -227,28 +304,29 @@
 
     - name: ensure htcacheclean runs when apache run
       file:
-        path: /etc/systemd/system/httpd.service.requires
+        path: /etc/systemd/system/httpd.service.requires/htcacheclean.service
         src: /usr/lib/systemd/system/htcacheclean.service
         state: link
-      notify:
-        - restart apache
-      tags:
-        - no_testing
 
-    - name: install davrods
-      yum:
-        name: https://github.com/UtrechtUniversity/davrods/releases/download/4.1_1.4.1/davrods-4.1_1.4.1-1.el7.centos.x86_64.rpm
-      notify:
-        - restart apache
-      tags:
-        - no_testing
+    - name: open HTTP connection in firewall
+      blockinfile:
+        path: /etc/sysconfig/iptables
+        insertbefore: -A INPUT -j REJECT
+        marker: "# {mark} DS MANAGED BLOCK (webdav)"
+        content: |
+          -A INPUT -m state --state NEW -p tcp --dport 80 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp --dport 443 -j ACCEPT
+      notify: restart firewall
 
   handlers:
+    - name: restart firewall
+      when: notifications_enabled is defined
+      service:
+        name: iptables
+        state: restarted
+
     - name: restart htcacheclean
+      when: notifications_enabled is defined
       service:
         name: htcacheclean
         state: restarted
-
-# TODO do the following
-# Update the iRODS environemt file.
-# Update iptables

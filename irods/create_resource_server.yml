@@ -5,7 +5,6 @@
 - name: install resource server package
   hosts: rs:!ies:!unmanaged_systems
   become: true
-  gather_facts: false
   tasks:
     - import_tasks: tasks/install_resource_pkg.yml
 
@@ -15,13 +14,28 @@
 - import_playbook: cfg_irods.yml
 
 
+- name: ensure IES is started
+  hosts: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tasks:
+    - name: start iRODS
+      irods_start:
+
+
 - name: bootstrap iRODS start
-  hosts: rs
+  hosts: rs:!ies
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   become_flags: '-i'
-  gather_facts: false
   tasks:
+    - name: create clerver user
+      delegate_to: "{{ groups['ies'][0] }}"
+      irods_user:
+        name: "{{ _irods_clerver_user }}"
+        password: "{{ _irods_clerver_password }}"
+        type: rodsadmin
+
     - name: initialize resource server connection to IES
       irods_clerver_auth:
         ies: "{{ groups['ies'][0] }}"

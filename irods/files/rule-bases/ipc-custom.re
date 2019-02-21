@@ -27,6 +27,7 @@
 # hook that will call the custome rule.
 
 @include 'aegis'
+@include 'avra'
 @include 'bisque'
 @include 'calliope'
 @include 'coge'
@@ -56,9 +57,6 @@ exclusive_acPostProcForCollCreate {
   *err = errormsg(coge_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(pire_acPostProcForCollCreate, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
   *err = errormsg(sciapps_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
@@ -74,9 +72,6 @@ exclusive_acPostProcForCopy {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForCopy, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(pire_acPostProcForCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sciapps_acPostProcForCopy, *msg);
@@ -97,9 +92,6 @@ exclusive_acPostProcForPut {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForPut, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(pire_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sanimal_acPostProcForPut, *msg);
@@ -257,9 +249,6 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
-  *err = errormsg(pire_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sciapps_acPostProcForObjRename(*SourceObject, *DestObject), *msg);

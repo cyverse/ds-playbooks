@@ -1,4 +1,11 @@
 ---
+_avra_base_collection: "{{ avra_base_collection if avra_base_collection is defined else None }}"
+
+_avra_manager: "{{ avra_manager if avra_manager is defined else _irods_clerver_user }}"
+
+_avra_resource_hierarchy: "{{ avra_resource_hierarchy if avra_resource_hierarchy is defined else
+                              _irods_resource_hierarchies[0] }}"
+
 _become_svc_acnt: "{{ become_svc_acnt if become_svc_acnt is defined else true }}
 "
 _bisque_irods_host: "{{ bisque_irods_host if bisque_irods_host is defined else _irods_ies }}"
@@ -37,7 +44,7 @@ _irods_allowed_clients: "{{ irods_allowed_src if irods_allowed_src is defined el
 _irods_clerver_password: "{{ irods_clerver_password if irods_clerver_password is defined else
                              'rods' }}"
 
-_irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else None }}"
+_irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else 'rods' }}"
 
 _irods_default_dir_mode: "{{ irods_default_dir_mode if irods_default_dir_mode is defined else
                              '0750' }}"
@@ -116,6 +123,18 @@ _load_balancer_irods_allowed_src: "{{
 _load_balancer_irods_extra_max_conn: "{{
   load_balancer_irods_extra_max_conn if load_balancer_irods_extra_max_conn is defined else
   100 }}"
+
+_load_balancer_irods_single_max_conn: "{{
+  load_balancer_irods_single_max_conn if load_balancer_irods_single_max_conn is defined else
+  100 }}"
+
+_load_balancer_irods_vip_srcs: "{{
+  load_balancer_irods_vip_srcs if load_balancer_irods_vip_srcs is defined else
+  [] }}"
+
+_load_balancer_queue_timeout: "{{
+  load_balancer_queue_timeout if load_balancer_queue_timeout is defined else
+  120 }}"
 
 _load_balancer_stats_allowed_src: "{{
   load_balancer_stats_allowed_src if load_balancer_stats_allowed_src is defined else

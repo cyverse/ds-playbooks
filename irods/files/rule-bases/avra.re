@@ -1,13 +1,14 @@
-# PIRE project policy
+# Avra project policy
 # include this file from within ipc-custom.re
 
-@include 'pire-env'
+@include 'avra-env'
+
+_avra_isForAvra(*Path) =
+  let *strName = str(avra_BASE_COLL) in
+  *strName != '' && str(*Path) like *strName ++ '/*'
 
 
-_pire_isForPIRE(*Path) = str(*Path) like str(pire_BASE_COLL) ++ '/*'
-
-
-# Determines if the provided collection or data object belongs to the PIRE
+# Determines if the provided collection or data object belongs to the Avra
 # project
 #
 # Parameters:
@@ -16,8 +17,8 @@ _pire_isForPIRE(*Path) = str(*Path) like str(pire_BASE_COLL) ++ '/*'
 # Return:
 #  true if the collection or data object belongs to the project, otherwise false
 #
-pire_replBelongsTo : path -> boolean
-pire_replBelongsTo(*Entity) = _pire_isForPIRE(*Entity)
+avra_replBelongsTo : path -> boolean
+avra_replBelongsTo(*Entity) = _avra_isForAvra(*Entity)
 
 
 # Returns the resource where newly ingested files will be stored
@@ -27,8 +28,8 @@ pire_replBelongsTo(*Entity) = _pire_isForPIRE(*Entity)
 #   a flag indicating whether or not this resource choice may be overridden by
 #   the user.
 #
-pire_replIngestResc : string * boolean
-pire_replIngestResc = (pire_RESC, false)
+avra_replIngestResc : string * boolean
+avra_replIngestResc = (avra_RESC, false)
 
 
 # Returns the resource where the second and subsequent replicas of a file will
@@ -39,17 +40,17 @@ pire_replIngestResc = (pire_RESC, false)
 #   a flag indicating whether or not this resource choice may be overridden by
 #   the user.
 #
-pire_replReplResc : string * boolean
-pire_replReplResc = pire_replIngestResc
+avra_replReplResc : string * boolean
+avra_replReplResc = avra_replIngestResc
 
 
-# Restrict the PIRE resource to files in the PIRE collection
+# Restrict the Avra resource to files in the Avra collection
 pep_resource_resolve_hierarchy_pre(*OUT) {
-  on (pire_RESC != ipc_DEFAULT_RESC
-      && $KVPairs.resc_hier == pire_RESC
-      && !_pire_isForPIRE($KVPairs.logical_path)) {
-    *msg = 'CYVERSE ERROR:  ' ++ pire_RESC ++ ' usage is limited to the EHT collection, '
-           ++ str(pire_BASE_COLL);
+  on (avra_RESC != ipc_DEFAULT_RESC
+      && $KVPairs.resc_hier == avra_RESC
+      && !_avra_isForAvra($KVPairs.logical_path)) {
+    *msg = 'CYVERSE ERROR:  ' ++ avra_RESC ++ ' usage is limited to the Avra collection, '
+           ++ str(avra_BASE_COLL);
 
     failmsg(-32000, *msg);
   }

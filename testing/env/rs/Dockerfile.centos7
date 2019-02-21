@@ -1,5 +1,9 @@
 FROM test-env-base
 
+RUN yum --assumeyes install epel-release
+RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+RUN yum --assumeyes install jq
+
 COPY rs/scripts/service.sh.template /tmp/
 COPY rs/scripts/prep-svc-script.sh /tmp/prep-svc-script
 
@@ -9,7 +13,6 @@ ARG IRODS_SYSTEM_USER=irods
 ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 
-RUN /tmp/prep-svc-script && \
-    rm --force /tmp/*
+RUN /tmp/prep-svc-script
 
 CMD [ "/service.sh" ]

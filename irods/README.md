@@ -16,7 +16,10 @@ None of these variables are required.
 
 Variable                                   | Default                              | Choices | Comments
 ------------------------------------------ | ------------------------------------ | ------- | --------
-`become_svc_acnt`                          | true                                           | whether or not to perform actions normally performed by the service account as the service account
+`avra_base_collection`                     |                                      |         | The base collection for the Avra project. If it isn't present no Avra rules will fire.
+`avra_manager`                             | `irods_clerver_user`                 |         | The iRODS user who is responsible for Avra data.
+`avra_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the Avra project
+`become_svc_acnt`                          | true                                 |         | whether or not to perform actions normally performed by the service account as the service account
 `bisque_irods_host`                        | `irods_ies`                          |         | The iRODS host to report to BisQue.
 `bisque_password`                          | admin                                |         | The password used to authenticate connections to BisQue
 `bisque_projects`                          | `[]`                                 |         | A list of projects that automatically publish to BisQue
@@ -58,14 +61,17 @@ Variable                                   | Default                            
 `irods_zone_key`                           | TEMPORARY_zone_key                   |         | the zone key
 `irods_zone_name`                          | tempZone                             |         | the name of the zone
 `load_balancer_irods_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS through the load balancer.
-`load_balancer_irods_estra_max_conn`       | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer for connections coming from jobs.
+`load_balancer_irods_extra_max_conn`       | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer for connections coming from jobs.
+`load_balancer_irods_single_max_conn`      | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer for connections coming from interactive and VIP sources.
+`load_balancer_irods_vip_srcs`             | `[]`                                           | A list of IP address ranges that aren't considered for queuing.
+`load_balancer_queue_timeout`              | 120                                  |         | The number of seconds a connection can be queued.
 `load_balancer_stats_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for hosts allowed to see the HAProxy stats web page.
 `load_balancer_stats_certificate`          | /etc/haproxy/certs/stats.pem         |         | The TLS certificate used by the stats endpoint
 `load_balancer_stats_password`             | B1Gp4sSw0rD!!                        |         | The password used to authetnicate access to the stats service
 `load_balancer_stats_port`                 | 81                                   |         | The TCP port used to retrieve HAProxy stats
 `load_balancer_stats_user`                 | haproxy-stats                        |         | The user to authenticate as to access the stats service
 `pire_quota`                               | 0                                    |         | The quota for the PIRE project. A `0` means no quota.
-`pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource server used by the PIRE project
+`pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
 `rabbitmq_ephemeral`                       | `true`                               |         | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
 `rabbitmq_password`                        | guest                                |         | The password iRODS uses to connect to the AMQP vhost
 `rabbitmq_port`                            | 5672                                 |         | The TCP port the RabbitMQ broker listens on

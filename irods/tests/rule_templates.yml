@@ -6,6 +6,7 @@
     - ../group_vars/all.yml
   vars:
     expected_bisque_irods_url: irods://dstesting_ies_centos6_1.dstesting_default
+    avra_env: "{{ lookup('template', '../templates/rule-bases/avra-env.re.j2') }}"
     aegis_env: "{{ lookup('template', '../templates/rule-bases/aegis-env.re.j2') }}"
     bisque_env: "{{ lookup('template', '../templates/rule-bases/bisque-env.re.j2') }}"
     ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
@@ -27,6 +28,12 @@
         that:
           - aegis_env is search("aegis_INGEST_RESC = 'aegisIngestRes'")
           - aegis_env is search("aegis_REPL_RESC = 'aegisReplRes'")
+
+    - name: verify constants expand correctly in avra-env.re.j2
+      assert:
+        that:
+          - avra_env is search("avra_BASE_COLL = ''")
+          - avra_env is search("avra_RESC = 'demoResc'")
 
     - name: verify constants expand correctly in bisque-env.re.j2
       assert:
@@ -133,6 +140,24 @@
                               | regex_escape)
           - ipc_env is search("ON($rescName == 'resource-2' && $clientAddr == ipc_IES_IP)"
                               | regex_escape)
+
+
+- name: test Avra params are set correctly
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    avra_base_collection: base
+    avra_resource_hierarchy:
+      name: avraRes
+    avra_env: "{{ lookup('template', '../templates/rule-bases/avra-env.re.j2') }}"
+  tasks:
+    - name: verify params
+      assert:
+        that:
+          - avra_env is search("avra_BASE_COLL = 'base'")
+          - avra_env is search("avra_RESC = 'avraRes'")
 
 
 - name: test that bisque-env.re gets generated correctly with a bisque iRODS host is provided

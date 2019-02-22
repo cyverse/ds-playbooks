@@ -1,13 +1,13 @@
 ---
 - name: cyverse.irods-cfg
   src: https://github.com/CyVerse-Ansible/ansible-irods-cfg
-  version: 49b6ce7c41117c565d8cd58530011838b7375fc9
+  version: d344b6d6c8abb50a2f9278c90ca9750998fd24da
 
 - name: cyverse.rabbitmq-vhost
   src: cyverse-ansible.rabbitmq-vhost
 
 - name: geerlingguy.apache
   src: geerlingguy.apache
-  
+
 - name: uoi-io.haproxy
   src: uoi-io.haproxy

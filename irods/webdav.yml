@@ -240,10 +240,29 @@
       yum:
         name: https://github.com/UtrechtUniversity/davrods/releases/download/4.1_1.4.1/davrods-4.1_1.4.1-1.el7.centos.x86_64.rpm
 
-# Update the iRODS environment file. (use irods-cfg role)
-    - name: configure irods connection
-      debug:
-        msg: TODO implement
+    - run_once: true
+      become: false
+      local_action:
+        module: import_role
+        name: cyverse.irods-cfg
+        tasks_from: irods_environment.yml
+      vars:
+        irods_cfg_root_dir: /tmp
+        irods_cfg_chown: false
+        irods_cfg_host: "{{ _irods_ies }}"
+        irods_cfg_zone_name: "{{ _irods_zone_name }}"
+        irods_cfg_zone_user: anonymous
+        irods_cfg_home: /{{ _irods_zone_name }}
+
+# TODO update ansible-irods-cfg's irods_environment.yml playbook to support client version
+        irods_cfg_authentication_file: /etc/httpd/irods/irodsA
+        irods_cfg_default_hash_scheme: MD5
+        irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
+
+    - name: install irods_environment.json
+      copy:
+        src: /tmp/var/lib/irods/.irods/irods_environment.json
+        dest: /etc/httpd/irods/irods_environment.json
 
     - include_tasks: tasks/mk_webdav_dir_head.yml
       vars:

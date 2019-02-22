@@ -18,21 +18,21 @@
         that:
           - commons_index is search('{{ item }}')
       with_items:
-        - <title>Index of /tempZone/commons/ on tempZone</title>
-        - <base href="/dav/tempZone/commons/"/>
-        - <a href="/dav/tempZone/">tempZone/</a>
-        - <a href="/dav/{{ _irods_zone_name }}/commons/">commons/</a>
-        - <span class="zone-name">{{ _irods_zone_name }}</span>
+        - <title>Index of /testing/commons/ on testing</title>
+        - <base href="/dav/testing/commons/"/>
+        - <a href="/dav/testing/">testing/</a>
+        - <a href="/dav/testing/commons/">commons/</a>
+        - <span class="zone-name">testing</span>
 
     - name: verify dav-index.html expands correctly
       assert:
         that:
           - dav_index is search('{{ item }}')
       with_items:
-        - <a href="tempZone/commons/community_released/">
-        - <a href="tempZone/commons/cyverse_curated/">CyVerse curated data access</a>
-        - <a href="tempZone/projects/">Project data access</a>
-        - <a href="tempZone/home/">User data access</a>
+        - <a href="testing/commons/community_released/">
+        - <a href="testing/commons/cyverse_curated/">CyVerse curated data access</a>
+        - <a href="testing/projects/">Project data access</a>
+        - <a href="testing/home/">User data access</a>
 
     - name: verify head.html expands correctly
       assert:
@@ -51,16 +51,29 @@
         that:
           - zone_index is search('{{ item }}')
       with_items:
-        - <title>Index of /tempZone on tempZone</title>
-        - <base href="/dav/tempZone/"/>
-        - <a href="/dav/tempZone/">tempZone/</a>
-        - <span class="zone-name">tempZone</span>
+        - <title>Index of /testing on testing</title>
+        - <base href="/dav/testing/"/>
+        - <a href="/dav/testing/">testing/</a>
+        - <span class="zone-name">testing</span>
 
 
 - name: test WebDAV server deposition
   hosts: webdav
   become: true
+  vars:
+    ie: "{{ lookup('file', '/tmp/var/lib/irods/.irods/irods_environment.json') }}"
   tasks:
+    - name: test irods_environment.json contents
+      assert:
+        that:
+          - ie.irods_authentication_file == '/etc/httpd/irods/irodsA'
+          - ie.irods_default_hash_scheme == 'MD5'
+          - ie.irods_default_resource == 'demoResc'
+          - ie.irods_home == '/testing'
+          - ie.irods_host == 'dstesting_ies_centos6_1.dstesting_default'
+          - ie.irods_user_name == 'anonymous'
+          - ie.irods_zone_name == 'testing'
+
     - include_tasks: tasks/test_pkg_installed.yml
       with_items:
         - mod_proxy_html
@@ -79,10 +92,7 @@
         pkg: irods-runtime
         version: '4.1.10'
 
-    - debug:
-        msg: TODO configure irods connection
-
-    - name: test add davrods directory listing heads
+    - name: test add davrods irods directory contents
       stat:
         path: /etc/httpd/irods/{{ item }}
       with_items:
@@ -90,13 +100,13 @@
         - projects-head.html
         - community-head.html
         - curated-head.html
-
+        - irods_environment.json
       register: response
       failed_when: not response.stat.exists
 
     - name: test create content directories
       stat:
-        path: /var/www/html/dav/tempZone/commons
+        path: /var/www/html/dav/testing/commons
       register: response
       failed_when: not (response.stat.exists and response.stat.isdir)
 
@@ -106,8 +116,8 @@
       with_items:
         - index.html
         - dav/index.html
-        - dav/tempZone/index.html
-        - dav/tempZone/commons/index.html
+        - dav/testing/index.html
+        - dav/testing/commons/index.html
       register: response
       failed_when: not response.stat.exists
 

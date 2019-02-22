@@ -3,6 +3,10 @@
   shell: '! [ $(find /var/lib/irods -not -user irods -print -quit) ]'
   changed_when: false
 
-- name: test account owns /etc/irods
+- name: test correct account group for /var/libs/irods
+  debug:
+    msg: TODO implement
+
+- name: test ensure account owns /etc/irods
   debug:
     msg: TODO implement

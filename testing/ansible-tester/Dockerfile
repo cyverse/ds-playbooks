@@ -1,21 +1,18 @@
 FROM williamyeh/ansible:centos7
-MAINTAINER Tony Edgin @ CyVerse
 
 RUN yum --assumeyes install \
-        dmidecode git postgresql python-dns wget \
-        https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm && \
-    yum clean all && \
-    rm --force --recursive /var/cache/yum && \
-    pip install --upgrade ansible && \
-    mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test /root/.ssh
+  dmidecode git postgresql python-dns python-netaddr wget \
+  https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm
+RUN pip install --upgrade ansible
+RUN mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test /root/.ssh
 
 COPY ansible.cfg /root/.ansible.cfg
 COPY ssh-config /root/.ssh/config
 
 COPY test-playbook.sh /test-playbook
 
-RUN chmod --recursive go-rwx /root/.ssh && \
-    chmod u+x /test-playbook
+RUN chmod --recursive go-rwx /root/.ssh
+RUN chmod u+x /test-playbook
 
 COPY inventory/* /inventory/
 COPY inventory/host_vars/* /inventory/host_vars/

@@ -11,7 +11,7 @@ ipc_DEFAULT_RESC : string
 ipc_DEFAULT_RESC = '{{ _irods_default_resource }}'
 
 ipc_IES_IP : string
-ipc_IES_IP = '{{ lookup("dig", _irods_ies) }}'
+ipc_IES_IP = '{{ _irods_ies if _irods_ies|ipaddr else lookup("dig", _irods_ies) }}'
 
 ipc_MAX_NUM_RE_PROCS : integer
 ipc_MAX_NUM_RE_PROCS = {{ _irods_max_num_re_procs }}

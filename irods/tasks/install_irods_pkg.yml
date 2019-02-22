@@ -1,4 +1,9 @@
 ---
+# os       the OS identifier for the package to install
+# pkg      the name of the package to install
+# pkg_ver  the version of the package to install
 - name: install {{ pkg }}
   yum:
-    name: https://files.renci.org/pub/irods/releases/{{ _irods_version }}/{{ os }}/{{ pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm
+    name: https://files.renci.org/pub/irods/releases/{{ _irods_version }}/{{ os }}/{{
+            pkg }}-{{ pkg_ver }}-{{ os }}-x86_64.rpm
+  async: 120

@@ -5,9 +5,11 @@
   vars:
     ies: "{{ groups['ies'][0] }}"
     ies_server: "{{ ies | regex_replace('\\..*') }}"
-    ies_ip: "{{ lookup('dig', ies) }}"
+    ies_ip: "{{ ies if ies|ipaddr else lookup('dig', ies) }}"
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
+    webdav_host: "{{ groups['webdav'][0] }}"
+    webdav_ip: "{{ webdav_host if webdav_host|ipaddr else lookup('dig', webdav_host) }}"
   roles:
     - role: uoi-io.haproxy
       vars:
@@ -112,7 +114,7 @@
               http_checks:
                 - expect status 200
               servers:
-                - webdav {{ lookup('dig', groups['webdav'][0]) }} check check-ssl verify none
+                - webdav {{ webdav_ip }} check check-ssl verify none
       notify:
         - reload haproxy
       tags:
@@ -149,31 +151,20 @@
         src: files/logrotate.d/haproxy
         dest: /etc/logrotate.d
 
-# TODO remove this once its been executed in all environments
-    - name: remove old iptables block
-      blockinfile:
-        path: /etc/sysconfig/iptables
-        marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
-        state: absent
-      notify:
-        - restart firewall
-
     - name: disable conntrack for proxied connections
       blockinfile:
         path: /etc/sysconfig/iptables
         marker: "# {mark} DS MANAGED BLOCK (load_balancer raw)"
         block: |
           *raw
-          :PREROUTING ACCEPT
           -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport 443 -j NOTRACK
-          -A PREROUTING -s {{ lookup('dig', _webdav_host) }} -p tcp --sport 443 -j NOTRACK
+          -A PREROUTING -s {{ webdav_ip }} -p tcp --sport 443 -j NOTRACK
           -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _canonical_irods_port }} -j NOTRACK
           -A PREROUTING -s {{ ies_ip }} -p tcp --sport 1247 -j NOTRACK
           -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
           -A PREROUTING -s {{ ies_ip }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
-          :OUTPUT ACCEPT
           -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport 443 -j NOTRACK
-          -A OUTPUT -d {{ lookup('dig', _webdav_host) }} -p tcp --dport 443 -j NOTRACK
+          -A OUTPUT -d {{ webdav_ip }} -p tcp --dport 443 -j NOTRACK
           -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _canonical_irods_port }} -j NOTRACK
           -A OUTPUT -d {{ ies_ip }} -p tcp --dport 1247 -j NOTRACK
           -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
@@ -189,8 +180,8 @@
         marker: "# {mark} DS MANAGED BLOCK (load_balancer filter)"
         block: |
           -A INPUT -m state --state UNTRACKED -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_irods_allowed_src }} --dport 80 -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp -s {{ _load_balancer_stats_allowed_src }} --dport {{ _load_balancer_stats_port }} -j ACCEPT
+          -A INPUT -m state --state NEW -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport 80 -j ACCEPT
+          -A INPUT -m state --state NEW -s {{ _load_balancer_stats_allowed_src }} -p tcp --dport {{ _load_balancer_stats_port }} -j ACCEPT
       notify:
         - restart firewall
 

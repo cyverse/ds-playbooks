@@ -61,7 +61,7 @@
   hosts: webdav
   become: true
   vars:
-    ie: "{{ lookup('file', '/tmp/var/lib/irods/.irods/irods_environment.json') }}"
+    ie: "{{ lookup('file', '/tmp/home/irods/.irods/irods_environment.json') }}"
   tasks:
     - name: test irods_environment.json contents
       assert:

@@ -96,7 +96,6 @@
           - irods_environment.irods_client_server_policy == 'CS_NEG_REFUSE'
           - irods_environment.irods_default_hash_scheme == 'MD5'
           - irods_environment.irods_default_resource == 'rs_centos6'
-          - irods_environment.irods_server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
           - irods_environment.irods_user_name == 'rods'
           - irods_environment.irods_zone_name == 'testing'
 
@@ -118,12 +117,8 @@
         - name: verify server_config.json has correct contents
           assert:
             that:
-              - server_config.advanced_settings.default_number_of_transfer_threads == 4
-              - 'server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes
-                   == 4'
               - server_config.default_dir_mode == '0750'
               - server_config.default_file_mode == '0600'
-              - server_config.default_resource_directory == None
               - server_config.default_resource_name == 'rs_centos6'
               - server_config.icat_host == inventory_hostname
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
@@ -185,9 +180,6 @@
         - name: verify server_config.json has correct contents
           assert:
             that:
-              - server_config.advanced_settings.default_number_of_transfer_threads == 4
-              - 'server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes
-                   == 4'
               - server_config.default_resource_directory == '/var/lib/irods/Vault'
               - server_config.default_resource_name == 'rs_centos6'
               - server_config.icat_host == 'dstesting_ies_centos6_1.dstesting_default'

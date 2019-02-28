@@ -256,12 +256,12 @@
 
 # TODO update ansible-irods-cfg's irods_environment.yml playbook to support client version
         irods_cfg_authentication_file: /etc/httpd/irods/irodsA
-        irods_cfg_default_hash_scheme: MD5
-        irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
+        irods_cfg_client_default_hash_scheme: MD5
+        irods_cfg_client_default_resource: "{{ _irods_default_resource }}"
 
     - name: install irods_environment.json
       copy:
-        src: /tmp/var/lib/irods/.irods/irods_environment.json
+        src: /tmp/home/irods/.irods/irods_environment.json
         dest: /etc/httpd/irods/irods_environment.json
 
     - include_tasks: tasks/mk_webdav_dir_head.yml

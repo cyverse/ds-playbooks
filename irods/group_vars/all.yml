@@ -22,7 +22,7 @@ _canonical_hostname: "{{ canonical_hostname if canonical_hostname is defined els
 
 _canonical_irods_port: "{{ canonical_irods_port if canonical_irods_port is defined else 1247 }}"
 
-_dbms_password: "{{ dbms_password if dbms_password is defined else None }}"
+_dbms_password: "{{ dbms_password | default('testpassword') }}"
 
 _dbms_port: "{{ dbms_port if dbms_port is defined else 5432 }}"
 

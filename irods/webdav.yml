@@ -100,6 +100,12 @@
                   RedirectPermanent /dav/{{ _irods_zone_name }}/home/shared \
                                     /dav/{{ _irods_zone_name }}/projects
 
+                  DirectoryIndex disabled
+
+                  AuthType Basic
+                  AuthName CyVerse
+                  AuthBasicProvider irods
+
                   <RequireAll>
                     Require expr \
                       %{REQUEST_URI} !~ m#^/dav/{{ _irods_zone_name }}/home(/[^/]*/?)?$# \
@@ -107,12 +113,6 @@
 
                     Require valid-user
                   </RequireAll>
-
-                  DirectoryIndex disabled
-
-                  AuthType Basic
-                  AuthName CyVerse
-                  AuthBasicProvider irods
 
                   Dav davrods-locallock
 
@@ -136,6 +136,8 @@
                   AuthName CyVerse
                   AuthBasicProvider irods
 
+                  Require valid-user
+                  
                   Dav davrods-locallock
 
                   DavDepthInfinity on

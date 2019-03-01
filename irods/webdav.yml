@@ -103,7 +103,7 @@
                   DirectoryIndex disabled
 
                   AuthType Basic
-                  AuthName CyVerse
+                  AuthName {{ _webdav_auth_name }}
                   AuthBasicProvider irods
 
                   <RequireAll>
@@ -133,11 +133,11 @@
                   DirectoryIndex disabled
 
                   AuthType Basic
-                  AuthName CyVerse
+                  AuthName {{ _webdav_auth_name }}
                   AuthBasicProvider irods
 
                   Require valid-user
-                  
+
                   Dav davrods-locallock
 
                   DavDepthInfinity on

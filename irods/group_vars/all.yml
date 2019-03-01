@@ -186,6 +186,8 @@ _single_threaded_resources: "{{
 
 _sysctl_kernel: "{{ sysctl_kernel if sysctl_kernel is defined else [] }}"
 
+_webdav_auth_name: "{{ webdav_auth_name | default('CyVerse') }}"
+
 _webdav_cache_dir: "{{ webdav_cache_dir if webdav_cache_dir is defined else
                        '/var/cache/httpd/proxy' }}"
 

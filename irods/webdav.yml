@@ -7,7 +7,7 @@
       vars:
         apache_ssl_cipher_suite: "HIGH:3DES:!aNULL:!MD5:!SEED:!IDEA"
         apache_global_vhost_settings: |
-          LoadModule log_forensic_module_modules/mod_log_forensic.so
+          LoadModule log_forensic_module modules/mod_log_forensic.so
           LoadModule proxy_html_module modules/mod_proxy_html.so
           LoadModule unique_id_module modules/mod_unique_id.so
 
@@ -100,7 +100,7 @@
                   RedirectPermanent /dav/{{ _irods_zone_name }}/home/shared \
                                     /dav/{{ _irods_zone_name }}/projects
 
-                  <RequireAll)
+                  <RequireAll>
                     Require expr \
                       %{REQUEST_URI} !~ m#^/dav/{{ _irods_zone_name }}/home(/[^/]*/?)?$# \
                       || %{REMOTE_USER} != "anonymous"

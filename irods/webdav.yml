@@ -58,7 +58,7 @@
                   Dav davrods-nolocks
 
                   DavRodsEnvFile /etc/httpd/irods/irods_environment.json
-                  DavRodsServer {{ _canonical_hostname }} {{ _canonical_irods_port }}
+                  DavRodsServer {{ _irods_ies }} 1247
                   DavRodsZone {{ _irods_zone_name }}
                   DavRodsAnonymousMode On
                   DavRodsAnonymousLogin "anonymous" ""
@@ -82,7 +82,7 @@
                   Dav davrods-nolocks
 
                   DavRodsEnvFile /etc/httpd/irods/irods_environment.json
-                  DavRodsServer {{ _canonical_hostname }} {{ _canonical_irods_port }}
+                  DavRodsServer {{ _irods_ies }} 1247
                   DavRodsZone {{ _irods_zone_name }}
                   DavRodsAnonymousMode On
                   DavRodsAnonymousLogin "anonymous" ""
@@ -118,7 +118,7 @@
 
                   DavDepthInfinity on
                   DavRodsEnvFile /etc/httpd/irods/irods_environment.json
-                  DavRodsServer {{ _canonical_hostname }} {{ _canonical_irods_port }}
+                  DavRodsServer {{ _irods_ies }} 1247
                   DavRodsZone {{ _irods_zone_name }}
                   DavRodsExposedRoot Home
                   DavRodsHtmlHead /etc/httpd/irods/home-head.html
@@ -142,7 +142,7 @@
 
                   DavDepthInfinity on
                   DavRodsEnvFile /etc/httpd/irods/irods_environment.json
-                  DavRodsServer {{ _canonical_hostname }} {{ _canonical_irods_port }}
+                  DavRodsServer {{ _irods_ies }} 1247
                   DavRodsZone {{ _irods_zone_name }}
                   DavRodsExposedRoot /{{ _irods_zone_name }}/home/shared
                   DavRodsHtmlHead /etc/httpd/irods/projects-head.html

@@ -190,13 +190,13 @@
                   ProxyPassReverse http://127.0.0.1/dav
 
                   ProxyHTMLURLMap ^http:(//[^/]+/dav/) https:$1 [R]
+
               # TODO consider moving this into 127.0.0.1 vhost it might simplify the URL rewrites
               # TODO consider using ansible to generate separate davrods services for /dav-anon
               - path: /dav-anon
                 extra_parameters: |
-                  # TODO have ansible generate this
                   # The base64 encoding of anonymous is YW5vbnltb3Vz
-                  RequestHeader set Authorization "Basic YW5vbnltb3Vz"
+                  RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
 
                   ProxyPass http://127.0.0.1/dav
                   ProxyPassReverse http://127.0.0.1/dav

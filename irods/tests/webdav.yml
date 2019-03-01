@@ -60,20 +60,7 @@
 - name: test WebDAV server deposition
   hosts: webdav
   become: true
-  vars:
-    ie: "{{ lookup('file', '/tmp/home/irods/.irods/irods_environment.json') }}"
   tasks:
-    - name: test irods_environment.json contents
-      assert:
-        that:
-          - ie.irods_authentication_file == '/etc/httpd/irods/irodsA'
-          - ie.irods_default_hash_scheme == 'MD5'
-          - ie.irods_default_resource == 'demoResc'
-          - ie.irods_home == '/testing'
-          - ie.irods_host == 'dstesting_ies_centos6_1.dstesting_default'
-          - ie.irods_user_name == 'anonymous'
-          - ie.irods_zone_name == 'testing'
-
     - include_tasks: tasks/test_pkg_installed.yml
       with_items:
         - mod_proxy_html
@@ -103,6 +90,23 @@
         - irods_environment.json
       register: response
       failed_when: not response.stat.exists
+
+    - name: retrieve encoded irods_environment.json
+      slurp:
+        src: /etc/httpd/irods/irods_environment.json
+      register: ieEncoded
+
+    - name: decode irods_environment.json
+      set_fact:
+        irods_environment: "{{ ieEncoded.content | b64decode }}"
+
+    - name: test irods_environment.json contents
+      assert:
+        that:
+          - irods_environment.irods_home == '/testing'
+          - irods_environment.irods_host == 'dstesting_ies_centos6_1.dstesting_default'
+          - irods_environment.irods_user_name == 'anonymous'
+          - irods_environment.irods_zone_name == 'testing'
 
     - name: test create content directories
       stat:

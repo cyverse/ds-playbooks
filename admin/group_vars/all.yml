@@ -2,6 +2,8 @@
 _nic_mtu: "{{ nic_mtu if nic_mtu is defined else 1500 }}"
 _nic_txqueuelen: "{{ nic_txqueuelen if nic_txqueuelen is defined else 1000 }}"
 
+_package_manager: "{{ package_manager | default('auto') }}"
+
 _rebootable: "{{ rebootable if rebootable is defined else true }}"
 
 _sysctl_net: "{{ sysctl_net if sysctl_net is defined else [] }}"

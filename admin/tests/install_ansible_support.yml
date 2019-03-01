@@ -24,9 +24,12 @@
   tasks:
     - name: test install EPEL repo
       when: ansible_distribution == 'CentOS'
-      debug:
-        msg: TODO implement
-
+      yum:
+        list: epel-release
+      register: result
+      failed_when: |
+        result.results | selectattr("yumstate", 'equalto', "installed") | list | count != 1
+      
     - name: test install packages
       debug:
         msg: TODO implement

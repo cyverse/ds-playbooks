@@ -8,7 +8,7 @@
       package:
         name: dmidecode
         state: present
-
+        use: "{{ _package_manager }}"
 
 - name: install required packages for ansible
   hosts: all:!unmanaged_systems

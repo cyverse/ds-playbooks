@@ -159,7 +159,8 @@
             extra_parameters: |
               ErrorLog logs/ssl_error_log
 
-              CustomLog logs/ssl_access_log forensic
+              CustomLog logs/ssl_access_log "%t %h \"%r\" %>s %b %D %L %{forensic-id}n"
+ 
               CustomLog logs/ssl_request_log "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b %{forensic-id}n"
 
               LogLevel warn

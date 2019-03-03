@@ -20,6 +20,7 @@
         apache_vhosts:
           - servername: "{{ inventory_hostname }}"
             extra_parameters: |
+              ServerAlias {{ _canonical_hostname }}
               RedirectPermanent / https://{{ inventory_hostname }}/
             comment: Redirect HTTP to HTTPS
           - servername: 127.0.0.1
@@ -157,6 +158,7 @@
             certificate_key_file: "{{ _webdav_tls_key_file }}"
             certificate_chain_file: "{{ _webdav_tls_chain_file }}"
             extra_parameters: |
+              ServerAlias {{ _canonical_hostname }}
               ErrorLog logs/ssl_error_log
 
               CustomLog logs/ssl_access_log "%t %h \"%r\" %>s %b %D %L %{forensic-id}n"

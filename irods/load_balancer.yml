@@ -114,7 +114,7 @@
               http_checks:
                 - expect status 200
               servers:
-                - webdav {{ webdav_ip }} check check-ssl verify none
+                - webdav {{ webdav_ip }} check check-ssl inter 20s verify none
       notify:
         - reload haproxy
       tags:

@@ -16,7 +16,7 @@
           CacheRoot {{ _webdav_cache_dir }}
           CacheDirLevels 2
           CacheDirLength 1
-          CacheMaxFileSize {{ _webdav_cache_max_file_size }}
+          CacheMaxFileSize {{ _webdav_cache_max_file_size * 2**20 }}
         apache_vhosts:
           - servername: "{{ inventory_hostname }}"
             extra_parameters: |

@@ -86,8 +86,8 @@ Variable                                   | Default                            
 `sysctl_kernel`                            | `[]`                                 |         | a list of sysctl kernel parameters to set for the IES, _see_below_
 `webdav_auth_name`                         | CyVerse                              |         | Authorization realm to use for the Data Store
 `webdav_cache_dir`                         | `/var/cache/httpd/proxy`             |         | the directory apache will use for the WebDAV cache
-`webdav_cache_max_file_size`               | 1000000                              |         | the maximum size in bytes of the largest WebDAV file apache will cache
-`webdav_cache_size`                        | 100                                  |         | the maximum size in megabytes the cache can be
+`webdav_cache_max_file_size`               | 1                                    |         | the maximum size in mebibytes of the largest WebDAV file apache will cache
+`webdav_cache_size`                        | 100                                  |         | the maximum size in mebibytes the cache can be
 `webdav_tls_cert_file`                     | `/etc/ssl/certs/dummy.crt`           |         | The TLS certificate file used for encrypted communication
 `weddav_tls_chain_file`                    | `/etc/ssl/certs/dummy-chain.crt`     |         | The TLS certificate chain file used for encrypted communication
 `webdav_tls_key_file`                      | `/etc/ssl/certs/dummy.key`           |         | The TLS key file used for encrypted communication

@@ -192,8 +192,7 @@ _webdav_cache_dir: "{{ webdav_cache_dir if webdav_cache_dir is defined else
                        '/var/cache/httpd/proxy' }}"
 
 _webdav_cache_max_file_size: "{{
-  webdav_cache_max_file_size if webdav_cache_max_file_size is defined else
-  1000000 }}"
+  webdav_cache_max_file_size if webdav_cache_max_file_size is defined else 1 }}"
 
 _webdav_cache_size: "{{ webdav_cache_size if webdav_cache_size is defined else 100 }}"
 

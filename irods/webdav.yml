@@ -46,112 +46,35 @@
               - path: /dav/{{ _irods_zone_name }}/commons/community_released
                 comment: Anonymous read-only access to the community released data
                 extra_parameters: |
+                  {% from 'davrods.j2' import davrods with context %}
                   RedirectPermanent \
                     /dav/{{ _irods_zone_name }}/commons/community_released/commons_repo/curated \
                     /dav/{{ _irods_zone_name }}/commons/cyverse_curated
 
-                  DirectoryIndex disabled
-
-                  AuthType None
-
-                  Require all granted
-
-                  Dav davrods-nolocks
-
-                  DavRodsEnvFile /etc/httpd/irods/irods_environment.json
-                  DavRodsServer {{ _irods_ies }} 1247
-                  DavRodsZone {{ _irods_zone_name }}
-                  DavRodsAnonymousMode On
-                  DavRodsAnonymousLogin "anonymous" ""
-                  DavRodsExposedRoot /{{ _irods_zone_name }}/home/shared
-                  DavRodsRxBufferKbs 32768
-                  DavRodsHtmlHead /etc/httpd/irods/community-head.html
-
-                  CacheDefaultExpire 2592000
-                  CacheMaxExpire 31536000
-
-                  ExpiresDefault "access plus 10080 minutes"
+                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'community-head.html', 365,
+                             30) }}
               - path: /dav/{{ _irods_zone_name }}/commons/cyverse_curated
                 comment: Anonymous read-only access to the data curated by CyVerse
                 extra_parameters: |
-                  DirectoryIndex disabled
-
-                  AuthType None
-
-                  Require all granted
-
-                  Dav davrods-nolocks
-
-                  DavRodsEnvFile /etc/httpd/irods/irods_environment.json
-                  DavRodsServer {{ _irods_ies }} 1247
-                  DavRodsZone {{ _irods_zone_name }}
-                  DavRodsAnonymousMode On
-                  DavRodsAnonymousLogin "anonymous" ""
-                  DavRodsExposedRoot /{{ _irods_zone_name }}/home/shared/commons_repo/curated
-                  DavRodsRxBufferKbs 32768
-                  DavRodsHtmlHead /etc/httpd/irods/curated-head.html
-
-                  CacheDefaultExpire 2592000
-                  CacheMaxExpire 31536000
-
-                  ExpiresDefault "access plus 10080 minutes"
+                  {% from 'davrods.j2' import davrods with context %}
+                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared/commons_repo/curated',
+                             'community-head.html', 365, 30) }}
               - path: /dav/{{ _irods_zone_name }}/home
                 comment: Authenticated read-write access to the home collection
                 extra_parameters: |
+                  {% from 'davrods.j2' import davrods with context %}
                   RedirectPermanent /dav/{{ _irods_zone_name }}/home/shared \
                                     /dav/{{ _irods_zone_name }}/projects
 
-                  DirectoryIndex disabled
-
-                  AuthType Basic
-                  AuthName {{ _webdav_auth_name }}
-                  AuthBasicProvider irods
-
-                  <RequireAll>
-                    Require expr \
-                      %{REQUEST_URI} !~ m#^/dav/{{ _irods_zone_name }}/home(/[^/]*/?)?$# \
-                      || %{REMOTE_USER} != "anonymous"
-
-                    Require valid-user
-                  </RequireAll>
-
-                  Dav davrods-locallock
-
-                  DavDepthInfinity on
-                  DavRodsEnvFile /etc/httpd/irods/irods_environment.json
-                  DavRodsServer {{ _irods_ies }} 1247
-                  DavRodsZone {{ _irods_zone_name }}
-                  DavRodsExposedRoot Home
-                  DavRodsHtmlHead /etc/httpd/irods/home-head.html
-
-                  CacheDefaultExpire 604800
-                  CacheMaxExpire 2592000
-
-                  ExpiresDefault "access plus 1440 minutes"
+                  {{ davrods('Home', 'home-head.html', 30, 7,
+                       [ 'expr %{REQUEST_URI} !~ m#^/dav/' ~ _irods_zone_name ~ '/home(/[^/]*/?)?$# || %{REMOTE_USER} != "anonymous"',
+                         'valid-user' ]) }}
               - path: /dav/{{ _irods_zone_name }}/projects
                 comment: Authenticated read-write access to the project folders
                 extra_parameters: |
-                  DirectoryIndex disabled
-
-                  AuthType Basic
-                  AuthName {{ _webdav_auth_name }}
-                  AuthBasicProvider irods
-
-                  Require valid-user
-
-                  Dav davrods-locallock
-
-                  DavDepthInfinity on
-                  DavRodsEnvFile /etc/httpd/irods/irods_environment.json
-                  DavRodsServer {{ _irods_ies }} 1247
-                  DavRodsZone {{ _irods_zone_name }}
-                  DavRodsExposedRoot /{{ _irods_zone_name }}/home/shared
-                  DavRodsHtmlHead /etc/httpd/irods/projects-head.html
-
-                  CacheDefaultExpire 604800
-                  CacheMaxExpire 2592000
-
-                  ExpiresDefault "access plus 1440 minutes"
+                  {% from 'davrods.j2' import davrods with context %}
+                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html', 30, 7
+                       [ 'valid-user' ]) }}
         apache_vhosts_ssl:
           - servername: "{{ inventory_hostname }}"
             certificate_file: "{{ _webdav_tls_cert_file }}"
@@ -162,7 +85,7 @@
               ErrorLog logs/ssl_error_log
 
               CustomLog logs/ssl_access_log "%t %h \"%r\" %>s %b %D %L %{forensic-id}n"
- 
+
               CustomLog logs/ssl_request_log "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b %{forensic-id}n"
 
               LogLevel warn

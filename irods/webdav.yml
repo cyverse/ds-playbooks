@@ -73,7 +73,7 @@
                 comment: Authenticated read-write access to the project folders
                 extra_parameters: |
                   {% from 'davrods.j2' import davrods with context %}
-                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html', 30, 7
+                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html', 30, 7,
                        [ 'valid-user' ]) }}
         apache_vhosts_ssl:
           - servername: "{{ inventory_hostname }}"

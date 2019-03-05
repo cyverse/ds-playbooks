@@ -49,7 +49,7 @@ DavRodsServer {{ _irods_ies }} 1247
 DavRodsZone {{ _irods_zone_name }}
 DavRodsExposedRoot {{ exposedRoot }}
 DavRodsRxBufferKbs 32768
-DavRodsHtmlHead /etc/httpd/irods{{ htmlHead }}
+DavRodsHtmlHead /etc/httpd/irods/{{ htmlHead }}
 
 CacheDefaultExpire {{ cacheExpire * 86400 }}
 CacheMaxExpire {{ cacheExpire * 86400 }}

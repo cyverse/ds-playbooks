@@ -1,4 +1,12 @@
-{# Generates a Location section for the apache config files #}
+{# Generates a Location section for the apache config files
+
+   Parameter:
+    def     a dictionary describing the location to generate
+     .path              the absolute URL path to the root of the location
+     .comment           (optional) a comment to about the location
+     .extra_parameters  (optional) extra apache directives to be included in the
+                        definition
+ #}
 {% macro mk(def) -%}
 {%   if def.comment is defined %}
 {# assuiming the macro is already identited on level #}

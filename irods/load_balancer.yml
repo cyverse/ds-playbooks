@@ -121,7 +121,7 @@
         - no_testing
 
   pre_tasks:
-    - name: disable notifcations for testing
+    - name: enable notifcations when not testing
       set_fact:
         notifications_enabled: true
       tags:
@@ -192,19 +192,19 @@
 
   handlers:
     - name: reload haproxy
-      when: notifications_enabled is defined
+      when: notifications_enabled | default(false)
       service:
         name: haproxy
         state: reloaded
 
     - name: restart firewall
-      when: notifications_enabled is defined
+      when: notifications_enabled | default(false)
       service:
         name: iptables
         state: restarted
 
     - name: restart syslog
-      when: notifications_enabled is defined
+      when: notifications_enabled | default(false)
       service:
         name: rsyslog
         state: restarted

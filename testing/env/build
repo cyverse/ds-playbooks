@@ -28,7 +28,8 @@ main()
 
   . "$cfg"
 
-  docker build --file "$baseDir"/base/Dockerfile --tag test-env-base "$baseDir"
+  docker build --file "$baseDir"/base/Dockerfile.centos6 --tag test-env-base:centos6 "$baseDir"
+  docker build --file "$baseDir"/base/Dockerfile.centos7 --tag test-env-base:centos7 "$baseDir"
   docker-compose --file "$baseDir"/docker-compose.yml --project-name "$ENV_NAME" build
 }
 

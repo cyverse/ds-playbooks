@@ -1,8 +1,5 @@
-FROM centos:6
+FROM test-env-base:centos6
 
-COPY base/config.sh /tmp/base-config
-
-RUN /tmp/base-config centos 6
 RUN yum --assumeyes install epel-release
 RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
 RUN yum --assumeyes install \
@@ -32,7 +29,4 @@ ARG IRODS_ZONE_USER=rods
 RUN /tmp/config-irods.sh
 RUN /tmp/prep-svc-script.sh
 
-COPY base/entrypoint.sh /entrypoint
-
-ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/service.sh" ]

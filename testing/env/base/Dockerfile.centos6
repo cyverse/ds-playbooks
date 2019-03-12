@@ -1,0 +1,9 @@
+FROM centos:6
+
+COPY base/config.sh /tmp/config
+
+RUN /tmp/config centos 6
+
+COPY base/entrypoint.sh /entrypoint
+
+ENTRYPOINT [ "/entrypoint" ]

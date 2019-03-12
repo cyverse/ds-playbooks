@@ -1,25 +1,27 @@
-FROM postgres:9.3
+FROM test-env-base:centos6
 
-COPY base/config.sh /tmp/base-config
+RUN touch /etc/sysconfig/iptables
+RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
 
-ARG DEBIAN_FRONTEND=noninteractive
+ADD https://github.com/tianon/gosu/releases/download/1.11/gosu-amd64 /usr/local/bin/gosu
+ADD https://github.com/tianon/gosu/releases/download/1.11/gosu-amd64.asc /usr/local/bin/gosu.asc
 
-RUN /tmp/base-config debian jesse
+RUN gpg --verify /usr/local/bin/gosu.asc
+RUN chmod +x /usr/local/bin/gosu
+RUN yum install --assumeyes \
+      https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm
+RUN yum install --assumeyes postgresql93-server
 
-# Since the provided value of PGDATA is mounted as a volume and given 777
-# permissions, pg_ctl cannot run during build time. The data directory location
-# needed to be changed.
-ENV PGDATA /var/lib/postgresql/alt_data
+ENV PATH "$PATH":/usr/pgsql-9.3/bin
+ENV PGDATA=/var/lib/pgsql/9.3/data
 
-RUN mkdir "$PGDATA"
-RUN chown postgres:postgres "$PGDATA"
-RUN gosu postgres initdb --auth ident --lc-collate C --locale en_US.UTF-8 --pgdata "$PGDATA"
+RUN gosu postgres initdb --auth ident --lc-collate C --locale en_US.UTF-8
+
+COPY postgresql/config/* "$PGDATA"/
+RUN chown postgres:postgres "$PGDATA"/*
 
 COPY postgresql/scripts/*.sql* /tmp/
 COPY postgresql/scripts/config.sh /tmp/config
-COPY postgresql/config/* "$PGDATA"/
-
-RUN chown postgres:postgres "$PGDATA"/*
 
 ARG DB_NAME=ICAT
 ARG DB_PASSWORD=testpassword
@@ -32,8 +34,6 @@ ARG IRODS_ZONE_USER=rods
 
 RUN gosu postgres /tmp/config
 
-COPY base/entrypoint.sh /entrypoint
 COPY postgresql/service.sh /
 
-ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/service.sh" ]

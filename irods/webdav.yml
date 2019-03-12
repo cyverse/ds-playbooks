@@ -253,13 +253,13 @@
 
   handlers:
     - name: restart firewall
-      when: notifications_enabled is defined
+      when: notifications_enabled | default(false)
       service:
         name: iptables
         state: restarted
 
     - name: restart htcacheclean
-      when: notifications_enabled is defined
+      when: notifications_enabled | default(false)
       service:
         name: htcacheclean
         state: restarted

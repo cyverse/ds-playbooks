@@ -1,4 +1,58 @@
 ---
+- name: allow IES to talk to DBMS
+  hosts: dbms
+  become: true
+  tasks:
+    - name: enable notifications when not testing
+      set_fact:
+        notifications_enabled: true
+      tags:
+        - no_testing
+
+    - name: allow IES communication through firewall
+      blockinfile:
+        path: /etc/sysconfig/iptables
+        insertbefore: -A {{ _firewall_chain }} -j REJECT
+        marker: "# {mark} DS MANAGED BLOCK"
+        block: |
+          {% for i in groups['ies'] %}
+          {%   set addr = i if i|ipaddr else lookup('dig', i) %}
+          {%   if inventory_hostname != i %}
+          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport {{ _dbms_port
+             }} -j ACCEPT
+          {%   endif %}
+          {% endfor %}
+      notify:
+        - restart firewall
+
+    - name: allow IES to communicate with Postgres DBMS
+      blockinfile:
+        path: /var/lib/pgsql/9.3/data/pg_hba.conf
+        insertafter: '# IPv4 local connections:'
+        marker: "# {mark} DS MANAGED BLOCK"
+        block: |
+          {% for i in groups['ies'] %}
+          {%   set addr = i if i|ipaddr else lookup('dig', i) %}
+          {{ '%-8s %-15s %-15s %-23s %s' | format('host', 'ICAT', _dbms_username, addr ~ '/32', 'md5')
+            }}
+          {% endfor %}
+      notify:
+        - reload postgresql
+
+  handlers:
+    - name: restart firewall
+      when: notifications_enabled | default(false)
+      service:
+        name: iptables
+        state: restarted
+
+    - name: reload postgresql
+      when: notifications_enabled | default(false)
+      service:
+        name: postgresql-9.3
+        state: reloaded
+
+
 - import_playbook: provision.yml
 
 

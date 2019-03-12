@@ -1,8 +1,5 @@
-FROM centos:6
+FROM test-env-base:centos6
 
-COPY base/config.sh /tmp/base-config
-
-RUN /tmp/base-config centos 6
 RUN yum --assumeyes install \
       epel-release \
       https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm
@@ -42,7 +39,4 @@ ARG IRODS_ZONE_USER=rods
 RUN /tmp/config-irods.sh
 RUN /tmp/prep-svc-script.sh
 
-COPY base/entrypoint.sh /entrypoint
-
-ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/service.sh" ]

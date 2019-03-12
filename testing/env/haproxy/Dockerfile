@@ -1,8 +1,8 @@
-FROM test-env-base
+FROM test-env-base:centos7
 
 RUN yum install --assumeyes epel-release
 RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-RUN yum install --assumeyes iptables openssl python-pip rsyslog
+RUN yum install --assumeyes openssl python-pip rsyslog
 RUN pip --disable-pip-version-check install pyOpenSSL
 RUN mkdir /etc/haproxy
 

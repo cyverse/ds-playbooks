@@ -2,8 +2,7 @@ FROM centos:7
 
 COPY base/config.sh /tmp/config
 
-RUN /tmp/config centos 7 && \
-    rm --force /tmp/config
+RUN /tmp/config centos 7
 
 COPY base/entrypoint.sh /entrypoint
 

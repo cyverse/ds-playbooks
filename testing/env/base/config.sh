@@ -67,17 +67,17 @@ install_centos_packages()
   local version="$1"
 
   rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
-  yum --assumeyes install libselinux-python openssh-server sudo
+  yum --assumeyes install iptables-services libselinux-python openssh-server sudo
 }
 
 
 install_debian_packages()
 {
   apt-get update --quiet
-  apt-get install --no-install-recommends --quiet --yes apt-utils
+  apt-get install --no-install-recommends --quiet --yes apt-utils 2> /dev/null
 
   apt-get install --no-install-recommends --quiet --yes \
-    jq openssh-server python-pip python-selinux python-virtualenv sudo
+    iptables jq openssh-server python-pip python-selinux python-virtualenv sudo
 }
 
 

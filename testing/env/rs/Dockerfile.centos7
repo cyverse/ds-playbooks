@@ -1,4 +1,4 @@
-FROM test-env-base
+FROM test-env-base:centos7
 
 RUN yum --assumeyes install epel-release
 RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7

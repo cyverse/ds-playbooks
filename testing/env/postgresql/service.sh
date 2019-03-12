@@ -21,7 +21,7 @@ main()
     printf 'Unknown command "%s"\n' "$action" >&2
     return 1
   fi
-  
+
   gosu postgres pg_ctl -w "$action"
 }
 

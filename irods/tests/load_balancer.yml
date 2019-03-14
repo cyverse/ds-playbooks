@@ -26,12 +26,6 @@
       register: result
       failed_when: not result.stat.exists
 
-    - name: test iptables rules
-      script: scripts/check-haproxy-iptables-raw.awk
-                --assign IES_IP={{ lookup('dig', 'dstesting_ies_centos6_1.dstesting_default') }}
-                /etc/sysconfig/iptables
-      changed_when: false
-
     - name: verify vip file is in place
       stat:
         path: /etc/haproxy/vip.lst

@@ -8,8 +8,6 @@
     ies_ip: "{{ ies if ies|ipaddr else lookup('dig', ies) }}"
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
-    webdav_host: "{{ groups['webdav'][0] }}"
-    webdav_ip: "{{ webdav_host if webdav_host|ipaddr else lookup('dig', webdav_host) }}"
   roles:
     - role: uoi-io.haproxy
       vars:
@@ -113,8 +111,13 @@
                 - httpchk OPTIONS /
               http_checks:
                 - expect status 200
-              servers:
-                - webdav {{ webdav_ip }} check check-ssl inter 20s verify none
+              servers: "[
+                {% for h in groups.webdav %}
+                  \"dav-{{ loop.index }} {%
+                    if h | ipaddr %}{{ h }}{% else %}{{ lookup('dig', h) }}{%
+                    endif %} check check-ssl inter 20s verify none\"
+                  {% if not loop.last %},{% endif %}
+                {% endfor %} ]"
       notify:
         - reload haproxy
       tags:
@@ -158,16 +161,19 @@
         block: |
           *raw
           -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport 443 -j NOTRACK
-          -A PREROUTING -s {{ webdav_ip }} -p tcp --sport 443 -j NOTRACK
-          -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _canonical_irods_port }} -j NOTRACK
-          -A PREROUTING -s {{ ies_ip }} -p tcp --sport 1247 -j NOTRACK
-          -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
-          -A PREROUTING -s {{ ies_ip }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
           -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport 443 -j NOTRACK
-          -A OUTPUT -d {{ webdav_ip }} -p tcp --dport 443 -j NOTRACK
+          {% for w in groups.webdav %}
+          {%   set addr = w if w|ipaddr else lookup('dig', w) %}
+          -A PREROUTING -s {{ addr }} -p tcp --sport 443 -j NOTRACK
+          -A OUTPUT -d {{ addr }} -p tcp --dport 443 -j NOTRACK
+          {% endfor %}
+          -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _canonical_irods_port }} -j NOTRACK
           -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _canonical_irods_port }} -j NOTRACK
+          -A PREROUTING -s {{ ies_ip }} -p tcp --sport 1247 -j NOTRACK
           -A OUTPUT -d {{ ies_ip }} -p tcp --dport 1247 -j NOTRACK
+          -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
           -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
+          -A PREROUTING -s {{ ies_ip }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
           -A OUTPUT -d {{ ies_ip }} -p tcp --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
           COMMIT
       notify:

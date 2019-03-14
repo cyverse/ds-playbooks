@@ -69,6 +69,12 @@
       loop_control:
         loop_var: pkg
 
+    - name: test ssl.conf is gone
+      stat:
+        path: /etc/httpd/conf.d/ssl.conf
+      register: response
+      failed_when: response.stat.exists
+      
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: irods-icommands

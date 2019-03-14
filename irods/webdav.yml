@@ -11,16 +11,24 @@
           LoadModule proxy_html_module modules/mod_proxy_html.so
           LoadModule unique_id_module modules/mod_unique_id.so
 
-          ForensicLog "logs/forensic_log"
-
           CacheRoot {{ _webdav_cache_dir }}
           CacheDirLevels 2
           CacheDirLength 1
           CacheMaxFileSize {{ (_webdav_cache_max_file_size | int) * 2**20 }}
+
+          ForensicLog "logs/forensic_log"
+
+          Listen 443 https
+
+          SSLPassPhraseDialog exec:/usr/libexec/httpd-ssl-pass-dialog
+          SSLRandomSeed connect builtin
+          SSLRandomSeed startup file:/dev/urandom 256
+          SSLSessionCache shmcb:/run/httpd/sslcache(512000)
         apache_vhosts:
           - servername: "{{ inventory_hostname }}"
             extra_parameters: |
               ServerAlias {{ _canonical_hostname }}
+
               RedirectPermanent / https://{{ inventory_hostname }}/
             comment: Redirect HTTP to HTTPS
           - servername: 127.0.0.1
@@ -82,6 +90,7 @@
             certificate_chain_file: "{{ _webdav_tls_chain_file }}"
             extra_parameters: |
               ServerAlias {{ _canonical_hostname }}
+
               ErrorLog logs/ssl_error_log
 
               CustomLog logs/ssl_access_log "%t %h \"%r\" %>s %b %D %L %{forensic-id}n"
@@ -110,6 +119,14 @@
               ProxyHTMLLinks base href
 
               Header edit Location ^http: https:
+
+              <Files ~ "\.(cgi|shtml|phtml|php3?)$">
+                SSLOptions +StdEnvVars
+              </Files>
+
+              <Directory "/var/www/cgi-bin">
+                SSLOptions +StdEnvVars
+              </Directory>
             comment: This proxy handles TLS, corrects requests, enables caching, and anonymous access for XMLHttpRequests
             locations:
               - path: /dav
@@ -150,6 +167,11 @@
     - name: install mod_ssl
       package:
         name: mod_ssl
+
+    - name: ensure ssl.conf is gone
+      file:
+        path: /etc/httpd/conf.d/ssl.conf
+        state: absent
 
     - include_tasks: tasks/install_irods_pkg.yml
       vars:

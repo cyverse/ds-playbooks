@@ -59,14 +59,13 @@
                     /dav/{{ _irods_zone_name }}/commons/community_released/commons_repo/curated \
                     /dav/{{ _irods_zone_name }}/commons/cyverse_curated
 
-                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'community-head.html', 365,
-                             30) }}
+                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'community-head.html', 365) }}
               - path: /dav/{{ _irods_zone_name }}/commons/cyverse_curated
                 comment: Anonymous read-only access to the data curated by CyVerse
                 extra_parameters: |
                   {% from 'davrods.j2' import davrods with context %}
                   {{ davrods('/' ~ _irods_zone_name ~ '/home/shared/commons_repo/curated',
-                             'community-head.html', 365, 30) }}
+                             'community-head.html', 365) }}
               - path: /dav/{{ _irods_zone_name }}/home
                 comment: Authenticated read-write access to the home collection
                 extra_parameters: |
@@ -74,14 +73,14 @@
                   RedirectPermanent /dav/{{ _irods_zone_name }}/home/shared \
                                     /dav/{{ _irods_zone_name }}/projects
 
-                  {{ davrods('Home', 'home-head.html', 30, 7,
+                  {{ davrods('Home', 'home-head.html', 1,
                        [ 'expr %{REQUEST_URI} !~ m#^/dav/' ~ _irods_zone_name ~ '/home(/[^/]*/?)?$# || %{REMOTE_USER} != "anonymous"',
                          'valid-user' ]) }}
               - path: /dav/{{ _irods_zone_name }}/projects
                 comment: Authenticated read-write access to the project folders
                 extra_parameters: |
                   {% from 'davrods.j2' import davrods with context %}
-                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html', 30, 7,
+                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html', 1,
                        [ 'valid-user' ]) }}
         apache_vhosts_ssl:
           - servername: "{{ inventory_hostname }}"

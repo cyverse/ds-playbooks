@@ -25,13 +25,13 @@
           SSLRandomSeed startup file:/dev/urandom 256
           SSLSessionCache shmcb:/run/httpd/sslcache(512000)
         apache_vhosts:
-          - servername: "{{ inventory_hostname }}"
+          - servername: "{{ _canonical_hostname }}"
             extra_parameters: |
-              ServerAlias {{ _canonical_hostname }}
+              ServerAlias {{ inventory_hostname }}
 
-              RedirectPermanent / https://{{ inventory_hostname }}/
+              RedirectPermanent / https://{{ _canonical_hostname }}/
             comment: Redirect HTTP to HTTPS
-          - servername: 127.0.0.1
+          - servername: localhost
             listen_ip: 127.0.0.1
             extra_parameters: |
               CacheQuickHandler off
@@ -49,6 +49,8 @@
               Header set Access-Control-Allow-Headers "Range"
               Header set Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
               Header set Access-Control-Allow-Origin "*"
+
+              UseCanonicalName On
             comment: The WebDAV host
             locations:
               - path: /dav/{{ _irods_zone_name }}/commons/community_released
@@ -84,12 +86,12 @@
                   {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html', 30, 7,
                        [ 'valid-user' ]) }}
         apache_vhosts_ssl:
-          - servername: "{{ inventory_hostname }}"
+          - servername: "{{ _canonical_hostname }}"
             certificate_file: "{{ _webdav_tls_cert_file }}"
             certificate_key_file: "{{ _webdav_tls_key_file }}"
             certificate_chain_file: "{{ _webdav_tls_chain_file }}"
             extra_parameters: |
-              ServerAlias {{ _canonical_hostname }}
+              ServerAlias {{ inventory_hostname }}
 
               ErrorLog logs/ssl_error_log
 
@@ -131,12 +133,12 @@
             locations:
               - path: /dav
                 extra_parameters: |
-                  ProxyPass http://127.0.0.1/dav
-                  ProxyPassReverse http://127.0.0.1/dav
+                  ProxyPass http://localhost/dav
+                  ProxyPassReverse http://localhost/dav
 
                   ProxyHTMLURLMap ^http:(//[^/]+/dav/) https:$1 [R]
 
-              # TODO consider moving this into 127.0.0.1 vhost it might simplify the URL rewrites
+              # TODO consider moving this into localhost vhost it might simplify the URL rewrites
               # TODO consider using ansible to generate separate davrods services for /dav-anon
               - path: /dav-anon
                 extra_parameters: |

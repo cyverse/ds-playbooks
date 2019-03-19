@@ -135,8 +135,8 @@
             locations:
               - path: /dav
                 extra_parameters: |
-                  ProxyPass http://localhost/dav
-                  ProxyPassReverse http://localhost/dav
+                  ProxyPass http://127.0.0.1/dav
+                  ProxyPassReverse http://127.0.0.1/dav
 
                   ProxyHTMLURLMap ^http:(//[^/]+/dav/) https:$1 [R]
 

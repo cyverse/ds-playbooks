@@ -1,19 +1,18 @@
 {# Generates a davrods configuration
 
    Parameters:
-    exposedRoot   the place in iRODS to act as the root of the WebDAV repo
-    htmlHead      the name of the HTML head file used in collection listings
-    cacheExpire   the number of days to keep something cached on the server
-    clientExpire  the number of days to ask the client to keep something in its
-                  cache
-    requires      (optional) a list of requirements that must be met to grant
-                  access to the requested collection or data object. Each
-                  requirement must be formatted in a way understandable by
-                  Apache's Require directive.
+    exposedRoot  the place in iRODS to act as the root of the WebDAV repo
+    htmlHead     the name of the HTML head file used in collection listings
+    cacheExpire  the maximum number of hours to keep something cached on the
+                 server
+    requires     (optional) a list of requirements that must be met to grant
+                 access to the requested collection or data object. Each
+                 requirement must be formatted in a way understandable by
+                 Apache's Require directive.
 
    This macro requires the template's context.
  #}
-{% macro davrods(exposedRoot, htmlHead, cacheExpire, clientExpire, requires=[]) -%}
+{% macro davrods(exposedRoot, htmlHead, cacheExpire, requires=[]) -%}
 DirectoryIndex disabled
 
 {%   if requires | length == 0 %}
@@ -51,8 +50,5 @@ DavRodsExposedRoot {{ exposedRoot }}
 DavRodsRxBufferKbs 32768
 DavRodsHtmlHead /etc/httpd/irods/{{ htmlHead }}
 
-CacheDefaultExpire {{ cacheExpire * 86400 }}
-CacheMaxExpire {{ cacheExpire * 86400 }}
-
-ExpiresDefault "access plus {{ clientExpire * 1440 }} minutes"
+CacheMaxExpire {{ cacheExpire * 3600 }}
 {%- endmacro %}

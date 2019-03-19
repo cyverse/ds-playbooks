@@ -41,7 +41,6 @@
               CacheLockMaxAge 5
               CacheHeader on
               CacheIgnoreHeaders Set-Cookie
-              CacheLastModifiedFactor 0.5
 
               ExpiresActive on
 

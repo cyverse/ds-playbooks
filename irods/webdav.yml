@@ -26,6 +26,11 @@
           SSLRandomSeed connect builtin
           SSLRandomSeed startup file:/dev/urandom 256
           SSLSessionCache shmcb:/run/httpd/sslcache(512000)
+
+          ProxyErrorOverride On
+          ProxyHTMLEnable On
+          ProxyHTMLLinks a href
+          ProxyHTMLLinks base href
         apache_vhosts:
           - servername: "{{ _canonical_hostname }}"
             extra_parameters: |
@@ -52,6 +57,15 @@
               UseCanonicalName On
             comment: The WebDAV host
             locations:
+              # TODO consider using ansible to generate separate davrods services for /dav-anon
+              - path: /dav-anon
+                extra_parameters: |
+                  RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
+
+                  ProxyPass http://127.0.0.1/dav
+                  ProxyHTMLURLMap ^((http://)?[^/]*)/dav/ $1/dav-anon/ [R]
+
+                  Header edit Location ^(.*)/dav $1/dav-anon
               - path: /dav/{{ _irods_zone_name }}/commons/community_released
                 comment: Anonymous read-only access to the community released data
                 extra_parameters: |
@@ -112,12 +126,8 @@
                 RequestHeader merge Cache-Control no-store
               </Elseif>
 
-              ProxyErrorOverride On
-              ProxyPreserveHost On
-
-              ProxyHTMLEnable On
-              ProxyHTMLLinks a href
-              ProxyHTMLLinks base href
+              ProxyPass / http://127.0.0.1/
+              ProxyHTMLURLMap ^http: https: [R]
 
               Header edit Location ^http: https:
 
@@ -132,27 +142,6 @@
                 SSLOptions +StdEnvVars
               </Directory>
             comment: This proxy handles TLS, corrects requests, enables caching, and anonymous access for XMLHttpRequests
-            locations:
-              - path: /dav
-                extra_parameters: |
-                  ProxyPass http://127.0.0.1/dav
-                  ProxyPassReverse http://127.0.0.1/dav
-
-                  ProxyHTMLURLMap ^http:(//[^/]+/dav/) https:$1 [R]
-
-              # TODO consider moving this into localhost vhost it might simplify the URL rewrites
-              # TODO consider using ansible to generate separate davrods services for /dav-anon
-              - path: /dav-anon
-                extra_parameters: |
-                  RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
-
-                  ProxyPass http://127.0.0.1/dav
-                  ProxyPassReverse http://127.0.0.1/dav
-
-                  ProxyHTMLURLMap ^http:(//[^/]+/dav/) https:$1 [lR]
-                  ProxyHTMLURLMap ^((https://)?[^/]*)/dav/ $1/dav-anon/ [R]
-
-                  Header edit Location ^(.*)/dav $1/dav-anon
         apache_vhosts_template: ../../templates/webdav/vhosts.conf.j2
       tags:
         - no_testing

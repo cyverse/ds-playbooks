@@ -38,7 +38,7 @@
 
               RedirectPermanent / https://{{ _canonical_hostname }}/
             comment: Redirect HTTP to HTTPS
-          - servername: localhost
+          - servername: "{{ _canonical_hostname }}"
             listen_ip: 127.0.0.1
             extra_parameters: |
               CacheQuickHandler off

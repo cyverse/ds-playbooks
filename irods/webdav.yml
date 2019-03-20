@@ -143,7 +143,7 @@
                 SSLOptions +StdEnvVars
               </Directory>
             comment: This proxy handles TLS, corrects requests, enables caching, and anonymous access for XMLHttpRequests
-        apache_vhosts_template: ../../templates/webdav/vhosts.conf.j2
+        apache_vhosts_template: ../../templates/webdav/etc/httpd/conf.d/vhosts.conf.j2
       tags:
         - no_testing
 
@@ -199,10 +199,14 @@
         head_dav_base: "{{ _irods_zone_name }}/{{ item.base }}"
         head_file: "{{ item.file }}"
       with_items:
-        - { file: "home-head.html", base: "home" }
-        - { file: "projects-head.html", base: "projects" }
-        - { file: "community-head.html", base: "commons/community_released" }
-        - { file: "curated-head.html", base: "commons/cyverse_curated" }
+        - file: home-head.html
+          base: home
+        - file: projects-head.html
+          base: projects
+        - file: community-head.html
+          base: commons/community_released
+        - file: curated-head.html
+          base: commons/cyverse_curated
 
     - name: create dav content directories
       file:
@@ -210,7 +214,7 @@
         recurse: true
         state: directory
 
-    - name: create dav content directories
+    - name: create dav-anon Directory
       file:
         path: /var/www/html/dav-anon
         recurse: true
@@ -223,17 +227,17 @@
 
     - name: add templated content
       template:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
+        src: templates/webdav/var/{{ item.src }}
+        dest: /var/www/html/{{ item.dest }}
       with_items:
-        - src: templates/webdav/dav-index.html.j2
-          dest: /var/www/html/dav/index.html
-        - src: templates/webdav/dav-anon-index.html.j2
-          dest: /var/www/html/dav-anon/index.html
-        - src: templates/webdav/zone-index.html.j2
-          dest: /var/www/html/dav/{{ _irods_zone_name }}/index.html
-        - src: templates/webdav/commons-index.html.j2
-          dest: /var/www/html/dav/{{ _irods_zone_name }}/commons/index.html
+        - src: dav/index.html.j2
+          dest: dav/index.html
+        - src: dav/zone-index.html.j2
+          dest: dav/{{ _irods_zone_name }}/index.html
+        - src: dav/commons-index.html.j2
+          dest: dav/{{ _irods_zone_name }}/commons/index.html
+        - src: dav-anon/index.html.j2
+          dest: dav-anon/index.html
 
     - name: create directory for cache
       file:
@@ -245,7 +249,7 @@
   post_tasks:
     - name: configure htcacheclean
       template:
-        src: templates/webdav/htcacheclean.j2
+        src: templates/webdav/etc/htcacheclean.j2
         dest: /etc/sysconfig/htcacheclean
       notify:
         - restart htcacheclean

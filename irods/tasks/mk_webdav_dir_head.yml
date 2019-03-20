@@ -5,5 +5,5 @@
 #                  directory listing output
 - name: add davrods directory listing head for {{ head_dav_base }}
   template:
-    src: templates/webdav/head.html.j2
+    src: templates/webdav/etc/httpd/head.html.j2
     dest: /etc/httpd/irods/{{ head_file }}

@@ -7,12 +7,12 @@
     - ../group_vars/all.yml
     - vars/webdav.yml
   vars:
-    commons_index: "{{ lookup('template', '../templates/webdav/commons-index.html.j2') }}"
-    dav_anon_index: "{{ lookup('template', '../templates/webdav/dav-anon-index.html.j2') }}"
-    dav_index: "{{ lookup('template', '../templates/webdav/dav-index.html.j2') }}"
-    head: "{{ lookup('template', '../templates/webdav/head.html.j2') }}"
-    htcacheclean: "{{ lookup('template', '../templates/webdav/htcacheclean.j2') }}"
-    zone_index: "{{ lookup('template', '../templates/webdav/zone-index.html.j2') }}"
+    head: "{{ lookup('template', '../templates/webdav/etc/httpd/head.html.j2') }}"
+    htcacheclean: "{{ lookup('template', '../templates/webdav/etc/htcacheclean.j2') }}"
+    commons_index: "{{ lookup('template', '../templates/webdav/var/dav/commons-index.html.j2') }}"
+    dav_index: "{{ lookup('template', '../templates/webdav/var/dav/index.html.j2') }}"
+    zone_index: "{{ lookup('template', '../templates/webdav/var/dav/zone-index.html.j2') }}"
+    dav_anon_index: "{{ lookup('template', '../templates/webdav/var/dav-anon/index.html.j2') }}"
   tasks:
     - name: verify commons-index.html expands correctly
       assert:

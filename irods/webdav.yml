@@ -58,11 +58,12 @@
             comment: The WebDAV host
             locations:
               # TODO consider using ansible to generate separate davrods services for /dav-anon
-              - path: /dav-anon
+              - path: /dav-anon/{{ _irods_zone_name }}
+                comment: implicit anonymous access
                 extra_parameters: |
                   RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
 
-                  ProxyPass http://127.0.0.1/dav
+                  ProxyPass http://127.0.0.1/dav/{{ _irods_zone_name }}
                   ProxyHTMLURLMap ^((http://)?[^/]*)/dav/ $1/dav-anon/ [R]
 
                   Header edit Location ^(.*)/dav $1/dav-anon
@@ -203,9 +204,15 @@
         - { file: "community-head.html", base: "commons/community_released" }
         - { file: "curated-head.html", base: "commons/cyverse_curated" }
 
-    - name: create content directories
+    - name: create dav content directories
       file:
         path: /var/www/html/dav/{{ _irods_zone_name }}/commons
+        recurse: true
+        state: directory
+
+    - name: create dav content directories
+      file:
+        path: /var/www/html/dav-anon
         recurse: true
         state: directory
 
@@ -214,20 +221,19 @@
         src: files/webdav/index.html
         dest: /var/www/html/index.html
 
-    - name: add dav web page
+    - name: add templated content
       template:
-        src: templates/webdav/dav-index.html.j2
-        dest: /var/www/html/dav/index.html
-
-    - name: add zone web page
-      template:
-        src: templates/webdav/zone-index.html.j2
-        dest: /var/www/html/dav/{{ _irods_zone_name }}/index.html
-
-    - name: add commons web page
-      template:
-        src: templates/webdav/commons-index.html.j2
-        dest: /var/www/html/dav/{{ _irods_zone_name }}/commons/index.html
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - src: templates/webdav/dav-index.html.j2
+          dest: /var/www/html/dav/index.html
+        - src: templates/webdav/dav-anon-index.html.j2
+          dest: /var/www/html/dav-anon/index.html
+        - src: templates/webdav/zone-index.html.j2
+          dest: /var/www/html/dav/{{ _irods_zone_name }}/index.html
+        - src: templates/webdav/commons-index.html.j2
+          dest: /var/www/html/dav/{{ _irods_zone_name }}/commons/index.html
 
     - name: create directory for cache
       file:

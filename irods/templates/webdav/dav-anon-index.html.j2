@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Anonymous WebDAV Service Landing Page</title>
+    <base href="/dav-anon/"/>
+    <meta charset="utf-8"/>
+  </head>
+
+  <body>
+    <h1>CyVerse Data Store Anonymous Read-Only WebDAV Access</h1>
+
+    <p>
+      The CyVerse Data Store has four anonymous WebDAV services. They only expose files and folders
+      than have been been made anonymously accessible.
+    </p>
+
+    <ul>
+      <li>
+        <a href="{{ _irods_zone_name }}/commons/community_released/">
+          Community released data access
+        </a>
+        provides access to public data hosted at CyVerse but curated by community members.
+      </li>
+      <li>
+        <a href="{{ _irods_zone_name }}/commons/cyverse_curated/">CyVerse curated data access</a>
+        provides access to public data hosted at CyVerse and curated here.
+      </li>
+      <li>
+        <a href="{{ _irods_zone_name }}/projects/">Project data access</a> provides access to
+        project data hosted at CyVerse.
+      </li>
+      <li>
+        Relative paths of the form
+        <code>{{ _irods_zone_name }}/home/<em>username</em>/<em>resource/path</em></code> provides
+        read-only access to the file or folder <em>resource/path</em> that under the home folder of
+        the user <em>username</em>.
+      </li>
+    </ul>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-# VERSION 11
+# VERSION 12
 #
 # bisque.re
 #
@@ -147,10 +147,9 @@ _bisque_Rm(*Client, *Path) {
 _bisque_scheduleLn(*Permission, *Client, *Path) {
   _bisque_logMsg("scheduling linking of *Path for *Client with permission *Permission");
 
-  delay("<PLUSET>1s</PLUSET>") {
+  delay("<PLUSET>1s</PLUSET>") { # _bisque_Ln(*Permission, *Client, *Path);
 # XXX - Due to https://github.com/irods/irods/issues/3621, _bisque_Ln has been inlined. Undo this
 #       the next iRODS upgrade.
-#    _bisque_Ln(*Permission, *Client, *Path);
     _bisque_logMsg("linking *Path for *Client with permission *Permission");
 
     *pArg = execCmdArg(*Permission);
@@ -188,19 +187,13 @@ _bisque_scheduleLn(*Permission, *Client, *Path) {
 
 _bisque_scheduleMv(*Client, *OldPath, *NewPath) {
   _bisque_logMsg('scheduling link move from *OldPath to *NewPath for *Client');
-
-  delay("<PLUSET>1s</PLUSET>") {
-    _bisque_Mv(*Client, *OldPath, *NewPath);
-  }
+  delay("<PLUSET>1s</PLUSET>") {_bisque_Mv(*Client, *OldPath, *NewPath);}
 }
 
 
 _bisque_scheduleRm(*Client, *Path) {
   _bisque_logMsg("scheduling removal of linking to *Path for *Client");
-
-  delay("<PLUSET>1s</PLUSET>") {
-    _bisque_Rm(*Client, *Path);
-  }
+  delay("<PLUSET>1s</PLUSET>") {_bisque_Rm(*Client, *Path);}
 }
 
 

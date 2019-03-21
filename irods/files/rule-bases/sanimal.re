@@ -1,4 +1,4 @@
-# VERSION: 1
+# VERSION: 2
 #
 # These are the custom rules for the sanimal project
 
@@ -36,9 +36,8 @@ sanimal_acPostProcForPut {
     if ($objPath like regex '^' ++ str(sanimal_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
       _sanimal_logMsg('scheduling ingest of $objPath for $userNameClient');
 
-      delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>") {
-        _sanimal_ingest($userNameClient, $objPath);
-      }
+      delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>") 
+      {_sanimal_ingest($userNameClient, $objPath);}
     }
   }
 }

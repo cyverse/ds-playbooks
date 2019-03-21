@@ -69,9 +69,7 @@ _replicate(*Object, *RescName) {
     writeLine('serverLog', *msg);
 # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
 #       iRODS version 4.2.1.
-    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {
-      _replicate(*Object, *RescName);
-    }
+    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_replicate(*Object, *RescName);}
   }
 }
 
@@ -122,9 +120,7 @@ _syncReplicas(*Object) {
     writeLine('serverLog', *msg);
 # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
 #       iRODS version 4.2.1.
-    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {
-      _syncReplicas(*Object);
-    }
+    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object);}
   }
 }
 
@@ -158,11 +154,9 @@ _incDelayTime {
 # TODO verify that this is still the case in iRODS 5. See https://github.com/irods/irods/issues/3634
 # for Boolean support.
 _scheduleMv(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalStr) {
-  delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>') {
-    _mvReplicas(*Object,
-                (*IngestName, bool(*IngestOptionalStr)),
-                (*ReplName, bool(*ReplOptionalStr)));
-  }
+  delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>') 
+  {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)));}
+
   _incDelayTime;
 }
 
@@ -194,9 +188,9 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
 
 
 _scheduleRepl(*Object, *RescName) {
-  delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {
-    _replicate(*Object, *RescName);
-  }
+  delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>1s REPEAT 0 TIMES</EF>') 
+  {_replicate(*Object, *RescName);}
+
   _incDelayTime;
 }
 
@@ -208,10 +202,11 @@ _scheduleSyncReplicas(*Object) {
                      AND DATA_NAME = '*dataName'
                      AND DATA_REPL_STATUS = '0') {
     if (int(*cnt.DATA_REPL_NUM) > 0) {
-      delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {
+      delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>1s REPEAT 0 TIMES</EF>') 
+      { # _syncReplicas(*Object);
 # XXX - Due to https://github.com/irods/irods/issues/3621, _syncReplicas has been inlined. Verify
 #       that this is still the case in iRODS 4.2.2.
-#        _syncReplicas(*Object);
+
         *err = errormsg(msiDataObjRepl(*Object, 'all=++++updateRepl=++++verifyChksum=', *status),
                         *msg);
 
@@ -219,9 +214,7 @@ _scheduleSyncReplicas(*Object) {
           writeLine('serverLog', *msg);
   # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
   #       iRODS version 4.2.1.
-          delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {
-            _syncReplicas(*Object);
-          }
+          delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object);}
         }
 # XXX - ^^^
       }

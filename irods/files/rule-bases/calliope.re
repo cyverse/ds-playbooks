@@ -1,4 +1,4 @@
-# VERSION 2
+# VERSION 3
 #
 # These are the custom rules for the Calliope project
 
@@ -40,8 +40,7 @@ calliope_acPostProcForPut {
   if (_calliope_isForCalliope($objPath)) {
     _calliope_logMsg('scheduling ingest of $objPath for $userNameClient');
 
-    delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>") {
-      _calliope_ingest($userNameClient, $objPath);
-    }
+    delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>") 
+    {_calliope_ingest($userNameClient, $objPath);}
   }
 }

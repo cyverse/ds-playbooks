@@ -55,6 +55,19 @@
               Header set Access-Control-Allow-Origin "*"
 
               UseCanonicalName On
+
+              # TODO consider using ansible to generate separate davrods services for /dav-anon
+              # implicit anonymous access
+              <LocationMatch "/dav-anon/cyverse.dev/((commons|home|projects)(/.*)?)" >
+                Require expr %{REQUEST_URI} !~ m#^/dav-anon/cyverse.dev/home(/[^/]*/?)?$#
+
+                RequestHeader set Authorization "Basic YW5vbnltb3Vz"
+
+                ProxyPassMatch http://127.0.0.1/dav/cyverse.dev/$1
+                ProxyHTMLURLMap ^((http://)?[^/]*)/dav/ $1/dav-anon/ [R]
+
+                Header edit Location ^(.*)/dav $1/dav-anon
+              </LocationMatch>
             comment: The WebDAV host
             locations:
               - path: /dav/{{ _irods_zone_name }}/commons/community_released
@@ -90,37 +103,6 @@
                   {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html',
                              max_cache_expire,
                        [ 'valid-user' ]) }}
-              # TODO maybe LocationMatch
-              # TODO consider using ansible to generate separate davrods services for /dav-anon
-              - path: /dav-anon/{{ _irods_zone_name }}/commons
-                comment: implicit anonymous access to commons
-                extra_parameters: |
-                  RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
-
-                  ProxyPass http://127.0.0.1/dav/{{ _irods_zone_name }}/commons
-                  ProxyHTMLURLMap ^((http://)?[^/]*)/dav/ $1/dav-anon/ [R]
-
-                  Header edit Location ^(.*)/dav $1/dav-anon
-              - path: /dav-anon/{{ _irods_zone_name }}/home
-                comment: implicit anonymous access to home
-                extra_parameters: |
-                  Require expr %{REQUEST_URI} !~ m#^/dav-anon/{{ _irods_zone_name }}/home(/[^/]*/?)?$#
-
-                  RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
-
-                  ProxyPass http://127.0.0.1/dav/{{ _irods_zone_name }}/home
-                  ProxyHTMLURLMap ^((http://)?[^/]*)/dav/ $1/dav-anon/ [R]
-
-                  Header edit Location ^(.*)/dav $1/dav-anon
-              - path: /dav-anon/{{ _irods_zone_name }}/projects
-                comment: implicit anonymous access to projects
-                extra_parameters: |
-                  RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
-
-                  ProxyPass http://127.0.0.1/dav/{{ _irods_zone_name }}/projects
-                  ProxyHTMLURLMap ^((http://)?[^/]*)/dav/ $1/dav-anon/ [R]
-
-                  Header edit Location ^(.*)/dav $1/dav-anon
         apache_vhosts_ssl:
           - servername: "{{ _canonical_hostname }}"
             certificate_file: "{{ _webdav_tls_cert_file }}"

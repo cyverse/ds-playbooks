@@ -62,19 +62,24 @@
 # DEFERRED FUNCTIONS AND RULES
 
 _replicate(*Object, *RescName) {
+  _repl_logMsg('replicating *Object to *RescName');
   *err = errormsg(msiDataObjRepl(*Object, 'backupRescName=*RescName++++verifyChksum=', *status),
                   *msg);
 
   if (*err < 0 && *err != -808000 && *err != -817000) {
-    writeLine('serverLog', *msg);
+    _repl_logMsg('failed to replicate *Object, retry in 8 hours');
+    _repl_logMsg(*msg);
 # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
 #       iRODS version 4.2.1.
     delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_replicate(*Object, *RescName);}
+  } else {
+    _repl_logMsg('replicated *Object');
   }
 }
 
 
 _mvReplicas(*DataPath, *IngestResc, *ReplResc) {
+  _repl_logMsg('moving replicas of *DataPath');
   *replFail = false;
   (*ingestName, *ingestOptional) = *IngestResc;
 
@@ -114,13 +119,17 @@ _mvReplicas(*DataPath, *IngestResc, *ReplResc) {
 
 
 _syncReplicas(*Object) {
+  _repl_logMsg('syncing replicas of *Object');
   *err = errormsg(msiDataObjRepl(*Object, 'all=++++updateRepl=++++verifyChksum=', *status), *msg);
 
   if (*err < 0 && *err != -808000) {
-    writeLine('serverLog', *msg);
+    _repl_logMsg('failed to sync replicas of *Object trying again in 8 hours');
+    _repl_logMsg(*msg);
 # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
 #       iRODS version 4.2.1.
     delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object);}
+  } else {
+    _repl_logMsg('synced replicas of *Object');
   }
 }
 
@@ -146,6 +155,11 @@ _delayTime = if (errorcode(temporaryStorage.delayTime) < 0) {
 
 _incDelayTime {
   temporaryStorage.delayTime = str(1 + int(temporaryStorage.delayTime));
+}
+
+
+_repl_logMsg(*Msg) {
+  writeLine('serverLog', 'DS: *Msg');
 }
 
 
@@ -206,18 +220,23 @@ _scheduleSyncReplicas(*Object) {
       { # _syncReplicas(*Object);
 # XXX - Due to https://github.com/irods/irods/issues/3621, _syncReplicas has been inlined. Verify
 #       that this is still the case in iRODS 4.2.2.
+        _repl_logMsg('syncing replicas of *Object');
 
         *err = errormsg(msiDataObjRepl(*Object, 'all=++++updateRepl=++++verifyChksum=', *status),
                         *msg);
 
         if (*err < 0 && *err != -808000) {
-          writeLine('serverLog', *msg);
+          _repl_logMsg('failed to sync replicas of *Object trying again in 8 hours');
+          _repl_logMsg(*msg);
   # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
   #       iRODS version 4.2.1.
           delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object);}
+        } else {
+          _repl_logMsg('synced replicas of *Object');
         }
 # XXX - ^^^
       }
+
       _incDelayTime;
     }
   }

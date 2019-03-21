@@ -11,10 +11,21 @@
     htcacheclean: "{{ lookup('template', '../templates/webdav/etc/htcacheclean.j2') }}"
     commons_index: "{{ lookup('template', '../templates/webdav/var/dav/commons-index.html.j2') }}"
     dav_index: "{{ lookup('template', '../templates/webdav/var/dav/index.html.j2') }}"
-    zone_index: "{{ lookup('template', '../templates/webdav/var/dav/zone-index.html.j2') }}"
+    dav_zone_index: "{{ lookup('template', '../templates/webdav/var/dav/zone-index.html.j2') }}"
     dav_anon_index: "{{ lookup('template', '../templates/webdav/var/dav-anon/index.html.j2') }}"
+    dav_anon_zone_index: "{{ lookup('template', '../templates/webdav/var/dav-anon/zone-index.html.j2') }}"
   tasks:
-    - name: verify commons-index.html expands correctly
+    - name: verify dav-index.html expands correctly
+      assert:
+        that:
+          - dav_index is search('{{ item }}')
+      with_items:
+        - <a href="testing/commons/community_released/">
+        - <a href="testing/commons/cyverse_curated/">CyVerse curated data access</a>
+        - <a href="testing/projects/">Project data access</a>
+        - <a href="testing/home/">User data access</a>
+
+    - name: verify dav/zone/commons/index.html expands correctly
       assert:
         that:
           - commons_index is search('{{ item }}')
@@ -25,7 +36,7 @@
         - <a href="/dav/testing/commons/">commons/</a>
         - <span class="zone-name">testing</span>
 
-    - name: verify dav-anon-index.html expands correctly
+    - name: verify dav-anon/index.html expands correctly
       assert:
         that:
           - dav_anon_index is search('{{ item }}')
@@ -34,15 +45,15 @@
         - <a href="testing/commons/cyverse_curated/">CyVerse curated data access</a>
         - <a href="testing/projects/">Project data access</a>
 
-    - name: verify dav-index.html expands correctly
+    - name: verify dav-anon/zone/index.html expands correctly
       assert:
         that:
-          - dav_index is search('{{ item }}')
+          - dav_anon_zone_index is search('{{ item }}')
       with_items:
-        - <a href="testing/commons/community_released/">
-        - <a href="testing/commons/cyverse_curated/">CyVerse curated data access</a>
-        - <a href="testing/projects/">Project data access</a>
-        - <a href="testing/home/">User data access</a>
+        - <title>Index of /testing on testing</title>
+        - <base href="/dav-anon/testing/"/>
+        - <a href="/dav-anon/testing/">testing/</a>
+        - <span class="zone-name">testing</span>
 
     - name: verify head.html expands correctly
       assert:
@@ -56,15 +67,6 @@
           - htcacheclean is search('CACHE_ROOT=/var/cache/httpd/proxy')
           - htcacheclean is search('LIMIT=100M')
 
-    - name: verify zone-index.html expands correctly
-      assert:
-        that:
-          - zone_index is search('{{ item }}')
-      with_items:
-        - <title>Index of /testing on testing</title>
-        - <base href="/dav/testing/"/>
-        - <a href="/dav/testing/">testing/</a>
-        - <span class="zone-name">testing</span>
 
 
 - name: test WebDAV server deposition

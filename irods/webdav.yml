@@ -90,6 +90,7 @@
                   {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html',
                              max_cache_expire,
                        [ 'valid-user' ]) }}
+              # TODO maybe LocationMatch
               # TODO consider using ansible to generate separate davrods services for /dav-anon
               - path: /dav-anon/{{ _irods_zone_name }}/commons
                 comment: implicit anonymous access to commons
@@ -102,8 +103,9 @@
                   Header edit Location ^(.*)/dav $1/dav-anon
               - path: /dav-anon/{{ _irods_zone_name }}/home
                 comment: implicit anonymous access to home
-                # TODO make anonymous return 404 for home and home/user maybe LocationMatch
                 extra_parameters: |
+                  Require expr %{REQUEST_URI} !~ m#^/dav-anon/{{ _irods_zone_name }}/home(/[^/]*/?)?$#
+
                   RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
 
                   ProxyPass http://127.0.0.1/dav/{{ _irods_zone_name }}/home

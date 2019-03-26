@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{% if svc == "dav-anon" %}Anonymous {% endif %}WebDAV Service Landing Page</title>
+    <base href="/{{ svc }}/"/>
+    <meta charset="utf-8"/>
+  </head>
+
+  <body>
+    <h1>
+      CyVerse Data Store{% if svc == "dav-anon" %} Anonymous, Read-Only{% endif %} WebDAV Access
+    </h1>
+
+    <p>
+      The CyVerse Data Store has four{% if svc == "dav-anon" %} anonymous, read-only{% endif %}
+      WebDAV services.{% if svc != "dav-anon" %} If a request is authenticated, the autheticated
+      user's permissions will determine what data can be read or modified. Providing
+      <code>anonymous</code> as the user name and no password will grant anonymous access.
+      {% endif %}
+    </p>
+
+    <p>Here are the four services.</p>
+
+    <ul>
+      <li>
+        <a href="{{ _irods_zone_name }}/commons/community_released/">{{ _irods_zone_name
+          }}/commons/community_released/</a>
+        provide access to public data hosted at CyVerse but curated by community members.
+      </li>
+      <li>
+        <a href="{{ _irods_zone_name }}/commons/cyverse_curated/">{{ _irods_zone_name
+          }}/commons/cyverse_curated/</a>
+        provide access to public data hosted at CyVerse and curated here.
+      </li>
+      <li>
+        <a href="{{ _irods_zone_name }}/projects/">{{ _irods_zone_name }}/projects/</a> provides
+        access to project data hosted at CyVerse.
+      </li>
+      <li>
+        {% if svc != "dav-anon" %}<a href="{{ _irods_zone_name }}/home/">{% endif %}{{
+          _irods_zone_name }}/home/{% if svc != "dav-anon" %}</a>{% endif %}
+        provide access to user data hosted at CyVerse. In order to reduce the risk of user data
+        inadvertently being exposed to web crawlers, the top-level folder and
+        all of its immediate folders, i.e., folders of the form <code><em>folder</em>/</code>,
+        where <em>folder</em> is the name of a folder, will not be accessible{% if svc != "dav-anon"
+          %} without authentication{% endif %}.
+      </li>
+    </ul>
+  </body>
+</html>

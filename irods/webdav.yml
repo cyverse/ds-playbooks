@@ -5,6 +5,8 @@
   roles:
     - role: geerlingguy.apache
       vars:
+        max_cache_expire: 24
+        commons_max_cache_expire: 8760
         apache_ssl_cipher_suite: "HIGH:3DES:!aNULL:!MD5:!SEED:!IDEA"
         apache_global_vhost_settings: |
           LoadModule log_forensic_module modules/mod_log_forensic.so
@@ -24,14 +26,19 @@
           SSLRandomSeed connect builtin
           SSLRandomSeed startup file:/dev/urandom 256
           SSLSessionCache shmcb:/run/httpd/sslcache(512000)
-        apache_vhosts:
-          - servername: "{{ inventory_hostname }}"
-            extra_parameters: |
-              ServerAlias {{ _canonical_hostname }}
 
-              RedirectPermanent / https://{{ inventory_hostname }}/
+          ProxyErrorOverride On
+          ProxyHTMLEnable On
+          ProxyHTMLLinks a href
+          ProxyHTMLLinks base href
+        apache_vhosts:
+          - servername: "{{ _canonical_hostname }}"
+            extra_parameters: |
+              ServerAlias {{ inventory_hostname }}
+
+              RedirectPermanent / https://{{ _canonical_hostname }}/
             comment: Redirect HTTP to HTTPS
-          - servername: 127.0.0.1
+          - servername: "{{ _canonical_hostname }}"
             listen_ip: 127.0.0.1
             extra_parameters: |
               CacheQuickHandler off
@@ -41,14 +48,25 @@
               CacheLockMaxAge 5
               CacheHeader on
               CacheIgnoreHeaders Set-Cookie
-              CacheLastModifiedFactor 0.5
-
-              ExpiresActive on
 
               Header merge Cache-Control public
               Header set Access-Control-Allow-Headers "Range"
               Header set Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
               Header set Access-Control-Allow-Origin "*"
+
+              UseCanonicalName On
+
+              # Redirect dav-anon to dav
+              <LocationMatch "/dav-anon/cyverse.dev/((commons/(community_released|cyverse_curated)|home|projects)(/.*)?)" >
+                Require expr %{REQUEST_URI} !~ m#^/dav-anon/cyverse.dev/home(/[^/]*/?)?$#
+
+                RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
+
+                ProxyPassMatch http://127.0.0.1/dav/cyverse.dev/$1
+                ProxyHTMLURLMap ^((http://)?[^/]*)/dav/ $1/dav-anon/ [R]
+
+                Header edit Location ^(.*)/dav $1/dav-anon
+              </LocationMatch>
             comment: The WebDAV host
             locations:
               - path: /dav/{{ _irods_zone_name }}/commons/community_released
@@ -59,13 +77,14 @@
                     /dav/{{ _irods_zone_name }}/commons/community_released/commons_repo/curated \
                     /dav/{{ _irods_zone_name }}/commons/cyverse_curated
 
-                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'community-head.html', 365) }}
+                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'community-head.html',
+                             commons_max_cache_expire) }}
               - path: /dav/{{ _irods_zone_name }}/commons/cyverse_curated
                 comment: Anonymous read-only access to the data curated by CyVerse
                 extra_parameters: |
                   {% from 'davrods.j2' import davrods with context %}
                   {{ davrods('/' ~ _irods_zone_name ~ '/home/shared/commons_repo/curated',
-                             'community-head.html', 365) }}
+                             'curated-head.html', commons_max_cache_expire) }}
               - path: /dav/{{ _irods_zone_name }}/home
                 comment: Authenticated read-write access to the home collection
                 extra_parameters: |
@@ -73,27 +92,27 @@
                   RedirectPermanent /dav/{{ _irods_zone_name }}/home/shared \
                                     /dav/{{ _irods_zone_name }}/projects
 
-                  {{ davrods('Home', 'home-head.html', 1,
+                  {{ davrods('Home', 'home-head.html', max_cache_expire,
                        [ 'expr %{REQUEST_URI} !~ m#^/dav/' ~ _irods_zone_name ~ '/home(/[^/]*/?)?$# || %{REMOTE_USER} != "anonymous"',
                          'valid-user' ]) }}
               - path: /dav/{{ _irods_zone_name }}/projects
                 comment: Authenticated read-write access to the project folders
                 extra_parameters: |
                   {% from 'davrods.j2' import davrods with context %}
-                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html', 1,
+                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html',
+                             max_cache_expire,
                        [ 'valid-user' ]) }}
         apache_vhosts_ssl:
-          - servername: "{{ inventory_hostname }}"
+          - servername: "{{ _canonical_hostname }}"
             certificate_file: "{{ _webdav_tls_cert_file }}"
             certificate_key_file: "{{ _webdav_tls_key_file }}"
             certificate_chain_file: "{{ _webdav_tls_chain_file }}"
             extra_parameters: |
-              ServerAlias {{ _canonical_hostname }}
+              ServerAlias {{ inventory_hostname }}
 
               ErrorLog logs/ssl_error_log
 
               CustomLog logs/ssl_access_log "%t %h \"%r\" %>s %b %D %L %{forensic-id}n"
-
               CustomLog logs/ssl_request_log "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b %{forensic-id}n"
 
               LogLevel warn
@@ -110,14 +129,13 @@
                 RequestHeader merge Cache-Control no-store
               </Elseif>
 
-              ProxyErrorOverride On
-              ProxyPreserveHost On
-
-              ProxyHTMLEnable On
-              ProxyHTMLLinks a href
-              ProxyHTMLLinks base href
+              ProxyPass / http://127.0.0.1/
+              ProxyHTMLURLMap ^http: https: [R]
 
               Header edit Location ^http: https:
+
+              ExpiresActive On
+              ExpiresDefault "access plus 12 hours"
 
               <Files ~ "\.(cgi|shtml|phtml|php3?)$">
                 SSLOptions +StdEnvVars
@@ -127,28 +145,7 @@
                 SSLOptions +StdEnvVars
               </Directory>
             comment: This proxy handles TLS, corrects requests, enables caching, and anonymous access for XMLHttpRequests
-            locations:
-              - path: /dav
-                extra_parameters: |
-                  ProxyPass http://127.0.0.1/dav
-                  ProxyPassReverse http://127.0.0.1/dav
-
-                  ProxyHTMLURLMap ^http:(//[^/]+/dav/) https:$1 [R]
-
-              # TODO consider moving this into 127.0.0.1 vhost it might simplify the URL rewrites
-              # TODO consider using ansible to generate separate davrods services for /dav-anon
-              - path: /dav-anon
-                extra_parameters: |
-                  RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
-
-                  ProxyPass http://127.0.0.1/dav
-                  ProxyPassReverse http://127.0.0.1/dav
-
-                  ProxyHTMLURLMap ^http:(//[^/]+/dav/) https:$1 [lR]
-                  ProxyHTMLURLMap ^((https://)?[^/]*)/dav/ $1/dav-anon/ [R]
-
-                  Header edit Location ^(.*)/dav $1/dav-anon
-        apache_vhosts_template: ../../templates/webdav/vhosts.conf.j2
+        apache_vhosts_template: ../../templates/webdav/etc/httpd/conf.d/vhosts.conf.j2
       tags:
         - no_testing
 
@@ -204,36 +201,27 @@
         head_dav_base: "{{ _irods_zone_name }}/{{ item.base }}"
         head_file: "{{ item.file }}"
       with_items:
-        - { file: "home-head.html", base: "home" }
-        - { file: "projects-head.html", base: "projects" }
-        - { file: "community-head.html", base: "commons/community_released" }
-        - { file: "curated-head.html", base: "commons/cyverse_curated" }
+        - file: home-head.html
+          base: home
+        - file: projects-head.html
+          base: projects
+        - file: community-head.html
+          base: commons/community_released
+        - file: curated-head.html
+          base: commons/cyverse_curated
 
-    - name: create content directories
-      file:
-        path: /var/www/html/dav/{{ _irods_zone_name }}/commons
-        recurse: true
-        state: directory
+    - include_tasks: tasks/install_webdav_html.yml
+      vars:
+        svc: dav
+
+    - include_tasks: tasks/install_webdav_html.yml
+      vars:
+        svc: dav-anon
 
     - name: add root web page
       copy:
         src: files/webdav/index.html
         dest: /var/www/html/index.html
-
-    - name: add dav web page
-      template:
-        src: templates/webdav/dav-index.html.j2
-        dest: /var/www/html/dav/index.html
-
-    - name: add zone web page
-      template:
-        src: templates/webdav/zone-index.html.j2
-        dest: /var/www/html/dav/{{ _irods_zone_name }}/index.html
-
-    - name: add commons web page
-      template:
-        src: templates/webdav/commons-index.html.j2
-        dest: /var/www/html/dav/{{ _irods_zone_name }}/commons/index.html
 
     - name: create directory for cache
       file:
@@ -245,7 +233,7 @@
   post_tasks:
     - name: configure htcacheclean
       template:
-        src: templates/webdav/htcacheclean.j2
+        src: templates/webdav/etc/htcacheclean.j2
         dest: /etc/sysconfig/htcacheclean
       notify:
         - restart htcacheclean

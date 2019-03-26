@@ -1,60 +1,15 @@
 ---
-- name: test WebDAV template expansion
+- name: test WebDAV config template expansion
   hosts: localhost
   run_once: true
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
-    - vars/webdav.yml
+    - vars/webdav_cfg.yml
   vars:
     head: "{{ lookup('template', '../templates/webdav/etc/httpd/head.html.j2') }}"
     htcacheclean: "{{ lookup('template', '../templates/webdav/etc/htcacheclean.j2') }}"
-    commons_index: "{{ lookup('template', '../templates/webdav/var/dav/commons-index.html.j2') }}"
-    dav_index: "{{ lookup('template', '../templates/webdav/var/dav/index.html.j2') }}"
-    dav_zone_index: "{{ lookup('template', '../templates/webdav/var/dav/zone-index.html.j2') }}"
-    dav_anon_index: "{{ lookup('template', '../templates/webdav/var/dav-anon/index.html.j2') }}"
-    dav_anon_zone_index: "{{ lookup('template', '../templates/webdav/var/dav-anon/zone-index.html.j2') }}"
   tasks:
-    - name: verify dav-index.html expands correctly
-      assert:
-        that:
-          - dav_index is search('{{ item }}')
-      with_items:
-        - <a href="testing/commons/community_released/">
-        - <a href="testing/commons/cyverse_curated/">CyVerse curated data access</a>
-        - <a href="testing/projects/">Project data access</a>
-        - <a href="testing/home/">User data access</a>
-
-    - name: verify dav/zone/commons/index.html expands correctly
-      assert:
-        that:
-          - commons_index is search('{{ item }}')
-      with_items:
-        - <title>Index of /testing/commons/ on testing</title>
-        - <base href="/dav/testing/commons/"/>
-        - <a href="/dav/testing/">testing/</a>
-        - <a href="/dav/testing/commons/">commons/</a>
-        - <span class="zone-name">testing</span>
-
-    - name: verify dav-anon/index.html expands correctly
-      assert:
-        that:
-          - dav_anon_index is search('{{ item }}')
-      with_items:
-        - <a href="testing/commons/community_released/">
-        - <a href="testing/commons/cyverse_curated/">CyVerse curated data access</a>
-        - <a href="testing/projects/">Project data access</a>
-
-    - name: verify dav-anon/zone/index.html expands correctly
-      assert:
-        that:
-          - dav_anon_zone_index is search('{{ item }}')
-      with_items:
-        - <title>Index of /testing on testing</title>
-        - <base href="/dav-anon/testing/"/>
-        - <a href="/dav-anon/testing/">testing/</a>
-        - <span class="zone-name">testing</span>
-
     - name: verify head.html expands correctly
       assert:
         that:
@@ -67,6 +22,115 @@
           - htcacheclean is search('CACHE_ROOT=/var/cache/httpd/proxy')
           - htcacheclean is search('LIMIT=100M')
 
+
+- name: test WebDAV dav html template expansion
+  hosts: localhost
+  run_once: true
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+    - vars/webdav_dav.yml
+  vars:
+    index: "{{ lookup('template', '../templates/webdav/var/index.html.j2') }}"
+    zone_index: "{{ lookup('template', '../templates/webdav/var/zone-index.html.j2') }}"
+    commons_index: "{{ lookup('template', '../templates/webdav/var/commons-index.html.j2') }}"
+  tasks:
+    - name: verify index.html expands correctly, part 1
+      assert:
+        that:
+          - index is search('{{ item }}')
+      with_items:
+        - <title>WebDAV Service Landing Page</title>
+        - Data Store WebDAV Access
+        - WebDAV services. If a
+        - <a href="testing/commons/community_released/">Community released data access</a>
+        - <a href="testing/commons/cyverse_curated/">CyVerse curated data access</a>
+        - <a href="testing/projects/">Project data access</a>
+        - <a href="testing/home/">User data access</a>
+        - <code>/testing/home</code>
+        - <code>/testing/home/<em>folder</em></code>
+        - accessible without authentication.
+
+    - name: verify index.html expands correctly, part 2
+      assert:
+        that:
+          - index is not search('has four anonymous, read-only')
+
+    - name: verify zone/index.html expands correctly
+      assert:
+        that:
+          - zone_index is search('{{ item }}')
+      with_items:
+        - <title>Index of /testing on testing</title>
+        - <base href="/dav/testing/"/>
+        - <a href="/dav/">/</a>
+        - <a href="/dav/testing/">testing/</a>
+        - <span class="zone-name">testing</span>
+        - <a href="home/">home/</a>
+
+    - name: verify zone/commons/index.html expands correctly
+      assert:
+        that:
+          - commons_index is search('{{ item }}')
+      with_items:
+        - <title>Index of /testing/commons/ on testing</title>
+        - <base href="/dav/testing/commons/"/>
+        - <a href="/dav/">/</a>
+        - <a href="/dav/testing/">testing/</a>
+        - <a href="/dav/testing/commons/">commons/</a>
+        - <span class="zone-name">testing</span>
+
+
+- name: test WebDAV dav-anon html template expansion
+  hosts: localhost
+  run_once: true
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+    - vars/webdav_dav_anon.yml
+  vars:
+    index: "{{ lookup('template', '../templates/webdav/var/index.html.j2') }}"
+    zone_index: "{{ lookup('template', '../templates/webdav/var/zone-index.html.j2') }}"
+    commons_index: "{{ lookup('template', '../templates/webdav/var/commons-index.html.j2') }}"
+  tasks:
+    - name: verify index.html expands correctly, part 1
+      assert:
+        that:
+          - index is search('{{ item }}')
+      with_items:
+        - <title>Anonymous WebDAV Service Landing Page</title>
+        - Data Store Anonymous, Read-Only
+        - has four anonymous, read-only
+        - accessible.
+
+    - name: verify index.html expands correctly, part 2
+      assert:
+        that:
+          - index is not search('WebDAV services. If a')
+
+    - name: verify zone/index.html expands correctly, part 1
+      assert:
+        that:
+          - zone_index is search('{{ item }}')
+      with_items:
+        - <base href="/dav-anon/testing/"/>
+        - <a href="/dav-anon/">/</a>
+        - <a href="/dav-anon/testing/">testing/</a>
+
+    - name: verify zone/index.html expands correctly, part 2
+      assert:
+        that:
+          - zone_index is not search('<a href="home/">home/</a>')
+
+    - name: verify zone/commons/index.html expands correctly
+      assert:
+        that:
+          - commons_index is search('{{ item }}')
+      with_items:
+        - <base href="/dav-anon/testing/commons/"/>
+        - <a href="/dav-anon/">/</a>
+        - <a href="/dav-anon/testing/">testing/</a>
+        - <a href="/dav-anon/testing/commons/">commons/</a>
 
 
 - name: test WebDAV server deposition
@@ -141,6 +205,9 @@
         - dav/testing/index.html
         - dav/testing/commons/index.html
         - dav-anon/index.html
+        - dav-anon/testing/index.html
+        - dav-anon/testing/commons/index.html
+
       register: response
       failed_when: not response.stat.exists
 

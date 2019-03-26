@@ -56,12 +56,11 @@
 
               UseCanonicalName On
 
-              # TODO consider using ansible to generate separate davrods services for /dav-anon
-              # implicit anonymous access
-              <LocationMatch "/dav-anon/cyverse.dev/((commons|home|projects)(/.*)?)" >
+              # Redirect dav-anon to dav
+              <LocationMatch "/dav-anon/cyverse.dev/((commons/(community_released|cyverse_curated)|home|projects)(/.*)?)" >
                 Require expr %{REQUEST_URI} !~ m#^/dav-anon/cyverse.dev/home(/[^/]*/?)?$#
 
-                RequestHeader set Authorization "Basic YW5vbnltb3Vz"
+                RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
 
                 ProxyPassMatch http://127.0.0.1/dav/cyverse.dev/$1
                 ProxyHTMLURLMap ^((http://)?[^/]*)/dav/ $1/dav-anon/ [R]
@@ -85,7 +84,7 @@
                 extra_parameters: |
                   {% from 'davrods.j2' import davrods with context %}
                   {{ davrods('/' ~ _irods_zone_name ~ '/home/shared/commons_repo/curated',
-                             'community-head.html', commons_max_cache_expire) }}
+                             'curated-head.html', commons_max_cache_expire) }}
               - path: /dav/{{ _irods_zone_name }}/home
                 comment: Authenticated read-write access to the home collection
                 extra_parameters: |
@@ -211,38 +210,18 @@
         - file: curated-head.html
           base: commons/cyverse_curated
 
-    - name: create dav content directories
-      file:
-        path: /var/www/html/dav/{{ _irods_zone_name }}/commons
-        recurse: true
-        state: directory
+    - include_tasks: tasks/install_webdav_html.yml
+      vars:
+        svc: dav
 
-    - name: create dav-anon content directories
-      file:
-        path: /var/www/html/dav-anon/{{ _irods_zone_name }}
-        recurse: true
-        state: directory
+    - include_tasks: tasks/install_webdav_html.yml
+      vars:
+        svc: dav-anon
 
     - name: add root web page
       copy:
         src: files/webdav/index.html
         dest: /var/www/html/index.html
-
-    - name: add templated content
-      template:
-        src: templates/webdav/var/{{ item.src }}
-        dest: /var/www/html/{{ item.dest }}
-      with_items:
-        - src: dav/index.html.j2
-          dest: dav/index.html
-        - src: dav/zone-index.html.j2
-          dest: dav/{{ _irods_zone_name }}/index.html
-        - src: dav/commons-index.html.j2
-          dest: dav/{{ _irods_zone_name }}/commons/index.html
-        - src: dav-anon/index.html.j2
-          dest: dav-anon/index.html
-        - src: dav-anon/zone-index.html.j2
-          dest: dav-anon/{{ _irods_zone_name }}/index.html
 
     - name: create directory for cache
       file:

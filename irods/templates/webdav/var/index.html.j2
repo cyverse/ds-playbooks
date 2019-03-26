@@ -41,8 +41,8 @@
           _irods_zone_name }}/home/{% if svc != "dav-anon" %}</a>{% endif %}
         provide access to user data hosted at CyVerse. In order to reduce the risk of user data
         inadvertently being exposed to web crawlers, the top-level folder and
-        all of its immediate folders, i.e., folders of the form <code><em>folder</em>/</code> where
-        <em>folder</em> is the name of a folder, will not be accessible{% if svc != "dav-anon"
+        all of its immediate folders, i.e., folders of the form <code><em>folder</em>/</code>,
+        where <em>folder</em> is the name of a folder, will not be accessible{% if svc != "dav-anon"
           %} without authentication{% endif %}.
       </li>
     </ul>

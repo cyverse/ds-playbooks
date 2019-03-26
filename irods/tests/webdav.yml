@@ -43,12 +43,10 @@
         - <title>WebDAV Service Landing Page</title>
         - Data Store WebDAV Access
         - WebDAV services. If a
-        - <a href="testing/commons/community_released/">Community released data access</a>
-        - <a href="testing/commons/cyverse_curated/">CyVerse curated data access</a>
-        - <a href="testing/projects/">Project data access</a>
-        - <a href="testing/home/">User data access</a>
-        - <code>/testing/home</code>
-        - <code>/testing/home/<em>folder</em></code>
+        - <a href="testing/commons/community_released/">testing/commons/community_released/</a>
+        - <a href="testing/commons/cyverse_curated/">testing/commons/cyverse_curated/</a>
+        - <a href="testing/projects/">testing/projects/</a>
+        - <a href="testing/home/">testing/home/</a>
         - accessible without authentication.
 
     - name: verify index.html expands correctly, part 2
@@ -101,12 +99,14 @@
         - <title>Anonymous WebDAV Service Landing Page</title>
         - Data Store Anonymous, Read-Only
         - has four anonymous, read-only
-        - accessible.
+        - testing/home/
+        - be accessible.
 
     - name: verify index.html expands correctly, part 2
       assert:
         that:
           - index is not search('WebDAV services. If a')
+          - index is not search('<a href="testing/home/">testing/home/</a>')
 
     - name: verify zone/index.html expands correctly, part 1
       assert:

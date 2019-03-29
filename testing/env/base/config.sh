@@ -13,13 +13,13 @@
 
 main()
 {
-  if [ "$#" -lt 1 ]
+  if [[ "$#" -lt 1 ]]
   then
     printf 'The OS name is required as the first argument\n' >&2
     return 1
   fi
 
-  if [ "$#" -lt 2 ]
+  if [[ "$#" -lt 2 ]]
   then
     printf 'The OS version number is required as the second argument\n' >&2
     return 1
@@ -29,11 +29,11 @@ main()
   local version="$2"
 
   # Install required packages
-  if [ "$os" = centos ]
+  if [[ "$os" = centos ]]
   then
     install_centos_packages "$version"
   else
-    install_debian_packages
+    install_debian_packages "$version"
 
     # Allow root to login without a password
     sed --in-place 's/nullok_secure/nullok/' /etc/pam.d/common-auth
@@ -45,12 +45,12 @@ main()
   # Configure passwordless root ssh access
   ssh-keygen -q -f /etc/ssh/ssh_host_key -N '' -t rsa
 
-  if ! [ -e /etc/ssh/ssh_host_dsa_key ]
+  if ! [[ -e /etc/ssh/ssh_host_dsa_key ]]
   then
     ssh-keygen -q -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
   fi
 
-  if ! [ -e /etc/ssh/ssh_host_rsa_key ]
+  if ! [[ -e /etc/ssh/ssh_host_rsa_key ]]
   then
     ssh-keygen -q -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
   fi
@@ -73,11 +73,11 @@ install_centos_packages()
 
 install_debian_packages()
 {
-  apt-get update --quiet
-  apt-get install --no-install-recommends --quiet --yes apt-utils
+  local version="$1"
 
-  apt-get install --no-install-recommends --quiet --yes \
-    jq openssh-server python-pip python-selinux python-virtualenv sudo
+  apt-get update -qq
+  apt-get install -qq -y apt-utils
+  apt-get install -qq -y jq openssh-server python-pip python-selinux python-virtualenv sudo
 }
 
 

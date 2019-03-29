@@ -1,3 +1,5 @@
+localhost ansible_connection=local
+
 [dbms]
 dstesting_dbms_1.dstesting_default
 

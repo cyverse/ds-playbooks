@@ -70,7 +70,6 @@ Variable                                   | Default                            
 `load_balancer_stats_password`             | B1Gp4sSw0rD!!                        |         | The password used to authetnicate access to the stats service
 `load_balancer_stats_port`                 | 81                                   |         | The TCP port used to retrieve HAProxy stats
 `load_balancer_stats_user`                 | haproxy-stats                        |         | The user to authenticate as to access the stats service
-`pire_quota`                               | 0                                    |         | The quota for the PIRE project. A `0` means no quota.
 `pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
 `rabbitmq_ephemeral`                       | `true`                               |         | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
 `rabbitmq_password`                        | guest                                |         | The password iRODS uses to connect to the AMQP vhost

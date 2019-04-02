@@ -154,8 +154,6 @@ _load_balancer_stats_password: "{{
   load_balancer_stats_password if load_balancer_stats_password is defined else
   'B1Gp4sSw0rD!!' }}"
 
-_pire_quota: "{{ pire_quota if pire_quota is defined else 0 }}"
-
 _pire_resource_hierarchy: "{{ pire_resource_hierarchy if pire_resource_hierarchy is defined else
                               _irods_resource_hierarchies[0] }}"
 

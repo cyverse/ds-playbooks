@@ -19,8 +19,6 @@ irods_resource_hierarchies:
   - name: rs_centos7
 irods_server_port_range_end: 20009
 
-pire_quota: 5000000
-
 pire_resource_hierarchy:
   name: pireRes
   type: passthru

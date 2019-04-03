@@ -1,0 +1,103 @@
+---
+- name: Build image
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - include_vars:
+        dir: "{{ inventory_dir }}/group_vars"
+        files_matching: 'irods\..*'
+
+    - include_vars:
+        dir: "{{ inventory_dir }}/group_vars"
+        files_matching: 'rs\..*'
+
+    - set_fact:
+        irods_default_resource: _IRODS_DEFAULT_RESOURCE_
+        irods_default_repl_resource: _IRODS_DEFAULT_RESOURCE_
+
+    - include_tasks: tasks/build_plugins.yml
+
+    - name: create command scripts staging directory
+      file:
+        path: "{{ _build_dir }}/cmd"
+        state: directory
+
+    - name: add common command scripts
+      copy:
+        src: "{{ item }}"
+        dest: "{{ _build_dir }}/cmd"
+      with_fileglob:
+        - "files/cmd-common/*"
+
+    - import_role:
+        name: cyverse.irods-cfg
+      vars:
+        irods_cfg_chown: false
+        irods_cfg_client_server_policy: "{{ _irods_client_server_policy }}"
+        irods_cfg_default_dir_mode: "{{ _irods_default_dir_mode }}"
+        irods_cfg_default_file_mode: "{{ _irods_default_file_mode }}"
+        irods_cfg_default_hash_scheme: "{{ _irods_default_hash_scheme }}"
+        irods_cfg_default_number_of_transfer_threads: "{{
+          _irods_default_number_of_transfer_threads }}"
+        irods_cfg_default_resource_directory: /irods_vault/_IRODS_STORAGE_RESOURCE_
+        irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
+        irods_cfg_icat_host: "{{ _irods_ies }}"
+        irods_cfg_host: rs
+        irods_cfg_host_entries:
+          - address_type: local
+            addresses:
+              - "{{ irods_cfg_host }}"
+              - _IRODS_RS_CNAME_
+        irods_cfg_negotiation_key: __IRODS_NEGOTIATION_KEY__
+        irods_cfg_re_additional_rulebases:
+          - ipc-custom
+          - ipc-housekeeping
+        irods_cfg_root_dir: "{{ _build_dir }}"
+        irods_cfg_server_control_plane_key: __IRODS_SERVER_CONTROL_PLANE_KEY__
+        irods_cfg_server_port_range_end: 20009
+        irods_cfg_server_port_range_start: 20000
+        irods_cfg_service_account_name: "{{ _irods_service_account_name }}"
+        irods_cfg_service_group_name: "{{ _irods_service_group_name }}"
+        irods_cfg_transfer_buffer_size_for_parallel_transfer: "{{
+          _irods_parallel_transfer_buffer_size }}"
+        irods_cfg_validate: false
+        irods_cfg_zone_key: __IRODS_ZONE_KEY__
+        irods_cfg_zone_name: "{{ _irods_zone_name }}"
+        irods_cfg_zone_user: _IRODS_USER_NAME_
+
+    - name: stage dynamic rule bases
+      template:
+        src: "{{ item }}"
+        dest: "{{ _build_dir }}/etc/irods/{{ item | basename | regex_replace('.j2$') }}"
+      with_fileglob:
+        - "templates/rule-bases/*"
+
+    - name: stage static rule bases
+      copy:
+        src: "{{ item }}"
+        dest: "{{ _build_dir }}/etc/irods"
+      with_fileglob:
+        - "files/rule-bases/*"
+
+    - name: copy .dockerignore
+      copy:
+        src: files/docker-rs/dockerignore
+        dest: "{{ _build_dir }}/.dockerignore"
+
+    - name: copy resource server docker scripts
+      copy:
+        src: files/docker-rs/{{ item }}
+        dest: "{{ _build_dir }}"
+      with_items:
+        - on-build-instantiate.sh
+        - periphery.sh
+        - Dockerfile
+
+    - name: build docker image
+      docker_image:
+        name: cyverse/ds-irods-rs-onbuild
+        buildargs:
+          path: "{{ _build_dir }}"
+          file: "{{ _build_dir }}/Dockerfile"
+      tags:
+        - no_testing

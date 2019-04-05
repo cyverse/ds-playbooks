@@ -28,9 +28,6 @@ set -e
 
 main()
 {
-  local irodsZoneName
-  irodsZoneName=$(jq -r '.irods_zone_name' /var/lib/irods/.irods/irods_environment.json)
-
   jq_in_place \
     "( .host_entries[]                          |
        select(.address_type == \"local\")       |

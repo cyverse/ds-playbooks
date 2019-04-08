@@ -2,8 +2,8 @@ FROM rabbitmq:3.5.1-management
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-ADD http://ftp.br.debian.org/debian-security/pool/updates/main/c/curl/libcurl3-gnutls_7.26.0-1+wheezy25+deb7u1_amd64.deb \
-    http://ftp.br.debian.org/debian-security/pool/updates/main/a/apt/apt-transport-https_0.9.7.9+deb7u6_amd64.deb \
+ADD http://archive.debian.org/debian-archive/debian-security/pool/updates/main/c/curl/libcurl3-gnutls_7.26.0-1+wheezy25+deb7u1_amd64.deb \
+    http://archive.debian.org/debian-archive/debian-security/pool/updates/main/a/apt/apt-transport-https_0.9.7.9+deb7u6_amd64.deb \
     /
 
 RUN dpkg --install \

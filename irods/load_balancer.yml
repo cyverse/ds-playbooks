@@ -191,10 +191,23 @@
       notify:
         - restart firewall
 
+    - name: ensure /etc/haproxy exists
+      file:
+        path: /etc/haproxy
+        state: directory
+
     - name: install VIP list
       template:
         src: templates/vip.lst.j2
         dest: /etc/haproxy/vip.lst
+      register: vip_list
+
+  post_tasks:
+    - name: reload haproxy if VIP list changed
+      when: vip_list is changed
+      command: 'true'
+      notify:
+        - reload haproxy
 
   handlers:
     - name: reload haproxy

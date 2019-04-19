@@ -97,5 +97,6 @@
       docker_image:
         name: cyverse/ds-irods-rs-onbuild
         path: "{{ _build_dir }}"
+        force: true
       tags:
         - no_testing

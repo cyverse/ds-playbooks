@@ -168,7 +168,7 @@
           -A OUTPUT -d {{ addr }} -p tcp --dport 443 -j NOTRACK
           {% endfor %}
           -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _canonical_irods_port }} -j NOTRACK
-          -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _canonical_irods_port }} -j NOTRACK
+          -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport {{ _canonical_irods_port }} -j NOTRACK
           -A PREROUTING -s {{ ies_ip }} -p tcp --sport 1247 -j NOTRACK
           -A OUTPUT -d {{ ies_ip }} -p tcp --dport 1247 -j NOTRACK
           -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK

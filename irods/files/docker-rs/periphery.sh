@@ -1,9 +1,26 @@
 #!/bin/bash
+#
+# Usage:
+#  periphery
+#
+# This program is meant to be called by the entry point script of the base
+# container. See https://github.com/cyverse/docker-irods-rs#design for the
+# details. When the `before_start` argument is passed in, it updates the iRODS
+# configuration files with the required secret keys. When `after_start` is
+# provided, it sets the status of its storage resource to `up`. Finally, when
+# `before_stop` is passed in, it sets the status to `down`.  It ignores all
+# other arguments.
+#
+# Ths program expects the following environment variables to be defined.
+#
+# IRODS_CONTROL_PLANE_KEY  the iRODS server control plane key
+# IRODS_NEGOTIATION_KEY    the iRODS negotiation key
+# IRODS_ZONE_KEY           the iRODS zone key
 
 
 main()
 {
-  local cmd="$*"
+  local cmd="$1"
 
   case "$cmd" in
     before_start)
@@ -47,13 +64,13 @@ set_resource_status()
 set_server_secrets()
 {
   jq_in_place \
-    ".irods_control_plane_key |= \"$CYVERSE_DS_CONTROL_PLANE_KEY\"" \
+    ".irods_control_plane_key |= \"$IRODS_CONTROL_PLANE_KEY\"" \
     /var/lib/irods/.irods/irods_environment.json
 
   jq_in_place \
-    ".negotiation_key          |= \"$CYVERSE_DS_NEGOTIATION_KEY\" |
-     .server_control_plane_key |= \"$CYVERSE_DS_CONTROL_PLANE_KEY\" |
-     .zone_key                 |= \"$CYVERSE_DS_ZONE_KEY\"" \
+    ".negotiation_key          |= \"$IRODS_NEGOTIATION_KEY\" |
+     .server_control_plane_key |= \"$IRODS_CONTROL_PLANE_KEY\" |
+     .zone_key                 |= \"$IRODS_ZONE_KEY\"" \
     /etc/irods/server_config.json
 }
 

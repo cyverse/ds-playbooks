@@ -46,9 +46,9 @@ VOLUME /var/lib/irods/iRODS/server/log /var/lib/irods/iRODS/server/log/proc
 
 EXPOSE 1247/tcp 1248/tcp 20000-20009/tcp 20000-20009/udp
 
-ENV CYVERSE_DS_CONTROL_PLANE_KEY=TEMPORARY__32byte_ctrl_plane_key
-ENV CYVERSE_DS_NEGOTIATION_KEY=TEMPORARY_32byte_negotiation_key
-ENV CYVERSE_DS_ZONE_KEY=TEMPORARY_zone_key
+ENV IRODS_CONTROL_PLANE_KEY=TEMPORARY__32byte_ctrl_plane_key
+ENV IRODS_NEGOTIATION_KEY=TEMPORARY_32byte_negotiation_key
+ENV IRODS_ZONE_KEY=TEMPORARY_zone_key
 
 CMD [ "/periphery" ]
 
@@ -57,15 +57,15 @@ CMD [ "/periphery" ]
 COPY on-build-instantiate.sh /on-build-instantiate
 RUN chmod u+x /on-build-instantiate
 
-ONBUILD ARG CYVERSE_DS_CLERVER_USER=ipc_admin
-ONBUILD ARG CYVERSE_DS_DEFAULT_RES=CyVerseRes
-ONBUILD ARG CYVERSE_DS_HOST_UID
-ONBUILD ARG CYVERSE_DS_RES_SERVER
-ONBUILD ARG CYVERSE_DS_STORAGE_RES
+ONBUILD ARG IRODS_CLERVER_USER=ipc_admin
+ONBUILD ARG IRODS_DEFAULT_RES=CyVerseRes
+ONBUILD ARG IRODS_HOST_UID
+ONBUILD ARG IRODS_RES_SERVER
+ONBUILD ARG IRODS_STORAGE_RES
 
 ONBUILD RUN /on-build-instantiate && \
             rm --force /on-build-instantiate
 
-ONBUILD VOLUME /irods_vault/"$CYVERSE_DS_STORAGE_RES"
+ONBUILD VOLUME /irods_vault/"$IRODS_STORAGE_RES"
 
 ONBUILD USER irods-host-user

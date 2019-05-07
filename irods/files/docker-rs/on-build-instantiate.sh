@@ -79,6 +79,7 @@ jq_in_place()
   local file="$2"
 
   jq "$filter" "$file" | sponge "$file"
+  chown irods:irods "$file"
 }
 
 

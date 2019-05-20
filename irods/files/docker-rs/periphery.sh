@@ -15,6 +15,7 @@
 #
 # IRODS_CONTROL_PLANE_KEY  the iRODS server control plane key
 # IRODS_NEGOTIATION_KEY    the iRODS negotiation key
+# IRODS_STORAGE_RES        the storage resource being managed
 # IRODS_ZONE_KEY           the iRODS zone key
 
 
@@ -44,20 +45,8 @@ set_resource_status()
 {
   local status="$1"
 
-  local rescLoc
-  rescLoc=$(hostname)
-
-  local resc
-  for resc in $(iquest '%s' "SELECT RESC_NAME WHERE RESC_LOC = '$rescLoc'")
-  do
-    if [[ "$resc" =~ ^CAT_NO_ROWS_FOUND ]]
-    then
-      break
-    fi
-
-    printf 'bringing %s %s\n' "$resc" "$status"
-    iadmin modresc "$resc" status "$status"
-  done
+  printf 'bringing %s %s\n' "$IRODS_STORAGE_RES" "$status"
+  iadmin modresc "$IRODS_STORAGE_RES" status "$status"
 }
 
 

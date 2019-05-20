@@ -52,7 +52,6 @@ ENV IRODS_ZONE_KEY=TEMPORARY_zone_key
 
 CMD [ "/periphery" ]
 
-
 ### Prepare onbuild instantiation logic
 COPY on-build-instantiate.sh /on-build-instantiate
 RUN chmod u+x /on-build-instantiate
@@ -69,3 +68,5 @@ ONBUILD RUN /on-build-instantiate && \
 ONBUILD VOLUME /irods_vault/"$IRODS_STORAGE_RES"
 
 ONBUILD USER irods-host-user
+
+ONBUILD ENV IRODS_STORAGE_RES="$IRODS_STORAGE_RES"

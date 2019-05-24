@@ -1,7 +1,6 @@
 ---
 - name: Build image
   hosts: localhost
-  gather_facts: false
   tasks:
     - include_vars:
         dir: "{{ inventory_dir }}/group_vars"
@@ -95,8 +94,14 @@
 
     - name: build docker image
       docker_image:
-        name: cyverse/ds-irods-rs-onbuild
+        name: "cyverse/ds-irods-rs-onbuild:{{ ansible_date_time.iso8601_basic_short }}"
         path: "{{ _build_dir }}"
         force: true
+#      notify:
+#        - new rs image
       tags:
         - no_testing
+
+#  handlers:
+#    - name: new rs image
+#      # TODO If a new images was created, tag latest with date and push both to

@@ -92,16 +92,37 @@
         - periphery.sh
         - Dockerfile
 
+    - name: retrieve previous docker image
+      docker_image:
+        name: cyverse/ds-irods-rs-onbuild
+      tags:
+        - no_testing
+
+    - name: inspect previous docker image
+      docker_image_facts:
+        name: cyverse/ds-irods-rs-onbuild
+      register: response
+      tags:
+        - no_testing
+
+    - name: extract previous docker image Id
+      set_fact:
+        previous_id: "{{ response.images[0].Id }}"
+      tags:
+        - no_testing
+
     - name: build docker image
       docker_image:
-        name: "cyverse/ds-irods-rs-onbuild:{{ ansible_date_time.iso8601_basic_short }}"
+        name: cyverse/ds-irods-rs-onbuild
+        tag: "{{ ansible_date_time.iso8601_basic_short }}"
         path: "{{ _build_dir }}"
         force: true
+      register: response
+      changed_when: response.image.Id != previous_id
 #      notify:
 #        - new rs image
       tags:
         - no_testing
 
-#  handlers:
 #    - name: new rs image
 #      # TODO If a new images was created, tag latest with date and push both to

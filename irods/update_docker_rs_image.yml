@@ -119,10 +119,26 @@
         force: true
       register: response
       changed_when: response.image.Id != previous_id
-#      notify:
-#        - new rs image
       tags:
         - no_testing
 
-#    - name: new rs image
-#      # TODO If a new images was created, tag latest with date and push both to
+    - name: remove duplicate docker image
+      when: response is not changed
+      docker_image:
+        name: cyverse/ds-irods-rs-onbuild
+        tag: "{{ ansible_date_time.iso8601_basic_short }}"
+        state: absent
+      tags:
+        - no_testing
+
+    - name: tag new image as latest
+      when: response is changed
+      docker_image:
+        name: cyverse/ds-irods-rs-onbuild
+        tag: latest
+        path: "{{ _build_dir }}"
+        force: true
+      tags:
+        - no_testing
+
+# TODO push images that have changed

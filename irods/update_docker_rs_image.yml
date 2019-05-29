@@ -4,11 +4,11 @@
   tasks:
     - include_vars:
         dir: "{{ inventory_dir }}/group_vars"
-        files_matching: 'irods\..*'
-
-    - include_vars:
-        dir: "{{ inventory_dir }}/group_vars"
-        files_matching: 'rs\..*'
+        files_matching: '(irods|rs)'
+        extensions:
+          - ''
+          - .yaml
+          - .yml
 
     - set_fact:
         irods_default_resource: _IRODS_DEFAULT_RESOURCE_
@@ -92,63 +92,82 @@
         - periphery.sh
         - Dockerfile
 
-    - name: retrieve previous docker image
-      docker_image:
-        name: cyverse/ds-irods-rs-onbuild
+    - when: _irods_publish_rs_image
+      block:
+        - name: retrieve previous docker image
+          docker_image:
+            name: cyverse/ds-irods-rs-onbuild
+          failed_when: false
+          register: response
+          tags:
+            - no_testing
+
+        - name: retag previous image as local
+          docker_tag:
+            source: cyverse/ds-irods-rs-onbuild
+            target: "{{ _irods_rs_image }}"
+          failed_when: false
       tags:
-        - no_testing
+        -no_testing
 
     - name: inspect previous docker image
       docker_image_facts:
-        name: cyverse/ds-irods-rs-onbuild
-      register: response
+        name: "{{ _irods_rs_image }}"
+      register: previous
       tags:
         - no_testing
 
     - name: extract previous docker image Id
+      when: previous.images | length > 0
       set_fact:
-        previous_id: "{{ response.images[0].Id }}"
+        previous_id: "{{ previous.images[0].Id }}"
       tags:
         - no_testing
 
     - name: build docker image
       docker_image:
-        name: cyverse/ds-irods-rs-onbuild
+        name: "{{ _irods_rs_image }}"
         tag: "{{ ansible_date_time.iso8601_basic_short }}"
         path: "{{ _build_dir }}"
         force: true
       register: response
-      changed_when: response.image.Id != previous_id
+      changed_when: previous_id is not defined or response.image.Id != previous_id
       tags:
         - no_testing
 
     - name: remove duplicate docker image
       when: response is not changed
       docker_image:
-        name: cyverse/ds-irods-rs-onbuild
+        name: "{{ _irods_rs_image }}"
         tag: "{{ ansible_date_time.iso8601_basic_short }}"
         state: absent
       tags:
         - no_testing
 
-    - name: tag new image as latest
-      when: response is changed
-      docker_image:
-        name: cyverse/ds-irods-rs-onbuild
-        tag: latest
-        path: "{{ _build_dir }}"
-        force: true
-      tags:
-        - no_testing
+    - when: response is changed
+      block:
+        - name: tag new image as latest
+          docker_tag:
+            source: "{{ _irods_rs_image }}:{{ ansible_date_time.iso8601_basic_short }}"
+            target: "{{ _irods_rs_image }}:latest"
 
-    - name: push new images to dockerhub
-      when: response is changed and _irods_publish_rs_image
-      docker_image:
-        name: cyverse/ds-irods-rs-onbuild
-        tag: "{{ item }}"
-        push: true
-      with_items:
-        - "{{ ansible_date_time.iso8601_basic_short }}"
-        - latest
+        - name: Create published tag
+          when: _irods_publish_rs_image
+          docker_tag:
+            source: "{{ _irods_rs_image }}:{{ item }}"
+            target: cyverse/ds-irods-rs-onbuild:{{ item }}
+          with_items:
+            - "{{ ansible_date_time.iso8601_basic_short }}"
+            - latest
+
+        - name: push published tag
+          when: _irods_publish_rs_image
+          docker_image:
+            name: cyverse/ds-irods-rs-onbuild
+            tag: "{{ item }}"
+            push: true
+          with_items:
+            - "{{ ansible_date_time.iso8601_basic_short }}"
+            - latest
       tags:
         - no_testing

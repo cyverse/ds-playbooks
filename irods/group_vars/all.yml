@@ -85,6 +85,8 @@ _irods_resource_hierarchies: '{{
     if irods_resource_hierarchies is defined and irods_resource_hierarchies|length > 0 else
   [ { "name": "demoResc" } ] }}'
 
+_irods_rs_image: "{{ irods_rs_image | default('ds-irods-rs-onbuild') }}"
+
 _irods_server_port_range_end: "{{
   irods_server_port_range_end if irods_server_port_range_end is defined else
   20199 }}"

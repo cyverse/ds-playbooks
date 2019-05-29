@@ -7,8 +7,8 @@
         files_matching: '(irods|rs)'
         extensions:
           - ''
-          - .yaml
-          - .yml
+          - yaml
+          - yml
 
     - set_fact:
         irods_default_resource: _IRODS_DEFAULT_RESOURCE_

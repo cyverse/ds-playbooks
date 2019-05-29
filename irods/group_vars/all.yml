@@ -18,6 +18,8 @@ _bisque_url: "{{ bisque_url if bisque_url is defined else None }}"
 
 _bisque_user: "{{ bisque_user if bisque_user is defined else 'admin' }}"
 
+_build_dir: "{{ build_dir if build_dir is defined else '/tmp' }}"
+
 _canonical_hostname: "{{ canonical_hostname if canonical_hostname is defined else _irods_ies }}"
 
 _canonical_irods_port: "{{ canonical_irods_port if canonical_irods_port is defined else 1247 }}"
@@ -46,11 +48,15 @@ _irods_clerver_password: "{{ irods_clerver_password if irods_clerver_password is
 
 _irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else 'rods' }}"
 
+_irods_client_server_policy: CS_NEG_REFUSE
+
 _irods_default_dir_mode: "{{ irods_default_dir_mode if irods_default_dir_mode is defined else
                              '0750' }}"
 
 _irods_default_file_mode: "{{ irods_default_file_mode if irods_default_file_mode is defined else
                               '0600' }}"
+
+_irods_default_hash_scheme: MD5
 
 _irods_default_number_of_transfer_threads: "{{
   irods_default_number_of_transfer_threads
@@ -83,10 +89,14 @@ _irods_parallel_transfer_buffer_size: "{{
   irods_parallel_transfer_buffer_size if irods_parallel_transfer_buffer_size is defined else
   None }}"
 
+_irods_publish_rs_image: "{{ irods_publish_rs_image | default(false) }}"
+
 _irods_resource_hierarchies: '{{
   irods_resource_hierarchies
     if irods_resource_hierarchies is defined and irods_resource_hierarchies|length > 0 else
   [ { "name": "demoResc" } ] }}'
+
+_irods_rs_image: "{{ irods_rs_image | default('ds-irods-rs-onbuild') }}"
 
 _irods_server_port_range_end: "{{
   irods_server_port_range_end if irods_server_port_range_end is defined else

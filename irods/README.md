@@ -25,6 +25,7 @@ Variable                                   | Default                            
 `bisque_projects`                          | `[]`                                 |         | A list of projects that automatically publish to BisQue
 `bisque_url`                               |                                      |         | The URL for the BisQue server to connect to
 `bisque_user`                              | admin                                |         | The user to connect to BisQue as
+`build_dir`                                | /tmp                                 |         | The directory used for building artifacts for deployment
 `canonical_hostname`                       | `irods_ies`                          |         | The external FQDN used to access the data store services
 `canonical_irods_port`                     | 1247                                 |         | The port on the `canonical_hostname` host listening for connections to iRODS
 `dbms_password`                            | irods                                |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
@@ -50,7 +51,9 @@ Variable                                   | Default                            
 `irods_negotiation_key`                    | TEMPORARY_32byte_negotiation_key     |         | the negotiation key
 `irods_other_host_entries`                 | []                                   |         | a list of other FQDNs to add to /etc/hosts
 `irods_parallel_transfer_buffer_size`      | 4                                    |         | the transfer buffer size in MiB for each stream during parallel transfer
+`irods_publish_rs_image`                   | false                                |         | Whether or not to publish a freshly build resource server docker image to dockerhub.
 `irods_resource_hierarchies`               | `[ { "name": "demoResc" } ]`         |         | the list of resource hierarchies that need to exist, _see below_
+`irods_rs_image`                           | ds-irods-rs-onbuild                  |         | the name of the unpublished RS image to be generated
 `irods_server_control_plane_key`           | TEMPORARY__32byte_ctrl_plane_key     |         | the server control plane key
 `irods_server_port_range_end`              | 20199                                |         | the last address in the range of auxillary TCP and UDP ports
 `irods_server_port_range_start`            | 20000                                |         | the first address in the range of auxillary TCP and UDP ports

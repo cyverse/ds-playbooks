@@ -1,0 +1,31 @@
+- name: checkout irods-netcdf-build repo
+  git:
+    repo: https://github.com/cyverse/irods-netcdf-build.git
+    dest: "{{ _build_dir }}/irods-netcdf-build"
+    version: "{{ _irods_version }}"
+    depth: 1
+    force: true
+  register: response
+
+- name: build iRODS NetCDF plugins
+  when: response is changed
+  command: "{{ _build_dir }}/irods-netcdf-build/build"
+  tags:
+    # docker in docker is a no no.
+    - no_testing
+
+- name: checkout msi-setavu-plugin repo
+  git:
+    repo: https://github.com/iPlantCollaborativeOpenSource/irods-setavu-plugin.git
+    dest: "{{ _build_dir }}/irods-setavu-plugin"
+    version: "{{ _irods_version }}"
+    depth: 1
+    force: true
+  register: response
+
+- name: build msiSetAVU plugin
+  when: response is changed
+  command: "{{ _build_dir }}/irods-setavu-plugin/build"
+  tags:
+    # docker in docker is a no no.
+    - no_testing

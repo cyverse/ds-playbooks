@@ -5,83 +5,29 @@
     pkg: irods-runtime
     pkg_ver: "{{ _irods_version }}"
 
-# XXX - This is a bug in the git module. It will be fixed in ansible 2.7
-- name: remove previous irods-netcdf-build repo
+- delegate_to: localhost
   run_once: true
   become: false
-  local_action:
-    module: file
-    name: /tmp/irods-netcdf-build
-    state: absent
-  tags:
-    - non_idempotent
+  import_tasks: build_plugins.yml
 
-- name: checkout irods-netcdf-build repo
-  run_once: true
-  become: false
-  local_action:
-    module: git
-    repo: https://github.com/cyverse/irods-netcdf-build.git
-    dest: /tmp/irods-netcdf-build
-    version: "{{ _irods_version }}"
-    force: true
-  register: response
-
-- when: response is changed
-  block:
-    - name: build iRODS NetCDF plugins
-      run_once: true
-      delegate_to: localhost
-      become: false
-      command: /tmp/irods-netcdf-build/build
-
-    - include_tasks: install_netcdf_plugin.yml
-      vars:
-        plugin: "{{ item }}"
-        rpm: "{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm"
-      with_items:
-        - irods-api-plugin-netcdf
-        - irods-icommands-netcdf
-        - irods-microservice-plugin-netcdf
+- include_tasks: install_netcdf_plugin.yml
+  vars:
+    plugin: "{{ item }}"
+    rpm: "{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm"
+  with_items:
+    - irods-api-plugin-netcdf
+    - irods-icommands-netcdf
+    - irods-microservice-plugin-netcdf
   tags:
     # docker in docker is a no no.
     - no_testing
 
-# XXX - This is a bug in the git module. It will be fixed in ansible 2.7
-- name: remove previous msi-setavu-plugin repo
-  run_once: true
-  become: false
-  local_action:
-    module: file
-    name: /tmp/irods-setavu-plugin
-    state: absent
-  tags:
-    - non_idempotent
-
-- name: checkout msi-setavu-plugin repo
-  run_once: true
-  become: false
-  local_action:
-    module: git
-    repo: https://github.com/iPlantCollaborativeOpenSource/irods-setavu-plugin.git
-    dest: /tmp/irods-setavu-plugin
-    version: "{{ _irods_version }}"
-    force: true
-  register: response
-
-- when: response is changed
-  block:
-    - name: build msiSetAVU plugin
-      run_once: true
-      become: false
-      local_action: command /tmp/irods-setavu-plugin/build
-
-    - name: upgrade msiSetAVU microservice
-      copy:
-        src: "/tmp/irods-setavu-plugin/libraries/centos{{ ansible_distribution_major_version }}/libmsiSetAVU.so"
-        dest: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
-        owner: "{{ _irods_service_account_name }}"
-        group: "{{ _irods_service_group_name }}"
+- name: upgrade msiSetAVU microservice
+  copy:
+    src: "{{ _build_dir }}/irods-setavu-plugin/libraries/centos{{ ansible_distribution_major_version }}/libmsiSetAVU.so"
+    dest: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
+    owner: "{{ _irods_service_account_name }}"
+    group: "{{ _irods_service_group_name }}"
   tags:
     # docker in docker is a no no.
     - no_testing

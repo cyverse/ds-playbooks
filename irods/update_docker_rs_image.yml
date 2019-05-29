@@ -141,4 +141,14 @@
       tags:
         - no_testing
 
-# TODO push images that have changed
+    - name: push new images to dockerhub
+      when: response is changed and _irods_publish_rs_image
+      docker_image:
+        name: cyverse/ds-irods-rs-onbuild
+        tag: "{{ item }}"
+        push: true
+      with_items:
+        - "{{ ansible_date_time.iso8601_basic_short }}"
+        - latest
+      tags:
+        - no_testing

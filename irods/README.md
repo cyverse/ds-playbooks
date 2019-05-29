@@ -46,6 +46,7 @@ Variable                                   | Default                            
 `irods_negotiation_key`                    | TEMPORARY_32byte_negotiation_key     |         | the negotiation key
 `irods_other_host_entries`                 | []                                   |         | a list of other FQDNs to add to /etc/hosts
 `irods_parallel_transfer_buffer_size`      | 4                                    |         | the transfer buffer size in MiB for each stream during parallel transfer
+`irods_publish_rs_image`                   | false                                |         | Whether or not to publish a freshly build resource server docker image to dockerhub.
 `irods_resource_hierarchies`               | `[ { "name": "demoResc" } ]`         |         | the list of resource hierarchies that need to exist, _see below_
 `irods_server_control_plane_key`           | TEMPORARY__32byte_ctrl_plane_key     |         | the server control plane key
 `irods_server_port_range_end`              | 20199                                |         | the last address in the range of auxillary TCP and UDP ports

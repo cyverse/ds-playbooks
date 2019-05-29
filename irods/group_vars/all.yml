@@ -78,6 +78,8 @@ _irods_parallel_transfer_buffer_size: "{{
   irods_parallel_transfer_buffer_size if irods_parallel_transfer_buffer_size is defined else
   None }}"
 
+_irods_publish_rs_image: "{{ irods_publish_rs_image | default(false) }}"
+
 _irods_resource_hierarchies: '{{
   irods_resource_hierarchies
     if irods_resource_hierarchies is defined and irods_resource_hierarchies|length > 0 else

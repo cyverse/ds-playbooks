@@ -1,13 +1,17 @@
 FROM test-env-base:centos6
 
-RUN yum --assumeyes install \
-      epel-release \
-      https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm
+RUN yum --assumeyes install epel-release
 RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
 RUN yum --assumeyes install \
-      jq libselinux-python moreutils python-pip python-requests python-virtualenv \
-      https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm \
+      https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/postgresql93-libs-9.3.25-1PGDG.rhel6.x86_64.rpm
+RUN yum --assumeyes install \
+      https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/postgresql93-9.3.25-1PGDG.rhel6.x86_64.rpm \
+      https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/postgresql93-odbc-10.03.0000-1PGDG.rhel6.x86_64.rpm \
+      https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-icat-4.1.10-centos6-x86_64.rpm
+RUN yum --assumeyes install \
       https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-database-plugin-postgres93-1.10-centos6-x86_64.rpm
+RUN yum --assumeyes install \
+      jq libselinux-python moreutils python-pip python-requests python-virtualenv
 RUN pip install pika
 RUN touch /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py
 

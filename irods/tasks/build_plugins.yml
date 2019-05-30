@@ -3,7 +3,6 @@
     repo: https://github.com/cyverse/irods-netcdf-build.git
     dest: "{{ _build_dir }}/irods-netcdf-build"
     version: "{{ _irods_version }}"
-    depth: 1
     force: true
   register: response
 
@@ -19,7 +18,6 @@
     repo: https://github.com/iPlantCollaborativeOpenSource/irods-setavu-plugin.git
     dest: "{{ _build_dir }}/irods-setavu-plugin"
     version: "{{ _irods_version }}"
-    depth: 1
     force: true
   register: response
 

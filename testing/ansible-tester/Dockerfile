@@ -1,9 +1,8 @@
 FROM williamyeh/ansible:centos7
 
 RUN yum --assumeyes install \
-  dmidecode git postgresql python-dns python-netaddr wget \
-  https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm
-RUN pip install --upgrade ansible
+      dmidecode git postgresql python-dns python-netaddr wget \
+      https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm
 RUN mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test /root/.ssh
 
 COPY ansible.cfg /root/.ansible.cfg

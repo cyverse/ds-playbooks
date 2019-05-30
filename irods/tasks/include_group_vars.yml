@@ -1,0 +1,26 @@
+---
+# Includes the variables for the given group.
+#
+# Variables:
+#  group  the name of the group
+
+- name: include vars from {{ group }} file
+  include_vars:
+    dir: "{{ inventory_dir }}/group_vars"
+    depth: 1
+    files_matching: "{{ group }}"
+    extensions:
+      - ''
+      - json
+      - yaml
+      - yml
+
+- name: include vars from {{ group }} directory
+  include_vars:
+    dir: "{{ inventory_dir }}/group_vars/{{ group }}"
+    extensions:
+      - ''
+      - json
+      - yaml
+      - yml
+  failed_when: false

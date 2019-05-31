@@ -147,7 +147,7 @@
               tcp_checks:
                 - connect
                 - send-binary 0000006e
-                - send <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>216</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option></option></StartupPack_PI>
+                - send <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>223</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option>haproxy</option></StartupPack_PI>
                 - 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>'
                 - send-binary 0000006f
                 - send <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
@@ -159,7 +159,7 @@
               tcp_checks:
                 - connect
                 - send-binary 0000006e
-                - send <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>216</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option></option></StartupPack_PI>
+                - send <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>223</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option>haproxy</option></StartupPack_PI>
                 - 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>'
                 - send-binary 0000006f
                 - send <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
@@ -168,7 +168,16 @@
               binds:
                 - :{{ reconn_ports_start }}-{{ reconn_ports_end }}
               servers:
-                - "{{ ies_server }} {{ ies_ip }}"
+                - "{{ ies_server }} {{ ies_ip }} check port 1247 inter 20s"
+              options:
+                - tcp-check
+              tcp_checks:
+                - connect
+                - send-binary 0000006e
+                - send <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>223</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option>haproxy</option></StartupPack_PI>
+                - 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>'
+                - send-binary 0000006f
+                - send <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
           - webdav_https:
               binds:
                 - :443

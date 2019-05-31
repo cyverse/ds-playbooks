@@ -8,11 +8,76 @@
     ies_ip: "{{ ies if ies|ipaddr else lookup('dig', ies) }}"
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
-  roles:
-    - role: uoi-io.haproxy
+  pre_tasks:
+    - name: enable notifcations when not testing
+      set_fact:
+        notifications_enabled: true
+      tags:
+        - no_testing
+
+    - name: configure rsyslog to listen on UDP socket
+      blockinfile:
+        path: /etc/rsyslog.conf
+        insertafter: '# Provides UDP syslog reception'
+        marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
+        block: |
+          $ModLoad imudp
+          $UDPServerRun 514
+          $UDPServerAddress 127.0.0.1
+      notify:
+        - restart syslog
+
+    - name: place rsyslog config for HAProxy
+      copy:
+        src: files/rsyslog.d/haproxy.conf
+        dest: /etc/rsyslog.d
+      notify:
+        - restart syslog
+
+    - name: place logrotate config for HAProxy
+      copy:
+        src: files/logrotate.d/haproxy
+        dest: /etc/logrotate.d
+
+    - name: ensure CentOS 7 stock HAProxy is not installed
+      package:
+        name: haproxy
+        state: absent
+
+    - name: ensure Software Collections repository is installed
+      package:
+        name: centos-release-scl
+
+    - name: ensure HAProxy version 1.8 is installed
+      package:
+        name: "{{ item }}"
+      with_items:
+        - rh-haproxy18-haproxy
+        - rh-haproxy18-haproxy-syspaths
+
+    - name: ensure /usr/sbin/haproxy points to the haproxy exec
+      file:
+        src: /opt/rh/rh-haproxy18/root/usr/sbin/haproxy
+        dest: /usr/sbin/haproxy
+        state: link
+
+    - name: ensure HAProxy starts on reboot
+      service:
+        name: haproxy
+        enabled: true
+        state: started
+      tags:
+        - no_testing
+
+    - name: install VIP list
+      template:
+        src: templates/vip.lst.j2
+        dest: /etc/haproxy/vip.lst
+
+    - include_role:
+        name: uoi-io.haproxy
+        tasks_from: config.yml
       vars:
-        haproxy_firewalld: false
-        haproxy_selinux: false
         haproxy_global_cpu_maps:
           - 1 0
         haproxy_global_nbproc: 1
@@ -120,39 +185,12 @@
                 {% endfor %} ]"
       notify:
         - reload haproxy
+
+    - import_role:
+        name: uoi-io.haproxy
+        tasks_from: sysctl.yml
       tags:
         - no_testing
-
-  pre_tasks:
-    - name: enable notifcations when not testing
-      set_fact:
-        notifications_enabled: true
-      tags:
-        - no_testing
-
-    - name: configure rsyslog to listen on UDP socket
-      blockinfile:
-        path: /etc/rsyslog.conf
-        insertafter: '# Provides UDP syslog reception'
-        marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
-        block: |
-          $ModLoad imudp
-          $UDPServerRun 514
-          $UDPServerAddress 127.0.0.1
-      notify:
-        - restart syslog
-
-    - name: place rsyslog config for HAProxy
-      copy:
-        src: files/rsyslog.d/haproxy.conf
-        dest: /etc/rsyslog.d
-      notify:
-        - restart syslog
-
-    - name: place logrotate config for HAProxy
-      copy:
-        src: files/logrotate.d/haproxy
-        dest: /etc/logrotate.d
 
     - name: disable conntrack for proxied connections
       blockinfile:
@@ -190,11 +228,6 @@
           -A INPUT -m state --state NEW -s {{ _load_balancer_stats_allowed_src }} -p tcp --dport {{ _load_balancer_stats_port }} -j ACCEPT
       notify:
         - restart firewall
-
-    - name: install VIP list
-      template:
-        src: templates/vip.lst.j2
-        dest: /etc/haproxy/vip.lst
 
   handlers:
     - name: reload haproxy

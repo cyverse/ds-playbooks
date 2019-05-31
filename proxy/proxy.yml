@@ -1,0 +1,41 @@
+---
+- name: Set up proxy
+  hosts: proxy
+  become: true
+  roles:
+    - role: proxy
+      vars:
+        proxy_default_max_conn: 500
+        proxy_default_queue_timeout: 10m
+
+        proxy_stats_port: 81
+        proxy_stats_tls_crt: /etc/haproxy/certs/cyverse_pem.pem
+        proxy_stats_auth:
+          username: ds
+          password: tokyo_bestbuy
+          realm: CyVerse-DS-Dev
+        proxy_stats_source_hosts:
+          - 128.196.38.31
+          - 150.135.0.0/16
+
+        proxy_irods_port: 1247
+        proxy_irods_reconn_first_port: 20000
+        proxy_irods_reconn_last_port: 20099
+        proxy_irods_backend_host: 128.196.65.26
+        proxy_irods_backend_port: 1247
+        proxy_irods_backend_reconn_first_port: 20000
+        proxy_irods_backend_reconn_last_port: 20099
+        proxy_irods_single_max_conn: 300
+        proxy_irods_extra_max_conn: 100
+        proxy_irods_source_hosts:
+          - 128.196.0.0/16
+        proxy_irods_vip_source_hosts:
+          - 128.196.38.0/24
+
+        proxy_webdav_port: 80
+        proxy_webdav_tls_port: 443
+        proxy_webdav_backend_hosts:
+          - 128.196.65.156
+          - 128.196.65.157
+        proxy_webdav_source_hosts:
+          - 128.196.0.0/16

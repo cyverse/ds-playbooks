@@ -1,0 +1,126 @@
+# Ansible managed
+
+##########################
+#         GLOBAL         #
+##########################
+global
+  chroot                     /var/lib/haproxy
+  user                       haproxy
+  group                      haproxy
+  daemon
+  nbproc                     1
+  cpu-map                    1 0
+  pidfile                    /var/run/haproxy.pid
+  log                        127.0.0.1 local0 debug
+  stats socket               /var/run/haproxy.sock mode 600 level admin
+  stats timeout              2m
+  maxconn                    4000
+  spread-checks              2
+  tune.ssl.default-dh-param  2048
+
+
+##########################
+#        DEFAULT         #
+##########################
+
+defaults
+  mode                        tcp
+  maxconn                     {{ default_max_conn }}
+  retries                     3
+  log                         global
+  option clitcpka
+  option srvtcpka
+  option dontlognull
+  option log-separate-errors
+  option tcplog
+  timeout connect             10s
+{% if default_queue_timeout %}
+  timeout queue               {{ default_queue_timeout }}
+{% endif %}
+  timeout client              1d
+  timeout server              1d
+  timeout client-fin          1m
+  timeout server-fin          1m
+
+
+##########################
+#         STATS          #
+##########################
+
+listen stats
+  mode                   http
+{% if stats_tls_crt %}
+  bind                   :{{ stats_port }} ssl crt {{ stats_tls_crt }}
+{% else %}
+  bind                   :{{ stats_port }}
+{% endif %}
+  maxconn                10
+  stats enable
+{% if stats_auth %}
+  stats auth             {{ stats_auth.username }}:{{ stats_auth.password }}
+{%   if stats_auth.realm %}
+  stats realm            {{ stats_auth.realm }}
+{%   endif %}
+{% endif %}
+  stats uri              /
+  stats hide-version
+  stats show-legends
+  stats refresh          10s
+  option dontlog-normal
+  timeout connect        100s
+  timeout queue          100s
+  timeout client         100s
+  timeout server         100s
+
+
+##########################
+#         IRODS          #
+##########################
+{% set irods_backend_ip
+     = irods_backend_host if irods_backend_host | ipaddr else lookup('dig', irods_backend_host) %}
+
+frontend irods_main
+  bind                    :{{ irods_port }}
+  default_backend         irods_single_conn
+  stick-table             type ip size 100k store conn_cur
+  acl                     vip-src        src -f /etc/haproxy/vip.lst
+  acl                     multiple-conn  src_conn_cur ge 2
+  tcp-request connection  track-sc0 src if !vip-src
+  use_backend             irods_extra_conn if multiple-conn
+
+backend irods_single_conn
+  server                 ies {{ irods_backend_ip }}:{{ irods_backend_port }} check inter 20s maxconn {{ irods_single_max_conn }}
+  option tcp-check
+  tcp-check connect
+  tcp-check send-binary  0000006e
+  tcp-check send         <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>216</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option></option></StartupPack_PI>
+  tcp-check expect       string <MsgHeader_PI>\n<type>RODS_VERSION</type>
+  tcp-check send-binary  0000006f
+  tcp-check send         <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
+
+backend irods_extra_conn
+  server                 ies {{ irods_backend_ip }}:{{ irods_backend_port }} check inter 20s maxconn {{ irods_extra_max_conn }}
+  option tcp-check
+  tcp-check connect
+  tcp-check send-binary  0000006e
+  tcp-check send         <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>216</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option></option></StartupPack_PI>
+  tcp-check expect       string <MsgHeader_PI>\n<type>RODS_VERSION</type>
+  tcp-check send-binary  0000006f
+  tcp-check send         <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
+
+listen irods_reconn
+  bind    :{{ irods_reconn_first_port }}-{{ irods_reconn_last_port }}
+  server  ies {{ irods_backend_ip }} check port {{ irods_backend_port }} inter 20s
+
+
+##########################
+#         WEBDAV         #
+##########################
+
+listen webdav
+  bind                :{{ webdav_port }},:{{ webdav_tls_port }}
+{% for host in webdav_backend_hosts %}
+  server              dav-{{ loop.index }} {{ host if host | ipaddr else lookup('dig', host) }} check port {{ webdav_port }} inter 20s maxconn 100
+{% endfor %}
+  option httpchk      OPTIONS /
+  http_checks expect  status 200

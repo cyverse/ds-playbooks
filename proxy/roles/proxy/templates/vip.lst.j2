@@ -1,0 +1,3 @@
+{% for host in irods_vip_client_hosts %}
+{{ host if host | ipaddr else lookup('dig', host) }}
+{% endfor %}

@@ -1,0 +1,17 @@
+---
+- name: verify that if stats auth exists it has correct fields
+  when: stats_auth
+  assert:
+    that:
+      - stats_auth.username is defined and (stats_auth.username | string | length) >= 1
+      - stats_auth.password is defined and (stats_auth.password | string | length) >= 1
+  run_once: true
+
+- name: verify that each route has at least one proxied port
+  assert:
+    that:
+      - item.proxied_ports is defined
+      - item.proxied_ports is iterable
+      - item.proxied_ports | length >= 1
+  with_items: "{{ routes }}"
+  run_once: true

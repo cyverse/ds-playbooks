@@ -1,0 +1,15 @@
+---
+- name: reload firewall
+  service:
+    name: iptables
+    state: reloaded
+
+- name: reload proxy
+  service:
+    name: rh-haproxy18-proxy
+    state: reloaded
+
+- name: restart rsyslog
+  service:
+    name: rsyslog
+    state: restarted

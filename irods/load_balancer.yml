@@ -126,11 +126,15 @@
                 - :{{ _canonical_irods_port }}
               stick_table: type ip size 100k store conn_cur
               acls:
+                - is-conn capture.req.hdr(0) -m str RODS_CONNECT
                 - vip-src src -f /etc/haproxy/vip.lst
               tcp_requests:
-                - connection track-sc0 src if !vip-src
+                - inspect-delay 5s
+                - content capture req.payload_lv(0,4),regsub(^\s*<MsgHeader_PI\s*>[\s\S]*<type\s*>,),regsub(</type\s*>[\s\S]*</MsgHeader_PI\s*>\s*$,) len 16
+                - content reject unless is-conn
+                - content track-sc1 src if !vip-src
               use_backends:
-                - irods_extra_conn if { src_conn_cur ge 2 }
+                - irods_extra_conn if { sc1_conn_cur ge 2 }
               default_backend: irods_single_conn
           - webdav_http:
               binds:

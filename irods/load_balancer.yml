@@ -179,11 +179,14 @@
                 - :443
               options:
                 - httpchk
-              servers: "[
-                {% for h in groups.webdav %}
-                  \"dav-{{ loop.index }} {% if h | ipaddr %}{{ h }}{% else %}{{ lookup('dig', h) }}{% endif %} check port 80 inter 20s\"
-                  {% if not loop.last %},{% endif %}
-                {% endfor %} ]"
+# XXX: Our caching is too dumb right now to support multiple webdav servers
+              servers:
+                - dav-1 {% if groups.webdav[0] | ipaddr %}{{ groups.webdav[0] }}{% else %}{{ lookup('dig', groups.webdav[0]) }}{% endif %} check port 80 inter 20s
+#              servers: "[
+#                {% for h in groups.webdav %}
+#                  \"dav-{{ loop.index }} {% if h | ipaddr %}{{ h }}{% else %}{{ lookup('dig', h) }}{% endif %} check port 80 inter 20s\"
+#                  {% if not loop.last %},{% endif %}
+#                {% endfor %} ]"
       notify:
         - reload haproxy
 

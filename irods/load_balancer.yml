@@ -87,6 +87,7 @@
         haproxy_global_tunes:
           - spread-checks: 2
           - tune.ssl.default-dh-param: 2048
+          - unix-bind: prefix /var/lib/haproxy/ mode 770 user haproxy
         haproxy_default_errorfiles: []
         haproxy_default_mode: tcp
         haproxy_default_options:
@@ -121,12 +122,13 @@
           - show-legends
           - hide-version
         haproxy_frontend:
-          - irods_main:
+          - irods_triage:
               binds:
                 - :{{ _canonical_irods_port }}
               stick_table: type ip size 100k store conn_cur
               acls:
                 - is-conn capture.req.hdr(0) -m str RODS_CONNECT
+                - too-many-conn sc1_conn_cur gt 1
                 - vip-src src -f /etc/haproxy/vip.lst
               tcp_requests:
                 - inspect-delay 5s
@@ -134,8 +136,12 @@
                 - content reject unless is-conn
                 - content track-sc1 src if !vip-src
               use_backends:
-                - irods_extra_conn if { sc1_conn_cur ge 2 }
-              default_backend: irods_single_conn
+                - irods_queued if too-many-conn
+              default_backend: irods_direct
+          - irods_indirect:
+              binds:
+                - unix@haproxy_irods.sock accept-proxy
+              default_backend: irods_direct
           - webdav_http:
               binds:
                 - :80
@@ -143,23 +149,14 @@
               redirects:
                 - scheme https code 301
         haproxy_backend:
-          - irods_single_conn:
+          - irods_queued:
+              servers:
+                - irods_indirect unix@haproxy_irods.sock send-proxy maxconn {{ _load_balancer_irods_extra_max_conn }}
+          - irods_direct:
               options:
                 - tcp-check
               servers:
-                - "{{ ies_server }} {{ ies_ip }}:1247 check inter 20s maxconn {{ _load_balancer_irods_single_max_conn }}"
-              tcp_checks:
-                - connect
-                - send-binary 0000006e
-                - send <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>223</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option>haproxy</option></StartupPack_PI>
-                - 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>'
-                - send-binary 0000006f
-                - send <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
-          - irods_extra_conn:
-              options:
-                - tcp-check
-              servers:
-                - "{{ ies_server }} {{ ies_ip }}:1247 check inter 20s maxconn {{ _load_balancer_irods_extra_max_conn }}"
+                - "{{ ies_server }} {{ ies_ip }}:1247 check inter 20s maxconn {{ _load_balancer_irods_single_max_conn + _load_balancer_irods_extra_max_conn }}"
               tcp_checks:
                 - connect
                 - send-binary 0000006e

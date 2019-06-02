@@ -142,12 +142,6 @@
               binds:
                 - unix@haproxy_irods.sock accept-proxy
               default_backend: irods_direct
-          - webdav_http:
-              binds:
-                - :80
-              mode: http
-              redirects:
-                - scheme https code 301
         haproxy_backend:
           - irods_queued:
               servers:
@@ -179,18 +173,15 @@
                 - 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>'
                 - send-binary 0000006f
                 - send <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
-          - webdav_https:
+          - webdav:
               binds:
+                - :80
                 - :443
               options:
-                - httpchk OPTIONS /
-              http_checks:
-                - expect status 200
+                - httpchk
               servers: "[
                 {% for h in groups.webdav %}
-                  \"dav-{{ loop.index }} {%
-                    if h | ipaddr %}{{ h }}{% else %}{{ lookup('dig', h) }}{%
-                    endif %} check check-ssl inter 20s verify none\"
+                  \"dav-{{ loop.index }} {% if h | ipaddr %}{{ h }}{% else %}{{ lookup('dig', h) }}{% endif %} check port 80 inter 20s\"
                   {% if not loop.last %},{% endif %}
                 {% endfor %} ]"
       notify:
@@ -208,6 +199,13 @@
         marker: "# {mark} DS MANAGED BLOCK (load_balancer raw)"
         block: |
           *raw
+          -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport 80 -j NOTRACK
+          -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport 80 -j NOTRACK
+          {% for w in groups.webdav %}
+          {%   set addr = w if w|ipaddr else lookup('dig', w) %}
+          -A PREROUTING -s {{ addr }} -p tcp --sport 80 -j NOTRACK
+          -A OUTPUT -d {{ addr }} -p tcp --dport 80 -j NOTRACK
+          {% endfor %}
           -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport 443 -j NOTRACK
           -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport 443 -j NOTRACK
           {% for w in groups.webdav %}
@@ -234,7 +232,6 @@
         marker: "# {mark} DS MANAGED BLOCK (load_balancer filter)"
         block: |
           -A INPUT -m state --state UNTRACKED -j ACCEPT
-          -A INPUT -m state --state NEW -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport 80 -j ACCEPT
           -A INPUT -m state --state NEW -s {{ _load_balancer_stats_allowed_src }} -p tcp --dport {{ _load_balancer_stats_port }} -j ACCEPT
       notify:
         - restart firewall

@@ -61,6 +61,11 @@
         dest: /usr/sbin/haproxy
         state: link
 
+    - name: ensure /etc/haproxy exists
+      file:
+        path: /etc/haproxy
+        state: directory
+
     - name: ensure /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg points to cfg
       file:
         src: /etc/haproxy/haproxy.cfg
@@ -80,6 +85,8 @@
       template:
         src: templates/vip.lst.j2
         dest: /etc/haproxy/vip.lst
+      notify:
+        - reload haproxy
 
     - include_role:
         name: uoi-io.haproxy
@@ -203,6 +210,13 @@
       tags:
         - no_testing
 
+    - name: ensure haproxy is started
+      service:
+        name: haproxy
+        state: started
+      tags:
+        - no_testing
+
     - name: disable conntrack for proxied connections
       blockinfile:
         path: /etc/sysconfig/iptables
@@ -245,13 +259,6 @@
           -A INPUT -m state --state NEW -s {{ _load_balancer_stats_allowed_src }} -p tcp --dport {{ _load_balancer_stats_port }} -j ACCEPT
       notify:
         - restart firewall
-
-    - name: ensure haproxy is started
-      service:
-        name: haproxy
-        state: started
-      tags:
-        - no_testing
 
   handlers:
     - name: reload haproxy

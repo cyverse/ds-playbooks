@@ -65,7 +65,7 @@ Variable                                   | Default                            
 `irods_zone_name`                          | tempZone                             |         | the name of the zone
 `load_balancer_irods_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS through the load balancer.
 `load_balancer_irods_extra_max_conn`       | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer for connections coming from jobs.
-`load_balancer_irods_single_max_conn`      | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer for connections coming from interactive and VIP sources.
+`load_balancer_irods_max_conn`             | 200                                  |         | The maximum number of concurrent connections to iRODS through the load balancer.
 `load_balancer_irods_vip_srcs`             | `[]`                                           | A list of IP address ranges that aren't considered for queuing.
 `load_balancer_queue_timeout`              | 120                                  |         | The number of seconds a connection can be queued.
 `load_balancer_stats_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for hosts allowed to see the HAProxy stats web page.

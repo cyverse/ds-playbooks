@@ -134,9 +134,7 @@ _load_balancer_irods_extra_max_conn: "{{
   load_balancer_irods_extra_max_conn if load_balancer_irods_extra_max_conn is defined else
   100 }}"
 
-_load_balancer_irods_single_max_conn: "{{
-  load_balancer_irods_single_max_conn if load_balancer_irods_single_max_conn is defined else
-  100 }}"
+_load_balancer_irods_max_conn: "{{ load_balancer_irods_max_conn | default(200) }}"
 
 _load_balancer_irods_vip_srcs: "{{
   load_balancer_irods_vip_srcs if load_balancer_irods_vip_srcs is defined else

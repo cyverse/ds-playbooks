@@ -1,4 +1,6 @@
-#! /bin/bash
+#!/bin/bash
+
+set -e
 
 readonly ExecName=$(readlink --canonicalize "$0")
 readonly PlaybooksDir=$(dirname "$ExecName")
@@ -12,23 +14,26 @@ main()
   do
     local reqFile="$roleDir"/requirements.yml
 
-    # ansible-galaxy won't update roles installed through dependencies, so
-    # delete all roles before updating
-    local roles
-    roles=$(find "$roleDir" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort)
+    if [[ -f "$reqFile" ]]
+    then
+      # ansible-galaxy won't update roles installed through dependencies, so
+      # delete all roles before updating
+      local roles
+      roles=$(find "$roleDir" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort)
 
-    local keepers
-    keepers=$(sed --quiet 's/^!\([^\/]*\)\/.*/\1/p' "$roleDir"/.gitignore | sort --unique)
+      local keepers
+      keepers=$(sed --quiet 's/^!\([^\/]*\)\/.*/\1/p' "$roleDir"/.gitignore | sort --unique)
 
-    local role
-    for role in $(comm -2 -3 <(echo "$roles") <(echo "$keepers"))
-    do
-      rm --force --recursive "${roleDir:?}"/"$role"
-    done
+      local role
+      for role in $(comm -2 -3 <(echo "$roles") <(echo "$keepers"))
+      do
+        rm --force --recursive "${roleDir:?}"/"$role"
+      done
 
-    ansible-galaxy install --force --role-file="$reqFile" --roles-path="$roleDir"
+      ansible-galaxy install --force --role-file="$reqFile" --roles-path="$roleDir"
+    fi
   done < <(find "$PlaybooksDir" -type d -name roles)
 }
 
-set -e
+
 main

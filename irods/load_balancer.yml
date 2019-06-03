@@ -8,7 +8,7 @@
     ies_ip: "{{ ies if ies|ipaddr else lookup('dig', ies) }}"
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
-  pre_tasks:
+  tasks:
     - name: enable notifcations when not testing
       set_fact:
         notifications_enabled: true

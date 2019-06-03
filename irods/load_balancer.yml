@@ -61,11 +61,18 @@
         dest: /usr/sbin/haproxy
         state: link
 
+    - name: ensure /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg points to cfg
+      file:
+        src: /etc/haproxy/haproxy.cfg
+        dest: /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg
+        state: link
+        follow: false
+        force: true
+
     - name: ensure HAProxy starts on reboot
       service:
         name: haproxy
         enabled: true
-        state: started
       tags:
         - no_testing
 
@@ -238,6 +245,13 @@
           -A INPUT -m state --state NEW -s {{ _load_balancer_stats_allowed_src }} -p tcp --dport {{ _load_balancer_stats_port }} -j ACCEPT
       notify:
         - restart firewall
+
+    - name: ensure haproxy is started
+      service:
+        name: haproxy
+        state: started
+      tags:
+        - no_testing
 
   handlers:
     - name: reload haproxy

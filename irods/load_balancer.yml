@@ -87,6 +87,8 @@
         dest: /etc/haproxy/vip.lst
       notify:
         - reload haproxy
+      tags:
+        - no_testing
 
     - include_role:
         name: uoi-io.haproxy
@@ -201,9 +203,9 @@
 #                  \"dav-{{ loop.index }} {% if h | ipaddr %}{{ h }}{% else %}{{ lookup('dig', h) }}{% endif %} check port 80 inter 20s\"
 #                  {% if not loop.last %},{% endif %}
 #                {% endfor %} ]"
-      notify:
-        - reload haproxy
-
+      tags:
+        - no_testing
+        
     - import_role:
         name: uoi-io.haproxy
         tasks_from: sysctl.yml
@@ -261,12 +263,6 @@
         - restart firewall
 
   handlers:
-    - name: reload haproxy
-      when: notifications_enabled | default(false)
-      service:
-        name: haproxy
-        state: reloaded
-
     - name: restart firewall
       when: notifications_enabled | default(false)
       service:

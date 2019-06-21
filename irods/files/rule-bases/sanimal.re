@@ -19,15 +19,15 @@ _sanimal_ingest(*Uploader, *TarPath) {
   *args= "*zoneArg *uploaderArg *tarArg";
   *status = errormsg(msiExecCmd("sanimal-ingest", *args, "null", "null", "null", *out), *err);
 
-  _sanimal_logMsg(*err);
-
-  msiGetStderrInExecCmdOut(*out, *resp);
-
-  foreach (*err in split(*resp, '\n')) {
-    _sanimal_logMsg(*err);
-  }
-
   if (*status != 0) {
+    _sanimal_logMsg(*err);
+
+    msiGetStderrInExecCmdOut(*out, *resp);
+
+    foreach (*err in split(*resp, '\n')) {
+      _sanimal_logMsg(*err);
+    }
+
     failmsg(*status, 'SANIMAL: failed to fully ingest *TarPath');
   }
 }

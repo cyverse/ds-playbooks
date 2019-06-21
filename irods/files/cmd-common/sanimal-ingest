@@ -117,4 +117,4 @@ mk_imeta_cmds()
 }
 
 
-main "$@"
+main "$@" >&2

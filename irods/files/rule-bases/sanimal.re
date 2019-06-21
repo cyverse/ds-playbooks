@@ -1,4 +1,4 @@
-# VERSION: 2
+# VERSION: 3
 #
 # These are the custom rules for the sanimal project
 
@@ -17,7 +17,9 @@ _sanimal_ingest(*Uploader, *TarPath) {
   *uploaderArg = execCmdArg(*Uploader);
   *tarArg = execCmdArg(*TarPath);
   *args= "*zoneArg *uploaderArg *tarArg";
-  *status = errorcode(msiExecCmd("sanimal-ingest", *args, "null", "null", "null", *out));
+  *status = errormsg(msiExecCmd("sanimal-ingest", *args, "null", "null", "null", *out), *err);
+
+  _sanimal_logMsg(*err);
 
   msiGetStderrInExecCmdOut(*out, *resp);
 
@@ -36,7 +38,7 @@ sanimal_acPostProcForPut {
     if ($objPath like regex '^' ++ str(sanimal_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
       _sanimal_logMsg('scheduling ingest of $objPath for $userNameClient');
 
-      delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>") 
+      delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
       {_sanimal_ingest($userNameClient, $objPath);}
     }
   }

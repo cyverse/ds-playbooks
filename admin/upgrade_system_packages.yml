@@ -10,8 +10,7 @@
         line: exclude=e2fsprogs* libcom_err-* libss-*
 
     - name: upgrade system packages
-      when: _rebootable
+      when: _rebootable | bool
       package:
         name: '*'
         state: latest
- 

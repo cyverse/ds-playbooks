@@ -1,10 +1,21 @@
 ---
 - name: test stop_all
   hosts: irods
-  become: true
   become_user: irods
   tasks:
+    - name: check if svc acnt exists
+      shell: |
+        if id --user irods &> /dev/null
+        then
+          printf exists
+        else
+          printf missing
+        fi
+      register: idResult
+      changed_when: false
+
     - name: verify that all servers are down
+      become: true
       shell: |
         if ! status=$(/var/lib/irods/iRODS/irodsctl status)
         then
@@ -16,3 +27,4 @@
           exit 1
         fi
       changed_when: false
+      when: idResult.stdout == 'exists'

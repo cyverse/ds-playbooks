@@ -1,6 +1,18 @@
 ---
+- name: check if svc acnt exists
+  shell: |
+    if id --user {{ _irods_service_account_name }} &> /dev/null
+    then
+      printf exists
+    else
+      printf missing
+    fi
+  register: idResult
+  changed_when: false
+
 - name: stop server
   become_flags: '-i'
+  become: "{{ _become_svc_acnt }}"
   shell: |
     if ! status=$(/var/lib/irods/iRODS/irodsctl status)
     then
@@ -18,5 +30,6 @@
 
       printf changed
     fi
-  register: result
-  changed_when: result.stdout == 'changed'
+  register: stopResult
+  changed_when: stopResult.stdout == 'changed'
+  when: idResult.stdout == 'exists'

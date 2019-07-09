@@ -45,7 +45,7 @@
           - "{{ _irods_zone_port }}"
           - "{{ _irods_server_control_plane_port }}"
       ignore_errors: true
-      with_items: "{{ groups['rs'] }}"
+      with_items: "{{ groups['rs'] | difference([inventory_hostname]) }}"
 
 
 - name: check port access from rs
@@ -65,7 +65,7 @@
         tcp_ports:
           - "{{ _irods_zone_port }}"
       ignore_errors: true
-      with_items: "{{ groups['ies'] }}"
+      with_items: "{{ groups['ies'] | difference([inventory_hostname]) }}"
 
     - name: check other rs ports
       port_check_sender:
@@ -73,7 +73,7 @@
         tcp_ports: "{{ [ _irods_zone_port ] | union(ephemeral_ports) }}"
         udp_ports: "{{ ephemeral_ports }}"
       ignore_errors: true
-      with_items: "{{ groups['rs'] }}"
+      with_items: "{{ groups['rs'] | difference([inventory_hostname]) }}"
 
 
 - name: stop receiver

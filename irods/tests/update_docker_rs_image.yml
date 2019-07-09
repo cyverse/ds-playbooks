@@ -1,0 +1,35 @@
+---
+- name: test build image
+  hosts: localhost
+  tasks:
+    - import_tasks: tasks/test_include_group_vars.yml
+
+    - debug:
+        msg: TODO test build_plugins.yml
+
+    - name: test create command scripts staging directory
+      debug:
+        msg: TODO implement
+
+    - name: test add common command scripts
+      debug:
+        msg: TODO implement
+
+    - debug:
+        msg: TODO import cyverse.irods-cfg
+
+    - name: test stage dynamic rule bases
+      debug:
+        msg: TODO implement
+
+    - name: test stage static rule bases
+      debug:
+        msg: TODO implement
+
+    - name: test copy .dockerignore
+      debug:
+        msg: TODO implement
+
+    - name: test copy resource server docker scripts
+      debug:
+        msg: TODO implement

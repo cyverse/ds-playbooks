@@ -44,7 +44,7 @@ DavDepthInfinity on
 
 {%   endif %}
 DavRodsEnvFile /etc/httpd/irods/irods_environment.json
-DavRodsServer {{ _irods_ies }} 1247
+DavRodsServer {{ _irods_ies }} {{ _irods_zone_port }}
 DavRodsZone {{ _irods_zone_name }}
 DavRodsExposedRoot {{ exposedRoot }}
 DavRodsRxBufferKbs 32768

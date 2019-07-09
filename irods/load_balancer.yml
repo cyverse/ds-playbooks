@@ -164,7 +164,7 @@
               options:
                 - tcp-check
               servers:
-                - "{{ ies_server }} {{ ies_ip }}:1247 check inter 20s maxconn {{ _load_balancer_irods_max_conn }}"
+                - "{{ ies_server }} {{ ies_ip }}:{{ _irods_zone_port }} check inter 20s maxconn {{ _load_balancer_irods_max_conn }}"
               tcp_checks:
                 - connect
                 - send-binary 0000006e
@@ -177,7 +177,7 @@
               binds:
                 - :{{ reconn_ports_start }}-{{ reconn_ports_end }}
               servers:
-                - "{{ ies_server }} {{ ies_ip }} check port 1247 inter 20s"
+                - "{{ ies_server }} {{ ies_ip }} check port {{ _irods_zone_port }} inter 20s"
               options:
                 - tcp-check
               tcp_checks:
@@ -239,8 +239,8 @@
           {% endfor %}
           -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _canonical_irods_port }} -j NOTRACK
           -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport {{ _canonical_irods_port }} -j NOTRACK
-          -A PREROUTING -s {{ ies_ip }} -p tcp --sport 1247 -j NOTRACK
-          -A OUTPUT -d {{ ies_ip }} -p tcp --dport 1247 -j NOTRACK
+          -A PREROUTING -s {{ ies_ip }} -p tcp --sport {{ _irods_zone_port }} -j NOTRACK
+          -A OUTPUT -d {{ ies_ip }} -p tcp --dport {{ _irods_zone_port }} -j NOTRACK
           -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
           -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
           -A PREROUTING -s {{ ies_ip }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK

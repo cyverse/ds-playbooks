@@ -22,7 +22,8 @@ _build_dir: "{{ build_dir if build_dir is defined else '/tmp' }}"
 
 _canonical_hostname: "{{ canonical_hostname if canonical_hostname is defined else _irods_ies }}"
 
-_canonical_irods_port: "{{ canonical_irods_port if canonical_irods_port is defined else 1247 }}"
+_canonical_irods_port: "{{
+  canonical_irods_port if canonical_irods_port is defined else _irods_zone_port }}"
 
 _dbms_password: "{{ dbms_password | default('testpassword') }}"
 
@@ -210,3 +211,10 @@ _webdav_tls_chain_file: "{{ webdav_tls_chain_file if webdav_tls_chain_file is de
 
 _webdav_tls_key_file: "{{ webdav_tls_key_file if webdav_tls_key_file is defined else
                           '/etc/ssl/certs/dummy.key' }}"
+
+
+# The following are internval constants
+
+_irods_server_control_plane_port: 1248
+
+_irods_zone_port: 1247

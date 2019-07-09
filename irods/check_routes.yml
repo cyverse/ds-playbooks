@@ -1,13 +1,16 @@
 ---
-- name: stop irods
-  hosts: irods
-  become_user: "{{ _irods_service_account_name }}"
-  tags:
-    - non_idempotent
-  tasks:
-    - import_tasks: tasks/stop_irods.yml
-      become: true
-      ignore_errors: true
+- import_playbook: stop_all.yml
+  ignore_errors: true
+  
+# - name: stop irods
+#   hosts: irods
+#   become_user: "{{ _irods_service_account_name }}"
+#   tags:
+#     - non_idempotent
+#   tasks:
+#     - import_tasks: tasks/stop_irods.yml
+#       become: true
+#       ignore_errors: true
 
 
 - name: start receivers

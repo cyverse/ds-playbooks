@@ -316,9 +316,6 @@ removePrefix(*orig, *prefixes) {
 # The logic for handling a newly created data object.
 #
 _ipc_createData(*Path) {
-  *err = errormsg(setAdminGroupPerm(*Path), *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
-
   *err = errormsg(msiDataObjChksum(*Path, 'forceChksum=', *chksum), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
@@ -340,6 +337,11 @@ _ipc_modifyData(*Path) {
 
 
 _ipc_createOrModifyData(*Path, *IsNew) {
+  # When an upload is completed after a restart, *IsNew is always false. We need
+  # to ensure that rodsadmin always get ownership.
+  *err = errormsg(setAdminGroupPerm(*Path), *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
   if (*IsNew) {
     _ipc_createData(*Path);
   } else {

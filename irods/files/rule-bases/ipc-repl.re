@@ -80,39 +80,32 @@ _replicate(*Object, *RescName) {
 
 _mvReplicas(*DataPath, *IngestResc, *ReplResc) {
   _repl_logMsg('moving replicas of *DataPath');
+
   *replFail = false;
   (*ingestName, *ingestOptional) = *IngestResc;
-
-  if (!*ingestOptional) {
-    if (_replicate(*DataPath, *ingestName) < 0) {
-      *replFail = true;
-    }
-  }
-
-# XXX - Added a semicolon to prevent irodsReServer failure. See
-#       https://github.com/irods/irods/issues/3629. Verify that this is still the case in iRODS
-#       4.2.2.
-  ;
-
   (*replName, *replOptional) = *ReplResc;
 
-  if (!*replOptional) {
-    if (_replicate(*DataPath, *replName) < 0) {
-      *replFail = true;
-    }
+  if (_replicate(*DataPath, *ingestName) < 0) {
+    *replFail = true;
+  }
 
-    if (*replFail) { fail; }
+  if (_replicate(*DataPath, *replName) < 0) {
+    *replFail = true;
+  }
 
-    # Once a replica exists on all the project's resource, remove the other replicas
-    msiSplitPath(*DataPath, *collPath, *dataName);
+  if (*replFail) {
+    fail;
+  }
 
-    foreach (*repl in SELECT DATA_RESC_NAME
-                      WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName') {
-      *rescName = *repl.DATA_RESC_NAME;
+  # Once a replica exists on all the project's resource, remove the other replicas
+  msiSplitPath(*DataPath, *collPath, *dataName);
 
-      if (*rescName != *ingestName && *rescName != *replName) {
-        msiDataObjTrim(*DataPath, *rescName, 'null', '1', 'null', *status);
-      }
+  foreach (*repl in SELECT DATA_RESC_NAME WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName')
+  {
+    *rescName = *repl.DATA_RESC_NAME;
+
+    if (*rescName != *ingestName && *rescName != *replName) {
+      msiDataObjTrim(*DataPath, *rescName, 'null', '1', 'null', *status);
     }
   }
 }
@@ -179,24 +172,22 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
   (*ingestName, *ingestOptional) = *IngestResc;
   (*replName, *replOptional) = *ReplResc;
 
-  if (!*ingestOptional || !*replOptional) {
-    msiGetObjType(*Entity, *type);
+  msiGetObjType(*Entity, *type);
 
-    if (*type == '-c') {
-      # if the entity is a collection
-      foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
-        foreach (*obj in SELECT COLL_NAME, DATA_NAME WHERE COLL_NAME LIKE '*collPat') {
-          *collPath = *obj.COLL_NAME;
-          *dataName = *obj.DATA_NAME;
-          _scheduleMv('*collPath/*dataName',
-                      *ingestName, str(*ingestOptional),
-                      *replName, str(*replOptional));
-        }
+  if (*type == '-c') {
+    # if the entity is a collection
+    foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
+      foreach (*obj in SELECT COLL_NAME, DATA_NAME WHERE COLL_NAME LIKE '*collPat') {
+        *collPath = *obj.COLL_NAME;
+        *dataName = *obj.DATA_NAME;
+        _scheduleMv('*collPath/*dataName',
+                    *ingestName, str(*ingestOptional),
+                    *replName, str(*replOptional));
       }
-    } else if (*type == '-d') {
-      # if the entity is a data object
-      _scheduleMv(*Entity, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
     }
+  } else if (*type == '-d') {
+    # if the entity is a data object
+    _scheduleMv(*Entity, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
   }
 }
 

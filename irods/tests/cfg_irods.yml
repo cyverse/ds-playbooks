@@ -23,8 +23,9 @@
         - bisque.re
         - bisque-env.re
         - calliope.re
-        - coge.re
+        - captcn.re
         - captcn-env.re
+        - coge.re
         - de.re
         - ipc-amqp.re
         - ipc-custom.re

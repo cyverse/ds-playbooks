@@ -9,6 +9,7 @@
     avra_env: "{{ lookup('template', '../templates/rule-bases/avra-env.re.j2') }}"
     aegis_env: "{{ lookup('template', '../templates/rule-bases/aegis-env.re.j2') }}"
     bisque_env: "{{ lookup('template', '../templates/rule-bases/bisque-env.re.j2') }}"
+    captcn_env: "{{ lookup('template', '../templates/rule-bases/captcn-env.re.j2') }}"
     ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
     pire_env: "{{ lookup('template', '../templates/rule-bases/pire-env.re.j2') }}"
     sanimal_env: "{{ lookup('template', '../templates/rule-bases/sanimal-env.re.j2') }}"
@@ -49,6 +50,13 @@
       assert:
         that:
           - sanimal_env is search("sanimal_BASE_COLL = ''" | regex_escape)
+
+    - name: verify CAP_TCN constants expand correctly in captcn-env.re.j2
+      assert:
+        that:
+         - captcn_env is search('captcn_OWNERS = list()' | regex_escape)
+         - captcn_env is search('captcn_WRITERS = list()' | regex_escape)
+         - captcn_env is search('captcn_READERS = list()' | regex_escape)
 
     - name: verify sernec constants expand correctly in sernec-env.re.j2
       assert:
@@ -189,6 +197,31 @@
       assert:
         that:
           - pire_env is search("pire_RESC = 'pireRes'")
+
+
+- name: test that CAP_TCN perm groups are generated correctly
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    captcn_owners:
+      - own1
+      - own2
+    captcn_readers:
+      - read1
+      - read2
+    captcn_writers:
+      - write1
+      - write2
+    captcn_env: "{{ lookup('template', '../templates/rule-bases/captcn-env.re.j2') }}"
+  tasks:
+    - name: verify captcn_env
+      assert:
+        that:
+         - captcn_env is search('captcn_OWNERS = list("own1", "own2")' | regex_escape)
+         - captcn_env is search('captcn_WRITERS = list("write1", "write2")' | regex_escape)
+         - captcn_env is search('captcn_READERS = list("read1", "read2")' | regex_escape)
 
 
 - name: test that sernec perm groups are generated correctly

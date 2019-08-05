@@ -28,6 +28,9 @@ Variable                                   | Default                            
 `build_dir`                                | /tmp                                 |         | The directory used for building artifacts for deployment
 `canonical_hostname`                       | `irods_ies`                          |         | The external FQDN used to access the data store services
 `canonical_irods_port`                     | 1247                                 |         | The port on the `canonical_hostname` host listening for connections to iRODS
+`captcn_owners`                            | `[]`                                 |         | a list of users who get ownership of CAP_TCN collections
+`captcn_readers`                           | `[]`                                 |         | a list of users who get read access to CAP_TCN collections
+`captcn_writers`                           | `[]`                                 |         | a list of users who get write access to CAP_TCN collections
 `dbms_password`                            | irods                                |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `dbms_port`                                | 5432                                 |         | The TCP port the DBMS listens on.
 `dbms_username`                            | irods                                |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.

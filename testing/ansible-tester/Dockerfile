@@ -1,5 +1,7 @@
 FROM williamyeh/ansible:centos7
 
+RUN pip --disable-pip-version-check install --upgrade ansible
+
 RUN yum --assumeyes install \
       dmidecode git postgresql python-dns python-netaddr wget \
       https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm

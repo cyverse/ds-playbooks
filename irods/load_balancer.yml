@@ -87,6 +87,8 @@
         dest: /etc/haproxy/vip.lst
       notify:
         - reload haproxy
+      tags:
+        - no_testing
 
     - include_role:
         name: uoi-io.haproxy
@@ -136,7 +138,7 @@
           - show-legends
           - hide-version
         haproxy_frontend:
-          - irods_triage:
+          - irods_main:
               binds:
                 - :{{ _canonical_irods_port }}
               stick_table: type ip size 100k store conn_cur
@@ -150,21 +152,22 @@
                 - content reject unless is-conn
                 - content track-sc1 src if !vip-src
               use_backends:
-                - irods_queued if too-many-conn
+                - irods_throttled if too-many-conn
+              default_backend: irods_direct
+          - irods_reconn:
+              binds:
+                - :{{ reconn_ports_start }}-{{ reconn_ports_end }}
               default_backend: irods_direct
           - irods_indirect:
               binds:
                 - unix@haproxy_irods.sock accept-proxy
               default_backend: irods_direct
         haproxy_backend:
-          - irods_queued:
-              servers:
-                - irods_indirect unix@haproxy_irods.sock send-proxy maxconn {{ _load_balancer_irods_extra_max_conn }}
           - irods_direct:
               options:
                 - tcp-check
               servers:
-                - "{{ ies_server }} {{ ies_ip }}:{{ _irods_zone_port }} check inter 20s maxconn {{ _load_balancer_irods_max_conn }}"
+                - "{{ ies_server }} {{ ies_ip }} maxconn {{ _load_balancer_irods_max_conn }} check port 1247 inter 20s"
               tcp_checks:
                 - connect
                 - send-binary 0000006e
@@ -172,21 +175,10 @@
                 - 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>'
                 - send-binary 0000006f
                 - send <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
-        haproxy_listen:
-          - irods_reconn:
-              binds:
-                - :{{ reconn_ports_start }}-{{ reconn_ports_end }}
+          - irods_throttled:
               servers:
-                - "{{ ies_server }} {{ ies_ip }} check port {{ _irods_zone_port }} inter 20s"
-              options:
-                - tcp-check
-              tcp_checks:
-                - connect
-                - send-binary 0000006e
-                - send <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>223</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option>haproxy</option></StartupPack_PI>
-                - 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>'
-                - send-binary 0000006f
-                - send <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
+                - indirect unix@haproxy_irods.sock send-proxy maxconn {{ _load_balancer_irods_extra_max_conn }}
+        haproxy_listen:
           - webdav:
               binds:
                 - :80
@@ -201,8 +193,8 @@
 #                  \"dav-{{ loop.index }} {% if h | ipaddr %}{{ h }}{% else %}{{ lookup('dig', h) }}{% endif %} check port 80 inter 20s\"
 #                  {% if not loop.last %},{% endif %}
 #                {% endfor %} ]"
-      notify:
-        - reload haproxy
+      tags:
+        - no_testing
 
     - import_role:
         name: uoi-io.haproxy
@@ -261,12 +253,6 @@
         - restart firewall
 
   handlers:
-    - name: reload haproxy
-      when: notifications_enabled | default(false)
-      service:
-        name: haproxy
-        state: reloaded
-
     - name: restart firewall
       when: notifications_enabled | default(false)
       service:

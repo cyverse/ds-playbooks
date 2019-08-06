@@ -93,7 +93,7 @@
         - periphery.sh
         - Dockerfile
 
-    - when: _irods_publish_rs_image
+    - when: _irods_publish_rs_image | bool
       block:
         - name: retrieve previous docker image
           docker_image:

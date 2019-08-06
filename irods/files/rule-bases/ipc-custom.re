@@ -1,4 +1,4 @@
-# VERSION: 2
+# VERSION: 3
 #
 # All customizations done to the iRODS rule logic are placed in this file or
 # should be included by this file.
@@ -30,6 +30,7 @@
 @include 'avra'
 @include 'bisque'
 @include 'calliope'
+@include 'captcn'
 @include 'coge'
 @include 'de'
 @include 'pire'
@@ -54,6 +55,9 @@ exclusive_acPostProcForCollCreate {
   *err = errormsg(bisque_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
+  *err = errormsg(captcn_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
   *err = errormsg(coge_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
@@ -69,6 +73,9 @@ exclusive_acPostProcForCopy {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(bisque_acPostProcForCopy, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(captcn_acPostProcForCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForCopy, *msg);
@@ -246,6 +253,9 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(bisque_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(captcn_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(coge_acPostProcForObjRename(*SourceObject, *DestObject), *msg);

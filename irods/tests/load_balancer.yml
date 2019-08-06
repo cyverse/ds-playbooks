@@ -25,9 +25,3 @@
         path: /etc/logrotate.d/haproxy
       register: result
       failed_when: not result.stat.exists
-
-    - name: verify vip file is in place
-      stat:
-        path: /etc/haproxy/vip.lst
-      register: result
-      failed_when: not result.stat.exists

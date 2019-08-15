@@ -1,6 +1,6 @@
 ---
 - name: install dmidecode required by ansible gather_facts
-  hosts: all:!unmanaged_systems
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   gather_facts: false
   tasks:
@@ -10,8 +10,9 @@
         state: present
         use: "{{ _package_manager }}"
 
+
 - name: install required packages for ansible
-  hosts: all:!unmanaged_systems
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
     - name: install EPEL repository on CentOS machines

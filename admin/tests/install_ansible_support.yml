@@ -1,6 +1,6 @@
 ---
 - name: test install dmidecode required by ansible gather_facts
-  hosts: all:!unmanaged_systems
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
     - name: test install dmidcode support for CentOS
@@ -16,7 +16,7 @@
 
 
 - name: test install required packages for ansible
-  hosts: all:!unmanaged_systems
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   gather_facts: false
   tasks:
@@ -26,6 +26,14 @@
       vars:
         pkg: epel-release
 
-    - name: test install packages
+    - name: test install common packages
+      debug:
+        msg: TODO implement
+
+    - name: test install common CentOS packages
+      debug:
+        msg: TODO implement
+
+    - name: test install packages for distributions other than CentOS
       debug:
         msg: TODO implement

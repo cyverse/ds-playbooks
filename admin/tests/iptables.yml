@@ -1,6 +1,6 @@
 ---
 - name: test initialize iptables
-  hosts: all:!unmanaged_systems
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
     - when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int >= 7

@@ -1,6 +1,6 @@
 ---
 - name: upgrade system packages
-  hosts: all:!unmanaged_systems
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
     - name: ensure e2fsprogs is never updated by yum
@@ -14,4 +14,3 @@
       package:
         name: '*'
         state: latest
- 

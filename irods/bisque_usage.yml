@@ -21,7 +21,7 @@
       get_url:
         validate_certs: no
         url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
-        dest: /var/lib/irods/iRODS/server/bin/cmd
+        dest: /var/lib/irods/iRODS/server/bin/cmd/bisque_paths.py
         mode: u+wx
         force: true
 

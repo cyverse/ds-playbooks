@@ -1,67 +1,63 @@
-#!/bin/bash
+#!/usr/bin/python
 #
-# An ansible module for ensuring iRODS is started
+# An ansible module for executing irodsctl, i.e., controling the state of an
+# iRODS server.
 #
 # Module Name:
 #  irods_ctl
+#
+# Optional Variables:
+#  state  The state irods-server should be in upon success. It should be one of
+#         'restarted', 'started', or 'stopped'. The default is 'started'.
 
-# WANT_JSON
+import os
 
-set -o nounset
+from ansible.module_utils.basic import AnsibleModule
 
+irodsctl = "/var/lib/irods/iRODS/irodsctl"
 
-main()
-{
-  local varFile="$1"
+def call_irodsctl(arg):
+  return os.popen(irodsctl + " " + arg).read()
 
-  local state
-  state=$(jq --raw-output '.state // "started"' < "$varFile")
+def is_running():
+  return "No servers running" not in call_irodsctl("status")
 
-  local statusMsg
-  if ! statusMsg=$(/var/lib/irods/iRODS/irodsctl status)
-  then
-    fail failed to determine if iRODS is already running
-  fi
+def ensure_started():
+  if not is_running():
+    call_irodsctl("start")
+    return True
+  else:
+    return False
 
-  if ! grep --quiet 'No servers running' <<<"$statusMsg"
-  then
-    succeed false
-  fi
+def ensure_stopped():
+  if is_running():
+    call_irodsctl("stop")
+    return True
+  else:
+    return False
 
-  local errMsg
-  if ! errMsg=$(/var/lib/irods/iRODS/irodsctl start 2>&1)
-  then
-    fail "$errMsg"
-  fi
+def restart():
+  response = call_irodsctl("restart")
+  # NB: irodsctl restart succeeds even when it fails to start the server, so we
+  #     need to check to see if iRODS is running
+  if not is_running():
+    raise Exception(response)
+  return True
 
-  succeed true
-}
+def ensure_state(state):
+  return { 'restarted' : restart,
+           'started'   : ensure_started,
+           'stopped'   : ensure_stopped,
+         }[state]()
 
+def main():
+  module = AnsibleModule(
+    argument_spec = dict(
+      state = dict(type='str', choices=["restarted","started","stopped"], default="started")))
+  try:
+    module.exit_json(params=module.params, changed=ensure_state(module.params['state']))
+  except Exception as e:
+    module.fail_json(msg=str(e))
 
-fail()
-{
-  local msg="$*"
-
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
-     '{failed: true, msg: $msg}' \
-    >&2
-
-  exit 1
-}
-
-
-succeed()
-{
-  local changed="$1"
-
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
-     '{changed: ($changed == "true")}' \
-    >&2
-
-  exit 0
-}
-
-
-main "@$ "2>&1
+if __name__ == '__main__':
+  main()

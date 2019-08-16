@@ -20,7 +20,7 @@
   become_user: "{{ _irods_service_account_name }}"
   tasks:
     - name: start iRODS
-      irods_start:
+      irods_ctl:
 
 
 - name: bootstrap iRODS start
@@ -42,7 +42,7 @@
         password: "{{ _irods_clerver_password }}"
 
     - name: start iRODS
-      irods_start:
+      irods_ctl:
 
 
 - import_playbook: mk_storage_resources.yml

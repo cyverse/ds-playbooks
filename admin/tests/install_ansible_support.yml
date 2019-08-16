@@ -1,15 +1,13 @@
 ---
 - name: test install dmidecode required by ansible gather_facts
-  hosts: all:!unmanaged_systems
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
     - name: test install dmidcode support for CentOS
       when: ansible_distribution == 'CentOS'
-      yum:
-        list: dmidecode
-      register: result
-      failed_when: |
-        result.results | selectattr("yumstate", 'equalto', "installed") | list | count != 1
+      include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: dmidecode
 
     - name: test install dmicode support for distributions other than CentOS
       when: ansible_distribution != 'CentOS'
@@ -18,18 +16,24 @@
 
 
 - name: test install required packages for ansible
-  hosts: all:!unmanaged_systems
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   gather_facts: false
   tasks:
     - name: test install EPEL repo
       when: ansible_distribution == 'CentOS'
-      yum:
-        list: epel-release
-      register: result
-      failed_when: |
-        result.results | selectattr("yumstate", 'equalto', "installed") | list | count != 1
-      
-    - name: test install packages
+      include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: epel-release
+
+    - name: test install common packages
+      debug:
+        msg: TODO implement
+
+    - name: test install common CentOS packages
+      debug:
+        msg: TODO implement
+
+    - name: test install packages for distributions other than CentOS
       debug:
         msg: TODO implement

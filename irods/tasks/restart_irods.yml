@@ -4,8 +4,9 @@
 
 - name: restart ICAT enabled servers
   when: inventory_hostname in groups['ies']
-  command: /var/lib/irods/iRODS/irodsctl restart
+  irods_ctl:
+    state: restarted
 
 - name: start resource servers
   when: inventory_hostname in groups['rs'] | difference(groups['ies'])
-  command: /var/lib/irods/iRODS/irodsctl start
+  irods_ctl:

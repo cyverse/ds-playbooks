@@ -1,0 +1,101 @@
+---
+- import_playbook: stop_all.yml
+  tags:
+    - non_idempotent
+
+
+- name: start receivers
+  hosts: irods
+  vars:
+    ephemeral_ports: "{{
+      range(_irods_server_port_range_start | int, (_irods_server_port_range_end | int) + 1) |
+      list }}"
+  tags:
+    - non_idempotent
+  tasks:
+    - name: start receiver
+      port_check_receiver:
+        tcp_ports: "{{
+          [ _irods_zone_port, _irods_server_control_plane_port ] | union(ephemeral_ports) }}"
+        udp_ports: "{{ ephemeral_ports }}"
+      async: 600
+      poll: 0
+      register: receiver
+      changed_when: false
+
+
+- name: check rs ports from ies
+  hosts: ies
+  gather_facts: false
+  serial: 1
+  tags:
+    - non_idempotent
+  tasks:
+    - name: check port
+      port_check_sender:
+        destination: "{{ item }}"
+        tcp_ports:
+          - "{{ _irods_zone_port }}"
+          - "{{ _irods_server_control_plane_port }}"
+      ignore_errors: true
+      with_items: "{{ groups['rs'] | difference([inventory_hostname]) }}"
+
+
+- name: check port access from rs
+  hosts: rs
+  gather_facts: false
+  serial: 1
+  vars:
+    ephemeral_ports: "{{
+      range(_irods_server_port_range_start | int, (_irods_server_port_range_end | int) + 1) |
+      list }}"
+  tags:
+    - non_idempotent
+  tasks:
+    - name: check ies ports
+      port_check_sender:
+        destination: "{{ item }}"
+        tcp_ports:
+          - "{{ _irods_zone_port }}"
+      ignore_errors: true
+      with_items: "{{ groups['ies'] | difference([inventory_hostname]) }}"
+
+    - name: check other rs ports
+      port_check_sender:
+        destination: "{{ item }}"
+        tcp_ports: "{{ [ _irods_zone_port ] | union(ephemeral_ports) }}"
+        udp_ports: "{{ ephemeral_ports }}"
+      ignore_errors: true
+      with_items: "{{ groups['rs'] | difference([inventory_hostname]) }}"
+
+
+- name: stop receiver
+  hosts: irods
+  gather_facts: false
+  tags:
+    - non_idempotent
+  tasks:
+    - name: stop receiver
+      port_check_sender:
+        tcp_ports:
+          - "{{ _irods_zone_port }}"
+        msg: finished
+      ignore_errors: true
+
+    - name: wait for receiver to stop
+      async_status:
+        jid: "{{ receiver.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: 1
+
+
+- name: restart previously stopped iRODS servers
+  hosts: irods
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  become_flags: '-i'
+  gather_facts: false
+  tasks:
+    - when: stop_irods_result is changed
+      include_tasks: tasks/restart_irods.yml

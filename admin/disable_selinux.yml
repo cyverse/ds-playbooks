@@ -1,6 +1,6 @@
 ---
 - name: disable SELinux
-  hosts: all:!unmanaged_systems
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
     - name: disable SELinux

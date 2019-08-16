@@ -43,7 +43,9 @@
         name: kernel.{{ item.name }}
         value: "{{ item.value }}"
       with_items: "{{ _sysctl_kernel }}"
-
+      tags:
+        - no_testing
+        
 
 - import_playbook: update_hosts.yml
 

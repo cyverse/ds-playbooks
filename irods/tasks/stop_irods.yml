@@ -1,22 +1,20 @@
 ---
+# Stops iRODS. The variable stop_irods_result holds the change value
+- name: check if svc acnt exists
+  shell: |
+    if id --user {{ _irods_service_account_name }} &> /dev/null
+    then
+      printf exists
+    else
+      printf missing
+    fi
+  register: idResult
+  changed_when: false
+
 - name: stop server
   become_flags: '-i'
-  shell: |
-    if ! status=$(/var/lib/irods/iRODS/irodsctl status)
-    then
-      printf '%s\n' "$status" >&2
-      exit 1
-    fi
-
-    if ! grep --quiet 'No servers running' <<<"$status"
-    then
-      if ! out=$(/var/lib/irods/iRODS/irodsctl stop 2>&1)
-      then
-        printf '%s\n' "$out" >&2
-        exit 1
-      fi
-
-      printf changed
-    fi
-  register: result
-  changed_when: result.stdout == 'changed'
+  become: "{{ _become_svc_acnt }}"
+  when: idResult.stdout == 'exists'
+  irods_ctl:
+    state: stopped
+  register: stop_irods_result

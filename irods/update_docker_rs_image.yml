@@ -52,6 +52,7 @@
           - ipc-housekeeping
         irods_cfg_root_dir: "{{ _build_dir }}"
         irods_cfg_server_control_plane_key: __IRODS_SERVER_CONTROL_PLANE_KEY__
+        irods_cfg_server_control_plane_port: 1248
         irods_cfg_server_port_range_end: 20009
         irods_cfg_server_port_range_start: 20000
         irods_cfg_service_account_name: "{{ _irods_service_account_name }}"
@@ -61,6 +62,7 @@
         irods_cfg_validate: false
         irods_cfg_zone_key: __IRODS_ZONE_KEY__
         irods_cfg_zone_name: "{{ _irods_zone_name }}"
+        irods_cfg_zone_port: 1247
         irods_cfg_zone_user: _IRODS_USER_NAME_
 
     - name: stage dynamic rule bases
@@ -98,8 +100,6 @@
             name: cyverse/ds-irods-rs-onbuild
           failed_when: false
           register: response
-          tags:
-            - no_testing
 
         - name: retag previous image as local
           docker_tag:

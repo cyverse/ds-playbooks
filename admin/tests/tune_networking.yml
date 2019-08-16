@@ -1,6 +1,6 @@
 ---
 - name: test tune_networking
-  hosts: physical
+  hosts: physical:!localhost
   tasks:
     - fail:
         msg: Detected a container as a physical machine

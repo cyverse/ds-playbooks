@@ -1,0 +1,63 @@
+#!/usr/bin/python
+#
+# An ansible module for executing irodsctl, i.e., controling the state of an
+# iRODS server.
+#
+# Module Name:
+#  irods_ctl
+#
+# Optional Variables:
+#  state  The state irods-server should be in upon success. It should be one of
+#         'restarted', 'started', or 'stopped'. The default is 'started'.
+
+import os
+
+from ansible.module_utils.basic import AnsibleModule
+
+irodsctl = "/var/lib/irods/iRODS/irodsctl"
+
+def call_irodsctl(arg):
+  return os.popen(irodsctl + " " + arg).read()
+
+def is_running():
+  return "No servers running" not in call_irodsctl("status")
+
+def ensure_started():
+  if not is_running():
+    call_irodsctl("start")
+    return True
+  else:
+    return False
+
+def ensure_stopped():
+  if is_running():
+    call_irodsctl("stop")
+    return True
+  else:
+    return False
+
+def restart():
+  response = call_irodsctl("restart")
+  # NB: irodsctl restart succeeds even when it fails to start the server, so we
+  #     need to check to see if iRODS is running
+  if not is_running():
+    raise Exception(response)
+  return True
+
+def ensure_state(state):
+  return { 'restarted' : restart,
+           'started'   : ensure_started,
+           'stopped'   : ensure_stopped,
+         }[state]()
+
+def main():
+  module = AnsibleModule(
+    argument_spec = dict(
+      state = dict(type='str', choices=["restarted","started","stopped"], default="started")))
+  try:
+    module.exit_json(params=module.params, changed=ensure_state(module.params['state']))
+  except Exception as e:
+    module.fail_json(msg=str(e))
+
+if __name__ == '__main__':
+  main()

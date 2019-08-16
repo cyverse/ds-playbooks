@@ -1,6 +1,6 @@
 ---
 - name: initialize iptables
-  hosts: all:!unmanaged_systems
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
     - name: install iptables-services package

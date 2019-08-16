@@ -30,7 +30,3 @@
     - name: test ensure pika installed
       command: pip --disable-pip-version-check show pika
       changed_when: false
-
-    - name: test configure linux kernel
-      debug:
-        msg: TODO implement

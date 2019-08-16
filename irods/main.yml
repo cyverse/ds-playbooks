@@ -32,7 +32,7 @@
   become_flags: '-i'
   tasks:
     - name: start iRODS
-      irods_start:
+      irods_ctl:
 
 
 - name: start iRODS on resource servers
@@ -43,7 +43,7 @@
   gather_facts: false
   tasks:
     - name: start iRODS
-      irods_start:
+      irods_ctl:
 
 
 - import_playbook: irods_runtime_init.yml

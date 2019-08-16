@@ -1,6 +1,6 @@
 ---
 - name: ensure correct timezone
-  hosts: all:!unmanaged_systems
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
     - name: make Mountain Standard Time

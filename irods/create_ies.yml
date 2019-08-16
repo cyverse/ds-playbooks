@@ -76,7 +76,7 @@
   gather_facts: false
   tasks:
     - name: start iRODS
-      irods_start:
+      irods_ctl:
 
     - name: authenticate clerver
       irods_clerver_auth:

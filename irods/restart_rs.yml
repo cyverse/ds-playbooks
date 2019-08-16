@@ -6,6 +6,7 @@
   become_flags: '-i'
   tasks:
     - name: restart server
-      command: /var/lib/irods/iRODS/irodsctl restart
+      irods_ctl:
+        state: restarted
   tags:
     - non_idempotent

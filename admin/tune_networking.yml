@@ -1,6 +1,6 @@
 ---
 - name: determine the servers that are on physical machines
-  hosts: all:!unmanaged_systems
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
     - name: group by virtualization type
@@ -8,6 +8,7 @@
         key: "{{ 'physical' if ansible_virtualization_type == 'NA'
                             or ansible_virtualization_type == 'kvm' else
                  'virtual' }}"
+
 
 - name: determine the NIC throughput and OS version for the physical servers
   hosts: physical
@@ -25,6 +26,7 @@
                 '10G' if ethtool.stdout|int >= 10000 else
                 '1G'  if ethtool.stdout|int >= 1000 else '' }}
 
+
 # TODO MTU tuning needs to be done based on the broadcast domain
 - name: tune MTU
 # TODO figure out if the IES having an MTU of 9000 without the DBMS having an MTU of 9000 affects
@@ -37,6 +39,7 @@
     - role: cyverse.ip
       ip_link_mtu: "{{ _nic_mtu }}"
 
+
 - name: tune txqueuelen
   hosts: physical
   become: true
@@ -44,6 +47,7 @@
   roles:
     - role: cyverse.ip
       ip_link_txqueuelen: "{{ _nic_txqueuelen }}"
+
 
 - name: tune TCP
   hosts: physical

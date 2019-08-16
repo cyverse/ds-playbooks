@@ -20,7 +20,6 @@
 # reporting all unreachable ports in the failure message
 
 
-
 import socket
 import time
 
@@ -31,16 +30,17 @@ class Checker:
 
   def check(self, destination, ports, msg):
     blocked_ports = []
-
     for port in ports:
       try:
         sock = self.mk_socket()
         sock.settimeout(4)
         self.check_on(sock, (destination, port), msg)
-        self.close_socket(sock)
       except Exception as e:
         blocked_ports.append("%d/%s (%s)" % (port, self.protocol(), str(e)))
-
+      try:
+        self.close_socket(sock)
+      except:
+        pass
     return blocked_ports
 
 
@@ -83,7 +83,6 @@ def check(params):
   tcp_ports = params['tcp_ports']
   udp_ports = params['udp_ports']
   msg = params['msg']
-
   blocked_tcp_ports = TCPChecker().check(destination, tcp_ports, msg)
   blocked_udp_ports = UDPChecker().check(destination, udp_ports, msg)
   return blocked_tcp_ports + blocked_udp_ports
@@ -94,18 +93,13 @@ def main():
       destination = dict(type='str', default="localhost"),
       tcp_ports = dict(type='list', default=[]),
       udp_ports = dict(type='list', default=[]),
-      msg = dict(type='str', default="ping")
-    )
-  )
-
+      msg = dict(type='str', default="ping")))
   blocked_ports = check(module.params)
-
   if blocked_ports:
     msg = "blocked ports %s" % blocked_ports
     module.fail_json(msg=msg)
   else:
     module.exit_json()
-
 
 if __name__ == '__main__':
   main()

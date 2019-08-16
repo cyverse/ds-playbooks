@@ -1,10 +1,11 @@
 ---
 - import_playbook: stop_all.yml
+  tags:
+    - non_idempotent
 
 
 - name: start receivers
   hosts: irods
-  gather_facts: false
   vars:
     ephemeral_ports: "{{
       range(_irods_server_port_range_start | int, (_irods_server_port_range_end | int) + 1) |
@@ -87,3 +88,14 @@
       register: job_result
       until: job_result.finished
       retries: 1
+
+
+- name: restart previously stopped iRODS servers
+  hosts: irods
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  become_flags: '-i'
+  gather_facts: false
+  tasks:
+    - when: stop_irods_result is changed
+      include_tasks: tasks/restart_irods.yml

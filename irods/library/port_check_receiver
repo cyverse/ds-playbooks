@@ -24,6 +24,7 @@
 
 import select
 import socket
+import struct
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -96,11 +97,11 @@ class TCPConnection(socket.socket):
 
   def transition_messenger(self, states):
     data = self.recv(128)
+    self.send("pong")
     states.add_output(self)
     return data
 
   def transition_writable(self, states):
-    self.send("pong")
     states.remove_output(self)
 
   def transition_exceptional(self, states):

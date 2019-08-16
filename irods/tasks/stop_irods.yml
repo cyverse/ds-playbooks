@@ -1,6 +1,5 @@
 ---
-# Stops iRODS. The variable stopResult holds the change value
-#
+# Stops iRODS. The variable stop_irods_result holds the change value
 - name: check if svc acnt exists
   shell: |
     if id --user {{ _irods_service_account_name }} &> /dev/null
@@ -18,4 +17,4 @@
   when: idResult.stdout == 'exists'
   irods_ctl:
     state: stopped
-  register: stopResult
+  register: stop_irods_result

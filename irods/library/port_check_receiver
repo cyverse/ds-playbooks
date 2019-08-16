@@ -114,6 +114,7 @@ class TCPSocket(socket.socket):
   def __init__(self, port):
     super(TCPSocket, self).__init__(socket.AF_INET, socket.SOCK_STREAM)
     self.setblocking(0)
+    self.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
     self.bind(("0.0.0.0", port))
     self.listen(5)
 

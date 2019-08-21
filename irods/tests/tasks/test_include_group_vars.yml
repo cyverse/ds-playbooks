@@ -1,3 +1,8 @@
 ---
-- debug:
-    msg: TODO test include_group_vars.yml
+- name: test include vars from file
+  debug:
+    msg: TODO implement
+
+- name: test include vars from directory
+  debug:
+    msg: TODO implement

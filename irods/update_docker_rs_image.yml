@@ -98,6 +98,7 @@
         - name: retrieve previous docker image
           docker_image:
             name: cyverse/ds-irods-rs-onbuild
+            source: pull
           failed_when: false
           register: response
 
@@ -126,6 +127,7 @@
     - name: build docker image
       docker_image:
         name: "{{ _irods_rs_image }}"
+        source: build
         tag: "{{ ansible_date_time.iso8601_basic_short }}"
         path: "{{ _build_dir }}"
         force: true

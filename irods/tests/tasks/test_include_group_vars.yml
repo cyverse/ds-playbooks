@@ -11,9 +11,14 @@
   debug:
     msg: TODO implement
 
+- include_tasks: ../tasks/include_group_vars.yml
+  vars:
+    group: irods
+
 - name: test include vars from .yml file
-  debug:
-    msg: TODO implement
+  assert:
+    that:
+      - avra_base_collection == '/testing/home/shared/avra'
 
 - name: test include vars from directory
   debug:

@@ -111,7 +111,7 @@
         -no_testing
 
     - name: inspect previous docker image
-      docker_image_facts:
+      docker_image_info:
         name: "{{ _irods_rs_image }}"
       register: previous
       tags:

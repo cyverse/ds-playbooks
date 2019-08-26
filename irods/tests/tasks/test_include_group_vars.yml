@@ -1,5 +1,17 @@
 ---
-- name: test include vars from file
+- name: test include vars from extensionless file
+  debug:
+    msg: TODO implement
+
+- name: test include vars from .json file
+  debug:
+    msg: TODO implement
+
+- name: test include vars from .yaml file
+  debug:
+    msg: TODO implement
+
+- name: test include vars from .yml file
   debug:
     msg: TODO implement
 

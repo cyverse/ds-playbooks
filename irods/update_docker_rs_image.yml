@@ -155,7 +155,7 @@
             target: "{{ _irods_rs_image }}:latest"
 
         - name: Create published tag
-          when: _irods_publish_rs_image
+          when: _irods_publish_rs_image | bool
           docker_tag:
             source: "{{ _irods_rs_image }}:{{ item }}"
             target: cyverse/ds-irods-rs-onbuild:{{ item }}
@@ -164,7 +164,7 @@
             - latest
 
         - name: push published tag
-          when: _irods_publish_rs_image
+          when: _irods_publish_rs_image | bool
           docker_image:
             name: cyverse/ds-irods-rs-onbuild
             tag: "{{ item }}"

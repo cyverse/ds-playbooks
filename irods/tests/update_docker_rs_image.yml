@@ -15,12 +15,17 @@
           expected_value: yaml
         - group: yml_file
           expected_value: yml
-        - group: extensionless_dir
-          expected_value: dir/
 
-    - name: test include group vars from json directory
-      debug:
-        msg: TODO implement
+    - include_tasks: ../tasks/include_group_vars.yml
+      vars:
+        inventory_dir: ../tests
+        group: dir
+
+    - name: test include group vars from directory
+      assert:
+        that:
+          - include_group_vars_none == 'no extension'
+          - include_group_vars_json == 'json'
 
     - name: test include group vars from yaml directory
       debug:

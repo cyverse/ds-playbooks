@@ -2,7 +2,33 @@
 - name: test build image
   hosts: localhost
   tasks:
-    - import_tasks: tasks/test_include_group_vars.yml
+    - include_tasks: tasks/test_include_group_vars.yml
+      vars:
+        group: "{{ item.group }}"
+        expected_value: "{{ item.expected_value }}"
+      with_items:
+        - group: extensionless_file
+          expected_value: no extension
+        - group: json_file
+          expected_value: json
+        - group: yaml_file
+          expected_value: yaml
+        - group: yml_file
+          expected_value: yml
+        - group: extensionless_dir
+          expected_value: dir/
+
+    - name: test include group vars from json directory
+      debug:
+        msg: TODO implement
+
+    - name: test include group vars from yaml directory
+      debug:
+        msg: TODO implement
+
+    - name: test include group vars from yml directory
+      debug:
+        msg: TODO implement
 
     - debug:
         msg: TODO test build_plugins.yml

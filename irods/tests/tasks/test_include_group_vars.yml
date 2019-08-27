@@ -1,25 +1,15 @@
 ---
-- name: test include vars from extensionless file
-  debug:
-    msg: TODO implement
-
-- name: test include vars from .json file
-  debug:
-    msg: TODO implement
-
-- name: test include vars from .yaml file
-  debug:
-    msg: TODO implement
+# Variables
+#   group           group name in group_vars to use
+#   expected_value  expected value of include_group_vars_var
 
 - include_tasks: ../tasks/include_group_vars.yml
   vars:
-    group: irods
+    inventory_dir: ../tests
+    # implicitly passed through
+    # group: "{{ group }}"
 
-- name: test include vars from .yml file
+- name: test include vars from {{ group }}
   assert:
     that:
-      - avra_base_collection == '/testing/home/shared/avra'
-
-- name: test include vars from directory
-  debug:
-    msg: TODO implement
+      - include_group_vars_var == expected_value

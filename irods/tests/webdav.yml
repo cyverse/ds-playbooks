@@ -5,7 +5,7 @@
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
-    - vars/webdav_cfg.yml
+    - group_vars/webdav_cfg.yml
   vars:
     head: "{{ lookup('template', '../templates/webdav/etc/httpd/head.html.j2') }}"
     htcacheclean: "{{ lookup('template', '../templates/webdav/etc/htcacheclean.j2') }}"
@@ -29,7 +29,7 @@
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
-    - vars/webdav_dav.yml
+    - group_vars/webdav_dav.yml
   vars:
     index: "{{ lookup('template', '../templates/webdav/var/index.html.j2') }}"
     zone_index: "{{ lookup('template', '../templates/webdav/var/zone-index.html.j2') }}"
@@ -85,7 +85,7 @@
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
-    - vars/webdav_dav_anon.yml
+    - group_vars/webdav_dav_anon.yml
   vars:
     index: "{{ lookup('template', '../templates/webdav/var/index.html.j2') }}"
     zone_index: "{{ lookup('template', '../templates/webdav/var/zone-index.html.j2') }}"

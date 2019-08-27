@@ -128,9 +128,11 @@
       docker_image:
         name: "{{ _irods_rs_image }}"
         source: build
+        build:
+          path: "{{ _build_dir }}"
+          pull: true
         tag: "{{ ansible_date_time.iso8601_basic_short }}"
-        path: "{{ _build_dir }}"
-        force: true
+        force_source: true
       register: response
       changed_when: previous_id is not defined or response.image.Id != previous_id
       tags:

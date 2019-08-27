@@ -15,10 +15,8 @@
           expected_value: yaml
         - group: yml_file
           expected_value: yml
-
-    - name: test include group vars from extensionless directory
-      debug:
-        msg: TODO implement
+        - group: extensionless_dir
+          expected_value: dir/
 
     - name: test include group vars from json directory
       debug:

@@ -1,6 +1,12 @@
 #!/bin/bash
 
-readonly ExecName=$(readlink --canonicalize "$0")
+
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+  readonly ExecName=$(greadlink -f "$0")
+else
+  readonly ExecName=$(readlink --canonicalize "$0")
+fi
 
 
 show_help()

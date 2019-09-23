@@ -35,8 +35,8 @@
       port_check_sender:
         destination: "{{ item }}"
         tcp_ports:
-          - "{{ _irods_zone_port }}"
-          - "{{ _irods_server_control_plane_port }}"
+          - "{{ hostvars[item]._irods_zone_port }}"
+          - "{{ hostvars[item]._irods_server_control_plane_port }}"
       ignore_errors: true
       with_items: "{{ groups['rs'] | difference([inventory_hostname]) }}"
 
@@ -45,10 +45,6 @@
   hosts: rs
   gather_facts: false
   serial: 1
-  vars:
-    ephemeral_ports: "{{
-      range(_irods_server_port_range_start | int, (_irods_server_port_range_end | int) + 1) |
-      list }}"
   tags:
     - non_idempotent
   tasks:
@@ -56,15 +52,20 @@
       port_check_sender:
         destination: "{{ item }}"
         tcp_ports:
-          - "{{ _irods_zone_port }}"
+          - "{{ hostvars[item]._irods_zone_port }}"
       ignore_errors: true
       with_items: "{{ groups['ies'] | difference([inventory_hostname]) }}"
 
     - name: check other rs ports
       port_check_sender:
         destination: "{{ item }}"
-        tcp_ports: "{{ [ _irods_zone_port ] | union(ephemeral_ports) }}"
-        udp_ports: "{{ ephemeral_ports }}"
+        tcp_ports: "{{ [ hostvars[item]._irods_zone_port ]
+                       | union(range(hostvars[item]._irods_server_port_range_start | int,
+                                     (hostvars[item]._irods_server_port_range_end | int) + 1)
+                               | list) }}"
+        udp_ports: "{{ range(hostvars[item]._irods_server_port_range_start | int,
+                             (hostvars[item]._irods_server_port_range_end | int) + 1)
+                       | list }}"
       ignore_errors: true
       with_items: "{{ groups['rs'] | difference([inventory_hostname]) }}"
 

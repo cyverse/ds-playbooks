@@ -1,6 +1,12 @@
 #!/bin/bash
 
-readonly ExecName=$(readlink --canonicalize "$0")
+
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+  readonly ExecName=$(greadlink -f "$0")
+else
+  readonly ExecName=$(readlink --canonicalize "$0")
+fi
 
 
 show_help()
@@ -19,21 +25,43 @@ Parameters:
                      playbooks
 
 Options:
-  -I, --inventory-hosts <hosts>  the name of the inventory hosts file to use
-  -P, --playbook  <playbook>     the path to the playbook to test relative to
-                                 <playbook_folder>.
-
-  -h, --help     show help and exit
-  -i, --inspect  after running the playbook, open shell that allows manual
-                 inspection of the configuration files, vaults, and logs
-  -p, --pretty   more information will be output and newlines will be expanded
-                 in that output.
+$(printHelpText)
 
 Summary:
 This script runs a playbook with in the testing environment. If no inventory
 hosts file is provided, it will use 'hosts-all'. If no playbook is provided, it
 will attempt to run the playbook <playbook_folder>/main.yml.
 EOF
+}
+
+printHelpText(){
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    cat <<EOF
+  -I <hosts>      the name of the inventory hosts file to use
+  -P <playbook>   the path to the playbook to test relative to <playbook_folder>.
+
+  -h              show help and exit
+  -i              after running the playbook, open shell that allows manual
+                  inspection of the configuration files, vaults, and logs
+  -p              more information will be output and newlines will be expanded
+                  in that output.
+EOF
+  else
+    cat <<EOF
+  -I, --inventory-hosts <hosts>  the name of the inventory hosts file to use
+  -P, --playbook  <playbook>     the path to the playbook to test relative to
+                                       <playbook_folder>.
+
+  -h, --help                     show help and exit
+  -i, --inspect                  after running the playbook, open shell that
+                                 allows manual inspection of the configuration
+                                 files, vaults, and logs
+  -p, --pretty                   more information will be output and newlines
+                                 will be expanded in that output.
+EOF
+  fi
+
 }
 
 
@@ -128,11 +156,18 @@ exit_with_help()
 parse_cmd_line()
 {
   local opts
-  opts=$(getopt --longoptions help,inspect,inventory-hosts:,playbook:,pretty \
-                --options hiI:P:p \
-                --name "$ExecName" \
-                -- \
-                "$@")
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    #shellcheck disable=SC2048,SC2086
+    opts=$(getopt hiI:P:p $*)
+  else
+    opts=$(getopt --longoptions help,inspect,inventory-hosts:,playbook:,pretty \
+                  --options hiI:P:p \
+                  --name "$ExecName" \
+                  -- \
+                  "$@")
+  fi
+
   local ret="$?"
 
   if [ "$ret" -ne 0 ]
@@ -187,7 +222,7 @@ resolve_playbook_dir()
 
 set -e
 
-# shellcheck disable=SC1091
+# shellcheck disable=SC1090
 . "$Cfg"
 
 main "$@"

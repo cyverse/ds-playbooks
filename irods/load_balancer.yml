@@ -117,10 +117,8 @@
           - queue {{ _load_balancer_queue_timeout }}s
           - server 1d
 
-# client-fin and server-fin need to be less than conntrack's TCP FIN_WAIT
-# timeout, usually 2m.
+# client-fin needs to be less than conntrack's TCP FIN_WAIT timeout, usually 2m.
           - client-fin 1m
-          - server-fin 1m
 
         haproxy_stats: true
         haproxy_stats_address: '*'

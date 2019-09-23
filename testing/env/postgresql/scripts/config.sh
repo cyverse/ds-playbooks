@@ -27,9 +27,16 @@
 # TODO The current syntax of IRODS_RESOURCES doesn't allow spaces or colons in
 # vault path names. Please change its syntax.
 
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+  readonly ExecName=$(greadlink -f "$0")
+else
+  readonly ExecName=$(readlink --canonicalize "$0")
+fi
+
 main()
 {
-  local baseDir=$(dirname $(readlink -f "$0"))
+  local baseDir=$(dirname "$ExecName")
   local sqlData="$baseDir"/values.sql
 
   printf 'Preparing %s\n' "$sqlData"

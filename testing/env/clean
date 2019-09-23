@@ -10,9 +10,16 @@
 # Deletes the four docker images.
 
 
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+  readonly ExecName=$(greadlink -f "$0")
+else
+  readonly ExecName=$(readlink --canonicalize "$0")
+fi
+
 main()
 {
-  local baseDir=$(dirname $(readlink -f "$0"))
+  local baseDir=$(dirname "$ExecName")
   local cfg="$@"
 
   if [ -z "$cfg" ]

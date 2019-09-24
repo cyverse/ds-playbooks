@@ -98,6 +98,7 @@
         - name: retrieve previous docker image
           docker_image:
             name: cyverse/ds-irods-rs-onbuild
+            source: pull
           failed_when: false
           register: response
 
@@ -110,7 +111,7 @@
         -no_testing
 
     - name: inspect previous docker image
-      docker_image_facts:
+      docker_image_info:
         name: "{{ _irods_rs_image }}"
       register: previous
       tags:
@@ -126,9 +127,12 @@
     - name: build docker image
       docker_image:
         name: "{{ _irods_rs_image }}"
+        source: build
+        build:
+          path: "{{ _build_dir }}"
+          pull: true
         tag: "{{ ansible_date_time.iso8601_basic_short }}"
-        path: "{{ _build_dir }}"
-        force: true
+        force_source: true
       register: response
       changed_when: previous_id is not defined or response.image.Id != previous_id
       tags:
@@ -151,7 +155,7 @@
             target: "{{ _irods_rs_image }}:latest"
 
         - name: Create published tag
-          when: _irods_publish_rs_image
+          when: _irods_publish_rs_image | bool
           docker_tag:
             source: "{{ _irods_rs_image }}:{{ item }}"
             target: cyverse/ds-irods-rs-onbuild:{{ item }}
@@ -160,8 +164,9 @@
             - latest
 
         - name: push published tag
-          when: _irods_publish_rs_image
+          when: _irods_publish_rs_image | bool
           docker_image:
+            source: local
             name: cyverse/ds-irods-rs-onbuild
             tag: "{{ item }}"
             push: true

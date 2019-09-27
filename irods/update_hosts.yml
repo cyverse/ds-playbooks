@@ -27,7 +27,7 @@
           {% endif %}
           {% endfor %}
           {% for f in _irods_federation %}
-          {% if not f|ipaddr %}
+          {% if not f.icat_host|ipaddr %}
           {{ lookup('dig', f.icat_host) }} {{ f.icat_host }}
           {% endif %}
           {% endfor %}

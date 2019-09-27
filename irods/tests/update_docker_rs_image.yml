@@ -24,12 +24,9 @@
     - name: test include group vars from directory
       assert:
         that:
-          - include_group_vars_none == 'no extension'
           - include_group_vars_json == 'json'
-
-    - name: test include group vars from yaml directory
-      debug:
-        msg: TODO implement
+          - include_group_vars_none == 'no extension'
+          - include_group_vars_yaml == 'yaml'
 
     - name: test include group vars from yml directory
       debug:

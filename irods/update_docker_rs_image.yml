@@ -166,6 +166,7 @@
         - name: push published tag
           when: _irods_publish_rs_image | bool
           docker_image:
+            source: local
             name: cyverse/ds-irods-rs-onbuild
             tag: "{{ item }}"
             push: true

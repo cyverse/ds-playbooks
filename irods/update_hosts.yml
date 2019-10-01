@@ -27,10 +27,17 @@
           {% endif %}
           {% endfor %}
           {% for f in _irods_federation %}
-          {% if not f|ipaddr %}
+          {% if not f.icat_host|ipaddr %}
           {{ lookup('dig', f.icat_host) }} {{ f.icat_host }}
           {% endif %}
           {% endfor %}
+          {% if inventory_hostname in groups['ies'] %}
+          {% for r in groups['rabbitmq'] %}
+          {% if not r|ipaddr %}
+          {{ lookup('dig', r) }} {{ r }}
+          {% endif %}
+          {% endfor %}
+          {% endif %}
           {% for e in _irods_other_host_entries %}
           {% if not e|ipaddr %}
           {{ lookup('dig', e) }} {{ e }}

@@ -24,3 +24,13 @@ pire_resource_hierarchy:
   type: passthru
   children:
     - name: pire
+
+terraref_base_collection: /testing/home/shared/terraref
+
+terraref_manager: terraref_mgr
+
+terraref_resource_hierarchy:
+  name: terrarefRes
+  type: passthru
+  children:
+    - name: terraref

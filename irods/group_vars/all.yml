@@ -199,6 +199,13 @@ _single_threaded_resources: "{{
 
 _sysctl_kernel: "{{ sysctl_kernel if sysctl_kernel is defined else [] }}"
 
+_terraref_base_collection: "{{ terraref_base_collection | default(None) }}"
+
+_terraref_manager: "{{ terraref_manager | default(_irods_clerver_user) }}"
+
+_terraref_resource_hierarchy: "{{
+  terraref_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}"
+
 _webdav_auth_name: "{{ webdav_auth_name | default('CyVerse') }}"
 
 _webdav_cache_dir: "{{ webdav_cache_dir if webdav_cache_dir is defined else

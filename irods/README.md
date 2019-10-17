@@ -89,6 +89,9 @@ Variable                                   | Default                            
 `sernec_writers`                           | `[]`                                 |         | a list of users who get write access to sernec collections
 `single_threaded_resources`                | `[]`                                 |         | a list of resources that only support single threaded transfers
 `sysctl_kernel`                            | `[]`                                 |         | a list of sysctl kernel parameters to set for the IES, _see_below_
+`terraref_base_collection`                 |                                      |         | The base collection for the TerraREF project. If it isn't present no TerraREF rules will fire.
+`terraref_manager`                         | `irods_clerver_user`                 |         | The iRODS user who is responsible for TerraREF data.
+`terraref_resource_hierarchy`              | `irods_resource_hierarchies[0]`      |         | The resource used by the TerraREF project.
 `webdav_auth_name`                         | CyVerse                              |         | Authorization realm to use for the Data Store
 `webdav_cache_dir`                         | `/var/cache/httpd/proxy`             |         | the directory apache will use for the WebDAV cache
 `webdav_cache_max_file_size`               | 1                                    |         | the maximum size in mebibytes of the largest WebDAV file apache will cache

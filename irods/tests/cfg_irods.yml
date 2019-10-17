@@ -47,6 +47,8 @@
         - host_access_control_config.json
         - hosts_config.json
         - server_config.json
+        - terraref.re
+        - terraref-env.re
 
     - name: Verify irods_environment.json is in place
       stat:

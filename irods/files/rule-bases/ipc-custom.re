@@ -37,6 +37,7 @@
 @include 'sanimal'
 @include 'sciapps'
 @include 'sernec'
+@include 'terraref'
 
 
 # EXCLUSIVE RULES

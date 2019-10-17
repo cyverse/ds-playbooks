@@ -274,6 +274,8 @@ replCopy {
   }
   on (pire_replBelongsTo(/$objPath)) {
   }
+  on (terraref_replBelongsTo(/$objPath)) {
+  }
 }
 replCopy {
   _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
@@ -306,6 +308,11 @@ replEntityRename(*SourceObject, *DestObject) {
       _scheduleMoves(*DestObject, pire_replIngestResc, pire_replReplResc);
     }
   }
+  on (terraref_replBelongsTo(/*DestObject)) {
+    if (!terraref_replBelongsTo(/*SourceObject)) {
+      _scheduleMoves(*DestObject, terraref_replIngestResc, terraref_replReplResc);
+    }
+  }
 }
 replEntityRename(*SourceObject, *DestObject) {
   if (aegis_replBelongsTo(/*SourceObject)) {
@@ -315,6 +322,9 @@ replEntityRename(*SourceObject, *DestObject) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
   if (pire_replBelongsTo(/*SourceObject)) {
+    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
+  }
+  if (terraref_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
 }
@@ -332,6 +342,8 @@ replPut {
     _createOrOverwrite($objPath, de_replIngestResc, de_replReplResc);
   }
   on (pire_replBelongsTo(/$objPath)) {
+  }
+  on (terraref_replBelongsTo(/$objPath)) {
   }
 }
 replPut {
@@ -355,6 +367,9 @@ replSetRescSchemeForCreate {
   on (pire_replBelongsTo(/$objPath)) {
     _setDefaultResc(pire_replIngestResc);
   }
+  on (terraref_replBelongsTo(/$objPath)) {
+    _setDefaultResc(terraref_replIngestResc);
+  }
 }
 replSetRescSchemeForCreate {
   _setDefaultResc(_defaultIngestResc);
@@ -376,6 +391,9 @@ replSetRescSchemeForRepl {
   }
   on (pire_replBelongsTo(/$objPath)) {
     _setDefaultResc(pire_replReplResc);
+  }
+  on (terraref_replBelongsTo(/$objPath)) {
+    _setDefaultResc(terraref_replReplResc);
   }
 }
 replSetRescSchemeForRepl {

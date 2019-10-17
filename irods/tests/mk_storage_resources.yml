@@ -10,6 +10,7 @@
       - pire
       - rs_centos6
       - rs_centos7
+      - terraref
   tasks:
     - name: test create vault directory
       stat:

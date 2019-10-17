@@ -14,6 +14,7 @@
     pire_env: "{{ lookup('template', '../templates/rule-bases/pire-env.re.j2') }}"
     sanimal_env: "{{ lookup('template', '../templates/rule-bases/sanimal-env.re.j2') }}"
     sernec_env: "{{ lookup('template', '../templates/rule-bases/sernec-env.re.j2') }}"
+    terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
   tasks:
     - name: verify constants expand correctly in ipc-env.re.j2
       assert:
@@ -41,6 +42,13 @@
         that:
           - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://dstesting_ies_centos6_1.dstesting_default'")
 
+    - name: verify constants expand correctly in captcn-env.re.j2
+      assert:
+        that:
+          - captcn_env is search('captcn_OWNERS = list()' | regex_escape)
+          - captcn_env is search('captcn_WRITERS = list()' | regex_escape)
+          - captcn_env is search('captcn_READERS = list()' | regex_escape)
+
     - name: verify constants expand correctly in pire-env.re.j2
       assert:
         that:
@@ -51,19 +59,18 @@
         that:
           - sanimal_env is search("sanimal_BASE_COLL = ''" | regex_escape)
 
-    - name: verify CAP_TCN constants expand correctly in captcn-env.re.j2
+    - name: verify constants expand correctly in sernec-env.re.j2
       assert:
         that:
-         - captcn_env is search('captcn_OWNERS = list()' | regex_escape)
-         - captcn_env is search('captcn_WRITERS = list()' | regex_escape)
-         - captcn_env is search('captcn_READERS = list()' | regex_escape)
+          - sernec_env is search('sernec_OWNERS = list()' | regex_escape)
+          - sernec_env is search('sernec_WRITERS = list()' | regex_escape)
+          - sernec_env is search('sernec_READERS = list()' | regex_escape)
 
-    - name: verify sernec constants expand correctly in sernec-env.re.j2
+    - name: verify constants expand correctly in terraref-env.re.j2
       assert:
         that:
-         - sernec_env is search('sernec_OWNERS = list()' | regex_escape)
-         - sernec_env is search('sernec_WRITERS = list()' | regex_escape)
-         - sernec_env is search('sernec_READERS = list()' | regex_escape)
+          - terraref_env is search("terraref_BASE_COLL = ''")
+          - terraref_env is search("terraref_RESC = 'demoResc'")
 
 
 - name: test aegis params are set correctly
@@ -247,3 +254,23 @@
          - sernec_env is search('sernec_OWNERS = list("own1", "own2")' | regex_escape)
          - sernec_env is search('sernec_WRITERS = list("write1", "write2")' | regex_escape)
          - sernec_env is search('sernec_READERS = list("read1", "read2")' | regex_escape)
+
+- name: test TerraREF params are set correctly
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+   - ../group_vars/all.yml
+  vars:
+    terraref_base_collection: base
+    terraref_resource_hierarchy:
+      name: terrarefRes
+    terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
+  tasks:
+    - debug:
+        var: terraref_env
+
+    - name: verify params
+      assert:
+        that:
+          - terraref_env is search("terraref_BASE_COLL = 'base'")
+          - terraref_env is search("terraref_RESC = 'terrarefRes'")

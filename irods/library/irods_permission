@@ -15,6 +15,10 @@
 #  recursive   if the object is a collection, whether or not the subject should
 #              be granted the same permission on everything in the collection.
 #              The default is false.
+#  zone        the zone the user or group belongs to. The default is the local
+#              zone.
+
+set -o errexit
 
 
 main()
@@ -25,6 +29,7 @@ main()
   local permission
   local object
   local recursive
+  local zone
   . "$varFile"
 
   local var
@@ -38,33 +43,38 @@ main()
   : "${recursive=false}"
   recursive="${recursive,,}"
 
+  if [[ -z "$zone" ]]
+  then
+    zone=$(quest "select ZONE_NAME where ZONE_TYPE = 'local'")
+  fi
+
   local objectType
   objectType=$(type "$object")
 
   if [ "$objectType" = 'data object' ]
   then
-    if test_data_correct "$subject" "$permission" "$object"
+    if test_data_correct "$subject" "$zone" "$permission" "$object"
     then
       succeed false
     fi
 
-    set_permission "$subject" "$permission" "$object"
+    set_permission "$subject" "$zone" "$permission" "$object"
   elif [ "$recursive" = false ]
   then
-    if test_coll_correct "$subject" "$permission" "$object"
+    if test_coll_correct "$subject" "$zone" "$permission" "$object"
     then
       succeed false
     fi
 
-    set_permission "$subject" "$permission" "$object"
+    set_permission "$subject" "$zone" "$permission" "$object"
   else
-    if test_coll_correct "$subject" "$permission" "$object" \
-       && test_members_correct "$subject" "$permission" "$object"
+    if test_coll_correct "$subject" "$zone" "$permission" "$object" \
+       && test_members_correct "$subject" "$zone" "$permission" "$object"
     then
       succeed false
     fi
 
-    set_perm_recursive "$subject" "$permission" "$object"
+    set_perm_recursive "$subject" "$zone" "$permission" "$object"
   fi
 
   succeed true
@@ -95,11 +105,12 @@ query_perm()
 set_perm_recursive()
 {
   local subject="$1"
-  local permission"$2"
-  local collection="$3"
+  local zone="$2"
+  local permission"$3"
+  local collection="$4"
 
   local errMsg
-  if ! errMsg=$(ichmod -M -r "$permission" "$subject" "$collection")
+  if ! errMsg=$(ichmod -M -r "$permission" "$subject#$zone" "$collection")
   then
     fail "$errMsg"
   fi
@@ -109,11 +120,12 @@ set_perm_recursive()
 set_permission()
 {
   local subject="$1"
-  local permission"$2"
-  local object="$3"
+  local zone="$2"
+  local permission"$3"
+  local object="$4"
 
   local errMsg
-  if ! errMsg=$(ichmod -M "$permission" "$subject" "$object")
+  if ! errMsg=$(ichmod -M "$permission" "$subject#$zone" "$object")
   then
     fail "$errMsg"
   fi
@@ -123,8 +135,9 @@ set_permission()
 test_coll_correct()
 {
   local subject="$1"
-  local permission="$2"
-  local collPath="$3"
+  local zone="$2"
+  local permission="$3"
+  local collPath="$4"
 
   local queryPerm
   queryPerm=$(query_perm "$permission")
@@ -133,9 +146,10 @@ test_coll_correct()
 # XXX - This can't bee done due to https://github.com/irods/irods/issues/2337.
 #       It is still present in 4.2.3.
 # currentPerm=$(quest \
-#   "select COLL_ACCESS_NAME where COLL_ID = '$objectId' and USER_NAME = '$subject'")
+#   "select COLL_ACCESS_NAME
+#    where COLL_ID = '$objectId' and USER_NAME = '$subject' and USER_ZONE = '$zone'")
   local subjectId
-  subjectId=$(quest "select USER_ID where USER_NAME = '$subject'")
+  subjectId=$(quest "select USER_ID where USER_NAME = '$subject' and USER_ZONE = '$zone'")
 
   currentPerm=$(quest \
     "select COLL_ACCESS_NAME where COLL_NAME = '$collPath' and COLL_ACCESS_USER_ID = '$subjectId'")
@@ -147,8 +161,9 @@ test_coll_correct()
 test_data_correct()
 {
   local subject="$1"
-  local permission="$2"
-  local dataPath="$3"
+  local zone="$2"
+  local permission="$3"
+  local dataPath="$4"
 
   local queryPerm
   queryPerm=$(query_perm "$permission")
@@ -162,7 +177,10 @@ test_data_correct()
   local currentPerm
   currentPerm=$(quest \
     "select DATA_ACCESS_NAME
-     where COLL_NAME = '$collPath' and DATA_NAME = '$dataName' and USER_NAME = '$subject'")
+     where COLL_NAME = '$collPath'
+       and DATA_NAME = '$dataName'
+       and USER_NAME = '$subject'
+       and USER_ZONE ='$zone'")
 
   [ "${currentPerm:-null}" = "$queryPerm" ]
 }
@@ -171,8 +189,9 @@ test_data_correct()
 test_members_correct()
 {
   local subject="$1"
-  local permission="$2"
-  local parentColl="$3"
+  local zone="$2"
+  local permission="$3"
+  local parentColl="$4"
 
   if [ "$permission" = null ]
   then
@@ -183,9 +202,9 @@ test_members_correct()
 #       It is still present in 4.2.3.
 #   collCount=$(quest \
 #     "select count(COLL_ACCESS_COLL_ID)
-#      where COLL_NAME like '$parentColl/%' and USER_NAME = '$subject'")
+#      where COLL_NAME like '$parentColl/%' and USER_NAME = '$subject' and USER_ZONE = '$zone'")
     local subjectId
-    subjectId=$(quest "select USER_ID where USER_NAME = '$subject'")
+    subjectId=$(quest "select USER_ID where USER_NAME = '$subject' and USER_ZONE = '$zone'")
 
     collCount=$(quest \
       "select count(COLL_ACCESS_COLL_ID)
@@ -200,7 +219,7 @@ test_members_correct()
     local fileCount
     fileCount=$(quest \
       "select count(DATA_ACCESS_DATA_ID)
-       where COLL_NAME like '$parentColl/%' and USER_NAME = '$subject'")
+       where COLL_NAME like '$parentColl/%' and USER_NAME = '$subject' and USER_ZONE = '$zone'")
 
     [ "$fileCount" -eq 0 ]
   else
@@ -217,9 +236,10 @@ test_members_correct()
 #     "select count(COLL_ID)
 #      where COLL_NAME like '$parentColl/%'
 #        and USER_NAME = '$subject'
+#        and USER_ZONE = '$zone'
 #        and COLL_ACCESS_NAME = '$queryPerm'")
     local subjectId
-    subjectId=$(quest "select USER_ID where USER_NAME = '$subject'")
+    subjectId=$(quest "select USER_ID where USER_NAME = '$subject' and USER_ZONE = '$zone'")
 
     correctCollCnt=$(quest \
       "select count(COLL_ID)
@@ -240,6 +260,7 @@ test_members_correct()
       "select count(DATA_ID)
        where COLL_NAME like '$parentColl/%'
          and USER_NAME = '$subject'
+         and USER_ZONE = '$zone'
          and DATA_ACCESS_NAME = '$queryPerm'")
 
     [ "$correctFileCnt" -ge "$fileCount" ]
@@ -317,5 +338,4 @@ succeed()
 }
 
 
-set -e
 main "$@" 2>&1

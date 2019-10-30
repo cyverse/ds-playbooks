@@ -3,9 +3,7 @@ version: "2.0"
 
 services:
   amqp:
-    build:
-      context: .
-      dockerfile: rabbitmq/Dockerfile
+    image: test-env-base:centos7
 
   apache:
     build:

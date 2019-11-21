@@ -24,3 +24,4 @@
             subject: "{{ _terraref_manager }}"
             permission: own
             object: "{{ _terraref_base_collection }}"
+            recursive: true

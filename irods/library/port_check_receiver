@@ -152,6 +152,7 @@ class UDPSocket(socket.socket):
 
 
 def receive(tcp_ports, udp_ports, stop_command, timeout):
+  timedOut = False
   socks = SocketSet()
 
   for port in tcp_ports:
@@ -182,9 +183,11 @@ def receive(tcp_ports, udp_ports, stop_command, timeout):
       if not socks.has_inputs():
         tearDown = True
     else:
+      timedOut = True
       tearDown = True
 
   socks.closeall()
+  return not timedOut
 
 
 def main():
@@ -203,9 +206,10 @@ def main():
     stop_command = module.params['stop_command']
     timeout = module.params['timeout']
 
-    receive(tcp_ports, udp_ports, stop_command, timeout)
-
-    module.exit_json()
+    if not receive(tcp_ports, udp_ports, stop_command, timeout):
+        module.fail_json(msg="timed out")
+    else:
+        module.exit_json()
   except Exception as e:
     module.fail_json(msg=str(e))
 

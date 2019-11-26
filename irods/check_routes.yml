@@ -89,6 +89,13 @@
       register: job_result
       until: job_result.finished
       retries: 1
+      failed_when: not job_result.finished
+
+    - name: check receiver failure
+      when: job_result.msg is defined
+      fail:
+        msg: '{{ job_result.msg }}'
+      ignore_errors: true
 
 
 - name: restart previously stopped iRODS servers

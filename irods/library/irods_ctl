@@ -10,7 +10,7 @@
 #  state  The state irods-server should be in upon success. It should be one of
 #         'restarted', 'started', or 'stopped'. The default is 'started'.
 
-from os import popen
+from subprocess import PIPE, Popen
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -19,7 +19,13 @@ _irodsctl = "/var/lib/irods/iRODS/irodsctl"
 
 
 def _call_irodsctl(arg):
-  return popen(_irodsctl + " " + arg).read()
+   cmd = Popen(args=[_irodsctl, arg], stdout=PIPE, stderr=PIPE)
+   (resp, err) = cmd.communicate()
+
+   if cmd.returncode != 0 or err:
+      raise Exception(err)
+
+   return resp
 
 
 def _is_running():
@@ -43,13 +49,7 @@ def _ensure_stopped():
 
 
 def _restart():
-  response = _call_irodsctl("restart")
-
-  # NB: irodsctl restart succeeds even when it fails to start the server, so we
-  #     need to check to see if iRODS is running
-  if not _is_running():
-    raise Exception(response)
-
+  _call_irodsctl("restart")
   return True
 
 

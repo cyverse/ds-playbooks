@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # An asible module for connecting to a set of ports on a given host. It is meant
 # to work in tandem with port_check_receiver to verify networks routes are open.

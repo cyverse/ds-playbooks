@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 #
 # An ansible module for listening on a set of ports. It's meant to work in
 # tandem with port_check_sender to verify network routes are open.

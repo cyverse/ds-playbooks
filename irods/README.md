@@ -31,6 +31,7 @@ Variable                                   | Default                            
 `captcn_owners`                            | `[]`                                 |         | a list of users who get ownership of CAP_TCN collections
 `captcn_readers`                           | `[]`                                 |         | a list of users who get read access to CAP_TCN collections
 `captcn_writers`                           | `[]`                                 |         | a list of users who get write access to CAP_TCN collections
+`check_routes_timeout`                     | 3                                    |         | the number of seconds the `check_route` playbook will wait for a response during a single port check
 `dbms_password`                            | irods                                |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `dbms_port`                                | 5432                                 |         | The TCP port the DBMS listens on.
 `dbms_username`                            | irods                                |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.

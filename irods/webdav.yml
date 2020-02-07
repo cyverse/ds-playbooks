@@ -170,6 +170,17 @@
       package:
         name: mod_ssl
 
+    - name: download RPM package with check (sha256)
+      get_url:
+        url: https://github.com/zhxu73/ds-playbooks/releases/download/0.0/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm
+        dest: /tmp/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm
+        checksum: sha512:8a72f1cae2cd6ad0a88244fa4dab50f97934929cd7393d09785225c1f53b6bef906d32fc0b39665034fa2d2f097822f7460d1378c9dfefc0d4b496ada395772c
+
+    - name: install RPM package to remove ssl.conf
+      yum:
+        name: /tmp/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm
+        state: present
+
     - name: ensure ssl.conf is gone
       file:
         path: /etc/httpd/conf.d/ssl.conf

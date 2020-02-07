@@ -39,7 +39,7 @@ main()
     return 1
   fi
 
-  irm -f "$tarFile"
+#  irm -f "$tarFile"
 
   if map_metadata  "$coll" "$metaFile"
   then

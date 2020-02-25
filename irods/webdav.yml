@@ -170,6 +170,9 @@
       package:
         name: mod_ssl
 
+    - name: install RPM package to remove ssl.conf
+      include_tasks: tasks/build_dummy_rpm.yml
+
     - name: ensure ssl.conf is gone
       file:
         path: /etc/httpd/conf.d/ssl.conf

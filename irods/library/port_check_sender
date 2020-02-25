@@ -10,6 +10,8 @@
 #  destination  the host to send the msg to, default 'localhost'
 #  tcp_ports    a list of TCP ports to send msg over, default is []
 #  udp_ports    a list of UDP ports to send msg over, devault is []
+#  timeout      the amount of time in seconds to wait for a response from
+#               port_check_receiver, default is 4.
 #  msg          the message to send, default is 'ping'
 #
 # This module is meant to work with the port_check_receiver module to check if a
@@ -28,12 +30,12 @@ from ansible.module_utils.basic import AnsibleModule
 
 class Checker:
 
-  def check(self, destination, ports, msg):
+  def check(self, destination, ports, timeout, msg):
     blocked_ports = []
     for port in ports:
       try:
         sock = self.mk_socket()
-        sock.settimeout(4)
+        sock.settimeout(timeout)
         self.check_on(sock, (destination, port), msg)
       except Exception as e:
         blocked_ports.append("%d/%s (%s)" % (port, self.protocol(), str(e)))
@@ -82,10 +84,12 @@ def check(params):
   destination = params['destination']
   tcp_ports = [ int(i) for i in params['tcp_ports'] ]
   udp_ports = [ int(i) for i in params['udp_ports'] ]
+  timeout = int(params['timeout'])
   msg = params['msg']
-  blocked_tcp_ports = TCPChecker().check(destination, tcp_ports, msg)
-  blocked_udp_ports = UDPChecker().check(destination, udp_ports, msg)
+  blocked_tcp_ports = TCPChecker().check(destination, tcp_ports, timeout, msg)
+  blocked_udp_ports = UDPChecker().check(destination, udp_ports, timeout, msg)
   return blocked_tcp_ports + blocked_udp_ports
+
 
 def main():
   module = AnsibleModule(
@@ -93,13 +97,17 @@ def main():
       destination = dict(type='str', default="localhost"),
       tcp_ports = dict(type='list', default=[]),
       udp_ports = dict(type='list', default=[]),
+      timeout = dict(type='int', default=4),
       msg = dict(type='str', default="ping")))
+
   blocked_ports = check(module.params)
+
   if blocked_ports:
     msg = "blocked ports %s" % blocked_ports
     module.fail_json(msg=msg)
   else:
     module.exit_json()
+
 
 if __name__ == '__main__':
   main()

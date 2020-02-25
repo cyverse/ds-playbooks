@@ -1,3 +1,5 @@
 ---
+check_routes_timeout: 5
+
 irods_version: 4.1.10
 irods_zone_name: testing

@@ -126,6 +126,9 @@ _irods_zone_name: "{{ irods_zone_name if irods_zone_name is defined else 'tempZo
 _load_balancer_irods_allowed_src: "{{
   load_balancer_irods_allowed_src if load_balancer_irods_allowed_src is defined else
   _irods_allowed_clients }}"
+
+_load_balancer_irods_check_period: "{{ load_balancer_irods_check_period | default(2) }}"
+
 _load_balancer_irods_extra_max_conn: "{{
   load_balancer_irods_extra_max_conn if load_balancer_irods_extra_max_conn is defined else
   100 }}"
@@ -149,6 +152,8 @@ _load_balancer_stats_user: "{{ load_balancer_stats_user if load_balancer_stats_u
 _load_balancer_stats_password: "{{
   load_balancer_stats_password if load_balancer_stats_password is defined else
   'B1Gp4sSw0rD!!' }}"
+
+_load_balancer_webdav_check_period: "{{ load_balancer_webdav_check_period | default(2) }}"
 
 _pire_resource_hierarchy: "{{ pire_resource_hierarchy if pire_resource_hierarchy is defined else
                               _irods_resource_hierarchies[0] }}"

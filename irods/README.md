@@ -68,15 +68,17 @@ Variable                                   | Default                            
 `irods_zone_key`                           | TEMPORARY_zone_key                   |         | the zone key
 `irods_zone_name`                          | tempZone                             |         | the name of the zone
 `load_balancer_irods_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS through the load balancer.
+`load_balancer_irods_check_period`         | 2                                    |         | The amount of time between irods health checks in seconds
 `load_balancer_irods_extra_max_conn`       | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer for connections coming from jobs.
 `load_balancer_irods_max_conn`             | 200                                  |         | The maximum number of concurrent connections to iRODS through the load balancer.
-`load_balancer_irods_vip_srcs`             | `[]`                                           | A list of IP address ranges that aren't considered for queuing.
+`load_balancer_irods_vip_srcs`             | `[]`                                 |         | A list of IP address ranges that aren't considered for queuing.
 `load_balancer_queue_timeout`              | 120                                  |         | The number of seconds a connection can be queued.
 `load_balancer_stats_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for hosts allowed to see the HAProxy stats web page.
 `load_balancer_stats_certificate`          | /etc/haproxy/certs/stats.pem         |         | The TLS certificate used by the stats endpoint
 `load_balancer_stats_password`             | B1Gp4sSw0rD!!                        |         | The password used to authetnicate access to the stats service
 `load_balancer_stats_port`                 | 81                                   |         | The TCP port used to retrieve HAProxy stats
 `load_balancer_stats_user`                 | haproxy-stats                        |         | The user to authenticate as to access the stats service
+`load_balancer_webdav_check_period`        | 2                                    |         | The amount of time between webdav health checks in seconds
 `pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
 `rabbitmq_ephemeral`                       | `true`                               |         | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
 `rabbitmq_password`                        | guest                                |         | The password iRODS uses to connect to the AMQP vhost

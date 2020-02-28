@@ -18,6 +18,8 @@
 # This script assumes that the executor of this script is authenicated as a
 # rodsadmin user.
 
+set -o errexit -o nounset -o pipefail
+
 
 main()
 {

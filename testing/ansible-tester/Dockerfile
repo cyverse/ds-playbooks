@@ -3,9 +3,8 @@ FROM williamyeh/ansible:centos7
 RUN pip --disable-pip-version-check install --upgrade ansible
 
 RUN yum --assumeyes install \
-      dmidecode git postgresql python-dns python-netaddr wget \
+      dmidecode git postgresql python-dns python-netaddr rpm-build wget \
       https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm \
-      rpm-build
 RUN pip --quiet install --upgrade Jinja2
 RUN mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test /root/.ssh
 

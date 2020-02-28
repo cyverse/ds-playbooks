@@ -17,6 +17,8 @@
 #
 # This script assumes that the executor of this script is authenicated as a
 # rodsadmin user.
+#
+# This script must be run on the resource server hosting TARFILE
 
 set -o errexit -o nounset -o pipefail
 
@@ -36,12 +38,15 @@ main()
   local coll="$parentColl"/"${tarName%-*}"
   local metaFile="$coll"/meta-"${tarName##*-}".csv
 
-  if ! clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"
+  # XXX - Work around for https://github.com/irods/irods/issues/3291
+  # if ! clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"
+  if ! bun "$uploader" "$tarFile" "${tarName%-*}"
   then
     return 1
   fi
 
-#  irm -f "$tarFile"
+  # XXX - Don't clean up until work around (^^^) is confirmed to work
+  # irm -f "$tarFile"
 
   if map_metadata  "$coll" "$metaFile"
   then
@@ -64,6 +69,28 @@ assign_acl()
       ichmod -M -r "$perm" "$user" "$entity"
     fi
   done
+}
+
+
+bun()
+{
+  local uploader="$1"
+  local tarDataPath="$2"
+  local destDirName="$3"
+
+  local tarColl tarName
+  tarColl=$(dirname "$tarDataPath")
+  tarName=$(basename "$tarDataPath")
+
+  local tarFilePath
+  tarFilePath=$(iquest '%s' "select DATA_PATH where COLL_NAME = '$tarColl' and DATA_NAME = '$tarName'")
+
+  local tarDir
+  tarDir=$(dirname "$tarFilePath")
+
+  local destDirPath="$tarDir"/"$destDirName"
+
+  tar --extract --file "$tarFilePath"
 }
 
 

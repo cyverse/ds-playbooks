@@ -1,4 +1,4 @@
-# VERSION: 3
+# VERSION: 4
 #
 # These are the custom rules for the Sparc'd project
 
@@ -17,7 +17,7 @@ _sparcd_ingest(*Uploader, *TarPath) {
   *uploaderArg = execCmdArg(*Uploader);
   *tarArg = execCmdArg(*TarPath);
   *args= "*zoneArg *uploaderArg *tarArg";
-  *status = errormsg(msiExecCmd("sparcd-ingest", *args, "null", "null", "null", *out), *err);
+  *status = errormsg(msiExecCmd("sparcd-ingest", *args, "null", *TarPath, "null", *out), *err);
 
   if (*status != 0) {
     _sparcd_logMsg(*err);

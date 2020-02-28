@@ -166,17 +166,12 @@
       package:
         name: mod_proxy_html
 
-    - name: install mod_ssl
-      package:
-        name: mod_ssl
-
     - name: install RPM package to remove ssl.conf
       include_tasks: tasks/build_dummy_rpm.yml
 
-    - name: ensure ssl.conf is gone
-      file:
-        path: /etc/httpd/conf.d/ssl.conf
-        state: absent
+    - name: install mod_ssl
+      package:
+        name: mod_ssl
 
     - include_tasks: tasks/install_irods_pkg.yml
       vars:

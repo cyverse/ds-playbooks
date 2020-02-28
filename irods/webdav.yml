@@ -166,17 +166,17 @@
       package:
         name: mod_proxy_html
 
+    - name: package_facts uses auto, setup for next task
+      package_facts:
+        manager: "auto"
+
+    - name: build & install mod_ssl-rm_ssl_conf RPM package to remove ssl.conf
+      include_tasks: tasks/install_rm_sslconf_rpm.yml
+      when: "'mod_ssl-rm_ssl_conf' not in ansible_facts.packages"
+
     - name: install mod_ssl
       package:
         name: mod_ssl
-
-    - name: install RPM package to remove ssl.conf
-      include_tasks: tasks/build_dummy_rpm.yml
-
-    - name: ensure ssl.conf is gone
-      file:
-        path: /etc/httpd/conf.d/ssl.conf
-        state: absent
 
     - include_tasks: tasks/install_irods_pkg.yml
       vars:

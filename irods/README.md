@@ -86,11 +86,11 @@ Variable                                   | Default                            
 `rabbitmq_user`                            | guest                                |         | The user iRODS uses to connect to the AMQP vhost
 `rabbitmq_vhost`                           | /                                    |         | The AMQP vhost iRODS connects to
 `restart_irods`                            | `false`                              |         | iRODS can be restarted on the servers having config file changes, _see below_
-`sanimal_irods_base_coll`                  |                                      |         | The base iRODS collection used by Sanimal. If this isn't set, no sanimal rules will fire.
 `sernec_owners`                            | `[]`                                 |         | a list of users who get ownership of sernec collections
 `sernec_readers`                           | `[]`                                 |         | a list of users who get read access to sernec collections
 `sernec_writers`                           | `[]`                                 |         | a list of users who get write access to sernec collections
 `single_threaded_resources`                | `[]`                                 |         | a list of resources that only support single threaded transfers
+`sparcd_irods_base_coll`                   |                                      |         | The base iRODS collection used by Sparc'd. If this isn't set, no sparcd rules will fire.
 `sysctl_kernel`                            | `[]`                                 |         | a list of sysctl kernel parameters to set for the IES, _see_below_
 `terraref_base_collection`                 |                                      |         | The base collection for the TerraREF project. If it isn't present no TerraREF rules will fire.
 `terraref_manager`                         | `irods_clerver_user`                 |         | The iRODS user who is responsible for TerraREF data.

@@ -3,12 +3,6 @@
 # and remove /etc/httpd/conf.d/ssl.conf when triggered.
 # The dummy RPM will be built on localhost, and copy to managed node for
 # installation.
-- name: install rpm-build package to enable building RPM
-  delegate_to: localhost
-  package:
-    name: rpm-build
-    state: present
-
 - name: create temporary directory
   delegate_to: localhost
   tempfile:

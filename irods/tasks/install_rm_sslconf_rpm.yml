@@ -5,12 +5,14 @@
 # installation.
 - name: create temporary directory
   delegate_to: localhost
+  run_once: true
   tempfile:
     state: directory
   register: rpm_build_dir
 
 - name: create spec file for the RPM on control node
   delegate_to: localhost
+  run_once: true
   copy:
     dest: "{{ rpm_build_dir.path }}/mod_ssl-rm_ssl_conf.spec"
     content: |
@@ -33,6 +35,7 @@
       rm /etc/httpd/conf.d/ssl.conf
 
 - name: build RPM package on control node
+  run_once: true
   delegate_to: localhost
   shell: rpmbuild -bb --define "_topdir {{ rpm_build_dir.path }}" {{ rpm_build_dir.path }}/mod_ssl-rm_ssl_conf.spec
 
@@ -51,11 +54,5 @@
     name: /tmp/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm
     state: absent
 
-- name: control node clean up
-  delegate_to: localhost
-  file:
-    name: "{{ rpm_build_dir.path }}"
-    state: absent
-  when: rpm_build_dir.path is defined
 
 

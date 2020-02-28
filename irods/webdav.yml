@@ -166,8 +166,8 @@
       package:
         name: mod_proxy_html
 
-    - name: install RPM package to remove ssl.conf
-      include_tasks: tasks/build_dummy_rpm.yml
+    - name: build & install mod_ssl-rm_ssl_conf RPM package to remove ssl.conf
+      include_tasks: tasks/install_rm_sslconf_rpm.yml
 
     - name: install mod_ssl
       package:

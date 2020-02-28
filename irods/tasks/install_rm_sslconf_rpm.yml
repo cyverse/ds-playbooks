@@ -1,7 +1,7 @@
 ---
-# Build a dummy RPM package that triggers on install & update of mod_ssl,
+# Build an empty RPM package that triggers on install & update of mod_ssl,
 # and remove /etc/httpd/conf.d/ssl.conf when triggered.
-# The dummy RPM will be built on localhost, and copy to managed node for
+# The RPM will be built on localhost, and copy to managed node for
 # installation.
 - name: create temporary directory
   delegate_to: localhost
@@ -9,12 +9,12 @@
     state: directory
   register: rpm_build_dir
 
-- name: create spec file on control node
+- name: create spec file for the RPM on control node
   delegate_to: localhost
   copy:
     dest: "{{ rpm_build_dir.path }}/mod_ssl-rm_ssl_conf.spec"
     content: |
-      Summary: A dummy rpm package that remove /etc/httpd/conf.d/ssl.conf
+      Summary: An empty rpm package that remove /etc/httpd/conf.d/ssl.conf
       Name:    mod_ssl-rm_ssl_conf
       Version: 1.0
       Release: 1
@@ -22,7 +22,7 @@
       BuildArchitectures: noarch
 
       %description
-      A dummy rpm package which the sole purpose is to remove
+      An empty rpm package which the sole purpose is to remove
       /etc/httpd/conf.d/ssl.conf after update mod_ssl package
 
       %files
@@ -32,11 +32,11 @@
       %triggerun -- mod_ssl
       rm /etc/httpd/conf.d/ssl.conf
 
-- name: build dummy rpm package on control node
+- name: build RPM package on control node
   delegate_to: localhost
   shell: rpmbuild -bb --define "_topdir {{ rpm_build_dir.path }}" {{ rpm_build_dir.path }}/mod_ssl-rm_ssl_conf.spec
 
-- name: copy dummy rpm to managed node
+- name: copy RPM to managed node
   copy:
     src: "{{ rpm_build_dir.path }}/RPMS/noarch/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm"
     dest: "/tmp/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm"

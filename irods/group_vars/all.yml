@@ -166,8 +166,7 @@ _rabbitmq_vhost: "{{ rabbitmq_vhost if rabbitmq_vhost is defined else '/' }}"
 
 _restart_irods: "{{ restart_irods if restart_irods is defined else false }}"
 
-_sanimal_irods_base_coll: "{{ sanimal_irods_base_coll if sanimal_irods_base_coll is defined else
-                              None }}"
+_sparcd_irods_base_coll: "{{ sparcd_irods_base_coll | default(None) }}"
 
 _sernec_owners: "{{ sernec_owners if sernec_owners is defined else [] }}"
 _sernec_readers: "{{ sernec_readers if sernec_readers is defined else [] }}"

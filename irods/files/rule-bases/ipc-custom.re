@@ -34,9 +34,9 @@
 @include 'coge'
 @include 'de'
 @include 'pire'
-@include 'sanimal'
 @include 'sciapps'
 @include 'sernec'
+@include 'sparcd'
 @include 'terraref'
 
 
@@ -102,10 +102,10 @@ exclusive_acPostProcForPut {
   *err = errormsg(coge_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(sanimal_acPostProcForPut, *msg);
+  *err = errormsg(sciapps_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(sciapps_acPostProcForPut, *msg);
+  *err = errormsg(sparcd_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 

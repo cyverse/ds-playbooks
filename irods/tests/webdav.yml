@@ -151,6 +151,22 @@
       register: response
       failed_when: response.stat.exists
 
+    - name: remove mod_ssl
+      package:
+        name: mod_ssl
+        state: absent
+
+    - name: install mod_ssl
+      package:
+        name: mod_ssl
+        state: present
+
+    - name: test ssl.conf is gone after reinstall (simulate update)
+      stat:
+        path: /etc/httpd/conf.d/ssl.conf
+      register: response
+      failed_when: response.stat.exists
+
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: irods-icommands

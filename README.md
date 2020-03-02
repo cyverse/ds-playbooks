@@ -11,3 +11,6 @@ group.
 
 If the control machine runs linux, `dmidecode` needs to be installed for
 `gather_facts` to work.
+
+`rpm-build` (using `yum` or `rpmbuild` if `apt-get`) needs to be installed
+on control machine for `irods/tasks/build_dummy_rpm.yml` to work.

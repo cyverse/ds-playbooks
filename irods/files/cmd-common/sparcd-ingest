@@ -89,8 +89,11 @@ bun()
   tarDir=$(dirname "$tarFilePath")
 
   local destDirPath="$tarDir"/"$destDirName"
+  mkdir --parents "$destDirPath"
+  tar --extract --no-overwrite-dir --directory "$destDirPath" --file "$tarFilePath"
 
-  tar --extract --file "$tarFilePath"
+  # TODO set PEP acSetChkFilePathPerm as '{msiSetChkFilePathPerm("noChkPathPerm"); }' for sparcd folders.
+  clientUserName="$uploader" ireg -C -f -K "$destDirPath" "$tarColl"/"$destDirName"
 }
 
 

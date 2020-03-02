@@ -6,8 +6,20 @@
     ies: "{{ groups['ies'][0] }}"
     ies_server: "{{ ies | regex_replace('\\..*') }}"
     ies_ip: "{{ ies if ies|ipaddr else lookup('dig', ies) }}"
+    ies_maxconn: maxconn {{ _load_balancer_irods_max_conn }}
+    ies_check_periods: inter {{ _load_balancer_irods_check_period }}s downinter 5s fastinter 2s
+    ies_check: check port 1247 fall 2 {{ ies_check_periods }}
+    ies_server_cfg: "{{ ies_ip }} {{ ies_maxconn }} {{ ies_check }}"
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
+    webdav_ip: "{%
+      if groups.webdav[0] | ipaddr %}{{
+        groups.webdav[0] }}{%
+      else %}{{
+        lookup('dig', groups.webdav[0]) }}{% endif %}"
+    webdav_check_periods: inter {{ _load_balancer_webdav_check_period }}s downinter 3s fastinter 1s
+    webdav_check: check port 80 fall 2 {{ webdav_check_periods }}
+    webdav_server_cfg: "{{ webdav_ip }} {{ webdav_check }}"
   tasks:
     - name: enable notifcations when not testing
       set_fact:
@@ -165,7 +177,7 @@
               options:
                 - tcp-check
               servers:
-                - "{{ ies_server }} {{ ies_ip }} maxconn {{ _load_balancer_irods_max_conn }} check port 1247 inter 20s"
+                - "{{ ies_server }} {{ ies_server_cfg }}"
               tcp_checks:
                 - connect
                 - send-binary 0000006e
@@ -185,7 +197,7 @@
                 - httpchk
 # XXX: Our caching is too dumb right now to support multiple webdav servers
               servers:
-                - dav-1 {% if groups.webdav[0] | ipaddr %}{{ groups.webdav[0] }}{% else %}{{ lookup('dig', groups.webdav[0]) }}{% endif %} check port 80 inter 20s
+                - dav-1 {{ webdav_server_cfg }}
 #              servers: "[
 #                {% for h in groups.webdav %}
 #                  \"dav-{{ loop.index }} {% if h | ipaddr %}{{ h }}{% else %}{{ lookup('dig', h) }}{% endif %} check port 80 inter 20s\"

@@ -26,7 +26,12 @@
         - captcn.re
         - captcn-env.re
         - coge.re
+        - core.dvm
+        - core.fnm
+        - core.re
         - de.re
+        - host_access_control_config.json
+        - hosts_config.json
         - ipc-amqp.re
         - ipc-custom.re
         - ipc-env.re
@@ -36,17 +41,12 @@
         - ipc-uuid.re
         - pire.re
         - pire-env.re
-        - sanimal.re
-        - sanimal-env.re
         - sernec.re
         - sernec-env.re
-        - service_account.config
-        - core.dvm
-        - core.fnm
-        - core.re
-        - host_access_control_config.json
-        - hosts_config.json
         - server_config.json
+        - service_account.config
+        - sparcd.re
+        - sparcd-env.re
         - terraref.re
         - terraref-env.re
 
@@ -71,7 +71,17 @@
         - delete-scheduled-rule
         - generateuuid
         - set-uuid
-        - sanimal-ingest
+        - sparcd-ingest
+
+    - name: Verify sanimal files are absent
+      stat:
+        path: "{{ item }}"
+      register: response
+      failed_when: response.stat.exists
+      with_items:
+        - /etc/irods/sanimal.re
+        - /etc/irods/sanimal-env.re
+        - /var/lib/irods/iRODS/server/bin/cmd/sanimal-ingest
 
     - name: Verify IES only files only on IES
       stat:

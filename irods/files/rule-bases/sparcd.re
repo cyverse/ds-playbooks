@@ -43,3 +43,11 @@ sparcd_acPostProcForPut {
     }
   }
 }
+
+
+acSetChkFilePathPerm {
+  on (str(sparcd_BASE_COLL) != ''
+      && $objPath like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/.*$') {
+    msiSetChkFilePathPerm('noChkPathPerm');
+  }
+}

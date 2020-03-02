@@ -83,7 +83,7 @@ bun()
   tarName=$(basename "$tarDataPath")
 
   local tarFilePath
-  tarFilePath=$(iquest '%s' "select DATA_PATH where COLL_NAME = '$tarColl' and DATA_NAME = '$tarName'")
+  tarFilePath=$(get_file_path "$tarDataPath")
 
   local tarDir
   tarDir=$(dirname "$tarFilePath")
@@ -92,8 +92,19 @@ bun()
   mkdir --parents "$destDirPath"
   tar --extract --no-overwrite-dir --directory "$destDirPath" --file "$tarFilePath"
 
-  # TODO set PEP acSetChkFilePathPerm as '{msiSetChkFilePathPerm("noChkPathPerm"); }' for sparcd folders.
   clientUserName="$uploader" ireg -C -f -K "$destDirPath" "$tarColl"/"$destDirName"
+}
+
+
+get_file_path()
+{
+  local dataPath="$1"
+
+  local coll dataName
+  coll=$(dirname "$dataPath")
+  dataName=$(basename "$dataPath")
+
+  iquest '%s' "select DATA_PATH where COLL_NAME = '$coll' and DATA_NAME = '$dataName'"
 }
 
 

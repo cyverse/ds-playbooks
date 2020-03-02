@@ -87,7 +87,7 @@
       stat:
         path: "{{ item }}"
       register: response
-      failed_when: response.stat.exists == (inventory_hostname in groups['ies'])
+      failed_when: response.stat.exists != ((inventory_hostname in groups['ies']) | bool)
       with_items:
         - /etc/irods/database_config.json
         - /var/lib/irods/iRODS/server/bin/cmd/amqptopicsend.py

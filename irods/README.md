@@ -37,8 +37,8 @@ Variable                                   | Default                            
 `dbms_username`                            | irods                                |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `de_job_irods_user`                        |                                      |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
 `firewall_chain`                           | INPUT                                |         | The iptables chain managing authorizing iRODS connections
-`irods_aegis_repl_resource`                | aegisReplRes                         |         | the name of the aegis resource where replicas are written
-`irods_aegis_resource`                     | aegisIngestRes                       |         | the name of the aegis resource where newly uploaded files are written
+`irods_aegis_repl_resource`                | _see description_                    |         | the name of the aegis resource where replicas are written. If `irods_aegis_resource` is defined, it is the default, otherwise, `irods_default_repl_resource` is.
+`irods_aegis_resource`                     | `irods_default_resource`             |         | the name of the aegis resource where newly uploaded files are written
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
 `irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | rods                                 |         | the rodsadmin user to be used by the server being configured

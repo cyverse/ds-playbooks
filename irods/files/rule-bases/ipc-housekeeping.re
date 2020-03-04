@@ -1,4 +1,4 @@
-# VERSION 1
+# VERSION 2
 #
 # ipc-housekeeping.re
 # This is a library of rules for periodic tasks like updating quota usage data.
@@ -12,7 +12,7 @@ _ipc_updateQuotaUsage {
   if (0 == errormsg(msiQuota, *msg)) {
     writeLine('serverLog', 'DS: quota usage updated');
   } else {
-    writeLine('serverLog', 'DS: quota usage update failed: *msg');
+    writeLine('serverLog', "DS: quota usage update failed: *msg");
   }
 }
 
@@ -34,7 +34,9 @@ ipc_rescheduleQuotaUsageUpdate {
       *idArg = execCmdArg(*row.RULE_EXEC_ID);
 
       writeLine('serverLog', 'DS: unscheduling quota usage updates');
-      *status = errorcode(msiExecCmd('delete-scheduled-rule', *idArg, "null", "null", "null", *out));
+
+      *status = errorcode(
+        msiExecCmd('delete-scheduled-rule', *idArg, 'null', 'null', 'null', *out));
 
       if (*status < 0) {
         msiGetStderrInExecCmdOut(*out, *resp);

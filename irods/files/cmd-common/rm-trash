@@ -163,7 +163,7 @@ disp_err()
   while IFS= read -r err
   do
     err="${err#ERROR: }"
-    
+
     if ! [[ "$err" =~ $parallelPat ]]
     then
       fmt_msg ERROR "$err"
@@ -221,7 +221,10 @@ rm_trash()
   delTot=$(wc --lines < "$trashList")
   printf '%d data objects will be deleted\n' "$delTot"
 
-  parallel --line-buffer --no-notice --no-run-if-empty --delimiter '\n' --max-args 100 --max-procs "$Concurrency" RM_DATA_BATCH < "$trashList"
+  parallel --line-buffer --no-notice --no-run-if-empty \
+      --delimiter '\n' --max-args 100 --max-procs "$Concurrency" \
+      RM_DATA_BATCH \
+    < "$trashList"
   local rc="$?"
   if [[ "$rc" -eq 129 ]]
   then

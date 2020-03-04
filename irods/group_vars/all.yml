@@ -34,9 +34,8 @@ _firewall_chain: "{{ firewall_chain if firewall_chain is defined else 'INPUT' }}
 
 _irods_aegis_repl_resource: "{{
   irods_aegis_repl_resource if irods_aegis_repl_resource is defined else
-  'aegisReplRes' }}"
-_irods_aegis_resource: "{{ irods_aegis_resource if irods_aegis_resource is defined else
-                           'aegisIngestRes' }}"
+  (irods_aegis_resource | default(_irods_default_repl_resource)) }}"
+_irods_aegis_resource: "{{ irods_aegis_resource | default(_irods_default_resource) }}"
 
 _irods_allowed_clients: "{{ irods_allowed_src if irods_allowed_src is defined else '0.0.0.0/0' }}"
 

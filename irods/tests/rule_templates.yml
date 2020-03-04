@@ -28,8 +28,8 @@
     - name: verify constants expand correctly in aegis-env.re.j2
       assert:
         that:
-          - aegis_env is search("aegis_INGEST_RESC = 'aegisIngestRes'")
-          - aegis_env is search("aegis_REPL_RESC = 'aegisReplRes'")
+          - aegis_env is search("aegis_INGEST_RESC = 'demoResc'")
+          - aegis_env is search("aegis_REPL_RESC = 'demoResc'")
 
     - name: verify constants expand correctly in avra-env.re.j2
       assert:
@@ -73,7 +73,39 @@
           - terraref_env is search("terraref_RESC = 'demoResc'")
 
 
-- name: test aegis params are set correctly
+- name: test aegis params are set correctly when no replication
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    irods_aegis_resource: aegisRes
+    aegis_env: "{{ lookup('template', '../templates/rule-bases/aegis-env.re.j2') }}"
+  tasks:
+    - name: verify params
+      assert:
+        that:
+          - aegis_env is search("aegis_INGEST_RESC = 'aegisRes'")
+          - aegis_env is search("aegis_REPL_RESC = 'aegisRes'")
+
+
+- name: test aegis params are set correctly when default replication
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    irods_default_repl_resource: replRes
+    aegis_env: "{{ lookup('template', '../templates/rule-bases/aegis-env.re.j2') }}"
+  tasks:
+    - name: verify params
+      assert:
+        that:
+          - aegis_env is search("aegis_INGEST_RESC = 'demoResc'")
+          - aegis_env is search("aegis_REPL_RESC = 'replRes'")
+
+
+- name: test aegis params are set correctly when custom replication
   hosts: localhost
   gather_facts: false
   vars_files:

@@ -73,16 +73,6 @@
         - set-uuid
         - sparcd-ingest
 
-    - name: Verify sanimal files are absent
-      stat:
-        path: "{{ item }}"
-      register: response
-      failed_when: response.stat.exists
-      with_items:
-        - /etc/irods/sanimal.re
-        - /etc/irods/sanimal-env.re
-        - /var/lib/irods/iRODS/server/bin/cmd/sanimal-ingest
-
     - name: Verify IES only files only on IES
       stat:
         path: "{{ item }}"

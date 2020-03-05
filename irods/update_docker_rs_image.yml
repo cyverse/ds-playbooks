@@ -134,7 +134,9 @@
         tag: "{{ ansible_date_time.iso8601_basic_short }}"
         force_source: true
       register: response
-      changed_when: previous_id is not defined or response.image.Id != previous_id
+      changed_when: |
+        response is succeeded 
+        and (previous_id is not defined or response.image.Id != previous_id)
       tags:
         - no_testing
 

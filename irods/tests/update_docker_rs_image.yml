@@ -27,10 +27,7 @@
           - include_group_vars_json == 'json'
           - include_group_vars_none == 'no extension'
           - include_group_vars_yaml == 'yaml'
-
-    - name: test include group vars from yml directory
-      debug:
-        msg: TODO implement
+          - include_group_vars_yml == 'yml'
 
     - debug:
         msg: TODO test build_plugins.yml

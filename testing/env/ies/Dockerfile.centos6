@@ -14,8 +14,6 @@ RUN yum --assumeyes install \
       jq libselinux-python moreutils python-pip python-requests python-virtualenv
 RUN pip install pika
 RUN touch /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py
-RUN touch /etc/irods/sanimal.re /etc/irods/sanimal-env.re
-RUN touch /var/lib/irods/iRODS/server/bin/cmd/sanimal-ingest
 
 COPY ies/config/ipc-housekeeping.re /etc/irods/
 COPY ies/scripts/* /tmp/

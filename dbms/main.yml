@@ -6,17 +6,16 @@
     - role: jtyr.grub_cmdline
       grub_cmdline_add_args:
         - transparent_hugepage=never
+      tags:
+        - no_testing
 
   post_tasks:
-    - name: Install PostgreSQL yum repo
-      yum:
-        name: https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-3.noarch.rpm
+    - name: Add PostgreSQL yum repository
+      include_tasks: tasks/add_postgresql_yum_repo.yml
 
     - name: Install PostgreSQL server
       package:
         name: postgresql93-server
-  tags:
-    - no_testing
 
 - name: Initialize PostgreSQL cluster
   hosts: dbms

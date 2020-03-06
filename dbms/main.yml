@@ -11,11 +11,7 @@
 
   post_tasks:
     - name: Add PostgreSQL yum repository
-      yum_repository:
-        name: pgdg-centos93
-        description: PostgreSQL 9.3 yum repo for CentOS 6
-        baseurl: https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/
-        state: present
+      include_tasks: tasks/add_postgresql_yum_repo.yml
 
     - name: Install PostgreSQL server
       package:

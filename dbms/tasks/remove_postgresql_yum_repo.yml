@@ -1,0 +1,34 @@
+---
+- name: Remove PostgreSQL server
+  package:
+    name: postgresql93-server
+    state: absent
+
+- name: Remove repo installed via RPM (in Dockerfile)
+  yum:
+    name: pgdg-centos93
+    state: absent
+
+- name: Remove repo via URL
+  yum_repository:
+    name: pgdg-centos93
+    baseurl: https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/
+    state: absent
+
+- name: verify that repo has been removed
+  block:
+    - name: install PostgreSQL server (should fail)
+      package:
+        name: postgresql93-server
+        state: present
+
+  rescue:
+      - name: previous task failed
+        set_fact: postgresql_server_install_failure = true
+
+  always:
+    - name: verify that the installation failed upon repo removal
+      assert:
+        that:
+          - "postgresql_server_install_failed is not defined"
+

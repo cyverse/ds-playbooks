@@ -1,0 +1,31 @@
+---
+- name: test Prepare for PostgreSQL
+  hosts: dbms
+  run_once: true
+  gather_facts: false
+  pre_tasks:
+    - name: package_facts uses auto, setup for next task
+      package_facts:
+        manager: "auto"
+  tasks:
+    - name: verify PostgreSQL server is installed correctly
+      assert:
+        that:
+          - "'postgresql93-server' in ansible_facts.packages"
+
+    - name: Remove PostgreSQL server
+      package:
+        name: postgresql93-server
+        state: absent
+
+    - name: Remove yum repo for PostgreSQL
+      include_tasks: ../tasks/remove_postgresql_yum_repo.yml
+
+    - name: Re-add PostgreSQL yum repo
+      include_tasks: ../tasks/add_postgresql_yum_repo.yml
+
+    - name: Install PostgreSQL server
+      package:
+        name: postgresql93-server
+        state: present
+

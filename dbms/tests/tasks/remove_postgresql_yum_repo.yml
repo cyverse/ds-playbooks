@@ -11,19 +11,8 @@
     state: absent
 
 - name: verify that repo has been removed
-  block:
-    - name: install PostgreSQL server (should fail)
-      package:
-        name: postgresql93-server
-        state: present
-
-  rescue:
-      - name: previous task failed
-        set_fact: postgresql_server_install_failure = true
-
-  always:
-    - name: verify that the installation failed upon repo removal
-      assert:
-        that:
-          - "postgresql_server_install_failed is not defined"
-
+  package:
+    name: postgresql93-server
+    state: present
+  register: response
+  failed_when: response is succeeded

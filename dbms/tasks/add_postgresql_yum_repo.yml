@@ -9,7 +9,7 @@
 - name: Add PostgreSQL yum repository via URL
   yum_repository:
     name: pgdg-centos93
-    description: PostgreSQL 9.3 yum repo for CentOS 6
+    description: PostgreSQL 9.3 yum repo for CentOS 6 (python 2.6)
     baseurl: https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/
     state: present
 

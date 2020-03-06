@@ -1,9 +1,4 @@
 ---
-- name: Remove PostgreSQL server
-  package:
-    name: postgresql93-server
-    state: absent
-
 - name: Remove repo installed via RPM (in Dockerfile)
   yum:
     name: pgdg-centos93

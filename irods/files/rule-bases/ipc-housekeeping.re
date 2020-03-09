@@ -4,7 +4,7 @@
 # This is a library of rules for periodic tasks like updating quota usage data.
 
 _ipc_QUOTA_UPDATE_FREQ = '1h REPEAT FOR EVER'
-_ipc_TRASH_RM_FREQ = '1w REPEAT FOR EVER'
+_ipc_TRASH_RM_FREQ = '7d REPEAT FOR EVER'
 
 
 _ipc_rmTrash {

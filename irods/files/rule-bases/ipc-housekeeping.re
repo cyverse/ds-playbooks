@@ -14,15 +14,15 @@ _ipc_rmTrash {
   *logFileArg = execCmdArg("/var/lib/irods/iRODS/server/log/trash-removal.log-*date");
 
   if (0 == errorcode(msiExecCmd('rm-trash', "--log *logFileArg", 'null', 'null', 'null', *out))) {
-    *subject = 'iRODS trash removal succeeded';
+    *subject = 'DS: ' ++ ipc_ZONE ++ ' trash removal of succeeded';
     *body = 'SSIA';
   } else {
-    *subject = 'iRODS trash removal failed';
+    *subject = 'DS: ' ++ ipc_ZONE ++ ' trash removal failed';
     msiGetStdErrInExecCmdOut(*out, *body);
   }
 
   if (0 != errorcode(msiSendMail(ipc_REPORT_EMAIL_ADDR, *subject, *body))) {
-    writeLine('serverLog', 'Failed to mail trash removal report');
+    writeLine('serverLog', 'DS: failed to mail trash removal report');
   }
 
   writeLine('serverLog', 'DS: completed trash removal');

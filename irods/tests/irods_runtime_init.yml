@@ -22,8 +22,8 @@
       failed_when: response is succeeded
 
     - name: verify /zone/home/shared does exist
-      debug:
-        msg: TODO implement
+      command: ils /testing/home/shared
+      changed_when: false
 
     - name: test ensure CyVerse curated collection base collection exists
       command: ils /testing/home/shared/commons_repo/curated
@@ -70,3 +70,6 @@
     - name: test start quota usage computation
       debug:
         msg: TODO implement
+
+    - debug:
+        msg: TODO implement test start trash removal

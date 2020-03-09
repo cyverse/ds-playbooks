@@ -55,3 +55,8 @@
       command: irule '{ ipc_rescheduleQuotaUsageUpdate }' null ruleExecOut
       register: results
       changed_when: results.stdout == 'scheduled quota usage updates'
+
+    - name: start trash removal
+      command: irule '{ ipc_rescheduleTrashRemoval }' null ruleExecOut
+      register: results
+      changed_when: results.stdout == 'scheduled trash removal'

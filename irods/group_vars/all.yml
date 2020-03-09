@@ -164,6 +164,8 @@ _rabbitmq_port: "{{ rabbitmq_port if rabbitmq_port is defined else 5672 }}"
 _rabbitmq_user: "{{ rabbitmq_user if rabbitmq_user is defined else 'guest' }}"
 _rabbitmq_vhost: "{{ rabbitmq_vhost if rabbitmq_vhost is defined else '/' }}"
 
+_report_email_addr: "{{ report_email_addr | default('root@localhost') }}"
+
 _restart_irods: "{{ restart_irods if restart_irods is defined else false }}"
 
 _sparcd_irods_base_coll: "{{ sparcd_irods_base_coll | default(None) }}"

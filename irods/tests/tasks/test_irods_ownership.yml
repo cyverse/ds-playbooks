@@ -1,12 +1,11 @@
 ---
+# vars:
+#   dir  the directory to verify irods ownership
+
 - name: test account owns /var/lib/irods
-  shell: '! [ $(find /var/lib/irods -not -user irods -print -quit) ]'
+  shell: '[[ -z "$(find {{ dir }} -not -user irods -print -quit)" ]]'
   changed_when: false
 
 - name: test correct account group for /var/libs/irods
-  debug:
-    msg: TODO implement
-
-- name: test ensure account owns /etc/irods
-  debug:
-    msg: TODO implement
+  shell: '[[ -z "$(find {{ dir }} -not -group irods -print -quit)" ]]'
+  changed_when: false

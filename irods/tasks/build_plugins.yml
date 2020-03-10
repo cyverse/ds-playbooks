@@ -6,28 +6,29 @@
     force: true
 
 - name: build iRODS NetCDF plugins
-  command: "{{ _build_dir }}/irods-netcdf-build/build"
-  args:
-    creates:
-      - "{{ _build_dir }}/packages/centos6/irods-api-plugin-netcdf-1.0-centos6.rpm"
-      - "{{ _build_dir }}/packages/centos6/irods-icommands-netcdf-1.0-centos6.rpm"
-      - "{{ _build_dir }}/packages/centos6/irods-microservice-plugin-netcdf-1.0-centos6.rpm"
-      - "{{ _build_dir }}/packages/centos6/irods-runtime-4.1.10-centos6.tgz"
+  command:
+    cmd: "{{ _build_dir }}/irods-netcdf-build/build"
+    creates: "{{ item }}"
+  with_fileglob:
+    - "{{ _build_dir }}/irods-netcdf-build/packages/centos6/irods-api-plugin-netcdf-1.0-centos6.rpm"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/centos6/irods-icommands-netcdf-1.0-centos6.rpm"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/centos6/irods-microservice-plugin-netcdf-1.0-centos6.rpm"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/centos6/irods-runtime-4.1.10-centos6.tgz"
 
-      - "{{ _build_dir }}/packages/centos7/irods-api-plugin-netcdf-1.0-centos7.rpm"
-      - "{{ _build_dir }}/packages/centos7/irods-icommands-netcdf-1.0-centos7.rpm"
-      - "{{ _build_dir }}/packages/centos7/irods-microservice-plugin-netcdf-1.0-centos7.rpm"
-      - "{{ _build_dir }}/packages/centos7/irods-runtime-4.1.10-centos7.tgz"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/centos7/irods-api-plugin-netcdf-1.0-centos7.rpm"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/centos7/irods-icommands-netcdf-1.0-centos7.rpm"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/centos7/irods-microservice-plugin-netcdf-1.0-centos7.rpm"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/centos7/irods-runtime-4.1.10-centos7.tgz"
 
-      - "{{ _build_dir }}/packages/ubuntu12/irods-api-plugin-netcdf-1.0-ubuntu12.deb"
-      - "{{ _build_dir }}/packages/ubuntu12/irods-icommands-netcdf-1.0-ubuntu12.deb"
-      - "{{ _build_dir }}/packages/ubuntu12/irods-microservice-plugin-netcdf-1.0-ubuntu12.deb"
-      - "{{ _build_dir }}/packages/ubuntu12/irods-runtime-4.1.10-ubuntu12.tgz"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu12/irods-api-plugin-netcdf-1.0-ubuntu12.deb"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu12/irods-icommands-netcdf-1.0-ubuntu12.deb"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu12/irods-microservice-plugin-netcdf-1.0-ubuntu12.deb"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu12/irods-runtime-4.1.10-ubuntu12.tgz"
 
-      - "{{ _build_dir }}/packages/ubuntu14/irods-api-plugin-netcdf-1.0-ubuntu14.deb"
-      - "{{ _build_dir }}/packages/ubuntu14/irods-icommands-netcdf-1.0-ubuntu14.deb"
-      - "{{ _build_dir }}/packages/ubuntu14/irods-microservice-plugin-netcdf-1.0-ubuntu14.deb"
-      - "{{ _build_dir }}/packages/ubuntu14/irods-runtime-4.1.10-ubuntu14.tgz"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu14/irods-api-plugin-netcdf-1.0-ubuntu14.deb"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu14/irods-icommands-netcdf-1.0-ubuntu14.deb"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu14/irods-microservice-plugin-netcdf-1.0-ubuntu14.deb"
+    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu14/irods-runtime-4.1.10-ubuntu14.tgz"
   tags:
     # docker in docker is a no no.
     - no_testing
@@ -40,11 +41,12 @@
     force: true
 
 - name: build msiSetAVU plugin
-  command: "{{ _build_dir }}/irods-setavu-plugin/build"
-  args:
-    creates:
-      - "{{ _build_dir }}/libraries/centos6/libmsiSetAVU.so"
-      - "{{ _build_dir }}/libraries/centos7/libmsiSetAVU.so"
+  command:
+    cmd: "{{ _build_dir }}/irods-setavu-plugin/build"
+    creates: "{{ item }}"
+  with_fileglob:
+      - "{{ _build_dir }}/irods-setavu-plugin/libraries/centos6/libmsiSetAVU.so"
+      - "{{ _build_dir }}/irods-setavu-plugin/libraries/centos7/libmsiSetAVU.so"
   tags:
     # docker in docker is a no no.
     - no_testing

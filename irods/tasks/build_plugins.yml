@@ -1,34 +1,48 @@
+---
 - name: checkout irods-netcdf-build repo
   git:
     repo: https://github.com/cyverse/irods-netcdf-build.git
     dest: "{{ _build_dir }}/irods-netcdf-build"
     version: "{{ _irods_version }}"
     force: true
+  register: response
+    
+- name: remove directory contains built packages if repo changed
+  when: response is changed
+  file:
+    path: "{{ item }}"
+    state: absent
+  # only remove scratch/ directory will cause a complete rebuild,
+  # remove packages/ directory will not
+  with_items:
+    - "{{ _build_dir }}/irods-netcdf-build/packages"
+    - "{{ _build_dir }}/irods-netcdf-build/scratch"
 
 - name: build iRODS NetCDF plugins
   command:
     cmd: "{{ _build_dir }}/irods-netcdf-build/build"
+  args:
     creates: "{{ item }}"
-  with_fileglob:
-    - "{{ _build_dir }}/irods-netcdf-build/packages/centos6/irods-api-plugin-netcdf-1.0-centos6.rpm"
-    - "{{ _build_dir }}/irods-netcdf-build/packages/centos6/irods-icommands-netcdf-1.0-centos6.rpm"
-    - "{{ _build_dir }}/irods-netcdf-build/packages/centos6/irods-microservice-plugin-netcdf-1.0-centos6.rpm"
-    - "{{ _build_dir }}/irods-netcdf-build/packages/centos6/irods-runtime-4.1.10-centos6.tgz"
+  with_items: 
+      - "{{ _build_dir }}/irods-netcdf-build/packages/centos6/irods-api-plugin-netcdf-1.0-centos6.rpm"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/centos6/irods-icommands-netcdf-1.0-centos6.rpm"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/centos6/irods-microservice-plugin-netcdf-1.0-centos6.rpm"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/centos6/irods-runtime-4.1.10-centos6.tgz"
 
-    - "{{ _build_dir }}/irods-netcdf-build/packages/centos7/irods-api-plugin-netcdf-1.0-centos7.rpm"
-    - "{{ _build_dir }}/irods-netcdf-build/packages/centos7/irods-icommands-netcdf-1.0-centos7.rpm"
-    - "{{ _build_dir }}/irods-netcdf-build/packages/centos7/irods-microservice-plugin-netcdf-1.0-centos7.rpm"
-    - "{{ _build_dir }}/irods-netcdf-build/packages/centos7/irods-runtime-4.1.10-centos7.tgz"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/centos7/irods-api-plugin-netcdf-1.0-centos7.rpm"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/centos7/irods-icommands-netcdf-1.0-centos7.rpm"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/centos7/irods-microservice-plugin-netcdf-1.0-centos7.rpm"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/centos7/irods-runtime-4.1.10-centos7.tgz"
 
-    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu12/irods-api-plugin-netcdf-1.0-ubuntu12.deb"
-    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu12/irods-icommands-netcdf-1.0-ubuntu12.deb"
-    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu12/irods-microservice-plugin-netcdf-1.0-ubuntu12.deb"
-    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu12/irods-runtime-4.1.10-ubuntu12.tgz"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu12/irods-api-plugin-netcdf-1.0-ubuntu12.deb"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu12/irods-icommands-netcdf-1.0-ubuntu12.deb"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu12/irods-microservice-plugin-netcdf-1.0-ubuntu12.deb"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu12/irods-runtime-4.1.10-ubuntu12.tgz"
 
-    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu14/irods-api-plugin-netcdf-1.0-ubuntu14.deb"
-    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu14/irods-icommands-netcdf-1.0-ubuntu14.deb"
-    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu14/irods-microservice-plugin-netcdf-1.0-ubuntu14.deb"
-    - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu14/irods-runtime-4.1.10-ubuntu14.tgz"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu14/irods-api-plugin-netcdf-1.0-ubuntu14.deb"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu14/irods-icommands-netcdf-1.0-ubuntu14.deb"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu14/irods-microservice-plugin-netcdf-1.0-ubuntu14.deb"
+      - "{{ _build_dir }}/irods-netcdf-build/packages/ubuntu14/irods-runtime-4.1.10-ubuntu14.tgz"
   tags:
     # docker in docker is a no no.
     - no_testing
@@ -39,14 +53,22 @@
     dest: "{{ _build_dir }}/irods-setavu-plugin"
     version: "{{ _irods_version }}"
     force: true
+  register: response
+
+- name: remove directory contains built library if repo changed
+  when: response is changed
+  file:
+    path: "{{ _build_dir }}/irods-setavu-plugin/libraries"
+    state: absent
 
 - name: build msiSetAVU plugin
   command:
     cmd: "{{ _build_dir }}/irods-setavu-plugin/build"
+  args:
     creates: "{{ item }}"
-  with_fileglob:
-      - "{{ _build_dir }}/irods-setavu-plugin/libraries/centos6/libmsiSetAVU.so"
-      - "{{ _build_dir }}/irods-setavu-plugin/libraries/centos7/libmsiSetAVU.so"
+  with_items:
+    - "{{ _build_dir }}/irods-setavu-plugin/libraries/centos6/libmsiSetAVU.so"
+    - "{{ _build_dir }}/irods-setavu-plugin/libraries/centos7/libmsiSetAVU.so"
   tags:
     # docker in docker is a no no.
     - no_testing

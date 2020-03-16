@@ -9,15 +9,6 @@
       set_fact:
         irods_cfg_made_changes: false
 
-    - name: ensure sanimal files absent
-      file:
-        path: "{{ item }}"
-        state: absent
-      with_items:
-        - /etc/irods/sanimal.re
-        - /etc/irods/sanimal-env.re
-        - /var/lib/irods/iRODS/server/bin/cmd/sanimal-ingest
-
     - name: add common command scripts
       copy:
         src: "{{ item }}"

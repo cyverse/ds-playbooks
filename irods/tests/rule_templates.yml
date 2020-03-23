@@ -298,9 +298,6 @@
     sparcd_admin: admin
     sparcd_env: "{{ lookup('template', '../templates/rule-bases/sparcd-env.re.j2') }}"
   tasks:
-    - debug:
-        var: sparcd_env
-
     - name: verify params
       assert:
         that:

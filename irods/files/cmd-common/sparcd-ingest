@@ -77,7 +77,7 @@ ensure_owner()
   if [[ "$resp" = "$coll" ]]
   then
     ichmod -M -r own "$user" "$coll"
-  if
+  fi
 }
 
 

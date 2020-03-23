@@ -1,4 +1,4 @@
-# VERSION: 4
+# VERSION: 5
 #
 # These are the custom rules for the Sparc'd project
 
@@ -14,9 +14,10 @@ _sparcd_ingest(*Uploader, *TarPath) {
   _sparcd_logMsg('ingesting *TarPath for *Uploader');
 
   *zoneArg = execCmdArg(ipc_ZONE);
+  *adminArg - execCmdArg(sparcd_ADMIN);
   *uploaderArg = execCmdArg(*Uploader);
   *tarArg = execCmdArg(*TarPath);
-  *args= "*zoneArg *uploaderArg *tarArg";
+  *args= "*zoneArg *adminArg *uploaderArg *tarArg";
   *status = errormsg(msiExecCmd("sparcd-ingest", *args, "null", *TarPath, "null", *out), *err);
 
   if (*status != 0) {
@@ -36,6 +37,8 @@ _sparcd_ingest(*Uploader, *TarPath) {
 sparcd_acPostProcForPut {
   if (str(sparcd_BASE_COLL) != '') {
     if ($objPath like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
+      ipc_getAccessObj(sparc_ADMIN, 'own', $objPath);
+
       _sparcd_logMsg('scheduling ingest of $objPath for $userNameClient');
 
       delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")

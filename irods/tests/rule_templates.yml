@@ -64,6 +64,7 @@
     - name: verify constants expand correctly in sparcd-env.re.j2
       assert:
         that:
+          - sparcd_env is search("sparcd_ADMIN = ''" | regex_escape)
           - sparcd_env is search("sparcd_BASE_COLL = ''" | regex_escape)
 
     - name: verify constants expand correctly in terraref-env.re.j2
@@ -287,20 +288,52 @@
          - sernec_env is search('sernec_WRITERS = list("write1", "write2")' | regex_escape)
          - sernec_env is search('sernec_READERS = list("read1", "read2")' | regex_escape)
 
+
+- name: test Sparcd default base collection when admin
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    sparcd_admin: admin
+    sparcd_env: "{{ lookup('template', '../templates/rule-bases/sparcd-env.re.j2') }}"
+  tasks:
+    - debug:
+        var: sparcd_env
+
+    - name: verify params
+      assert:
+        that:
+          - sparcd_env is search("sparcd_ADMIN = 'admin'")
+          - sparcd_env is search("sparcd_BASE_COLL = '/testing/home/admin/Sparcd/Collections'")
+
+
+- name: test Sparcd custom base collection
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    sparcd_base_collection: base
+    sparcd_env: "{{ lookup('template', '../templates/rule-bases/sparcd-env.re.j2') }}"
+  tasks:
+    - name: verify params
+      assert:
+        that:
+          - sparcd_env is search("sparcd_BASE_COLL = 'base'")
+
+
 - name: test TerraREF params are set correctly
   hosts: localhost
   gather_facts: false
   vars_files:
-   - ../group_vars/all.yml
+    - ../group_vars/all.yml
   vars:
     terraref_base_collection: base
     terraref_resource_hierarchy:
       name: terrarefRes
     terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
   tasks:
-    - debug:
-        var: terraref_env
-
     - name: verify params
       assert:
         that:

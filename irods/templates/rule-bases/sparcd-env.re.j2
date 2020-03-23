@@ -1,6 +1,10 @@
-# VERSION: 1
+# VERSION: 2
 #
 # These are the configuration values for the Sparc'd project rules.
 
+
+sparcd_ADMIN : str
+sparcd_ADMIN = '{{ _sparcd_admin }}'
+
 sparcd_BASE_COLL : path
-sparcd_BASE_COLL = '{{ _sparcd_irods_base_coll }}'
+sparcd_BASE_COLL = '{{ _sparcd_base_collection }}'

@@ -90,7 +90,8 @@ Variable                                   | Default                            
 `sernec_readers`                           | `[]`                                 |         | a list of users who get read access to sernec collections
 `sernec_writers`                           | `[]`                                 |         | a list of users who get write access to sernec collections
 `single_threaded_resources`                | `[]`                                 |         | a list of resources that only support single threaded transfers
-`sparcd_irods_base_coll`                   |                                      |         | The base iRODS collection used by Sparc'd. If this isn't set, no sparcd rules will fire.
+`sparcd_admin`                             | null                                 |         | The user name of the Sparc'd administrator. If this isn't set, no sparcd rules will fire.
+`sparcd_base_collection`                   | _see description_                    |         | The base iRODS collection used by Sparc'd. If `{{ sparcd_admin }}` is `null`, the default is `null`, otherwise the default is `/{{ irods_zone_name }}/home/{{ sparcd_admin }}/Sparcd/Collections`.
 `sysctl_kernel`                            | `[]`                                 |         | a list of sysctl kernel parameters to set for the IES, _see_below_
 `terraref_base_collection`                 |                                      |         | The base collection for the TerraREF project. If it isn't present no TerraREF rules will fire.
 `terraref_manager`                         | `irods_clerver_user`                 |         | The iRODS user who is responsible for TerraREF data.

@@ -1,19 +1,21 @@
 #!/bin/bash
 #
-# Usage: sparcd-ingest ZONE UPLOADER TARFILE
+# Usage: sparcd-ingest ZONE ADMIN UPLOADER TARFILE
 #
-# ZONE is the iRODS zone. UPLOADER is the iRODS username of the user who
-# uploaded the TAR file to be processed. UPLOADER must belong to ZONE. TARFILE
-# is the absolute path in ZONE to the TAR file that is to be processed. It's
-# base name should have the form `<collection name>-<part number>.tar`.
+# ZONE is the iRODS zone. ADMIN is the Sparc'd administrator's username.
+# UPLOADER is the iRODS username of the user who uploaded the TAR file to be
+# processed. ADMIN and UPLOADER must belong to ZONE. TARFILE is the absolute
+# path in ZONE to the TAR file that is to be processed. It's base name should
+# have the form `<collection name>-<part number>.tar`.
 #
 # On behalf of UPLOADER, this script extracts the contents of TARFILE into a
 # collection named `<collection name>` in the same parent collection as TARFILE.
 # It then deletes TARFILE. After that it uses the extracted
 # `meta-<part number>.csv` file to apply AVUs to the other extracted data
-# objects ande deletes meta.csv. Finally, it assigns the ACL of the parent
-# collection to all extracted collections and data objects preserving UPLOADER's
-# own permission on everything extracted.
+# objects ande deletes meta.csv. Finally, gives ADMIN own permission on the
+# collection, and it assigns the ACL of the parent collection to all extracted
+# collections and data objects preserving UPLOADER's own permission on
+# everything extracted.
 #
 # This script assumes that the executor of this script is authenicated as a
 # rodsadmin user.
@@ -26,8 +28,11 @@ set -o errexit -o nounset -o pipefail
 main()
 {
   local zone="$1"
-  local uploader="$2"
-  local tarFile="$3"
+  local admin="$2"
+  local uploader="$3"
+  local tarFile="$4"
+
+  local rc=0
 
   local parentColl
   parentColl=$(dirname "$tarFile")
@@ -40,13 +45,17 @@ main()
 
   # XXX - Work around for https://github.com/irods/irods/issues/3291
   # if ! clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"
-  if ! bun "$uploader" "$tarFile" "${tarName%-*}"
+  if bun "$uploader" "$tarFile" "${tarName%-*}"
   then
-    return 1
-  fi
+    ensure_owner "$admin" "$coll"
 
-  # XXX - Don't clean up until work around (^^^) is confirmed to work
-  # irm -f "$tarFile"
+    # XXX - Don't clean up until work around (^^^) is confirmed to work
+    # irm -f "$tarFile"
+  else
+    local rc="$?"
+    ensure_owner "$admin" "$coll" || true
+    return "$rc"
+  fi
 
   if map_metadata  "$coll" "$metaFile"
   then
@@ -54,6 +63,21 @@ main()
   fi
 
   ils -A "$parentColl" | mk_acl | assign_acl "$uploader"\#"$zone" "$coll"
+}
+
+
+ensure_owner()
+{
+  local user="$1"
+  local coll="$2"
+
+  local resp
+  resp=$(iquest '%s' "select COLL_NAME where COLL_NAME = '$coll'")
+
+  if [[ "$resp" = "$coll" ]]
+  then
+    ichmod -M -r own "$user" "$coll"
+  if
 }
 
 

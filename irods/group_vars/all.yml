@@ -167,7 +167,11 @@ _report_email_addr: "{{ report_email_addr | default('root@localhost') }}"
 
 _restart_irods: "{{ restart_irods if restart_irods is defined else false }}"
 
-_sparcd_irods_base_coll: "{{ sparcd_irods_base_coll | default(None) }}"
+_sparcd_admin: "{{ sparcd_admin | default(None) }}"
+_sparcd_base_collection: "{{
+  sparcd_base_collection if sparcd_base_collection is defined else
+  '/' + _irods_zone_name + '/home/' + _sparcd_admin + '/Sparcd/Collections' if _sparcd_admin else
+  None }}"
 
 _sernec_owners: "{{ sernec_owners if sernec_owners is defined else [] }}"
 _sernec_readers: "{{ sernec_readers if sernec_readers is defined else [] }}"

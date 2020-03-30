@@ -19,8 +19,6 @@
           CacheDirLength 1
           CacheMaxFileSize {{ (_webdav_cache_max_file_size | int) * 2**20 }}
 
-          ForensicLog "logs/forensic_log"
-
           Listen 443 https
 
           SSLPassPhraseDialog exec:/usr/libexec/httpd-ssl-pass-dialog
@@ -37,11 +35,21 @@
             extra_parameters: |
               ServerAlias {{ inventory_hostname }}
 
+              ErrorLog logs/http_error_log
+              CustomLog logs/http_request_log "%t %h \"%r\" %>s %L"
+              LogLevel warn
+
               RedirectPermanent / https://{{ _canonical_hostname }}/
             comment: Redirect HTTP to HTTPS
           - servername: "{{ _canonical_hostname }}"
             listen_ip: 127.0.0.1
             extra_parameters: |
+              ErrorLog logs/error_log
+              ForensicLog logs/forensic_log
+              CustomLog logs/access_log "%t %h \"%r\" %>s %b %D %L %{forensic-id}n"
+              CustomLog logs/cache_log "%t %h \"%r\" %{cache-status}e %{forensic-id}n"
+              LogLevel warn
+
               CacheQuickHandler off
               CacheEnable disk /dav
               CacheLock on
@@ -116,11 +124,8 @@
             extra_parameters: |
               ServerAlias {{ inventory_hostname }}
 
-              ErrorLog logs/ssl_error_log
-
-              CustomLog logs/ssl_access_log "%t %h \"%r\" %>s %b %D %L %{forensic-id}n"
-              CustomLog logs/ssl_request_log "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b %{forensic-id}n"
-
+              ErrorLog logs/https_error_log
+              CustomLog logs/https_request_log "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %>s %L"
               LogLevel warn
 
               BrowserMatch "MSIE [2-5]" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0

@@ -5,6 +5,7 @@
 # installation.
 - name: create temporary directory
   delegate_to: localhost
+  become: false
   run_once: true
   tempfile:
     state: directory
@@ -53,6 +54,3 @@
   file:
     name: /tmp/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm
     state: absent
-
-
-

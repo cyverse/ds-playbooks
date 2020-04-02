@@ -1,0 +1,44 @@
+---
+- name: set up RabbitMQ broker
+  hosts: rabbitmq
+  become: true
+  tasks:
+    - name: install epel repository
+      package:
+        name: epel-release
+        state: present
+
+    - name: install from web
+      yum:
+        name: https://www.rabbitmq.com/releases/rabbitmq-server/v3.5.1/rabbitmq-server-3.5.1-1.noarch.rpm
+
+    - name: enable management plugin
+      rabbitmq_plugin:
+        names: rabbitmq_management
+        state: enabled
+
+    - name: start broker
+      service:
+        name: rabbitmq-server
+        enabled: true
+        state: started
+
+    - name: create admin user
+      rabbitmq_user:
+        user: "{{ _admin_user }}"
+        password: "{{ _admin_password }}"
+        vhost: /
+        configure_priv: .*
+        read_priv: .*
+        write_priv: .*
+        tags: administrator
+        state: present
+
+    - name: remove guest user
+      rabbitmq_user:
+        user: guest
+        state: absent
+
+    - name: create data store virtual host
+      rabbitmq_vhost:
+        name: /{{ _deploy_env }}/data-store

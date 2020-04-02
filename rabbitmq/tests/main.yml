@@ -1,0 +1,55 @@
+---
+- name: test set up RabbitMQ broker
+  hosts: rabbitmq
+  become: true
+  tasks:
+    - name: test install epel repository
+      yum:
+        list: epel-release
+      register: result
+      failed_when: result.results | selectattr('yumstate', 'eq', 'installed') | list | count != 1
+
+    - name: test install from web
+      yum:
+        list: rabbitmq-server
+      register: result
+      failed_when: |
+        result.results | selectattr('yumstate', 'eq', 'installed') | list | count != 1 or
+        result.results
+            | selectattr('yumstate', 'eq', 'installed')
+            | map(attribute='version')
+            | first
+          is version_compare('3.5.1', '<')
+
+    - name: test enable management plugin
+      shell: test $(rabbitmq-plugins list -e -m 'rabbitmq_management$') = rabbitmq_management
+
+    - name: test start broker
+      service_facts:
+      failed_when: |
+        ansible_facts.services['rabbitmq-server'].status != 'enabled' or
+        ansible_facts.services['rabbitmq-server'].state != 'running'
+
+    - name: test create admin user
+      shell: |
+        rabbitmqctl list_users | grep --quiet --regexp '^rabbitmq_admin\s\s*\[administrator\]$'
+
+    - name: test admin user permissions
+      shell: |
+        rabbitmqctl list_user_permissions rabbitmq_admin \
+          | grep --quiet --regexp '^/\s\s*\.\*\s\s*\.\*\s\s*\.\*$'
+
+    - name: test remove guest user
+      shell: |
+        users=$(rabbitmqctl list_users)
+
+        if grep --quiet --regexp '^guest' <<<"$users"
+        then
+          printf '%s\n' "$users" >&2
+          exit 1
+        else
+          exit 0
+        fi
+
+    - name: test create data store virtual host
+      fail:

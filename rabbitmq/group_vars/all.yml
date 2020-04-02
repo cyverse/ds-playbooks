@@ -1,0 +1,11 @@
+---
+_admin_password: "{{ rabbitmq_admin_password | default(_admin_password_default) }}"
+_admin_user: "{{ rabbitmq_admin_user | default(_admin_user_default) }}"
+
+_deploy_env: "{{ rabbitmq_deploy_env | default(_deploy_env_default) }}"
+
+
+_admin_password_default: guest
+_admin_user_default: guest
+
+_deploy_env_default: testing

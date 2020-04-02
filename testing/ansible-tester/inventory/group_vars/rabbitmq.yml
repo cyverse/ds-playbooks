@@ -1,0 +1,3 @@
+---
+rabbitmq_admin_password: password
+rabbitmq_admin_user: rabbitmq_admin

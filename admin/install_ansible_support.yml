@@ -33,3 +33,4 @@
         - python-requests
         - python-virtualenv
         - "{{ 'python-selinux' if ansible_distribution == 'Debian' else 'libselinux-python' }}"
+        - python-dns

@@ -26,14 +26,27 @@
       vars:
         pkg: epel-release
 
-    - name: test install common packages
+    - name: test jq installed
+      include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: jq
+
+    - name: test Python libselinux package installed
       debug:
         msg: TODO implement
 
-    - name: test install common CentOS packages
+    - name: test python-dns installed
       debug:
         msg: TODO implement
 
-    - name: test install packages for distributions other than CentOS
+    - name: test Python PIP package installed
+      debug:
+        msg: TODO implement
+
+    - name: test python-requests installed
+      debug:
+        msg: TODO implement
+
+    - name: test python-virtualenv installed
       debug:
         msg: TODO implement

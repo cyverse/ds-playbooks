@@ -1,93 +1,337 @@
-#!/bin/bash
-#
-# An ansible module for managing a user group in iRODS.
-#
-# Module Name:
-#  irods_group
-#
-# Required Variables:
-#  name  The name of the group to create.
+#!/usr/bin/python
 
-
-main()
-{
-  local varFile="$1"
-
-  local name
-  . "$varFile"
-  require name
-
-  local id
-  id=$(quest "select USER_GROUP_ID where USER_GROUP_NAME = '$name'")
-
-  if [ -z "$id" ]
-  then
-    local errMsg
-    if ! errMsg=$(iadmin mkgroup "$name" 2>&1)
-    then
-      fail "$errMsg"
-    fi
-
-    succeed true
-  fi
-
-  succeed false
+ANSIBLE_METADATA = {
+    'metadata_version': '1.1',
+    'status': ['preview'],
+    'supported_by': 'community'
 }
 
+DOCUMENTATION = '''
+---
+module: irods_group
 
-quest()
-{
-  local query="$*"
+short_description: Create/Remove iRODS group and Add/Remove user from iRODS group
 
-  local response
-  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
-  then
-    fail "$response"
-  fi
+version_added: "2.4"
 
-  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
-  then
-    printf '%s' "$response"
-  fi
-}
+description:
+    - "Create/Remove iRODS group and Add/Remove user from iRODS group"
+
+options:
+    group:
+        description:
+            - Name of the iRODS group
+        required: true
+    user:
+        description:
+            - Username of user
+        required: false
+    state:
+        description:
+            - Desired state to achieve
+            - Either present or absent
+        required: true
+    host:
+        description:
+            - Hostname of the iRODS server
+        required: true
+    port:
+        description:
+            - Port of the iRODS server
+        required: true
+    admin_user:
+        description:
+            - Username of the admin user
+        required: true
+    admin_password:
+        description:
+            - Password of the admin user
+        required: true
+    admin_zone:
+        description:
+            - Zone of the admin user
+        required: true
+
+author:
+    - John Xu
+'''
+
+EXAMPLES = '''
+# Ensure a group exist, create if not exist
+- name: Add a irods group
+  irods_group:
+    group: some_irods_group
+    state: present
+    host: cyverse.org
+    port: 1247
+    admin_user: rods
+    admin_password: 1234
+    admin_zone: tempZone
+
+# Ensure the group with given name is absent
+- name: Remove irods group
+  irods_group:
+    group: some_irods_group
+    state: absent
+    host: cyverse.org
+    port: 1247
+    admin_user: rods
+    admin_password: 1234
+    admin_zone: tempZone
+
+# Ensure the user is present in the group (group must already exist)
+- name: Add user to group
+  irods_group:
+    group: some_irods_group
+    user: one_user
+    state: present
+    host: cyverse.org
+    port: 1247
+    admin_user: rods
+    admin_password: 1234
+    admin_zone: tempZone
+
+# Ensure the user is absent from the group (group must already exist)
+- name: Remove user to group
+  irods_group:
+    group: some_irods_group
+    user: one_user
+    state: absent
+    host: cyverse.org
+    port: 1247
+    admin_user: rods
+    admin_password: 1234
+    admin_zone: tempZone
+'''
+
+RETURN = '''
+message:
+    description: Performed operation
+'''
+
+from ansible.module_utils.basic import AnsibleModule
+from subprocess import Popen, PIPE
+import os
+import ssl
+
+try:
+    USE_IRODS_CLIENT = True
+    from irods.session import iRODSSession
+    from irods.models import User, UserGroup
+except ImportError:
+    USE_IRODS_CLIENT = False
 
 
-require()
-{
-  local var="$1"
+class IRODSGroupModule:
+    def __init__(self):
 
-  if [ -z "${!var}" ]
-  then
-    fail "variable '$var' must be defined"
-  fi
-}
+        # define argument
+        self.module_args = dict(
+            group=dict(type='str', required=True),
+            user=dict(type='str', required=False),
+            state=dict(type='str', required=True, default="present"),
+
+            host=dict(type='str', required=True),
+            port=dict(type='int', required=True),
+            admin_user=dict(type='str', required=True),
+            admin_password=dict(type='str', required=True),
+            admin_zone=dict(type='str', required=True),
+        )
+        # result
+        self.result = dict(
+            changed=False,
+            message=''
+        )
+
+        # init module
+        self.module = AnsibleModule(
+            argument_spec=self.module_args,
+            supports_check_mode=True
+        )
+
+        self.session = None
+
+    def run(self):
+        """
+        entry point for module
+        """
+
+        # check param and env
+        self.sanity_check()
+
+        # only-check mode
+        if self.module.check_mode:
+            return self.result
+
+        self.init_session()
+
+        action = self.select_action()
+        action()
+
+    def _fail(self, msg, err=None):
+
+        if self.session:
+            self.session.cleanup
+
+        if err:
+            self.module.fail_json(msg=msg + ", " + err, **self.result)
+        else:
+            self.module.fail_json(msg=msg, **self.result)
+
+    def _success(self, msg=""):
+        if msg:
+            self.result["message"] = msg
+        self.module.exit_json(**self.result)
+
+    def sanity_check(self):
+        if self.module.params["state"] not in ["present", "absent"]:
+            self._fail("Invalid state")
+
+    def init_session(self):
+        ssl_context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None, cadata=None)
+        ssl_settings = {'ssl_context': ssl_context}
+        self.session = iRODSSession(
+            host=self.module.params["host"],
+            port=self.module.params["port"],
+            user=self.module.params["admin_user"],
+            password=self.module.params["admin_password"],
+            zone=self.module.params["admin_zone"],
+            **ssl_settings)
+
+    def select_action(self):
+        """
+        dispatch action according to the argument passed to the module
+        """
+        if "username" in self.module.params:
+            if self.module.params["state"] == "present":
+                return self.member_present
+            else:
+                return self.member_absent
+        if self.module.params["state"] == "present":
+            return self.group_present
+        else:
+            return self.group_absent
+
+    def group_present(self):
+        group_name = self.module.params["group"]
+
+        if self._group_exist(group_name):
+            self._success()
+
+        # add group
+        self._create_irods_group(group_name)
+
+        if self._group_exist(group_name):
+            self._success("Group is created")
+        else:
+            self._fail("Group disappear after creation")
+
+    def group_absent(self):
+        group_name = self.module.params["group"]
+
+        if not self._group_exist(group_name):
+            self._success()
+
+        # remove group
+        self._remove_irods_group(group_name)
+
+        if not self._group_exist(group_name):
+            self._success("Group is removed")
+        else:
+            self._fail("Group still exists after removal")
+
+    def member_present(self):
+        group_name = self.module.params["group"]
+        username = self.module.params["user"]
+
+        # group must already exist
+        if not self._group_exist(group_name):
+            self._fail("Group must already exist")
+
+        if self._is_user_in_group(group_name, username):
+            self._success()
+
+        # add user
+        self._add_user_to_group(group_name, username)
+
+        if self._is_user_in_group(group_name, username):
+            self._success("User is added to the group")
+        else:
+            self._fail("User not in group after adding")
+
+    def member_absent(self):
+        group_name = self.module.params["group"]
+        username = self.module.params["user"]
+
+        # group must already exist
+        if not self._group_exist(group_name):
+            self._fail("Group must already exist")
+
+        if not self._is_user_in_group(group_name, username):
+            self._success()
+
+        # remove user from group
+        self._remove_user_from_group(group_name, username)
+
+        if not self._is_user_in_group(group_name, username):
+            self._success("User is removed from the group")
+        else:
+            self._fail("User remain in group after removal")
+
+    def _create_irods_group(self, name):
+        try:
+            self.session.user_groups.create(name)
+            self.result["changed"] = True
+        except Exception as e:
+            self._fail("Unable to create irods group", e)
+
+    def _remove_irods_group(self, name):
+        try:
+            self.session.user_groups.remove(name)
+            self.result["changed"] = True
+        except Exception as e:
+            self._fail("Unable to remove irods group", e)
 
 
-fail()
-{
-  local msg="$*"
+    def _add_user_to_group(self, group_name, username):
+        try:
+            self.session.user_groups.addmember(group_name, username)
+            self.result["changed"] = True
+        except Exception as e:
+            self._fail("Unable to add user to irods group", e)
 
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
-     '{failed: true, msg: $msg}' \
-    >&2
+    def _remove_user_from_group(self, group_name, username):
+        try:
+            self.session.user_groups.removemember(group_name, username)
+            self.result["changed"] = True
+        except Exception as e:
+            self._fail("Unable to remove user from irods group", e)
 
-  exit 1
-}
+    def _is_user_in_group(self, group_name, username):
+        try:
+            query = self.session.query(User.name, UserGroup.name)
 
+            for result in query:
+                if group_name == result[UserGroup.name] and username == result[User.name]:
+                    return True
+            return False
+        except Exception as e:
+            self._fail("Unable to list user in irods group", e)
 
-succeed()
-{
-  local changed="$1"
+    def _group_exist(self, group_name):
+        try:
+            query = self.session.query(UserGroup.name)
 
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
-     '{changed: ($changed == "true")}' \
-    >&2
+            for result in query:
+                if group_name == result[UserGroup.name]:
+                    return True
+            return False
+        except Exception as e:
+            self._fail("Unable to list irods group", e)
 
-  exit 0
-}
+def main():
+    module = IRODSGroupModule()
+    module.run()
 
-
-set -e
-main "$@" 2>&1
+if __name__ == '__main__':
+    main()

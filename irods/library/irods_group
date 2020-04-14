@@ -187,6 +187,10 @@ class IRODSGroupModule:
         if self.module.params["state"] not in ["present", "absent"]:
             self._fail("Invalid state")
 
+        # python-irodsclient is required at this point
+        if not USE_IRODS_CLIENT:
+            self._fail("python-irodsclient not installed")
+
     def init_session(self):
         ssl_context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None, cadata=None)
         ssl_settings = {'ssl_context': ssl_context}

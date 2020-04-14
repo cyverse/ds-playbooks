@@ -129,7 +129,7 @@ class IRODSGroupModule:
         self.module_args = dict(
             group=dict(type='str', required=True),
             user=dict(type='str', required=False),
-            state=dict(type='str', required=True, default="present"),
+            state=dict(type='str', required=True),
 
             host=dict(type='str', required=True),
             port=dict(type='int', required=True),

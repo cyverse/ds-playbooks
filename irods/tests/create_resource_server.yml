@@ -52,6 +52,21 @@
         fi
       changed_when: false
 
+    - name: test clerver user is in group rodsadmin
+      delegate_to: localhost
+      become: true
+      become_user: root
+      irods_group:
+        group: rodsadmin
+        user: rods
+        state: present
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: rods 
+        admin_password: "{{ _irods_clerver_password }}"
+        admin_zone: "{{ _irods_zone_name }}"
+
+
     - name: test initialize resource server connection to IES
       stat:
         path: /var/lib/irods/.irods/.irodsA

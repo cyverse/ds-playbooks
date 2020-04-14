@@ -38,9 +38,12 @@
 
     - name: ensure clerver user is in group rodsadmin
       delegate_to: localhost
+      become: true
+      become_user: root
       irods_group:
         group: rodsadmin
         user: "{{ _irods_clerver_user }}"
+        state: present
         host: "{{ groups['ies'][0] }}"
         port: "{{ _irods_zone_port }}"
         admin_user: "{{ _irods_clerver_user }}"

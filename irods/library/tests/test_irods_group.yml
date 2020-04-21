@@ -1,0 +1,143 @@
+---
+- name: testing irods_group module
+  hosts: ies[0]
+  pre_tasks:
+    - name: group should be absent
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg | cut -d'#' -f 1 | grep test_group1
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout != ""
+
+    - name: create some test users
+      become: true
+      become_user: irods
+      shell: |
+        iadmin mkuser test_user1 rodsuser
+        iadmin mkuser test_user2 rodsuser
+        iadmin mkuser test_user3 rodsuser
+        iadmin mkuser test_user4 rodsuser
+        iadmin mkuser test_user5 rodsuser
+
+  tasks:
+    - name: create group
+      delegate_to: localhost
+      irods_group:
+        group: test_group1
+        state: present
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "testing"
+      register: resp
+      failed_when: not resp.changed
+
+    - name: create group again
+      delegate_to: localhost
+      irods_group:
+        group: test_group1
+        state: present
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "testing"
+      register: resp
+      failed_when: resp.changed
+
+    - name: check if group is created
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg | cut -d'#' -f 1 | grep test_group1
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout == ""
+
+    - name: add users to group
+      delegate_to: localhost
+      irods_group:
+        group: test_group1
+        users:
+          - test_user1
+          - test_user2
+          - test_user3
+        state: present
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "testing"
+      register: resp
+      failed_when: not resp.changed
+
+    - name: check if users are present in group
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1| grep test_user1
+        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1| grep test_user2
+        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1| grep test_user3
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout == ""
+
+    - name: remove users from group
+      delegate_to: localhost
+      irods_group:
+        group: test_group1
+        users:
+          - test_user1
+          - test_user2
+        state: absent
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "testing"
+      register: resp
+      failed_when: not resp.changed
+
+    - name: check if users are absent in group
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1 | grep test_user1
+        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1| grep test_user2
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout != ""
+
+    - name: check if some users still exist in group
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1 | grep test_user3
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout == ""
+
+    - name: remove group
+      delegate_to: localhost
+      irods_group:
+        group: test_group1
+        state: absent
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "testing"
+      register: resp
+      failed_when: not resp.changed
+
+    - name: check if group is removed
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg | cut -d'#' -f 1 | grep test_group1
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout != ""

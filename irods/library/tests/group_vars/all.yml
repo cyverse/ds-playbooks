@@ -1,0 +1,208 @@
+---
+_avra_base_collection: "{{ avra_base_collection if avra_base_collection is defined else None }}"
+_avra_manager: "{{ avra_manager if avra_manager is defined else _irods_clerver_user }}"
+_avra_resource_hierarchy: "{{ avra_resource_hierarchy if avra_resource_hierarchy is defined else
+                              _irods_resource_hierarchies[0] }}"
+
+_become_svc_acnt: "{{ become_svc_acnt if become_svc_acnt is defined else true }}"
+
+_bisque_irods_host: "{{ bisque_irods_host if bisque_irods_host is defined else _irods_ies }}"
+_bisque_password: "{{ bisque_password if bisque_password is defined else 'admin' }}"
+_bisque_projects: "{{ bisque_projects if bisque_projects is defined else [] }}"
+_bisque_url: "{{ bisque_url if bisque_url is defined else None }}"
+_bisque_user: "{{ bisque_user if bisque_user is defined else 'admin' }}"
+
+_build_dir: "{{ build_dir if build_dir is defined else '/tmp' }}"
+
+_canonical_hostname: "{{ canonical_hostname if canonical_hostname is defined else _irods_ies }}"
+_canonical_irods_port: "{{
+  canonical_irods_port if canonical_irods_port is defined else _irods_zone_port }}"
+
+_captcn_owners: "{{ captcn_owners | default([]) }}"
+_captcn_readers: "{{ captcn_readers | default([]) }}"
+_captcn_writers: "{{ captcn_writers | default([]) }}"
+
+_check_routes_timeout: "{{ check_routes_timeout | default(3) }}"
+
+_dbms_password: "{{ dbms_password | default('testpassword') }}"
+_dbms_port: "{{ dbms_port if dbms_port is defined else 5432 }}"
+_dbms_username: "{{ dbms_username if dbms_username is defined else 'irods' }}"
+
+_de_job_irods_user: "{{ de_job_irods_user if de_job_irods_user is defined else None }}"
+
+_firewall_chain: "{{ firewall_chain if firewall_chain is defined else 'INPUT' }}"
+
+_irods_aegis_repl_resource: "{{
+  irods_aegis_repl_resource if irods_aegis_repl_resource is defined else
+  (irods_aegis_resource | default(_irods_default_repl_resource)) }}"
+_irods_aegis_resource: "{{ irods_aegis_resource | default(_irods_default_resource) }}"
+
+_irods_allowed_clients: "{{ irods_allowed_src if irods_allowed_src is defined else '0.0.0.0/0' }}"
+
+_irods_clerver_password: "{{ irods_clerver_password if irods_clerver_password is defined else
+                             'rods' }}"
+
+_irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else 'rods' }}"
+
+_irods_client_server_policy: CS_NEG_REFUSE
+
+_irods_default_dir_mode: "{{ irods_default_dir_mode if irods_default_dir_mode is defined else
+                             '0750' }}"
+
+_irods_default_file_mode: "{{ irods_default_file_mode if irods_default_file_mode is defined else
+                              '0600' }}"
+
+_irods_default_hash_scheme: MD5
+
+_irods_default_number_of_transfer_threads: "{{
+  irods_default_number_of_transfer_threads
+    if irods_default_number_of_transfer_threads is defined else
+  None }}"
+
+_irods_default_repl_resource: "{{
+  irods_default_repl_resource if irods_default_repl_resource is defined else
+  _irods_default_resource }}"
+
+_irods_default_resource: "{{ irods_default_resource if irods_default_resource is defined else
+                             _irods_resource_hierarchies[0].name }}"
+
+_irods_default_vault: "{{ irods_default_vault if irods_default_vault is defined else None }}"
+
+_irods_federation: "{{ irods_federation if irods_federation is defined else [] }}"
+
+_irods_host_aliases: "{{ irods_host_aliases if irods_host_aliases is defined else [] }}"
+
+_irods_ies: "{{ irods_ies if irods_ies is defined else groups['ies'][0] }}"
+
+_irods_max_num_re_procs: "{{ irods_max_num_re_procs if irods_max_num_re_procs is defined else 4 }}"
+
+_irods_negotiation_key: "{{ irods_negotiation_key if irods_negotiation_key is defined else None }}"
+
+_irods_other_host_entries: "{{ irods_other_host_entries if irods_other_host_entries is defined else
+                               [] }}"
+
+_irods_parallel_transfer_buffer_size: "{{
+  irods_parallel_transfer_buffer_size if irods_parallel_transfer_buffer_size is defined else
+  None }}"
+
+_irods_publish_rs_image: "{{ irods_publish_rs_image | default(false) }}"
+
+_irods_resource_hierarchies: '{{
+  irods_resource_hierarchies
+    if irods_resource_hierarchies is defined and irods_resource_hierarchies|length > 0 else
+  [ { "name": "demoResc" } ] }}'
+
+_irods_rs_image: "{{ irods_rs_image | default('ds-irods-rs-onbuild') }}"
+
+_irods_server_port_range_end: "{{
+  irods_server_port_range_end if irods_server_port_range_end is defined else
+  20199 }}"
+
+_irods_server_port_range_start: "{{
+  irods_server_port_range_start if irods_server_port_range_start is defined else
+  20000 }}"
+
+_irods_server_control_plane_key: "{{
+  irods_server_control_plane_key if irods_server_control_plane_key is defined else
+  None }}"
+
+_irods_service_account_name: "{{
+  irods_service_account_name if irods_service_account_name is defined else 'irods' }}"
+
+_irods_service_group_name: "{{
+  irods_service_group_name if irods_service_group_name is defined else
+  _irods_service_account_name }}"
+
+_irods_storage_resources: "{{
+  irods_storage_resources if irods_storage_resources is defined else [] }}"
+
+_irods_version: "{{ irods_version if irods_version is defined else '4.1.11' }}"
+
+_irods_zone_key: "{{ irods_zone_key if irods_zone_key is defined else None }}"
+
+_irods_zone_name: "{{ irods_zone_name if irods_zone_name is defined else 'tempZone' }}"
+
+_load_balancer_irods_allowed_src: "{{
+  load_balancer_irods_allowed_src if load_balancer_irods_allowed_src is defined else
+  _irods_allowed_clients }}"
+
+_load_balancer_irods_check_period: "{{ load_balancer_irods_check_period | default(2) }}"
+
+_load_balancer_irods_extra_max_conn: "{{
+  load_balancer_irods_extra_max_conn if load_balancer_irods_extra_max_conn is defined else
+  100 }}"
+_load_balancer_irods_max_conn: "{{ load_balancer_irods_max_conn | default(200) }}"
+_load_balancer_irods_vip_srcs: "{{
+  load_balancer_irods_vip_srcs if load_balancer_irods_vip_srcs is defined else
+  [] }}"
+_load_balancer_queue_timeout: "{{
+  load_balancer_queue_timeout if load_balancer_queue_timeout is defined else
+  120 }}"
+_load_balancer_stats_allowed_src: "{{
+  load_balancer_stats_allowed_src if load_balancer_stats_allowed_src is defined else
+  '0.0.0.0/0' }}"
+_load_balancer_stats_certificate: "{{
+  load_balancer_stats_certificate if load_balancer_stats_certificate is defined else
+  '/etc/haproxy/cert/stats.pem' }}"
+_load_balancer_stats_port: "{{ load_balancer_stats_port if load_balancer_stats_port is defined else
+                               81 }}"
+_load_balancer_stats_user: "{{ load_balancer_stats_user if load_balancer_stats_user is defined else
+                               'haproxy-stats' }}"
+_load_balancer_stats_password: "{{
+  load_balancer_stats_password if load_balancer_stats_password is defined else
+  'B1Gp4sSw0rD!!' }}"
+
+_load_balancer_webdav_check_period: "{{ load_balancer_webdav_check_period | default(2) }}"
+
+_pire_resource_hierarchy: "{{ pire_resource_hierarchy if pire_resource_hierarchy is defined else
+                              _irods_resource_hierarchies[0] }}"
+
+_rabbitmq_ephemeral: "{{ rabbitmq_ephemeral if rabbitmq_ephemeral is defined else True }}"
+_rabbitmq_password: "{{ rabbitmq_password if rabbitmq_password is defined else 'guest' }}"
+_rabbitmq_port: "{{ rabbitmq_port if rabbitmq_port is defined else 5672 }}"
+_rabbitmq_user: "{{ rabbitmq_user if rabbitmq_user is defined else 'guest' }}"
+_rabbitmq_vhost: "{{ rabbitmq_vhost if rabbitmq_vhost is defined else '/' }}"
+
+_report_email_addr: "{{ report_email_addr | default('root@localhost') }}"
+
+_restart_irods: "{{ restart_irods if restart_irods is defined else false }}"
+
+_sparcd_admin: "{{ sparcd_admin | default(None) }}"
+_sparcd_base_collection: "{{
+  sparcd_base_collection if sparcd_base_collection is defined else
+  '/' + _irods_zone_name + '/home/' + _sparcd_admin + '/Sparcd/Collections' if _sparcd_admin else
+  None }}"
+
+_sernec_owners: "{{ sernec_owners if sernec_owners is defined else [] }}"
+_sernec_readers: "{{ sernec_readers if sernec_readers is defined else [] }}"
+_sernec_writers: "{{ sernec_writers if sernec_writers is defined else [] }}"
+
+_single_threaded_resources: "{{
+  single_threaded_resources if single_threaded_resources is defined else
+  [] }}"
+
+_sysctl_kernel: "{{ sysctl_kernel if sysctl_kernel is defined else [] }}"
+
+_terraref_base_collection: "{{ terraref_base_collection | default(None) }}"
+_terraref_manager: "{{ terraref_manager | default(_irods_clerver_user) }}"
+_terraref_resource_hierarchy: "{{
+  terraref_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}"
+
+_webdav_auth_name: "{{ webdav_auth_name | default('CyVerse') }}"
+_webdav_cache_dir: "{{ webdav_cache_dir if webdav_cache_dir is defined else
+                       '/var/cache/httpd/proxy' }}"
+_webdav_cache_max_file_size: "{{
+  webdav_cache_max_file_size if webdav_cache_max_file_size is defined else 1 }}"
+_webdav_cache_size: "{{ webdav_cache_size if webdav_cache_size is defined else 100 }}"
+_webdav_tls_cert_file: "{{ webdav_tls_cert_file if webdav_tls_cert_file is defined else
+                           '/etc/ssl/certs/dummy.crt' }}"
+_webdav_tls_chain_file: "{{ webdav_tls_chain_file if webdav_tls_chain_file is defined else
+                            '/etc/ssl/certs/dummy-chain.crt' }}"
+_webdav_tls_key_file: "{{ webdav_tls_key_file if webdav_tls_key_file is defined else
+                          '/etc/ssl/certs/dummy.key' }}"
+
+
+# The following are internal constants
+
+_irods_server_control_plane_port: 1248
+_irods_zone_port: 1247

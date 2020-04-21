@@ -67,6 +67,13 @@ def controller(action):
     return rc
 
 def run_tester(doInspect, pretty, module_dir, playbook, hosts):
+
+    # create a empty dir that allows the overlapping volume mount to work
+    # e.g. ds-playbooks/irods/library/tests/library
+    empty_dir = os.path.join(module_dir, "tests", "library")
+    if not os.path.isdir(empty_dir):
+        os.mkdir(empty_dir)
+
     cmd = """
     source {0} && \
     docker run --interactive --rm --tty \

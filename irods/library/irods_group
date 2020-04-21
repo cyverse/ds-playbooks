@@ -22,7 +22,7 @@ options:
         description:
             - Name of the iRODS group
         required: true
-    user:
+    users:
         description:
             - Username of user
         required: false
@@ -83,7 +83,8 @@ EXAMPLES = """
 - name: Add user to group
   irods_group:
     group: some_irods_group
-    user: one_user
+    users:
+        - one_user
     state: present
     host: cyverse.org
     port: 1247
@@ -95,7 +96,8 @@ EXAMPLES = """
 - name: Remove user to group
   irods_group:
     group: some_irods_group
-    user: one_user
+    users:
+        - one_user
     state: absent
     host: cyverse.org
     port: 1247
@@ -185,7 +187,7 @@ class IRODSGroupModule:
             self.session.cleanup
 
         if err:
-            self.module.fail_json(msg=msg + ", " + err, **self.result)
+            self.module.fail_json(msg=msg + "\n" + str(err), **self.result)
         else:
             self.module.fail_json(msg=msg, **self.result)
 
@@ -217,7 +219,7 @@ class IRODSGroupModule:
         """
         dispatch action according to the argument passed to the module
         """
-        if "username" in self.module.params:
+        if "users" in self.module.params and self.module.params["users"]:
             if self.module.params["state"] == "present":
                 return self.member_present
             else:
@@ -267,9 +269,7 @@ class IRODSGroupModule:
             self._fail("Group must already exist")
 
         # check if users are in the group
-        for username in users:
-            if self._is_user_in_group(group_name, username):
-                users.remove(username)
+        users = [username for username in users if not self._is_user_in_group(group_name, username) ]
 
         # if all users present
         if not users:
@@ -298,9 +298,7 @@ class IRODSGroupModule:
             self._fail("Group must already exist")
 
         # check if users are in the group
-        for username in users:
-            if not self._is_user_in_group(group_name, username):
-                users.remove(username)
+        users = set([username for username in users if self._is_user_in_group(group_name, username) ])
 
         # if all users absent
         if not users:

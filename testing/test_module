@@ -1,0 +1,99 @@
+#!/usr/bin/env python
+
+import os
+import sys
+from subprocess import Popen
+import argparse
+
+def main():
+    args = parse_args()
+
+    module_dir = os.path.abspath(args.module_folder)
+    module_name = args.module_name
+    playbook = os.path.join("test_" + args.module_name + ".yml")
+
+    if not dir_exist(module_dir):
+        print("{} not a directory".format(module_dir))
+        return
+    if not module_exist(module_dir, module_name):
+        print("module {} not found".format(args.module_name))
+        return
+    if not playbook_exist(module_dir, playbook):
+        print("{} not a file".format(playbook))
+        return
+
+    if controller("start") == 0:
+        run_tester(args.doInspect, args.pretty, module_dir, playbook, args.hosts)
+    controller("stop")
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("module_folder",
+            help="the path to the root directory for a collection of module")
+
+    parser.add_argument("module_name", help="name of the module")
+
+    parser.add_argument("-I", metavar="hosts", dest="hosts",
+            default=DefaultHosts,
+            help="the name of the inventory hosts file to use")
+
+    parser.add_argument("-i", "--inspect", dest="doInspect",
+            action="store_const", const=True, default=False,
+            help="after running the playbook, open shell that allows manual \
+            inspection of the configuration files, vaults, and logs")
+
+    parser.add_argument("-p", "--pretty", dest="pretty",
+            action="store_const", const=True, default=False,
+            help="more information will be output and newlines will be \
+            expanded in that output.")
+
+    return parser.parse_args()
+
+def dir_exist(dir):
+    return os.path.isdir(dir)
+
+def module_exist(module_dir, module_name):
+    return os.path.isfile(os.path.join(module_dir, module_name))
+
+def playbook_exist(module_dir, playbook):
+    return os.path.isfile(os.path.join(module_dir, "tests", playbook))
+
+def controller(action):
+    cmd = ' '.join([BaseDir+"/env/controller", Cfg, action])
+    p = Popen(cmd, shell=True, executable="/bin/bash")
+    rc = p.wait()
+    print("rc: " + str(rc))
+    return rc
+
+def run_tester(doInspect, pretty, module_dir, playbook, hosts):
+    cmd = """
+    source {0} && \
+    docker run --interactive --rm --tty \
+            --env IRODS_HOST="$IRODS_IES6_HOST" \
+            --env IRODS_ZONE_NAME="$IRODS_ZONE_NAME" \
+            --env PGHOST="$DBMS_HOST" \
+            --network "$DOMAIN" \
+            --volume "{1}/tests":/playbooks-under-test:ro \
+            --volume "{1}":/playbooks-under-test/library:ro \
+            ansible-tester "{2}" "{3}" "{4}" "{5}"
+    """.format(Cfg, module_dir, sh_bool(doInspect), sh_bool(pretty), playbook, hosts)
+
+    p = Popen(cmd, shell=True, executable="/bin/bash")
+    rc = p.wait()
+    print("rc: " + str(rc))
+    return rc
+
+def sh_bool(val):
+    if val:
+        return "true"
+    else:
+        return "false"
+
+if __name__ == "__main__":
+    ExecName = sys.argv[0]
+    BaseDir = os.path.dirname(ExecName)
+    Cfg = BaseDir + "/config.inc"
+    DefaultHosts = "hosts-all"
+
+    main()

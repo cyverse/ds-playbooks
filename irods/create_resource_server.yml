@@ -38,8 +38,7 @@
 
     - name: ensure clerver user is in group rodsadmin
       delegate_to: localhost
-      become: true
-      become_user: root
+      become: false
       irods_group:
         group: rodsadmin
         users:

@@ -3,8 +3,8 @@ FROM test-env-base:centos6
 RUN touch /etc/sysconfig/iptables
 RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
 
-ADD https://github.com/tianon/gosu/releases/download/1.11/gosu-amd64 /usr/local/bin/gosu
-ADD https://github.com/tianon/gosu/releases/download/1.11/gosu-amd64.asc /usr/local/bin/gosu.asc
+ADD https://github.com/tianon/gosu/releases/download/1.12/gosu-amd64 /usr/local/bin/gosu
+ADD https://github.com/tianon/gosu/releases/download/1.12/gosu-amd64.asc /usr/local/bin/gosu.asc
 
 RUN gpg --verify /usr/local/bin/gosu.asc
 RUN chmod +x /usr/local/bin/gosu

@@ -103,7 +103,6 @@ def controller(action):
     cmd = ' '.join([BASEDIR+"/env/controller", CFG, action])
     p = Popen(cmd, shell=True, executable="/bin/bash")
     rc = p.wait()
-    print("rc: " + str(rc))
     return rc
 
 def run_tester(doInspect, pretty, module_dir, playbook, hosts):
@@ -134,7 +133,6 @@ def run_tester(doInspect, pretty, module_dir, playbook, hosts):
 
     p = Popen(cmd, shell=True, executable="/bin/bash")
     rc = p.wait()
-    print("rc: " + str(rc))
     return rc
 
 def sh_bool(val):

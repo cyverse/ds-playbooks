@@ -47,7 +47,7 @@ options:
         description:
             - Password of the admin user
         required: true
-    admin_zone:
+    zone:
         description:
             - Zone of the admin user
         required: true
@@ -66,7 +66,7 @@ EXAMPLES = """
     port: 1247
     admin_user: rods
     admin_password: 1234
-    admin_zone: tempZone
+    zone: tempZone
 
 # Ensure the group with given name is absent
 - name: Remove irods group
@@ -77,7 +77,7 @@ EXAMPLES = """
     port: 1247
     admin_user: rods
     admin_password: 1234
-    admin_zone: tempZone
+    zone: tempZone
 
 # Ensure the user is present in the group (group must already exist)
 - name: Add user to group
@@ -90,7 +90,7 @@ EXAMPLES = """
     port: 1247
     admin_user: rods
     admin_password: 1234
-    admin_zone: tempZone
+    zone: tempZone
 
 # Ensure the user is absent from the group (group must already exist)
 - name: Remove user to group
@@ -103,7 +103,7 @@ EXAMPLES = """
     port: 1247
     admin_user: rods
     admin_password: 1234
-    admin_zone: tempZone
+    zone: tempZone
 """
 
 RETURN = """

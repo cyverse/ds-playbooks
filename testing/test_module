@@ -5,7 +5,30 @@ import sys
 from subprocess import Popen
 import argparse
 
+DOCUMENTATION = """
+Usage:
+    test_module <module_folder> <module_name>
+
+Positional Arguments:
+    <module_folder>                 The folder the module is in
+    <module_name>                   The name of the module file
+
+Optional Arguments:
+    -I, --inventory-hosts <hosts>   the name of the inventory hosts file to use
+    -h, --help                      show help and exit
+    -i, --inspect                   after running the playbook, open shell that
+                                    allows manual inspection of the configuration
+                                    files, vaults, and logs
+    -p, --pretty                    more information will be output and newlines
+                                    will be expanded in that output.
+Example:
+    ./test_module ../irods/library irods_group -i
+"""
+
 def main():
+    """
+    Entrypoint
+    """
     args = parse_args()
 
     module_dir = os.path.abspath(args.module_folder)
@@ -23,10 +46,14 @@ def main():
         return
 
     if controller("start") == 0:
-        run_tester(args.doInspect, args.pretty, module_dir, playbook, args.hosts)
+        run_tester(args.doInspect, args.pretty, module_dir, playbook,
+            args.hosts)
     controller("stop")
 
 def parse_args():
+    """
+    Parsing the command line argument
+    """
     parser = argparse.ArgumentParser()
 
     parser.add_argument("module_folder",
@@ -35,7 +62,7 @@ def parse_args():
     parser.add_argument("module_name", help="name of the module")
 
     parser.add_argument("-I", metavar="hosts", dest="hosts",
-            default=DefaultHosts,
+            default=DEFAULT_HOSTS,
             help="the name of the inventory hosts file to use")
 
     parser.add_argument("-i", "--inspect", dest="doInspect",
@@ -51,22 +78,38 @@ def parse_args():
     return parser.parse_args()
 
 def dir_exist(dir):
+    """
+    Check if a directory exists
+    """
     return os.path.isdir(dir)
 
 def module_exist(module_dir, module_name):
+    """
+    Check if a module(file) exist at a given module directory
+    """
     return os.path.isfile(os.path.join(module_dir, module_name))
 
 def playbook_exist(module_dir, playbook):
+    """
+    Check if the test playbooks exist
+    """
     return os.path.isfile(os.path.join(module_dir, "tests", playbook))
 
 def controller(action):
-    cmd = ' '.join([BaseDir+"/env/controller", Cfg, action])
+    """
+    Start/Stop the testing container environment,
+    calls env/controller
+    """
+    cmd = ' '.join([BASEDIR+"/env/controller", CFG, action])
     p = Popen(cmd, shell=True, executable="/bin/bash")
     rc = p.wait()
     print("rc: " + str(rc))
     return rc
 
 def run_tester(doInspect, pretty, module_dir, playbook, hosts):
+    """
+    Run ansible-tester docker container to start the testing
+    """
 
     # create a empty dir that allows the overlapping volume mount to work
     # e.g. ds-playbooks/irods/library/tests/library
@@ -74,6 +117,7 @@ def run_tester(doInspect, pretty, module_dir, playbook, hosts):
     if not os.path.isdir(empty_dir):
         os.mkdir(empty_dir)
 
+    # docker cmd to run ansible-tester
     cmd = """
     source {0} && \
     docker run --interactive --rm --tty \
@@ -84,7 +128,9 @@ def run_tester(doInspect, pretty, module_dir, playbook, hosts):
             --volume "{1}/tests":/playbooks-under-test:ro \
             --volume "{1}":/playbooks-under-test/library:ro \
             ansible-tester "{2}" "{3}" "{4}" "{5}"
-    """.format(Cfg, module_dir, sh_bool(doInspect), sh_bool(pretty), playbook, hosts)
+    """
+    cmd = cmd.format(CFG, module_dir, sh_bool(doInspect), sh_bool(pretty),
+        playbook, hosts)
 
     p = Popen(cmd, shell=True, executable="/bin/bash")
     rc = p.wait()
@@ -92,15 +138,19 @@ def run_tester(doInspect, pretty, module_dir, playbook, hosts):
     return rc
 
 def sh_bool(val):
+    """
+    Convert a python boolean value to a bash boolean string (all lower case)
+    """
     if val:
         return "true"
     else:
         return "false"
 
 if __name__ == "__main__":
-    ExecName = sys.argv[0]
-    BaseDir = os.path.dirname(ExecName)
-    Cfg = BaseDir + "/config.inc"
-    DefaultHosts = "hosts-all"
+    # some global variable
+    EXEC_NAME = sys.argv[0]
+    BASEDIR = os.path.dirname(EXEC_NAME)
+    CFG = BASEDIR + "/config.inc"
+    DEFAULT_HOSTS = "hosts-all"
 
     main()

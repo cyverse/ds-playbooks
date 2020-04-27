@@ -61,10 +61,12 @@
           - rods
         state: present
         host: "{{ groups['ies'][0] }}"
-        port: "{{ _irods_zone_port }}"
+        port: 1247
         admin_user: rods 
-        admin_password: "{{ _irods_clerver_password }}"
-        zone: "{{ _irods_zone_name }}"
+        admin_password: rods
+        zone: testing
+      register: resp
+      failed_when: resp.changed
 
 
     - name: test initialize resource server connection to IES

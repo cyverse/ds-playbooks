@@ -39,7 +39,7 @@
     - name: ensure clerver user is in group rodsadmin
       delegate_to: localhost
       become: false
-      irods_group:
+      irods_group_member:
         group: rodsadmin
         users:
           - "{{ _irods_clerver_user }}"

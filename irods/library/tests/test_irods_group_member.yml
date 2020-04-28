@@ -38,9 +38,9 @@
           - test_user3
         state: present
         host: "{{ groups['ies'][0] }}"
-        port: "{{ _irods_zone_port }}"
-        admin_user: "{{ _irods_clerver_user }}"
-        admin_password: "{{ _irods_clerver_password }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
         zone: "testing"
       register: resp
       failed_when: not resp.changed
@@ -66,10 +66,10 @@
           - test_user3
         state: present
         host: "{{ groups['ies'][0] }}"
-        port: "{{ _irods_zone_port }}"
-        admin_user: "{{ _irods_clerver_user }}"
-        admin_password: "{{ _irods_clerver_password }}"
-        zone: "testing"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
       register: resp
       failed_when: resp.changed
 
@@ -82,10 +82,10 @@
           - test_user2
         state: absent
         host: "{{ groups['ies'][0] }}"
-        port: "{{ _irods_zone_port }}"
-        admin_user: "{{ _irods_clerver_user }}"
-        admin_password: "{{ _irods_clerver_password }}"
-        zone: "testing"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
       register: resp
       failed_when: not resp.changed
 
@@ -117,9 +117,9 @@
           - test_user2
         state: absent
         host: "{{ groups['ies'][0] }}"
-        port: "{{ _irods_zone_port }}"
-        admin_user: "{{ _irods_clerver_user }}"
-        admin_password: "{{ _irods_clerver_password }}"
-        zone: "testing"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
       register: resp
       failed_when: resp.changed

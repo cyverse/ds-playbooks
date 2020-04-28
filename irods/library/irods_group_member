@@ -8,19 +8,24 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = """
 ---
-module: irods_group
+module: irods_group_member
 
-short_description: Create/Remove iRODS group
+short_description: Add/Remove user from iRODS group
 
 version_added: "2.4"
 
 description:
-    - "Create/Remove iRODS group"
+    - "Add/Remove user from iRODS group, group must be present"
 
 options:
     group:
         description:
             - Name of the iRODS group
+            - Group must already be present
+        required: true
+    users:
+        description:
+            - Username of user
         required: true
     state:
         description:
@@ -53,10 +58,12 @@ author:
 """
 
 EXAMPLES = """
-# Ensure a group exist, create if not exist
-- name: Add a irods group
-  irods_group:
+# Ensure the user is present in the group (group must already exist)
+- name: Add user to group
+  irods_group_member:
     group: some_irods_group
+    users:
+        - one_user
     state: present
     host: cyverse.org
     port: 1247
@@ -64,10 +71,12 @@ EXAMPLES = """
     admin_password: 1234
     zone: tempZone
 
-# Ensure the group with given name is absent
-- name: Remove irods group
-  irods_group:
+# Ensure the user is absent from the group (group must already exist)
+- name: Remove user to group
+  irods_group_member:
     group: some_irods_group
+    users:
+        - one_user
     state: absent
     host: cyverse.org
     port: 1247
@@ -81,10 +90,10 @@ message:
     description: Performed operation
     type: str
     returned: always
-group:
-    description: group changed by the task
+users:
+    description: users changed by the task
     type: str
-    returned: always
+    returned: when users param is specified
 """
 
 from ansible.module_utils.basic import AnsibleModule
@@ -106,6 +115,7 @@ class IRODSGroupModule:
         # define argument
         self.module_args = dict(
             group=dict(type="str", required=True),
+            users=dict(type="list", elements="str", required=True),
             state=dict(type="str", required=True,
                 choices=["present", "absent"]),
 
@@ -183,53 +193,92 @@ class IRODSGroupModule:
         dispatch action according to the argument passed to the module
         """
         if self.module.params["state"] == "present":
-            return self.group_present
+            return self.member_present
         else:
-            return self.group_absent
+            return self.member_absent
 
-    def group_present(self):
+    def member_present(self):
         group_name = self.module.params["group"]
+        users = set(self.module.params["users"])
+        self.result["users"] = []
 
-        if self._group_exist(group_name):
+        # group must already exist
+        if not self._group_exist(group_name):
+            self._fail("Group must already exist")
+
+        # check if users are in the group
+        users = [username for username in users if not self._is_user_in_group(group_name, username) ]
+
+        # if all users present
+        if not users:
             self._success()
 
-        # add group
-        self._create_irods_group(group_name)
+        # add users
+        for username in users:
+            self._add_user_to_group(group_name, username)
+            self.result["users"].append(username)
 
-        if self._group_exist(group_name):
-            self.result["group"] = group_name
-            self._success("Group is created")
+        users_remain_absent = [ username for username in users if not self._is_user_in_group(group_name, username) ]
+        if not users_remain_absent:
+            self.result["users"] = list(users)
+            self._success("All specified user(s) are added to the group")
         else:
-            self._fail("Group disappear after creation")
+            self.result["users"] = users_remain_absent
+            self._fail("Specified user(s) not in group after adding")
 
-    def group_absent(self):
+    def member_absent(self):
         group_name = self.module.params["group"]
+        users = set(self.module.params["users"])
+        self.result["users"] = []
 
+        # group must already exist
         if not self._group_exist(group_name):
+            self._fail("Group must already exist")
+
+        # check if users are in the group
+        users = set([username for username in users if self._is_user_in_group(group_name, username) ])
+
+        # if all users absent
+        if not users:
             self._success()
 
-        # remove group
-        self._remove_irods_group(group_name)
+        # remove users from group
+        for username in users:
+            self._remove_user_from_group(group_name, username)
+            self.result["users"].append(username)
 
-        if not self._group_exist(group_name):
-            self.result["group"] = group_name
-            self._success("Group is removed")
+        users_still_exist = [ username for username in users if self._is_user_in_group(group_name, username) ]
+        if not users_still_exist:
+            self.result["users"] = list(users)
+            self._success("All specified user(s) are removed from the group")
         else:
-            self._fail("Group still exists after removal")
+            self.result["users"] = users_still_exist
+            self._fail("Specified user(s) remain in group after removal")
 
-    def _create_irods_group(self, name):
+    def _add_user_to_group(self, group_name, username):
         try:
-            self.session.user_groups.create(name)
+            self.session.user_groups.addmember(group_name, username)
             self.result["changed"] = True
         except Exception as e:
-            self._fail("Unable to create irods group {}".format(name), e)
+            self._fail("Unable to add user {} to irods group {}".format(username, group_name), e)
 
-    def _remove_irods_group(self, name):
+    def _remove_user_from_group(self, group_name, username):
         try:
-            self.session.user_groups.remove(name)
+            self.session.user_groups.removemember(group_name, username)
             self.result["changed"] = True
         except Exception as e:
-            self._fail("Unable to remove irods group {}".format(name), e)
+            self._fail("Unable to remove user {} from irods group {}".format(username, group_name), e)
+
+    def _is_user_in_group(self, group_name, username):
+        try:
+            query = self.session.query(User.name, UserGroup.name)
+
+            for result in query:
+                if group_name == result[UserGroup.name] and username == result[User.name]:
+                    return True
+            return False
+        except Exception as e:
+            self._fail("Unable to query user memebership in irods group {}".format(group_name), e)
 
     def _group_exist(self, group_name):
         try:

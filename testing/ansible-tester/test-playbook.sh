@@ -47,7 +47,7 @@ do_test()
   local inventory=/inventory/"$hosts"
   local playbookPath=/playbooks-under-test/"$playbook"
   local testPath=/playbooks-under-test/tests/"$playbook"
-  local lib_path_option
+  local libPathOption
 
   printf 'Waiting for environment to be ready\n'
   if ! ansible-playbook --inventory-file "$inventory" /wait-for-ready.yml > /dev/null
@@ -70,15 +70,15 @@ do_test()
   # add the option for module-path only if a library directory exists
   if [ -d /playbooks-under-test/library ]
   then
-    lib_path_option="--module-path /playbooks-under-test/library"
+    libPathOption="--module-path /playbooks-under-test/library"
   else
-    lib_path_option=""
+    libPathOption=""
   fi
 
   if [ -e "$testPath" ]
   then
     printf 'Checking configuration\n'
-    if ! ansible-playbook --inventory-file "$inventory" "$testPath" ${lib_path_option}
+    if ! ansible-playbook --inventory-file "$inventory" "$testPath" ${libPathOption}
     then
       return 1
     fi

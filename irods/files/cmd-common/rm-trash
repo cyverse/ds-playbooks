@@ -226,7 +226,7 @@ rm_trash()
       RM_DATA_BATCH \
     < "$trashList"
   local rc="$?"
-  if [[ "$rc" -eq 129 ]]
+  if [[ "$rc" -eq 129 ]]  # RM_DATA_BATCH sends a SIGHUP
   then
     printf 'EXITING\n' >&2
     return 1
@@ -393,7 +393,7 @@ RM_DATA_BATCH()
 {
   trap 'kill -TERM "$PARALLEL_PID"; sleep 1; kill -HUP "$PARALLEL_PID"' TERM
 
-  if ! stdbuf --error L --output L irm -f -v "$@" 2> >(MK_RM_ERRS) | MK_RM_MSGS "$@"
+  if ! stdbuf --error L --output L irm -f -v "$@" | MK_RM_MSGS "$@"
   then
     exit 1
   fi
@@ -401,18 +401,6 @@ RM_DATA_BATCH()
   exit 0
 }
 export -f RM_DATA_BATCH
-
-
-MK_RM_ERRS()
-{
-  local line
-  while IFS= read -r line
-  do
-    printf 'UNKNOWN ERROR: %s\n' "$line" >&2
-    kill -TERM "$$"
-  done
-}
-export -f MK_RM_ERRS
 
 
 MK_RM_MSGS()

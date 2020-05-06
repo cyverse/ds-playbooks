@@ -9,10 +9,21 @@
         commons_max_cache_expire: 8760
         apache_ssl_cipher_suite: "HIGH:3DES:!aNULL:!MD5:!SEED:!IDEA"
         apache_global_vhost_settings: |
-          LoadModule log_forensic_module modules/mod_log_forensic.so
-          LoadModule proxy_html_module modules/mod_proxy_html.so
-          LoadModule sed_module modules/mod_sed.so
-          LoadModule unique_id_module modules/mod_unique_id.so
+          <IfModule !log_forensic_module>
+            LoadModule log_forensic_module modules/mod_log_forensic.so
+          </IfModule>
+
+          <IfModule !proxy_html_module>
+            LoadModule proxy_html_module modules/mod_proxy_html.so
+          </IfModule>
+
+          <IfModule !sed_module>
+            LoadModule sed_module modules/mod_sed.so
+          </IfModule>
+
+          <IfModule !unique_id_module>
+            LoadModule unique_id_module modules/mod_unique_id.so
+          </IfModule>
 
           CacheRoot {{ _webdav_cache_dir }}
           CacheDirLevels 2

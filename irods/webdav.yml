@@ -25,6 +25,8 @@
             LoadModule unique_id_module modules/mod_unique_id.so
           </IfModule>
 
+          ForensicLog logs/forensic_log
+
           CacheRoot {{ _webdav_cache_dir }}
           CacheDirLevels 2
           CacheDirLength 1
@@ -56,7 +58,6 @@
             listen_ip: 127.0.0.1
             extra_parameters: |
               ErrorLog logs/error_log
-              ForensicLog logs/forensic_log
               CustomLog logs/access_log "%t %h \"%r\" %>s %b %D %L %{forensic-id}n"
               CustomLog logs/cache_log "%t %h \"%r\" %{cache-status}e %{forensic-id}n"
               LogLevel warn

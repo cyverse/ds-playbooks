@@ -26,6 +26,7 @@
           </IfModule>
 
           ForensicLog logs/forensic_log
+          ErrorLogFormat "%{cu}t [%-m:%l] [pid %P] %-a %E: %M"
 
           CacheRoot {{ _webdav_cache_dir }}
           CacheDirLevels 2

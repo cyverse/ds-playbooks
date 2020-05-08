@@ -46,7 +46,7 @@
 
 
 - name: tune TCP
-  hosts: physical
+  hosts: all:!unmanaged_systems:!localhost
   become: true
   gather_facts: false
   tasks:
@@ -55,16 +55,5 @@
         name: net.{{ item.name }}
         value: "{{ item.value }}"
       with_items: "{{ _sysctl_net }}"
-
-
-- name: set TCP keepalive send rate
-  hosts: all:!unmanaged_systems:!localhost
-  become: true
-  gather_facts: false
-  tasks:
-    - name: set rate to once every 30 minutes
-      sysctl:
-        name: net.ipv4.tcp_keepalive_time
-        value: '1800'
-      tags:
-        - no_testing  
+  tags:
+    - no_testing

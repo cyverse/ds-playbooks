@@ -188,6 +188,7 @@ _terraref_manager: "{{ terraref_manager | default(_irods_clerver_user) }}"
 _terraref_resource_hierarchy: "{{
   terraref_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}"
 
+_webdav_allowed_src: "{{ webdav_allowed_src | default(['0.0.0.0/0']) }}"
 _webdav_auth_name: "{{ webdav_auth_name | default('CyVerse') }}"
 _webdav_cache_dir: "{{ webdav_cache_dir if webdav_cache_dir is defined else
                        '/var/cache/httpd/proxy' }}"

@@ -283,8 +283,10 @@
         insertbefore: -A INPUT -j REJECT
         marker: "# {mark} DS MANAGED BLOCK (webdav)"
         content: |
-          -A INPUT -m state --state NEW -p tcp --dport 80 -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp --dport 443 -j ACCEPT
+          {% for i in _webdav_allowed_src %}
+          -A INPUT -m state --state NEW -p tcp -s {{ i }} --dport 80 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ i }} --dport 443 -j ACCEPT
+          {% endfor %}
       notify: restart firewall
 
   handlers:

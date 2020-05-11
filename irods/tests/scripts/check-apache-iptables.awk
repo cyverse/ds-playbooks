@@ -9,8 +9,8 @@ BEGIN {
   table = "";
   idx = 0;
 
-  Rules[1] = "-A INPUT -m state --state NEW -p tcp --dport 80 -j ACCEPT";
-  Rules[2] = "-A INPUT -m state --state NEW -p tcp --dport 443 -j ACCEPT";
+  Rules[1] = "-A INPUT -m state --state NEW -p tcp -s 0.0.0.0/0 --dport 80 -j ACCEPT";
+  Rules[2] = "-A INPUT -m state --state NEW -p tcp -s 0.0.0.0/0 --dport 443 -j ACCEPT";
 }
 
 

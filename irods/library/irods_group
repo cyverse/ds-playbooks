@@ -1,4 +1,7 @@
 #!/usr/bin/python
+"""
+Provides an ansible module for creating and removing an iRODS group.
+"""
 
 ANSIBLE_METADATA = {
     "metadata_version": "1.1",

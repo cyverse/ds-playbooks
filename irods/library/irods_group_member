@@ -300,6 +300,9 @@ class IRODSGroupModule:
             self.session.user_groups.addmember(group_name, username)
             self.result["changed"] = True
         except Exception as exc:
+            # A broad catch on all exception type that could be raised by the
+            # call to irods module, since the possible exception types are
+            # not well documented.
             self._fail("Unable to add user {} to irods group {}".format(username, group_name), exc)
 
     def _remove_user_from_group(self, group_name, username):
@@ -310,6 +313,9 @@ class IRODSGroupModule:
             self.session.user_groups.removemember(group_name, username)
             self.result["changed"] = True
         except Exception as exc:
+            # A broad catch on all exception type that could be raised by the
+            # call to irods module, since the possible exception types are
+            # not well documented.
             self._fail("Unable to remove user {} from irods group {}".format(
                 username, group_name), exc)
 
@@ -325,6 +331,9 @@ class IRODSGroupModule:
                     return True
             return False
         except Exception as exc:
+            # A broad catch on all exception type that could be raised by the
+            # call to irods module, since the possible exception types are
+            # not well documented.
             self._fail("Unable to query user memebership in irods group {}".format(group_name), exc)
 
     def _group_exist(self, group_name):
@@ -339,6 +348,9 @@ class IRODSGroupModule:
                     return True
             return False
         except Exception as exc:
+            # A broad catch on all exception type that could be raised by the
+            # call to irods module, since the possible exception types are
+            # not well documented.
             self._fail("Unable to query irods group {}".format(group_name), exc)
 
 def main():

@@ -1,0 +1,83 @@
+---
+- name: testing irods_group module
+  hosts: ies[0]
+  pre_tasks:
+    - name: group should be absent
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg | cut -d'#' -f 1 | grep test_group1
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout != ""
+
+  tasks:
+    - name: create group
+      delegate_to: localhost
+      irods_group:
+        group: test_group1
+        state: present
+        host: "{{ groups['ies'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: resp
+      failed_when: not resp.changed
+
+    - name: check if group is created
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg | cut -d'#' -f 1 | grep test_group1
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout == ""
+
+    - name: create group again (check idempotency)
+      delegate_to: localhost
+      irods_group:
+        group: test_group1
+        state: present
+        host: "{{ groups['ies'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: resp
+      failed_when: resp.changed
+
+    - name: remove group
+      delegate_to: localhost
+      irods_group:
+        group: test_group1
+        state: absent
+        host: "{{ groups['ies'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: resp
+      failed_when: not resp.changed
+
+    - name: check if group is removed
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg | cut -d'#' -f 1 | grep test_group1
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout != ""
+
+    - name: remove group again (check idempotency)
+      delegate_to: localhost
+      irods_group:
+        group: test_group1
+        state: absent
+        host: "{{ groups['ies'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: resp
+      failed_when: resp.changed

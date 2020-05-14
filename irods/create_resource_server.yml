@@ -36,6 +36,20 @@
         password: "{{ _irods_clerver_password }}"
         type: rodsadmin
 
+    - name: ensure clerver user is in group rodsadmin
+      delegate_to: localhost
+      become: false
+      irods_group_member:
+        group: rodsadmin
+        users:
+          - "{{ _irods_clerver_user }}"
+        state: present
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"
+
     - name: initialize resource server connection to IES
       irods_clerver_auth:
         ies: "{{ groups['ies'][0] }}"

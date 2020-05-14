@@ -1,0 +1,163 @@
+#!/usr/bin/env python
+"""
+Usage:
+    test_module <module_folder> <module_name>
+
+Positional Arguments:
+    <module_folder>                 The folder the module is in
+    <module_name>                   The name of the module file
+
+Optional Arguments:
+    -I, --inventory-hosts <hosts>   the name of the inventory hosts file to use
+    -h, --help                      show help and exit
+    -i, --inspect                   after running the playbook, open shell that
+                                    allows manual inspection of the
+                                    configuration files, vaults, and logs
+    -p, --pretty                    more information will be output and
+                                    newlines will be expanded in that output.
+Example:
+    ./test_module ../irods/library irods_group -i
+"""
+
+import os
+import sys
+from subprocess import Popen
+import argparse
+
+
+def main():
+    """
+    Entrypoint
+    """
+    args = parse_args()
+
+    module_dir = os.path.abspath(args.module_folder)
+    module_name = args.module_name
+    playbook = os.path.join("test_" + args.module_name + ".yml")
+
+    if not dir_exist(module_dir):
+        print("{} not a directory".format(module_dir))
+        return
+    if not module_exist(module_dir, module_name):
+        print("module {} not found".format(args.module_name))
+        return
+    if not playbook_exist(module_dir, playbook):
+        print("{} not a file".format(playbook))
+        return
+
+    if controller("start") == 0:
+        run_tester(args.doInspect, args.pretty, module_dir, playbook,
+                   args.hosts)
+    controller("stop")
+
+
+def parse_args():
+    """
+    Parsing the command line argument
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("module_folder",
+                        help="the path to the root directory for a collection \
+                        of module")
+
+    parser.add_argument("module_name", help="name of the module")
+
+    parser.add_argument("-I", metavar="hosts", dest="hosts",
+                        default=DEFAULT_HOSTS,
+                        help="the name of the inventory hosts file to use")
+
+    parser.add_argument("-i", "--inspect", dest="doInspect",
+                        action="store_const", const=True, default=False,
+                        help="after running the playbook, open shell that \
+                        allows manual inspection of the configuration files, \
+                        vaults, and logs")
+
+    parser.add_argument("-p", "--pretty", dest="pretty",
+                        action="store_const", const=True, default=False,
+                        help="more information will be output and newlines \
+                        will be expanded in that output.")
+
+    return parser.parse_args()
+
+
+def dir_exist(directory):
+    """
+    Check if a directory exists
+    """
+    return os.path.isdir(directory)
+
+
+def module_exist(module_dir, module_name):
+    """
+    Check if a module(file) exist at a given module directory
+    """
+    return os.path.isfile(os.path.join(module_dir, module_name))
+
+
+def playbook_exist(module_dir, playbook):
+    """
+    Check if the test playbooks exist
+    """
+    return os.path.isfile(os.path.join(module_dir, "tests", playbook))
+
+
+def controller(action):
+    """
+    Start/Stop the testing container environment,
+    calls env/controller
+    """
+    cmd = ' '.join([BASEDIR+"/env/controller", CFG, action])
+    proc = Popen(cmd, shell=True, executable="/bin/bash")
+    return_code = proc.wait()
+    return return_code
+
+
+def run_tester(do_inspect, pretty, module_dir, playbook, hosts):
+    """
+    Run ansible-tester docker container to start the testing
+    """
+
+    # create a empty dir that allows the overlapping volume mount to work
+    # e.g. ds-playbooks/irods/library/tests/library
+    empty_dir = os.path.join(module_dir, "tests", "library")
+    if not os.path.isdir(empty_dir):
+        os.mkdir(empty_dir)
+
+    # docker cmd to run ansible-tester
+    cmd = """
+    source {0} && \
+    docker run --interactive --rm --tty \
+            --env IRODS_HOST="$IRODS_IES6_HOST" \
+            --env IRODS_ZONE_NAME="$IRODS_ZONE_NAME" \
+            --env PGHOST="$DBMS_HOST" \
+            --network "$DOMAIN" \
+            --volume "{1}/tests":/playbooks-under-test:ro \
+            --volume "{1}":/playbooks-under-test/library:ro \
+            ansible-tester "{2}" "{3}" "{4}" "{5}"
+    """
+    cmd = cmd.format(CFG, module_dir, sh_bool(do_inspect), sh_bool(pretty),
+                     playbook, hosts)
+
+    proc = Popen(cmd, shell=True, executable="/bin/bash")
+    return_code = proc.wait()
+    return return_code
+
+
+def sh_bool(val):
+    """
+    Convert a python boolean value to a bash boolean string (all lower case)
+    """
+    if val:
+        return "true"
+    return "false"
+
+
+if __name__ == "__main__":
+    # some global variable
+    EXEC_NAME = sys.argv[0]
+    BASEDIR = os.path.dirname(EXEC_NAME)
+    CFG = BASEDIR + "/config.inc"
+    DEFAULT_HOSTS = "hosts-all"
+
+    main()

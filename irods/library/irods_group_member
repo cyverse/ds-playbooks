@@ -98,8 +98,8 @@ message:
     returned: always
 users:
     description: users changed by the task
-    type: str
-    returned: when users param is specified
+    type: list
+    returned: always
 """
 
 try:
@@ -136,7 +136,7 @@ class IRODSGroupModule:
         self.result = dict(
             changed=False,
             message="",
-            group=""
+            users=[]
         )
 
         # init module

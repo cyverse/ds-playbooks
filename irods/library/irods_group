@@ -147,14 +147,12 @@ class IRODSGroupModule:
 
         # only-check mode
         if self.module.check_mode:
-            return self.result
+            self.module.exit_json(**self.result)
 
         self.init_session()
 
         action = self.select_action()
         action()
-
-        return None
 
     def _fail(self, msg, err=None):
         """

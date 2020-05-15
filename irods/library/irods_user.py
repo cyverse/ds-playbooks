@@ -1,6 +1,7 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 """
-Provides an ansible module for creating and removing iRODS users.
+Provides an ansible module for creating, updating and removing iRODS users.
 """
 
 import ssl
@@ -16,55 +17,84 @@ DOCUMENTATION = """
 ---
 module: irods_user
 
-short_description: Create/Remove users
+short_description: Create/Update/Remove iRODS user
 
 version_added: "2.4"
 
 description:
-    - "Create/Remove iRODS user"
+    - Create iRODS user.
+    - Update iRODS user's type or password.
+    - Remove iRODS user.
 
 options:
-    users:
+    name:
         description:
-            - Username of users
+            - Username of user
         required: true
+        type: str
     state:
         description:
             - Desired state to achieve
             - Either present or absent
         required: true
+        choices:
+            - present
+            - absent
+        type: str
+    type:
+        description:
+            - User's type
+            - Only meaningful when state is 'present'
+            - Type to change into if user exist with a different type
+        required: false
+        default: rodsuser
+        type: str
+    password:
+        description:
+            - User's password
+            - Only meaningful when state is 'present'
+        required: false
+        type: str
     host:
         description:
             - Hostname of the iRODS server
         required: true
+        type: str
     port:
         description:
             - Port of the iRODS server
         required: true
+        type: int
     admin_user:
         description:
             - Username of the admin user
         required: true
+        type: str
     admin_password:
         description:
             - Password of the admin user
         required: true
+        type: str
     zone:
         description:
             - Zone of the admin user
         required: true
+        type: str
+
+requirements:
+    - python-irodsclient
 
 author:
     - John Xu
+
+
 """
 
 EXAMPLES = '''
-# Create iRODS users
-- name: create users
+# Create iRODS user of type rodsuser
+- name: create user
   irods_user:
-    users:
-        - test_user1
-        - test_user2
+    name: test_user1
     state: present
     host: cyverse.org
     port: 1247
@@ -72,12 +102,10 @@ EXAMPLES = '''
     admin_password: 1234
     zone: tempZone
 
-# Remove iRODS users
-- name: remove users
+# Remove iRODS user
+- name: remove user
   irods_user:
-    users:
-        - test_user1
-        - test_user2
+    name: test_user1
     state: absent
     host: cyverse.org
     port: 1247
@@ -87,13 +115,9 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-message:
-    description: Performed operation
+user:
+    description: user that has been changed
     type: str
-    returned: always
-users:
-    description: List of users that has been changed, empty list if none
-    type: list
     returned: always
 '''
 
@@ -116,9 +140,11 @@ class IRODSUserModule:
         """
         # define argument
         self.module_args = dict(
-            users=dict(type="list", elements="str", required=True),
+            name=dict(type="str", required=True),
             state=dict(type="str", required=True,
                        choices=["present", "absent"]),
+            type=dict(type="str", default="rodsuser", required=False),
+            password=dict(type="str", no_log=True, required=False),
 
             host=dict(type="str", required=True),
             port=dict(type="int", required=True),
@@ -129,8 +155,7 @@ class IRODSUserModule:
         # result
         self.result = dict(
             changed=False,
-            message="",
-            users=[]
+            user=""
         )
 
         # init module
@@ -211,57 +236,57 @@ class IRODSUserModule:
 
     def user_present(self):
         """
-        Ensure list of users specified in the parameter are present
+        Ensure user specified in the parameter are present
         """
-        # get set of users
-        users = set(self.module.params["users"])
-        if not users:
-            self._success("no user are specified")
+        # get username
+        username = self.module.params["name"]
+        if not username:
+            self._success("empty username")
+        user_type = self.module.params["type"]
+        password = self.module.params["password"]
 
-        # check if users exist, select the non-exist ones
-        users = {user for user in users if not self._user_exist(user)}
+        # check if user exist
+        if not self._user_exist(username):
+            # create user
+            self._create_user(username, user_type)
+            if password:
+                self._update_user_password(username, password)
+            self.result["user"] = username
+        elif self._user_type(username) != user_type:
+            # update user_type
+            self._update_user_type(username, user_type)
+            self.result["user"] = username
 
-        # create users
-        for user in users:
-            self._create_user(user)
-            self.result["users"].append(user)
-
-        # check if users have being added
-        vanished_users = {user for user in users if not self._user_exist(user)}
-        if vanished_users:
-            self._fail("users disappear after creation, {}".format(
-                vanished_users))
+        # check if user is present
+        if not self._user_exist(username):
+            self._fail("user disappear after creation, {}".format(username))
         self._success()
 
     def user_absent(self):
         """
-        Ensure list of users specified in the parameter are absent
+        Ensure user specified in the parameter are absent
         """
-        # get set of users
-        users = set(self.module.params["users"])
-        if not users:
-            self._success("no user are specified")
+        # get username
+        username = self.module.params["name"]
 
-        # check if user exist, select the exist ones
-        users = {user for user in users if self._user_exist(user)}
+        # check if user exist
+        if not self._user_exist(username):
+            self._success("user already absent")
 
-        # remove users
-        for user in users:
-            self._remove_user(user)
-            self.result["users"].append(user)
+        # remove user
+        self._remove_user(username)
+        self.result["user"] = username
 
-        # check if users have been removed
-        leftover_users = {user for user in users if self._user_exist(user)}
-        if leftover_users:
-            self._fail("users still exist after removal, {}".format(
-                leftover_users))
+        # check if user have been removed
+        if self._user_exist(username):
+            self._fail("user still exist after removal, {}".format(username))
 
-    def _create_user(self, username):
+    def _create_user(self, username, user_type):
         """
         Create an iRODS user with the given username
         """
         try:
-            self.session.users.create(self, username, "rodsuser")
+            self.session.users.create(username, user_type)
             self.result["changed"] = True
         except Exception as exc:
             # A broad catch on all exception type that could be raised by the
@@ -269,18 +294,59 @@ class IRODSUserModule:
             # not well documented.
             self._fail("Unable to create user {}".format(username), exc)
 
+    def _update_user_type(self, username, user_type):
+        """
+        Update user's type
+        """
+        try:
+            self.session.users.modify(username, "type", user_type)
+            self.result["changed"] = True
+        except Exception as exc:
+            # A broad catch on all exception type that could be raised by the
+            # call to irods module, since the possible exception types are
+            # not well documented.
+            self._fail("Unable to update user type for {}".format(username), exc)
+
+    def _update_user_password(self, username, password):
+        """
+        Update user's password
+        """
+        try:
+            self.session.users.modify(username, "password", password)
+            self.result["changed"] = True
+        except Exception as exc:
+            # A broad catch on all exception type that could be raised by the
+            # call to irods module, since the possible exception types are
+            # not well documented.
+            self._fail("Unable to update passowrd for user {}".format(username), exc)
+
     def _remove_user(self, username):
         """
         Remove the iRODS user with the given username
         """
         try:
-            self.session.users.remove(self, username)
+            self.session.users.remove(username)
             self.result["changed"] = True
         except Exception as exc:
             # A broad catch on all exception type that could be raised by the
             # call to irods module, since the possible exception types are
             # not well documented.
             self._fail("Unable to remove user {}".format(username), exc)
+
+    def _user_type(self, username):
+        """
+        Get the type of the user, None if user not exists
+        """
+        try:
+            user = self.session.users.get(username)
+            if not user:
+                return None
+            return user.type
+        except Exception as exc:
+            # A broad catch on all exception type that could be raised by the
+            # call to irods module, since the possible exception types are
+            # not well documented.
+            self._fail("Unable to query user type for {}".format(username), exc)
 
     def _user_exist(self, username):
         """

@@ -66,10 +66,17 @@ do_test()
     return 1
   fi
 
+  local libPathOption=""
+  # add the option for module-path only if a library directory exists
+  if [ -d /playbooks-under-test/library ]
+  then
+    libPathOption="--module-path /playbooks-under-test/library"
+  fi
+
   if [ -e "$testPath" ]
   then
     printf 'Checking configuration\n'
-    if ! ansible-playbook --inventory-file "$inventory" "$testPath"
+    if ! ansible-playbook --inventory-file "$inventory" "$testPath" ${libPathOption}
     then
       return 1
     fi

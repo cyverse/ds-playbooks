@@ -4,4 +4,6 @@
     pkg: irods-resource
     version: '4.1.10'
 
-- import_tasks: test_irods_ownership.yml
+- include_tasks: test_irods_ownership.yml
+  vars:
+    dir: /var/lib/irods

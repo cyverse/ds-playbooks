@@ -5,7 +5,7 @@ RUN pip --disable-pip-version-check install --upgrade ansible
 RUN yum --assumeyes install \
       dmidecode git postgresql python-dns python-netaddr rpm-build wget \
       https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm
-RUN pip --quiet install --upgrade Jinja2
+RUN pip --quiet install --upgrade Jinja2 python-irodsclient
 RUN mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test /root/.ssh
 
 COPY ansible.cfg /root/.ansible.cfg

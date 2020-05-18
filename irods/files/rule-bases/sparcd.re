@@ -36,9 +36,13 @@ _sparcd_ingest(*Uploader, *TarPath) {
 
 sparcd_acPostProcForPut {
   if (str(sparcd_BASE_COLL) != '') {
-    if ($objPath like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
+  
+    # Give Sparc'd admin user own permission on every file added to the Base collection
+    if ($objPath like regex '^' ++ str(sparcd_BASE_COLL) ++ '/.*') {
       ipc_giveAccessObj(sparcd_ADMIN, 'own', $objPath);
+    }
 
+    if ($objPath like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
       _sparcd_logMsg('scheduling ingest of $objPath for $userNameClient');
 
       delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")

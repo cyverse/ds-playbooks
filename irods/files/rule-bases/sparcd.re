@@ -1,10 +1,11 @@
-# VERSION: 5
+# VERSION: 6
 #
 # These are the custom rules for the Sparc'd project
 
 @include "sparcd-env"
 
-
+_sparcd_PERM = 'own'
+_
 _sparcd_logMsg(*Msg) {
   writeLine('serverLog', 'SPARCD: *Msg');
 }
@@ -34,13 +35,20 @@ _sparcd_ingest(*Uploader, *TarPath) {
 }
 
 
+_sparcd_isForSparcd(*Path) =
+  let *strBase = str(sparcd_BASE_COLL) in *strBase != '' &&  *Path like *strBase ++ '/%'
+
+
+sparcd_acPostProcForCollCreate {
+  if (_sparcd_isForSparcd($collName)) {
+    ipc_giveAccessColl(sparcd_ADMIN, _sparcd_PERM, $collName);
+  }
+}
+
+
 sparcd_acPostProcForPut {
-  if (str(sparcd_BASE_COLL) != '') {
-  
-    # Give Sparc'd admin user own permission on every file added to the Base collection
-    if ($objPath like regex '^' ++ str(sparcd_BASE_COLL) ++ '/.*') {
-      ipc_giveAccessObj(sparcd_ADMIN, 'own', $objPath);
-    }
+  if (_sparcd_isForSparcd($objPath)) {
+    ipc_giveAccessObj(sparcd_ADMIN, _sparcd_PERM, $objPath);
 
     if ($objPath like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
       _sparcd_logMsg('scheduling ingest of $objPath for $userNameClient');

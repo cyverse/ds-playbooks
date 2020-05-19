@@ -67,6 +67,9 @@ exclusive_acPostProcForCollCreate {
 
   *err = errormsg(sernec_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sparcd_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
 exclusive_acPostProcForCopy {

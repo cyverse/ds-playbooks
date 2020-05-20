@@ -55,6 +55,18 @@ options:
             - Only meaningful when state is 'present'
         required: false
         type: str
+    update_password:
+        description:
+            - Specify whether to update user's password or not
+            - Only meaningful when state is 'present' and password is provided
+            - 'always' means always update user's password
+            - 'on_create' means only set user's password when creating user
+        required: false
+        choices:
+            - always
+            - on_create
+        default: on_create
+        type: str
     host:
         description:
             - Hostname of the iRODS server
@@ -145,6 +157,9 @@ class IRODSUserModule:
                        choices=["present", "absent"]),
             type=dict(type="str", default="rodsuser", required=False),
             password=dict(type="str", no_log=True, required=False),
+            update_password=dict(type="str", required=False,
+                                 default="on_create",
+                                 choices=["always", "on_create"]),
 
             host=dict(type="str", required=True),
             port=dict(type="int", required=True),
@@ -252,10 +267,14 @@ class IRODSUserModule:
             if password:
                 self._update_user_password(username, password)
             self.result["user"] = username
-        elif self._user_type(username) != user_type:
-            # update user_type
-            self._update_user_type(username, user_type)
-            self.result["user"] = username
+        else:
+            if password and self.module.params["update_password"] == "always":
+                self._update_user_password(username, password)
+                self.result["user"] = username
+            if user_type and self._user_type(username) != user_type:
+                # update user_type
+                self._update_user_type(username, user_type)
+                self.result["user"] = username
 
         # check if user is present
         if not self._user_exist(username):

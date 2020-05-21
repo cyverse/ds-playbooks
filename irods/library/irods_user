@@ -55,18 +55,6 @@ options:
             - Only meaningful when state is 'present'
         required: false
         type: str
-    update_password:
-        description:
-            - Specify whether to update user's password or not
-            - Only meaningful when state is 'present' and password is provided
-            - 'always' means always update user's password
-            - 'on_create' means only set user's password when creating user
-        required: false
-        choices:
-            - always
-            - on_create
-        default: on_create
-        type: str
     host:
         description:
             - Hostname of the iRODS server
@@ -136,7 +124,7 @@ user:
 try:
     USE_IRODS_CLIENT = True
     from irods.session import iRODSSession
-    from irods.models import User
+    from irods.models import User, Collection
 except ImportError:
     USE_IRODS_CLIENT = False
 
@@ -157,9 +145,6 @@ class IRODSUserModule:
                        choices=["present", "absent"]),
             type=dict(type="str", default="rodsuser", required=False),
             password=dict(type="str", no_log=True, required=False),
-            update_password=dict(type="str", required=False,
-                                 default="on_create",
-                                 choices=["always", "on_create"]),
 
             host=dict(type="str", required=True),
             port=dict(type="int", required=True),
@@ -264,17 +249,23 @@ class IRODSUserModule:
         if not self._user_exist(username):
             # create user
             self._create_user(username, user_type)
+            self.result["user"] = username
             if password:
                 self._update_user_password(username, password)
-            self.result["user"] = username
+                if not self._check_password(username, password):
+                    self._fail("inconsistent password after updating password")
         else:
-            if password and self.module.params["update_password"] == "always":
-                self._update_user_password(username, password)
-                self.result["user"] = username
             if user_type and self._user_type(username) != user_type:
                 # update user_type
                 self._update_user_type(username, user_type)
                 self.result["user"] = username
+
+            # check if password is consistent
+            if password and not self._check_password(username, password):
+                self._update_user_password(username, password)
+                self.result["user"] = username
+                if not self._check_password(username, password):
+                    self._fail("inconsistent password after updating password")
 
         # check if user is present
         if not self._user_exist(username):
@@ -305,7 +296,7 @@ class IRODSUserModule:
         Create an iRODS user with the given username
         """
         try:
-            self.session.users.create(username, user_type)
+            self.session.users.create(username, user_type, user_zone=self.module.params["zone"])
             self.result["changed"] = True
         except Exception as exc:
             # A broad catch on all exception type that could be raised by the
@@ -318,7 +309,7 @@ class IRODSUserModule:
         Update user's type
         """
         try:
-            self.session.users.modify(username, "type", user_type)
+            self.session.users.modify(username, "type", user_type, user_zone=self.module.params["zone"])
             self.result["changed"] = True
         except Exception as exc:
             # A broad catch on all exception type that could be raised by the
@@ -331,7 +322,7 @@ class IRODSUserModule:
         Update user's password
         """
         try:
-            self.session.users.modify(username, "password", password)
+            self.session.users.modify(username, "password", password, user_zone=self.module.params["zone"])
             self.result["changed"] = True
         except Exception as exc:
             # A broad catch on all exception type that could be raised by the
@@ -344,7 +335,7 @@ class IRODSUserModule:
         Remove the iRODS user with the given username
         """
         try:
-            self.session.users.remove(username)
+            self.session.users.remove(username, user_zone=self.module.params["zone"])
             self.result["changed"] = True
         except Exception as exc:
             # A broad catch on all exception type that could be raised by the
@@ -352,12 +343,39 @@ class IRODSUserModule:
             # not well documented.
             self._fail("Unable to remove user {}".format(username), exc)
 
+    def _check_password(self, username, password):
+        """
+        Check if able to login as user with given password
+        """
+        try:
+            ssl_context = ssl.create_default_context(
+                purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None,
+                cadata=None)
+            ssl_settings = {"ssl_context": ssl_context}
+            user_session = iRODSSession(
+                host=self.module.params["host"],
+                port=self.module.params["port"],
+                user=username,
+                password=password,
+                zone=self.module.params["zone"],
+                **ssl_settings)
+            user_session.users.get(username)
+
+            return True
+        except Exception as exc:
+            # A broad catch on all exception type that could be raised by the
+            # call to irods module, since the possible exception types are
+            # not well documented.
+            self.result["check_password_exc"] = str(type(exc))
+            self.result["check_password_exc_msg"] = str(exc)
+            return False
+
     def _user_type(self, username):
         """
         Get the type of the user, None if user not exists
         """
         try:
-            user = self.session.users.get(username)
+            user = self.session.users.get(username, user_zone=self.module.params["zone"])
             if not user:
                 return None
             return user.type

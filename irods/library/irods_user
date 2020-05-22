@@ -119,12 +119,24 @@ user:
     description: user that has been changed
     type: str
     returned: always
+exc:
+    description:
+        - type of last iRODS exception thrown
+        - empty string when none is thrown
+    type: str
+    returned: always
+exc_msg:
+    description:
+        - message of the last iRODS exception thrown
+        - empty string when none is thrown
+    type: str
+    returned: always
 '''
 
 try:
     USE_IRODS_CLIENT = True
     from irods.session import iRODSSession
-    from irods.models import User, Collection
+    from irods.models import User
 except ImportError:
     USE_IRODS_CLIENT = False
 
@@ -155,7 +167,9 @@ class IRODSUserModule:
         # result
         self.result = dict(
             changed=False,
-            user=""
+            user="",
+            exc="",
+            exc_msg=""
         )
 
         # init module
@@ -302,6 +316,8 @@ class IRODSUserModule:
             # A broad catch on all exception type that could be raised by the
             # call to irods module, since the possible exception types are
             # not well documented.
+            self.result["exc"] = type(exc).__name__
+            self.result["exc_msg"] = str(exc)
             self._fail("Unable to create user {}".format(username), exc)
 
     def _update_user_type(self, username, user_type):
@@ -309,12 +325,15 @@ class IRODSUserModule:
         Update user's type
         """
         try:
-            self.session.users.modify(username, "type", user_type, user_zone=self.module.params["zone"])
+            self.session.users.modify(username, "type", user_type,
+                                      user_zone=self.module.params["zone"])
             self.result["changed"] = True
         except Exception as exc:
             # A broad catch on all exception type that could be raised by the
             # call to irods module, since the possible exception types are
             # not well documented.
+            self.result["exc"] = type(exc).__name__
+            self.result["exc_msg"] = str(exc)
             self._fail("Unable to update user type for {}".format(username), exc)
 
     def _update_user_password(self, username, password):
@@ -322,12 +341,15 @@ class IRODSUserModule:
         Update user's password
         """
         try:
-            self.session.users.modify(username, "password", password, user_zone=self.module.params["zone"])
+            self.session.users.modify(username, "password", password,
+                                      user_zone=self.module.params["zone"])
             self.result["changed"] = True
         except Exception as exc:
             # A broad catch on all exception type that could be raised by the
             # call to irods module, since the possible exception types are
             # not well documented.
+            self.result["exc"] = type(exc).__name__
+            self.result["exc_msg"] = str(exc)
             self._fail("Unable to update passowrd for user {}".format(username), exc)
 
     def _remove_user(self, username):
@@ -341,6 +363,8 @@ class IRODSUserModule:
             # A broad catch on all exception type that could be raised by the
             # call to irods module, since the possible exception types are
             # not well documented.
+            self.result["exc"] = type(exc).__name__
+            self.result["exc_msg"] = str(exc)
             self._fail("Unable to remove user {}".format(username), exc)
 
     def _check_password(self, username, password):
@@ -359,6 +383,8 @@ class IRODSUserModule:
                 password=password,
                 zone=self.module.params["zone"],
                 **ssl_settings)
+
+            # fetch self to test if credential is correct
             user_session.users.get(username)
 
             return True
@@ -366,8 +392,8 @@ class IRODSUserModule:
             # A broad catch on all exception type that could be raised by the
             # call to irods module, since the possible exception types are
             # not well documented.
-            self.result["check_password_exc"] = str(type(exc))
-            self.result["check_password_exc_msg"] = str(exc)
+            self.result["exc"] = type(exc).__name__
+            self.result["exc_msg"] = str(exc)
             return False
 
     def _user_type(self, username):
@@ -383,6 +409,8 @@ class IRODSUserModule:
             # A broad catch on all exception type that could be raised by the
             # call to irods module, since the possible exception types are
             # not well documented.
+            self.result["exc"] = type(exc).__name__
+            self.result["exc_msg"] = str(exc)
             self._fail("Unable to query user type for {}".format(username), exc)
 
     def _user_exist(self, username):
@@ -400,6 +428,8 @@ class IRODSUserModule:
             # A broad catch on all exception type that could be raised by the
             # call to irods module, since the possible exception types are
             # not well documented.
+            self.result["exc"] = type(exc).__name__
+            self.result["exc_msg"] = str(exc)
             self._fail("Unable to query irods user {}".format(username), exc)
 
 

@@ -36,7 +36,7 @@ _sparcd_ingest(*Uploader, *TarPath) {
 
 
 _sparcd_isForSparcd(*Path) =
-  let *strBase = str(sparcd_BASE_COLL) in *strBase != '' &&  *Path like *strBase ++ '/%'
+  let *strBase = str(sparcd_BASE_COLL) in *strBase != '' && *Path like *strBase ++ '/*'
 
 
 sparcd_acPostProcForCollCreate {

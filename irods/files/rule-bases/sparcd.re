@@ -5,7 +5,7 @@
 @include "sparcd-env"
 
 _sparcd_PERM = 'own'
-_
+
 _sparcd_logMsg(*Msg) {
   writeLine('serverLog', 'SPARCD: *Msg');
 }

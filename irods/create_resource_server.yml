@@ -30,11 +30,18 @@
   become_flags: '-i'
   tasks:
     - name: create clerver user
-      delegate_to: "{{ groups['ies'][0] }}"
+      delegate_to: localhost
+      become: false
       irods_user:
         name: "{{ _irods_clerver_user }}"
-        password: "{{ _irods_clerver_password }}"
         type: rodsadmin
+        state: present
+        password: "{{ _irods_clerver_password }}"
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"
 
     - name: ensure clerver user is in group rodsadmin
       delegate_to: localhost

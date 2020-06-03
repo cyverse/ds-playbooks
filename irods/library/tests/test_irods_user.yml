@@ -6,6 +6,7 @@
       irods_user:
         name: test_user1
         type: rodsuser
+        info: foo_bar
         state: present
         password: rods123
         host: "dstesting_ies_centos6_1.dstesting_default"
@@ -27,6 +28,7 @@
       shell: |
           iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsuser"
           iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "zone_name: testing"
+          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_info: foo_bar"
       environment:
         IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
         IRODS_PORT: 1247
@@ -202,6 +204,38 @@
     - name: check user exist and is correct type via iadmin
       shell: |
           iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsuser"
+      environment:
+        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_PORT: 1247
+        IRODS_USER_NAME: rods
+        IRODS_PASSWORD: rods
+        IRODS_ZONE_NAME: testing
+      changed_when: false
+
+    - name: update user's info
+      irods_user:
+        name: test_user1
+        type: rodsuser
+        info: bar_foo
+        state: present
+        host: "dstesting_ies_centos6_1.dstesting_default"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: check returned result
+      assert:
+        that:
+          - response.changed
+          - response.exc == ""
+          - response.exc_msg == ""
+          - response.user == "test_user1"
+
+    - name: check user exist and has correct info via iadmin
+      shell: |
+          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_info: bar_foo"
       environment:
         IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
         IRODS_PORT: 1247

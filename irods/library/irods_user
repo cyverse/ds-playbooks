@@ -49,6 +49,12 @@ options:
         required: false
         default: rodsuser
         type: str
+    info:
+        description:
+            - User's info
+            - Only meaningful when state is 'present'
+        required: false
+        type: str
     password:
         description:
             - User's password
@@ -156,6 +162,7 @@ class IRODSUserModule:
             state=dict(type="str", required=True,
                        choices=["present", "absent"]),
             type=dict(type="str", default="rodsuser", required=False),
+            info=dict(type="str", required=False),
             password=dict(type="str", no_log=True, required=False),
 
             host=dict(type="str", required=True),
@@ -257,6 +264,7 @@ class IRODSUserModule:
         if not username:
             self._success("empty username")
         user_type = self.module.params["type"]
+        info = self.module.params["info"]
         password = self.module.params["password"]
 
         # check if user exist
@@ -268,10 +276,17 @@ class IRODSUserModule:
                 self._update_user_password(username, password)
                 if not self._check_password(username, password):
                     self._fail("inconsistent password after updating password")
+            if info:
+                self._update_user_info(username, info)
         else:
             if user_type and self._user_type(username) != user_type:
                 # update user_type
                 self._update_user_type(username, user_type)
+                self.result["user"] = username
+
+            if info and self._user_info(username) != info:
+                # update info
+                self._update_user_info(username, info)
                 self.result["user"] = username
 
             # check if password is consistent
@@ -325,8 +340,20 @@ class IRODSUserModule:
         """
         Update user's type
         """
+        self._update_user_attribute(username, "type", user_type)
+
+    def _update_user_info(self, username, info):
+        """
+        Update user's info
+        """
+        self._update_user_attribute(username, "info", info)
+
+    def _update_user_attribute(self, username, attirbute, value):
+        """
+        Update an attribute of user, attirbute must exist
+        """
         try:
-            self.session.users.modify(username, "type", user_type,
+            self.session.users.modify(username, attirbute, value,
                                       user_zone=self.module.params["zone"])
             self.result["changed"] = True
         except Exception as exc:
@@ -335,7 +362,7 @@ class IRODSUserModule:
             # not well documented.
             self.result["exc"] = type(exc).__name__
             self.result["exc_msg"] = str(exc)
-            self._fail("Unable to update user type for {}".format(username), exc)
+            self._fail("Unable to update user's {} for {}".format(attirbute, username), exc)
 
     def _update_user_password(self, username, password):
         """
@@ -397,6 +424,15 @@ class IRODSUserModule:
             self.result["exc_msg"] = str(exc)
             return False
 
+    def _user_info(self, username):
+        """
+        Get user's info
+        """
+        query = self.session.query(User.name, User.info).filter(User.name == username)
+        for result in query:
+            return result[User.info]
+        return None
+
     def _user_type(self, username):
         """
         Get the type of the user, None if user not exists
@@ -412,7 +448,7 @@ class IRODSUserModule:
             # not well documented.
             self.result["exc"] = type(exc).__name__
             self.result["exc_msg"] = str(exc)
-            self._fail("Unable to query user type for {}".format(username), exc)
+            self._fail("Unable to query user's type for {}".format(username), exc)
 
     def _user_exist(self, username):
         """

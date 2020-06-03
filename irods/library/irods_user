@@ -304,6 +304,7 @@ class IRODSUserModule:
         # check if user have been removed
         if self._user_exist(username):
             self._fail("user still exist after removal, {}".format(username))
+        self._success()
 
     def _create_user(self, username, user_type):
         """

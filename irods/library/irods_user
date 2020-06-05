@@ -88,7 +88,7 @@ options:
         type: str
 
 requirements:
-    - python-irodsclient
+    - python-irodsclient>=0.8.2
 
 author:
     - John Xu

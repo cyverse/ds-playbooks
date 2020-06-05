@@ -84,6 +84,7 @@ options:
     zone:
         description:
             - Zone of the admin user
+            - Zone of the user that the module operate on
         required: true
         type: str
 
@@ -428,7 +429,9 @@ class IRODSUserModule:
         """
         Get user's info
         """
-        query = self.session.query(User.name, User.info).filter(User.name == username)
+        query = self.session.query(User.name, User.info) \
+            .filter(User.name == username,
+                    User.zone == self.module.params["zone"])
         for result in query:
             return result[User.info]
         return None
@@ -455,7 +458,9 @@ class IRODSUserModule:
         Check if there exist an iRODS user with the given username
         """
         try:
-            query = self.session.query(User.name)
+            query = self.session.query(User.name) \
+                .filter(User.name == username,
+                        User.zone == self.module.params["zone"])
 
             for result in query:
                 if username == result[User.name]:

@@ -1,144 +1,335 @@
-#!/bin/bash
-#
-# An ansible module for creating a collection
-#
-# Module Name:
-#  irods_collection
-#
-# Required Variables:
-#  path  the absolute path to the collection to create
-#
-# Optional Variables:
-#  parents:  Whether or not to create the parent collections as well. The
-#            default is false.
-#  state:    Indicates if the collection should be `present` or `absent`. The
-#            default is present.
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+"""
+Provides an ansible module for creating and removing iRODS collection.
+"""
 
-# WANT_JSON
+import ssl
+from ansible.module_utils.basic import AnsibleModule
 
-
-main()
-{
-  local varFile="$1"
-
-  local path
-  path=$(jq --raw-output '.path' < "$varFile")
-  require path
-
-  local parents
-  parents=$(jq --raw-output '.parents // false' < "$varFile")
-  parents="${parents,,}"
-
-  if [ "$parents" != true ] && [ "$parents" != false ]
-  then
-    fail "'parents' must be 'true' or 'false'"
-  fi
-
-  local state
-  state=$(jq --raw-output '.state // "present"' < "$varFile")
-  state="${state,,}"
-
-  if [ "$state" = present ]
-  then
-    if exists "$path"
-    then
-      succeed false
-    fi
-
-    local errMsg
-    if [ "$parents" = true ]
-    then
-      if ! errMsg=$(imkdir -p "$path" 2>&1)
-      then
-        fail "$errMsg"
-      fi
-    else
-      if ! errMsg=$(imkdir "$path" 2>&1)
-      then
-        fail "$errMsg"
-      fi
-    fi
-  elif [ "$state" = absent ]
-  then
-    if ! exists "$path"
-    then
-      succeed false
-    fi
-
-    local errMsg
-    if ! errMsg=$(irm -f -r "$path" 2>&1)
-    then
-      fail "$errMsg"
-    fi
-  else
-    fail "'state' must be 'present' or 'absent'"
-  fi
-
-  succeed true
+ANSIBLE_METADATA = {
+    "metadata_version": "1.1",
+    "status": ["preview"],
+    "supported_by": "community"
 }
 
+DOCUMENTATION = """
+---
+module: irods_collection
 
-exists()
-{
-  local path="$1"
+short_description: Create/Remove iRODS collection
 
-  [[ -n $(quest "select COLL_ID where COLL_NAME = '$path'") ]]
-}
+version_added: "2.4"
+
+description:
+    - Create iRODS collection.
+    - Remove iRODS collection.
+
+options:
+    path:
+        description:
+            - path of the collection
+        required: true
+        type: str
+    state:
+        description:
+            - Desired state to achieve
+            - Either present or absent
+        required: true
+        choices:
+            - present
+            - absent
+        type: str
+    parents:
+        description:
+            - Whether or not to create the parent collections
+            - Only meaningful when state is present
+        required: false
+        default: false
+        type: bool
+    host:
+        description:
+            - Hostname of the iRODS server
+        required: true
+        type: str
+    port:
+        description:
+            - Port of the iRODS server
+        required: true
+        type: int
+    admin_user:
+        description:
+            - Username of the admin user
+        required: true
+        type: str
+    admin_password:
+        description:
+            - Password of the admin user
+        required: true
+        type: str
+    zone:
+        description:
+            - Zone of the admin user
+        required: true
+        type: str
+
+requirements:
+    - python-irodsclient>=0.8.2
+
+author:
+    - John Xu
 
 
-quest()
-{
-  local query="$*"
+"""
 
-  local response
-  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
-  then
-    fail "$response"
-  fi
+EXAMPLES = '''
+# Create iRODS collection
+- name: create a collection
+  irods_collection:
+    path: /home/test_user1/collection1
+    state: present
+    host: cyverse.org
+    port: 1247
+    admin_user: rods
+    admin_password: 1234
+    zone: tempZone
 
-  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
-  then
-    printf '%s' "$response"
-  fi
-}
+# Remove iRODS collection
+- name: remove a collection
+  irods_collection:
+    path: /home/test_user1/collection1
+    state: absent
+    host: cyverse.org
+    port: 1247
+    admin_user: rods
+    admin_password: 1234
+    zone: tempZone
+'''
+
+RETURN = '''
+collection:
+    description: collection that has been changed
+    type: str
+    returned: always
+exc:
+    description:
+        - type of last iRODS exception thrown
+        - empty string when none is thrown
+    type: str
+    returned: always
+exc_msg:
+    description:
+        - message of the last iRODS exception thrown
+        - empty string when none is thrown
+    type: str
+    returned: always
+'''
+
+try:
+    USE_IRODS_CLIENT = True
+    from irods.session import iRODSSession
+    from irods.models import Collection
+    from irods.exception import CollectionDoesNotExist
+except ImportError:
+    USE_IRODS_CLIENT = False
 
 
-require()
-{
-  local var="$1"
+class IRODSCollectionModule:
+    """
+    Module class
+    """
 
-  if [ -z "${!var}" ]
-  then
-    fail "variable '$var' must be defined"
-  fi
-}
+    def __init__(self):
+        """
+        Initialize the module
+        """
+        # define argument
+        self.module_args = dict(
+            path=dict(type="str", required=True),
+            state=dict(type="str", required=True,
+                       choices=["present", "absent"]),
+            parents=dict(type="bool", default=False, required=False),
+
+            host=dict(type="str", required=True),
+            port=dict(type="int", required=True),
+            admin_user=dict(type="str", no_log=True, required=True),
+            admin_password=dict(type="str", no_log=True, required=True),
+            zone=dict(type="str", required=True),
+        )
+        # result
+        self.result = dict(
+            changed=False,
+            collection="",
+            exc="",
+            exc_msg=""
+        )
+
+        # init module
+        self.module = AnsibleModule(
+            argument_spec=self.module_args,
+            supports_check_mode=True
+        )
+
+        self.session = None
+
+    def run(self):
+        """
+        Entry point for module class, method to be called to run the module
+        """
+        # check param and env
+        self.sanity_check()
+
+        # only-check mode
+        if self.module.check_mode:
+            self.module.exit_json(**self.result)
+
+        self.init_session()
+
+        action = self.select_action()
+        action()
+
+    def _fail(self, msg, err=None):
+        """
+        Failure routine, called when the operation failed
+        """
+        if self.session:
+            self.session.cleanup()
+
+        if err:
+            self.module.fail_json(msg=msg + "\n" + str(err), **self.result)
+        else:
+            self.module.fail_json(msg=msg, **self.result)
+
+    def _success(self, msg=""):
+        """
+        Success routine, called when the operation succeeds
+        """
+        if msg:
+            self.result["message"] = msg
+        self.module.exit_json(**self.result)
+
+    def sanity_check(self):
+        """
+        Check if python-irodsclient is installed
+        """
+        # python-irodsclient is required at this point
+        if not USE_IRODS_CLIENT:
+            self._fail("python-irodsclient not installed")
+
+    def init_session(self):
+        """
+        Initialize the iRODS session with iRODS server
+        """
+        ssl_context = ssl.create_default_context(
+            purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None,
+            cadata=None)
+        ssl_settings = {"ssl_context": ssl_context}
+        self.session = iRODSSession(
+            host=self.module.params["host"],
+            port=self.module.params["port"],
+            user=self.module.params["admin_user"],
+            password=self.module.params["admin_password"],
+            zone=self.module.params["zone"],
+            **ssl_settings)
+
+    def select_action(self):
+        """
+        Dispatch action according to the argument passed to the module
+        """
+        if self.module.params["state"] == "present":
+            return self.collection_present
+        return self.collection_absent
+
+    def collection_present(self):
+        """
+        Ensure the collection specified by the path parameter is present
+        """
+        path = self.module.params["path"]
+        create_parent = self.module.params["parents"]
+
+        # check if collection exist
+        if self._collection_exists(path):
+            self._success()
+
+        self._create_collection(path, create_parent)
+
+        if self._collection_exists(path):
+            self._success()
+        else:
+            self._fail("Collection disappear after creation")
+
+    def collection_absent(self):
+        """
+        Ensure the collection specified by the path parameter is absent
+        """
+        path = self.module.params["path"]
+
+        # check if collection exist
+        if not self._collection_exists(path):
+            self._success()
+
+        self._remove_collection(path)
+
+        if not self._collection_exists(path):
+            self._success()
+        else:
+            self._fail("Collection remains after removal")
+
+    def _create_collection(self, path, create_parents):
+        """
+        Create a collection with the given path
+        """
+        try:
+            coll = self.session.collections.create(path, recurse=create_parents)
+            self.result["changed"] = True
+            self.result["collection"] = coll.path
+        except Exception as exc:
+            # A broad catch on all exception type that could be raised by the
+            # call to irods module, since the possible exception types are
+            # not well documented.
+            self.result["exc"] = type(exc).__name__
+            self.result["exc_msg"] = str(exc)
+            self._fail("Unable to create irods collection {}".format(path), exc)
+
+    def _remove_collection(self, path):
+        """
+        Remove a collection with the given path
+        """
+        try:
+            self.session.collections.remove(path, force=True)
+            self.result["changed"] = True
+            self.result["collection"] = path
+        except Exception as exc:
+            # A broad catch on all exception type that could be raised by the
+            # call to irods module, since the possible exception types are
+            # not well documented.
+            self.result["exc"] = type(exc).__name__
+            self.result["exc_msg"] = str(exc)
+            self._fail("Unable to remove irods collection {}".format(path), exc)
+
+    def _collection_exists(self, path):
+        """
+        Check if the collection exists
+        """
+        try:
+            query = self.session.query(Collection).filter(Collection.name == path)
+            result = [row for row in query]
+            return len(result) > 0
+        except Exception as exc:
+            # A broad catch on all exception type that could be raised by the
+            # call to irods module, since the possible exception types are
+            # not well documented.
+            self.result["exc"] = type(exc).__name__
+            self.result["exc_msg"] = str(exc)
+            self._fail("Unable to 1query irods collection {}".format(path), exc)
+
+def main():
+    """
+    Entrypoint of the Ansible module
+    """
+    module = IRODSCollectionModule()
+    module.run()
 
 
-fail()
-{
-  local msg="$*"
-
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
-     '{failed: true, msg: $msg}' \
-    >&2
-
-  exit 1
-}
-
-
-succeed()
-{
-  local changed="$1"
-
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
-     '{changed: ($changed == "true")}' \
-    >&2
-
-  exit 0
-}
-
-
-set -e
-main "$@" 2>&1
+if __name__ == '__main__':
+    main()

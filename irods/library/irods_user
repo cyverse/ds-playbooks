@@ -23,7 +23,7 @@ version_added: "2.4"
 
 description:
     - Create iRODS user.
-    - Update iRODS user's type or password.
+    - Update iRODS user's type or password or info.
     - Remove iRODS user.
 
 options:
@@ -109,10 +109,47 @@ EXAMPLES = '''
     admin_password: 1234
     zone: tempZone
 
+# Update password of test_user1
+- name: update password
+  irods_user:
+    name: test_user1
+    password: foo
+    state: present
+    host: cyverse.org
+    port: 1247
+    admin_user: rods
+    admin_password: 1234
+    zone: tempZone
+
+# Update info of test_user1
+- name: update info
+  irods_user:
+    name: test_user1
+    info: some information
+    state: present
+    host: cyverse.org
+    port: 1247
+    admin_user: rods
+    admin_password: 1234
+    zone: tempZone
+
+# Update type of test_user1
+- name: update user type
+  irods_user:
+    name: test_user1
+    type: other_type
+    state: present
+    host: cyverse.org
+    port: 1247
+    admin_user: rods
+    admin_password: 1234
+    zone: tempZone
+
 # Remove iRODS user
 - name: remove user
   irods_user:
     name: test_user1
+    type: other_type
     state: absent
     host: cyverse.org
     port: 1247

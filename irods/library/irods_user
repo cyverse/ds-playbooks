@@ -310,11 +310,11 @@ class IRODSUserModule:
             # create user
             self._create_user(username, user_type)
             self.result["user"] = username
-            if password:
+            if password is not None:
                 self._update_user_password(username, password)
                 if not self._check_password(username, password):
                     self._fail("inconsistent password after updating password")
-            if info:
+            if info is not None:
                 self._update_user_info(username, info)
         else:
             if user_type and self._user_type(username) != user_type:
@@ -328,7 +328,7 @@ class IRODSUserModule:
                 self.result["user"] = username
 
             # check if password is consistent
-            if password and not self._check_password(username, password):
+            if password is not None and not self._check_password(username, password):
                 self._update_user_password(username, password)
                 self.result["user"] = username
                 if not self._check_password(username, password):

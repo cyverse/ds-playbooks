@@ -14,5 +14,13 @@
         password: ''
 
     - name: create jobs staging collection
+      delegate_to: localhost
+      become: false
       irods_collection:
         path: /{{ _irods_zone_name }}/jobs
+        state: present
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"

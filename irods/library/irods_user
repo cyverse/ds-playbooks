@@ -36,7 +36,7 @@ options:
         description:
             - Desired state to achieve
             - Either present or absent
-        required: true
+        default: present
         choices:
             - present
             - absent
@@ -197,8 +197,8 @@ class IRODSUserModule:
         # define argument
         self.module_args = dict(
             name=dict(type="str", required=True),
-            state=dict(type="str", required=True,
-                       choices=["present", "absent"]),
+            state=dict(type="str", choices=["present", "absent"],
+                       default="present"),
             type=dict(type="str", default="rodsuser", required=False),
             info=dict(type="str", required=False),
             password=dict(type="str", no_log=True, required=False),

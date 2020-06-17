@@ -1,9 +1,10 @@
-# VERSION: 5
+# VERSION: 6
 #
 # These are the custom rules for the Sparc'd project
 
 @include "sparcd-env"
 
+_sparcd_PERM = 'own'
 
 _sparcd_logMsg(*Msg) {
   writeLine('serverLog', 'SPARCD: *Msg');
@@ -34,11 +35,22 @@ _sparcd_ingest(*Uploader, *TarPath) {
 }
 
 
-sparcd_acPostProcForPut {
-  if (str(sparcd_BASE_COLL) != '') {
-    if ($objPath like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
-      ipc_giveAccessObj(sparcd_ADMIN, 'own', $objPath);
+_sparcd_isForSparcd(*Path) =
+  let *strBase = str(sparcd_BASE_COLL) in *strBase != '' && *Path like *strBase ++ '/*'
 
+
+sparcd_acPostProcForCollCreate {
+  if (_sparcd_isForSparcd($collName)) {
+    ipc_giveAccessColl(sparcd_ADMIN, _sparcd_PERM, $collName);
+  }
+}
+
+
+sparcd_acPostProcForPut {
+  if (_sparcd_isForSparcd($objPath)) {
+    ipc_giveAccessObj(sparcd_ADMIN, _sparcd_PERM, $objPath);
+
+    if ($objPath like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
       _sparcd_logMsg('scheduling ingest of $objPath for $userNameClient');
 
       delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")

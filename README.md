@@ -9,7 +9,7 @@ The following system packages need to be installed on control machine.
 
 * `ansible`
 * `dmidecode` (if control machine runs linux)
-* `docker-ce` 
+* `docker-ce`
 * `git`
 * `jq`
 * `python-dns`
@@ -19,7 +19,7 @@ The following system packages need to be installed on control machine.
 
 The following python packages need to be installed on the control machine using `pip`.
 
-* `docker-py`
+* `docker`
 * `python-irodsclient`
 * `requests`
 * `urllib3`

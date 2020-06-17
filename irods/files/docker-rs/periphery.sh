@@ -53,7 +53,7 @@ set_resource_status()
 set_server_secrets()
 {
   jq_in_place \
-    ".irods_control_plane_key |= \"$IRODS_CONTROL_PLANE_KEY\"" \
+    ".irods_server_control_plane_key |= \"$IRODS_CONTROL_PLANE_KEY\"" \
     /var/lib/irods/.irods/irods_environment.json
 
   jq_in_place \

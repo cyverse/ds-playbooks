@@ -1,0 +1,276 @@
+---
+- name: test irods_user module
+  hosts: localhost
+  tasks:
+    - name: create test user
+      irods_user:
+        name: test_user1
+        type: rodsuser
+        info: foo_bar
+        state: present
+        password: rods123
+        host: "dstesting_ies_centos6_1.dstesting_default"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: check returned result
+      assert:
+        that:
+          - response.changed
+          - response.exc == ""
+          - response.exc_msg == ""
+          - response.user == "test_user1"
+
+    - name: check user exist and is correct type via iadmin
+      shell: |
+          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsuser"
+          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "zone_name: testing"
+          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_info: foo_bar"
+      environment:
+        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_PORT: 1247
+        IRODS_USER_NAME: rods
+        IRODS_PASSWORD: rods
+        IRODS_ZONE_NAME: testing
+      changed_when: false
+
+    - name: check user exist and password is consistent with given value
+      irods_user:
+        name: test_user1
+        type: rodsuser
+        state: present
+        password: rods123
+        host: "dstesting_ies_centos6_1.dstesting_default"
+        port: 1247
+        admin_user: test_user1
+        admin_password: rods123
+        zone: testing
+
+    - name: update password
+      irods_user:
+        name: test_user1
+        type: rodsuser
+        state: present
+        password: rods321 # different password
+        host: "dstesting_ies_centos6_1.dstesting_default"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+      # should thrown exception for different password
+    - name: check returned result
+      assert:
+        that:
+          - response.changed
+          - response.exc == "CAT_INVALID_AUTHENTICATION"
+          - response.exc_msg == "None"
+          - response.user == "test_user1"
+
+    - name: check user exist and password is consistent with given value
+      irods_user:
+        name: test_user1
+        type: rodsuser
+        state: present
+        password: rods321
+        host: "dstesting_ies_centos6_1.dstesting_default"
+        port: 1247
+        admin_user: test_user1
+        admin_password: rods321
+        zone: testing
+
+    - name: update password again
+      irods_user:
+        name: test_user1
+        type: rodsuser
+        state: present
+        password: rods321
+        host: "dstesting_ies_centos6_1.dstesting_default"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: check returned result
+      assert:
+        that:
+          - not response.changed
+          - response.exc == ""
+          - response.exc_msg == ""
+          - response.user == ""
+
+    - name: check user exist and password is consistent with given value
+      irods_user:
+        name: test_user1
+        type: rodsuser
+        state: present
+        password: rods321
+        host: "dstesting_ies_centos6_1.dstesting_default"
+        port: 1247
+        admin_user: test_user1
+        admin_password: rods321
+        zone: testing
+
+    - debug:
+        msg: "{{ response }}"
+
+    - name: update type
+      irods_user:
+        name: test_user1
+        type: rodsadmin
+        state: present
+        host: "dstesting_ies_centos6_1.dstesting_default"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: check returned result
+      assert:
+        that:
+          - response.changed
+          - response.exc == ""
+          - response.exc_msg == ""
+          - response.user == "test_user1"
+
+    - name: check user exist and is correct type via iadmin
+      shell: |
+          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsadmin"
+      environment:
+        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_PORT: 1247
+        IRODS_USER_NAME: rods
+        IRODS_PASSWORD: rods
+        IRODS_ZONE_NAME: testing
+      changed_when: false
+
+    - name: update type again
+      irods_user:
+        name: test_user1
+        type: rodsadmin
+        state: present
+        host: "dstesting_ies_centos6_1.dstesting_default"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: check returned result
+      assert:
+        that:
+          - not response.changed
+          - response.exc == ""
+          - response.exc_msg == ""
+          - response.user == ""
+
+    - name: check user exist and is correct type via iadmin
+      shell: |
+          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsadmin"
+      environment:
+        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_PORT: 1247
+        IRODS_USER_NAME: rods
+        IRODS_PASSWORD: rods
+        IRODS_ZONE_NAME: testing
+      changed_when: false
+
+    - name: update type back
+      irods_user:
+        name: test_user1
+        type: rodsuser
+        state: present
+        host: "dstesting_ies_centos6_1.dstesting_default"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: check returned result
+      assert:
+        that:
+          - response.changed
+          - response.exc == ""
+          - response.exc_msg == ""
+          - response.user == "test_user1"
+
+    - name: check user exist and is correct type via iadmin
+      shell: |
+          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsuser"
+      environment:
+        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_PORT: 1247
+        IRODS_USER_NAME: rods
+        IRODS_PASSWORD: rods
+        IRODS_ZONE_NAME: testing
+      changed_when: false
+
+    - name: update user's info
+      irods_user:
+        name: test_user1
+        type: rodsuser
+        info: bar_foo
+        state: present
+        host: "dstesting_ies_centos6_1.dstesting_default"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: check returned result
+      assert:
+        that:
+          - response.changed
+          - response.exc == ""
+          - response.exc_msg == ""
+          - response.user == "test_user1"
+
+    - name: check user exist and has correct info via iadmin
+      shell: |
+          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_info: bar_foo"
+      environment:
+        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_PORT: 1247
+        IRODS_USER_NAME: rods
+        IRODS_PASSWORD: rods
+        IRODS_ZONE_NAME: testing
+      changed_when: false
+
+    - name: remove user
+      irods_user:
+        name: test_user1
+        state: absent
+        host: "dstesting_ies_centos6_1.dstesting_default"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: check returned result
+      assert:
+        that:
+          - response.changed
+          - response.exc == ""
+          - response.exc_msg == ""
+          - response.user == "test_user1"
+
+    - name: check if user removed via iadmin
+      shell: |
+          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "No rows found"
+      environment:
+        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_PORT: 1247
+        IRODS_USER_NAME: rods
+        IRODS_PASSWORD: rods
+        IRODS_ZONE_NAME: testing
+      changed_when: false
+

@@ -13,5 +13,10 @@
 
     - name: create project collection
       irods_collection:
+        path: /{{ _irods_zone_name }}/home/shared/bhpire
+        parents: true
+
+    - name: create public collection
+      irods_collection:
         path: /{{ _irods_zone_name }}/home/shared/eht
         parents: true

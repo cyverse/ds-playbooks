@@ -4,7 +4,10 @@
 @include 'pire-env'
 
 
-_pire_isForPIRE(*Path) = str(*Path) like str(pire_BASE_COLL) ++ '/*'
+_pire_isForPIRE(*Path) =
+  let *strPath = str(*Path)
+  in *strPath like str(pire_PROJECT_BASE_COLL) ++ '/*' ||
+     *strPath like str(pire_PUBLIC_BASE_COLL) ++ '/*' 
 
 
 # Determines if the provided collection or data object belongs to the PIRE
@@ -49,7 +52,7 @@ pep_resource_resolve_hierarchy_pre(*OUT) {
       && $KVPairs.resc_hier == pire_RESC
       && !_pire_isForPIRE($KVPairs.logical_path)) {
     *msg = 'CYVERSE ERROR:  ' ++ pire_RESC ++ ' usage is limited to the EHT collection, '
-           ++ str(pire_BASE_COLL);
+           ++ str(pire_PUBLIC_BASE_COLL);
 
     failmsg(-32000, *msg);
   }

@@ -16,5 +16,9 @@
       changed_when: false
 
     - name: test create project collection
+      shell: ils /testing/home/shared/bhpire &> /dev/null
+      changed_when: false
+
+    - name: test create public collection
       shell: ils /testing/home/shared/eht &> /dev/null
       changed_when: false

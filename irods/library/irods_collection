@@ -129,7 +129,6 @@ try:
     USE_IRODS_CLIENT = True
     from irods.session import iRODSSession
     from irods.models import Collection
-    from irods.exception import CollectionDoesNotExist
 except ImportError:
     USE_IRODS_CLIENT = False
 
@@ -313,8 +312,10 @@ class IRODSCollectionModule:
         """
         try:
             query = self.session.query(Collection).filter(Collection.name == path)
-            result = [row for row in query]
-            return len(result) > 0
+            for row in query:
+                if row:
+                    return True
+            return False
         except Exception as exc:
             # A broad catch on all exception type that could be raised by the
             # call to irods module, since the possible exception types are

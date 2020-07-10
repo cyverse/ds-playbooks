@@ -35,10 +35,10 @@ options:
         description:
             - Desired state to achieve
             - Either present or absent
-        required: true
         choices:
             - present
             - absent
+        default: present
         type: str
     parents:
         description:
@@ -145,8 +145,8 @@ class IRODSCollectionModule:
         # define argument
         self.module_args = dict(
             path=dict(type="str", required=True),
-            state=dict(type="str", required=True,
-                       choices=["present", "absent"]),
+            state=dict(type="str", choices=["present", "absent"],
+                       default="present"),
             parents=dict(type="bool", default=False, required=False),
 
             host=dict(type="str", required=True),

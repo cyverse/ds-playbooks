@@ -17,8 +17,15 @@
       irods_collection:
         path: /{{ _irods_zone_name }}/home/shared/bhpire
         parents: true
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"
 
     - name: create public collection
+      delegate_to: localhost
+      become: false
       irods_collection:
         path: /{{ _irods_zone_name }}/home/shared/eht
         parents: true

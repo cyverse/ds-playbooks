@@ -1,6 +1,6 @@
 ---
 - name: test configure AMQP broker
-  hosts: rabbitmq
+  hosts: rabbitmq[0]
   become: true
   tasks:
     - name: test vhost name is correct
@@ -28,9 +28,7 @@
   become: true
   become_user: irods
   tasks:
-    - name: test start iRODS
-      debug:
-        msg: TODO implement
+    - import_tasks: tasks/test_irods_running.yml
 
 
 - name: test start iRODS on resource servers

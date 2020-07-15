@@ -7,7 +7,7 @@
 
 
 - name: configure AMQP broker
-  hosts: rabbitmq
+  hosts: rabbitmq[0]
   become: true
   roles:
     - role: cyverse.rabbitmq-vhost

@@ -12,9 +12,17 @@
         hierarchy: "{{ _pire_resource_hierarchy }}"
 
     - name: create project collection
+      when: _pire_manager != ''
       irods_collection:
         path: /{{ _irods_zone_name }}/home/shared/bhpire
         parents: true
+
+    - name: give PIRE manager own permission on project collection
+      when: _pire_manager != ''
+      irods_permission:
+        subject: "{{ _pire_manager }}"
+        permission: own
+        object: /{{ _irods_zone_name }}/home/shared/bhpire
 
     - name: create public collection
       irods_collection:

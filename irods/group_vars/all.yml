@@ -154,6 +154,7 @@ _load_balancer_stats_password: "{{
 
 _load_balancer_webdav_check_period: "{{ load_balancer_webdav_check_period | default(2) }}"
 
+_pire_manager: "{{ pire_manager | default(None) }}"
 _pire_resource_hierarchy: "{{ pire_resource_hierarchy if pire_resource_hierarchy is defined else
                               _irods_resource_hierarchies[0] }}"
 

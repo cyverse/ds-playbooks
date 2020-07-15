@@ -14,6 +14,7 @@
     - name: create project collection
       delegate_to: localhost
       become: false
+      when: _pire_manager != ''
       irods_collection:
         path: /{{ _irods_zone_name }}/home/shared/bhpire
         parents: true
@@ -22,6 +23,13 @@
         admin_user: "{{ _irods_clerver_user }}"
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
+
+    - name: give PIRE manager own permission on project collection
+      when: _pire_manager != ''
+      irods_permission:
+        subject: "{{ _pire_manager }}"
+        permission: own
+        object: /{{ _irods_zone_name }}/home/shared/bhpire
 
     - name: create public collection
       delegate_to: localhost

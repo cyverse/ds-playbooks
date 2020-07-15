@@ -19,6 +19,11 @@
       shell: ils /testing/home/shared/bhpire &> /dev/null
       changed_when: false
 
+    - name: test give PIRE manager own permission on project collection
+      shell: |
+        ils -A /testing/home/shared/bhpire | sed --quiet 2p | grep --quiet pire_mgr#testing:own
+      changed_when: false
+
     - name: test create public collection
       shell: ils /testing/home/shared/eht &> /dev/null
       changed_when: false

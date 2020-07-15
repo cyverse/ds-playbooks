@@ -32,11 +32,12 @@
 
 
 - name: test start iRODS on resource servers
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+  hosts: rs:!ies
+  become: true
+  become_user: irods
   tasks:
-    - debug:
+    - name: test start iRODS
+      debug:
         msg: TODO implement
 
 

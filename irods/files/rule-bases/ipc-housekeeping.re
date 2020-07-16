@@ -1,32 +1,13 @@
-# VERSION 2
+# VERSION 3
 #
 # ipc-housekeeping.re
 # This is a library of rules for periodic tasks like updating quota usage data.
 
+#
+# QUOTAS
+#
+
 _ipc_QUOTA_UPDATE_FREQ = '1h REPEAT FOR EVER'
-_ipc_TRASH_RM_FREQ = '7d REPEAT FOR EVER'
-
-
-_ipc_rmTrash {
-  writeLine('serverLog', 'DS: starting trash removal');
-
-  msiGetFormattedSystemTime(*date, 'human', '%d-%02d-%02d');
-  *logFileArg = execCmdArg("/var/lib/irods/iRODS/server/log/trash-removal.log-*date");
-
-  if (0 == errorcode(msiExecCmd('rm-trash', "--log *logFileArg", 'null', 'null', 'null', *out))) {
-    *subject = 'DS: ' ++ ipc_ZONE ++ ' trash removal of succeeded';
-    *body = 'SSIA';
-  } else {
-    *subject = 'DS: ' ++ ipc_ZONE ++ ' trash removal failed';
-    msiGetStdErrInExecCmdOut(*out, *body);
-  }
-
-  if (0 != errorcode(msiSendMail(ipc_REPORT_EMAIL_ADDR, *subject, *body))) {
-    writeLine('serverLog', 'DS: failed to mail trash removal report');
-  }
-
-  writeLine('serverLog', 'DS: completed trash removal');
-}
 
 
 _ipc_updateQuotaUsage {
@@ -43,12 +24,6 @@ _ipc_updateQuotaUsage {
 _ipc_scheduleQuotaUsageUpdate {
   writeLine('serverLog', 'DS: scheduling quota usage updates');
   delay('<PLUSET>0s</PLUSET><EF>' ++ _ipc_QUOTA_UPDATE_FREQ ++ '</EF>') {_ipc_updateQuotaUsage}
-}
-
-
-_ipc_scheduleRmTrash {
-  writeLine('serverLog', 'DS: scheduling trash removal');
-  delay('<PLUSET>0s</PLUSET><EF>' ++ _ipc_TRASH_RM_FREQ ++ '</EF>') {_ipc_rmTrash}
 }
 
 
@@ -82,6 +57,41 @@ ipc_rescheduleQuotaUsageUpdate {
     _ipc_scheduleQuotaUsageUpdate;
     writeLine('stdout', 'scheduled quota usage updates');
   }
+}
+
+
+#
+# TRASH REMOVAL
+#
+
+_ipc_TRASH_RM_FREQ = '7d REPEAT FOR EVER'
+
+
+_ipc_rmTrash {
+  writeLine('serverLog', 'DS: starting trash removal');
+
+  msiGetFormattedSystemTime(*date, 'human', '%d-%02d-%02d');
+  *logFileArg = execCmdArg("/var/lib/irods/iRODS/server/log/trash-removal.log-*date");
+
+  if (0 == errorcode(msiExecCmd('rm-trash', "--log *logFileArg", 'null', 'null', 'null', *out))) {
+    *subject = 'DS: ' ++ ipc_ZONE ++ ' trash removal of succeeded';
+    *body = 'SSIA';
+  } else {
+    *subject = 'DS: ' ++ ipc_ZONE ++ ' trash removal failed';
+    msiGetStdErrInExecCmdOut(*out, *body);
+  }
+
+  if (0 != errorcode(msiSendMail(ipc_REPORT_EMAIL_ADDR, *subject, *body))) {
+    writeLine('serverLog', 'DS: failed to mail trash removal report');
+  }
+
+  writeLine('serverLog', 'DS: completed trash removal');
+}
+
+
+_ipc_scheduleRmTrash {
+  writeLine('serverLog', 'DS: scheduling trash removal');
+  delay('<PLUSET>0s</PLUSET><EF>' ++ _ipc_TRASH_RM_FREQ ++ '</EF>') {_ipc_rmTrash}
 }
 
 

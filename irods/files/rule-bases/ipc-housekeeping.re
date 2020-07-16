@@ -3,39 +3,19 @@
 # ipc-housekeeping.re
 # This is a library of rules for periodic tasks like updating quota usage data.
 
-#
-# QUOTAS
-#
 
-_ipc_QUOTA_UPDATE_FREQ = '1h REPEAT FOR EVER'
-
-
-_ipc_updateQuotaUsage {
-  writeLine('serverLog', 'DS: updating quota usage');
-
-  if (0 == errormsg(msiQuota, *msg)) {
-    writeLine('serverLog', 'DS: quota usage updated');
-  } else {
-    writeLine('serverLog', "DS: quota usage update failed: *msg");
-  }
+_ipc_schedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
+  writeLine('serverLog', 'DS: scheduling *Desc');
+  eval(``delay('<PLUSET>0s</PLUSET><EF>*Freq</EF>') {`` ++ *RuleName ++ ``}``);
 }
 
 
-_ipc_scheduleQuotaUsageUpdate {
-  writeLine('serverLog', 'DS: scheduling quota usage updates');
-  delay('<PLUSET>0s</PLUSET><EF>' ++ _ipc_QUOTA_UPDATE_FREQ ++ '</EF>') {_ipc_updateQuotaUsage}
-}
-
-
-# This rule shedules the hourly calculation of quota usage data
-#
-ipc_rescheduleQuotaUsageUpdate {
+_ipc_reschedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
   *scheduled = false;
 
-  foreach(*row in SELECT RULE_EXEC_ID, RULE_EXEC_FREQUENCY
-                  WHERE RULE_EXEC_NAME = '_ipc_updateQuotaUsage|') {
-    if (*scheduled || *row.RULE_EXEC_FREQUENCY != _ipc_QUOTA_UPDATE_FREQ) {
-      writeLine('serverLog', 'DS: unscheduling quota usage updates');
+  foreach(*row in SELECT RULE_EXEC_ID, RULE_EXEC_FREQUENCY WHERE RULE_EXEC_NAME = '*RuleName|') {
+    if (*scheduled || *row.RULE_EXEC_FREQUENCY != *Freq) {
+      writeLine('serverLog', 'DS: unscheduling *Desc');
 
       *idArg = execCmdArg(*row.RULE_EXEC_ID);
 
@@ -52,20 +32,40 @@ ipc_rescheduleQuotaUsageUpdate {
   }
 
   if (*scheduled) {
-    writeLine('stdout', 'quota usage updates already scheduled');
+    writeLine('stdout', '*Desc already scheduled');
   } else {
-    _ipc_scheduleQuotaUsageUpdate;
-    writeLine('stdout', 'scheduled quota usage updates');
+    _ipc_schedulePeriodicPolicy(*RuleName, *Freq, *Desc);
+    writeLine('stdout', 'scheduled *Desc');
   }
+}
+
+
+#
+# QUOTAS
+#
+
+_ipc_updateQuotaUsage {
+  writeLine('serverLog', 'DS: updating quota usage');
+
+  if (0 == errormsg(msiQuota, *msg)) {
+    writeLine('serverLog', 'DS: quota usage updated');
+  } else {
+    writeLine('serverLog', "DS: quota usage update failed: *msg");
+  }
+}
+
+
+# This rule shedules the hourly calculation of quota usage data
+#
+ipc_rescheduleQuotaUsageUpdate {
+  _ipc_reschedulePeriodicPolicy(
+    ``_ipc_updateQuotaUsage``, '1h REPEAT FOR EVER', 'quota usage updates');
 }
 
 
 #
 # TRASH REMOVAL
 #
-
-_ipc_TRASH_RM_FREQ = '7d REPEAT FOR EVER'
-
 
 _ipc_rmTrash {
   writeLine('serverLog', 'DS: starting trash removal');
@@ -89,39 +89,8 @@ _ipc_rmTrash {
 }
 
 
-_ipc_scheduleRmTrash {
-  writeLine('serverLog', 'DS: scheduling trash removal');
-  delay('<PLUSET>0s</PLUSET><EF>' ++ _ipc_TRASH_RM_FREQ ++ '</EF>') {_ipc_rmTrash}
-}
-
-
 # This rule shedules the weekly trash removal
 #
 ipc_rescheduleTrashRemoval {
-  *scheduled = false;
-
-  foreach(*row in SELECT RULE_EXEC_ID, RULE_EXEC_FREQUENCY WHERE RULE_EXEC_NAME = '_ipc_rmTrash|') {
-    if (*scheduled || *row.RULE_EXEC_FREQUENCY != _ipc_TRASH_RM_FREQ) {
-      writeLine('serverLog', 'DS: unscheduling trash removal');
-
-      *idArg = execCmdArg(*row.RULE_EXEC_ID);
-
-      *status = errorcode(
-        msiExecCmd('delete-scheduled-rule', *idArg, 'null', 'null', 'null', *out));
-
-      if (*status < 0) {
-        msiGetStderrInExecCmdOut(*out, *resp);
-        failmsg(*status, *resp);
-      }
-    } else {
-      *scheduled = true;
-    }
-  }
-
-  if (*scheduled) {
-    writeLine('stdout', 'trash removal already scheduled');
-  } else {
-    _ipc_scheduleRmTrash;
-    writeLine('stdout', 'scheduled trash removal');
-  }
+  _ipc_reschedulePeriodicPolicy(``_ipc_rmTrash``, '7d REPEAT FOR EVER', 'trash removal');
 }

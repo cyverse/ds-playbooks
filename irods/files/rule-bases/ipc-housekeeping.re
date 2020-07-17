@@ -83,7 +83,7 @@ _ipc_determineStorageFreeSpace {
     }
   }
 
-  writeLine('serverLog', DS: determined free space on resource servers');
+  writeLine('serverLog', 'DS: determined free space on resource servers');
 }
 
 

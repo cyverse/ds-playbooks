@@ -38,8 +38,18 @@
       changed_when: false
 
     - name: verify that rodsadmin has write permission on zone coll members
-      debug:
-        msg: TODO implement
+      shell: |
+        id=$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")
+        totColls=$(iquest '%s' "select count(COLL_ID) where COLL_PARENT_NAME = '/testing'")
+
+        totCollsWrite=$(iquest '%s' \
+                               "select count(COLL_ID)
+                                where COLL_PARENT_NAME = '/testing'
+                                  and COLL_ACCESS_USER_ID = '$id'
+                                  and COLL_ACCESS_NAME = 'modify object'")
+
+        [[ $totColls -gt 0 ]] && [[ $totColls -eq $totCollsWrite ]]
+      changed_when: false
 
     - name: verify that rodsadmin has own permission on everthing else
       debug:
@@ -72,4 +82,7 @@
         msg: TODO implement
 
     - debug:
-        msg: TODO implement test start trash removal
+        msg: TODO test start storage free space determination
+
+    - debug:
+        msg: TODO test start trash removal

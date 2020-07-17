@@ -73,6 +73,11 @@
       register: results
       changed_when: results.stdout == 'scheduled quota usage updates'
 
+    - name: start storage free space determination
+      command: irule ipc_rescheduleStorageFreeSpaceDetermination null ruleExecOut
+      register: results
+      changed_when: results.stdout == 'scheduled storage determination'
+
     - name: start trash removal
       command: irule ipc_rescheduleTrashRemoval null ruleExecOut
       register: results

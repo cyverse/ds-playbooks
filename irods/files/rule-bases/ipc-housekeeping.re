@@ -55,7 +55,10 @@ _ipc_updateQuotaUsage {
 }
 
 
-# This rule shedules the hourly calculation of quota usage data
+# This rule shedules the hourly calculation of quota usage data. If it
+# reschedules the calculation, it writes 'scheduled quota usage updates' to
+# standard output. If it doesn't error out, but doesn't reschedule the
+# calculation, it writes 'quota usage updates already scheduled'.
 #
 ipc_rescheduleQuotaUsageUpdate {
   _ipc_reschedulePeriodicPolicy(
@@ -93,7 +96,10 @@ _ipc_determineAllStorageFreeSpace {
 
 
 # This rule schedules the daily determination of the available disk space for
-# all Unix file system resources.
+# all Unix file system resources. If it reschedules the determination, it writes
+# 'scheduled storage determination' to standard output. If it doesn't error
+# out, but it doesn't reschedule the determination, it writes 'storage 
+# determination already scheduled'.
 #
 ipc_rescheduleStorageFreeSpaceDetermination {
   _ipc_reschedulePeriodicPolicy(
@@ -127,7 +133,10 @@ _ipc_rmTrash {
 }
 
 
-# This rule shedules the weekly trash removal
+# This rule shedules the weekly trash removal. If it reschedules the removal,
+# it writes 'scheduled trash removal' to standard output. If it doesn't error
+# out, but it doesn't reschedule the removal, it writes 'trash removal already
+# scheduled'.
 #
 ipc_rescheduleTrashRemoval {
   _ipc_reschedulePeriodicPolicy(``_ipc_rmTrash``, '7d REPEAT FOR EVER', 'trash removal');

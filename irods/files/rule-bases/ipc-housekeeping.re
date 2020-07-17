@@ -67,20 +67,19 @@ ipc_rescheduleQuotaUsageUpdate {
 # STORAGE FREE SPACE
 #
 
-# XXX: This is very likely not the right way to do this. I don't know what the
-#      argument to msi_update_unixfilesystem_resource_free_space should be.
+# XXX: msi_update_unixfilesystem_resource_free_space needs to be run on the
+#      server hosting the resource.
 _ipc_determineStorageFreeSpace {
   writeLine('serverLog', 'DS: determining free space on resource servers');
 
   foreach(*record in SELECT RESC_NAME
                      WHERE RESC_TYPE_NAME = 'unixfilesystem' AND RESC_STATUS = 'up') {
     *resc = *record.RESC_NAME;
-    *err = errormsg(msi_update_unixfilesystem_resource_free_space(*record.RESC_NAME), *msg);
 
-    if (*err == 0) {
-      writeLine('serverLog', 'DS: determined free space on *resc');
+    if (0 == errormsg(msi_update_unixfilesystem_resource_free_space(*resc), *msg)) {
+      writeLine('serverLog', "DS: determined free space on *resc");
     } else {
-      writeLine('serverLog', 'DS: failed to determine free space on *resc');
+      writeLine('serverLog', "DS: failed to determine free space on *resc: *msg");
     }
   }
 

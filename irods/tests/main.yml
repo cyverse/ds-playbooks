@@ -23,22 +23,12 @@
 - import_playbook: cfg_irods.yml
 
 
-- name: test start iRODS on IES
-  hosts: ies
+- name: verify iRODS started
+  hosts: irods
   become: true
   become_user: irods
   tasks:
     - import_tasks: tasks/test_irods_running.yml
-
-
-- name: test start iRODS on resource servers
-  hosts: rs:!ies
-  become: true
-  become_user: irods
-  tasks:
-    - name: test start iRODS
-      debug:
-        msg: TODO implement
 
 
 - import_playbook: irods_runtime_init.yml

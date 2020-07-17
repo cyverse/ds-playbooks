@@ -67,29 +67,37 @@ ipc_rescheduleQuotaUsageUpdate {
 # STORAGE FREE SPACE
 #
 
-# XXX: msi_update_unixfilesystem_resource_free_space needs to be run on the
-#      server hosting the resource.
-_ipc_determineStorageFreeSpace {
+# NOTE: This runs on the resource server hosting the resource whose free space
+#       is in question.
+_ipc_determineStorageFreeSpace(*Host, *RescName) {
+  remote(*Host, '') {
+    if (0 == errormsg(msi_update_unixfilesystem_resource_free_space(*RescName), *msg)) {
+      writeLine('serverLog', "DS: determined free space on *RescName");
+    } else {
+      writeLine('serverLog', "DS: failed to determine free space on *RescName: *msg");
+    }
+  }
+}
+
+
+_ipc_determineAllStorageFreeSpace {
   writeLine('serverLog', 'DS: determining free space on resource servers');
 
-  foreach(*record in SELECT RESC_NAME
+  foreach(*record in SELECT RESC_NAME, RESC_LOC
                      WHERE RESC_TYPE_NAME = 'unixfilesystem' AND RESC_STATUS = 'up') {
-    *resc = *record.RESC_NAME;
-
-    if (0 == errormsg(msi_update_unixfilesystem_resource_free_space(*resc), *msg)) {
-      writeLine('serverLog', "DS: determined free space on *resc");
-    } else {
-      writeLine('serverLog', "DS: failed to determine free space on *resc: *msg");
-    }
+    _ipc_determineStorageFreeSpace(*record.RESC_LOC, *record.RESC_NAME);
   }
 
   writeLine('serverLog', 'DS: determined free space on resource servers');
 }
 
 
+# This rule schedules the daily determination of the available disk space for
+# all Unix file system resources.
+#
 ipc_rescheduleStorageFreeSpaceDetermination {
   _ipc_reschedulePeriodicPolicy(
-    ``_ipc_determineStorageFreeSpace``, '1d REPEAT FOR EVER', 'storage determination');
+    ``_ipc_determineAllStorageFreeSpace``, '1d REPEAT FOR EVER', 'storage determination');
 }
 
 

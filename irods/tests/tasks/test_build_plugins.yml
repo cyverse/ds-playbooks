@@ -1,0 +1,18 @@
+---
+- name: test checkout irods-netcdf-build repo
+  run_once: true
+  become: false
+  local_action:
+    module: stat
+    path: /tmp/irods-netcdf-build
+  register: response
+  failed_when: not response.stat.exists
+
+- name: test checkout msi-setavu-plugin repo
+  run_once: true
+  become: false
+  local_action:
+    module: stat
+    path: /tmp/irods-setavu-plugin
+  register: response
+  failed_when: not response.stat.exists

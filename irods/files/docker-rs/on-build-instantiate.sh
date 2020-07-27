@@ -18,11 +18,11 @@
 #                     default
 # IRODS_HOST_UID      (optional) the UID of the hosting server to run iRODS as
 #                     instead of the default user defined in the container
-# IRODS_RES_SERVER    the FQDN or address used by the rest of the grid to
-#                     communicate with this server
+# IRODS_RES_SERVER    the FQDN or address used by the grid to communicate with
+#                     this server
 # IRODS_STORAGE_RES   the unix file system resource to server
 
-set -e
+set -o errexit
 
 
 main()
@@ -46,6 +46,7 @@ main()
     ".irods_cwd              |= sub(\"_IRODS_USER_NAME_\"; \"$IRODS_CLERVER_USER\") |
      .irods_default_resource |= \"$IRODS_DEFAULT_RES\" |
      .irods_home             |= sub(\"_IRODS_USER_NAME_\"; \"$IRODS_CLERVER_USER\") |
+     .irods_host             |= \"$IRODS_RS_SERVER\" |
      .irods_user_name        |= \"$IRODS_CLERVER_USER\"" \
     /var/lib/irods/.irods/irods_environment.json
 

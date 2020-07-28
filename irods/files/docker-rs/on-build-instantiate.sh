@@ -46,7 +46,7 @@ main()
     ".irods_cwd              |= sub(\"_IRODS_USER_NAME_\"; \"$IRODS_CLERVER_USER\") |
      .irods_default_resource |= \"$IRODS_DEFAULT_RES\" |
      .irods_home             |= sub(\"_IRODS_USER_NAME_\"; \"$IRODS_CLERVER_USER\") |
-     .irods_host             |= \"$IRODS_RS_SERVER\" |
+     .irods_host             |= \"$IRODS_RES_SERVER\" |
      .irods_user_name        |= \"$IRODS_CLERVER_USER\"" \
     /var/lib/irods/.irods/irods_environment.json
 

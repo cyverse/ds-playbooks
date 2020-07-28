@@ -32,8 +32,10 @@
     - import_tasks: tasks/test_build_plugins.yml
 
     - name: test create command scripts staging directory
-      debug:
-        msg: TODO implement
+      stat:
+        path: /tmp/cmd
+      register: response
+      failed_when: not (response.stat.exists and response.stat.isdir)
 
     - name: test add common command scripts
       debug:

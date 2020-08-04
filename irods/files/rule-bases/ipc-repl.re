@@ -254,7 +254,7 @@ _createOrOverwrite(*Object, *IngestResc, *ReplResc) {
 }
 
 
-_repl_createOrOverwrite(*Object, *IngestResc, *ReplResc) {
+_repl_createOrOverwrite(*Object, *IngestResc, *ReplRes) {
   if ($writeFlag == 0) {
 # XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
 #    _scheduleRepl(*Object, if $rescName == *IngestResc then *IngestResc else *ReplResc);
@@ -333,8 +333,9 @@ _repl_findReplResc(*Resc) {
 # REPLICATION RULES
 
 # This rule ensures that copies of files are replicated.
-#
-replCopy {
+
+# DEPRECATED
+_old_replCopy {
   on (aegis_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
   }
@@ -348,9 +349,23 @@ replCopy {
   on (terraref_replBelongsTo(/$objPath)) {
   }
 }
-replCopy {
+_old_replCopy {
   _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
  }
+
+
+# TODO Once deprecated functionality is gone, move common logic with replPut
+#      into _repl_createOrOverwrite
+replCopy {
+  (*resc, *_) = _repl_findResc($objPath);
+
+  if (*resc != ipc_DEFAULT_RESC) {
+    (*repl, *_) = _repl_findReplResc(*resc);
+    _repl_createOrOverwrite($objPath, (*resc, true), (*repl, true));
+  } else {
+    _old_replCopy;
+  }
+}
 
 
 # This rule updates the replicas if needed after a collection or data object has
@@ -401,9 +416,9 @@ replEntityRename(*SourceObject, *DestObject) {
 }
 
 
-# DEPRECATED
 # This rule ensures that uploaded files are replicated.
-#
+
+# DEPRECATED
 _old_replPut {
   on (aegis_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
@@ -435,10 +450,10 @@ replPut {
 }
 
 
-# DEPRECATED
 # This rule ensures that the correct resource is chosen for first replica of a
 # newly created data object.
-#
+
+# DEPRECATED
 _old_replSetRescSchemeForCreate {
   on (aegis_replBelongsTo(/$objPath)) {
     _setDefaultResc(aegis_replIngestResc);
@@ -472,10 +487,10 @@ replSetRescSchemeForCreate {
 }
 
 
-# DEPRECATED
 # This rule ensures that the correct resource is chosen for the second and
 # subsequent replicas of a data object.
-#
+
+# DEPRECATED
 _old_replSetRescSchemeForRepl {
   on (aegis_replBelongsTo(/$objPath)) {
     _setDefaultResc(aegis_replReplResc);

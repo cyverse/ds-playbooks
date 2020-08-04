@@ -351,10 +351,11 @@ replPut {
 }
 
 
+# DEPRECATED
 # This rule ensures that the correct resource is chosen for first replica of a
 # newly created data object.
 #
-replSetRescSchemeForCreate {
+_old_replSetRescSchemeForCreate {
   on (aegis_replBelongsTo(/$objPath)) {
     _setDefaultResc(aegis_replIngestResc);
   }
@@ -371,8 +372,55 @@ replSetRescSchemeForCreate {
     _setDefaultResc(terraref_replIngestResc);
   }
 }
-replSetRescSchemeForCreate {
+_old_replSetRescSchemeForCreate {
   _setDefaultResc(_defaultIngestResc);
+}
+
+
+# ipc::hosted-collection COLL (forced|preferred)
+#   When attached to a resource RESC, this AVU indicates that data objects that
+#   belong to COLL are to have their primary replica stored on RESC. When the
+#   unit is 'preferred', the user may override this. COLL is the path to the
+#   base collection relative to the zone collection.
+#
+# If a resource is determined by the iRODS server a client connects to,
+# ipc::hosted-collection takes precedence.
+
+# Given an absolute path to a collection, this rule determines the resource
+# where member data objects have their primary replicas stored. It returns a
+# two-tuple with the first is element is the name of the resource, and the
+# second is the value 'forced' or 'preferred'. 'forced' means that the user
+# cannot override this choice, and 'preferred' means they can.
+_ipc_findResc(*DataPath) {
+  msiSplitPath(*DataPath, *collPath, *dataName);
+  *resc = ipc_DEFAULT_RESC;
+  *residency = 'preferred';
+  *bestColl = '/';
+
+  foreach (*record in SELECT META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS, RESC_NAME
+                      WHERE META_RESC_ATTR_NAME = 'ipc::hosted-collection') {
+    if (*collPath ++ '/' like '/' ++ ipc_ZONE ++ '/' ++ *record.META_RESC_ATTR_VALUE ++ '/*') {
+      if (strlen(*record.META_RESC_ATTR_VALUE) > strlen(*bestColl)) {
+        *resc = *record.RESC_NAME;
+        *residency = *record.META_RESC_ATTR_UNITS;
+        *bestColl = *record.META_RESC_ATTR_VALUE;
+      }
+    }
+  }
+
+  *result = (*resc, *residency);
+  *result;
+}
+
+
+replSetRescSchemeForCreate {
+  (*resc, *residency) = _ipc_findResc($objPath);
+
+  if (*resc != ipc_DEFAULT_RESC) {
+    msiSetDefaultResc(*resc, *residency);
+  } else {
+    _old_replSetRescSchemeForCreate;
+  }
 }
 
 

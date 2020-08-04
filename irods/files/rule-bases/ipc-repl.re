@@ -240,6 +240,7 @@ _scheduleSyncReplicas(*Object) {
 }
 
 
+# DEPRECATED
 _createOrOverwrite(*Object, *IngestResc, *ReplResc) {
   if ($writeFlag == 0) {
     (*ingestName, *optional) = *IngestResc;
@@ -253,9 +254,79 @@ _createOrOverwrite(*Object, *IngestResc, *ReplResc) {
 }
 
 
+_repl_createOrOverwrite(*Object, *IngestResc, *ReplResc) {
+  if ($writeFlag == 0) {
+# XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
+#    _scheduleRepl(*Object, if $rescName == *IngestResc then *IngestResc else *ReplResc);
+# XXX - ^^^
+  } else {
+    _scheduleSyncReplicas(*Object);
+  }
+}
+
+
 _setDefaultResc(*Resource) {
   (*name, *optional) = *Resource;
   msiSetDefaultResc(*name, if *optional then 'preferred' else 'forced');
+}
+
+
+# ipc::hosted-collection COLL (forced|preferred)
+#   When attached to a resource RESC, this AVU indicates that data objects that
+#   belong to COLL are to have their primary replica stored on RESC. When the
+#   unit is 'preferred', the user may override this. COLL is the path to the
+#   base collection relative to the zone collection.
+#
+# If a resource is determined by the iRODS server a client connects to,
+# ipc::hosted-collection takes precedence.
+
+# Given an absolute path to a collection, this rule determines the resource
+# where member data objects have their primary replicas stored. It returns a
+# two-tuple with the first is element is the name of the resource, and the
+# second is the value 'forced' or 'preferred'. 'forced' means that the user
+# cannot override this choice, and 'preferred' means they can.
+_repl_findResc(*DataPath) {
+  msiSplitPath(*DataPath, *collPath, *dataName);
+  *resc = ipc_DEFAULT_RESC;
+  *residency = 'preferred';
+  *bestColl = '/';
+
+  foreach (*record in SELECT META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS, RESC_NAME
+                      WHERE META_RESC_ATTR_NAME = 'ipc::hosted-collection') {
+    if (*collPath ++ '/' like '/' ++ ipc_ZONE ++ '/' ++ *record.META_RESC_ATTR_VALUE ++ '/*') {
+      if (strlen(*record.META_RESC_ATTR_VALUE) > strlen(*bestColl)) {
+        *resc = *record.RESC_NAME;
+        *residency = *record.META_RESC_ATTR_UNITS;
+        *bestColl = *record.META_RESC_ATTR_VALUE;
+      }
+    }
+  }
+
+  *result = (*resc, *residency);
+  *result;
+}
+
+
+# ipc::replica-resource REPL-RESC (forced|preferred)
+#   When attached to a resource RESC, this AVU indicates that the resource
+#   REPL-RESC is to asynchronously replicate the contents of RESC. When the unit
+#   is 'preferred', the user may override this.
+
+
+# Given a resource, this rule determines the list of resources that asynchronously replicate its
+# replicas.
+_repl_findReplResc(*Resc) {
+  *repl = ipc_DEFAULT_REPL_RESC;
+  *residency = 'preferred';
+
+  foreach (*record in SELECT META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
+                      WHERE RESC_NAME = *Resc AND META_RESC_ATTR_NAME = 'ipc::replica-resource') {
+    *repl = *record.META_RESC_ATTR_VALUE;
+    *residency = *record.META_RESC_ATTR_UNITS;
+  }
+
+  *result =(*repl, *residency);
+  *result;
 }
 
 
@@ -330,9 +401,10 @@ replEntityRename(*SourceObject, *DestObject) {
 }
 
 
+# DEPRECATED
 # This rule ensures that uploaded files are replicated.
 #
-replPut {
+_old_replPut {
   on (aegis_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
   }
@@ -346,8 +418,20 @@ replPut {
   on (terraref_replBelongsTo(/$objPath)) {
   }
 }
-replPut {
+_old_replPut {
   _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
+}
+
+
+replPut {
+  (*resc, *_) = _repl_findResc($objPath);
+
+  if (*resc != ipc_DEFAULT_RESC) {
+    (*repl, *_) = _repl_findReplResc(*resc);
+    _repl_createOrOverwrite($objPath, (*resc, true), (*repl, true));
+  } else {
+    _old_replPut;
+  }
 }
 
 
@@ -377,44 +461,8 @@ _old_replSetRescSchemeForCreate {
 }
 
 
-# ipc::hosted-collection COLL (forced|preferred)
-#   When attached to a resource RESC, this AVU indicates that data objects that
-#   belong to COLL are to have their primary replica stored on RESC. When the
-#   unit is 'preferred', the user may override this. COLL is the path to the
-#   base collection relative to the zone collection.
-#
-# If a resource is determined by the iRODS server a client connects to,
-# ipc::hosted-collection takes precedence.
-
-# Given an absolute path to a collection, this rule determines the resource
-# where member data objects have their primary replicas stored. It returns a
-# two-tuple with the first is element is the name of the resource, and the
-# second is the value 'forced' or 'preferred'. 'forced' means that the user
-# cannot override this choice, and 'preferred' means they can.
-_ipc_findResc(*DataPath) {
-  msiSplitPath(*DataPath, *collPath, *dataName);
-  *resc = ipc_DEFAULT_RESC;
-  *residency = 'preferred';
-  *bestColl = '/';
-
-  foreach (*record in SELECT META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS, RESC_NAME
-                      WHERE META_RESC_ATTR_NAME = 'ipc::hosted-collection') {
-    if (*collPath ++ '/' like '/' ++ ipc_ZONE ++ '/' ++ *record.META_RESC_ATTR_VALUE ++ '/*') {
-      if (strlen(*record.META_RESC_ATTR_VALUE) > strlen(*bestColl)) {
-        *resc = *record.RESC_NAME;
-        *residency = *record.META_RESC_ATTR_UNITS;
-        *bestColl = *record.META_RESC_ATTR_VALUE;
-      }
-    }
-  }
-
-  *result = (*resc, *residency);
-  *result;
-}
-
-
 replSetRescSchemeForCreate {
-  (*resc, *residency) = _ipc_findResc($objPath);
+  (*resc, *residency) = _repl_findResc($objPath);
 
   if (*resc != ipc_DEFAULT_RESC) {
     msiSetDefaultResc(*resc, *residency);
@@ -450,34 +498,11 @@ _old_replSetRescSchemeForRepl {
 }
 
 
-# ipc::replica-resource REPL-RESC (forced|preferred)
-#   When attached to a resource RESC, this AVU indicates that the resource
-#   REPL-RESC is to asynchronously replicate the contents of RESC. When the unit
-#   is 'preferred', the user may override this.
-
-
-# Given a resource, this rule determines the list of resources that asynchronously replicate its
-# replicas.
-_ipc_findReplResc(*Resc) {
-  *repl = *Resc;
-  *residency = 'preferred';
-
-  foreach (*record in SELECT META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
-                      WHERE RESC_NAME = *Resc AND META_RESC_ATTR_NAME = 'ipc::replica-resource') {
-    *repl = *record.META_RESC_ATTR_VALUE;
-    *residency = *record.META_RESC_ATTR_UNITS;
-  }
-
-  *result =(*repl, *residency);
-  *result;
-}
-
-
 replSetRescSchemeForRepl {
-  (*resc, *_) = _ipc_findResc($objPath);
+  (*resc, *_) = _repl_findResc($objPath);
 
   if (*resc != ipc_DEFAULT_RESC) {
-    (*repl, *residency) = _ipc_findReplResc(*resc);
+    (*repl, *residency) = _repl_findReplResc(*resc);
     msiSetDefaultResc(*repl, *residency);
   } else {
     _old_replSetRescSchemeForRepl;

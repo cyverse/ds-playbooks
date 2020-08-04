@@ -424,10 +424,11 @@ replSetRescSchemeForCreate {
 }
 
 
+# DEPRECATED
 # This rule ensures that the correct resource is chosen for the second and
 # subsequent replicas of a data object.
 #
-replSetRescSchemeForRepl {
+_old_replSetRescSchemeForRepl {
   on (aegis_replBelongsTo(/$objPath)) {
     _setDefaultResc(aegis_replReplResc);
   }
@@ -444,6 +445,41 @@ replSetRescSchemeForRepl {
     _setDefaultResc(terraref_replReplResc);
   }
 }
-replSetRescSchemeForRepl {
+_old_replSetRescSchemeForRepl {
   _setDefaultResc(_defaultReplResc);
+}
+
+
+# ipc::replica-resource REPL-RESC (forced|preferred)
+#   When attached to a resource RESC, this AVU indicates that the resource
+#   REPL-RESC is to asynchronously replicate the contents of RESC. When the unit
+#   is 'preferred', the user may override this.
+
+
+# Given a resource, this rule determines the list of resources that asynchronously replicate its
+# replicas.
+_ipc_findReplResc(*Resc) {
+  *repl = *Resc;
+  *residency = 'preferred';
+
+  foreach (*record in SELECT META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
+                      WHERE RESC_NAME = *Resc AND META_RESC_ATTR_NAME = 'ipc::replica-resource') {
+    *repl = *record.META_RESC_ATTR_VALUE;
+    *residency = *record.META_RESC_ATTR_UNITS;
+  }
+
+  *result =(*repl, *residency);
+  *result;
+}
+
+
+replSetRescSchemeForRepl {
+  (*resc, *_) = _ipc_findResc($objPath);
+
+  if (*resc != ipc_DEFAULT_RESC) {
+    (*repl, *residency) = _ipc_findReplResc(*resc);
+    msiSetDefaultResc(*repl, *residency);
+  } else {
+    _old_replSetRescSchemeForRepl;
+  }
 }

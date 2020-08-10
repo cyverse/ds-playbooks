@@ -26,7 +26,7 @@
           </IfModule>
 
           ForensicLog logs/forensic_log
-          ErrorLogFormat "%{cu}t [%-m:%l] [pid %P] %-a %E: %M"
+          ErrorLogFormat "%{cu}t %-L [pid %P] [%-m:%l] %-a %E: %M"
 
           CacheRoot {{ _webdav_cache_dir }}
           CacheDirLevels 2
@@ -50,7 +50,7 @@
               ServerAlias {{ inventory_hostname }}
 
               ErrorLog logs/http_error_log
-              CustomLog logs/http_request_log "%t %h \"%r\" %>s %L"
+              CustomLog logs/http_request_log "%{%Y-%m-%d %T}t.%{usec_frac}t %a \"%r\" %>s %L %{forensic-id}n"
               LogLevel warn
 
               RedirectPermanent / https://{{ _canonical_hostname }}/
@@ -59,8 +59,8 @@
             listen_ip: 127.0.0.1
             extra_parameters: |
               ErrorLog logs/error_log
-              CustomLog logs/access_log "%t %h \"%r\" %>s %b %D %L %{forensic-id}n"
-              CustomLog logs/cache_log "%t %h \"%r\" %{cache-status}e %{forensic-id}n"
+              CustomLog logs/access_log "%{%Y-%m-%d %T}t.%{usec_frac}t %{X-Forwarded-For}i \"%r\" %>s %L %{forensic-id}n"
+              CustomLog logs/cache_log "%{%Y-%m-%d %T}t.%{usec_frac}t \"%r\" %{cache-status}e %L %{forensic-id}n"
               LogLevel warn
 
               CacheQuickHandler off
@@ -138,7 +138,7 @@
               ServerAlias {{ inventory_hostname }}
 
               ErrorLog logs/https_error_log
-              CustomLog logs/https_request_log "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %>s %L"
+              CustomLog logs/https_request_log "%{%Y-%m-%d %T}t.%{usec_frac}t %{SSL_PROTOCOL}x %{SSL_CIPHER}x %a \"%r\" %>s %L %{forensic-id}n" 
               LogLevel warn
 
               BrowserMatch "MSIE [2-5]" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0

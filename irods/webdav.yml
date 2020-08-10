@@ -159,7 +159,6 @@
               CacheIgnoreHeaders Set-Cookie
 
               ExpiresActive On
-              ExpiresDefault "access plus 12 hours"
 
               <Files ~ "\.(cgi|shtml|phtml|php3?)$">
                 SSLOptions +StdEnvVars

@@ -60,18 +60,8 @@
             extra_parameters: |
               ErrorLog logs/error_log
               CustomLog logs/access_log "%{%Y-%m-%d %T}t.%{usec_frac}t %{X-Forwarded-For}i \"%r\" %>s %L %{forensic-id}n"
-              CustomLog logs/cache_log "%{%Y-%m-%d %T}t.%{usec_frac}t \"%r\" %{cache-status}e %L %{forensic-id}n"
               LogLevel warn
 
-              CacheQuickHandler off
-              CacheEnable disk /dav
-              CacheLock on
-              CacheLockPath /tmp/mod_cache-lock
-              CacheLockMaxAge 5
-              CacheHeader on
-              CacheIgnoreHeaders Set-Cookie
-
-              Header merge Cache-Control public
               Header set Access-Control-Allow-Headers "Range"
               Header set Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
               Header set Access-Control-Allow-Origin "*"
@@ -138,7 +128,8 @@
               ServerAlias {{ inventory_hostname }}
 
               ErrorLog logs/https_error_log
-              CustomLog logs/https_request_log "%{%Y-%m-%d %T}t.%{usec_frac}t %{SSL_PROTOCOL}x %{SSL_CIPHER}x %a \"%r\" %>s %L %{forensic-id}n" 
+              CustomLog logs/https_request_log "%{%Y-%m-%d %T}t.%{usec_frac}t %{SSL_PROTOCOL}x %{SSL_CIPHER}x %a \"%r\" %>s %L %{forensic-id}n"
+              CustomLog logs/cache_log "%{%Y-%m-%d %T}t.%{usec_frac}t \"%r\" %{cache-status}e %L %{forensic-id}n"
               LogLevel warn
 
               BrowserMatch "MSIE [2-5]" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0
@@ -157,6 +148,15 @@
               ProxyHTMLURLMap ^http: https: [R]
 
               Header edit Location ^http: https:
+              Header merge Cache-Control public
+
+              CacheQuickHandler off
+              CacheEnable disk /dav
+              CacheLock on
+              CacheLockPath /tmp/mod_cache-lock
+              CacheLockMaxAge 5
+              CacheHeader on
+              CacheIgnoreHeaders Set-Cookie
 
               ExpiresActive On
               ExpiresDefault "access plus 12 hours"

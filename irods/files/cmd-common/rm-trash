@@ -242,7 +242,7 @@ rm_trash()
   printf '%d base collections will be pruned\n' "$delTot"
 
   local parent
-  while read -r parent
+  while IFS= read -r parent
   do
     if ! prune_children "$trashTempFiles" "$parent"
     then
@@ -297,7 +297,7 @@ prune_children()
   if quest '%s' "select COLL_NAME where COLL_PARENT_NAME = '$parent'" > "$childList"
   then
     local collection
-    while read -r collection
+    while IFS= read -r collection
     do
       if ! prune_collection "$trashTempFiles" "$collection"
       then

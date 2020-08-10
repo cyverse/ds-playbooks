@@ -155,7 +155,7 @@
               CacheLock on
               CacheLockPath /tmp/mod_cache-lock
               CacheLockMaxAge 5
-              CacheHeader on
+              CacheDetailHeader on
               CacheIgnoreHeaders Set-Cookie
 
               ExpiresActive On

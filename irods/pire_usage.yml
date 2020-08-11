@@ -27,6 +27,7 @@
     - name: give PIRE manager own permission on project collection
       when: _pire_manager != ''
       delegate_to: localhost
+      become: false
       irods_permission:
         subject: "{{ _pire_manager }}"
         permission: own

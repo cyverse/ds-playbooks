@@ -29,6 +29,7 @@
 
         - name: assign owner to project collection
           delegate_to: localhost
+          become: false
           irods_permission:
             subject: "{{ _terraref_manager }}"
             permission: own

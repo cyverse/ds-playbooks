@@ -78,6 +78,7 @@ _replicate(*Object, *RescName) {
 }
 
 
+# DEPRECATED
 _mvReplicas(*DataPath, *IngestResc, *ReplResc) {
   _repl_logMsg('moving replicas of *DataPath');
 
@@ -105,6 +106,37 @@ _mvReplicas(*DataPath, *IngestResc, *ReplResc) {
     *rescName = *repl.DATA_RESC_NAME;
 
     if (*rescName != *ingestName && *rescName != *replName) {
+      msiDataObjTrim(*DataPath, *rescName, 'null', '1', 'null', *status);
+    }
+  }
+}
+
+
+_repl_mvReplicas(*DataPath, *IngestName, *ReplName) {
+  _repl_logMsg('moving replicas of *DataPath');
+
+  *replFail = false;
+
+  if (_replicate(*DataPath, *IngestName) < 0) {
+    *replFail = true;
+  }
+
+  if (_replicate(*DataPath, *ReplName) < 0) {
+    *replFail = true;
+  }
+
+  if (*replFail) {
+    fail;
+  }
+
+  # Once a replica exists on all the project's resource, remove the other replicas
+  msiSplitPath(*DataPath, *collPath, *dataName);
+
+  foreach (*repl in SELECT DATA_RESC_NAME WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName')
+  {
+    *rescName = *repl.DATA_RESC_NAME;
+
+    if (*rescName != *IngestName && *rescName != *ReplName) {
       msiDataObjTrim(*DataPath, *rescName, 'null', '1', 'null', *status);
     }
   }
@@ -156,6 +188,7 @@ _repl_logMsg(*Msg) {
 }
 
 
+# DEPRECATED
 # As of 4.2.1, Booleans and tuples are not supported by packing instructions. The resource
 # description tuple must be expanded, and the second term needs to be converted to a string.
 # TODO verify that this is still the case in iRODS 5. See https://github.com/irods/irods/issues/3634
@@ -168,6 +201,15 @@ _scheduleMv(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalSt
 }
 
 
+_repl_scheduleMv(*Object, *IngestName, *ReplName) {
+  delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
+  {_repl_mvReplicas(*Object, *IngestName, *ReplName);}
+
+  _incDelayTime;
+}
+
+
+# DEPRECATED
 _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
   (*ingestName, *ingestOptional) = *IngestResc;
   (*replName, *replOptional) = *ReplResc;
@@ -188,6 +230,25 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
   } else if (*type == '-d') {
     # if the entity is a data object
     _scheduleMv(*Entity, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
+  }
+}
+
+
+_repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
+  msiGetObjType(*Entity, *type);
+
+  if (*type == '-c') {
+    # if the entity is a collection
+    foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
+      foreach (*obj in SELECT COLL_NAME, DATA_NAME WHERE COLL_NAME LIKE '*collPat') {
+        *collPath = *obj.COLL_NAME;
+        *dataName = *obj.DATA_NAME;
+        _repl_scheduleMv('*collPath/*dataName', *IngestName, *ReplName);
+      }
+    }
+  } else if (*type == '-d') {
+    # if the entity is a data object
+    _repl_scheduleMv(*Entity, *IngestName, *ReplName);
   }
 }
 
@@ -254,7 +315,7 @@ _createOrOverwrite(*Object, *IngestResc, *ReplResc) {
 }
 
 
-_repl_createOrOverwrite(*Object, *IngestResc, *ReplRes) {
+_repl_createOrOverwrite(*Object, *IngestResc, *ReplResc) {
   if ($writeFlag == 0) {
 # XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
 #    _scheduleRepl(*Object, if $rescName == *IngestResc then *IngestResc else *ReplResc);
@@ -361,7 +422,7 @@ replCopy {
 
   if (*resc != ipc_DEFAULT_RESC) {
     (*repl, *_) = _repl_findReplResc(*resc);
-    _repl_createOrOverwrite($objPath, (*resc, true), (*repl, true));
+    _repl_createOrOverwrite($objPath, *resc, *repl);
   } else {
     _old_replCopy;
   }
@@ -375,8 +436,9 @@ replCopy {
 #  SourceObject  the absolute path to the collection or data object before it
 #                was moved
 #  DestObject    the absolute path after it was moved
-#
-replEntityRename(*SourceObject, *DestObject) {
+
+# DEPRECATED
+_old_replEntityRename(*SourceObject, *DestObject) {
   on (aegis_replBelongsTo(/*DestObject)) {
     if (!aegis_replBelongsTo(/*SourceObject)) {
       _scheduleMoves(*DestObject, aegis_replIngestResc, aegis_replReplResc);
@@ -400,7 +462,7 @@ replEntityRename(*SourceObject, *DestObject) {
     }
   }
 }
-replEntityRename(*SourceObject, *DestObject) {
+_old_replEntityRename(*SourceObject, *DestObject) {
   if (aegis_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
@@ -412,6 +474,22 @@ replEntityRename(*SourceObject, *DestObject) {
   }
   if (terraref_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
+  }
+}
+
+
+replEntityRename(*SourceObject, *DestObject) {
+  (*destResc, *_) = _repl_findResc(*DestObject);
+
+  if (*destResc != ipc_DEFAULT_RESC) {
+    (*srcResc, *_) = _repl_findResc(*SrcObject);
+
+     if (*srcResc != *destResc) {
+       (*destRepl, *_) = _repl_findReplResc(*destResc);
+       _repl_scheduleMoves(*DestObject, *destResc, *destRepl);
+     }
+  } else {
+    _old_replEntityRename(*SourceObject, *DestObject);
   }
 }
 
@@ -443,7 +521,7 @@ replPut {
 
   if (*resc != ipc_DEFAULT_RESC) {
     (*repl, *_) = _repl_findReplResc(*resc);
-    _repl_createOrOverwrite($objPath, (*resc, true), (*repl, true));
+    _repl_createOrOverwrite($objPath, *resc, *repl);
   } else {
     _old_replPut;
   }

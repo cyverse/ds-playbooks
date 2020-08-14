@@ -1,6 +1,24 @@
 # Replication logic
 # include this file from within ipc-custom.re
 #
+# Replication is controlled by AVUs attached to relevant root resources.
+#
+# ipc::hosted-collection COLL (forced|preferred)
+#   When attached to a resource RESC, this AVU indicates that data objects that
+#   belong to COLL are to have their primary replica stored on RESC. When the
+#   unit is 'preferred', the user may override this. COLL is the path to the
+#   base collection relative to the zone collection. If a resource is determined
+#   by both the iRODS server a client connects to and an ipc::hosted-collection
+#   AVU, the AVU takes precedence. If two or more AVUs match, the resource whose
+#   COLL as the specific match is used.
+#
+# ipc::replica-resource REPL-RESC (forced|preferred)
+#   When attached to a resource RESC, this AVU indicates that the resource
+#   REPL-RESC is to asynchronously replicate the contents of RESC. When the unit
+#   is 'preferred', the user may override this.
+#
+# DEPRECATED FUNCTIONALITY
+#
 # Unlike the logic in ipc-logic.re, the replication logic doesn't apply
 # globally. Different projects may have different replication policies.
 #
@@ -189,10 +207,10 @@ _repl_logMsg(*Msg) {
 
 
 # DEPRECATED
-# As of 4.2.1, Booleans and tuples are not supported by packing instructions. The resource
-# description tuple must be expanded, and the second term needs to be converted to a string.
-# TODO verify that this is still the case in iRODS 5. See https://github.com/irods/irods/issues/3634
-# for Boolean support.
+# XXX - As of 4.2.1, Booleans and tuples are not supported by packing instructions. The resource
+#       description tuple must be expanded, and the second term needs to be converted to a string.
+#       See https://github.com/irods/irods/issues/3634 for Boolean support.
+# TODO - verify that this is still the case in iRODS 4.2.2.
 _scheduleMv(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalStr) {
   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
   {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)))}
@@ -332,15 +350,6 @@ _setDefaultResc(*Resource) {
 }
 
 
-# ipc::hosted-collection COLL (forced|preferred)
-#   When attached to a resource RESC, this AVU indicates that data objects that
-#   belong to COLL are to have their primary replica stored on RESC. When the
-#   unit is 'preferred', the user may override this. COLL is the path to the
-#   base collection relative to the zone collection.
-#
-# If a resource is determined by the iRODS server a client connects to,
-# ipc::hosted-collection takes precedence.
-
 # Given an absolute path to a collection, this rule determines the resource
 # where member data objects have their primary replicas stored. It returns a
 # two-tuple with the first is element is the name of the resource, and the
@@ -368,14 +377,8 @@ _repl_findResc(*DataPath) {
 }
 
 
-# ipc::replica-resource REPL-RESC (forced|preferred)
-#   When attached to a resource RESC, this AVU indicates that the resource
-#   REPL-RESC is to asynchronously replicate the contents of RESC. When the unit
-#   is 'preferred', the user may override this.
-
-
-# Given a resource, this rule determines the list of resources that asynchronously replicate its
-# replicas.
+# Given a resource, this rule determines the list of resources that
+# asynchronously replicate its replicas.
 _repl_findReplResc(*Resc) {
   *repl = ipc_DEFAULT_REPL_RESC;
   *residency = 'preferred';
@@ -412,11 +415,10 @@ _old_replCopy {
 }
 _old_replCopy {
   _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
- }
+}
 
-
-# TODO Once deprecated functionality is gone, move common logic with replPut
-#      into _repl_createOrOverwrite
+# TODO - Once deprecated functionality is gone, move common logic with replPut into
+#        _repl_createOrOverwrite.
 replCopy {
   (*resc, *_) = _repl_findResc($objPath);
 
@@ -503,16 +505,6 @@ replEntityRename(*SourceObject, *DestObject) {
 }
 
 
-_old_replEntityRename(*SourceObject, *DestObject) {
-  writeLine('serverLog', '_old_replEntityRename(*SourceObject, *DestObject) {');
-  (*srcResc, *_) = _repl_findResc(*SourceObject);
-
-  if (*srcResc != ipc_DEFAULT_RESC) {
-    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
-  }
-}
-
-
 # This rule ensures that uploaded files are replicated.
 
 # DEPRECATED
@@ -533,7 +525,6 @@ _old_replPut {
 _old_replPut {
   _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
 }
-
 
 replPut {
   (*resc, *_) = _repl_findResc($objPath);
@@ -572,7 +563,6 @@ _old_replSetRescSchemeForCreate {
   _setDefaultResc(_defaultIngestResc);
 }
 
-
 replSetRescSchemeForCreate {
   (*resc, *residency) = _repl_findResc($objPath);
 
@@ -608,7 +598,6 @@ _old_replSetRescSchemeForRepl {
 _old_replSetRescSchemeForRepl {
   _setDefaultResc(_defaultReplResc);
 }
-
 
 replSetRescSchemeForRepl {
   (*resc, *_) = _repl_findResc($objPath);

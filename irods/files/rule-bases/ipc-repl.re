@@ -71,7 +71,7 @@ _replicate(*Object, *RescName) {
     _repl_logMsg(*msg);
 # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
 #       iRODS version 4.2.1.
-    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_replicate(*Object, *RescName);}
+    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_replicate(*Object, *RescName)}
   } else {
     _repl_logMsg('replicated *Object');
   }
@@ -152,7 +152,7 @@ _syncReplicas(*Object) {
     _repl_logMsg(*msg);
 # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
 #       iRODS version 4.2.1.
-    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object);}
+    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object)}
   } else {
     _repl_logMsg('synced replicas of *Object');
   }
@@ -195,7 +195,7 @@ _repl_logMsg(*Msg) {
 # for Boolean support.
 _scheduleMv(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalStr) {
   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
-  {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)));}
+  {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)))}
 
   _incDelayTime;
 }
@@ -203,7 +203,7 @@ _scheduleMv(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalSt
 
 _repl_scheduleMv(*Object, *IngestName, *ReplName) {
   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
-  {_repl_mvReplicas(*Object, *IngestName, *ReplName);}
+  {_repl_mvReplicas(*Object, *IngestName, *ReplName)}
 
   _incDelayTime;
 }
@@ -255,7 +255,7 @@ _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
 
 _scheduleRepl(*Object, *RescName) {
   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>1s REPEAT 0 TIMES</EF>')
-  {_replicate(*Object, *RescName);}
+  {_replicate(*Object, *RescName)}
 
   _incDelayTime;
 }
@@ -285,7 +285,7 @@ _scheduleSyncReplicas(*Object) {
           _repl_logMsg(*msg);
   # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
   #       iRODS version 4.2.1.
-          delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object);}
+          delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object)}
         } else {
           # _repl_logMsg('synced replicas of *Object');
   # XXX - Due to https://github.com/irods/irods/issues/3621, _repl_logMsg has been inlined. Verify
@@ -318,7 +318,7 @@ _createOrOverwrite(*Object, *IngestResc, *ReplResc) {
 _repl_createOrOverwrite(*Object, *IngestResc, *ReplResc) {
   if ($writeFlag == 0) {
 # XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
-#    _scheduleRepl(*Object, if $rescName == *IngestResc then *IngestResc else *ReplResc);
+#    _scheduleRepl(*Object, if $rescName == *ReplResc then *IngestResc else *ReplResc);
 # XXX - ^^^
   } else {
     _scheduleSyncReplicas(*Object);
@@ -463,33 +463,52 @@ _old_replEntityRename(*SourceObject, *DestObject) {
   }
 }
 _old_replEntityRename(*SourceObject, *DestObject) {
-  if (aegis_replBelongsTo(/*SourceObject)) {
+  on (aegis_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
-  if (avra_replBelongsTo(/*SourceObject)) {
+  on (avra_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
-  if (pire_replBelongsTo(/*SourceObject)) {
+  on (pire_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
-  if (terraref_replBelongsTo(/*SourceObject)) {
+  on (terraref_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
 }
+# DEPRECATION NOTE: When the conditional versions are ready to be deleted, merge this into
+#                   replEntityRename.
+_old_replEntityRename(*SourceObject, *DestObject) {
+  writeLine('serverLog', '_old_replEntityRename(*SourceObject, *DestObject) {');
+  (*srcResc, *_) = _repl_findResc(*SourceObject);
 
+  if (*srcResc != ipc_DEFAULT_RESC) {
+    _repl_scheduleMoves(*DestObject, ipc_DEFAULT_RESC, ipc_DEFAULT_REPL_RESC);
+  }
+}
 
 replEntityRename(*SourceObject, *DestObject) {
   (*destResc, *_) = _repl_findResc(*DestObject);
 
   if (*destResc != ipc_DEFAULT_RESC) {
-    (*srcResc, *_) = _repl_findResc(*SrcObject);
+    (*srcResc, *_) = _repl_findResc(*SourceObject);
 
-     if (*srcResc != *destResc) {
-       (*destRepl, *_) = _repl_findReplResc(*destResc);
-       _repl_scheduleMoves(*DestObject, *destResc, *destRepl);
-     }
+    if (*srcResc != *destResc) {
+      (*destRepl, *_) = _repl_findReplResc(*destResc);
+      _repl_scheduleMoves(*DestObject, *destResc, *destRepl);
+    }
   } else {
     _old_replEntityRename(*SourceObject, *DestObject);
+  }
+}
+
+
+_old_replEntityRename(*SourceObject, *DestObject) {
+  writeLine('serverLog', '_old_replEntityRename(*SourceObject, *DestObject) {');
+  (*srcResc, *_) = _repl_findResc(*SourceObject);
+
+  if (*srcResc != ipc_DEFAULT_RESC) {
+    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
 }
 

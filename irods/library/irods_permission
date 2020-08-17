@@ -20,7 +20,7 @@ module: irods_collection
 
 short_description: Create/Remove iRODS collection
 
-version_added: "2.4"
+version_added: "2.9"
 
 description:
     - Create iRODS collection.

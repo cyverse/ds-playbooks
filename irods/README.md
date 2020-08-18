@@ -103,6 +103,7 @@ Variable                                   | Default                            
 `webdav_cache_dir`                         | `/var/cache/httpd/proxy`             |         | the directory apache will use for the WebDAV cache
 `webdav_cache_max_file_size`               | 1                                    |         | the maximum size in mebibytes of the largest WebDAV file apache will cache
 `webdav_cache_size`                        | 100                                  |         | the maximum size in mebibytes the cache can be
+`webdav_max_request_workers`               | 256                                  |         | the upper limit on the number of simultaneous requests that will be served
 `webdav_tls_cert_file`                     | `/etc/ssl/certs/dummy.crt`           |         | The TLS certificate file used for encrypted communication
 `weddav_tls_chain_file`                    | `/etc/ssl/certs/dummy-chain.crt`     |         | The TLS certificate chain file used for encrypted communication
 `webdav_tls_key_file`                      | `/etc/ssl/certs/dummy.key`           |         | The TLS key file used for encrypted communication

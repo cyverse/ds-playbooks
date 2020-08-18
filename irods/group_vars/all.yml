@@ -196,8 +196,7 @@ _webdav_cache_dir: "{{ webdav_cache_dir if webdav_cache_dir is defined else
 _webdav_cache_max_file_size: "{{
   webdav_cache_max_file_size if webdav_cache_max_file_size is defined else 1 }}"
 _webdav_cache_size: "{{ webdav_cache_size if webdav_cache_size is defined else 100 }}"
-_webdav_max_request_workers: "{{ webdav_max_request_workers if webdav_max_requestworkers
-  is defined else 256 }}"
+_webdav_max_request_workers: "{{ webdav_max_request_workers | default(256) }}"
 _webdav_tls_cert_file: "{{ webdav_tls_cert_file if webdav_tls_cert_file is defined else
                            '/etc/ssl/certs/dummy.crt' }}"
 _webdav_tls_chain_file: "{{ webdav_tls_chain_file if webdav_tls_chain_file is defined else

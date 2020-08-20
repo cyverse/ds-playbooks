@@ -153,6 +153,7 @@ _load_balancer_stats_password: "{{
   'B1Gp4sSw0rD!!' }}"
 
 _load_balancer_webdav_check_period: "{{ load_balancer_webdav_check_period | default(2) }}"
+_load_balancer_webdav_max_conn: "{{ load_balancer_webdav_max_conn | default(100) }}"
 
 _pire_manager: "{{ pire_manager | default(None) }}"
 _pire_resource_hierarchy: "{{ pire_resource_hierarchy if pire_resource_hierarchy is defined else

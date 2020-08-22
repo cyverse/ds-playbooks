@@ -52,8 +52,7 @@ options:
         description:
             - whether or not the subject should be granted the same permission on everything in the collection.
             - object must be a collection
-            - permission will always be set when recursive is true
-            - changed will always be true if the permission is set
+            - changed will be true if the permission is set
         required: false
         type: bool
     host:

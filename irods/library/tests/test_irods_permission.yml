@@ -95,15 +95,12 @@
             admin_password: rods
             zone: testing
           register: result
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == []
-              - result.perm_after == ["read"]
-              - result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != [] or
+              result.perm_after != ["read"] or
+              not result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check read permission on test_coll1
           changed_when: false
@@ -133,7 +130,6 @@
           register: result
 
         - name: set permission again (idempotency)
-          failed_when: result.changed
           irods_permission:
             subject: test_user1
             permission: read
@@ -144,15 +140,12 @@
             admin_password: rods
             zone: testing
           register: result
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == ["read"]
-              - result.perm_after == ["read"]
-              - not result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != ["read"] or
+              result.perm_after != ["read"] or
+              result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check read permission on test_coll1
           changed_when: false
@@ -179,16 +172,12 @@
             admin_password: rods
             zone: testing
           register: result
-        - debug: var=result # debug
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == ["read"]
-              - result.perm_after == ["read"]
-              - result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != ["read"] or
+              result.perm_after != ["read"] or
+              not result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check read permission on test_coll1 & test_coll1/sub_coll1
           changed_when: false
@@ -216,16 +205,12 @@
             admin_password: rods
             zone: testing
           register: result
-        - debug: var=result # debug
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == ["read"]
-              - result.perm_after == ["read"]
-              - not result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != ["read"] or
+              result.perm_after != ["read"] or
+              result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check read permission on test_coll1 & test_coll1/sub_coll1
           changed_when: false
@@ -252,15 +237,12 @@
             admin_password: rods
             zone: testing
           register: result
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == ["read"]
-              - result.perm_after == ["write"]
-              - result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != ["read"] or
+              result.perm_after != ["write"] or
+              not result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check write permission on test_coll1
           changed_when: false
@@ -286,15 +268,12 @@
             admin_password: rods
             zone: testing
           register: result
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == ["write"]
-              - result.perm_after == ["own"]
-              - result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != ["write"] or
+              result.perm_after != ["own"] or
+              not result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check ownership permission on test_coll1
           changed_when: false
@@ -320,15 +299,12 @@
             admin_password: rods
             zone: testing
           register: result
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == ["own"]
-              - result.perm_after == []
-              - result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != ["own"] or
+              result.perm_after != [] or
+              not result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check null/no permission on test_coll1
           failed_when: result.failed or "test_user1#testing:" in result.stdout
@@ -356,16 +332,12 @@
             admin_password: rods
             zone: testing
           register: result
-        - debug: var=result # debug
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == []
-              - result.perm_after == []
-              - result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != [] or
+              result.perm_after != [] or
+              not result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check null/no permission on test_coll1
           failed_when: result.failed or "test_user1#testing:" in result.stdout
@@ -393,16 +365,12 @@
             admin_password: rods
             zone: testing
           register: result
-        - debug: var=result # debug
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == []
-              - result.perm_after == []
-              - not result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != [] or
+              result.perm_after != [] or
+              result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check null/no permission on test_coll1
           failed_when: result.failed or "test_user1#testing:" in result.stdout
@@ -432,15 +400,12 @@
             admin_password: rods
             zone: testing
           register: result
-        
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == []
-              - result.perm_after == ["read"]
-              - result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != [] or
+              result.perm_after != ["read"] or
+              not result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: grant test_user1 read permission on test_obj1 again
           irods_permission:
@@ -453,15 +418,12 @@
             admin_password: rods
             zone: testing
           register: result
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == ["read"]
-              - result.perm_after == ["read"]
-              - not result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != ["read"] or
+              result.perm_after != ["read"] or
+              result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check read permission on test_obj1
           changed_when: false
@@ -487,15 +449,12 @@
             admin_password: rods
             zone: testing
           register: result
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == ["read"]
-              - result.perm_after == ["write"]
-              - result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != ["read"] or
+              result.perm_after != ["write"] or
+              not result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check write permission on test_obj1
           changed_when: false
@@ -521,15 +480,12 @@
             admin_password: rods
             zone: testing
           register: result
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == ["write"]
-              - result.perm_after == ["own"]
-              - result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != ["write"] or
+              result.perm_after != ["own"] or
+              not result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check ownership permission on test_obj1
           changed_when: false
@@ -555,15 +511,12 @@
             admin_password: rods
             zone: testing
           register: result
-
-        - name: check returned result
-          assert:
-            that:
-              - result.perm_before == ["own"]
-              - result.perm_after == []
-              - result.changed
-              - result.exc == ""
-              - result.exc_msg == ""
+          failed_when: >
+              result.perm_before != ["own"] or
+              result.perm_after != [] or
+              not result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
 
         - name: check null/no permission on test_obj1
           failed_when: result.failed or "test_user1#${IRODS_ZONE_NAME}:" in result.stdout

@@ -27,6 +27,18 @@
         admin_password: rods
         zone: testing
 
+    - name: create test_user3 and other_zone
+      shell: |
+          iinit <<< ${IRODS_PASSWORD}
+          iadmin mkzone other_zone remote
+          iadmin mkuser test_user3#other_zone rodsuser
+      environment:
+        IRODS_PORT: 1247
+        IRODS_USER_NAME: rods
+        IRODS_HOST: "{{ groups['ies'][0] }}"
+        IRODS_PASSWORD: rods
+        IRODS_ZONE_NAME: testing
+
     - name: create collections
       shell: |
           iinit <<< ${IRODS_PASSWORD}
@@ -567,3 +579,33 @@
             IRODS_ZONE_NAME: testing
           register: result
 
+        - name: grant test_user3#other_zone read permission on test_obj1
+          irods_permission:
+            subject: test_user3
+            subject_zone: other_zone
+            permission: "read"
+            object: "{{ TEST_DATA_OBJECT1 }}"
+            host: "{{ groups['ies'][0] }}"
+            port: 1247
+            admin_user: rods
+            admin_password: rods
+            zone: testing
+          register: result
+          failed_when: >
+              result.perm_before != [] or
+              result.perm_after != ["read"] or
+              not result.changed or
+              result.exc != "" or
+              result.exc_msg != ""
+
+        - name: check permission on test_obj1
+          changed_when: false
+          shell: |
+              iinit <<< ${IRODS_PASSWORD}
+              ils -lA {{ TEST_DATA_OBJECT1 }} | grep "test_user3#other_zone:read"
+          environment:
+            IRODS_PORT: 1247
+            IRODS_USER_NAME: rods
+            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_PASSWORD: rods
+            IRODS_ZONE_NAME: testing

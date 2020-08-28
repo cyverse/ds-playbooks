@@ -55,6 +55,12 @@ options:
             - changed will be true if the permission is set
         required: false
         type: bool
+    subject_zone:
+        description:
+            - zone of the recipent of the permission
+            - default to the value of zone field
+        required: false
+        type: str
     host:
         description:
             - Hostname of the iRODS server
@@ -169,6 +175,7 @@ class IRODSPermissionModule:
                             choices=["null", "read", "write", "own"]),
             object=dict(type="str", required=True),
             recursive=dict(type="bool", required=False, default=False),
+            subject_zone=dict(type="str", required=False),
 
             host=dict(type="str", required=True),
             port=dict(type="int", required=True),
@@ -274,6 +281,9 @@ class IRODSPermissionModule:
         path = self.module.params["object"]
         username = self.module.params["subject"]
         recursive = self.module.params["recursive"]
+        subject_zone = self.module.params["subject_zone"]
+        if not subject_zone:
+            subject_zone = self.module.params["zone"]
 
         # get existing permission of the object
         obj_type = self._object_type(path)
@@ -287,10 +297,10 @@ class IRODSPermissionModule:
 
         # remove permission if exists
         if recursive and not self._check_null_permission_recursive(path, username):
-            self._set_permission(path, "null", username, recursive=True)
+            self._set_permission(path, "null", username, recursive=True, user_zone=subject_zone)
             self.result["changed"] = True
         elif not recursive and permission:
-            self._set_permission(path, "null", username)
+            self._set_permission(path, "null", username, user_zone=subject_zone)
             self.result["changed"] = True
         self.result["perm_after"] = self._get_permission(obj_type, path, username)
         self._success("permission is absent")
@@ -303,6 +313,9 @@ class IRODSPermissionModule:
         path = self.module.params["object"]
         target_perm = self.module.params["permission"]
         username = self.module.params["subject"]
+        subject_zone = self.module.params["subject_zone"]
+        if not subject_zone:
+            subject_zone = self.module.params["zone"]
 
         # get existing permission of the object
         obj_type = self._object_type(path)
@@ -314,7 +327,7 @@ class IRODSPermissionModule:
         # set permission if different
         # or if recursive option is set
         if _permission_diff(permission, [target_perm]):
-            self._set_permission(path, target_perm, username)
+            self._set_permission(path, target_perm, username, user_zone=subject_zone)
             self.result["changed"] = True
         self.result["perm_after"] = self._get_permission(obj_type, path, username)
         self._success("permission is present")
@@ -328,6 +341,9 @@ class IRODSPermissionModule:
         target_perm = self.module.params["permission"]
         username = self.module.params["subject"]
         recursive = self.module.params["recursive"]
+        subject_zone = self.module.params["subject_zone"]
+        if not subject_zone:
+            subject_zone = self.module.params["zone"]
 
         # get existing permission of the object
         obj_type = self._object_type(path)
@@ -340,18 +356,18 @@ class IRODSPermissionModule:
             self._fail("recursive option can only be used on collection")
 
         if not self._check_permission_recursive(path, username, target_perm):
-            self._set_permission(path, target_perm, username, recursive=recursive)
+            self._set_permission(path, target_perm, username, recursive=recursive, user_zone=subject_zone)
             self.result["changed"] = True
             if not self._check_permission_recursive(path, username, target_perm):
                 self._fail("permission changed after setting permission")
         self.result["perm_after"] = self._get_permission(obj_type, path, username)
         self._success("permission is present")
 
-    def _set_permission(self, path, perm_str, user, recursive=False):
+    def _set_permission(self, path, perm_str, user, recursive=False, user_zone=""):
         """
-        'read'
+        Set permission
         """
-        self.session.permissions.set(iRODSAccess(perm_str, path, user), recursive=recursive)
+        self.session.permissions.set(iRODSAccess(perm_str, path, user, user_zone=user_zone), recursive=recursive)
 
     def _get_permission(self, obj_type, path, username):
         """

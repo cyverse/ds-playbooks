@@ -278,8 +278,8 @@ trashed_data()
   quest \
       '%s %s/%s' \
       "select max(DATA_MODIFY_TIME), COLL_NAME, DATA_NAME where COLL_NAME like '/$zone/trash/%'" \
-    | sort --numeric --key 1,1 \
     | truncate_by_time "$upperBound" \
+    | sort --numeric --key 1,1 \
     | cut --delimiter ' ' --fields 2-
 }
 
@@ -381,7 +381,12 @@ truncate_by_time()
   local dataObj modifyTs
   while read -r modifyTs dataObj
   do
-    if [[ "${modifyTs#0}" -lt "$upperBound" ]]
+    if ! [[ "$modifyTs" =~ [0-9]+ ]]
+    then
+      printf 'Bad modification time stamp: "%s" skipping data object "%s"\n' \
+          "$modifyTs" "$dataObj" \
+        >&2
+    elif [[ "${modifyTs#0}" -lt "$upperBound" ]]
     then
       printf '%s %s\n' "$modifyTs" "$dataObj"
     fi

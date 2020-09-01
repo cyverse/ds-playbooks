@@ -15,6 +15,9 @@
   hosts: ies
   become: true
   tasks:
+    - debug:
+        msg: TODO test ensure GNU parallel installed
+        
     - name: test ensure pika installed
       command: pip --disable-pip-version-check show pika
       changed_when: false

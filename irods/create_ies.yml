@@ -68,6 +68,13 @@
       tags:
         - no_testing
 
+    - name: ensure GNU parallel installed
+      package:
+        name: "{{ 'moreutils' if ansible_distribution == 'CentOS' and
+                                 ansible_distribution_version is version ('7', '<') else
+                  'parallel' }}"
+        state: present
+
     - name: ensure pika installed
       pip:
         name: pika

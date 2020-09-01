@@ -20,13 +20,3 @@
     - name: verify that the system user has correct comment
       command: grep --quiet --regexp '^irods:[^:]*:[^:]*:[^:]*:iRODS Administrator:' /etc/passwd
       changed_when: false
-
-
-- name: test provision additional for IES
-  hosts: ies
-  become: true
-  gather_facts: false
-  tasks:
-    - name: test ensure pika installed
-      command: pip --disable-pip-version-check show pika
-      changed_when: false

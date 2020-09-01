@@ -28,25 +28,6 @@
         comment: iRODS Administrator
 
 
-- name: provision additional for IES
-  hosts: ies
-  become: true
-  gather_facts: false
-  tasks:
-    - name: ensure pika installed
-      pip:
-        name: pika
-        state: present
-
-    - name: configure linux kernel
-      sysctl:
-        name: kernel.{{ item.name }}
-        value: "{{ item.value }}"
-      with_items: "{{ _sysctl_kernel }}"
-      tags:
-        - no_testing
-        
-
 - import_playbook: update_hosts.yml
 
 

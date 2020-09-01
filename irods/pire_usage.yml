@@ -26,10 +26,17 @@
 
     - name: give PIRE manager own permission on project collection
       when: _pire_manager != ''
+      delegate_to: localhost
+      become: false
       irods_permission:
         subject: "{{ _pire_manager }}"
         permission: own
         object: /{{ _irods_zone_name }}/home/shared/bhpire
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"
 
     - name: create public collection
       delegate_to: localhost

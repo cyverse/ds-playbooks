@@ -1,4 +1,13 @@
 ---
+- name: test allow IES to talk to DBMS
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement
+
+
 - import_playbook: provision.yml
 
 
@@ -9,7 +18,7 @@
     - name: test ensure pika installed
       command: pip --disable-pip-version-check show pika
       changed_when: false
-  
+
     - import_tasks: tasks/test_install_ies_pkgs.yml
 
     - import_tasks: tasks/test_install_plugins.yml

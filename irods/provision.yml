@@ -3,14 +3,12 @@
   hosts: irods:!unmanaged_systems
   become: true
   tasks:
-    - name: install which
+    - name: install required packages
       package:
-        name: which
-        state: present
-
-    - name: install uuidd
-      package:
-        name: uuidd
+        name:
+          - mailx
+          - uuidd
+          - which
         state: present
 
     - name: create service group

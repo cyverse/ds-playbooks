@@ -20,6 +20,9 @@ Options:
  -h, --help      show help and exit
  -L, --log FILE  write all output to FILE
  -v, --version   show version and exit
+
+Dependencies:
+ GNU \`parallel\` needs to be installed.
 EOF
 }
 
@@ -44,6 +47,13 @@ readonly Concurrency=4
 
 main()
 {
+  if ! check_dependencies
+  then
+    printf 'missing dependencies\n' >&2
+    show_help >&2
+    return 1
+  fi
+
   declare -A optMap=(
     [help]=''
     [version]=''
@@ -88,6 +98,17 @@ main()
   trap "rm_temps '$trashTmpFiles' 2> >(disp_err) > >(disp_out)" EXIT
 
   rm_trash "$trashTmpFiles" 2> >(disp_err) > >(disp_out)
+}
+
+
+check_dependencies()
+{
+  if ! which parallel > /dev/null
+  then
+    # shellcheck disable=SC2016
+    printf 'Cannot find `parallel`\n' >&2
+    return 1
+  fi
 }
 
 

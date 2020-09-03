@@ -3,14 +3,12 @@
   hosts: irods:!unmanaged_systems
   become: true
   tasks:
-    - name: install which
+    - name: install required packages
       package:
-        name: which
-        state: present
-
-    - name: install uuidd
-      package:
-        name: uuidd
+        name:
+          - mailx
+          - uuidd
+          - which
         state: present
 
     - name: create service group
@@ -27,25 +25,6 @@
         group: "{{ _irods_service_group_name }}"
         comment: iRODS Administrator
 
-
-- name: provision additional for IES
-  hosts: ies
-  become: true
-  gather_facts: false
-  tasks:
-    - name: ensure pika installed
-      pip:
-        name: pika
-        state: present
-
-    - name: configure linux kernel
-      sysctl:
-        name: kernel.{{ item.name }}
-        value: "{{ item.value }}"
-      with_items: "{{ _sysctl_kernel }}"
-      tags:
-        - no_testing
-        
 
 - import_playbook: update_hosts.yml
 

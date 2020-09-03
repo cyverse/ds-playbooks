@@ -56,10 +56,30 @@
 - import_playbook: provision.yml
 
 
-- name: install IES packages
+- name: provision additional for IES
   hosts: ies
   become: true
   tasks:
+    - name: configure linux kernel
+      sysctl:
+        name: kernel.{{ item.name }}
+        value: "{{ item.value }}"
+      with_items: "{{ _sysctl_kernel }}"
+      tags:
+        - no_testing
+
+    - name: ensure GNU parallel installed
+      package:
+        name: "{{ 'moreutils' if ansible_distribution == 'CentOS' and
+                                 ansible_distribution_version is version ('7', '<') else
+                  'parallel' }}"
+        state: present
+
+    - name: ensure pika installed
+      pip:
+        name: pika
+        state: present
+
     - import_tasks: tasks/install_ies_pkgs.yml
 
     - import_tasks: tasks/install_plugins.yml

@@ -1,4 +1,6 @@
 ---
+_domain_name: "{{ domain_name | mandatory }}"
+
 _nic_mtu: "{{ nic_mtu if nic_mtu is defined else 1500 }}"
 _nic_txqueuelen: "{{ nic_txqueuelen if nic_txqueuelen is defined else 1000 }}"
 

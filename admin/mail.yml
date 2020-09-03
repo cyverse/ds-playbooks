@@ -1,0 +1,61 @@
+---
+- name: set up mail for sending alerts
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  tasks:
+    - name: install sendmail
+      package:
+        name: sendmail
+        state: present
+
+    - when: inventory_hostname | ipaddr
+      block:
+        - name: install m4
+          package:
+            name: m4
+            state: present
+
+        - name: install sendmail config
+          package:
+            name: sendmail-cf
+            state: present
+
+        - name: configure masquerading
+          blockinfile:
+            path: /etc/mail/sendmail.mc
+            marker: dnl {mark} DS MANAGED BLOCK
+            block: |
+              FEATURE(masquerade_envelope)dnl
+              MASQUERADE_AS({{ _domain_name }})dnl
+              MASQUERADE_DOMAIN({{ ansible_hostname }})dnl
+          notify: reload sendmail config
+
+  handlers:
+    - name: rebuild sendmail config
+      shell: |
+        if ! m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf.new
+        then
+          exit 1
+        fi
+
+        if diff --brief /etc/mail/sendmail.cf /etc/mail/sendmail.cf.new > /dev/null
+        then
+          rm --force /etc/mail/sendmail.cf.new
+          exit 0
+        fi
+
+        if ! mv --force /etc/mail/sendmail.cf.new /etc/mail/sendmail.cf
+        then
+          exit 1
+        fi
+
+        echo changed
+      register: response
+      changed_when: response.stdout == 'changed'
+      notify: restart sendmail
+
+    - name: restart sendmail
+      service:
+        name: sendmail
+        enabled: true
+        state: restarted

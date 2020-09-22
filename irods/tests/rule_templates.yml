@@ -327,12 +327,10 @@
     - ../group_vars/all.yml
   vars:
     terraref_base_collection: base
-    terraref_resource_hierarchy:
-      name: terrarefRes
     terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
   tasks:
     - name: verify params
       assert:
         that:
           - terraref_env is search("terraref_BASE_COLL = 'base'")
-          - terraref_env is search("terraref_RESC = 'terrarefRes'")
+          - terraref_env is search("terraref_RESC = 'demoResc'")

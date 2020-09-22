@@ -131,7 +131,7 @@ _ipc_rmTrash {
     *body = 'SSIA';
   } else {
     *subject = ipc_ZONE ++ ' trash removal failed';
-    msiGetStdErrInExecCmdOut(*out, *body);
+    msiGetStderrInExecCmdOut(*out, *body);
   }
 
   if (0 != errorcode(msiSendMail(ipc_REPORT_EMAIL_ADDR, *subject, *body))) {

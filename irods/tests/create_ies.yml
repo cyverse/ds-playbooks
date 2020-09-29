@@ -1,11 +1,26 @@
 ---
 - name: test allow IES to talk to DBMS
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+  hosts: dbms
+  become: true
   tasks:
+    - name: test allow IES communication through firewall
+      shell: |
+        sed --quiet \
+            '/^# BEGIN DS MANAGED BLOCK$/{
+               n;
+               /^-A INPUT -m state --state NEW -p tcp -s [^ ]\+ --dport 5432 -j ACCEPT$/!Q1;
+               n;
+               /^-A INPUT -m state --state NEW -p tcp -s [^ ]\+ --dport 5432 -j ACCEPT$/!Q1;
+               n;
+               /^# END DS MANAGED BLOCK$/Q0 };
+             $ Q1' \
+          /etc/sysconfig/iptables
+      args:
+        warn: false
+      changed_when: false
+
     - debug:
-        msg: TODO implement
+        msg: TODO test allow IES to communicate with Postgres DBMS
 
 
 - import_playbook: provision.yml
@@ -16,8 +31,11 @@
   become: true
   tasks:
     - debug:
+        msg: TODO test ensure mail client is installed
+
+    - debug:
         msg: TODO test ensure GNU parallel installed
-        
+
     - name: test ensure pika installed
       command: pip --disable-pip-version-check show pika
       changed_when: false

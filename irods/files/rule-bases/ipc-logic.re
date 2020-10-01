@@ -618,7 +618,7 @@ ipc_acPostProcForFilePathReg {
 # This rule ensured that every data object created through fiie registration
 # causes a data-object.add AMQP message to be published.
 ipc_archive_acPostProcForFilePathReg {
-   _ipc_createOrModifyArchiveData($objectPath, true);
+   _ipc_createOrModifyArchiveData($objPath, true);
 }
 
 

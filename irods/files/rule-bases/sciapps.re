@@ -31,7 +31,7 @@ sciapps_acPostProcForPut {
 
 
 # Add a call to this rule from inside the acPostProcForFilePathReg PEP.
-sciapps_acPostProcForForFilePathReg {
+sciapps_acPostProcForFilePathReg {
   ipc_ensureAccessOnCreateObj(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, $objPath);
 }
 

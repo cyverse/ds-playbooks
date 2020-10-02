@@ -255,7 +255,7 @@ acPostProcForFilePathReg {
 
   exclusive_acPostProcForFilePathReg;
 
-  *err = errormsg(replPut, *msg);
+  *err = errormsg(replFilePathReg, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 

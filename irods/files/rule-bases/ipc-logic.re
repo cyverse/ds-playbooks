@@ -577,29 +577,50 @@ ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 }
 
 
-# This rule ensures that a checksum is computed for every uploaded data object. It also sends
-# data object changes messages to the irods topic exchange.
+# This rule ensures that a UUID is assigned to and a checksum is computed for
+# every uploaded data object and the rodsadmin group gets own permission.
 #
 ipc_acPostProcForPut {
   _ipc_createOrModifyData($objPath, $writeFlag == 0);
 }
 
+
+# This rule ensures that a data object change AMQP message is published for
+# every uploaded data object.
 ipc_archive_acPostProcForPut {
   _ipc_createOrModifyArchiveData($objPath, $writeFlag == 0);
 }
 
 
-# This rule sends a data object copied message to the message exchange for the data object being
-# copied. If the target data object already exists, a data object modified message will be sent
-# instead.
+# This rule ensures that a UUID is assigned to and a checksum is computed for
+# every copied data object and the rodsadmin group gets own permission.
 #
 ipc_acPostProcForCopy {
   _ipc_createOrModifyData($objPath, $writeFlag == 0);
 }
 
+
+# This rule ensures that a data object change AMQP message is published for
+# every uploaded data object.
 ipc_archive_acPostProcForCopy {
   _ipc_createOrModifyArchiveData($objPath, $writeFlag == 0);
 }
+
+
+# This rule ensures that every data object created through file registration is
+# assigned a UUID and checksum and receives rodsadmin group own permission.
+#
+ipc_acPostProcForFilePathReg {
+  _ipc_createOrModifyData($objPath, true);
+}
+
+
+# This rule ensured that every data object created through fiie registration
+# causes a data-object.add AMQP message to be published.
+ipc_archive_acPostProcForFilePathReg {
+   _ipc_createOrModifyArchiveData($objPath, true);
+}
+
 
 # This rule checks that AVU being modified isn't a protected one.
 ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *New1, *New2,

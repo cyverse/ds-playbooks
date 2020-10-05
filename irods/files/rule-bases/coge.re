@@ -19,6 +19,12 @@ coge_acPostProcForCopy {
 }
 
 
+# Add a call to this rule from inside the acPostProcForFilePathReg PEP.
+coge_acPostProcForFilePathReg {
+  ipc_ensureAccessOnCreateObj(_coge_USER, _coge_COLL, _coge_PERM, $objPath);
+}
+
+
 coge_acPostProcForPut {
   ipc_ensureAccessOnCreateObj(_coge_USER, _coge_COLL, _coge_PERM, $objPath);
 }

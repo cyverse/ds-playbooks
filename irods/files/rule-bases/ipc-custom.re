@@ -1,4 +1,4 @@
-# VERSION: 3
+# VERSION: 4
 #
 # All customizations done to the iRODS rule logic are placed in this file or
 # should be included by this file.
@@ -109,6 +109,26 @@ exclusive_acPostProcForPut {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sparcd_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+}
+
+exclusive_acPostProcForFilePathReg {
+  *err = errormsg(ipc_archive_acPostProcForFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(bisque_acPostProcForFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(calliope_acPostProcForFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(coge_acPostProcForFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sciapps_acPostProcForFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sparcd_acPostProcForFilePathReg, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
@@ -229,6 +249,15 @@ acPostProcForCopy {
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
+acPostProcForFilePathReg {
+  *err = errormsg(ipc_acPostProcForFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  exclusive_acPostProcForFilePathReg;
+
+  *err = errormsg(replFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+}
 
 acPostProcForCollCreate {
   *err = errormsg(ipc_acPostProcForCollCreate, *msg);

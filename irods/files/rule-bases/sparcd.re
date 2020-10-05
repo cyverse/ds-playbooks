@@ -46,6 +46,21 @@ sparcd_acPostProcForCollCreate {
 }
 
 
+# Add a call to this rule from inside the acPostProcForFilePathReg PEP.
+sparcd_acPostProcForFilePathReg {
+  if (_sparcd_isForSparcd($objPath)) {
+    ipc_giveAccessObj(sparcd_ADMIN, _sparcd_PERM, $objPath);
+
+    if ($objPath like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
+      _sparcd_logMsg('scheduling ingest of $objPath for $userNameClient');
+
+      delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
+      {_sparcd_ingest($userNameClient, $objPath);}
+    }
+  }
+}
+
+
 sparcd_acPostProcForPut {
   if (_sparcd_isForSparcd($objPath)) {
     ipc_giveAccessObj(sparcd_ADMIN, _sparcd_PERM, $objPath);

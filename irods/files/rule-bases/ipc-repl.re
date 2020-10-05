@@ -330,6 +330,27 @@ replEntityRename(*SourceObject, *DestObject) {
 }
 
 
+# This rule ensures that registered files are replicated.
+#
+replFilePathReg {
+  on (aegis_replBelongsTo(/$objPath)) {
+    _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
+  }
+  on (avra_replBelongsTo(/$objPath)) {
+  }
+  on (de_replBelongsTo(/$objPath)) {
+    _createOrOverwrite($objPath, de_replIngestResc, de_replReplResc);
+  }
+  on (pire_replBelongsTo(/$objPath)) {
+  }
+  on (terraref_replBelongsTo(/$objPath)) {
+  }
+}
+replFilePathReg {
+  _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
+}
+
+
 # This rule ensures that uploaded files are replicated.
 #
 replPut {

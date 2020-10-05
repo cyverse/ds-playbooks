@@ -52,7 +52,6 @@ options:
         description:
             - whether or not the subject should be granted the same permission on everything in the collection.
             - object must be a collection
-            - changed will be true if the permission is set
         required: false
         type: bool
     subject_zone:

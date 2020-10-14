@@ -39,6 +39,22 @@ _sparcd_isForSparcd(*Path) =
   let *strBase = str(sparcd_BASE_COLL) in *strBase != '' && *Path like *strBase ++ '/*'
 
 
+_sparcd_handle_new_object(*User, *Object) {
+  if (_sparcd_isForSparcd(*Object)) {
+    ipc_giveAccessObj(sparcd_ADMIN, _sparcd_PERM, *Object);
+
+    if (*Object like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
+      remote(ipc_RE_HOST, '') {
+        _sparcd_logMsg('scheduling ingest of *Object for *User');
+
+        delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
+        {_sparcd_ingest(*User, *Object);}
+      }
+    }
+  }
+}
+
+
 sparcd_acPostProcForCollCreate {
   if (_sparcd_isForSparcd($collName)) {
     ipc_giveAccessColl(sparcd_ADMIN, _sparcd_PERM, $collName);
@@ -46,17 +62,14 @@ sparcd_acPostProcForCollCreate {
 }
 
 
+# Add a call to this rule from inside the acPostProcForFilePathReg PEP.
+sparcd_acPostProcForFilePathReg {
+  _sparcd_handle_new_object($userNameClient, $objPath);
+}
+
+
 sparcd_acPostProcForPut {
-  if (_sparcd_isForSparcd($objPath)) {
-    ipc_giveAccessObj(sparcd_ADMIN, _sparcd_PERM, $objPath);
-
-    if ($objPath like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
-      _sparcd_logMsg('scheduling ingest of $objPath for $userNameClient');
-
-      delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
-      {_sparcd_ingest($userNameClient, $objPath);}
-    }
-  }
+  _sparcd_handle_new_object($userNameClient, $objPath);
 }
 
 

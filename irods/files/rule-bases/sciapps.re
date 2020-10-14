@@ -30,6 +30,12 @@ sciapps_acPostProcForPut {
 }
 
 
+# Add a call to this rule from inside the acPostProcForFilePathReg PEP.
+sciapps_acPostProcForFilePathReg {
+  ipc_ensureAccessOnCreateObj(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, $objPath);
+}
+
+
 sciapps_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   ipc_ensureAccessOnMv(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, *SrcEntity, *DestEntity);
 }

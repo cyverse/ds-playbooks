@@ -133,6 +133,7 @@ sendDataObjectOpen(*Data) =
   let *msg = ipc_jsonDocument(list(mkEntityField(*Data),
                                    mkPathField($objPath),
                                    mkUserObject('author', $userNameClient, $rodsZoneClient),
+                                   ipc_jsonNumber('size', $dataSize),
                                    ipc_jsonString('timestamp', getTimestamp())))
   in sendMsg(DATA_OBJECT_TYPE ++ '.open', *msg)
 

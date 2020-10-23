@@ -106,9 +106,9 @@
 
     - when: inventory_hostname in groups['ies']
       vars:
-        expected_driver: "{{
+        expected_driver_pat: "{{
           '/usr/pgsql-9\\.3/lib/psqlodbca?\\.so' if ansible_distribution_major_version == '6' else
-          '/usr/lib64/psqlodbc\\.so'}}"
+          '/usr/lib64/psqlodbc\\.so' }}"
       block:
         - name: retrieve encoded server_config.json
           slurp:
@@ -150,9 +150,9 @@
         - name: verify .odbc.ini contents
           assert:
             that:
-              - odbc is search('driver = ' ~ expected_driver)
-              - odbc is search('Database = ICAT' | regex_escape)
-              - odbc is search('Port = 5432' | regex_escape)
+              - odbc is search('driver = ' ~ expected_driver_pat)
+              - odbc is search('Database = ICAT')
+              - odbc is search('Port = 5432')
               - odbc is search('Servername = dstesting_dbms_1.dstesting_default' | regex_escape)
 
         - name: retrieve encoded .pgpass

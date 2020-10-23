@@ -72,7 +72,7 @@
       package:
         name: mailx
         state: present
-        
+
     - name: ensure GNU parallel installed
       package:
         name: "{{ 'moreutils' if ansible_distribution == 'CentOS' and

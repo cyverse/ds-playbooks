@@ -6,7 +6,6 @@
     - name: install required packages
       package:
         name:
-          - mailx
           - uuidd
           - which
         state: present

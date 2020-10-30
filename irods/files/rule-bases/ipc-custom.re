@@ -220,12 +220,7 @@ acPreProcForObjRename(*SourceObject, *DestObject) {
 
 # DS-30: This rule prevents user from creating collection(s) that ends with "." or ".."
 acPreprocForCollCreate {
-  if($collName like regex '^.*[\/][.]{1,2}') then {
-    *temp = split($collName, "/");
-    *tempSize = size(*temp);
-    writeLine("serverLog","Collection name '"++elem(*temp, *tempSize-1)++"' is not allowed");
-    failmsg(-809000, "Collection name '"++elem(*temp, *tempSize-1)++"' is not allowed")
-  }
+  ipc_acPreprocForCollCreate;
 }
 
 

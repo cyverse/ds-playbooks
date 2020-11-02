@@ -483,6 +483,15 @@ ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zo
   }
 }
 
+# DS-30: This rule prevents user from creating collection(s) that ends with "." or ".."
+ipc_acPreprocForCollCreate {
+  if($collName like regex '^.*[\/][.]{1,2}') then {
+    msiSplitPath($collName, *parentCollName, *childName)
+    writeLine("serverLog","Collection name '"++*childName++"' is not allowed");
+    failmsg(-809000, "Collection name '"++*childName++"' is not allowed")
+  }
+}
+
 # This rule makes the admin owner of any created collection.  This rule is not applied to
 # collections created when a TAR file is expanded. (i.e. ibun -x)
 #

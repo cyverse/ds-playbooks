@@ -218,6 +218,12 @@ acPreProcForObjRename(*SourceObject, *DestObject) {
   de_acPreProcForObjRename(*SourceObject, *DestObject);
 }
 
+# DS-30: This rule prevents user from creating collection(s) that ends with "." or ".."
+acPreprocForCollCreate {
+  ipc_acPreprocForCollCreate;
+}
+
+
 # NOTE: The camelcasing is inconsistent here
 acPreprocForRmColl { ipc_acPreprocForRmColl; }
 

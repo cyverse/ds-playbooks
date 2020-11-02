@@ -50,5 +50,7 @@ DavRodsExposedRoot {{ exposedRoot }}
 DavRodsRxBufferKbs 32768
 DavRodsHtmlHead /etc/httpd/irods/{{ htmlHead }}
 
+Header set Vary Authorization
+
 CacheMaxExpire {{ cacheExpire * 3600 }}
 {%- endmacro %}

@@ -33,11 +33,6 @@
           ForensicLog logs/forensic_log
           ErrorLogFormat "%{cu}t %-L [pid %P] [%-m:%l] %-a %E: %M"
 
-          CacheRoot {{ _webdav_cache_dir }}
-          CacheDirLevels 2
-          CacheDirLength 1
-          CacheMaxFileSize {{ (_webdav_cache_max_file_size | int) * 2**20 }}
-
           Listen 443 https
 
           SSLPassPhraseDialog exec:/usr/libexec/httpd-ssl-pass-dialog
@@ -146,23 +141,19 @@
               </If>
               <Elseif "-n %{HTTP:Range}">
                 # To prevent davrods from crashing, tell it not to cache partial responses
-                RequestHeader merge Cache-Control no-store
+                # When varnish-cache is configured, this should be commented out for caching
+                # RequestHeader merge Cache-Control no-store
               </Elseif>
 
-              ProxyPass / http://127.0.0.1/ retry=0 
+              ProxyPass / http://127.0.0.1:{{ _webdav_varnish_service_port }}/ retry=0 
               ProxyHTMLURLMap ^http: https: [R]
 
               Header edit Location ^http: https:
               Header merge Cache-Control public
 
-              CacheQuickHandler off
-              CacheEnable disk /dav
-              CacheLock on
-              CacheLockPath /tmp/mod_cache-lock
-              CacheLockMaxAge 5
-              CacheDetailHeader on
-              CacheIgnoreHeaders Set-Cookie
-
+              # Disable cache when varnish-cache is configured
+              CacheDisable /
+              
               ExpiresActive On
 
               <Files ~ "\.(cgi|shtml|phtml|php3?)$">
@@ -254,12 +245,30 @@
         src: files/webdav/index.html
         dest: /var/www/html/index.html
 
-    - name: create directory for cache
+    - name: install epel-release package required by varnish-cache
+      package:
+          name: epel-release
+
+    - name: install varnish-cache package
+      package:
+        name: varnish
+
+    - name: setup varnish-cache
+      template:
+        src: "templates/webdav/etc/varnish/{{ item }}.j2"
+        dest: "/etc/varnish/{{ item }}"
+      with_items:
+        - default.vcl
+        - varnish.params
+
+    - name: Create a cache dir
       file:
         path: "{{ _webdav_cache_dir }}"
+        recurse: true
         state: directory
-        owner: apache
-        group: apache
+        owner: varnish
+        group: varnish
+        mode: 0755
 
   post_tasks:
     - name: configure htcacheclean
@@ -279,6 +288,12 @@
       file:
         path: /etc/systemd/system/httpd.service.requires/htcacheclean.service
         src: /usr/lib/systemd/system/htcacheclean.service
+        state: link
+
+    - name: ensure varnish runs when apache run
+      file:
+        path: /etc/systemd/system/httpd.service.requires/varnish.service
+        src: /usr/lib/systemd/system/varnish.service
         state: link
 
     - name: open HTTP connection in firewall
@@ -305,3 +320,10 @@
       service:
         name: htcacheclean
         state: restarted
+
+    - name: restart varnish
+      when: notifications_enabled | default(false)
+      service:
+        name: varnish
+        state: restarted
+

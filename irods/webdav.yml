@@ -74,7 +74,7 @@
 
                 RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
 
-                ProxyPassMatch http://127.0.0.1/dav/{{ _irods_zone_name }}/$1 retry=0 
+                ProxyPassMatch http://127.0.0.1/dav/{{ _irods_zone_name }}/$1 retry=0
                 ProxyHTMLURLMap ^((http://)?[^/]*)/dav/ $1/dav-anon/ [R]
 
                 <If "%{REQUEST_METHOD} == 'PROPFIND'">
@@ -145,7 +145,7 @@
                 # RequestHeader merge Cache-Control no-store
               </Elseif>
 
-              ProxyPass / http://127.0.0.1:{{ _webdav_varnish_service_port }}/ retry=0 
+              ProxyPass / http://127.0.0.1:{{ _webdav_varnish_service_port }}/ retry=0
               ProxyHTMLURLMap ^http: https: [R]
 
               Header edit Location ^http: https:
@@ -153,7 +153,7 @@
 
               # Disable cache when varnish-cache is configured
               CacheDisable /
-              
+
               ExpiresActive On
 
               <Files ~ "\.(cgi|shtml|phtml|php3?)$">
@@ -271,24 +271,11 @@
         mode: 0755
 
   post_tasks:
-    - name: configure htcacheclean
-      template:
-        src: templates/webdav/etc/htcacheclean.j2
-        dest: /etc/sysconfig/htcacheclean
-      notify:
-        - restart htcacheclean
-
     - name: create apache systemd service dependencies directory
       file:
         path: /etc/systemd/system/httpd.service.requires
         recurse: true
         state: directory
-
-    - name: ensure htcacheclean runs when apache run
-      file:
-        path: /etc/systemd/system/httpd.service.requires/htcacheclean.service
-        src: /usr/lib/systemd/system/htcacheclean.service
-        state: link
 
     - name: ensure varnish runs when apache run
       file:
@@ -315,15 +302,8 @@
         name: iptables
         state: restarted
 
-    - name: restart htcacheclean
-      when: notifications_enabled | default(false)
-      service:
-        name: htcacheclean
-        state: restarted
-
     - name: restart varnish
       when: notifications_enabled | default(false)
       service:
         name: varnish
         state: restarted
-

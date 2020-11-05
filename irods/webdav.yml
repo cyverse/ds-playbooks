@@ -245,10 +245,6 @@
         src: files/webdav/index.html
         dest: /var/www/html/index.html
 
-    - name: install epel-release package required by varnish-cache
-      package:
-          name: epel-release
-
     - name: install varnish-cache package
       package:
         name: varnish

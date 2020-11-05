@@ -3,10 +3,13 @@
 #
 # pkg      The name of the package
 # version  (optional) The package version that should be installed
-- name: check correct {{ pkg }} package installed
-  package_facts:
+
+- package_facts:
     strategy: all
-  failed_when: |
+
+- name: check correct {{ pkg }} package installed
+  when: |
     pkg not in ansible_facts.packages or
     ansible_facts.packages[pkg] | length != 1 or
     version is defined and ansible_facts.packages[pkg][0].version is version_compare(version, '!=')
+  fail:

@@ -8,12 +8,30 @@
     - group_vars/webdav_cfg.yml
   vars:
     head: "{{ lookup('template', '../templates/webdav/etc/httpd/head.html.j2') }}"
+    default_vcl: "{{ lookup('template', '../templates/webdav/etc/varnish/default.vcl.j2') }}"
+    varnish_params: "{{ lookup('template', '../templates/webdav/etc/varnish/varnish.params.j2') }}"
   tasks:
     - name: verify head.html expands correctly
       assert:
         that:
           - head is search('/\* Style for the testing/base/ davrods \*/')
           - "head is search('content: \"/testing/base/\";')"
+
+    - name: verify default.vcl expands correctly
+      assert:
+        that:
+          - default_vcl
+            is search('set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * 0.1'
+                      | regex_escape)
+
+    - name: verify varnish.params expands correctly
+      assert:
+        that:
+          - varnish_params is search('VARNISH_LISTEN_PORT=6081')
+          - varnish_params is search('VARNISH_ADMIN_LISTEN_PORT=6082')
+          - varnish_params
+            is search('VARNISH_STORAGE="file,/var/cache/varnish/varnish_cache.bin,1000M"'
+                      | regex_escape)
 
 
 - name: test WebDAV dav html template expansion
@@ -120,9 +138,10 @@
   tasks:
     - include_tasks: tasks/test_pkg_installed.yml
       with_items:
+        - davrods
         - mod_proxy_html
         - mod_ssl
-        - davrods
+        - varnish
       loop_control:
         loop_var: pkg
 
@@ -204,9 +223,22 @@
         - dav-anon/index.html
         - dav-anon/testing/index.html
         - dav-anon/testing/commons/index.html
-
       register: response
       failed_when: not response.stat.exists
+
+    - include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: varnish
+
+    - name: test default.vcl deployed
+      stat:
+        path: /etc/varnish/default.vcl
+      register: response
+      failed_when : not response.stat.exists
+
+    - name: test varnish.params deployed
+      stat:
+        path: /etc/varnish/varnish.params
 
     - name: test create directory for cache
       stat:
@@ -221,3 +253,9 @@
     - name: test open HTTP connection in firewall
       script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables
       changed_when: false
+
+    - debug:
+        msg: TODO test roles
+
+    - debug:
+        msg: TODO test post tasks

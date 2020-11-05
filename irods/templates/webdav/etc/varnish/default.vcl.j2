@@ -37,7 +37,7 @@ sub vcl_backend_response {
     #
     # Here you clean the response headers, removing silly Set-Cookie headers
     # and other mistakes your backend does.
-    set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * {{ _webdav_cache_ttl_percentage }};
+    set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * {{ _webdav_cache_ttl_fraction }};
 }
 
 sub vcl_deliver {

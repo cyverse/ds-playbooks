@@ -32,17 +32,58 @@ sub vcl_recv {
     return (hash);
 }
 
+sub vcl_pipe {
+    return (pipe);
+}
+
+sub vcl_pass {
+    return (fetch);
+}
+
+sub vcl_hash {
+    hash_data(req.url);
+    if (req.http.host) {
+        hash_data(req.http.host);
+    } else {
+        hash_data(server.ip);
+    }
+    return (lookup);
+}
+
+sub vcl_purge {
+    return (synth(200, "Purged"));
+}
+
+sub vcl_hit {
+    return (deliver);
+}
+
+sub vcl_miss {
+    return (fetch);
+}
+
+sub vcl_deliver {
+    return (deliver);
+}
+
 sub vcl_backend_response {
     # Happens after we have read the response headers from the backend.
     #
     # Here you clean the response headers, removing silly Set-Cookie headers
     # and other mistakes your backend does.
     set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * {{ _webdav_cache_ttl_fraction }};
-}
+    
+    # need to put 's' to the value to tell this is in seconds
+    if (beresp.ttl >= {{_webdav_cache_max_ttl}}s) {
+        set beresp.ttl = {{_webdav_cache_max_ttl}}s;
+    }
 
-sub vcl_deliver {
-    # Happens when we have all the pieces we need, and are about to send the
-    # response to the client.
-    #
-    # You can do accounting or modifying the final object here.
+    # Determine cache or not
+    if (std.integer(beresp.http.Content-Length, 0) > ({{ _webdav_cache_max_file_size }} * 1024 * 1024)) {
+        # this determines how long the file will not be cached 
+        set beresp.ttl = 1m;
+        set beresp.uncacheable = true;
+    }
+
+    return (deliver);
 }

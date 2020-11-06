@@ -23,6 +23,15 @@
           - default_vcl
             is search('set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * 0.1'
                       | regex_escape)
+          - default_vcl
+            is search('beresp.ttl >= 86400s'
+                      | regex_escape)
+          - default_vcl
+            is search('set beresp.ttl = 86400s'
+                      | regex_escape)
+          - default_vcl
+            is search('if (std.integer(beresp.http.Content-Length, 0) > (10 * 1024 * 1024))'
+                      | regex_escape)
 
     - name: verify varnish.params expands correctly
       assert:

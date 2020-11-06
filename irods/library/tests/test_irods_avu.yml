@@ -1,0 +1,42 @@
+---
+- name: Test irods_avu module
+  hosts: localhost
+  pre_tasks:
+    - name: create data object for testing
+      shell: |
+        touch /tmp/test-object
+        iput -f -R rs_centos6 /tmp/test-object <<< rods
+        rm --force /tmp/test-object
+      args:
+        warn: false
+      changed_when: false
+
+  tasks:
+    - name: add unitless AVU to implicit data object
+      debug:
+        msg: TODO implement
+
+    - name: set AVU with unit to explicit data object
+      debug:
+        msg: TODO implement
+
+    - name: add AVU with same attribute to same data object
+      debug:
+        msg: TODO implement
+
+    - name: set AVU with same attribute to same data object
+      debug:
+        msg: TODO implement
+
+    - name: remove AVU from data object
+      debug:
+        msg: TODO implement
+
+    - name: add AVU to resource
+      debug:
+        msg: TODO implement
+
+  post_tasks:
+    - name: remove testing data object
+      shell: irm -f test-object <<< rods
+      changed_when: false

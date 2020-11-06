@@ -117,7 +117,6 @@ def run_tester(do_inspect, pretty, module_dir, playbook, hosts):
     """
     Run ansible-tester docker container to start the testing
     """
-
     # create a empty dir that allows the overlapping volume mount to work
     # e.g. ds-playbooks/irods/library/tests/library
     empty_dir = os.path.join(module_dir, "tests", "library")
@@ -127,14 +126,15 @@ def run_tester(do_inspect, pretty, module_dir, playbook, hosts):
     # docker cmd to run ansible-tester
     cmd = """
     source {0} && \
-    docker run --interactive --rm --tty \
+    (docker run --interactive --rm --tty \
             --env IRODS_HOST="$IRODS_IES6_HOST" \
             --env IRODS_ZONE_NAME="$IRODS_ZONE_NAME" \
             --env PGHOST="$DBMS_HOST" \
             --network "$DOMAIN" \
             --volume "{1}/tests":/playbooks-under-test:ro \
             --volume "{1}":/playbooks-under-test/library:ro \
-            ansible-tester "{2}" "{3}" "{4}" "{5}"
+            ansible-tester "{2}" "{3}" "{4}" "{5}";
+     rmdir {1}/tests/library)
     """
     cmd = cmd.format(CFG, module_dir, sh_bool(do_inspect), sh_bool(pretty),
                      playbook, hosts)

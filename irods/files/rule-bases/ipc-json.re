@@ -18,7 +18,7 @@ encodeString(*Str) {
   *pos = 0;
   while (*len > *pos) {
     *c = substr(*Str, *pos, *pos + 1);
-    *escC = if *c == '"' then '\\"' else if *c == '\\' then '\\\\' else *c;
+    *escC = if *c == '"' then '\\"' else if *c == '\t' then '\\t' else if *c == '\n' then '\\n' else if *c == '\r' then '\\r' else if *c == '\\' then '\\\\' else *c;
     *escStr = *escStr ++ *escC;
     *pos = *pos + 1;
   }

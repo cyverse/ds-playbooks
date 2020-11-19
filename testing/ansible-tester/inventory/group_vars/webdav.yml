@@ -1,7 +1,7 @@
 ---
 webdav_cache_dir: /cache_vol
-webdav_cache_max_file_size: 500000
 webdav_cache_size: 500
+webdav_cache_max_file_size: 10
 
 webdav_tls_chain_file: /etc/pki/tls/certs/testing.crt
 webdav_tls_key_file: "{{ webdav_tls_chain_file }}"

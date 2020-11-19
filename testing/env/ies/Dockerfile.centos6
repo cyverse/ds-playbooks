@@ -1,7 +1,5 @@
 FROM test-env-base:centos6
 
-RUN yum --assumeyes install epel-release
-RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
 RUN yum --assumeyes install \
       https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-6-x86_64/postgresql93-libs-9.3.25-1PGDG.rhel6.x86_64.rpm
 RUN yum --assumeyes install \

@@ -244,14 +244,6 @@
       package:
         name: varnish
 
-    - name: setup varnish-cache
-      template:
-        src: "templates/webdav/etc/varnish/{{ item }}.j2"
-        dest: "/etc/varnish/{{ item }}"
-      with_items:
-        - default.vcl
-        - varnish.params
-
     - name: Create a cache dir
       file:
         path: "{{ _webdav_cache_dir }}"
@@ -260,6 +252,17 @@
         owner: varnish
         group: varnish
         mode: 0755
+
+    - name: setup varnish-cache
+      template:
+        src: "templates/webdav/etc/varnish/{{ item }}.j2"
+        dest: "/etc/varnish/{{ item }}"
+      with_items:
+        - default.vcl
+        - varnish.params
+      notify:
+        - restart varnish
+        - restart varnishncsa
 
   post_tasks:
     - name: create apache systemd service dependencies directory
@@ -272,6 +275,12 @@
       file:
         path: /etc/systemd/system/httpd.service.requires/varnish.service
         src: /usr/lib/systemd/system/varnish.service
+        state: link
+
+    - name: ensure varnishncsa runs when apache run
+      file:
+        path: /etc/systemd/system/httpd.service.requires/varnishncsa.service
+        src: /usr/lib/systemd/system/varnishncsa.service
         state: link
 
     - name: open HTTP connection in firewall
@@ -297,4 +306,10 @@
       when: notifications_enabled | default(false)
       service:
         name: varnish
+        state: restarted
+    
+    - name: restart varnishncsa
+      when: notifications_enabled | default(false)
+      service:
+        name: varnishncsa
         state: restarted

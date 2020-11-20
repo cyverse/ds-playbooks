@@ -320,7 +320,7 @@
     - name: reload systemd
       when: notifications_enabled | default(false)
       systemd:
-        daemon: reload
+        daemon_reload: yes
 
     - name: restart varnish
       when: notifications_enabled | default(false)

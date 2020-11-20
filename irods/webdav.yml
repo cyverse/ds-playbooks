@@ -244,9 +244,9 @@
       package:
         name: varnish
 
-    # Overrides service configuration to have 5 seconds of sleep 
+    # Overrides service configuration to have 5 seconds of sleep
     #     after varnish service is started
-    # This is neccessary because varnishncsa that requires the varnish service 
+    # This is neccessary because varnishncsa that requires the varnish service
     #     can start too fast
     # Related issue
     #     https://varnish-cache.org/lists/pipermail/varnish-misc/2014-August/023977.html
@@ -255,10 +255,7 @@
       copy:
         src: files/webdav/varnish/varnish.service
         dest: /etc/systemd/system/varnish.service
-
-    - name: restart systemctl daemon
-      systemd:
-        daemon_reload: yes
+      notify: reload systemd
 
     - name: Create a cache dir
       file:
@@ -320,12 +317,17 @@
         name: iptables
         state: restarted
 
+    - name: reload systemd
+      when: notifications_enabled | default(false)
+      systemd:
+        daemon: reload
+
     - name: restart varnish
       when: notifications_enabled | default(false)
       service:
         name: varnish
         state: restarted
-    
+
     - name: restart varnishncsa
       when: notifications_enabled | default(false)
       service:

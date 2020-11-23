@@ -31,7 +31,17 @@
       vars:
         pkg: jq
 
-    - name: test Python libselinux package installed
+    - name: test python-selinux package installed on CentOS
+      when: ansible_distribution == 'CentOS'
+      include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: libselinux-python
+
+    - name: test python-selinux package installed on Ubuntu
+      debug:
+        msg: TODO implement
+
+    - name: test python-selinux package installed elsewhere
       debug:
         msg: TODO implement
 

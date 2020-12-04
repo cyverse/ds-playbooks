@@ -27,10 +27,13 @@
         state: present
       with_items:
         - jq
-        - "{{ 'python-selinux' if ansible_distribution == 'Debian' else 'libselinux-python' }}"
-        - python-dns
+        - "{{ 'libselinux-python' if ansible_distribution == 'CentOS' else
+              'python3-selinux' if ansible_distribution == 'Ubuntu' else
+              'python-selinux' }}"
+        - "{{ 'python3-dns' if ansible_distribution == 'Ubuntu' else 'python-dns' }}"
         - "{{ 'python2-pip' if ansible_distribution == 'CentOS'
                             and ansible_distribution_version is version ('7', '>=') else
+              'python3-pip' if ansible_distribution == 'Ubuntu' else
               'python-pip' }}"
-        - python-requests
-        - python-virtualenv
+        - "{{ 'python3-requests' if ansible_distribution == 'Ubuntu' else 'python-requests' }}"
+        - "{{ 'python3-virtualenv' if ansible_distribution == 'Ubuntu' else 'python-virtualenv' }}"

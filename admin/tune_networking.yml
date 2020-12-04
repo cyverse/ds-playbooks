@@ -8,6 +8,7 @@
         key: "{{ 'physical' if ansible_virtualization_type == 'NA'
                             or ansible_virtualization_type == 'kvm' else
                  'virtual' }}"
+      changed_when: false
 
 
 - name: determine the NIC throughput and OS version for the physical servers
@@ -25,6 +26,7 @@
         key: centos{{ ansible_distribution_major_version }}_{{
                 '10G' if ethtool.stdout|int >= 10000 else
                 '1G'  if ethtool.stdout|int >= 1000 else '' }}
+      changed_when: false
 
 
 - name: tune MTU

@@ -1,5 +1,9 @@
 FROM centos:6
 
+# Switch to using CentOS 6 Vault repo
+COPY base/config/CentOS6-Base.repo /etc/yum.repos.d/CentOS-Base.repo
+COPY base/config/CentOS6-Vault.repo /etc/yum.repos.d/CentOS-Vault.repo
+
 COPY base/config.sh /tmp/config
 
 RUN /tmp/config centos 6

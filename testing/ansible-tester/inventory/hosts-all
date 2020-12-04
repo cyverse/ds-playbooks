@@ -8,8 +8,8 @@ ies
 rs
 
 [ies]
-dstesting_ies_centos6_1.dstesting_default
-dstesting_ies_centos7_1.dstesting_default
+dstesting_ies_configured_1.dstesting_default
+dstesting_ies_unconfigured_1.dstesting_default
 
 [rs]
 dstesting_rs_centos6_1.dstesting_default

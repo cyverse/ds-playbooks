@@ -128,7 +128,7 @@ def run_tester(do_inspect, pretty, module_dir, playbook, hosts):
     cmd = """
     source {0} && \
     docker run --interactive --rm --tty \
-            --env IRODS_HOST="$IRODS_IES6_HOST" \
+            --env IRODS_HOST="$IRODS_IES_CONF_HOST" \
             --env IRODS_ZONE_NAME="$IRODS_ZONE_NAME" \
             --env PGHOST="$DBMS_HOST" \
             --network "$DOMAIN" \

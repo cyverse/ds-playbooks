@@ -187,7 +187,7 @@
             that:
               - server_config.default_resource_directory == '/var/lib/irods/Vault'
               - server_config.default_resource_name == 'rs_centos6'
-              - server_config.icat_host == 'dstesting_ies_centos6_1.dstesting_default'
+              - server_config.icat_host == 'dstesting_ies_configured_1.dstesting_default'
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
               - server_config.re_rulebase_set[0].filename == 'ipc-custom'
               - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'

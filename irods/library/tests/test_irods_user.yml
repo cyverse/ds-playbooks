@@ -9,7 +9,7 @@
         info: foo_bar
         state: present
         password: rods123
-        host: "dstesting_ies_centos6_1.dstesting_default"
+        host: "dstesting_ies_configured_1.dstesting_default"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -30,7 +30,7 @@
           iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "zone_name: testing"
           iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_info: foo_bar"
       environment:
-        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_HOST: dstesting_ies_configured_1.dstesting_default
         IRODS_PORT: 1247
         IRODS_USER_NAME: rods
         IRODS_PASSWORD: rods
@@ -43,7 +43,7 @@
         type: rodsuser
         state: present
         password: rods123
-        host: "dstesting_ies_centos6_1.dstesting_default"
+        host: "dstesting_ies_configured_1.dstesting_default"
         port: 1247
         admin_user: test_user1
         admin_password: rods123
@@ -55,7 +55,7 @@
         type: rodsuser
         state: present
         password: rods321 # different password
-        host: "dstesting_ies_centos6_1.dstesting_default"
+        host: "dstesting_ies_configured_1.dstesting_default"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -77,7 +77,7 @@
         type: rodsuser
         state: present
         password: rods321
-        host: "dstesting_ies_centos6_1.dstesting_default"
+        host: "dstesting_ies_configured_1.dstesting_default"
         port: 1247
         admin_user: test_user1
         admin_password: rods321
@@ -89,7 +89,7 @@
         type: rodsuser
         state: present
         password: rods321
-        host: "dstesting_ies_centos6_1.dstesting_default"
+        host: "dstesting_ies_configured_1.dstesting_default"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -110,7 +110,7 @@
         type: rodsuser
         state: present
         password: rods321
-        host: "dstesting_ies_centos6_1.dstesting_default"
+        host: "dstesting_ies_configured_1.dstesting_default"
         port: 1247
         admin_user: test_user1
         admin_password: rods321
@@ -124,7 +124,7 @@
         name: test_user1
         type: rodsadmin
         state: present
-        host: "dstesting_ies_centos6_1.dstesting_default"
+        host: "dstesting_ies_configured_1.dstesting_default"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -143,7 +143,7 @@
       shell: |
           iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsadmin"
       environment:
-        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_HOST: dstesting_ies_configured_1.dstesting_default
         IRODS_PORT: 1247
         IRODS_USER_NAME: rods
         IRODS_PASSWORD: rods
@@ -155,7 +155,7 @@
         name: test_user1
         type: rodsadmin
         state: present
-        host: "dstesting_ies_centos6_1.dstesting_default"
+        host: "dstesting_ies_configured_1.dstesting_default"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -174,7 +174,7 @@
       shell: |
           iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsadmin"
       environment:
-        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_HOST: dstesting_ies_configured_1.dstesting_default
         IRODS_PORT: 1247
         IRODS_USER_NAME: rods
         IRODS_PASSWORD: rods
@@ -186,7 +186,7 @@
         name: test_user1
         type: rodsuser
         state: present
-        host: "dstesting_ies_centos6_1.dstesting_default"
+        host: "dstesting_ies_configured_1.dstesting_default"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -205,7 +205,7 @@
       shell: |
           iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsuser"
       environment:
-        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_HOST: dstesting_ies_configured_1.dstesting_default
         IRODS_PORT: 1247
         IRODS_USER_NAME: rods
         IRODS_PASSWORD: rods
@@ -218,7 +218,7 @@
         type: rodsuser
         info: bar_foo
         state: present
-        host: "dstesting_ies_centos6_1.dstesting_default"
+        host: "dstesting_ies_configured_1.dstesting_default"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -237,7 +237,7 @@
       shell: |
           iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_info: bar_foo"
       environment:
-        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_HOST: dstesting_ies_configured_1.dstesting_default
         IRODS_PORT: 1247
         IRODS_USER_NAME: rods
         IRODS_PASSWORD: rods
@@ -248,7 +248,7 @@
       irods_user:
         name: test_user1
         state: absent
-        host: "dstesting_ies_centos6_1.dstesting_default"
+        host: "dstesting_ies_configured_1.dstesting_default"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -267,10 +267,9 @@
       shell: |
           iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "No rows found"
       environment:
-        IRODS_HOST: dstesting_ies_centos6_1.dstesting_default
+        IRODS_HOST: dstesting_ies_configured_1.dstesting_default
         IRODS_PORT: 1247
         IRODS_USER_NAME: rods
         IRODS_PASSWORD: rods
         IRODS_ZONE_NAME: testing
       changed_when: false
-

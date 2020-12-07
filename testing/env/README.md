@@ -8,8 +8,8 @@ The environment consists of size containers. The `amqp` container hosts the
 RabbitMQ broker that in turn hosts the `irods` exchange, where the Data Store
 publishes messages to. The `dbms` container hosts the PostgreSQL server that in
 turn hosts the ICAT DB. The `load_balancer` container hosts the HAProxy for the
-IES. The `ies_centos6` container hosts the IES server running CentOS 6. The
-`ies_centos7` containers hosts the IES server running CentOS 7. The `rs_centos6`
+IES. The `ies_configured` container hosts a configured IES server. The
+`ies_unconfigured` container hosts an unconfigured IES server. The `rs_centos6`
 container hosts the resource server running on CentOS 6. Finally, the
 `rs_centos7` container hosts the resource server running on CentOS 7.
 
@@ -57,11 +57,11 @@ export IRODS_ZONE_NAME=testing
 # The name of the default resource to use
 export IRODS_DEFAULT_RESOURCE="$IRODS_RS6_NAME"
 
-# The host name of the CentOS 6 IES
-export IRODS_IES6_HOST="$ENV_NAME"_ies_centos6_1."$DOMAIN"
+# The host name of the configured IES
+export IRODS_IES_CONF_HOST="$ENV_NAME"_ies_configured_1."$DOMAIN"
 
-# The host name of the CentOS 7 IES
-export IRODS_IES7_HOST="$ENV_NAME"_ies_centos7_1."$DOMAIN"
+# The host name of the unconfigured IES
+export IRODS_IES_UNCONF_HOST="$ENV_NAME"_ies_unconfigured_1."$DOMAIN"
 
 # The host name of the CentOS 6 resource server
 export IRODS_RS6_HOST="$ENV_NAME"_"$IRODS_RS6_NAME"_1."$DOMAIN"

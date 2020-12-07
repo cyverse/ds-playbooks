@@ -3,12 +3,18 @@
   hosts: dbms
   become: true
   roles:
-    - role: jtyr.grub_cmdline
-      grub_cmdline_add_args:
+    - role: adfinis_sygroup.grub
+      grub_console: False
+      grub_consoles: []
+      grub_serial: []
+      grub_timeout: 0
+      grub_disable_network_predictable_interface_names: False
+      grub_cmdline_linux_default_list:
+        - maybe-ubiquity
         - transparent_hugepage=never
       tags:
         - no_testing
-
+        
   post_tasks:
     - name: Add PostgreSQL yum repository
       include_tasks: tasks/add_postgresql_yum_repo.yml

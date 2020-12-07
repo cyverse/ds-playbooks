@@ -227,6 +227,13 @@ acPreprocForCollCreate {
 # NOTE: The camelcasing is inconsistent here
 acPreprocForRmColl { ipc_acPreprocForRmColl; }
 
+# DS-28
+#acPreProcForObjRename(*sourceObject,*destObject) { }
+acPreprocForDataObjOpen {
+  ipc_acPreprocForDataObjOpen;
+}
+#acPreprocForCollCreate { }
+
 
 # POST-PROC RULE HOOKS
 #

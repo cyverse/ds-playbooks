@@ -488,7 +488,31 @@ ipc_acPreprocForCollCreate {
   if($collName like regex '^.*[\/][.]{1,2}') then {
     msiSplitPath($collName, *parentCollName, *childName)
     writeLine("serverLog","Collection name '"++*childName++"' is not allowed");
-    failmsg(-809000, "Collection name '"++*childName++"' is not allowed")
+    failmsg(-809000, "Collection name '"++*childName++"' is not allowed");
+  }
+}
+
+# DS-28
+ipc_acPreprocForDataObjOpen {
+  #msiGetSessionVarValue("all","all");
+  *str_len = strlen($objPath);
+  *itr = 0;
+  while(*itr < *str_len){
+    # takes care of the '/' if found at the end of the string
+    if (*itr == *str_len - 1) {
+      *last_char = substr($objPath, *itr, *itr+1);
+      if(*last_char == '/'){
+       writeLine('serverlog', "Object name ends with '/' is not allowed");
+       failmsg(-809000, "Object name ends with '/' is not allowed");
+      }
+    }
+    *c1 = substr($objPath, *itr, *itr+1);
+    *c2 = substr($objPath, *itr + 1, *itr+2);
+    if (*c1 == '/' && *c2 == '/'){
+      writeLine('serverlog', "Object name contains with '/' is not allowed");
+      failmsg(-809000, "Object name contains with '/' is not allowed");
+    }
+    *itr = *itr + 1;
   }
 }
 

@@ -13,10 +13,11 @@
 #  HOSTS      the inventory hosts to test against
 #
 # Envinroment Variables:
-#  DBMS_HOST        The hostname of the PostgreSQL server to connect to
-#  ENV_NAME         The docker environment to join
-#  IRODS_IES6_HOST  The host name of the iRODS IES running CentOS 6to connect to
-#  IRODS_ZONE_NAME  The name of the iRODS zone inside the testing environment
+#  DBMS_HOST            The hostname of the PostgreSQL server to connect to
+#  ENV_NAME             The docker environment to join
+#  IRODS_IES_CONF_HOST  The host name of the iRODS IES to connect to
+#  IRODS_ZONE_NAME      The name of the iRODS zone inside the testing
+#                       environment
 
 
 main()
@@ -28,7 +29,7 @@ main()
   local hosts="$5"
 
   docker run --interactive --rm --tty \
-             --env IRODS_HOST="$IRODS_IES6_HOST" \
+             --env IRODS_HOST="$IRODS_IES_CONF_HOST" \
              --env IRODS_ZONE_NAME="$IRODS_ZONE_NAME" \
              --env PGHOST="$DBMS_HOST" \
              --network "$DOMAIN" \

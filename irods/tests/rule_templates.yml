@@ -5,7 +5,7 @@
   vars_files:
     - ../group_vars/all.yml
   vars:
-    expected_bisque_irods_url: irods://dstesting_ies_centos6_1.dstesting_default
+    expected_bisque_irods_url: irods://dstesting_ies_configured_1.dstesting_default
     avra_env: "{{ lookup('template', '../templates/rule-bases/avra-env.re.j2') }}"
     aegis_env: "{{ lookup('template', '../templates/rule-bases/aegis-env.re.j2') }}"
     bisque_env: "{{ lookup('template', '../templates/rule-bases/bisque-env.re.j2') }}"
@@ -23,7 +23,7 @@
           - ipc_env is search("ipc_DEFAULT_REPL_RESC = 'demoResc'")
           - ipc_env is search("ipc_DEFAULT_RESC = 'demoResc'")
           - ipc_env is search("ipc_MAX_NUM_RE_PROCS = 4")
-          - ipc_env is search("ipc_RE_HOST = 'dstesting_ies_centos6_1.dstesting_default'")
+          - ipc_env is search("ipc_RE_HOST = 'dstesting_ies_configured_1.dstesting_default'")
 
     - name: verify constants expand correctly in aegis-env.re.j2
       assert:
@@ -40,7 +40,8 @@
     - name: verify constants expand correctly in bisque-env.re.j2
       assert:
         that:
-          - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://dstesting_ies_centos6_1.dstesting_default'")
+          - bisque_env
+              is search("bisque_IRODS_URL_BASE = 'irods://dstesting_ies_configured_1.dstesting_default'")
 
     - name: verify constants expand correctly in captcn-env.re.j2
       assert:

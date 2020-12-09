@@ -11,6 +11,7 @@ sernec_isForSernec(*Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/sernec/\
 sernec_assignPerms(*Path, *UserNameClient) {
   msiGetObjType(*Path, *type);
   *recursiveFlag = if *type == '-c' then 'recursive' else 'default';
+  msiSetACL(*recursiveFlag, 'own', *UserNameClient, *Path);
 
   foreach(*user in sernec_OWNERS) {
     msiSetACL(*recursiveFlag, 'own', *user, *Path);

@@ -153,7 +153,9 @@
               - odbc is search('driver = ' ~ expected_driver_pat)
               - odbc is search('Database = ICAT')
               - odbc is search('Port = 5432')
-              - odbc is search('Servername = dstesting_dbms_1.dstesting_default' | regex_escape)
+              - "odbc
+                   is search('Servername = dstesting_dbms_configured_1.dstesting_default'
+                             | regex_escape)"
 
         - name: retrieve encoded .pgpass
           slurp:
@@ -168,7 +170,7 @@
           assert:
             that:
               - "pgpass
-                   is search('dstesting_dbms_1.dstesting_default:5432:ICAT:irods:testpassword'
+                   is search('dstesting_dbms_configured_1.dstesting_default:5432:ICAT:irods:testpassword'
                              | regex_escape)"
 
     - when: inventory_hostname in groups['rs']

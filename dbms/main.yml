@@ -14,40 +14,105 @@
         - transparent_hugepage=never
       tags:
         - no_testing
-        
+
   post_tasks:
-    - name: Add PostgreSQL yum repository
-      include_tasks: tasks/add_postgresql_yum_repo.yml
+    # - name: Add PostgreSQL yum repository
+    #   include_tasks: tasks/add_postgresql_yum_repo.yml
 
-    - name: Install PostgreSQL server
-      package:
-        name: postgresql93-server
+#    - name: Install PostgreSQL server
+#      package:
+#        name: postgresql93-server
 
-- name: Initialize PostgreSQL cluster
-  hosts: dbms
-  become: true
-  become_user: postgres
-  gather_facts: false
-  tasks:
-    - name: Initialize
-      shell: |
-        # TODO - This only checks for the existence of the database. It should be modified to
-        # check whether or not the correct collate value is set.
-        if ! [ -e /var/lib/pgsql/9.3/data/PG_VERSION ]
-        then
-          /usr/pgsql-9.3/bin/initdb --auth ident \
-                                    --lc-collate C \
-                                    --locale en_US.UTF-8 \
-                                    --pgdata /var/lib/pgsql/9.3/data
+# - name: Initialize PostgreSQL cluster
+#   hosts: dbms
+#   become: true
+#   become_user: postgres
+#   gather_facts: false
+#   tasks:
+#     - name: Initialize
+#       shell: |
+#         if ! [[ -e /var/lib/postgresql/12/main/PG_VERSION ]]
+#         then
+#
+#
+#       shell: |
+#         # TODO - This only checks for the existence of the database. It should be modified to
+#         # check whether or not the correct collate value is set.
+#         if ! [ -e /var/lib/pgsql/9.3/data/PG_VERSION ]
+#         then
+#           /usr/pgsql-9.3/bin/initdb --auth ident \
+#                                     --lc-collate C \
+#                                     --locale en_US.UTF-8 \
+#                                     --pgdata /var/lib/pgsql/9.3/data
+#
+#           if [ "$?" -ne 0 ]
+#           then
+#             exit 1
+#           fi
+#
+#           printf 'changed'
+#         fi
+#       register: result
+#       changed_when: result.stdout == 'changed'
+#   tags:
+#     - no_testing
 
-          if [ "$?" -ne 0 ]
-          then
-            exit 1
-          fi
+# Created required locale
+local-gen en_US.UTF-8
 
-          printf 'changed'
-        fi
-      register: result
-      changed_when: result.stdout == 'changed'
-  tags:
-    - no_testing
+# ??? The following might install PostgreSQL with C collation
+LC_COLLATE=C apt install postgresql
+
+apt install postgresql-client python3-psycopg2
+
+postgresql.conf changes
+data_directory = '/var/lib/postgresql/12/main'
+listen_addresses = '*'
+port = 31390
+max_connections = 100       # ???
+shared_buffers = 6GB        # 25% total memory
+work_mem = 64MB             # ???
+maintenance_work_mem = 1GB  # ???
+wal_level = replica         # hot_standby if master with replica
+
+# vvv NOT NEEDED FOR QA
+checkpoint_seqments ???
+checkpoint_timeout = 15min
+checkpoint_completion_target = 0.9
+archive_mode = on
+archive_command = 'gzip < %p > /var/lib/pgsql/9.3/archive/%f.gz'
+max_wal_senders = 3
+wal_keep_segments = 1000
+# ^^^
+
+random_page_cost = 4           # ???
+effective_cache_size = 12GB    # 50% total memory
+log_min_duration_statemet = 0  # Should be 1000 in prod
+log_line_prefix = '< %m %r >'
+standard_conforming_strings = off
+
+# Create ICAT DB as prescribed in iRODS installation.
+CREATE USER irods WITH PASSWORD ...
+CREATE DATABASE "ICAT";
+GRANT ALL PRIVILEGES ON DATABASE "ICAT" TO irods;
+
+# Create icat_reader user
+CREATE ROLE icat_reader WITH PASSWORD ...
+GRANT CONNECT, TEMPORARY ON DATABASE "ICAT" TO icat_reader;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO icat_reader;
+
+# Configure pg_hba.conf
+# BEGIN DS MANAGED BLOCK
+host    ICAT            irods           128.196.65.45/32        md5
+# END DS MANAGED BLOCK
+host    ICAT            icat_reader     10.140.65.0/24          md5
+host    ICAT            icat_reader     128.196.38.0/25         md5
+host    ICAT            icat_reader     150.135.78.223/32       md5
+host    ICAT            icat_reader     150.135.78.247/32       md5
+host    ICAT            icat_reader     150.135.93.128/26       md5
+host    ICAT            icat_reader     150.135.165.64/26       md5
+host    all             all             127.0.0.1/32            md5
+
+# Configure firewall
+firewall-cmd --zone=public --permanent --add-service=postgresql
+firewall-cmd --reload

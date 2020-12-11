@@ -2,6 +2,8 @@
 - name: allow IES to talk to DBMS
   hosts: dbms
   become: true
+  vars:
+    __icat_dbms_dir: /var/lib/postgres/12/main
   tasks:
     - name: enable notifications when not testing
       set_fact:
@@ -27,7 +29,7 @@
 
     - name: allow IES to communicate with Postgres DBMS
       blockinfile:
-        path: /var/lib/pgsql/9.3/data/pg_hba.conf
+        path: "{{ __icat_dbms_dir }}/pg_hba.conf"
         insertafter: '# IPv4 local connections:'
         marker: "# {mark} DS MANAGED BLOCK"
         block: |

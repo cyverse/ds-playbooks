@@ -21,6 +21,12 @@ services:
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     tty: true
 
+  dbms_unconfigured:
+    build:
+      context: .
+      dockerfile: postgresql/Dockerfile.unconfigured
+    tty: true
+    
   ies_configured:
     build:
       context: .

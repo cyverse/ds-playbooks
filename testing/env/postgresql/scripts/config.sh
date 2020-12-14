@@ -27,6 +27,8 @@
 # TODO The current syntax of IRODS_RESOURCES doesn't allow spaces or colons in
 # vault path names. Please change its syntax.
 
+set -e
+
 if [[ "$OSTYPE" == "darwin"* ]]
 then
   readonly ExecName=$(greadlink -f "$0")
@@ -45,13 +47,13 @@ main()
     > "$sqlData"
 
   printf 'Starting PostgreSQL server\n'
-  pg_ctl -w start > /dev/null
+  pg_ctlcluster 12 main start > /dev/null
 
   printf 'Initializing %s database ...\n' "$DB_NAME"
   init_db "$DBMS_PORT" "$DB_NAME" "$DB_USER" "$DB_PASSWORD" "$sqlData"
 
   printf 'Stopping PostgreSQL server\n'
-  pg_ctl -w stop > /dev/null
+  pg_ctlcluster 12 main stop > /dev/null
 }
 
 
@@ -162,7 +164,5 @@ VALUES (
 EOF
 }
 
-
-set -e
 
 main

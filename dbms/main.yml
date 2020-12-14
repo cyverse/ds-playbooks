@@ -58,7 +58,7 @@
 #     - no_testing
 
 # Created required locale
-local-gen en_US.UTF-8
+locale-gen en_US.UTF-8
 
 # ??? The following might install PostgreSQL with C collation
 LC_COLLATE=C apt install postgresql

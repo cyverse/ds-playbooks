@@ -9,6 +9,8 @@
 #
 # Starts or stops all of the containers.
 
+set -e
+
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -46,7 +48,7 @@ main()
 
   case "$action" in
     start)
-      local dcCmd='up -d'
+      local dcCmd='up -d --scale dbms_unconfigured=2'
       ;;
     stop)
       local dcCmd='down --remove-orphans --volumes'
@@ -60,7 +62,5 @@ main()
   docker-compose --file "$baseDir"/docker-compose.yml --project-name "$ENV_NAME" $dcCmd
 }
 
-
-set -e
 
 main "$@"

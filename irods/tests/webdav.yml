@@ -21,17 +21,12 @@
       assert:
         that:
           - default_vcl
-            is search('set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * 0.1'
-                      | regex_escape)
+              is search('set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * 0.1'
+                        | regex_escape)
+          - default_vcl is search('beresp.ttl >= 86400s' | regex_escape)
+          - default_vcl is search('set beresp.ttl = 86400s' | regex_escape)
           - default_vcl
-            is search('beresp.ttl >= 86400s'
-                      | regex_escape)
-          - default_vcl
-            is search('set beresp.ttl = 86400s'
-                      | regex_escape)
-          - default_vcl
-            is search('if (std.integer(beresp.http.Content-Length, 0) > (10 * 1024 * 1024))'
-                      | regex_escape)
+              is search('if (std.integer(beresp.http.Content-Length, 0) > 10485760)' | regex_escape)
 
     - name: verify varnish.params expands correctly
       assert:
@@ -39,8 +34,8 @@
           - varnish_params is search('VARNISH_LISTEN_PORT=6081')
           - varnish_params is search('VARNISH_ADMIN_LISTEN_PORT=6082')
           - varnish_params
-            is search('VARNISH_STORAGE="file,/var/cache/varnish/varnish_cache.bin,1000M"'
-                      | regex_escape)
+              is search('VARNISH_STORAGE="file,/var/cache/varnish/varnish_cache.bin,1000M"'
+                        | regex_escape)
 
 
 - name: test WebDAV dav html template expansion
@@ -264,7 +259,13 @@
       changed_when: false
 
     - debug:
-        msg: TODO test roles
+        msg: TODO test create apache systemd service dependencies directory
 
     - debug:
-        msg: TODO test post tasks
+        msg: TODO test ensure varnish runs when apache run
+
+    - debug:
+        msg: TODO test ensure varnishncsa runs when apache run
+
+    - debug:
+        msg: TODO open HTTP connection in firewall

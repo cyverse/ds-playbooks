@@ -56,8 +56,10 @@
           - index is search('<title>WebDAV Service Landing Page</title>')
           - index is search('Data Store WebDAV Access')
           - index is search('WebDAV services. If a')
-          - index is search('<a href="testing/commons/community_released/">testing/commons/community_released/</a>')
-          - index is search('<a href="testing/commons/cyverse_curated/">testing/commons/cyverse_curated/</a>')
+          - index
+              is search('<a href="testing/commons/community_released/">testing/commons/community_released/</a>')
+          - index
+              is search('<a href="testing/commons/cyverse_curated/">testing/commons/cyverse_curated/</a>')
           - index is search('<a href="testing/projects/">testing/projects/</a>')
           - index is search('<a href="testing/home/">testing/home/</a>')
           - index is search('accessible without authentication.')

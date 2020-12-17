@@ -240,22 +240,33 @@
         src: files/webdav/index.html
         dest: /var/www/html/index.html
 
-    - name: install varnish-cache package
+    # Clear old varnish setting
+    - name: uninstall pre-installed varnish-cache package
       package:
-        name: varnish
+        name: vernish
+        state: absent
 
-    # Overrides service configuration to have 5 seconds of sleep
-    #     after varnish service is started
-    # This is neccessary because varnishncsa that requires the varnish service
-    #     can start too fast
-    # Related issue
-    #     https://varnish-cache.org/lists/pipermail/varnish-misc/2014-August/023977.html
-    # This only happens Varnish v4.x
-    - name: install varnish-cache service
-      copy:
-        src: files/webdav/varnish/varnish.service
-        dest: /etc/systemd/system/varnish.service
+    - name: delete stale varnish-cache service file
+      file:
+        path: /etc/systemd/system/varnish.service
+        state: absent
       notify: reload systemd
+
+    - name: delete stale varnish-cache log files (without this, varnishncsa may crash)
+      file:
+        path: /var/log/varnish/
+        state: absent
+
+    - name: delete stale varnish-cache cache dir
+      file:
+        path: "{{ _webdav_cache_dir }}"
+        state: absent
+    # Cleaning done
+
+    - name: install varnish-cache package (v6.5.1)
+      yum:
+        name: https://packagecloud.io/varnishcache/varnish65/packages/el/7/varnish-6.5.1-0.0.el7.x86_64.rpm/download.rpm
+        state: present
 
     - name: Create a cache dir
       file:
@@ -266,14 +277,33 @@
         group: varnish
         mode: 0755
 
-    - name: setup varnish-cache
+    - name: Create a log dir
+      file:
+        path: "/var/log/varnish"
+        recurse: true
+        state: directory
+        owner: varnishlog
+        group: varnish
+        mode: 0755
+
+    - name: setup varnish-cache VCL
       template:
         src: "templates/webdav/etc/varnish/{{ item }}.j2"
         dest: "/etc/varnish/{{ item }}"
       with_items:
         - default.vcl
-        - varnish.params
       notify:
+        - restart varnish
+        - restart varnishncsa
+
+    - name: setup varnish-cache service
+      template:
+        src: "templates/webdav/usr/lib/systemd/system/{{ item }}.j2"
+        dest: "/usr/lib/systemd/system/{{ item }}"
+      with_items:
+        - varnish.service
+      notify:
+        - reload systemd
         - restart varnish
         - restart varnishncsa
 
@@ -284,12 +314,10 @@
         recurse: true
         state: directory
 
-    # Use /etc/systemd/system/varnish.service instead of /usr/lib/systemd/system/varnish.service
-    # We created the file above
     - name: ensure varnish runs when apache run
       file:
         path: /etc/systemd/system/httpd.service.requires/varnish.service
-        src: /etc/systemd/system/varnish.service
+        src: /usr/lib/systemd/system/varnish.service
         state: link
 
     - name: ensure varnishncsa runs when apache run

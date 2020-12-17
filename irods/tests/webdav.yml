@@ -9,7 +9,7 @@
   vars:
     head: "{{ lookup('template', '../templates/webdav/etc/httpd/head.html.j2') }}"
     default_vcl: "{{ lookup('template', '../templates/webdav/etc/varnish/default.vcl.j2') }}"
-    varnish_params: "{{ lookup('template', '../templates/webdav/etc/varnish/varnish.params.j2') }}"
+    varnish_service: "{{ lookup('template', '../templates/webdav/usr/lib/systemd/system/varnish.service.j2') }}"
   tasks:
     - name: verify head.html expands correctly
       assert:
@@ -28,13 +28,12 @@
           - default_vcl
               is search('if (std.integer(beresp.http.Content-Length, 0) > 10485760)' | regex_escape)
 
-    - name: verify varnish.params expands correctly
+    - name: verify varnish.service expands correctly
       assert:
         that:
-          - varnish_params is search('VARNISH_LISTEN_PORT=6081')
-          - varnish_params is search('VARNISH_ADMIN_LISTEN_PORT=6082')
-          - varnish_params
-              is search('VARNISH_STORAGE="file,/var/cache/varnish/varnish_cache.bin,1000M"'
+          - varnish_service is search('-a :6081,HTTP')
+          - varnish_service
+              is search('-s file,/var/cache/varnish/varnish_cache.bin,1000M'
                         | regex_escape)
 
 
@@ -242,18 +241,28 @@
       register: response
       failed_when : not response.stat.exists
 
-    - name: test varnish.params deployed
+    - name: test varnish.service deployed
       stat:
-        path: /etc/varnish/varnish.params
+        path: /usr/lib/systemd/system/varnish.service
 
     - name: test create directory for cache
       stat:
-        path: /cache_vol
+        path: /var/cache/varnish
       register: response
       failed_when: |
         not response.stat.exists or
         not response.stat.isdir or
         response.stat.pw_name != 'varnish' or
+        response.stat.gr_name != 'varnish'
+
+    - name: test create directory for varnish log
+      stat:
+        path: /var/log/varnish
+      register: response
+      failed_when: |
+        not response.stat.exists or
+        not response.stat.isdir or
+        response.stat.pw_name != 'varnishlog' or
         response.stat.gr_name != 'varnish'
 
     - name: test open HTTP connection in firewall

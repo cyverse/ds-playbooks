@@ -240,33 +240,56 @@
         src: files/webdav/index.html
         dest: /var/www/html/index.html
 
-    # Clear old varnish setting
+    # Check existing varnish installation
+    - name: get version of existing varnish installation
+      shell: yum list installed custom-rpm | grep custom-rpm | awk '{print $2}' | cut -d'-' -f1
+      args:
+        warn: False
+      register: varnish_version
+      changed_when: False
+
+    # Caution: When varnish is not installed, varnish_upgrade will have false
+    - name: determine whether to upgrade or not
+      set_fact:
+        varnish_upgrade: "{{ varnish_version is version('6.5.1', '<') }}"
+
+    - name: determine wheter to install or not
+      set_fact:
+        varnish_install_skip: "{{ varnish_version is version('6.5.1', '>=') }}"
+
+
+    # Clear old varnish setting when upgrading
     - name: uninstall pre-installed varnish-cache package
       package:
-        name: vernish
+        name: varnish
         state: absent
+      when: varnish_upgrade
 
     - name: delete stale varnish-cache service file
       file:
         path: /etc/systemd/system/varnish.service
         state: absent
       notify: reload systemd
-
+      when: varnish_upgrade
+      
     - name: delete stale varnish-cache log files (without this, varnishncsa may crash)
       file:
         path: /var/log/varnish/
         state: absent
+      when: varnish_upgrade
 
     - name: delete stale varnish-cache cache dir
       file:
         path: "{{ _webdav_cache_dir }}"
         state: absent
+      when: varnish_upgrade
     # Cleaning done
 
     - name: install varnish-cache package (v6.5.1)
       yum:
         name: https://packagecloud.io/varnishcache/varnish65/packages/el/7/varnish-6.5.1-0.0.el7.x86_64.rpm/download.rpm
         state: present
+      when: not varnish_install_skip
 
     - name: Create a cache dir
       file:

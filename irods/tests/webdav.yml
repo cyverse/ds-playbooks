@@ -146,7 +146,6 @@
         - davrods
         - mod_proxy_html
         - mod_ssl
-        - varnish
       loop_control:
         loop_var: pkg
 
@@ -234,6 +233,7 @@
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: varnish
+        version: '6.5.1'
 
     - name: test default.vcl deployed
       stat:
@@ -247,7 +247,7 @@
 
     - name: test create directory for cache
       stat:
-        path: /var/cache/varnish
+        path: /cache_vol
       register: response
       failed_when: |
         not response.stat.exists or

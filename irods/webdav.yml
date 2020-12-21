@@ -243,6 +243,11 @@
         'varnish' in ansible_facts.packages
         and ansible_facts.packages['varnish'][0].version is version_compare('6.5.1', '<')
       block:
+        - name: ensure varnish not running
+          service:
+            name: varnish
+            state: stopped
+            
         - name: uninstall pre-installed varnish-cache package
           package:
             name: varnish

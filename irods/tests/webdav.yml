@@ -9,7 +9,7 @@
   vars:
     head: "{{ lookup('template', '../templates/webdav/etc/httpd/head.html.j2') }}"
     default_vcl: "{{ lookup('template', '../templates/webdav/etc/varnish/default.vcl.j2') }}"
-    varnish_params: "{{ lookup('template', '../templates/webdav/etc/varnish/varnish.params.j2') }}"
+    varnish_service: "{{ lookup('template', '../templates/webdav/usr/lib/systemd/system/varnish.service.j2') }}"
   tasks:
     - name: verify head.html expands correctly
       assert:
@@ -21,26 +21,20 @@
       assert:
         that:
           - default_vcl
-            is search('set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * 0.1'
-                      | regex_escape)
+              is search('set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * 0.1'
+                        | regex_escape)
+          - default_vcl is search('beresp.ttl >= 86400s' | regex_escape)
+          - default_vcl is search('set beresp.ttl = 86400s' | regex_escape)
           - default_vcl
-            is search('beresp.ttl >= 86400s'
-                      | regex_escape)
-          - default_vcl
-            is search('set beresp.ttl = 86400s'
-                      | regex_escape)
-          - default_vcl
-            is search('if (std.integer(beresp.http.Content-Length, 0) > (10 * 1024 * 1024))'
-                      | regex_escape)
+              is search('if (std.integer(beresp.http.Content-Length, 0) > 10485760)' | regex_escape)
 
-    - name: verify varnish.params expands correctly
+    - name: verify varnish.service expands correctly
       assert:
         that:
-          - varnish_params is search('VARNISH_LISTEN_PORT=6081')
-          - varnish_params is search('VARNISH_ADMIN_LISTEN_PORT=6082')
-          - varnish_params
-            is search('VARNISH_STORAGE="file,/var/cache/varnish/varnish_cache.bin,1000M"'
-                      | regex_escape)
+          - varnish_service is search('-a :6081,HTTP')
+          - varnish_service
+              is search('-s file,/var/cache/varnish/varnish_cache.bin,1000M'
+                        | regex_escape)
 
 
 - name: test WebDAV dav html template expansion
@@ -61,8 +55,10 @@
           - index is search('<title>WebDAV Service Landing Page</title>')
           - index is search('Data Store WebDAV Access')
           - index is search('WebDAV services. If a')
-          - index is search('<a href="testing/commons/community_released/">testing/commons/community_released/</a>')
-          - index is search('<a href="testing/commons/cyverse_curated/">testing/commons/cyverse_curated/</a>')
+          - index
+              is search('<a href="testing/commons/community_released/">testing/commons/community_released/</a>')
+          - index
+              is search('<a href="testing/commons/cyverse_curated/">testing/commons/cyverse_curated/</a>')
           - index is search('<a href="testing/projects/">testing/projects/</a>')
           - index is search('<a href="testing/home/">testing/home/</a>')
           - index is search('accessible without authentication.')
@@ -150,7 +146,6 @@
         - davrods
         - mod_proxy_html
         - mod_ssl
-        - varnish
       loop_control:
         loop_var: pkg
 
@@ -238,6 +233,7 @@
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: varnish
+        version: '6.5.1'
 
     - name: test default.vcl deployed
       stat:
@@ -245,26 +241,45 @@
       register: response
       failed_when : not response.stat.exists
 
-    - name: test varnish.params deployed
+    - name: test varnish.service deployed
       stat:
-        path: /etc/varnish/varnish.params
+        path: /usr/lib/systemd/system/varnish.service
 
     - name: test create directory for cache
       stat:
         path: /cache_vol
       register: response
-      failed_when: |
+      failed_when: >
         not response.stat.exists or
         not response.stat.isdir or
         response.stat.pw_name != 'varnish' or
+        response.stat.gr_name != 'varnish'
+
+    - name: test create directory for varnish log
+      stat:
+        path: /var/log/varnish
+      register: response
+      failed_when: >
+        not response.stat.exists or
+        not response.stat.isdir or
+        response.stat.pw_name != 'varnishlog' or
         response.stat.gr_name != 'varnish'
 
     - name: test open HTTP connection in firewall
       script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables
       changed_when: false
 
-    - debug:
-        msg: TODO test roles
+    - name: test create apache systemd service dependencies directory
+      stat:
+        path: /etc/systemd/system/httpd.service.requires
+      register: response
+      failed_when: not response.stat.exists or not response.stat.isdir
 
     - debug:
-        msg: TODO test post tasks
+        msg: TODO test ensure varnish runs when apache run
+
+    - debug:
+        msg: TODO test ensure varnishncsa runs when apache run
+
+    - debug:
+        msg: TODO open HTTP connection in firewall

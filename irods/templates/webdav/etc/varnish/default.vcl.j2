@@ -5,6 +5,7 @@ import std;
 backend default {
     .host = "127.0.0.1";
     .port = "80";
+    .first_byte_timeout = 300s;
 }
 
 sub vcl_recv {
@@ -56,15 +57,15 @@ sub vcl_deliver {
 
 sub vcl_backend_response {
     set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * {{ _webdav_cache_ttl_fraction }};
-    
+
     # need to put 's' to the value to tell this is in seconds
-    if (beresp.ttl >= {{_webdav_cache_max_ttl}}s) {
-        set beresp.ttl = {{_webdav_cache_max_ttl}}s;
+    if (beresp.ttl >= {{ _webdav_cache_max_ttl }}s) {
+        set beresp.ttl = {{ _webdav_cache_max_ttl }}s;
     }
 
     # Determine cache or not
-    if (std.integer(beresp.http.Content-Length, 0) > ({{ _webdav_cache_max_file_size }} * 1024 * 1024)) {
-        # this determines how long the file will not be cached 
+    if (std.integer(beresp.http.Content-Length, 0) > {{ _webdav_cache_max_file_size|int * 1024 * 1024 }}) {
+        # this determines how long the file will not be cached
         set beresp.ttl = 1m;
         set beresp.uncacheable = true;
     }

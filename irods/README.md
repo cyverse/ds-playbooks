@@ -103,7 +103,7 @@ Variable                                   | Default                            
 `webdav_auth_name`                         | CyVerse                              |         | Authorization realm to use for the Data Store
 `webdav_cache_dir`                         | `/var/cache/varnish`                 |         | The directory varnish-cache will use for the WebDAV cache
 `webdav_cache_size`                        | 1000                                 |         | The maximum size in mebibytes the cache can be
-`webdav_cache_max_file_size`               | 10                                   |         | The maximum size in mebibytes of the largest WebDAV file varnish-cache will cache 
+`webdav_cache_max_file_size`               | 10                                   |         | The maximum size in mebibytes of the largest WebDAV file varnish-cache will cache.
 `webdav_cache_ttl_fraction`                | 0.1                                  |         | The fraction elapsed time since the last-modified time of a file for cache TTL (Time-to-live) configuration
 `webdav_cache_max_ttl`                     | 86400                                |         | The maximum cache TTL in seconds
 `webdav_max_request_workers`               | 256                                  |         | the upper limit on the number of simultaneous requests that will be served

@@ -209,4 +209,3 @@ _webdav_varnish_service_port: "{{ webdav_varnish_service_port | default(6081) }}
 
 _irods_server_control_plane_port: 1248
 _irods_zone_port: 1247
-_webdav_varnish_admin_port: 6082

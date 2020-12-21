@@ -249,7 +249,7 @@
       stat:
         path: /cache_vol
       register: response
-      failed_when: |
+      failed_when: >
         not response.stat.exists or
         not response.stat.isdir or
         response.stat.pw_name != 'varnish' or
@@ -259,7 +259,7 @@
       stat:
         path: /var/log/varnish
       register: response
-      failed_when: |
+      failed_when: >
         not response.stat.exists or
         not response.stat.isdir or
         response.stat.pw_name != 'varnishlog' or
@@ -269,8 +269,11 @@
       script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables
       changed_when: false
 
-    - debug:
-        msg: TODO test create apache systemd service dependencies directory
+    - name: test create apache systemd service dependencies directory
+      stat:
+        path: /etc/systemd/system/httpd.service.requires
+      register: response
+      failed_when: not response.stat.exists or not response.stat.isdir
 
     - debug:
         msg: TODO test ensure varnish runs when apache run

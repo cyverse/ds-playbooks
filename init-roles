@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# This program installs the published ansible roles required by the playbooks.
+#
+# Usage:
+#  init-roles
 
 set -e
 

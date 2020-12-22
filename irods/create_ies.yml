@@ -3,29 +3,13 @@
   hosts: dbms
   become: true
   vars:
-    __icat_dbms_dir: /var/lib/postgres/12/main
+    __icat_dbms_dir: /etc/postgresql/12/main
   tasks:
     - name: enable notifications when not testing
       set_fact:
         notifications_enabled: true
       tags:
         - no_testing
-
-    - name: allow IES communication through firewall
-      blockinfile:
-        path: /etc/sysconfig/iptables
-        insertbefore: -A {{ _firewall_chain }} -j REJECT
-        marker: "# {mark} DS MANAGED BLOCK"
-        block: |
-          {% for i in groups['ies'] %}
-          {%   set addr = i if i|ipaddr else lookup('dig', i) %}
-          {%   if inventory_hostname != i %}
-          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport {{ _dbms_port
-             }} -j ACCEPT
-          {%   endif %}
-          {% endfor %}
-      notify:
-        - restart firewall
 
     - name: allow IES to communicate with Postgres DBMS
       blockinfile:

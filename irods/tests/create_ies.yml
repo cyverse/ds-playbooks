@@ -3,22 +3,6 @@
   hosts: dbms
   become: true
   tasks:
-    - name: test allow IES communication through firewall
-      shell: |
-        sed --quiet \
-            '/^# BEGIN DS MANAGED BLOCK$/{
-               n;
-               /^-A INPUT -m state --state NEW -p tcp -s [^ ]\+ --dport 5432 -j ACCEPT$/!Q1;
-               n;
-               /^-A INPUT -m state --state NEW -p tcp -s [^ ]\+ --dport 5432 -j ACCEPT$/!Q1;
-               n;
-               /^# END DS MANAGED BLOCK$/Q0 };
-             $ Q1' \
-          /etc/sysconfig/iptables
-      args:
-        warn: false
-      changed_when: false
-
     - name: test allow IES to communicate with Postgres DBMS
       shell: |
         sed --quiet \
@@ -30,7 +14,7 @@
                n;
                /^# END DS MANAGED BLOCK$/Q0 };
              $ Q1' \
-          /var/lib/pgsql/9.3/data/pg_hba.conf
+          /etc/postgresql/12/main/pg_hba.conf
       args:
         warn: false
       changed_when: false
@@ -43,8 +27,10 @@
   hosts: ies
   become: true
   tasks:
-    - debug:
-        msg: TODO test ensure mail client is installed
+    - name: test ensure mail client is installed
+      include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: mailx
 
     - debug:
         msg: TODO test ensure GNU parallel installed

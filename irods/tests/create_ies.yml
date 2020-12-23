@@ -27,13 +27,12 @@
   hosts: ies
   become: true
   tasks:
-    - name: test ensure mail client is installed
-      include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: mailx
-
-    - debug:
-        msg: TODO test ensure GNU parallel installed
+    - include_tasks: tasks/test_pkg_installed.yml
+      with_items:
+        - mailx
+        - parallel
+      loop_control:
+        loop_var: pkg
 
     - name: test ensure pika installed
       command: pip --disable-pip-version-check show pika

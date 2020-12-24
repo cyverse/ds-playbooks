@@ -105,10 +105,6 @@
           - irods_environment.irods_zone_name == 'testing'
 
     - when: inventory_hostname in groups['ies']
-      vars:
-        expected_driver_pat: "{{
-          '/usr/pgsql-9\\.3/lib/psqlodbca?\\.so' if ansible_distribution_major_version == '6' else
-          '/usr/lib64/psqlodbc\\.so' }}"
       block:
         - name: retrieve encoded server_config.json
           slurp:
@@ -150,12 +146,12 @@
         - name: verify .odbc.ini contents
           assert:
             that:
-              - odbc is search('driver = ' ~ expected_driver_pat)
+              - odbc is search('driver = /usr/pgsql-12/lib/psqlodbc.so' | regex_escape)
               - odbc is search('Database = ICAT')
               - odbc is search('Port = 5432')
-              - "odbc
-                   is search('Servername = dstesting_dbms_configured_1.dstesting_default'
-                             | regex_escape)"
+              - odbc
+                  is search('Servername = dstesting_dbms_configured_1.dstesting_default'
+                    | regex_escape)
 
         - name: retrieve encoded .pgpass
           slurp:

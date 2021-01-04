@@ -101,14 +101,16 @@ Variable                                   | Default                            
 `terraref_resource_hierarchy`              | `irods_resource_hierarchies[0]`      |         | The resource used by the TerraREF project.
 `webdav_allowed_src`                       | `[ "0.0.0.0/0" ]`                    |         | A list of network/masks for the clients allowed direct access to the WebDAV servers
 `webdav_auth_name`                         | CyVerse                              |         | Authorization realm to use for the Data Store
-`webdav_cache_dir`                         | `/var/cache/varnish`                 |         | the directory varnish-cache will use for the WebDAV cache
-`webdav_cache_size`                        | 1000                                 |         | the maximum size in mebibytes the cache can be
+`webdav_cache_dir`                         | `/var/cache/varnish`                 |         | The directory varnish-cache will use for the WebDAV cache
+`webdav_cache_size`                        | 1000                                 |         | The maximum size in mebibytes the cache can be
+`webdav_cache_max_file_size`               | 10                                   |         | The maximum size in mebibytes of the largest WebDAV file varnish-cache will cache.
+`webdav_cache_ttl_fraction`                | 0.1                                  |         | The fraction elapsed time since the last-modified time of a file for cache TTL (Time-to-live) configuration
+`webdav_cache_max_ttl`                     | 86400                                |         | The maximum cache TTL in seconds
 `webdav_max_request_workers`               | 256                                  |         | the upper limit on the number of simultaneous requests that will be served
 `webdav_tls_cert_file`                     | `/etc/ssl/certs/dummy.crt`           |         | The TLS certificate file used for encrypted communication
 `weddav_tls_chain_file`                    | `/etc/ssl/certs/dummy-chain.crt`     |         | The TLS certificate chain file used for encrypted communication
 `webdav_tls_key_file`                      | `/etc/ssl/certs/dummy.key`           |         | The TLS key file used for encrypted communication
 `webdav_varnish_service_port`              | 6081                                 |         | The service port number for varnish-cache
-`webdav_cache_ttl_percentage`              | 0.1                                  |         | The percentage to the elapsed time since the last-modified time of a file for TTL (Time-to-live) configuration
 
 
 The `restart_irods` flag is ignored in the `main.yml` playbook.

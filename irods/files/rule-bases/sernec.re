@@ -8,20 +8,25 @@
 sernec_isForSernec(*Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/sernec/\*'
 
 
-sernec_assignPerms(*Path) {
+sernec_assignPerms(*Path, *UserNameClient) {
   msiGetObjType(*Path, *type);
   *recursiveFlag = if *type == '-c' then 'recursive' else 'default';
+  msiSetACL(*recursiveFlag, 'own', *UserNameClient, *Path);
 
   foreach(*user in sernec_OWNERS) {
     msiSetACL(*recursiveFlag, 'own', *user, *Path);
   }
 
   foreach(*user in sernec_WRITERS) {
-    msiSetACL(*recursiveFlag, 'write', *user, *Path);
+    if (*user != *UserNameClient) {
+      msiSetACL(*recursiveFlag, 'write', *user, *Path);
+    }
   }
 
   foreach(*user in sernec_READERS) {
-    msiSetACL(*recursiveFlag, 'read', *user, *Path);
+    if (*user != *UserNameClient) {
+      msiSetACL(*recursiveFlag, 'read', *user, *Path);
+    }
   }
 
   if (*type == '-c') {
@@ -34,7 +39,7 @@ sernec_assignPerms(*Path) {
 # create under the sernec home
 sernec_acPostProcForCollCreate {
   if (sernec_isForSernec($collName)) {
-    sernec_assignPerms($collName);
+    sernec_assignPerms($collName, $userNameClient);
   }
 }
 
@@ -43,7 +48,7 @@ sernec_acPostProcForCollCreate {
 # the correct permissions. Copied data objects don't inherit permissions.
 sernec_acPostProcForCopy {
   if (sernec_isForSernec($objPath) && $writeFlag == 0) {
-    sernec_assignPerms($objPath);
+    sernec_assignPerms($objPath, $userNameClient);
   }
 }
 
@@ -53,6 +58,6 @@ sernec_acPostProcForCopy {
 # permissions.
 sernec_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   if (!sernec_isForSernec(*SrcEntity) && sernec_isForSernec(*DestEntity)) {
-    sernec_assignPerms(*DestEntity);
+    sernec_assignPerms(*DestEntity, $userNameClient);
   }
 }

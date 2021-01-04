@@ -8,7 +8,8 @@
 #  VERSION  the major version of the OS to configure.
 #
 # This script configures the common ansible requirements
-#
+
+set -e
 
 
 main()
@@ -67,6 +68,10 @@ install_centos_packages()
   local version="$1"
 
   rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
+
+  yum --assumeyes install epel-release
+  rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
+
   yum --assumeyes install iptables-services libselinux-python openssh-server sudo
 }
 
@@ -77,7 +82,7 @@ install_debian_packages()
 
   apt-get update -qq
   apt-get install -qq -y apt-utils 2> /dev/null
-  
+
   apt-get install -qq -y \
     iptables jq openssh-server python-pip python-selinux python-virtualenv sudo
 }
@@ -91,7 +96,5 @@ s/#?PermitEmptyPasswords no/PermitEmptyPasswords yes/
 EOF
 }
 
-
-set -e
 
 main "$@"

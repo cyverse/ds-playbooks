@@ -193,7 +193,9 @@ _webdav_allowed_src: "{{ webdav_allowed_src | default(['0.0.0.0/0']) }}"
 _webdav_auth_name: "{{ webdav_auth_name | default('CyVerse') }}"
 _webdav_cache_dir: "{{ webdav_cache_dir | default('/var/cache/varnish') }}"
 _webdav_cache_size: "{{ webdav_cache_size | default(1000) }}"
-_webdav_cache_ttl_percentage: "{{ webdav_cache_ttl_percentage | default(0.1) }}"
+_webdav_cache_max_file_size: "{{ webdav_cache_max_file_size | default(10) }}"
+_webdav_cache_ttl_fraction: "{{ webdav_cache_ttl_fraction | default(0.1) }}"
+_webdav_cache_max_ttl: "{{ webdav_cache_max_ttl | default(86400) }}"
 
 _webdav_max_request_workers: "{{ webdav_max_request_workers | default(256) }}"
 _webdav_tls_cert_file: "{{ webdav_tls_cert_file | default('/etc/ssl/certs/dummy.crt') }}"
@@ -207,4 +209,3 @@ _webdav_varnish_service_port: "{{ webdav_varnish_service_port | default(6081) }}
 
 _irods_server_control_plane_port: 1248
 _irods_zone_port: 1247
-_webdav_varnish_admin_port: "{{ webdav_varnish_admin_port | default(6082) }}"

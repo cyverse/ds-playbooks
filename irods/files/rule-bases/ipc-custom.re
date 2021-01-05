@@ -215,10 +215,10 @@ acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *Source
 }
 
 acPreProcForObjRename(*SourceObject, *DestObject) {
+  ipc_acPreProcForObjRename(*SourceObject, *DestObject);
   de_acPreProcForObjRename(*SourceObject, *DestObject);
 }
 
-# DS-30: This rule prevents user from creating collection(s) that ends with "." or ".."
 acPreprocForCollCreate {
   ipc_acPreprocForCollCreate;
 }

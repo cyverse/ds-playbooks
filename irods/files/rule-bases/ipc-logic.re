@@ -483,12 +483,14 @@ ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zo
   }
 }
 
-# DS-30: This rule prevents user from creating collection(s) that ends with "." or ".."
+# XXX - Workaround for https://github.com/irods/irods/issues/4750, fixed in iRODS 4.2.8
 ipc_acPreprocForCollCreate {
-  if($collName like regex '^.*[\/][.]{1,2}') then {
-    msiSplitPath($collName, *parentCollName, *childName)
-    writeLine("serverLog","Collection name '"++*childName++"' is not allowed");
-    failmsg(-809000, "Collection name '"++*childName++"' is not allowed");
+  if($collName like regex '(.*/|(.*/)?\.{1,2})') {
+    cut;
+    failmsg(-809000, 'Collection cannot be named ".", "..", or "/"');
+  } else if ($collName like regex '.*//.*') {
+    cut;
+    failmsg(-809000, 'Path cannot have a "//" in it');
   }
 }
 
@@ -513,6 +515,16 @@ ipc_acPreprocForDataObjOpen {
       failmsg(-809000, "Object name contains with '/' is not allowed");
     }
     *itr = *itr + 1;
+  }
+}
+
+# XXX - Workaround for https://github.com/irods/irods/issues/4750, fixed in iRODS 4.2.8
+ipc_acPreProcForObjRename(*SourceObject, *DestObject) {
+  msiGetObjType(*SourceObject, *type);
+
+  if(*type == '-c' && *DestObject like regex '(.*/|(.*/)?\.{1,2})') {
+    cut;
+    failmsg(-809000, 'Collection cannot be named ".", "..", or "/"');
   }
 }
 

@@ -471,6 +471,25 @@ ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
   }
 }
 
+
+ipc_acPreprocForCollCreate {
+  # XXX - Workaround for https://github.com/irods/irods/issues/4060, fixed in iRODS 4.2.7
+  if($collName like regex '.*\\.*') {
+    cut;
+    failmsg(-809000, 'Collection name cannot contain a "\\"');
+  }
+
+  # XXX - Workaround for https://github.com/irods/irods/issues/4750, fixed in iRODS 4.2.8
+  if($collName like regex '(.*/|(.*/)?\.{1,2})') {
+    cut;
+    failmsg(-809000, 'Collection cannot be named ".", "..", or "/"');
+  } else if ($collName like regex '.*//.*') {
+    cut;
+    failmsg(-809000, 'Path cannot have a "//" in it');
+  }
+}
+
+
 # This rule prevents the user from removing rodsadmin's ownership from an ACL unless the user is of
 # type rodsadmin.
 #
@@ -483,14 +502,22 @@ ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zo
   }
 }
 
-# DS-30: This rule prevents user from creating collection(s) that ends with "." or ".."
-ipc_acPreprocForCollCreate {
-  if($collName like regex '^.*[\/][.]{1,2}') then {
-    msiSplitPath($collName, *parentCollName, *childName)
-    writeLine("serverLog","Collection name '"++*childName++"' is not allowed");
-    failmsg(-809000, "Collection name '"++*childName++"' is not allowed")
+
+ipc_acPreProcForObjRename(*SourceObject, *DestObject) {
+  # XXX - Workaround for https://github.com/irods/irods/issues/4060, fixed in iRODS 4.2.7
+  if(*DestObject like regex '.*\\.*') {
+    cut;
+    failmsg(-809000, 'Entity name cannot contain a "\\"');
+  }
+
+  # XXX - Workaround for https://github.com/irods/irods/issues/4750, fixed in iRODS 4.2.8
+  msiGetObjType(*SourceObject, *type);
+  if(*type == '-c' && *DestObject like regex '(.*/|(.*/)?\.{1,2})') {
+    cut;
+    failmsg(-809000, 'Collection cannot be named ".", "..", or "/"');
   }
 }
+
 
 # This rule makes the admin owner of any created collection.  This rule is not applied to
 # collections created when a TAR file is expanded. (i.e. ibun -x)
@@ -776,4 +803,13 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *S
 #
 ipc_acPostProcForParallelTransferReceived(*LeafResource) {
   msi_update_unixfilesystem_resource_free_space(*LeafResource);
+}
+
+
+# XXX - Workaround for https://github.com/irods/irods/issues/4060, fixed in iRODS 4.2.7
+ipc_acSetRescSchemeForCreate {
+  if($objPath like regex '.*\\.*') {
+    cut;
+    failmsg(-809000, 'Data object name cannot contain a "\\"');
+  }
 }

@@ -179,7 +179,10 @@ acPreConnect(*OUT) { ipc_acPreConnect(*OUT); }
 
 acSetNumThreads { ipc_acSetNumThreads; }
 
-acSetRescSchemeForCreate { replSetRescSchemeForCreate; }
+acSetRescSchemeForCreate {
+  ipc_acSetRescSchemeForCreate;
+  replSetRescSchemeForCreate;
+}
 
 acSetRescSchemeForRepl { replSetRescSchemeForRepl; }
 
@@ -193,6 +196,9 @@ acSetReServerNumProc { ipc_acSetReServerNumProc; }
 # subsequent pre-proc rule fails. Third party pre-proc rules should be called
 # before any IPC pre-proc rules to ensure that third party rules don't
 # invalidate IPC rules.
+
+# NOTE: The camelcasing is inconsistent here
+acPreprocForCollCreate { ipc_acPreprocForCollCreate; }
 
 acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
   ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
@@ -215,14 +221,9 @@ acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *Source
 }
 
 acPreProcForObjRename(*SourceObject, *DestObject) {
+  ipc_acPreProcForObjRename(*SourceObject, *DestObject);
   de_acPreProcForObjRename(*SourceObject, *DestObject);
 }
-
-# DS-30: This rule prevents user from creating collection(s) that ends with "." or ".."
-acPreprocForCollCreate {
-  ipc_acPreprocForCollCreate;
-}
-
 
 # NOTE: The camelcasing is inconsistent here
 acPreprocForRmColl { ipc_acPreprocForRmColl; }

@@ -247,7 +247,7 @@
           service:
             name: varnish
             state: stopped
-            
+
         - name: uninstall pre-installed varnish-cache package
           package:
             name: varnish
@@ -273,6 +273,22 @@
       yum:
         name: https://packagecloud.io/varnishcache/varnish65/packages/el/7/varnish-6.5.1-0.0.el7.x86_64.rpm/download.rpm
         state: present
+
+    - name: Create varnish shared memory mount point
+      file:
+        path: /var/lib/varnish
+        state: directory
+        mode: 0777
+
+    - name: mount varnish shared memory
+      mount:
+        path: /var/lib/varnish
+        src: tmpfs
+        fstype: tmpfs
+        opts: rw,nodev,nosuid
+        state: mounted
+      tags:
+        - no_testing
 
     - name: Create a cache dir
       file:

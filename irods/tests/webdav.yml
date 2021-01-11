@@ -270,15 +270,13 @@
       stat:
         path: /etc/varnish/default.vcl
       register: response
-      failed_when : not response.stat.exists
+      failed_when: not response.stat.exists
 
     - name: test varnish.service deployed
       stat:
         path: /usr/lib/systemd/system/varnish.service
-
-    - name: test open HTTP connection in firewall
-      script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables
-      changed_when: false
+      register: response
+      failed_when: not response.stat.exists
 
     - name: test create apache systemd service dependencies directory
       stat:
@@ -292,5 +290,6 @@
     - debug:
         msg: TODO test ensure varnishncsa runs when apache run
 
-    - debug:
-        msg: TODO open HTTP connection in firewall
+    - name: test open HTTP connection in firewall
+      script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables
+      changed_when: false

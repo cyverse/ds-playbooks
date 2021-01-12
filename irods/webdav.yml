@@ -264,10 +264,16 @@
             path: /var/log/varnish/
             state: absent
 
-        - name: delete stale varnish-cache cache dir
+        - name: find files in varnish cache dir
+          find:
+            paths: "{{ _webdav_cache_dir }}"
+          register: cached_files
+
+        - name: delete varnish cache files
           file:
             path: "{{ _webdav_cache_dir }}"
             state: absent
+          with_items: "{{ cached_files }}"
 
     - name: install varnish-cache package (v6.5.1)
       yum:

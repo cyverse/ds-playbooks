@@ -480,7 +480,7 @@ ipc_acPreprocForCollCreate {
   }
 
   # XXX - Workaround for https://github.com/irods/irods/issues/4750, fixed in iRODS 4.2.8
-  if($collName like regex '(.*/|(.*/)?\.{1,2})') {
+  if($collName like regex '(.*/|(.*/)?\\.{1,2})') {
     cut;
     failmsg(-809000, 'Collection cannot be named ".", "..", or "/"');
   } else if ($collName like regex '.*//.*') {
@@ -512,7 +512,7 @@ ipc_acPreProcForObjRename(*SourceObject, *DestObject) {
 
   # XXX - Workaround for https://github.com/irods/irods/issues/4750, fixed in iRODS 4.2.8
   msiGetObjType(*SourceObject, *type);
-  if(*type == '-c' && *DestObject like regex '(.*/|(.*/)?\.{1,2})') {
+  if(*type == '-c' && *DestObject like regex '(.*/|(.*/)?\\.{1,2})') {
     cut;
     failmsg(-809000, 'Collection cannot be named ".", "..", or "/"');
   }

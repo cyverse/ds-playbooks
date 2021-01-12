@@ -474,9 +474,9 @@ ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
 
 ipc_acPreprocForCollCreate {
   # XXX - Workaround for https://github.com/irods/irods/issues/4060, fixed in iRODS 4.2.7
-  if($collName like regex '.*\\.*') {
+  if($collName like regex '.*\\\\.*') {
     cut;
-    failmsg(-809000, 'Collection name cannot contain a "\\"');
+    failmsg(-809000, 'Collection name cannot contain a "\"');
   }
 
   # XXX - Workaround for https://github.com/irods/irods/issues/4750, fixed in iRODS 4.2.8
@@ -505,9 +505,9 @@ ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zo
 
 ipc_acPreProcForObjRename(*SourceObject, *DestObject) {
   # XXX - Workaround for https://github.com/irods/irods/issues/4060, fixed in iRODS 4.2.7
-  if(*DestObject like regex '.*\\.*') {
+  if(*DestObject like regex '.*\\\\.*') {
     cut;
-    failmsg(-809000, 'Entity name cannot contain a "\\"');
+    failmsg(-809000, 'Entity name cannot contain a "\"');
   }
 
   # XXX - Workaround for https://github.com/irods/irods/issues/4750, fixed in iRODS 4.2.8
@@ -808,8 +808,8 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 
 # XXX - Workaround for https://github.com/irods/irods/issues/4060, fixed in iRODS 4.2.7
 ipc_acSetRescSchemeForCreate {
-  if($objPath like regex '.*\\.*') {
+  if($objPath like regex '.*\\\\.*') {
     cut;
-    failmsg(-809000, 'Data object name cannot contain a "\\"');
+    failmsg(-809000, 'Data object name cannot contain a "\"');
   }
 }

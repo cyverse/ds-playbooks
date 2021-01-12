@@ -1,0 +1,10 @@
+---
+
+- include: install.yml
+
+- include: configure.yml
+
+- include: replication.yml
+  when: initialize_all_replicas is defined and initialize_all_replicas == true
+
+#- include: healthchecks.yml

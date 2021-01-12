@@ -1,0 +1,14 @@
+---
+
+- name: install | apt install postgres12 and postgres12 client
+  apt:
+    pkg:
+      - postgresql
+      - postgresql-client
+      - python3-psycopg2
+    state: present
+
+- name: install | create en_US.UTF-8
+  locale_gen:
+    name: en_US.UTF-8
+    state: present

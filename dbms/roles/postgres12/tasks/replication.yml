@@ -1,0 +1,46 @@
+---
+
+- name: replication | create replication user
+  postgresql_user:
+    db: "{{ pg_db }}"
+    port: "{{ pg_listen_port }}" # this is required because the module uses it to build the string for the socket
+    name: "{{ pg_replication_user }}"
+    role_attr_flags: replication
+    password: '{{ pg_replication_pass }}'
+  when: "'primary_postgres_node' in group_names"
+  become: true
+  become_user: postgres
+
+- name: replication | stop database on secondaries
+  service:
+    name: postgresql@12-main.service
+    state: stopped
+  when: "'secondary_postgres_nodes' in group_names"
+
+- name: replication | ensure pgdata path is empty
+  file:
+    state: absent
+    path: "{{ pg_db_path }}"
+  when: "'secondary_postgres_nodes' in group_names"
+
+- name: replication | replicate db from primary to secondaries
+  shell: "pg_basebackup --host={{ hostvars[groups['primary_postgres_node'][0]]['pg_listen_address'] }} --user={{ pg_replication_user }} --port={{ pg_listen_port }} --pgdata={{ pg_db_path }} --format=plain --wal-method=stream --progress --write-recovery-conf --no-password"
+  become: true
+  become_user: postgres
+  when: "'secondary_postgres_nodes' in group_names"
+
+- name : replication | create standby.signal files on secondary postgres nodes
+  copy:
+    content: ""
+    dest: "{{ pg_db_path }}/standby.signal"
+    force: no
+    group: postgres
+    owner: postgres
+    mode: 0600
+  when: "'secondary_postgres_nodes' in group_names"
+
+- name: replication | start database on secondaries
+  service:
+    name: postgresql@12-main.service
+    state: started
+  when: "'secondary_postgres_nodes' in group_names"

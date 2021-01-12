@@ -1,0 +1,8 @@
+---
+
+- hosts:
+    - primary_postgres_node
+    - secondary_postgres_nodes
+  roles:
+    - postgres12
+

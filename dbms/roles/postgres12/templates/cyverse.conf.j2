@@ -1,0 +1,38 @@
+listen_addresses = '127.0.0.1,{{ pg_listen_address }}'
+port = '{{ pg_listen_port }}'
+
+max_wal_senders = {{ pg_max_wal_senders }}
+wal_keep_segments = {{ pg_wal_keep_segments }}
+
+max_connections = {{ pg_max_connections }}
+
+effective_cache_size = {{ pg_effective_cache_size }}
+shared_buffers = {{ pg_shared_buffers }}
+work_mem = {{ pg_work_memory }}
+maintenance_work_mem = {{ pg_maintenance_work_memory }}
+
+min_wal_size = {{ pg_min_wal_size }}
+max_wal_size = {{ pg_max_wal_size }}
+checkpoint_timeout = {{ pg_checkpoint_timeout }}
+checkpoint_completion_target = {{ pg_checkpoint_completion_target }}
+
+random_page_cost = {{ pg_random_page_cost }}
+
+standard_conforming_strings = {{ pg_standard_conforming_strings }}
+
+log_min_duration_statement = {{ pg_log_min_duration_statement }}
+log_line_prefix = '{{ pg_log_line_prefix }}'
+
+{% if ansible_hostname in groups['primary_postgres_node'] %}
+archive_mode = ON
+archive_command = 'gzip < %p > {{ pg_db_path }}/archive/%f.gz'
+
+{% else %}
+
+hot_standby = on
+restore_command = 'cp {{ pg_db_path }}/archive/%f | zcat {{ pg_db_path }}/archive/%f > %p'
+
+{% if pg_hot_standby_feedback | default(false) %}
+hot_standby_feedback = on
+{% endif %}
+{% endif %}

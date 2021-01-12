@@ -287,6 +287,8 @@
         fstype: tmpfs
         opts: rw,nodev,nosuid
         state: mounted
+      notify:
+        - restart varnish
       tags:
         - no_testing
 

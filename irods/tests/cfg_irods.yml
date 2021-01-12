@@ -105,10 +105,6 @@
           - irods_environment.irods_zone_name == 'testing'
 
     - when: inventory_hostname in groups['ies']
-      vars:
-        expected_driver: "{{
-          '/usr/pgsql-9.3/lib/psqlodbca.so' if ansible_distribution_major_version == '6' else
-          '/usr/lib64/psqlodbc.so'}}"
       block:
         - name: retrieve encoded server_config.json
           slurp:
@@ -150,9 +146,9 @@
         - name: verify .odbc.ini contents
           assert:
             that:
-              - odbc is search('driver = ' ~ expected_driver | regex_escape)
-              - odbc is search('Database = ICAT' | regex_escape)
-              - odbc is search('Port = 5432' | regex_escape)
+              - odbc is search('driver = /usr/pgsql-9\\.3/lib/psqlodbca?\\.so')
+              - odbc is search('Database = ICAT')
+              - odbc is search('Port = 5432')
               - odbc is search('Servername = dstesting_dbms_1.dstesting_default' | regex_escape)
 
         - name: retrieve encoded .pgpass
@@ -187,7 +183,7 @@
             that:
               - server_config.default_resource_directory == '/var/lib/irods/Vault'
               - server_config.default_resource_name == 'rs_centos6'
-              - server_config.icat_host == 'dstesting_ies_centos6_1.dstesting_default'
+              - server_config.icat_host == 'dstesting_ies_configured_1.dstesting_default'
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
               - server_config.re_rulebase_set[0].filename == 'ipc-custom'
               - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'

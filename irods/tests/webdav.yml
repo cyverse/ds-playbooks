@@ -8,7 +8,8 @@
     - group_vars/webdav_cfg.yml
   vars:
     head: "{{ lookup('template', '../templates/webdav/etc/httpd/head.html.j2') }}"
-    htcacheclean: "{{ lookup('template', '../templates/webdav/etc/htcacheclean.j2') }}"
+    default_vcl: "{{ lookup('template', '../templates/webdav/etc/varnish/default.vcl.j2') }}"
+    varnish_service: "{{ lookup('template', '../templates/webdav/usr/lib/systemd/system/varnish.service.j2') }}"
   tasks:
     - name: verify head.html expands correctly
       assert:
@@ -16,11 +17,24 @@
           - head is search('/\* Style for the testing/base/ davrods \*/')
           - "head is search('content: \"/testing/base/\";')"
 
-    - name: verify htcacheclean expands correctly
+    - name: verify default.vcl expands correctly
       assert:
         that:
-          - htcacheclean is search('CACHE_ROOT=/var/cache/httpd/proxy')
-          - htcacheclean is search('LIMIT=100M')
+          - default_vcl
+              is search('set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * 0.1'
+                        | regex_escape)
+          - default_vcl is search('beresp.ttl >= 86400s' | regex_escape)
+          - default_vcl is search('set beresp.ttl = 86400s' | regex_escape)
+          - default_vcl
+              is search('if (std.integer(beresp.http.Content-Length, 0) > 10485760)' | regex_escape)
+
+    - name: verify varnish.service expands correctly
+      assert:
+        that:
+          - varnish_service is search('-a :6081,HTTP')
+          - varnish_service
+              is search('-s file,/var/cache/varnish/varnish_cache.bin,1000M'
+                        | regex_escape)
 
 
 - name: test WebDAV dav html template expansion
@@ -38,16 +52,16 @@
     - name: verify index.html expands correctly, part 1
       assert:
         that:
-          - index is search('{{ item }}')
-      with_items:
-        - <title>WebDAV Service Landing Page</title>
-        - Data Store WebDAV Access
-        - WebDAV services. If a
-        - <a href="testing/commons/community_released/">testing/commons/community_released/</a>
-        - <a href="testing/commons/cyverse_curated/">testing/commons/cyverse_curated/</a>
-        - <a href="testing/projects/">testing/projects/</a>
-        - <a href="testing/home/">testing/home/</a>
-        - accessible without authentication.
+          - index is search('<title>WebDAV Service Landing Page</title>')
+          - index is search('Data Store WebDAV Access')
+          - index is search('WebDAV services. If a')
+          - index
+              is search('<a href="testing/commons/community_released/">testing/commons/community_released/</a>')
+          - index
+              is search('<a href="testing/commons/cyverse_curated/">testing/commons/cyverse_curated/</a>')
+          - index is search('<a href="testing/projects/">testing/projects/</a>')
+          - index is search('<a href="testing/home/">testing/home/</a>')
+          - index is search('accessible without authentication.')
 
     - name: verify index.html expands correctly, part 2
       assert:
@@ -57,26 +71,22 @@
     - name: verify zone/index.html expands correctly
       assert:
         that:
-          - zone_index is search('{{ item }}')
-      with_items:
-        - <title>Index of /testing on testing</title>
-        - <base href="/dav/testing/"/>
-        - <a href="/dav/">/</a>
-        - <a href="/dav/testing/">testing/</a>
-        - <span class="zone-name">testing</span>
-        - <a href="home/">home/</a>
+          - zone_index is search('<title>Index of /testing on testing</title>')
+          - zone_index is search('<base href="/dav/testing/"/>')
+          - zone_index is search('<a href="/dav/">/</a>')
+          - zone_index is search('<a href="/dav/testing/">testing/</a>')
+          - zone_index is search('<span class="zone-name">testing</span>')
+          - zone_index is search('<a href="home/">home/</a>')
 
     - name: verify zone/commons/index.html expands correctly
       assert:
         that:
-          - commons_index is search('{{ item }}')
-      with_items:
-        - <title>Index of /testing/commons/ on testing</title>
-        - <base href="/dav/testing/commons/"/>
-        - <a href="/dav/">/</a>
-        - <a href="/dav/testing/">testing/</a>
-        - <a href="/dav/testing/commons/">commons/</a>
-        - <span class="zone-name">testing</span>
+          - commons_index is search('<title>Index of /testing/commons/ on testing</title>')
+          - commons_index is search('<base href="/dav/testing/commons/"/>')
+          - commons_index is search('<a href="/dav/">/</a>')
+          - commons_index is search('<a href="/dav/testing/">testing/</a>')
+          - commons_index is search('<a href="/dav/testing/commons/">commons/</a>')
+          - commons_index is search('<span class="zone-name">testing</span>')
 
 
 - name: test WebDAV dav-anon html template expansion
@@ -94,13 +104,11 @@
     - name: verify index.html expands correctly, part 1
       assert:
         that:
-          - index is search('{{ item }}')
-      with_items:
-        - <title>Anonymous WebDAV Service Landing Page</title>
-        - Data Store Anonymous, Read-Only
-        - has four anonymous, read-only
-        - testing/home/
-        - be accessible.
+          - index is search('<title>Anonymous WebDAV Service Landing Page</title>')
+          - index is search('Data Store Anonymous, Read-Only')
+          - index is search('has four anonymous, read-only')
+          - index is search('testing/home/')
+          - index is search('be accessible.')
 
     - name: verify index.html expands correctly, part 2
       assert:
@@ -111,11 +119,9 @@
     - name: verify zone/index.html expands correctly, part 1
       assert:
         that:
-          - zone_index is search('{{ item }}')
-      with_items:
-        - <base href="/dav-anon/testing/"/>
-        - <a href="/dav-anon/">/</a>
-        - <a href="/dav-anon/testing/">testing/</a>
+          - zone_index is search('<base href="/dav-anon/testing/"/>')
+          - zone_index is search('<a href="/dav-anon/">/</a>')
+          - zone_index is search('<a href="/dav-anon/testing/">testing/</a>')
 
     - name: verify zone/index.html expands correctly, part 2
       assert:
@@ -125,12 +131,10 @@
     - name: verify zone/commons/index.html expands correctly
       assert:
         that:
-          - commons_index is search('{{ item }}')
-      with_items:
-        - <base href="/dav-anon/testing/commons/"/>
-        - <a href="/dav-anon/">/</a>
-        - <a href="/dav-anon/testing/">testing/</a>
-        - <a href="/dav-anon/testing/commons/">commons/</a>
+          - commons_index is search('<base href="/dav-anon/testing/commons/"/>')
+          - commons_index is search('<a href="/dav-anon/">/</a>')
+          - commons_index is search('<a href="/dav-anon/testing/">testing/</a>')
+          - commons_index is search('<a href="/dav-anon/testing/commons/">commons/</a>')
 
 
 - name: test WebDAV server deposition
@@ -139,9 +143,9 @@
   tasks:
     - include_tasks: tasks/test_pkg_installed.yml
       with_items:
+        - davrods
         - mod_proxy_html
         - mod_ssl
-        - davrods
       loop_control:
         loop_var: pkg
 
@@ -202,7 +206,7 @@
       assert:
         that:
           - irods_environment.irods_home == '/testing'
-          - irods_environment.irods_host == 'dstesting_ies_centos6_1.dstesting_default'
+          - irods_environment.irods_host == 'dstesting_ies_configured_1.dstesting_default'
           - irods_environment.irods_user_name == 'anonymous'
           - irods_environment.irods_zone_name == 'testing'
 
@@ -223,25 +227,74 @@
         - dav-anon/index.html
         - dav-anon/testing/index.html
         - dav-anon/testing/commons/index.html
-
       register: response
       failed_when: not response.stat.exists
+
+    - include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: varnish
+        version: '6.5.1'
+
+    - name: test create varnish shared memory mount point
+      stat:
+        path: /var/lib/varnish
+      register: response
+      failed_when:
+        not response.stat.exists or
+        not response.stat.isdir or
+        response.stat.mode != '0777'
 
     - name: test create directory for cache
       stat:
         path: /cache_vol
       register: response
-      failed_when: |
+      failed_when: >
         not response.stat.exists or
         not response.stat.isdir or
-        response.stat.pw_name != 'apache' or
-        response.stat.gr_name != 'apache'
+        response.stat.pw_name != 'varnish' or
+        response.stat.gr_name != 'varnish' or
+        response.stat.mode != '0755'
 
-    - name: test ensure htcacheclean runs when apache run
+    - name: test create directory for varnish log
       stat:
-        path: /etc/systemd/system/httpd.service.requires/htcacheclean.service
+        path: /var/log/varnish
+      register: response
+      failed_when: >
+        not response.stat.exists or
+        not response.stat.isdir or
+        response.stat.pw_name != 'varnishlog' or
+        response.stat.gr_name != 'varnish' or
+        response.stat.mode != '0755'
+
+    - name: test default.vcl deployed
+      stat:
+        path: /etc/varnish/default.vcl
       register: response
       failed_when: not response.stat.exists
+
+    - name: test varnish.service deployed
+      stat:
+        path: /usr/lib/systemd/system/varnish.service
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test create apache systemd service dependencies directory
+      stat:
+        path: /etc/systemd/system/httpd.service.requires
+      register: response
+      failed_when: not response.stat.exists or not response.stat.isdir
+
+    - name: test ensure varnish runs when apache run
+      stat:
+        path: /etc/systemd/system/httpd.service.requires/varnish.service
+      register: response
+      failed_when: >
+        not response.stat.exists or
+        not response.stat.islnk or
+        response.stat.lnk_source != '/usr/lib/systemd/system/varnish.service'
+
+    - debug:
+        msg: TODO test ensure varnishncsa runs when apache run
 
     - name: test open HTTP connection in firewall
       script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables

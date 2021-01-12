@@ -20,6 +20,9 @@ Options:
  -h, --help      show help and exit
  -L, --log FILE  write all output to FILE
  -v, --version   show version and exit
+
+Dependencies:
+ GNU \`parallel\` needs to be installed.
 EOF
 }
 
@@ -44,6 +47,13 @@ readonly Concurrency=4
 
 main()
 {
+  if ! check_dependencies
+  then
+    printf 'missing dependencies\n' >&2
+    show_help >&2
+    return 1
+  fi
+
   declare -A optMap=(
     [help]=''
     [version]=''
@@ -88,6 +98,17 @@ main()
   trap "rm_temps '$trashTmpFiles' 2> >(disp_err) > >(disp_out)" EXIT
 
   rm_trash "$trashTmpFiles" 2> >(disp_err) > >(disp_out)
+}
+
+
+check_dependencies()
+{
+  if ! which parallel > /dev/null
+  then
+    # shellcheck disable=SC2016
+    printf 'Cannot find `parallel`\n' >&2
+    return 1
+  fi
 }
 
 
@@ -242,7 +263,7 @@ rm_trash()
   printf '%d base collections will be pruned\n' "$delTot"
 
   local parent
-  while read -r parent
+  while IFS= read -r parent
   do
     if ! prune_children "$trashTempFiles" "$parent"
     then
@@ -278,8 +299,8 @@ trashed_data()
   quest \
       '%s %s/%s' \
       "select max(DATA_MODIFY_TIME), COLL_NAME, DATA_NAME where COLL_NAME like '/$zone/trash/%'" \
-    | sort --numeric --key 1,1 \
     | truncate_by_time "$upperBound" \
+    | sort --numeric --key 1,1 \
     | cut --delimiter ' ' --fields 2-
 }
 
@@ -297,7 +318,7 @@ prune_children()
   if quest '%s' "select COLL_NAME where COLL_PARENT_NAME = '$parent'" > "$childList"
   then
     local collection
-    while read -r collection
+    while IFS= read -r collection
     do
       if ! prune_collection "$trashTempFiles" "$collection"
       then
@@ -381,7 +402,12 @@ truncate_by_time()
   local dataObj modifyTs
   while read -r modifyTs dataObj
   do
-    if [[ "${modifyTs#0}" -lt "$upperBound" ]]
+    if ! [[ "$modifyTs" =~ [0-9]+ ]]
+    then
+      printf 'Bad modification time stamp: "%s" skipping data object "%s"\n' \
+          "$modifyTs" "$dataObj" \
+        >&2
+    elif [[ "${modifyTs#0}" -lt "$upperBound" ]]
     then
       printf '%s %s\n' "$modifyTs" "$dataObj"
     fi

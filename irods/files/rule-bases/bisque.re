@@ -204,6 +204,13 @@ _bisque_handleNewObject(*Client, *Path) {
 }
 
 
+_bisque_handleObjCreate(*Creator, *Path) {
+  if (_bisque_isForBisque(*Creator, *Path)) {
+    _bisque_handleNewObject(_bisque_getClient(*Creator, *Path), *Path);
+  }
+}
+
+
 # Add a call to this rule from inside the acPostProcForCollCreate PEP.
 bisque_acPostProcForCollCreate {
   if (_bisque_isForBisque($userNameClient, $collName)) {
@@ -211,20 +218,21 @@ bisque_acPostProcForCollCreate {
   }
 }
 
-
 # Add a call to this rule from inside the acPostProcForPut PEP.
 bisque_acPostProcForPut {
-  if (_bisque_isForBisque($userNameClient, $objPath)) {
-    _bisque_handleNewObject(_bisque_getClient($userNameClient, $objPath), $objPath);
-  }
+  _bisque_handleObjCreate($userNameClient, $objPath);
 }
 
 
 # Add a call to this rule from inside the acPostProcForCopy PEP.
 bisque_acPostProcForCopy {
-  if (_bisque_isForBisque($userNameClient, $objPath)) {
-    _bisque_handleNewObject(_bisque_getClient($userNameClient, $objPath), $objPath);
-  }
+  _bisque_handleObjCreate($userNameClient, $objPath);
+}
+
+
+# Add a call to this rule from inside the acPostProcForFilePathReg PEP.
+bisque_acPostProcForFilePathReg {
+  _bisque_handleObjCreate($userNameClient, $objPath);
 }
 
 

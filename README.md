@@ -15,7 +15,7 @@ The following system packages need to be installed on control machine.
 * `python-dns`
 * `python-netaddr`
 * `python-pip`
-* `rpm-build` (`rpmbuild` if control machine runs Debian or Ubuntu)
+* `rpm-build` (`rpm` if control machine runs Debian or Ubuntu)
 
 The following python packages need to be installed on the control machine using `pip`.
 

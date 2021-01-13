@@ -7,27 +7,40 @@
     name: "{{ pg_replication_user }}"
     role_attr_flags: replication
     password: '{{ pg_replication_pass }}'
-  when: "'primary_postgres_node' in group_names"
+#  when: "'primary_postgres_node' in group_names"
+  when: pg_downstream_nodes|length > 0
   become: true
   become_user: postgres
 
+# NB: Consider putting these in a single block task with a single `when: pg_upstream_node`
 - name: replication | stop database on secondaries
   service:
     name: postgresql@12-main.service
     state: stopped
-  when: "'secondary_postgres_nodes' in group_names"
+#  when: "'secondary_postgres_nodes' in group_names"
+  when: pg_upstream_node
 
 - name: replication | ensure pgdata path is empty
   file:
     state: absent
     path: "{{ pg_db_path }}"
-  when: "'secondary_postgres_nodes' in group_names"
+#  when: "'secondary_postgres_nodes' in group_names"
+  when: pg_upstream_node
 
 - name: replication | replicate db from primary to secondaries
-  shell: "pg_basebackup --host={{ hostvars[groups['primary_postgres_node'][0]]['pg_listen_address'] }} --user={{ pg_replication_user }} --port={{ pg_listen_port }} --pgdata={{ pg_db_path }} --format=plain --wal-method=stream --progress --write-recovery-conf --no-password"
+#  shell: "pg_basebackup --host={{ hostvars[groups['primary_postgres_node'][0]]['pg_listen_address'] }} --user={{ pg_replication_user }} --port={{ pg_listen_port }} --pgdata={{ pg_db_path }} --format=plain --wal-method=stream --progress --write-recovery-conf --no-password"
+  shell: |
+    pg_basebackup --progress --write-recovery-conf --no-password \
+      --host={{ pg_upstream_node }} \
+      --user={{ pg_replication_user }} \
+      --port={{ pg_listen_port }} \
+      --pgdata={{ pg_db_path }} \
+      --format=plain \
+      --wal-method=stream
   become: true
   become_user: postgres
-  when: "'secondary_postgres_nodes' in group_names"
+#  when: "'secondary_postgres_nodes' in group_names"
+  when: pg_upstream_node
 
 - name : replication | create standby.signal files on secondary postgres nodes
   copy:
@@ -37,10 +50,12 @@
     group: postgres
     owner: postgres
     mode: 0600
-  when: "'secondary_postgres_nodes' in group_names"
+#  when: "'secondary_postgres_nodes' in group_names"
+  when: pg_upstream_node
 
 - name: replication | start database on secondaries
   service:
     name: postgresql@12-main.service
     state: started
-  when: "'secondary_postgres_nodes' in group_names"
+#  when: "'secondary_postgres_nodes' in group_names"
+  when: pg_upstream_node

@@ -1,11 +1,16 @@
 ---
+# The upstream DBMS node for ansible_hostname
+pg_upstream_node: null
+# The downstream DBMS nodes for ansible hostname
+pg_downstream_nodes: []
+
 pg_db: postgres
 pg_db_path: '/var/lib/postgresql/12/main' # changing this requires adjusting the systemctl file.
 pg_conf_path: '/etc/postgresql/12/main'
 pg_max_wal_senders: 120
 pg_wal_keep_segments: 4000
 pg_max_connections: 1500
-pg_effective_cache_size: 1GB 
+pg_effective_cache_size: 1GB
 pg_shared_buffers: 1GB
 pg_work_memory: 64MB
 pg_maintenance_work_memory: 1GB

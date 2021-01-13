@@ -23,11 +23,13 @@ standard_conforming_strings = {{ pg_standard_conforming_strings }}
 log_min_duration_statement = {{ pg_log_min_duration_statement }}
 log_line_prefix = '{{ pg_log_line_prefix }}'
 
-{% if ansible_hostname in groups['primary_postgres_node'] %}
+{#{% if ansible_hostname in groups['primary_postgres_node'] %}#}
+{% if pg_downstream_nodes|length > 0 %}
 archive_mode = ON
 archive_command = 'gzip < %p > {{ pg_db_path }}/archive/%f.gz'
 
-{% else %}
+{#{% else %}#}
+{% elif pg_upstream_node %}
 
 hot_standby = on
 restore_command = 'cp {{ pg_db_path }}/archive/%f | zcat {{ pg_db_path }}/archive/%f > %p'

@@ -4,6 +4,8 @@ pg_upstream_node: null
 # The downstream DBMS nodes for ansible hostname
 pg_downstream_nodes: []
 
+pg_destroy_default_db_on_init: false
+
 pg_db: postgres
 pg_db_path: '/var/lib/postgresql/12/main' # changing this requires adjusting the systemctl file.
 pg_conf_path: '/etc/postgresql/12/main'

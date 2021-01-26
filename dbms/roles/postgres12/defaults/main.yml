@@ -1,7 +1,5 @@
 ---
-# The upstream DBMS node for ansible_hostname
 pg_upstream_node: null
-# The downstream DBMS nodes for ansible hostname
 pg_downstream_nodes: []
 
 pg_destroy_default_db_on_init: false

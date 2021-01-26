@@ -5,9 +5,10 @@ dbms_primary
 dbms_replicas
 
 [dbms_primary]
-dstesting_dbms_configured_1.dstesting_default
+dstesting_dbms_unconfigured_1.dstesting_default
 
 [dbms_replicas]
+dstesting_dbms_unconfigured_2.dstesting_default
 
 [irods:children]
 ies
@@ -15,9 +16,11 @@ rs
 
 [ies]
 dstesting_ies_configured_1.dstesting_default
+dstesting_ies_unconfigured_1.dstesting_default
 
 [rs]
 dstesting_rs_centos6_1.dstesting_default
+dstesting_rs_centos7_1.dstesting_default
 
 [load_balancer]
 dstesting_load_balancer_1.dstesting_default
@@ -26,6 +29,7 @@ dstesting_load_balancer_1.dstesting_default
 dstesting_amqp_1.dstesting_default
 
 [webdav]
+dstesting_apache_1.dstesting_default
 
 [unmanaged_systems]
 dstesting_amqp_1.dstesting_default

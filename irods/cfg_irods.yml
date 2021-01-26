@@ -44,7 +44,7 @@
       import_role:
         name: cyverse.irods-cfg
       vars:
-        dbms_host: "{{ groups['dbms'][0] }}"
+        dbms_host: "{{ groups['dbms_primary'][0] }}"
         rabbitmq_user_info: "{{ _rabbitmq_user }}:{{ _rabbitmq_password }}"
         rabbitmq_authority: "{{ rabbitmq_user_info }}@{{
                                 groups['rabbitmq'][0] }}:{{ _rabbitmq_port }}"

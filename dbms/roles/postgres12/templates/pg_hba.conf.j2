@@ -24,14 +24,11 @@ host    replication     all             ::1/128                 md5
 {% for entry in pg_hba_users %}
 {{ entry }}
 {% endfor %}
-{#{% for ip in groups['primary_postgres_node'] | map('extract', hostvars, ['pg_listen_address']) %}#}
-{% if pg_upstream_node ] %}
-{% set ip = pg_upstream_node if pg_upstream_node|ipaddr else lookup('dig', pg_upstream_node) %}
+{% if pg_upstream_node %}
+{%  set ip = pg_upstream_node if pg_upstream_node|ipaddr else lookup('dig', pg_upstream_node) %}
 host	replication	{{ pg_replication_user }}     {{ ip }}/32       trust
 {% endif %}
-{% endfor %}
-{#{% for ip in groups['secondary_postgres_nodes'] | map('extract', hostvars, ['pg_listen_address']) %}#}
 {% for replica in pg_downstream_nodes %}
-{% set ip = replica if replica|ipaddr else lookup('dig', replica) %}
+{%  set ip = replica if replica|ipaddr else lookup('dig', replica) %}
 host	replication	{{ pg_replication_user }}    {{ ip }}/32        trust
 {% endfor %}

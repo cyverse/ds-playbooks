@@ -6,8 +6,25 @@
     ies: "{{ groups['ies'][0] }}"
     ies_server: "{{ ies | regex_replace('\\..*') }}"
     ies_ip: "{{ ies if ies|ipaddr else lookup('dig', ies) }}"
+    ies_maxconn: maxconn {{ _load_balancer_irods_max_conn }}
+    ies_check_periods: inter {{ _load_balancer_irods_check_period }}s downinter 5s fastinter 2s
+    ies_check: check port 1247 fall 2 {{ ies_check_periods }}
+# XXX: Until we are load balancing iRODS servers, I'm disabling checks to prevent false positives
+    ies_server_cfg: "{{ ies_ip }} {{ ies_maxconn }}"
+#   ies_server_cfg: "{{ ies_ip }} {{ ies_maxconn }} {{ ies_check }}"
     reconn_ports_end: "{{ hostvars[ies]._irods_server_port_range_end }}"
     reconn_ports_start: "{{ hostvars[ies]._irods_server_port_range_start }}"
+    webdav_ip: "{%
+      if groups.webdav[0] | ipaddr %}{{
+        groups.webdav[0] }}{%
+      else %}{{
+        lookup('dig', groups.webdav[0]) }}{% endif %}"
+    webdav_check_periods: inter {{ _load_balancer_webdav_check_period }}s downinter 3s fastinter 1s
+    webdav_check: check port 80 fall 2 {{ webdav_check_periods }}
+    webdav_maxconn: maxconn {{ _load_balancer_webdav_max_conn }}
+# XXX: Until we are load balancing WebDAV servers, I'm disabling checks to prevent false positives
+    webdav_server_cfg: "{{ webdav_ip }} {{ webdav_maxconn }}"
+#   webdav_server_cfg: "{{ webdav_ip }} {{ webdav_maxconn }} {{ webdav_check }}"
   tasks:
     - name: enable notifcations when not testing
       set_fact:
@@ -162,17 +179,19 @@
               default_backend: irods_direct
         haproxy_backend:
           - irods_direct:
-              options:
-                - tcp-check
+# XXX: Until we are load balancing iRODS servers, I'm disabling checks to prevent false positives
+#             options:
+#               - tcp-check
               servers:
-                - "{{ ies_server }} {{ ies_ip }} maxconn {{ _load_balancer_irods_max_conn }} check port 1247 inter 20s"
-              tcp_checks:
-                - connect
-                - send-binary 0000006e
-                - send <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>223</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option>haproxy</option></StartupPack_PI>
-                - 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>'
-                - send-binary 0000006f
-                - send <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
+                - "{{ ies_server }} {{ ies_server_cfg }}"
+# XXX: Until we are load balancing iRODS servers, I'm disabling checks to prevent false positives
+#             tcp_checks:
+#               - connect
+#               - send-binary 0000006e
+#               - send <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>223</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option>haproxy</option></StartupPack_PI>
+#               - 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>'
+#               - send-binary 0000006f
+#               - send <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
           - irods_throttled:
               servers:
                 - indirect unix@haproxy_irods.sock send-proxy maxconn {{ _load_balancer_irods_extra_max_conn }}
@@ -181,16 +200,17 @@
               binds:
                 - :80
                 - :443
-              options:
-                - httpchk
+# XXX: Until we are load balancing WebDAV servers, I'm disabling checks to prevent false positives
+#             options:
+#               - httpchk
 # XXX: Our caching is too dumb right now to support multiple webdav servers
               servers:
-                - dav-1 {% if groups.webdav[0] | ipaddr %}{{ groups.webdav[0] }}{% else %}{{ lookup('dig', groups.webdav[0]) }}{% endif %} check port 80 inter 20s
-#              servers: "[
-#                {% for h in groups.webdav %}
-#                  \"dav-{{ loop.index }} {% if h | ipaddr %}{{ h }}{% else %}{{ lookup('dig', h) }}{% endif %} check port 80 inter 20s\"
-#                  {% if not loop.last %},{% endif %}
-#                {% endfor %} ]"
+                - dav-1 {{ webdav_server_cfg }}
+#             servers: "[
+#               {% for h in groups.webdav %}
+#                 \"dav-{{ loop.index }} {% if h | ipaddr %}{{ h }}{% else %}{{ lookup('dig', h) }}{% endif %} check port 80 inter 20s\"
+#                 {% if not loop.last %},{% endif %}
+#               {% endfor %} ]"
       tags:
         - no_testing
 

@@ -133,6 +133,7 @@ sendDataObjectOpen(*Data) =
   let *msg = ipc_jsonDocument(list(mkEntityField(*Data),
                                    mkPathField($objPath),
                                    mkUserObject('author', $userNameClient, $rodsZoneClient),
+                                   ipc_jsonNumber('size', $dataSize),
                                    ipc_jsonString('timestamp', getTimestamp())))
   in sendMsg(DATA_OBJECT_TYPE ++ '.open', *msg)
 
@@ -470,6 +471,25 @@ ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
   }
 }
 
+
+ipc_acPreprocForCollCreate {
+  # XXX - Workaround for https://github.com/irods/irods/issues/4060, fixed in iRODS 4.2.7
+  if($collName like regex '.*\\\\.*') {
+    cut;
+    failmsg(-809000, 'Collection name cannot contain a "\"');
+  }
+
+  # XXX - Workaround for https://github.com/irods/irods/issues/4750, fixed in iRODS 4.2.8
+  if($collName like regex '(.*/|(.*/)?\\.{1,2})') {
+    cut;
+    failmsg(-809000, 'Collection cannot be named ".", "..", or "/"');
+  } else if ($collName like regex '.*//.*') {
+    cut;
+    failmsg(-809000, 'Path cannot have a "//" in it');
+  }
+}
+
+
 # This rule prevents the user from removing rodsadmin's ownership from an ACL unless the user is of
 # type rodsadmin.
 #
@@ -481,6 +501,23 @@ ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zo
     }
   }
 }
+
+
+ipc_acPreProcForObjRename(*SourceObject, *DestObject) {
+  # XXX - Workaround for https://github.com/irods/irods/issues/4060, fixed in iRODS 4.2.7
+  if(*DestObject like regex '.*\\\\.*') {
+    cut;
+    failmsg(-809000, 'Entity name cannot contain a "\"');
+  }
+
+  # XXX - Workaround for https://github.com/irods/irods/issues/4750, fixed in iRODS 4.2.8
+  msiGetObjType(*SourceObject, *type);
+  if(*type == '-c' && *DestObject like regex '(.*/|(.*/)?\\.{1,2})') {
+    cut;
+    failmsg(-809000, 'Collection cannot be named ".", "..", or "/"');
+  }
+}
+
 
 # This rule makes the admin owner of any created collection.  This rule is not applied to
 # collections created when a TAR file is expanded. (i.e. ibun -x)
@@ -577,29 +614,50 @@ ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 }
 
 
-# This rule ensures that a checksum is computed for every uploaded data object. It also sends
-# data object changes messages to the irods topic exchange.
+# This rule ensures that a UUID is assigned to and a checksum is computed for
+# every uploaded data object and the rodsadmin group gets own permission.
 #
 ipc_acPostProcForPut {
   _ipc_createOrModifyData($objPath, $writeFlag == 0);
 }
 
+
+# This rule ensures that a data object change AMQP message is published for
+# every uploaded data object.
 ipc_archive_acPostProcForPut {
   _ipc_createOrModifyArchiveData($objPath, $writeFlag == 0);
 }
 
 
-# This rule sends a data object copied message to the message exchange for the data object being
-# copied. If the target data object already exists, a data object modified message will be sent
-# instead.
+# This rule ensures that a UUID is assigned to and a checksum is computed for
+# every copied data object and the rodsadmin group gets own permission.
 #
 ipc_acPostProcForCopy {
   _ipc_createOrModifyData($objPath, $writeFlag == 0);
 }
 
+
+# This rule ensures that a data object change AMQP message is published for
+# every uploaded data object.
 ipc_archive_acPostProcForCopy {
   _ipc_createOrModifyArchiveData($objPath, $writeFlag == 0);
 }
+
+
+# This rule ensures that every data object created through file registration is
+# assigned a UUID and checksum and receives rodsadmin group own permission.
+#
+ipc_acPostProcForFilePathReg {
+  _ipc_createOrModifyData($objPath, true);
+}
+
+
+# This rule ensured that every data object created through fiie registration
+# causes a data-object.add AMQP message to be published.
+ipc_archive_acPostProcForFilePathReg {
+   _ipc_createOrModifyArchiveData($objPath, true);
+}
+
 
 # This rule checks that AVU being modified isn't a protected one.
 ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *New1, *New2,
@@ -745,4 +803,13 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *S
 #
 ipc_acPostProcForParallelTransferReceived(*LeafResource) {
   msi_update_unixfilesystem_resource_free_space(*LeafResource);
+}
+
+
+# XXX - Workaround for https://github.com/irods/irods/issues/4060, fixed in iRODS 4.2.7
+ipc_acSetRescSchemeForCreate {
+  if($objPath like regex '.*\\\\.*') {
+    cut;
+    failmsg(-809000, 'Data object name cannot contain a "\"');
+  }
 }

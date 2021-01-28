@@ -1,0 +1,125 @@
+---
+- name: testing irods_group_member module
+  hosts: ies[0]
+  pre_tasks:
+    - name: group should be absent
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg | cut -d'#' -f 1 | grep test_group1
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout != ""
+
+    - name: create a test group
+      become: true
+      become_user: irods
+      shell: |
+        iadmin mkgroup test_group1
+
+    - name: create some test users
+      become: true
+      become_user: irods
+      shell: |
+        iadmin mkuser test_user1 rodsuser
+        iadmin mkuser test_user2 rodsuser
+        iadmin mkuser test_user3 rodsuser
+        iadmin mkuser test_user4 rodsuser
+        iadmin mkuser test_user5 rodsuser
+
+  tasks:
+    - name: add users to group
+      delegate_to: localhost
+      irods_group_member:
+        group: test_group1
+        users:
+          - test_user1
+          - test_user2
+          - test_user3
+        state: present
+        host: "{{ groups['ies'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: "testing"
+      register: resp
+      failed_when: not resp.changed
+
+    - name: check if users are present in group
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1| grep test_user1
+        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1| grep test_user2
+        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1| grep test_user3
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout == ""
+
+    - name: add users to group again (check idempotency)
+      delegate_to: localhost
+      irods_group_member:
+        group: test_group1
+        users:
+          - test_user1
+          - test_user2
+          - test_user3
+        state: present
+        host: "{{ groups['ies'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: resp
+      failed_when: resp.changed
+
+    - name: remove users from group
+      delegate_to: localhost
+      irods_group_member:
+        group: test_group1
+        users:
+          - test_user1
+          - test_user2
+        state: absent
+        host: "{{ groups['ies'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: resp
+      failed_when: not resp.changed
+
+    - name: check if users are absent in group
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1 | grep test_user1
+        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1| grep test_user2
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout != ""
+
+    - name: check if some users still exist in group
+      become: true
+      become_user: irods
+      shell: |
+        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1 | grep test_user3
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout == ""
+
+    - name: remove users from group again (check idempotency)
+      delegate_to: localhost
+      irods_group_member:
+        group: test_group1
+        users:
+          - test_user1
+          - test_user2
+        state: absent
+        host: "{{ groups['ies'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: resp
+      failed_when: resp.changed

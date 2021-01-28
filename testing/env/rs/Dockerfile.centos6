@@ -1,7 +1,5 @@
 FROM test-env-base:centos6
 
-RUN yum --assumeyes install epel-release
-RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
 RUN yum --assumeyes install \
       jq libselinux-python python-pip python-requests python-virtualenv \
       https://files.renci.org/pub/irods/releases/4.1.10/centos6/irods-resource-4.1.10-centos6-x86_64.rpm

@@ -19,32 +19,32 @@ services:
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     tty: true
 
-  ies_centos6:
+  ies_configured:
     build:
       context: .
-      dockerfile: ies/Dockerfile.centos6
+      dockerfile: ies/Dockerfile.configured
       args:
         DBMS_HOST: "$DBMS_HOST"
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
-        IRODS_HOST: "$IRODS_IES6_HOST"
+        IRODS_HOST: "$IRODS_IES_CONF_HOST"
         IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_SYSTEM_GROUP: "$IRODS_IES_SYSTEM_GROUP"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
-    hostname: "$IRODS_IES6_HOST"
+    hostname: "$IRODS_IES_CONF_HOST"
     tty: true
     depends_on:
       - amqp
       - dbms
 
-  ies_centos7:
+  ies_unconfigured:
     build:
       context: .
-      dockerfile: ies/Dockerfile.centos7
+      dockerfile: ies/Dockerfile.unconfigured
       args:
         DBMS_HOST: "$DBMS_HOST"
         IRODS_SYSTEM_GROUP: "$IRODS_IES_SYSTEM_GROUP"
-    hostname: "$IRODS_IES7_HOST"
+    hostname: "$IRODS_IES_UNCONF_HOST"
     tty: true
 
   load_balancer:
@@ -53,7 +53,7 @@ services:
       dockerfile: haproxy/Dockerfile
     depends_on:
       - apache
-      - ies_centos6
+      - ies_configured
 
   rs_centos6:
     build:
@@ -63,7 +63,7 @@ services:
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
         IRODS_DEFAULT_VAULT: "$IRODS_VAULT"
         IRODS_HOST: "$IRODS_RS6_HOST"
-        IRODS_IES: "$IRODS_IES6_HOST"
+        IRODS_IES: "$IRODS_IES_CONF_HOST"
         IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
@@ -72,13 +72,13 @@ services:
     hostname: "$IRODS_RS6_HOST"
     tty: true
     depends_on:
-      - ies_centos6
+      - ies_configured
 
   rs_centos7:
     build:
       context: .
       dockerfile: rs/Dockerfile.centos7
       args:
-        IRODS_IES: "$IRODS_IES6_HOST"
+        IRODS_IES: "$IRODS_IES_CONF_HOST"
     hostname: "$IRODS_RS7_HOST"
     tty: true

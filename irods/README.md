@@ -31,13 +31,14 @@ Variable                                   | Default                            
 `captcn_owners`                            | `[]`                                 |         | a list of users who get ownership of CAP_TCN collections
 `captcn_readers`                           | `[]`                                 |         | a list of users who get read access to CAP_TCN collections
 `captcn_writers`                           | `[]`                                 |         | a list of users who get write access to CAP_TCN collections
+`check_routes_timeout`                     | 3                                    |         | the number of seconds the `check_route` playbook will wait for a response during a single port check
 `dbms_password`                            | irods                                |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `dbms_port`                                | 5432                                 |         | The TCP port the DBMS listens on.
 `dbms_username`                            | irods                                |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `de_job_irods_user`                        |                                      |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
 `firewall_chain`                           | INPUT                                |         | The iptables chain managing authorizing iRODS connections
-`irods_aegis_repl_resource`                | aegisReplRes                         |         | the name of the aegis resource where replicas are written
-`irods_aegis_resource`                     | aegisIngestRes                       |         | the name of the aegis resource where newly uploaded files are written
+`irods_aegis_repl_resource`                | _see description_                    |         | the name of the aegis resource where replicas are written. If `irods_aegis_resource` is defined, it is the default, otherwise, `irods_default_repl_resource` is.
+`irods_aegis_resource`                     | `irods_default_resource`             |         | the name of the aegis resource where newly uploaded files are written
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
 `irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | rods                                 |         | the rodsadmin user to be used by the server being configured
@@ -67,38 +68,50 @@ Variable                                   | Default                            
 `irods_zone_key`                           | TEMPORARY_zone_key                   |         | the zone key
 `irods_zone_name`                          | tempZone                             |         | the name of the zone
 `load_balancer_irods_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS through the load balancer.
+`load_balancer_irods_check_period`         | 2                                    |         | The amount of time between irods health checks in seconds
 `load_balancer_irods_extra_max_conn`       | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer for connections coming from jobs.
 `load_balancer_irods_max_conn`             | 200                                  |         | The maximum number of concurrent connections to iRODS through the load balancer.
-`load_balancer_irods_vip_srcs`             | `[]`                                           | A list of IP address ranges that aren't considered for queuing.
+`load_balancer_irods_vip_srcs`             | `[]`                                 |         | A list of IP address ranges that aren't considered for queuing.
 `load_balancer_queue_timeout`              | 120                                  |         | The number of seconds a connection can be queued.
 `load_balancer_stats_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for hosts allowed to see the HAProxy stats web page.
 `load_balancer_stats_certificate`          | /etc/haproxy/certs/stats.pem         |         | The TLS certificate used by the stats endpoint
 `load_balancer_stats_password`             | B1Gp4sSw0rD!!                        |         | The password used to authetnicate access to the stats service
 `load_balancer_stats_port`                 | 81                                   |         | The TCP port used to retrieve HAProxy stats
 `load_balancer_stats_user`                 | haproxy-stats                        |         | The user to authenticate as to access the stats service
+`load_balancer_webdav_check_period`        | 2                                    |         | The amount of time between webdav health checks in seconds
+`load_balancer_webdav_max_conn`            | 100                                  |         | The maximum number of concurrent connections to WebDAV through the load balancer.
+`pire_manager`                             | null                                 |         | The username that owns the PIRE project collection, if `null`, the collection isn't created.
 `pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
 `rabbitmq_ephemeral`                       | `true`                               |         | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
 `rabbitmq_password`                        | guest                                |         | The password iRODS uses to connect to the AMQP vhost
 `rabbitmq_port`                            | 5672                                 |         | The TCP port the RabbitMQ broker listens on
 `rabbitmq_user`                            | guest                                |         | The user iRODS uses to connect to the AMQP vhost
 `rabbitmq_vhost`                           | /                                    |         | The AMQP vhost iRODS connects to
+`report_email_addr`                        | root@localhost                       |         | The address where reports are to be emailed.
 `restart_irods`                            | `false`                              |         | iRODS can be restarted on the servers having config file changes, _see below_
-`sanimal_irods_base_coll`                  |                                      |         | The base iRODS collection used by Sanimal. If this isn't set, no sanimal rules will fire.
 `sernec_owners`                            | `[]`                                 |         | a list of users who get ownership of sernec collections
 `sernec_readers`                           | `[]`                                 |         | a list of users who get read access to sernec collections
 `sernec_writers`                           | `[]`                                 |         | a list of users who get write access to sernec collections
 `single_threaded_resources`                | `[]`                                 |         | a list of resources that only support single threaded transfers
+`sparcd_admin`                             | null                                 |         | The user name of the Sparc'd administrator. If this isn't set, no sparcd rules will fire.
+`sparcd_base_collection`                   | _see description_                    |         | The base iRODS collection used by Sparc'd. If `{{ sparcd_admin }}` is `null`, the default is `null`, otherwise the default is `/{{ irods_zone_name }}/home/{{ sparcd_admin }}/Sparcd/Collections`.
 `sysctl_kernel`                            | `[]`                                 |         | a list of sysctl kernel parameters to set for the IES, _see_below_
 `terraref_base_collection`                 |                                      |         | The base collection for the TerraREF project. If it isn't present no TerraREF rules will fire.
 `terraref_manager`                         | `irods_clerver_user`                 |         | The iRODS user who is responsible for TerraREF data.
 `terraref_resource_hierarchy`              | `irods_resource_hierarchies[0]`      |         | The resource used by the TerraREF project.
+`webdav_allowed_src`                       | `[ "0.0.0.0/0" ]`                    |         | A list of network/masks for the clients allowed direct access to the WebDAV servers
 `webdav_auth_name`                         | CyVerse                              |         | Authorization realm to use for the Data Store
-`webdav_cache_dir`                         | `/var/cache/httpd/proxy`             |         | the directory apache will use for the WebDAV cache
-`webdav_cache_max_file_size`               | 1                                    |         | the maximum size in mebibytes of the largest WebDAV file apache will cache
-`webdav_cache_size`                        | 100                                  |         | the maximum size in mebibytes the cache can be
+`webdav_cache_dir`                         | `/var/cache/varnish`                 |         | The directory varnish-cache will use for the WebDAV cache
+`webdav_cache_size`                        | 1000                                 |         | The maximum size in mebibytes the cache can be
+`webdav_cache_max_file_size`               | 10                                   |         | The maximum size in mebibytes of the largest WebDAV file varnish-cache will cache.
+`webdav_cache_ttl_fraction`                | 0.1                                  |         | The fraction elapsed time since the last-modified time of a file for cache TTL (Time-to-live) configuration
+`webdav_cache_max_ttl`                     | 86400                                |         | The maximum cache TTL in seconds
+`webdav_max_request_workers`               | 256                                  |         | the upper limit on the number of simultaneous requests that will be served
 `webdav_tls_cert_file`                     | `/etc/ssl/certs/dummy.crt`           |         | The TLS certificate file used for encrypted communication
 `weddav_tls_chain_file`                    | `/etc/ssl/certs/dummy-chain.crt`     |         | The TLS certificate chain file used for encrypted communication
 `webdav_tls_key_file`                      | `/etc/ssl/certs/dummy.key`           |         | The TLS key file used for encrypted communication
+`webdav_varnish_service_port`              | 6081                                 |         | The service port number for varnish-cache
+
 
 The `restart_irods` flag is ignored in the `main.yml` playbook.
 

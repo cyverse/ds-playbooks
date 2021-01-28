@@ -1,0 +1,195 @@
+#!/bin/bash
+#
+# Usage: sparcd-ingest ZONE ADMIN UPLOADER TARFILE
+#
+# ZONE is the iRODS zone. ADMIN is the Sparc'd administrator's username.
+# UPLOADER is the iRODS username of the user who uploaded the TAR file to be
+# processed. ADMIN and UPLOADER must belong to ZONE. TARFILE is the absolute
+# path in ZONE to the TAR file that is to be processed. It's base name should
+# have the form `<collection name>-<part number>.tar`.
+#
+# On behalf of UPLOADER, this script extracts the contents of TARFILE into a
+# collection named `<collection name>` in the same parent collection as TARFILE.
+# It then deletes TARFILE. After that it uses the extracted
+# `meta-<part number>.csv` file to apply AVUs to the other extracted data
+# objects ande deletes meta.csv. Finally, gives ADMIN own permission on the
+# collection, and it assigns the ACL of the parent collection to all extracted
+# collections and data objects preserving UPLOADER's own permission on
+# everything extracted.
+#
+# This script assumes that the executor of this script is authenicated as a
+# rodsadmin user.
+#
+# This script must be run on the resource server hosting TARFILE
+
+set -o errexit -o nounset -o pipefail
+
+
+main()
+{
+  local zone="$1"
+  local admin="$2"
+  local uploader="$3"
+  local tarFile="$4"
+
+  local rc=0
+
+  local parentColl
+  parentColl=$(dirname "$tarFile")
+
+  local tarName
+  tarName=$(basename "$tarFile" .tar)
+
+  local coll="$parentColl"/"${tarName%-*}"
+  local metaFile="$coll"/meta-"${tarName##*-}".csv
+
+  # XXX - Work around for https://github.com/irods/irods/issues/3291
+  # if ! clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"
+  if bun "$uploader" "$tarFile" "${tarName%-*}"
+  then
+    ensure_owner "$admin" "$coll"
+
+    # XXX - Don't clean up until work around (^^^) is confirmed to work
+    # irm -f "$tarFile"
+  else
+    local rc="$?"
+    ensure_owner "$admin" "$coll" || true
+    return "$rc"
+  fi
+
+  if map_metadata  "$coll" "$metaFile"
+  then
+    irm -f "$metaFile"
+  fi
+
+  ils -A "$parentColl" | mk_acl | assign_acl "$uploader"\#"$zone" "$coll"
+}
+
+
+ensure_owner()
+{
+  local user="$1"
+  local coll="$2"
+
+  local resp
+  resp=$(iquest '%s' "select COLL_NAME where COLL_NAME = '$coll'")
+
+  if [[ "$resp" = "$coll" ]]
+  then
+    ichmod -M -r own "$user" "$coll"
+  fi
+}
+
+
+assign_acl()
+{
+  local uploader="$1"
+  local entity="$2"
+
+  while IFS=: read -r -d ' ' user perm
+  do
+    if [ "$user" != "$uploader" ]
+    then
+      ichmod -M -r "$perm" "$user" "$entity"
+    fi
+  done
+}
+
+
+bun()
+{
+  local uploader="$1"
+  local tarDataPath="$2"
+  local destDirName="$3"
+
+  local tarColl tarName
+  tarColl=$(dirname "$tarDataPath")
+  tarName=$(basename "$tarDataPath")
+
+  local rescHier tarFilePath
+  read -r rescHier tarFilePath < <(get_file_loc "$tarDataPath")
+
+  local tarDir
+  tarDir=$(dirname "$tarFilePath")
+
+  local destDirPath="$tarDir"/"$destDirName"
+  mkdir --parents "$destDirPath"
+  tar --extract --no-overwrite-dir --directory "$destDirPath" --file "$tarFilePath"
+
+  local storeResc="${rescHier##*;}"
+  local destCollPath="$tarColl"/"$destDirName"
+
+  # XXX - ireg -R fails when clientUserName is set
+  #clientUserName="$uploader" ireg -C -f -K -R "$storeResc" "$destDirPath" "$destCollPath"
+  ireg -C -f -K -R "$storeResc" "$destDirPath" "$destCollPath"
+  ichmod -M -r own "$uploader" "$destCollPath"
+}
+
+
+get_file_loc()
+{
+  local dataPath="$1"
+
+  local coll dataName
+  coll=$(dirname "$dataPath")
+  dataName=$(basename "$dataPath")
+
+  iquest \
+    '%s %s' \
+    "select DATA_RESC_HIER, DATA_PATH where COLL_NAME = '$coll' and DATA_NAME = '$dataName'"
+}
+
+
+# Converts the an ACL list in the format ils -A generates into something useable
+# by ichmod.
+#
+# In other words, it converts
+#
+#/zone/path/to/entity:
+#       ACL - writer#zone:modify object   owner#zone:own   g:group#zone:own   reader#zone:read object
+#       Inheritance - Disabled
+# ...
+#
+# into
+#
+#writer#zone:write owner#zone:own group#zone:own reader#zone:read
+#
+mk_acl()
+{
+  sed --quiet --file - <(cat) <<'SED_SCRIPT'
+2 {
+  s/ g:/ /g
+  s/read object/read/g
+  s/modify object/write/g
+  s/  */ /g
+  s/^ ACL - //
+  p
+}
+SED_SCRIPT
+}
+
+
+map_metadata()
+{
+  local parentColl="$1"
+  local metaFile="$2"
+
+  iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null
+}
+
+
+mk_imeta_cmds()
+{
+  local parentColl="$1"
+
+  while IFS=, read -r -a fields
+  do
+    for ((idx=1; idx < ${#fields[@]}; idx+=3))
+    do
+      printf 'adda -d "%s/%s" "%s" "%s" "%s"\n' "$parentColl" "${fields[0]}" "${fields[@]:$idx:3}"
+    done
+  done
+}
+
+
+main "$@" >&2

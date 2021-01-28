@@ -1,7 +1,5 @@
 FROM test-env-base:centos7
 
-RUN yum --assumeyes install epel-release
-RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
 RUN yum --assumeyes install jq
 
 COPY rs/scripts/service.sh.template /tmp/

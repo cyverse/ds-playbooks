@@ -37,6 +37,7 @@
         tcp_ports:
           - "{{ hostvars[item]._irods_zone_port }}"
           - "{{ hostvars[item]._irods_server_control_plane_port }}"
+        timeout: "{{ _check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['rs'] | difference([inventory_hostname]) }}"
 
@@ -53,6 +54,7 @@
         destination: "{{ item }}"
         tcp_ports:
           - "{{ hostvars[item]._irods_zone_port }}"
+        timeout: "{{ _check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['ies'] | difference([inventory_hostname]) }}"
 
@@ -66,6 +68,7 @@
         udp_ports: "{{ range(hostvars[item]._irods_server_port_range_start | int,
                              (hostvars[item]._irods_server_port_range_end | int) + 1)
                        | list }}"
+        timeout: "{{ _check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['rs'] | difference([inventory_hostname]) }}"
 
@@ -89,6 +92,13 @@
       register: job_result
       until: job_result.finished
       retries: 1
+      failed_when: not job_result.finished
+
+    - name: check receiver failure
+      when: job_result.msg is defined
+      fail:
+        msg: '{{ job_result.msg }}'
+      ignore_errors: true
 
 
 - name: restart previously stopped iRODS servers

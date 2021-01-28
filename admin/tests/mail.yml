@@ -1,0 +1,11 @@
+---
+- name: test set up mail for sending alerts
+  hosts: all:!unmanaged_systems:!localhost
+  tasks:
+    - name: test install packages
+      include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: sendmail
+
+    # The rest of the playbook can't be tested, since none of the hostnames in
+    # the testing environment are IP addresses.

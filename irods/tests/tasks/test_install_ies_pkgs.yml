@@ -8,8 +8,14 @@
   vars:
     pkg: "{{
       'irods-database-plugin-postgres93'
-        if inventory_hostname == 'dstesting_ies_centos6_1.dstesting_default' else
+        if inventory_hostname == 'dstesting_ies_configured_1.dstesting_default' else
       'irods-database-plugin-postgres' }}"
     version: '1.10'
 
-- import_tasks: test_irods_ownership.yml
+- include_tasks: test_irods_ownership.yml
+  vars:
+    dir: /etc/irods
+
+- include_tasks: test_irods_ownership.yml
+  vars:
+    dir: /var/lib/irods

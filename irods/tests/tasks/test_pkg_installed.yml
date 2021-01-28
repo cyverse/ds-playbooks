@@ -1,12 +1,15 @@
 ---
-# Tests than an CentOS package is installed
+# Tests that a system package is installed
 #
 # pkg      The name of the package
 # version  (optional) The package version that should be installed
+
+- package_facts:
+    strategy: all
+
 - name: check correct {{ pkg }} package installed
-  yum:
-    list: "{{ pkg }}"
-  register: result
-  failed_when: |
-    result.results | selectattr('yumstate', 'eq', 'installed') | list | count != 1 or
-    version is defined and result.results[0].version is version_compare(version, '!=')
+  when: |
+    pkg not in ansible_facts.packages or
+    ansible_facts.packages[pkg] | length != 1 or
+    version is defined and ansible_facts.packages[pkg][0].version is version_compare(version, '!=')
+  fail:

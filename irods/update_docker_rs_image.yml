@@ -40,12 +40,12 @@
         irods_cfg_default_resource_directory: /irods_vault/_IRODS_STORAGE_RESOURCE_
         irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
         irods_cfg_icat_host: "{{ _irods_ies }}"
-        irods_cfg_host: rs
+        irods_cfg_host: _IRODS_RS_CNAME_
         irods_cfg_host_entries:
           - address_type: local
             addresses:
               - "{{ irods_cfg_host }}"
-              - _IRODS_RS_CNAME_
+              - rs
         irods_cfg_negotiation_key: __IRODS_NEGOTIATION_KEY__
         irods_cfg_re_additional_rulebases:
           - ipc-custom
@@ -134,7 +134,9 @@
         tag: "{{ ansible_date_time.iso8601_basic_short }}"
         force_source: true
       register: response
-      changed_when: previous_id is not defined or response.image.Id != previous_id
+      changed_when: |
+        response is succeeded
+        and (previous_id is not defined or response.image.Id != previous_id)
       tags:
         - no_testing
 

@@ -1,0 +1,56 @@
+---
+# Build an empty RPM package that triggers on install & update of mod_ssl,
+# and remove /etc/httpd/conf.d/ssl.conf when triggered.
+# The RPM will be built on localhost, and copy to managed node for
+# installation.
+- name: create temporary directory
+  delegate_to: localhost
+  become: false
+  run_once: true
+  tempfile:
+    state: directory
+  register: rpm_build_dir
+
+- name: create spec file for the RPM on control node
+  delegate_to: localhost
+  run_once: true
+  copy:
+    dest: "{{ rpm_build_dir.path }}/mod_ssl-rm_ssl_conf.spec"
+    content: |
+      Summary: An empty rpm package that remove /etc/httpd/conf.d/ssl.conf
+      Name:    mod_ssl-rm_ssl_conf
+      Version: 1.0
+      Release: 1
+      License: CyVerse License
+      BuildArchitectures: noarch
+
+      %description
+      An empty rpm package which the sole purpose is to remove
+      /etc/httpd/conf.d/ssl.conf after update mod_ssl package
+
+      %files
+
+      %triggerin -- mod_ssl
+      rm /etc/httpd/conf.d/ssl.conf
+      %triggerun -- mod_ssl
+      rm /etc/httpd/conf.d/ssl.conf
+
+- name: build RPM package on control node
+  run_once: true
+  delegate_to: localhost
+  shell: rpmbuild -bb --define "_topdir {{ rpm_build_dir.path }}" {{ rpm_build_dir.path }}/mod_ssl-rm_ssl_conf.spec
+
+- name: copy RPM to managed node
+  copy:
+    src: "{{ rpm_build_dir.path }}/RPMS/noarch/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm"
+    dest: "/tmp/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm"
+
+- name: install RPM package on managed node
+  yum:
+    name: /tmp/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm
+    state: present
+
+- name: managed node clean up
+  file:
+    name: /tmp/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm
+    state: absent

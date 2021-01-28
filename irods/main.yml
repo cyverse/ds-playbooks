@@ -7,7 +7,7 @@
 
 
 - name: configure AMQP broker
-  hosts: rabbitmq
+  hosts: rabbitmq[0]
   become: true
   roles:
     - role: cyverse.rabbitmq-vhost
@@ -30,6 +30,7 @@
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   become_flags: '-i'
+  gather_facts: false
   tasks:
     - name: start iRODS
       irods_ctl:

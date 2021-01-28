@@ -152,13 +152,21 @@ class UDPSocket(socket.socket):
 
 
 def receive(tcp_ports, udp_ports, stop_command, timeout):
+  failures = []
+  timedOut = False
   socks = SocketSet()
 
   for port in tcp_ports:
-    socks.add_input(TCPSocket(port))
+    try:
+      socks.add_input(TCPSocket(port))
+    except Exception as e:
+      failures.append("%d/tcp: %s" % (port, str(e)))
 
   for port in udp_ports:
-    socks.add_input(UDPSocket(port))
+    try:
+      socks.add_input(UDPSocket(port))
+    except Exception as e:
+      failures.append("%d/tcp: %s" % (port, str(e)))
 
   tearDown = not socks.has_inputs()
 
@@ -182,9 +190,11 @@ def receive(tcp_ports, udp_ports, stop_command, timeout):
       if not socks.has_inputs():
         tearDown = True
     else:
+      failures.append("receiver: timed out")
       tearDown = True
 
   socks.closeall()
+  return failures
 
 
 def main():
@@ -202,10 +212,15 @@ def main():
     udp_ports = module.params['udp_ports']
     stop_command = module.params['stop_command']
     timeout = module.params['timeout']
+    failures = receive(tcp_ports, udp_ports, stop_command, timeout)
 
-    receive(tcp_ports, udp_ports, stop_command, timeout)
-
-    module.exit_json()
+    if failures:
+      msg=""
+      for failure in failures:
+        msg += failure + "\n"
+        module.fail_json(msg=msg)
+    else:
+        module.exit_json()
   except Exception as e:
     module.fail_json(msg=str(e))
 

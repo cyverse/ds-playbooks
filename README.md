@@ -5,9 +5,23 @@ This is a collection of playbooks for maintaining CyVerse's Data Store.
 
 ## Prerequisites
 
-These playbooks run docker and git on the control machine, so they need to be
-installed. Also the user executing ansible needs to be a member of the docker
-group.
+The following system packages need to be installed on control machine.
 
-If the control machine runs linux, `dmidecode` needs to be installed for
-`gather_facts` to work.
+* `ansible`
+* `dmidecode` (if control machine runs linux)
+* `docker-ce`
+* `git`
+* `jq`
+* `python-dns`
+* `python-netaddr`
+* `python-pip`
+* `rpm-build` (`rpm` if control machine runs Debian or Ubuntu)
+
+The following python packages need to be installed on the control machine using `pip`.
+
+* `docker`
+* `python-irodsclient`
+* `requests`
+* `urllib3`
+
+The user executing ansible needs to be a member of the `docker` group.

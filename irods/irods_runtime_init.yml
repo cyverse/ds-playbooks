@@ -17,9 +17,17 @@
         destination: /{{ _irods_zone_name }}/home/shared
 
     - name: ensure CyVerse curated collection base collection exists
+      become: false
+      delegate_to: localhost
       irods_collection:
         path: /{{ _irods_zone_name }}/home/shared/commons_repo/curated
         parents: true
+        state: present
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"
 
     - name: force initialize perms when not testing
       set_fact:
@@ -37,14 +45,30 @@
       changed_when: response.stdout == 'true'
 
     - name: ensure anonymous user exists
+      delegate_to: localhost
+      become: false
       irods_user:
         name: anonymous
+        password: ''
+        state: present
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"
 
     - name: ensure anonymous user has read access to required collections
+      delegate_to: localhost
+      become: false
       irods_permission:
         subject: anonymous
         permission: read
         object: "{{ item }}"
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"
       with_items:
         - /{{ _irods_zone_name }}
         - /{{ _irods_zone_name }}/home
@@ -52,6 +76,16 @@
         - /{{ _irods_zone_name }}/home/shared/commons_repo/curated
 
     - name: start quota usage computation
-      command: irule '{ ipc_rescheduleQuotaUsageUpdate }' null ruleExecOut
+      command: irule ipc_rescheduleQuotaUsageUpdate null ruleExecOut
       register: results
       changed_when: results.stdout == 'scheduled quota usage updates'
+
+    - name: start storage free space determination
+      command: irule ipc_rescheduleStorageFreeSpaceDetermination null ruleExecOut
+      register: results
+      changed_when: results.stdout == 'scheduled storage determination'
+
+    - name: start trash removal
+      command: irule ipc_rescheduleTrashRemoval null ruleExecOut
+      register: results
+      changed_when: results.stdout == 'scheduled trash removal'

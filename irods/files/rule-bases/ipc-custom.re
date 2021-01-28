@@ -1,4 +1,4 @@
-# VERSION: 3
+# VERSION: 4
 #
 # All customizations done to the iRODS rule logic are placed in this file or
 # should be included by this file.
@@ -34,9 +34,9 @@
 @include 'coge'
 @include 'de'
 @include 'pire'
-@include 'sanimal'
 @include 'sciapps'
 @include 'sernec'
+@include 'sparcd'
 @include 'terraref'
 
 
@@ -66,6 +66,9 @@ exclusive_acPostProcForCollCreate {
   if (*err < 0) { writeLine('serverLog', *msg); }
 
   *err = errormsg(sernec_acPostProcForCollCreate, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sparcd_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
@@ -102,10 +105,30 @@ exclusive_acPostProcForPut {
   *err = errormsg(coge_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(sanimal_acPostProcForPut, *msg);
+  *err = errormsg(sciapps_acPostProcForPut, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 
-  *err = errormsg(sciapps_acPostProcForPut, *msg);
+  *err = errormsg(sparcd_acPostProcForPut, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+}
+
+exclusive_acPostProcForFilePathReg {
+  *err = errormsg(ipc_archive_acPostProcForFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(bisque_acPostProcForFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(calliope_acPostProcForFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(coge_acPostProcForFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sciapps_acPostProcForFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  *err = errormsg(sparcd_acPostProcForFilePathReg, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
@@ -156,7 +179,10 @@ acPreConnect(*OUT) { ipc_acPreConnect(*OUT); }
 
 acSetNumThreads { ipc_acSetNumThreads; }
 
-acSetRescSchemeForCreate { replSetRescSchemeForCreate; }
+acSetRescSchemeForCreate {
+  ipc_acSetRescSchemeForCreate;
+  replSetRescSchemeForCreate;
+}
 
 acSetRescSchemeForRepl { replSetRescSchemeForRepl; }
 
@@ -170,6 +196,9 @@ acSetReServerNumProc { ipc_acSetReServerNumProc; }
 # subsequent pre-proc rule fails. Third party pre-proc rules should be called
 # before any IPC pre-proc rules to ensure that third party rules don't
 # invalidate IPC rules.
+
+# NOTE: The camelcasing is inconsistent here
+acPreprocForCollCreate { ipc_acPreprocForCollCreate; }
 
 acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
   ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
@@ -192,6 +221,7 @@ acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *Source
 }
 
 acPreProcForObjRename(*SourceObject, *DestObject) {
+  ipc_acPreProcForObjRename(*SourceObject, *DestObject);
   de_acPreProcForObjRename(*SourceObject, *DestObject);
 }
 
@@ -226,6 +256,15 @@ acPostProcForCopy {
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
+acPostProcForFilePathReg {
+  *err = errormsg(ipc_acPostProcForFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+
+  exclusive_acPostProcForFilePathReg;
+
+  *err = errormsg(replFilePathReg, *msg);
+  if (*err < 0) { writeLine('serverLog', *msg); }
+}
 
 acPostProcForCollCreate {
   *err = errormsg(ipc_acPostProcForCollCreate, *msg);

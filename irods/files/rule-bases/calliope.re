@@ -40,7 +40,18 @@ calliope_acPostProcForPut {
   if (_calliope_isForCalliope($objPath)) {
     _calliope_logMsg('scheduling ingest of $objPath for $userNameClient');
 
-    delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>") 
+    delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
+    {_calliope_ingest($userNameClient, $objPath);}
+  }
+}
+
+
+# Add a call to this rule from inside the acPostProcForFilePathReg PEP.
+calliope_acPostProcForFilePathReg {
+  if (_calliope_isForCalliope($objPath)) {
+    _calliope_logMsg('scheduling ingest of $objPath for $userNameClient');
+
+    delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
     {_calliope_ingest($userNameClient, $objPath);}
   }
 }

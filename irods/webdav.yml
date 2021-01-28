@@ -5,20 +5,31 @@
   roles:
     - role: geerlingguy.apache
       vars:
-        max_cache_expire: 24
-        commons_max_cache_expire: 8760
         apache_ssl_cipher_suite: "HIGH:3DES:!aNULL:!MD5:!SEED:!IDEA"
         apache_global_vhost_settings: |
-          LoadModule log_forensic_module modules/mod_log_forensic.so
-          LoadModule proxy_html_module modules/mod_proxy_html.so
-          LoadModule unique_id_module modules/mod_unique_id.so
+          <IfModule !log_forensic_module>
+            LoadModule log_forensic_module modules/mod_log_forensic.so
+          </IfModule>
 
-          CacheRoot {{ _webdav_cache_dir }}
-          CacheDirLevels 2
-          CacheDirLength 1
-          CacheMaxFileSize {{ (_webdav_cache_max_file_size | int) * 2**20 }}
+          <IfModule !proxy_html_module>
+            LoadModule proxy_html_module modules/mod_proxy_html.so
+          </IfModule>
 
-          ForensicLog "logs/forensic_log"
+          <IfModule !sed_module>
+            LoadModule sed_module modules/mod_sed.so
+          </IfModule>
+
+          <IfModule !unique_id_module>
+            LoadModule unique_id_module modules/mod_unique_id.so
+          </IfModule>
+
+          <IfModule mpm_prefork_module>
+            MaxRequestWorkers       {{ _webdav_max_request_workers }}
+            ServerLimit             {{ _webdav_max_request_workers }}
+          </IfModule>
+
+          ForensicLog logs/forensic_log
+          ErrorLogFormat "%{cu}t %-L [pid %P] [%-m:%l] %-a %E: %M"
 
           Listen 443 https
 
@@ -36,20 +47,19 @@
             extra_parameters: |
               ServerAlias {{ inventory_hostname }}
 
+              ErrorLog logs/http_error_log
+              CustomLog logs/http_request_log {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %a \"%r\" %>s %L %{forensic-id}n"' }}
+              LogLevel warn
+
               RedirectPermanent / https://{{ _canonical_hostname }}/
             comment: Redirect HTTP to HTTPS
           - servername: "{{ _canonical_hostname }}"
             listen_ip: 127.0.0.1
             extra_parameters: |
-              CacheQuickHandler off
-              CacheEnable disk /dav
-              CacheLock on
-              CacheLockPath /tmp/mod_cache-lock
-              CacheLockMaxAge 5
-              CacheHeader on
-              CacheIgnoreHeaders Set-Cookie
+              ErrorLog logs/error_log
+              CustomLog logs/access_log {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %{X-Forwarded-For}i \"%r\" %>s %L %{forensic-id}n"' }}
+              LogLevel warn
 
-              Header merge Cache-Control public
               Header set Access-Control-Allow-Headers "Range"
               Header set Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
               Header set Access-Control-Allow-Origin "*"
@@ -62,8 +72,13 @@
 
                 RequestHeader set Authorization "Basic {{ 'anonymous' | b64encode }}"
 
-                ProxyPassMatch http://127.0.0.1/dav/{{ _irods_zone_name }}/$1
+                ProxyPassMatch http://127.0.0.1/dav/{{ _irods_zone_name }}/$1 retry=0
                 ProxyHTMLURLMap ^((http://)?[^/]*)/dav/ $1/dav-anon/ [R]
+
+                <If "%{REQUEST_METHOD} == 'PROPFIND'">
+                  SetOutputFilter Sed
+                  OutputSed "s,/dav/,/dav-anon/,g"
+                </If>
 
                 Header edit Location ^(.*)/dav $1/dav-anon
               </LocationMatch>
@@ -77,14 +92,13 @@
                     /dav/{{ _irods_zone_name }}/commons/community_released/commons_repo/curated \
                     /dav/{{ _irods_zone_name }}/commons/cyverse_curated
 
-                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'community-head.html',
-                             commons_max_cache_expire) }}
+                  {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'community-head.html') }}
               - path: /dav/{{ _irods_zone_name }}/commons/cyverse_curated
                 comment: Anonymous read-only access to the data curated by CyVerse
                 extra_parameters: |
                   {% from 'davrods.j2' import davrods with context %}
                   {{ davrods('/' ~ _irods_zone_name ~ '/home/shared/commons_repo/curated',
-                             'curated-head.html', commons_max_cache_expire) }}
+                             'curated-head.html') }}
               - path: /dav/{{ _irods_zone_name }}/home
                 comment: Authenticated read-write access to the home collection
                 extra_parameters: |
@@ -92,7 +106,7 @@
                   RedirectPermanent /dav/{{ _irods_zone_name }}/home/shared \
                                     /dav/{{ _irods_zone_name }}/projects
 
-                  {{ davrods('Home', 'home-head.html', max_cache_expire,
+                  {{ davrods('Home', 'home-head.html',
                        [ 'expr %{REQUEST_URI} !~ m#^/dav/' ~ _irods_zone_name ~ '/home(/[^/]*/?)?$# || %{REMOTE_USER} != "anonymous"',
                          'valid-user' ]) }}
               - path: /dav/{{ _irods_zone_name }}/projects
@@ -100,7 +114,6 @@
                 extra_parameters: |
                   {% from 'davrods.j2' import davrods with context %}
                   {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html',
-                             max_cache_expire,
                        [ 'valid-user' ]) }}
         apache_vhosts_ssl:
           - servername: "{{ _canonical_hostname }}"
@@ -110,11 +123,8 @@
             extra_parameters: |
               ServerAlias {{ inventory_hostname }}
 
-              ErrorLog logs/ssl_error_log
-
-              CustomLog logs/ssl_access_log "%t %h \"%r\" %>s %b %D %L %{forensic-id}n"
-              CustomLog logs/ssl_request_log "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b %{forensic-id}n"
-
+              ErrorLog logs/https_error_log
+              CustomLog logs/https_request_log {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %{SSL_PROTOCOL}x %{SSL_CIPHER}x %a \"%r\" %>s %L %{forensic-id}n"' }}
               LogLevel warn
 
               BrowserMatch "MSIE [2-5]" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0
@@ -126,16 +136,20 @@
               </If>
               <Elseif "-n %{HTTP:Range}">
                 # To prevent davrods from crashing, tell it not to cache partial responses
-                RequestHeader merge Cache-Control no-store
+                # When varnish-cache is configured, this should be commented out for caching
+                # RequestHeader merge Cache-Control no-store
               </Elseif>
 
-              ProxyPass / http://127.0.0.1/
+              ProxyPass / http://127.0.0.1:{{ _webdav_varnish_service_port }}/ retry=0 timeout=300
               ProxyHTMLURLMap ^http: https: [R]
 
               Header edit Location ^http: https:
+              Header merge Cache-Control public
+
+              # Disable cache when varnish-cache is configured
+              CacheDisable /
 
               ExpiresActive On
-              ExpiresDefault "access plus 12 hours"
 
               <Files ~ "\.(cgi|shtml|phtml|php3?)$">
                 SSLOptions +StdEnvVars
@@ -156,18 +170,20 @@
       tags:
         - no_testing
 
+    - name: package_facts uses auto, setup for next task
+      package_facts:
+
     - name: install mod_proxy_html
       package:
         name: mod_proxy_html
 
+    - name: build & install mod_ssl-rm_ssl_conf RPM package to remove ssl.conf
+      include_tasks: tasks/install_rm_sslconf_rpm.yml
+      when: "'mod_ssl-rm_ssl_conf' not in ansible_facts.packages"
+
     - name: install mod_ssl
       package:
         name: mod_ssl
-
-    - name: ensure ssl.conf is gone
-      file:
-        path: /etc/httpd/conf.d/ssl.conf
-        state: absent
 
     - include_tasks: tasks/install_irods_pkg.yml
       vars:
@@ -223,31 +239,121 @@
         src: files/webdav/index.html
         dest: /var/www/html/index.html
 
-    - name: create directory for cache
+    - when: >
+        'varnish' in ansible_facts.packages
+        and ansible_facts.packages['varnish'][0].version is version_compare('6.5.1', '<')
+      block:
+        - name: ensure varnish not running
+          service:
+            name: varnish
+            state: stopped
+
+        - name: uninstall pre-installed varnish-cache package
+          package:
+            name: varnish
+            state: absent
+
+        - name: delete stale varnish-cache service file
+          file:
+            path: /etc/systemd/system/varnish.service
+            state: absent
+          notify: reload systemd
+
+        - name: delete stale varnish-cache log files (without this, varnishncsa may crash)
+          file:
+            path: /var/log/varnish/
+            state: absent
+
+        - name: find files in varnish cache dir
+          find:
+            paths: "{{ _webdav_cache_dir }}"
+          register: cached_files
+
+        - name: delete varnish cache files
+          file:
+            path: "{{ _webdav_cache_dir }}"
+            state: absent
+          with_items: "{{ cached_files }}"
+
+    - name: install varnish-cache package (v6.5.1)
+      yum:
+        name: https://packagecloud.io/varnishcache/varnish65/packages/el/7/varnish-6.5.1-0.0.el7.x86_64.rpm/download.rpm
+        state: present
+
+    - name: Create varnish shared memory mount point
+      file:
+        path: /var/lib/varnish
+        state: directory
+        mode: 0777
+
+    - name: mount varnish shared memory
+      mount:
+        path: /var/lib/varnish
+        src: tmpfs
+        fstype: tmpfs
+        opts: rw,nodev,nosuid
+        state: mounted
+      notify:
+        - restart varnish
+      tags:
+        - no_testing
+
+    - name: Create a cache dir
       file:
         path: "{{ _webdav_cache_dir }}"
+        recurse: true
         state: directory
-        owner: apache
-        group: apache
+        owner: varnish
+        group: varnish
+        mode: 0755
+
+    - name: Create a log dir
+      file:
+        path: "/var/log/varnish"
+        recurse: true
+        state: directory
+        owner: varnishlog
+        group: varnish
+        mode: 0755
+
+    - name: setup varnish-cache VCL
+      template:
+        src: "templates/webdav/etc/varnish/{{ item }}.j2"
+        dest: "/etc/varnish/{{ item }}"
+      with_items:
+        - default.vcl
+      notify:
+        - restart varnish
+        - restart varnishncsa
+
+    - name: setup varnish-cache service
+      template:
+        src: "templates/webdav/usr/lib/systemd/system/{{ item }}.j2"
+        dest: "/usr/lib/systemd/system/{{ item }}"
+      with_items:
+        - varnish.service
+      notify:
+        - reload systemd
+        - restart varnish
+        - restart varnishncsa
 
   post_tasks:
-    - name: configure htcacheclean
-      template:
-        src: templates/webdav/etc/htcacheclean.j2
-        dest: /etc/sysconfig/htcacheclean
-      notify:
-        - restart htcacheclean
-
     - name: create apache systemd service dependencies directory
       file:
         path: /etc/systemd/system/httpd.service.requires
         recurse: true
         state: directory
 
-    - name: ensure htcacheclean runs when apache run
+    - name: ensure varnish runs when apache run
       file:
-        path: /etc/systemd/system/httpd.service.requires/htcacheclean.service
-        src: /usr/lib/systemd/system/htcacheclean.service
+        path: /etc/systemd/system/httpd.service.requires/varnish.service
+        src: /usr/lib/systemd/system/varnish.service
+        state: link
+
+    - name: ensure varnishncsa runs when apache run
+      file:
+        path: /etc/systemd/system/httpd.service.requires/varnishncsa.service
+        src: /usr/lib/systemd/system/varnishncsa.service
         state: link
 
     - name: open HTTP connection in firewall
@@ -256,8 +362,10 @@
         insertbefore: -A INPUT -j REJECT
         marker: "# {mark} DS MANAGED BLOCK (webdav)"
         content: |
-          -A INPUT -m state --state NEW -p tcp --dport 80 -j ACCEPT
-          -A INPUT -m state --state NEW -p tcp --dport 443 -j ACCEPT
+          {% for i in _webdav_allowed_src %}
+          -A INPUT -m state --state NEW -p tcp -s {{ i }} --dport 80 -j ACCEPT
+          -A INPUT -m state --state NEW -p tcp -s {{ i }} --dport 443 -j ACCEPT
+          {% endfor %}
       notify: restart firewall
 
   handlers:
@@ -267,8 +375,19 @@
         name: iptables
         state: restarted
 
-    - name: restart htcacheclean
+    - name: reload systemd
+      when: notifications_enabled | default(false)
+      systemd:
+        daemon_reload: yes
+
+    - name: restart varnish
       when: notifications_enabled | default(false)
       service:
-        name: htcacheclean
+        name: varnish
+        state: restarted
+
+    - name: restart varnishncsa
+      when: notifications_enabled | default(false)
+      service:
+        name: varnishncsa
         state: restarted

@@ -26,7 +26,12 @@
         - captcn.re
         - captcn-env.re
         - coge.re
+        - core.dvm
+        - core.fnm
+        - core.re
         - de.re
+        - host_access_control_config.json
+        - hosts_config.json
         - ipc-amqp.re
         - ipc-custom.re
         - ipc-env.re
@@ -36,17 +41,12 @@
         - ipc-uuid.re
         - pire.re
         - pire-env.re
-        - sanimal.re
-        - sanimal-env.re
         - sernec.re
         - sernec-env.re
-        - service_account.config
-        - core.dvm
-        - core.fnm
-        - core.re
-        - host_access_control_config.json
-        - hosts_config.json
         - server_config.json
+        - service_account.config
+        - sparcd.re
+        - sparcd-env.re
         - terraref.re
         - terraref-env.re
 
@@ -70,14 +70,15 @@
         - de-create-collection
         - delete-scheduled-rule
         - generateuuid
+        - rm-trash
         - set-uuid
-        - sanimal-ingest
+        - sparcd-ingest
 
     - name: Verify IES only files only on IES
       stat:
         path: "{{ item }}"
       register: response
-      failed_when: response.stat.exists == (inventory_hostname in groups['ies'])
+      failed_when: response.stat.exists != ((inventory_hostname in groups['ies']) | bool)
       with_items:
         - /etc/irods/database_config.json
         - /var/lib/irods/iRODS/server/bin/cmd/amqptopicsend.py
@@ -104,10 +105,6 @@
           - irods_environment.irods_zone_name == 'testing'
 
     - when: inventory_hostname in groups['ies']
-      vars:
-        expected_driver: "{{
-          '/usr/pgsql-9.3/lib/psqlodbca.so' if ansible_distribution_major_version == '6' else
-          '/usr/lib64/psqlodbc.so'}}"
       block:
         - name: retrieve encoded server_config.json
           slurp:
@@ -149,9 +146,9 @@
         - name: verify .odbc.ini contents
           assert:
             that:
-              - odbc is search('driver = ' ~ expected_driver | regex_escape)
-              - odbc is search('Database = ICAT' | regex_escape)
-              - odbc is search('Port = 5432' | regex_escape)
+              - odbc is search('driver = /usr/pgsql-9\\.3/lib/psqlodbca?\\.so')
+              - odbc is search('Database = ICAT')
+              - odbc is search('Port = 5432')
               - odbc is search('Servername = dstesting_dbms_1.dstesting_default' | regex_escape)
 
         - name: retrieve encoded .pgpass
@@ -186,7 +183,7 @@
             that:
               - server_config.default_resource_directory == '/var/lib/irods/Vault'
               - server_config.default_resource_name == 'rs_centos6'
-              - server_config.icat_host == 'dstesting_ies_centos6_1.dstesting_default'
+              - server_config.icat_host == 'dstesting_ies_configured_1.dstesting_default'
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
               - server_config.re_rulebase_set[0].filename == 'ipc-custom'
               - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'

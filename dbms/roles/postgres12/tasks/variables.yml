@@ -1,0 +1,9 @@
+---
+
+- name: variables | verify required vars exist
+  assert:
+    that:
+      - pg_replication_user is defined
+      - pg_replication_pass is defined
+      #- pg_health_and_repl_check_user is defined
+      #- pg_health_and_repl_check_pass is defined

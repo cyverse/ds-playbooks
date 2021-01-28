@@ -1,4 +1,6 @@
-listen_addresses = '127.0.0.1,{{ pg_listen_address }}'
+#listen_addresses = '127.0.0.1,{{ pg_listen_addresses }}'
+listen_addresses = '{{ ([ '127.0.0.1' ] + pg_listen_addresses) | join(",") }}'
+
 port = '{{ pg_listen_port }}'
 
 max_wal_senders = {{ pg_max_wal_senders }}

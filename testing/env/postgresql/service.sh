@@ -5,6 +5,8 @@
 #
 # This script starts or stops the postgresSQL server inside the container.
 
+set -o errexit
+
 
 main()
 {
@@ -22,10 +24,11 @@ main()
     return 1
   fi
 
-  gosu postgres pg_ctl -w "$action"
+  if id --user postgres &> /dev/null
+  then
+    sudo -i -u postgres pg_ctlcluster 12 main "$action"
+  fi
 }
 
-
-set -e
 
 main "$@"

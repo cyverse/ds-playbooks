@@ -2,6 +2,8 @@
 - name: allow IES to talk to DBMS
   hosts: dbms
   become: true
+  vars:
+    __icat_dbms_dir: /etc/postgresql/12/main
   tasks:
     - name: enable notifications when not testing
       set_fact:
@@ -9,25 +11,9 @@
       tags:
         - no_testing
 
-    - name: allow IES communication through firewall
-      blockinfile:
-        path: /etc/sysconfig/iptables
-        insertbefore: -A {{ _firewall_chain }} -j REJECT
-        marker: "# {mark} DS MANAGED BLOCK"
-        block: |
-          {% for i in groups['ies'] %}
-          {%   set addr = i if i|ipaddr else lookup('dig', i) %}
-          {%   if inventory_hostname != i %}
-          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport {{ _dbms_port
-             }} -j ACCEPT
-          {%   endif %}
-          {% endfor %}
-      notify:
-        - restart firewall
-
     - name: allow IES to communicate with Postgres DBMS
       blockinfile:
-        path: /var/lib/pgsql/9.3/data/pg_hba.conf
+        path: "{{ __icat_dbms_dir }}/pg_hba.conf"
         insertafter: '# IPv4 local connections:'
         marker: "# {mark} DS MANAGED BLOCK"
         block: |
@@ -68,17 +54,33 @@
       tags:
         - no_testing
 
-    - name: ensure mail client is installed
-      package:
-        name: mailx
-        state: present
+    - name: ensure PostgreSQL 12 repo installed
+      yum:
+        name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 
-    - name: ensure GNU parallel installed
+    - name: ensure required packages are installed
       package:
-        name: "{{ 'moreutils' if ansible_distribution == 'CentOS' and
-                                 ansible_distribution_version is version ('7', '<') else
-                  'parallel' }}"
+        name: "{{ item }}"
         state: present
+      with_items:
+        - mailx
+        - parallel
+        - postgresql12
+#        - postgresql12-odbc
+# XXX postgresql12-odbc package is currently unsigned, causing package to fail
+#     to install it. Once it is signed again, revert this change.
+    - yum:
+        name: postgresql12-odbc
+        disable_gpg_check: yes
+
+    - name: ensure PostgreSQL 9 clients are removed
+      package:
+        name:
+          - postgresql93
+          - postgresql93-libs
+          - postgresql93-odbc
+        state: absent
+      notify: stop ies
 
     - name: ensure pika installed
       pip:
@@ -89,6 +91,12 @@
 
     - import_tasks: tasks/install_plugins.yml
 
+  handlers:
+    - name: stop ies
+      become: "{{ _become_svc_acnt }}"
+      become_user: "{{ _irods_service_account_name }}"
+      irods_ctl:
+        state: stopped
 
 - import_playbook: cfg_irods.yml
 

@@ -1,0 +1,11 @@
+---
+
+- include: variables.yml
+
+- include: install.yml
+
+- include: configure.yml
+
+- include: replication.yml
+
+#- include: healthchecks.yml

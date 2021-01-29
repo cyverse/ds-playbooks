@@ -19,7 +19,7 @@ COPY ies/scripts/* /tmp/
 ARG DB_NAME=ICAT
 ARG DB_PASSWORD=testpassword
 ARG DB_USER=irods
-ARG DBMS_HOST=dbms
+ARG DBMS_HOST=dbms_configured
 ARG DBMS_PORT=5432
 ARG DBMS_TYPE=postgres
 ARG IRODS_CONTROL_PLANE_KEY=TEMPORARY__32byte_ctrl_plane_key

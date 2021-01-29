@@ -44,7 +44,7 @@
       import_role:
         name: cyverse.irods-cfg
       vars:
-        dbms_host: "{{ groups['dbms'][0] }}"
+        dbms_host: "{{ groups['dbms_primary'][0] }}"
         rabbitmq_user_info: "{{ _rabbitmq_user }}:{{ _rabbitmq_password }}"
         rabbitmq_authority: "{{ rabbitmq_user_info }}@{{
                                 groups['rabbitmq'][0] }}:{{ _rabbitmq_port }}"
@@ -72,7 +72,8 @@
                               'db_host': dbms_host,
                               'db_password': _dbms_password,
                               'db_port': _dbms_port,
-                              'db_username': _dbms_username
+                              'db_username': _dbms_username,
+                              'odbc_driver': '/usr/pgsql-12/lib/psqlodbc.so'
                             } }}"
         irods_cfg_icat_host: "{{
           inventory_hostname if inventory_hostname in groups['ies'] else _irods_ies }}"

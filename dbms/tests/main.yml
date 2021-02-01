@@ -1,31 +1,44 @@
 ---
-- name: test Prepare for PostgreSQL
+- name: test postgresql12 role
   hosts: dbms
-  run_once: true
-  gather_facts: false
   pre_tasks:
     - name: package_facts uses auto, setup for next task
       package_facts:
         manager: "auto"
+
   tasks:
     - name: verify PostgreSQL server is installed correctly
       assert:
         that:
-          - "'postgresql93-server' in ansible_facts.packages"
+          - "'postgresql' in ansible_facts.packages"
+          - "'postgresql-client' in ansible_facts.packages"
 
-    - name: Remove PostgreSQL server
-      package:
-        name: postgresql93-server
-        state: absent
+    - debug:
+        msg: TODO verify python3-psycopg2 is installed
 
-    - name: Remove yum repo for PostgreSQL
-      include_tasks: tasks/remove_postgresql_yum_repo.yml
+    - debug:
+        msg: TODO verify locale en_US.UTF-8 exists
 
-    - name: Re-add PostgreSQL yum repo
-      include_tasks: ../tasks/add_postgresql_yum_repo.yml
+    - debug:
+        msg: TODO test configure.yml
 
-    - name: Install PostgreSQL server
-      package:
-        name: postgresql93-server
-        state: present
+    - debug:
+        msg: TODO test replication.yml
 
+
+- name: Test Set up primary DBMS
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement
+
+
+- name: Test Set up replica DBMSs
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement

@@ -1,5 +1,4 @@
 ---
-# TODO move this into role
 - name: test postgresql12 role
   hosts: dbms
   pre_tasks:
@@ -12,9 +11,7 @@
       assert:
         that:
           - "'postgresql' in ansible_facts.packages"
-
-    - debug:
-        msg: TODO verify postgresql-client is installed
+          - "'postgresql-client' in ansible_facts.packages"
 
     - debug:
         msg: TODO verify python3-psycopg2 is installed

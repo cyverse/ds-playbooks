@@ -6,6 +6,8 @@
 
 - include: configure.yml
 
+- meta: flush_handlers
+
 - include: replication.yml
 
 #- include: healthchecks.yml

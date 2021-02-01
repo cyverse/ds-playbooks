@@ -24,8 +24,8 @@
     - role: postgres12
       vars:
         pg_downstream_nodes: "{{ groups['dbms_replicas'] }}"
-        pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int / 4 }}MB"
-        pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int /2 }}MB"
+        pg_shared_buffers: "{{ (ansible_facts['memtotal_mb']|int / 4) | int }}MB"
+        pg_effective_cache_size: "{{ (ansible_facts['memtotal_mb']|int /2) | int }}MB"
 
 - name: Set up replica DBMSs
   hosts: dbms_replicas
@@ -35,5 +35,5 @@
     - role: postgres12
       vars:
         pg_upstream_node: "{{ groups['dbms_primary'][0] }}"
-        pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int / 4 }}MB"
-        pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int / 2 }}MB"
+        pg_shared_buffers: "{{ (ansible_facts['memtotal_mb']|int / 4) | int }}MB"
+        pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int // 2 }}MB"

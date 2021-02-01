@@ -1,7 +1,7 @@
 ---
 pg_upstream_node: null
 pg_downstream_nodes: []
-
+pg_hba_users: []
 pg_destroy_default_db_on_init: false
 
 pg_db: postgres

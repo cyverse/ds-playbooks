@@ -10,7 +10,7 @@
   become: true
   become_user: postgres
   no_log: true
-  
+
 - when: pg_upstream_node and pg_destroy_default_db_on_init
   block:
     - name: replication | stop database on secondaries

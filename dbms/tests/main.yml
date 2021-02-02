@@ -19,7 +19,13 @@
       changed_when: false
 
     - debug:
-        msg: TODO test configure | template configs
+        msg: TODO test cyverse.conf template expansion
+
+    - debug:
+        msg: TODO test cyverse.conf deposition
+
+    - debug:
+        msg: TODO test configure | template pg_hba.conf
 
     - debug:
         msg: TODO test configure | ensure archive dir exists
@@ -41,6 +47,15 @@
 
 
 - name: Test Set up replica DBMSs
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement
+
+
+- name: Test Prepare for iRODS
   hosts: localhost
   gather_facts: false
   run_once: true

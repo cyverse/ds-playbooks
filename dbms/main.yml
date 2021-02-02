@@ -44,3 +44,24 @@
         pg_replication_user: "{{ _dbms_replication_user }}"
         pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
         pg_upstream_node: "{{ groups['dbms_primary'][0] }}"
+        pg_destroy_default_db_on_init: "{{ _dbms_replication_start }}"
+
+
+- name: Prepare for iRODS
+  hosts: dbms_primary
+  become: True
+  become_user: postgres
+  gather_facts: False
+  run_once: True
+  tasks:
+    - name: create ICAT DB
+      postgresql_db:
+        name: ICAT
+
+    - name: create iRODS user
+      postgresql_user:
+        name: "{{ _dbms_irods_user }}"
+        password: "{{ _dbms_irods_password }}"
+        db: ICAT
+        priv: ALL
+      no_log: true

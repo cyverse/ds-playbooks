@@ -35,4 +35,4 @@
     owner: postgres
     group: postgres
     mode: "0600"
-  when: pg_upstream_node or pg_downstream_nodes
+  when: pg_upstream_node or pg_downstream_nodes|length > 0

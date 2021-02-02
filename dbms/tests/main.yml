@@ -7,14 +7,12 @@
         manager: "auto"
 
   tasks:
-    - name: verify PostgreSQL server is installed correctly
+    - name: verify required packages installed
       assert:
         that:
           - "'postgresql' in ansible_facts.packages"
           - "'postgresql-client' in ansible_facts.packages"
-
-    - debug:
-        msg: TODO verify python3-psycopg2 is installed
+          - "'python3-psycopg2' in ansible_facts.packages"
 
     - debug:
         msg: TODO verify locale en_US.UTF-8 exists

@@ -1,5 +1,4 @@
 ---
-
 - name: Prepare for PostgreSQL
   hosts: dbms
   become: true
@@ -16,6 +15,7 @@
       tags:
         - no_testing
 
+
 - name: Set up primary DBMS
   hosts: dbms_primary
   become: true
@@ -24,8 +24,11 @@
     - role: postgres12
       vars:
         pg_downstream_nodes: "{{ groups['dbms_replicas'] }}"
-        pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
         pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int // 2 }}MB"
+        pg_replication_pass: "{{ _dbms_replication_password }}"
+        pg_replication_user: "{{ _dbms_replication_user }}"
+        pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
+
 
 - name: Set up replica DBMSs
   hosts: dbms_replicas
@@ -34,6 +37,8 @@
   roles:
     - role: postgres12
       vars:
-        pg_upstream_node: "{{ groups['dbms_primary'][0] }}"
-        pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
         pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int // 2 }}MB"
+        pg_replication_pass: "{{ _dbms_replication_password }}"
+        pg_replication_user: "{{ _dbms_replication_user }}"
+        pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
+        pg_upstream_node: "{{ groups['dbms_primary'][0] }}"

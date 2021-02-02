@@ -1,0 +1,3 @@
+---
+_dbms_replication_password: "{{ dbms_replication_password | mandatory }}"
+_dbms_replication_user: "{{ dbms_replication_user | default('postgres') }}"

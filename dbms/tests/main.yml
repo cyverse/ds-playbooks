@@ -14,8 +14,8 @@
           - "'postgresql-client' in ansible_facts.packages"
           - "'python3-psycopg2' in ansible_facts.packages"
 
-    - debug:
-        msg: TODO verify locale en_US.UTF-8 exists
+    - name: verify locale en_US.UTF-8 exists
+      shell: locale --all-locales | grep --quiet en_US.utf8
 
     - debug:
         msg: TODO test configure.yml

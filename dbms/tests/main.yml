@@ -16,9 +16,16 @@
 
     - name: verify locale en_US.UTF-8 exists
       shell: locale --all-locales | grep --quiet en_US.utf8
+      changed_when: false
 
     - debug:
-        msg: TODO test configure.yml
+        msg: TODO test configure | template configs
+
+    - debug:
+        msg: TODO test configure | ensure archive dir exists
+
+    - debug:
+        msg: TODO test configure | template pgpass file
 
     - debug:
         msg: TODO test replication.yml

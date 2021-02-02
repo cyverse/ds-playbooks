@@ -19,7 +19,10 @@
       changed_when: false
 
     - debug:
-        msg: TODO test configure | template cyverse.conf
+        msg: TODO test cyverse.conf template expansion
+
+    - debug:
+        msg: TODO test cyverse.conf deposition
 
     - debug:
         msg: TODO test configure | template pg_hba.conf

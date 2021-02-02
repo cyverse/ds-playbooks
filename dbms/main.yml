@@ -44,6 +44,7 @@
         pg_replication_user: "{{ _dbms_replication_user }}"
         pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
         pg_upstream_node: "{{ groups['dbms_primary'][0] }}"
+        pg_destroy_default_db_on_init: "{{ _dbms_replication_start }}"
 
 
 - name: Prepare for iRODS

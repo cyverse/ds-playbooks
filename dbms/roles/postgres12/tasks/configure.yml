@@ -35,4 +35,4 @@
     owner: postgres
     group: postgres
     mode: "0600"
-  when: "'secondary_postgres_nodes' in group_names"
+  when: pg_upstream_node or pg_downstream_nodes

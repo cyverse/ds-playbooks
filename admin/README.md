@@ -2,6 +2,10 @@
 
 This is a collection of playbooks for maintaining DS servers.
 
+## Tags
+
+* `no_testing` for tasks that shouldn't be run within the containerized testing environment
+* `non_idempotent` for tasks that aren't idempotent
 
 ## Variables
 

@@ -1,5 +1,5 @@
 ---
-- name: install dmidecode required by ansible gather_facts
+- name: install ansible core facts requirement
   hosts: all:!unmanaged_systems:!localhost
   become: true
   gather_facts: false
@@ -15,6 +15,13 @@
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
+    - name: update apt cache on Ubuntu machines
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        update_cache: yes
+      tags:
+        - non_idempotent
+
     - name: install EPEL repository on CentOS machines
       when: ansible_distribution == 'CentOS'
       package:
@@ -26,6 +33,7 @@
         name: "{{ item }}"
         state: present
       with_items:
+        - "{{ 'iproute2' if ansible_distribution == 'Ubuntu' else 'iproute' }}"
         - jq
         - "{{ 'libselinux-python' if ansible_distribution == 'CentOS' else
               'python3-selinux' if ansible_distribution == 'Ubuntu' else

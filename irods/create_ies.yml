@@ -19,23 +19,17 @@
         block: |
           {% for i in groups['ies'] %}
           {%   set addr = i if i|ipaddr else lookup('dig', i) %}
-          {{ '%-8s %-15s %-15s %-23s %s' | format('host', 'ICAT', _dbms_username, addr ~ '/32', 'md5')
-            }}
+          {{ '%-8s %-15s %-15s %-23s %s'
+            | format('host', 'ICAT', _dbms_username, addr ~ '/32', 'md5') }}
           {% endfor %}
       notify:
         - reload postgresql
 
   handlers:
-    - name: restart firewall
-      when: notifications_enabled | default(false)
-      service:
-        name: iptables
-        state: restarted
-
     - name: reload postgresql
       when: notifications_enabled | default(false)
       service:
-        name: postgresql-9.3
+        name: postgresql
         state: reloaded
 
 

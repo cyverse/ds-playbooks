@@ -48,10 +48,23 @@
                                   and COLL_ACCESS_USER_ID = '$id'
                                   and COLL_ACCESS_NAME = 'modify object'")
 
-        [[ $totColls -gt 0 ]] && [[ $totColls -eq $totCollsWrite ]]
+        (( totColls > 0 && totColls == totCollsWrite ))
       changed_when: false
 
-    - name: verify that rodsadmin has own permission on everthing else
+    - name: verify that rodsadmin has own permission on all other collections
+      shell: |
+        id=$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")
+        totColls=$(iquest '%s' "select count(COLL_ID) where COLL_PARENT_NAME like '/testing/%'")
+
+        totCollsOwn=$(iquest '%s' \
+                             "select count(COLL_ID)
+                              where COLL_PARENT_NAME like '/testing/%'
+                                and COLL_ACCESS_USER_ID = '$id' and COLL_ACCESS_NAME = 'own'")
+
+        (( totColls > 0 && totColls == totCollsOwn ))
+      changed_when: false
+
+    - name: verify that rodsadmin has own permission on all data objects
       debug:
         msg: TODO implement
 

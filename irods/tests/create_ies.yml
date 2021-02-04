@@ -26,6 +26,7 @@
 - name: test install IES packages
   hosts: ies
   become: true
+  become_flags: '-i'
   tasks:
     - include_tasks: tasks/test_pkg_installed.yml
       with_items:
@@ -53,6 +54,11 @@
     - import_tasks: tasks/test_install_ies_pkgs.yml
 
     - import_tasks: tasks/test_install_plugins.yml
+
+    - name: test correct psql version
+      assert:
+        that:
+          - ansible_env.PATH is search('/usr/pgsql-12/bin' | regex_escape)
 
 
 - import_playbook: cfg_irods.yml

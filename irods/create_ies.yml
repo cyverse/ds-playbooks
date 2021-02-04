@@ -85,6 +85,14 @@
 
     - import_tasks: tasks/install_plugins.yml
 
+    - name: add postgres 12 clients to path
+      copy:
+        src: "{{ item }}"
+        dest: /etc/profile.d
+      with_fileglob:
+        - "files/profile.d/*"
+
+
   handlers:
     - name: stop ies
       become: "{{ _become_svc_acnt }}"

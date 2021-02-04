@@ -65,12 +65,20 @@
       changed_when: false
 
     - name: verify that rodsadmin has own permission on all data objects
-      debug:
-        msg: TODO implement
+      shell: |
+        id=$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")
+        totObjs=$(iquest '%s' "select count(DATA_ID)")
+
+        totObjsOwn=$(iquest '%s' \
+                            "select count(DATA_ID)
+                             where DATA_ACCESS_USER_ID = '$id' and DATA_ACCESS_NAME = 'own'")
+
+        (( totObjs == totObjsOwn ))
+      changed_when: false
 
     - name: test ensure anonymous user exists
-      debug:
-        msg: TODO implement
+      shell: test "$(iadmin lu anonymous)" != 'No rows found'
+      changed_when: false
 
     - name: verify anonymous user has read access to zone collection
       shell: ils -A /testing | grep --quiet 'anonymous#testing:read object'

@@ -70,9 +70,9 @@
         irods_cfg_icat: "{{ None if inventory_hostname not in groups['ies'] else
                             {
                               'db_host': dbms_host,
-                              'db_password': _dbms_password,
-                              'db_port': _dbms_port,
-                              'db_username': _dbms_username,
+                              'db_password': _irods_db_password,
+                              'db_port': _irods_dbms_port,
+                              'db_username': _irods_db_user,
                               'odbc_driver': '/usr/pgsql-12/lib/psqlodbc.so'
                             } }}"
         irods_cfg_icat_host: "{{

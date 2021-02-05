@@ -6,12 +6,12 @@ an iRODS grid.
 
 The environment consists of size containers. The `amqp` container hosts the
 RabbitMQ broker that in turn hosts the `irods` exchange, where the Data Store
-publishes messages to. The `dbms` container hosts the PostgreSQL server that in
-turn hosts the ICAT DB. The `load_balancer` container hosts the HAProxy for the
-IES. The `ies_configured` container hosts a configured IES server. The
-`ies_unconfigured` container hosts an unconfigured IES server. The `rs_centos6`
-container hosts the resource server running on CentOS 6. Finally, the
-`rs_centos7` container hosts the resource server running on CentOS 7.
+publishes messages to. The `dbms_configured` container hosts the PostgreSQL
+server that in turn hosts the ICAT DB. The `load_balancer` container hosts the
+HAProxy for the IES. The `ies_configured` container hosts a configured IES
+server. The `ies_unconfigured` container hosts an unconfigured IES server. The
+`rs_centos6` container hosts the resource server running on CentOS 6. Finally,
+the `rs_centos7` container hosts the resource server running on CentOS 7.
 
 The environment is controlled by docker-compose, but there are three programs
 that simplify the usage of docker-compose. `build` can be used to create all of
@@ -30,7 +30,7 @@ export ENV_NAME=dstesting
 export DOMAIN="$ENV_NAME"_default
 
 # The host name of the PostgreSQL server
-export DBMS_HOST="$ENV_NAME"_dbms_1."$DOMAIN"
+export DBMS_HOST="$ENV_NAME"_dbms_configured_1."$DOMAIN"
 
 # The name of the primary group the irods service account belongs to on IES.
 export IRODS_IES_SYSTEM_GROUP=irods_ies

@@ -1,0 +1,5 @@
+---
+dbms_irods_password: "{{ irods_icat_password }}"
+
+dbms_replication_password: password
+dbms_replication_user: replicator

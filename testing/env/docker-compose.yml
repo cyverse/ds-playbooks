@@ -12,15 +12,21 @@ services:
       context: .
       dockerfile: apache/Dockerfile
 
-  dbms:
+  dbms_configured:
     build:
       context: .
-      dockerfile: postgresql/Dockerfile
+      dockerfile: postgresql/Dockerfile.configured
       args:
         IRODS_RESOURCES: "$IRODS_RS6_NAME:$IRODS_RS6_HOST:$IRODS_VAULT $IRODS_RS7_NAME:$IRODS_RS7_HOST:$IRODS_VAULT"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     tty: true
 
+  dbms_unconfigured:
+    build:
+      context: .
+      dockerfile: postgresql/Dockerfile.unconfigured
+    tty: true
+    
   ies_configured:
     build:
       context: .
@@ -37,7 +43,7 @@ services:
     tty: true
     depends_on:
       - amqp
-      - dbms
+      - dbms_configured
 
   ies_unconfigured:
     build:

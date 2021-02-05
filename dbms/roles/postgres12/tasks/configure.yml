@@ -1,0 +1,38 @@
+---
+
+# this is required because these facts don't exist otherwise https://gist.github.com/aliusmiles/e32a7296dda81438e56fff01d95d669b
+# - name: configure | gather facts
+#   setup:
+#   delegate_to: "{{ item }}"
+#   delegate_facts: True
+#   with_items: "{{ groups['pgpool_nodes'] }}"
+
+- name: configure | template configs
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: postgres
+    group: postgres
+    mode: "{{ item.mode }}"
+  with_items:
+    - { src: cyverse.conf.j2, dest: "{{ pg_conf_path }}/conf.d/cyverse.conf", mode: "0640" }
+    - { src: pg_hba.conf.j2, dest: "{{ pg_conf_path }}/pg_hba.conf", mode: "0640" }
+  notify:
+    - restart postgres
+
+- name: configure | ensure archive dir exists
+  file:
+    state: directory
+    path: "{{ pg_db_path }}/archive"
+    owner: postgres
+    group: postgres
+    mode: "0600"
+
+- name: configure | template pgpass file
+  template:
+    src: pgpass.j2
+    dest: /var/lib/postgresql/.pgpass
+    owner: postgres
+    group: postgres
+    mode: "0600"
+  when: pg_upstream_node or pg_downstream_nodes|length > 0

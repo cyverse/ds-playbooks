@@ -1,5 +1,5 @@
 ---
-- name: test install dmidecode required by ansible gather_facts
+- name: test install required packages for ansible
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
@@ -8,32 +8,40 @@
       vars:
         pkg: dmidecode
 
-
-- name: test install required packages for ansible
-  hosts: all:!unmanaged_systems:!localhost
-  become: true
-  gather_facts: false
-  tasks:
     - name: test install EPEL repo
       when: ansible_distribution == 'CentOS'
       include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: epel-release
 
+    - name: test iproute installed on not Ubuntu
+      when: ansible_distribution != 'Ubuntu'
+      include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: iproute
+
+    - name: test iproute2 installed on Ubuntu
+      when: ansible_distribution == 'Ubuntu'
+      include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: iproute2
+
     - name: test jq installed
       include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: jq
 
-    - name: test python-selinux package installed on CentOS
+    - name: test libselinux-python package installed on CentOS
       when: ansible_distribution == 'CentOS'
       include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: libselinux-python
 
-    - name: test python-selinux package installed on Ubuntu
-      debug:
-        msg: TODO implement
+    - name: test python3-selinux package installed on Ubuntu
+      when: ansible_distribution == 'Ubuntu'
+      include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: python3-selinux
 
     - name: test python-selinux package installed elsewhere
       debug:

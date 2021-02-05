@@ -48,16 +48,37 @@
                                   and COLL_ACCESS_USER_ID = '$id'
                                   and COLL_ACCESS_NAME = 'modify object'")
 
-        [[ $totColls -gt 0 ]] && [[ $totColls -eq $totCollsWrite ]]
+        (( totColls > 0 && totColls == totCollsWrite ))
       changed_when: false
 
-    - name: verify that rodsadmin has own permission on everthing else
-      debug:
-        msg: TODO implement
+    - name: verify that rodsadmin has own permission on all other collections
+      shell: |
+        id=$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")
+        totColls=$(iquest '%s' "select count(COLL_ID) where COLL_PARENT_NAME like '/testing/%'")
+
+        totCollsOwn=$(iquest '%s' \
+                             "select count(COLL_ID)
+                              where COLL_PARENT_NAME like '/testing/%'
+                                and COLL_ACCESS_USER_ID = '$id' and COLL_ACCESS_NAME = 'own'")
+
+        (( totColls > 0 && totColls == totCollsOwn ))
+      changed_when: false
+
+    - name: verify that rodsadmin has own permission on all data objects
+      shell: |
+        id=$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")
+        totObjs=$(iquest '%s' "select count(DATA_ID)")
+
+        totObjsOwn=$(iquest '%s' \
+                            "select count(DATA_ID)
+                             where DATA_ACCESS_USER_ID = '$id' and DATA_ACCESS_NAME = 'own'")
+
+        (( totObjs == totObjsOwn ))
+      changed_when: false
 
     - name: test ensure anonymous user exists
-      debug:
-        msg: TODO implement
+      shell: test "$(iadmin lu anonymous)" != 'No rows found'
+      changed_when: false
 
     - name: verify anonymous user has read access to zone collection
       shell: ils -A /testing | grep --quiet 'anonymous#testing:read object'

@@ -6,10 +6,7 @@
 
 - include_tasks: test_pkg_installed.yml
   vars:
-    pkg: "{{
-      'irods-database-plugin-postgres93'
-        if inventory_hostname == 'dstesting_ies_configured_1.dstesting_default' else
-      'irods-database-plugin-postgres' }}"
+    pkg: irods-database-plugin-postgres
     version: '1.10'
 
 - include_tasks: test_irods_ownership.yml

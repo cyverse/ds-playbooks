@@ -9,7 +9,7 @@
 #
 # This script configures the common ansible requirements
 
-set -e
+set -o errexit
 
 
 main()
@@ -33,11 +33,13 @@ main()
   if [[ "$os" = centos ]]
   then
     install_centos_packages "$version"
-  else
+  elif [[ "$os" == debian ]]; then
     install_debian_packages "$version"
 
     # Allow root to login without a password
     sed --in-place 's/nullok_secure/nullok/' /etc/pam.d/common-auth
+  else
+    install_ubuntu_packages "$version"
   fi
 
   # Remove root's password
@@ -85,6 +87,16 @@ install_debian_packages()
 
   apt-get install -qq -y \
     iptables jq openssh-server python-pip python-selinux python-virtualenv sudo
+}
+
+
+install_ubuntu_packages() {
+  local version="$1"
+
+  apt-get update --quiet=2
+  apt-get install --yes --quiet=2 apt-utils 2> /dev/null
+
+  apt-get install --yes --quiet=2 openssh-server python3-apt sudo
 }
 
 

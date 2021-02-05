@@ -14,40 +14,54 @@
         - transparent_hugepage=never
       tags:
         - no_testing
-        
-  post_tasks:
-    - name: Add PostgreSQL yum repository
-      include_tasks: tasks/add_postgresql_yum_repo.yml
 
-    - name: Install PostgreSQL server
-      package:
-        name: postgresql93-server
 
-- name: Initialize PostgreSQL cluster
-  hosts: dbms
+- name: Set up primary DBMS
+  hosts: dbms_primary
   become: true
-  become_user: postgres
   gather_facts: false
+  roles:
+    - role: postgres12
+      vars:
+        pg_downstream_nodes: "{{ groups['dbms_replicas'] }}"
+        pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int // 2 }}MB"
+        pg_listen_addresses: "{{ ansible_facts['all_ipv4_addresses'] }}"
+        pg_replication_pass: "{{ _dbms_replication_password }}"
+        pg_replication_user: "{{ _dbms_replication_user }}"
+        pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
+
+
+- name: Set up replica DBMSs
+  hosts: dbms_replicas
+  become: true
+  gather_facts: false
+  roles:
+    - role: postgres12
+      vars:
+        pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int // 2 }}MB"
+        pg_listen_addresses: "{{ ansible_facts['all_ipv4_addresses'] }}"
+        pg_replication_pass: "{{ _dbms_replication_password }}"
+        pg_replication_user: "{{ _dbms_replication_user }}"
+        pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
+        pg_upstream_node: "{{ groups['dbms_primary'][0] }}"
+        pg_destroy_default_db_on_init: "{{ _dbms_replication_start }}"
+
+
+- name: Prepare for iRODS
+  hosts: dbms_primary
+  become: True
+  become_user: postgres
+  gather_facts: False
+  run_once: True
   tasks:
-    - name: Initialize
-      shell: |
-        # TODO - This only checks for the existence of the database. It should be modified to
-        # check whether or not the correct collate value is set.
-        if ! [ -e /var/lib/pgsql/9.3/data/PG_VERSION ]
-        then
-          /usr/pgsql-9.3/bin/initdb --auth ident \
-                                    --lc-collate C \
-                                    --locale en_US.UTF-8 \
-                                    --pgdata /var/lib/pgsql/9.3/data
+    - name: create ICAT DB
+      postgresql_db:
+        name: ICAT
 
-          if [ "$?" -ne 0 ]
-          then
-            exit 1
-          fi
-
-          printf 'changed'
-        fi
-      register: result
-      changed_when: result.stdout == 'changed'
-  tags:
-    - no_testing
+    - name: create iRODS user
+      postgresql_user:
+        name: "{{ _dbms_irods_user }}"
+        password: "{{ _dbms_irods_password }}"
+        db: ICAT
+        priv: ALL
+      no_log: true

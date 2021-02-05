@@ -99,8 +99,8 @@
       changed_when: false
 
     - name: test start quota usage computation
-      debug:
-        msg: TODO implement
+      shell: iqstat -a | grep --quiet _ipc_updateQuotaUsage
+      changed_when: false
 
     - debug:
         msg: TODO test start storage free space determination

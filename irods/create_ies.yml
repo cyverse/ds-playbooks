@@ -14,13 +14,12 @@
     - name: allow IES to communicate with Postgres DBMS
       blockinfile:
         path: "{{ __icat_dbms_dir }}/pg_hba.conf"
-        insertafter: '# IPv4 local connections:'
-        marker: "# {mark} DS MANAGED BLOCK"
+        marker: "# {mark} DS IRODS MANAGED BLOCK"
         block: |
           {% for i in groups['ies'] %}
           {%   set addr = i if i|ipaddr else lookup('dig', i) %}
-          {{ '%-8s %-15s %-15s %-23s %s'
-            | format('host', 'ICAT', _dbms_username, addr ~ '/32', 'md5') }}
+          {{   '%-7s %-15s %-15s %-23s %s'
+                 | format('host', 'ICAT', hostvars[i]._irods_db_user, addr ~ '/32', 'md5') }}
           {% endfor %}
       notify:
         - reload postgresql

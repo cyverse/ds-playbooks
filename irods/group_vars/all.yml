@@ -24,10 +24,6 @@ _captcn_writers: "{{ captcn_writers | default([]) }}"
 
 _check_routes_timeout: "{{ check_routes_timeout | default(3) }}"
 
-_dbms_password: "{{ dbms_password | default('testpassword') }}"
-_dbms_port: "{{ dbms_port if dbms_port is defined else 5432 }}"
-_dbms_username: "{{ dbms_username if dbms_username is defined else 'irods' }}"
-
 _de_job_irods_user: "{{ de_job_irods_user if de_job_irods_user is defined else None }}"
 
 _firewall_chain: "{{ firewall_chain if firewall_chain is defined else 'INPUT' }}"
@@ -45,6 +41,11 @@ _irods_clerver_password: "{{ irods_clerver_password if irods_clerver_password is
 _irods_clerver_user: "{{ irods_clerver_user if irods_clerver_user is defined else 'rods' }}"
 
 _irods_client_server_policy: CS_NEG_REFUSE
+
+_irods_db_password: "{{ irods_db_password | default('testpassword') }}"
+_irods_db_user: "{{ irods_db_user | default('irods') }}"
+
+_irods_dbms_port: "{{ irods_dbms_port | default(5432) }}"
 
 _irods_default_dir_mode: "{{ irods_default_dir_mode if irods_default_dir_mode is defined else
                              '0750' }}"

@@ -32,9 +32,6 @@ Variable                                   | Default                            
 `captcn_readers`                           | `[]`                                 |         | a list of users who get read access to CAP_TCN collections
 `captcn_writers`                           | `[]`                                 |         | a list of users who get write access to CAP_TCN collections
 `check_routes_timeout`                     | 3                                    |         | the number of seconds the `check_route` playbook will wait for a response during a single port check
-`dbms_password`                            | irods                                |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
-`dbms_port`                                | 5432                                 |         | The TCP port the DBMS listens on.
-`dbms_username`                            | irods                                |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `de_job_irods_user`                        |                                      |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
 `firewall_chain`                           | INPUT                                |         | The iptables chain managing authorizing iRODS connections
 `irods_aegis_repl_resource`                | _see description_                    |         | the name of the aegis resource where replicas are written. If `irods_aegis_resource` is defined, it is the default, otherwise, `irods_default_repl_resource` is.
@@ -42,6 +39,9 @@ Variable                                   | Default                            
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
 `irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | rods                                 |         | the rodsadmin user to be used by the server being configured
+`irods_db_password`                        | testpassword                         |         | The password iRODS uses when connecting to the ICAT DB.
+`irods_db_user`                            | irods                                |         | The user iRODS uses when connecting to the ICAT DB.
+`irods_dbms_port`                          | 5432                                 |         | The TCP port the DBMS listens on.
 `irods_default_dir_mode`                   | 0750                                 |         | the default permissions assigned to newly created directories in the vault
 `irods_default_file_mode`                  | 0600                                 |         | the default permissions assigned to newly created files in the vault
 `irods_default_number_of_transfer_threads` | 4                                    |         | the default maximum number of transfer streams for parallel transfer

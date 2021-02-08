@@ -6,13 +6,13 @@
     - name: test allow IES to communicate with Postgres DBMS
       shell: |
         sed --quiet \
-            '/^# BEGIN DS MANAGED BLOCK$/{
+            '/^# BEGIN DS IRODS MANAGED BLOCK$/{
                n;
                / *host \+ICAT \+irods \+[0-9.]\+\/32 \+md5$/!Q1;
                n;
                / *host \+ICAT \+irods \+[0-9.]\+\/32 \+md5$/!Q1;
                n;
-               /^# END DS MANAGED BLOCK$/Q0 };
+               /^# END DS IRODS MANAGED BLOCK$/Q0 };
              $ Q1' \
           /etc/postgresql/12/main/pg_hba.conf
       args:

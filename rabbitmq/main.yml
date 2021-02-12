@@ -10,18 +10,22 @@
 
     - name: install from web
       yum:
-        name: https://www.rabbitmq.com/releases/rabbitmq-server/v3.5.1/rabbitmq-server-3.5.1-1.noarch.rpm
+        name: 'https://bintray.com/rabbitmq/rpm/download_file?file_path=rabbitmq-server%2Fv3.6.x%2Fel%2F7%2Fnoarch%2Frabbitmq-server-3.6.15-1.el7.noarch.rpm'
 
     - name: enable management plugin
       rabbitmq_plugin:
         names: rabbitmq_management
         state: enabled
+      tags:
+        no_testing
 
     - name: start broker
       service:
         name: rabbitmq-server
         enabled: true
         state: started
+      tags:
+        no_testing
 
     - name: create admin user
       rabbitmq_user:
@@ -33,12 +37,25 @@
         write_priv: .*
         tags: administrator
         state: present
+      tags:
+        no_testing
 
     - name: remove guest user
+      when: _admin_user != 'guest'
       rabbitmq_user:
         user: guest
         state: absent
+      tags:
+        no_testing
 
     - name: create data store virtual host
       rabbitmq_vhost:
         name: /{{ _deploy_env }}/data-store
+      tags:
+        no_testing
+
+    - debug:
+        msg: TODO giver admin user full permission on data store virtual host
+
+    - debug:
+        msg: TODO create irods exchange with correct permissions

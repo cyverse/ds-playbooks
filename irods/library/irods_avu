@@ -154,24 +154,106 @@ RETURN = ''' # '''
 
 import ssl
 from ssl import Purpose
-from typing import Optional
+from typing import Mapping, Optional, Union
 
 from ansible.module_utils.basic import AnsibleModule
 
-try:
-    from irods.meta import iRODSMeta
-    from irods.session import iRODSSession
+_IRODSCLIENT_PACK_ERR: Optional[Exception] = None
 
-    _IRODSCLIENT_PACK_ERR = None
+try:
+    from irods.data_object import iRODSDataObject
+    from irods.exception import CAT_INVALID_AUTHENTICATION, \
+        CAT_INVALID_CLIENT_USER, CAT_INVALID_USER, CollectionDoesNotExist, \
+        DataObjectDoesNotExist, NetworkException
+    from irods.meta import iRODSMeta
+    from irods.resource import iRODSResource
+    from irods.session import iRODSSession
 except Exception as e:
     _IRODSCLIENT_PACK_ERR = e
+
+
+_IrodsEntity = Union[iRODSDataObject, iRODSResource]
+
+
+class _IrodsAvuError(Exception):
+    def __init__(self, message: str):
+        self._message = message
+
+    def __str__(self) -> str:
+        return self._message
+
+
+class _IrodsAvuAuthenticationError(_IrodsAvuError):
+
+    def __init__(self, zone: str, user: str):
+        msgTmpl = "user '{0}' cannot be authenticated in zone '{1}'"
+
+        super(_IrodsAvuAuthenticationError, self).__init__(
+            msgTmpl.format(user, zone))
+
+
+def _ensure_avu_added(
+    entity: _IrodsEntity, attribute: str, value: str, units: Optional[str]
+) -> bool:
+    for avu in entity.metadata.get_all(attribute):
+        if avu.value == value and avu.units == units:
+            return False
+
+    entity.metadata.add(attribute, value, units)
+    return True
+
+
+def _ensure_avu_removed(
+    entity: _IrodsEntity, attribute: str, value: str, units: Optional[str]
+) -> bool:
+    for avu in entity.metadata.get_all(attribute):
+        if avu.value == value and avu.units == units:
+            entity.metadata.remove(attribute, value, units)
+            return True
+
+    return False
+
+
+def _ensure_avu_set(
+    entity: _IrodsEntity, attribute: str, value: str, units: Optional[str]
+) -> bool:
+    avus = entity.metadata.get_all(attribute)
+
+    if len(avus) == 1 and avus[0].value == value and avus[0].units == units:
+        return False
+
+    avu = iRODSMeta(attribute, value, units)
+    entity.metadata[attribute] = avu
+    return True
+
+
+def _get_entity(
+    session: iRODSSession, entity_type: str, entity_name: str
+) -> _IrodsEntity:
+    if entity_type == "data object":
+        try:
+            return session.data_objects.get(entity_name)
+        except CollectionDoesNotExist:
+            raise _IrodsAvuError(
+                "The data object '{0}' does not exist".format(entity_name))
+        except DataObjectDoesNotExist:
+            raise _IrodsAvuError(
+                "The data object '{0}' does not exist".format(entity_name))
+    elif entity_type == "resource":
+        return session.resources.get(entity_name)
+    else:
+        raise _IrodsAvuError("entities of that type not supported")
 
 
 def _irods_session(
     host: str, port: int, zone: str, user: str, password: str
 ) -> iRODSSession:
     return iRODSSession(
-        host, port, zone, user, password,
+        host=host,
+        port=port,
+        zone=zone,
+        user=user,
+        password=password,
         ssl_context=ssl.create_default_context(Purpose.SERVER_AUTH))
 
 
@@ -188,27 +270,39 @@ def _irods_avu(
     admin_user: str,
     admin_password: str
 ) -> bool:
-    with _irods_session(host, port, zone, admin_user, admin_password)
-    as session:
-        if entity_type == "resource":
-            entity = session.resources.get(entity_name)
-        else:
-            entity = session.data_objects.get(entity_name)
+    try:
+        with _irods_session(
+            host, port, zone, admin_user, admin_password
+        ) as session:
+            entity = _get_entity(session, entity_type, entity_name)
 
-        avus = entity.metadata().get_all(attribute)
-        if state == "present":
-            if len(avus) == 1:
-                if avus[0].value == value and avus[0].units == units:
-                    return False
-            new_avu = iRODSMeta(attribute, value, units)
-            entity.metadata[new_avu.name] = new_avu
-            return True
-        else:
-            for avu in avus:
-                if avu.value == value and avu.units == units:
-                    entity.metadata.remove(attribute, value, units)
-                    return True
-            return False
+            if state == "absent":
+                return _ensure_avu_removed(entity, attribute, value, units)
+            elif state == "present":
+                return _ensure_avu_added(entity, attribute, value, units)
+            elif state == "set":
+                return _ensure_avu_set(entity, attribute, value, units)
+            else:
+                raise _IrodsAvuError("state not implemented")
+    except CAT_INVALID_AUTHENTICATION:
+        raise _IrodsAvuAuthenticationError(zone, admin_user)
+    except CAT_INVALID_CLIENT_USER:
+        raise _IrodsAvuAuthenticationError(zone, admin_user)
+    except CAT_INVALID_USER:
+        raise _IrodsAvuAuthenticationError(zone, admin_user)
+
+
+def _validate_params(
+    params: Mapping[str, Union[str, int, Optional[str]]]
+) -> None:
+    if not params['host']:
+        raise _IrodsAvuError("host cannot be empty")
+    if not params['port']:
+        raise _IrodsAvuError("port cannot be null")
+    if not params['attribute']:
+        raise _IrodsAvuError("attribute name cannot be empty")
+    if not params['value']:
+        raise _IrodsAvuError("value cannot be empty")
 
 
 def _prep_module() -> AnsibleModule:
@@ -221,20 +315,22 @@ def _prep_module() -> AnsibleModule:
             type='str',
             choices=["data object", "resource"],
             default="data object"),
-        state=dict(type='str', choices=["absent", "set"], default="set"),
+        state=dict(
+            type='str',
+            choices=["absent", "present", "set"],
+            default="present"),
         host=dict(type='str', default="localhost.localdomain"),
         port=dict(type='int', default=1247),
         zone=dict(type='str', required=True),
         admin_user=dict(type='str', default="rods"),
-        admin_password=dict(type='str', required=True))
+        admin_password=dict(type='str', required=True, no_log=True))
 
     return AnsibleModule(argument_spec=options_spec)
 
 
 def main() -> None:
     """Entrypoint of module."""
-    module = _prep_module()
-
+    module: AnsibleModule = _prep_module()
     if _IRODSCLIENT_PACK_ERR:
         err_msg = "python-irodsclient issue: %s" % (str(_IRODSCLIENT_PACK_ERR))
         module.fail_json(msg=err_msg)
@@ -243,10 +339,16 @@ def main() -> None:
     result = dict(changed=False)
 
     try:
+        _validate_params(module.params)
         result['changed'] = _irods_avu(**module.params)
         module.exit_json(**result)
-    except Exception as e:
+    except _IrodsAvuError as e:
         module.fail_json(msg=str(e))
+    except NetworkException as e:
+        module.fail_json(msg=str(e))
+    except Exception as e:
+        tmpl = "An unexpected exception of type {0} occurred. Arguments: {1!r}"
+        module.fail_json(msg=tmpl.format(type(e).__name__, e.args))
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2020, The Arizona Board of Regents
+# Copyright: (c) 2021, The Arizona Board of Regents
 # Standard BSD License | CyVerse (see https://cyverse.org/license)
 
 ANSIBLE_METADATA = {
@@ -85,12 +85,12 @@ options:
     required: true
     type: str
 
-  admin_user:
-    description: This is the iRODS account used when connecting.
+  username:
+    description: This is the iRODS rodsadmin account used when connecting.
     default: rods
     type: str
 
-  admin_password:
+  password:
     description: This is the password used to authenticate the iRODS account.
     required: true
     type: str
@@ -113,7 +113,7 @@ EXAMPLES = r'''
     value: v
     entity_name: /tempZone/home/user/file
     zone: tempZone
-    admin_password: rods
+    password: rods
 
 - name: ensure a resource of a remote IES does not have an AVU
   irods_avu:
@@ -125,7 +125,7 @@ EXAMPLES = r'''
     entity_name: demoResc
     host: ies.localdomain
     zone: tempZone
-    admin_password: rods
+    password: rods
 
 - name: ensure a data object on an IES listening on a custom port has an AVU
   irods_avu:
@@ -136,7 +136,7 @@ EXAMPLES = r'''
     entity_name: /tempZone/home/user/file
     port: 1250
     zone: tempZone
-    admin_password: rods
+    password: rods
 
 - name: ensure a dato object has an AVU connecting as a specific user
   irods_avu:
@@ -145,8 +145,8 @@ EXAMPLES = r'''
     units: u
     entity_name: /tempZone/home/user/file
     zone: tempZone
-    admin_user: user
-    admin_password: password
+    username: user
+    password: password
 '''
 
 RETURN = ''' # '''
@@ -267,13 +267,17 @@ def _irods_avu(
     host: str,
     port: int,
     zone: str,
-    admin_user: str,
-    admin_password: str
+    username: str,
+    password: str
 ) -> bool:
     try:
         with _irods_session(
-            host, port, zone, admin_user, admin_password
+            host, port, zone, username, password
         ) as session:
+            if not session.users.get(username, zone).type == "rodsadmin":
+                raise _IrodsAvuError(
+                    "'{0}' must be a rodsadmin user".format(username))
+
             entity = _get_entity(session, entity_type, entity_name)
 
             if state == "absent":
@@ -285,11 +289,11 @@ def _irods_avu(
             else:
                 raise _IrodsAvuError("state not implemented")
     except CAT_INVALID_AUTHENTICATION:
-        raise _IrodsAvuAuthenticationError(zone, admin_user)
+        raise _IrodsAvuAuthenticationError(zone, username)
     except CAT_INVALID_CLIENT_USER:
-        raise _IrodsAvuAuthenticationError(zone, admin_user)
+        raise _IrodsAvuAuthenticationError(zone, username)
     except CAT_INVALID_USER:
-        raise _IrodsAvuAuthenticationError(zone, admin_user)
+        raise _IrodsAvuAuthenticationError(zone, username)
 
 
 def _validate_params(
@@ -322,8 +326,8 @@ def _prep_module() -> AnsibleModule:
         host=dict(type='str', default="localhost.localdomain"),
         port=dict(type='int', default=1247),
         zone=dict(type='str', required=True),
-        admin_user=dict(type='str', default="rods"),
-        admin_password=dict(type='str', required=True, no_log=True))
+        username=dict(type='str', default="rods"),
+        password=dict(type='str', required=True, no_log=True))
 
     return AnsibleModule(argument_spec=options_spec)
 

@@ -1,6 +1,24 @@
 # Replication logic
 # include this file from within ipc-custom.re
 #
+# Replication is controlled by AVUs attached to relevant root resources.
+#
+# ipc::hosted-collection COLL (forced|preferred)
+#   When attached to a resource RESC, this AVU indicates that data objects that
+#   belong to COLL are to have their primary replica stored on RESC. When the
+#   unit is 'preferred', the user may override this. COLL is the path to the
+#   base collection relative to the zone collection. If a resource is determined
+#   by both the iRODS server a client connects to and an ipc::hosted-collection
+#   AVU, the AVU takes precedence. If two or more AVUs match, the resource whose
+#   COLL as the specific match is used.
+#
+# ipc::replica-resource REPL-RESC (forced|preferred)
+#   When attached to a resource RESC, this AVU indicates that the resource
+#   REPL-RESC is to asynchronously replicate the contents of RESC. When the unit
+#   is 'preferred', the user may override this.
+#
+# DEPRECATED FUNCTIONALITY
+#
 # Unlike the logic in ipc-logic.re, the replication logic doesn't apply
 # globally. Different projects may have different replication policies.
 #
@@ -71,13 +89,14 @@ _replicate(*Object, *RescName) {
     _repl_logMsg(*msg);
 # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
 #       iRODS version 4.2.1.
-    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_replicate(*Object, *RescName);}
+    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_replicate(*Object, *RescName)}
   } else {
     _repl_logMsg('replicated *Object');
   }
 }
 
 
+# DEPRECATED
 _mvReplicas(*DataPath, *IngestResc, *ReplResc) {
   _repl_logMsg('moving replicas of *DataPath');
 
@@ -111,6 +130,37 @@ _mvReplicas(*DataPath, *IngestResc, *ReplResc) {
 }
 
 
+_repl_mvReplicas(*DataPath, *IngestName, *ReplName) {
+  _repl_logMsg('moving replicas of *DataPath');
+
+  *replFail = false;
+
+  if (_replicate(*DataPath, *IngestName) < 0) {
+    *replFail = true;
+  }
+
+  if (_replicate(*DataPath, *ReplName) < 0) {
+    *replFail = true;
+  }
+
+  if (*replFail) {
+    fail;
+  }
+
+  # Once a replica exists on all the project's resource, remove the other replicas
+  msiSplitPath(*DataPath, *collPath, *dataName);
+
+  foreach (*repl in SELECT DATA_RESC_NAME WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName')
+  {
+    *rescName = *repl.DATA_RESC_NAME;
+
+    if (*rescName != *IngestName && *rescName != *ReplName) {
+      msiDataObjTrim(*DataPath, *rescName, 'null', '1', 'null', *status);
+    }
+  }
+}
+
+
 _syncReplicas(*Object) {
   _repl_logMsg('syncing replicas of *Object');
   *err = errormsg(msiDataObjRepl(*Object, 'all=++++updateRepl=++++verifyChksum=', *status), *msg);
@@ -120,7 +170,7 @@ _syncReplicas(*Object) {
     _repl_logMsg(*msg);
 # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
 #       iRODS version 4.2.1.
-    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object);}
+    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object)}
   } else {
     _repl_logMsg('synced replicas of *Object');
   }
@@ -156,18 +206,28 @@ _repl_logMsg(*Msg) {
 }
 
 
-# As of 4.2.1, Booleans and tuples are not supported by packing instructions. The resource
-# description tuple must be expanded, and the second term needs to be converted to a string.
-# TODO verify that this is still the case in iRODS 5. See https://github.com/irods/irods/issues/3634
-# for Boolean support.
+# DEPRECATED
+# XXX - As of 4.2.1, Booleans and tuples are not supported by packing instructions. The resource
+#       description tuple must be expanded, and the second term needs to be converted to a string.
+#       See https://github.com/irods/irods/issues/3634 for Boolean support.
+# TODO - verify that this is still the case in iRODS 4.2.2.
 _scheduleMv(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalStr) {
   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
-  {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)));}
+  {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)))}
 
   _incDelayTime;
 }
 
 
+_repl_scheduleMv(*Object, *IngestName, *ReplName) {
+  delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
+  {_repl_mvReplicas(*Object, *IngestName, *ReplName)}
+
+  _incDelayTime;
+}
+
+
+# DEPRECATED
 _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
   (*ingestName, *ingestOptional) = *IngestResc;
   (*replName, *replOptional) = *ReplResc;
@@ -192,9 +252,28 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
 }
 
 
+_repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
+  msiGetObjType(*Entity, *type);
+
+  if (*type == '-c') {
+    # if the entity is a collection
+    foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
+      foreach (*obj in SELECT COLL_NAME, DATA_NAME WHERE COLL_NAME LIKE '*collPat') {
+        *collPath = *obj.COLL_NAME;
+        *dataName = *obj.DATA_NAME;
+        _repl_scheduleMv('*collPath/*dataName', *IngestName, *ReplName);
+      }
+    }
+  } else if (*type == '-d') {
+    # if the entity is a data object
+    _repl_scheduleMv(*Entity, *IngestName, *ReplName);
+  }
+}
+
+
 _scheduleRepl(*Object, *RescName) {
   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>1s REPEAT 0 TIMES</EF>')
-  {_replicate(*Object, *RescName);}
+  {_replicate(*Object, *RescName)}
 
   _incDelayTime;
 }
@@ -224,7 +303,7 @@ _scheduleSyncReplicas(*Object) {
           _repl_logMsg(*msg);
   # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
   #       iRODS version 4.2.1.
-          delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object);}
+          delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object)}
         } else {
           # _repl_logMsg('synced replicas of *Object');
   # XXX - Due to https://github.com/irods/irods/issues/3621, _repl_logMsg has been inlined. Verify
@@ -240,6 +319,7 @@ _scheduleSyncReplicas(*Object) {
 }
 
 
+# DEPRECATED
 _createOrOverwrite(*Object, *IngestResc, *ReplResc) {
   if ($writeFlag == 0) {
     (*ingestName, *optional) = *IngestResc;
@@ -253,17 +333,73 @@ _createOrOverwrite(*Object, *IngestResc, *ReplResc) {
 }
 
 
+_repl_createOrOverwrite(*Object, *IngestResc, *ReplResc) {
+  if ($writeFlag == 0) {
+# XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
+#    _scheduleRepl(*Object, if $rescName == *ReplResc then *IngestResc else *ReplResc);
+# XXX - ^^^
+  } else {
+    _scheduleSyncReplicas(*Object);
+  }
+}
+
+
 _setDefaultResc(*Resource) {
   (*name, *optional) = *Resource;
   msiSetDefaultResc(*name, if *optional then 'preferred' else 'forced');
 }
 
 
+# Given an absolute path to a collection, this rule determines the resource
+# where member data objects have their primary replicas stored. It returns a
+# two-tuple with the first is element is the name of the resource, and the
+# second is the value 'forced' or 'preferred'. 'forced' means that the user
+# cannot override this choice, and 'preferred' means they can.
+_repl_findResc(*DataPath) {
+  msiSplitPath(*DataPath, *collPath, *dataName);
+  *resc = ipc_DEFAULT_RESC;
+  *residency = 'preferred';
+  *bestColl = '/';
+
+  foreach (*record in SELECT META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS, RESC_NAME
+                      WHERE META_RESC_ATTR_NAME = 'ipc::hosted-collection') {
+    if (*collPath ++ '/' like '/' ++ ipc_ZONE ++ '/' ++ *record.META_RESC_ATTR_VALUE ++ '/*') {
+      if (strlen(*record.META_RESC_ATTR_VALUE) > strlen(*bestColl)) {
+        *resc = *record.RESC_NAME;
+        *residency = *record.META_RESC_ATTR_UNITS;
+        *bestColl = *record.META_RESC_ATTR_VALUE;
+      }
+    }
+  }
+
+  *result = (*resc, *residency);
+  *result;
+}
+
+
+# Given a resource, this rule determines the list of resources that
+# asynchronously replicate its replicas.
+_repl_findReplResc(*Resc) {
+  *repl = ipc_DEFAULT_REPL_RESC;
+  *residency = 'preferred';
+
+  foreach (*record in SELECT META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
+                      WHERE RESC_NAME = *Resc AND META_RESC_ATTR_NAME = 'ipc::replica-resource') {
+    *repl = *record.META_RESC_ATTR_VALUE;
+    *residency = *record.META_RESC_ATTR_UNITS;
+  }
+
+  *result =(*repl, *residency);
+  *result;
+}
+
+
 # REPLICATION RULES
 
 # This rule ensures that copies of files are replicated.
-#
-replCopy {
+
+# DEPRECATED
+_old_replCopy {
   on (aegis_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
   }
@@ -277,9 +413,22 @@ replCopy {
   on (terraref_replBelongsTo(/$objPath)) {
   }
 }
-replCopy {
+_old_replCopy {
   _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
- }
+}
+
+# TODO - Once deprecated functionality is gone, move common logic with replPut into
+#        _repl_createOrOverwrite.
+replCopy {
+  (*resc, *_) = _repl_findResc($objPath);
+
+  if (*resc != ipc_DEFAULT_RESC) {
+    (*repl, *_) = _repl_findReplResc(*resc);
+    _repl_createOrOverwrite($objPath, *resc, *repl);
+  } else {
+    _old_replCopy;
+  }
+}
 
 
 # This rule updates the replicas if needed after a collection or data object has
@@ -289,8 +438,9 @@ replCopy {
 #  SourceObject  the absolute path to the collection or data object before it
 #                was moved
 #  DestObject    the absolute path after it was moved
-#
-replEntityRename(*SourceObject, *DestObject) {
+
+# DEPRECATED
+_old_replEntityRename(*SourceObject, *DestObject) {
   on (aegis_replBelongsTo(/*DestObject)) {
     if (!aegis_replBelongsTo(/*SourceObject)) {
       _scheduleMoves(*DestObject, aegis_replIngestResc, aegis_replReplResc);
@@ -314,18 +464,43 @@ replEntityRename(*SourceObject, *DestObject) {
     }
   }
 }
+_old_replEntityRename(*SourceObject, *DestObject) {
+  on (aegis_replBelongsTo(/*SourceObject)) {
+    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
+  }
+  on (avra_replBelongsTo(/*SourceObject)) {
+    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
+  }
+  on (pire_replBelongsTo(/*SourceObject)) {
+    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
+  }
+  on (terraref_replBelongsTo(/*SourceObject)) {
+    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
+  }
+}
+# DEPRECATION NOTE: When the conditional versions are ready to be deleted, merge this into
+#                   replEntityRename.
+_old_replEntityRename(*SourceObject, *DestObject) {
+  writeLine('serverLog', '_old_replEntityRename(*SourceObject, *DestObject) {');
+  (*srcResc, *_) = _repl_findResc(*SourceObject);
+
+  if (*srcResc != ipc_DEFAULT_RESC) {
+    _repl_scheduleMoves(*DestObject, ipc_DEFAULT_RESC, ipc_DEFAULT_REPL_RESC);
+  }
+}
+
 replEntityRename(*SourceObject, *DestObject) {
-  if (aegis_replBelongsTo(/*SourceObject)) {
-    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
-  }
-  if (avra_replBelongsTo(/*SourceObject)) {
-    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
-  }
-  if (pire_replBelongsTo(/*SourceObject)) {
-    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
-  }
-  if (terraref_replBelongsTo(/*SourceObject)) {
-    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
+  (*destResc, *_) = _repl_findResc(*DestObject);
+
+  if (*destResc != ipc_DEFAULT_RESC) {
+    (*srcResc, *_) = _repl_findResc(*SourceObject);
+
+    if (*srcResc != *destResc) {
+      (*destRepl, *_) = _repl_findReplResc(*destResc);
+      _repl_scheduleMoves(*DestObject, *destResc, *destRepl);
+    }
+  } else {
+    _old_replEntityRename(*SourceObject, *DestObject);
   }
 }
 
@@ -352,8 +527,9 @@ replFilePathReg {
 
 
 # This rule ensures that uploaded files are replicated.
-#
-replPut {
+
+# DEPRECATED
+_old_replPut {
   on (aegis_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
   }
@@ -367,15 +543,27 @@ replPut {
   on (terraref_replBelongsTo(/$objPath)) {
   }
 }
-replPut {
+_old_replPut {
   _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
+}
+
+replPut {
+  (*resc, *_) = _repl_findResc($objPath);
+
+  if (*resc != ipc_DEFAULT_RESC) {
+    (*repl, *_) = _repl_findReplResc(*resc);
+    _repl_createOrOverwrite($objPath, *resc, *repl);
+  } else {
+    _old_replPut;
+  }
 }
 
 
 # This rule ensures that the correct resource is chosen for first replica of a
 # newly created data object.
-#
-replSetRescSchemeForCreate {
+
+# DEPRECATED
+_old_replSetRescSchemeForCreate {
   on (aegis_replBelongsTo(/$objPath)) {
     _setDefaultResc(aegis_replIngestResc);
   }
@@ -392,15 +580,26 @@ replSetRescSchemeForCreate {
     _setDefaultResc(terraref_replIngestResc);
   }
 }
-replSetRescSchemeForCreate {
+_old_replSetRescSchemeForCreate {
   _setDefaultResc(_defaultIngestResc);
+}
+
+replSetRescSchemeForCreate {
+  (*resc, *residency) = _repl_findResc($objPath);
+
+  if (*resc != ipc_DEFAULT_RESC) {
+    msiSetDefaultResc(*resc, *residency);
+  } else {
+    _old_replSetRescSchemeForCreate;
+  }
 }
 
 
 # This rule ensures that the correct resource is chosen for the second and
 # subsequent replicas of a data object.
-#
-replSetRescSchemeForRepl {
+
+# DEPRECATED
+_old_replSetRescSchemeForRepl {
   on (aegis_replBelongsTo(/$objPath)) {
     _setDefaultResc(aegis_replReplResc);
   }
@@ -417,6 +616,17 @@ replSetRescSchemeForRepl {
     _setDefaultResc(terraref_replReplResc);
   }
 }
-replSetRescSchemeForRepl {
+_old_replSetRescSchemeForRepl {
   _setDefaultResc(_defaultReplResc);
+}
+
+replSetRescSchemeForRepl {
+  (*resc, *_) = _repl_findResc($objPath);
+
+  if (*resc != ipc_DEFAULT_RESC) {
+    (*repl, *residency) = _repl_findReplResc(*resc);
+    msiSetDefaultResc(*repl, *residency);
+  } else {
+    _old_replSetRescSchemeForRepl;
+  }
 }

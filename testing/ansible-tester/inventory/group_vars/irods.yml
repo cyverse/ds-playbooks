@@ -7,6 +7,10 @@ avra_resource_hierarchy:
   children:
     - name: avra
 
+cereus_projects:
+  - base_collection: /testing/home/shared/cereus
+    owner: rods
+
 de_job_irods_user: de_job
 
 irods_calliope_project_coll: /testing/home/shared/calliope

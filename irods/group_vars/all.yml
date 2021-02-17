@@ -22,6 +22,9 @@ _captcn_owners: "{{ captcn_owners | default([]) }}"
 _captcn_readers: "{{ captcn_readers | default([]) }}"
 _captcn_writers: "{{ captcn_writers | default([]) }}"
 
+_cereus_projects: "{{ cereus_projects | default([]) }}"
+_cereus_resource_hierarchy: "{{ cereus_resource | default(_irods_resource_hierarchies[0]) }}"
+
 _check_routes_timeout: "{{ check_routes_timeout | default(3) }}"
 
 _dbms_password: "{{ dbms_password | default('testpassword') }}"

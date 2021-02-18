@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Usage:
     test_module <module_folder> <module_name>
@@ -15,6 +15,8 @@ Optional Arguments:
                                     configuration files, vaults, and logs
     -p, --pretty                    more information will be output and
                                     newlines will be expanded in that output.
+    -v, --verbose                   lots of information will be written to
+                                    output.
 Example:
     ./test_module ../irods/library irods_group -i
 """
@@ -47,7 +49,7 @@ def main():
 
     if controller("start") == 0:
         run_tester(args.doInspect, args.pretty, module_dir, playbook,
-                   args.hosts)
+                   args.hosts, args.verbose)
     controller("stop")
 
 
@@ -77,6 +79,10 @@ def parse_args():
                         action="store_const", const=True, default=False,
                         help="more information will be output and newlines \
                         will be expanded in that output.")
+
+    parser.add_argument("-v", "--verbose", dest="verbose",
+                        action="store_const", const="verbose", default="",
+                        help="lots of information will be written to output")
 
     return parser.parse_args()
 
@@ -113,7 +119,7 @@ def controller(action):
     return return_code
 
 
-def run_tester(do_inspect, pretty, module_dir, playbook, hosts):
+def run_tester(do_inspect, pretty, module_dir, playbook, hosts, verbose):
     """
     Run ansible-tester docker container to start the testing
     """
@@ -133,11 +139,11 @@ def run_tester(do_inspect, pretty, module_dir, playbook, hosts):
             --network "$DOMAIN" \
             --volume "{1}/tests":/playbooks-under-test:ro \
             --volume "{1}":/playbooks-under-test/library:ro \
-            ansible-tester "{2}" "{3}" "{4}" "{5}";
+            ansible-tester "{2}" "{3}" "{4}" "{5}" "{6}";
      rmdir {1}/tests/library)
     """
     cmd = cmd.format(CFG, module_dir, sh_bool(do_inspect), sh_bool(pretty),
-                     playbook, hosts)
+                     playbook, hosts, verbose)
 
     proc = Popen(cmd, shell=True, executable="/bin/bash")
     return_code = proc.wait()

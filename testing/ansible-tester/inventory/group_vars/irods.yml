@@ -11,6 +11,12 @@ cereus_projects:
   - base_collection: /testing/home/shared/cereus
     owner: rods
 
+cereus_resource_hierarchy:
+  name: cereusRes
+  type: passthru
+  children:
+    - name: cereus
+
 de_job_irods_user: de_job
 
 irods_calliope_project_coll: /testing/home/shared/calliope

@@ -5,12 +5,12 @@
 #
 # ipc::hosted-collection COLL (forced|preferred)
 #   When attached to a resource RESC, this AVU indicates that data objects that
-#   belong to COLL are to have their primary replica stored on RESC. When the
-#   unit is 'preferred', the user may override this. COLL is the path to the
-#   base collection relative to the zone collection. If a resource is determined
-#   by both the iRODS server a client connects to and an ipc::hosted-collection
-#   AVU, the AVU takes precedence. If two or more AVUs match, the resource whose
-#   COLL as the specific match is used.
+#   belong to the collection COLL are to have their primary replica stored on
+#   RESC. When the unit is 'preferred', the user may override this. COLL is the
+#   absolute path to the base collection. If a resource is determined by both
+#   the iRODS server a client connects to and an ipc::hosted-collection AVU, the
+#   AVU takes precedence. If two or more AVUs match, the resource whose COLL has
+#   the specific match is used.
 #
 # ipc::replica-resource REPL-RESC (forced|preferred)
 #   When attached to a resource RESC, this AVU indicates that the resource
@@ -362,13 +362,12 @@ _repl_findResc(*DataPath) {
   *bestColl = '/';
 
   foreach (*record in SELECT META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS, RESC_NAME
-                      WHERE META_RESC_ATTR_NAME = 'ipc::hosted-collection') {
-    if (*collPath ++ '/' like '/' ++ ipc_ZONE ++ '/' ++ *record.META_RESC_ATTR_VALUE ++ '/*') {
-      if (strlen(*record.META_RESC_ATTR_VALUE) > strlen(*bestColl)) {
-        *resc = *record.RESC_NAME;
-        *residency = *record.META_RESC_ATTR_UNITS;
-        *bestColl = *record.META_RESC_ATTR_VALUE;
-      }
+                      WHERE META_RESC_ATTR_NAME = 'ipc::hosted-collection'
+                        AND META_RESC_ATTR_VALUE = '*collPath' || LIKE '*collPath/%') {
+    if (strlen(*record.META_RESC_ATTR_VALUE) > strlen(*bestColl)) {
+      *bestColl = *record.META_RESC_ATTR_VALUE;
+      *residency = *record.META_RESC_ATTR_UNITS;
+      *resc = *record.RESC_NAME;
     }
   }
 
@@ -506,8 +505,9 @@ replEntityRename(*SourceObject, *DestObject) {
 
 
 # This rule ensures that registered files are replicated.
-#
-replFilePathReg {
+
+# DEPRECATED
+_old_replFilePathReg {
   on (aegis_replBelongsTo(/$objPath)) {
     _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
   }
@@ -521,8 +521,19 @@ replFilePathReg {
   on (terraref_replBelongsTo(/$objPath)) {
   }
 }
-replFilePathReg {
+_old_replFilePathReg {
   _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
+}
+
+replFilePathReg {
+  (*resc, *_) = _repl_findResc($objPath);
+
+  if (*resc != ipc_DEFAULT_RESC) {
+    (*repl, *_) = _repl_findReplResc(*resc);
+    _repl_createOrOverwrite($objPath, *resc, *repl);
+  } else {
+    _old_replFilePathReg;
+  }
 }
 
 

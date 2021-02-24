@@ -363,7 +363,7 @@ _repl_findResc(*DataPath) {
 
   foreach (*record in SELECT META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS, RESC_NAME
                       WHERE META_RESC_ATTR_NAME = 'ipc::hosted-collection') {
-    if (*collPath + '/' like *record.META_RESC_ATTR_VALUE + '/*') {
+    if (*collPath ++ '/' like *record.META_RESC_ATTR_VALUE ++ '/*') {
       if (strlen(*record.META_RESC_ATTR_VALUE) > strlen(*bestColl)) {
         *bestColl = *record.META_RESC_ATTR_VALUE;
         *residency = *record.META_RESC_ATTR_UNITS;

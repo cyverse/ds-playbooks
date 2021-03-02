@@ -41,8 +41,8 @@
         or init_rodsadmin_perms
       script: scripts/init-rodsadmin-perms.sh '{{
         groups['dbms_primary'][0] }}' '{{
-        _dbms_port }}' '{{
-        _dbms_username }}' '{{
+        _irods_dbms_port }}' '{{
+        _irods_db_user }}' '{{
         _irods_zone_name }}'
       register: response
       changed_when: response.stdout == 'true'

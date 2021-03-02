@@ -9,14 +9,31 @@
 
 - name: configure | template configs
   template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
+    src: cyverse.conf.j2
+    dest: "{{ pg_conf_path }}/conf.d/cyverse.conf"
     owner: postgres
     group: postgres
-    mode: "{{ item.mode }}"
-  with_items:
-    - { src: cyverse.conf.j2, dest: "{{ pg_conf_path }}/conf.d/cyverse.conf", mode: "0640" }
-    - { src: pg_hba.conf.j2, dest: "{{ pg_conf_path }}/pg_hba.conf", mode: "0640" }
+    mode: "0640"
+  notify:
+    - restart postgres
+
+- name: configure | ensure block in pg_hba.conf exists
+  blockinfile:
+    path: "{{ pg_conf_path }}/pg_hba.conf"
+    insertafter: "{{ pg_hba_insertafter }}"
+    marker: "# {mark} postgres12 MANAGED BLOCK2"
+    block: |
+      {% for entry in pg_hba_users %}
+      {{ entry }}
+      {% endfor %}
+      {% if pg_upstream_node %}
+      {%  set ip = pg_upstream_node if pg_upstream_node|ipaddr else lookup('dig', pg_upstream_node) %}
+      host	replication	{{ pg_replication_user }}     {{ ip }}/32       trust
+      {% endif %}
+      {% for replica in pg_downstream_nodes %}
+      {%  set ip = replica if replica|ipaddr else lookup('dig', replica) %}
+      host	replication	{{ pg_replication_user }}    {{ ip }}/32        trust
+      {% endfor %}
   notify:
     - restart postgres
 
@@ -26,7 +43,7 @@
     path: "{{ pg_db_path }}/archive"
     owner: postgres
     group: postgres
-    mode: "0600"
+    mode: "0770"
 
 - name: configure | template pgpass file
   template:

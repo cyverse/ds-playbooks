@@ -7,6 +7,7 @@ pg_destroy_default_db_on_init: false
 pg_db: postgres
 pg_db_path: '/var/lib/postgresql/12/main' # changing this requires adjusting the systemctl file.
 pg_conf_path: '/etc/postgresql/12/main'
+pg_hba_insertafter: '# ----------------------------------'
 pg_max_wal_senders: 120
 pg_wal_keep_segments: 4000
 pg_max_connections: 1500

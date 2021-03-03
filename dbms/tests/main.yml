@@ -2,13 +2,16 @@
 - name: test postgresql12 role default template expansion
   hosts: localhost
   gather_facts: false
-  run_once: true
+  vars_files:
+    - ../roles/postgres12/defaults/main.yml
+  vars:
+    - cyverse_conf: "{{ lookup('template', '../roles/postgres12/templates/cyverse.conf.j2') }}"
   tasks:
-    - debug:
-        msg: TODO check list_addresses
-
-    - debug:
-        msg: TODO check port
+    - name: verify config values expand correctly in cyverse.conf
+      assert:
+        that:
+          - cyverse_conf is search("listen_addresses = '127.0.0.1'" | regex_escape)
+          - cyverse_conf is search("port = '5432'")
 
     - debug:
         msg: TODO check max_wal_senders
@@ -66,7 +69,7 @@
     - name: test default .pgpass expansion
       debug:
         msg: TODO implement
-        
+
 
 - name: test postgresql12 role custom var template expansion
   hosts: localhost

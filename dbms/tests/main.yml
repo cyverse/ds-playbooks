@@ -12,12 +12,8 @@
         that:
           - cyverse_conf is search("listen_addresses = '127.0.0.1'" | regex_escape)
           - cyverse_conf is search("port = '5432'")
-
-    - debug:
-        msg: TODO check max_wal_senders
-
-    - debug:
-        msg: TODO check wal_keep_segments
+          - cyverse_conf is search('max_wal_senders = 120')
+          - cyverse_conf is search('wal_keep_segments = 4000')
 
     - debug:
         msg: TODO check max_connections

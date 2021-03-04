@@ -1,11 +1,19 @@
 ---
+- name: configure | ensure postgres user owns home dir
+  file:
+    path: /var/lib/postgresql
+    state: directory
+    owner: postgres
+    group: postgres
+    recurse: yes
 
-# this is required because these facts don't exist otherwise https://gist.github.com/aliusmiles/e32a7296dda81438e56fff01d95d669b
-# - name: configure | gather facts
-#   setup:
-#   delegate_to: "{{ item }}"
-#   delegate_facts: True
-#   with_items: "{{ groups['pgpool_nodes'] }}"
+- name: configure | ensure archive dir exists
+  file:
+    state: directory
+    path: "{{ pg_db_path }}/archive"
+    owner: postgres
+    group: postgres
+    mode: "0770"
 
 - name: configure | template configs
   template:
@@ -36,14 +44,6 @@
       {% endfor %}
   notify:
     - restart postgres
-
-- name: configure | ensure archive dir exists
-  file:
-    state: directory
-    path: "{{ pg_db_path }}/archive"
-    owner: postgres
-    group: postgres
-    mode: "0770"
 
 - name: configure | template pgpass file
   template:

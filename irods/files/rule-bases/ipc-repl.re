@@ -420,11 +420,9 @@ _old_replCopy {
 # TODO - Once deprecated functionality is gone, move common logic with replPut into
 #        _repl_createOrOverwrite.
 replCopy {
-  (*resc, *_) = _repl_findResc($objPath);
-
-  if (*resc != ipc_DEFAULT_RESC) {
-    (*repl, *_) = _repl_findReplResc(*resc);
-    _repl_createOrOverwrite($objPath, *resc, *repl);
+  if ($rescName != ipc_DEFAULT_RESC) {
+    (*repl, *_) = _repl_findReplResc($rescName);
+    _repl_createOrOverwrite($objPath, $rescName, *repl);
   } else {
     _old_replCopy;
   }
@@ -481,7 +479,6 @@ _old_replEntityRename(*SourceObject, *DestObject) {
 # DEPRECATION NOTE: When the conditional versions are ready to be deleted, merge this into
 #                   replEntityRename.
 _old_replEntityRename(*SourceObject, *DestObject) {
-  writeLine('serverLog', '_old_replEntityRename(*SourceObject, *DestObject) {');
   (*srcResc, *_) = _repl_findResc(*SourceObject);
 
   if (*srcResc != ipc_DEFAULT_RESC) {
@@ -527,11 +524,9 @@ _old_replFilePathReg {
 }
 
 replFilePathReg {
-  (*resc, *_) = _repl_findResc($objPath);
-
-  if (*resc != ipc_DEFAULT_RESC) {
-    (*repl, *_) = _repl_findReplResc(*resc);
-    _repl_createOrOverwrite($objPath, *resc, *repl);
+  if ($rescName != ipc_DEFAULT_RESC) {
+    (*repl, *_) = _repl_findReplResc($rescName);
+    _repl_createOrOverwrite($objPath, $rescName, *repl);
   } else {
     _old_replFilePathReg;
   }
@@ -560,11 +555,9 @@ _old_replPut {
 }
 
 replPut {
-  (*resc, *_) = _repl_findResc($objPath);
-
-  if (*resc != ipc_DEFAULT_RESC) {
-    (*repl, *_) = _repl_findReplResc(*resc);
-    _repl_createOrOverwrite($objPath, *resc, *repl);
+  if ($rescName != ipc_DEFAULT_RESC) {
+    (*repl, *_) = _repl_findReplResc($rescName);
+    _repl_createOrOverwrite($objPath, $rescName, *repl);
   } else {
     _old_replPut;
   }

@@ -188,16 +188,16 @@ _defaultReplResc = (ipc_DEFAULT_REPL_RESC, true)
 
 
 _delayTime : int
-_delayTime = if (errorcode(temporaryStorage.delayTime) < 0) {
-               temporaryStorage.delayTime = '1';
+_delayTime = if (errorcode(temporaryStorage.repl_delayTime) < 0) {
+               temporaryStorage.repl_delayTime = '1';
                1;
              } else {
-               int(temporaryStorage.delayTime);
+               int(temporaryStorage.repl_delayTime);
              }
 
 
 _incDelayTime {
-  temporaryStorage.delayTime = str(1 + int(temporaryStorage.delayTime));
+  temporaryStorage.repl_delayTime = str(1 + int(temporaryStorage.repl_delayTime));
 }
 
 
@@ -597,12 +597,15 @@ _old_replSetRescSchemeForCreate {
 }
 
 replSetRescSchemeForCreate {
-  (*resc, *residency) = _repl_findResc($objPath);
+  # XXX iRODS 4.1.10 bug workaround. This prevents irepl from failing
+  if (errorcode(temporaryStorage.'repl_$objPath') < 0) {
+    (*resc, *residency) = _repl_findResc($objPath);
 
-  if (*resc != ipc_DEFAULT_RESC) {
-    msiSetDefaultResc(*resc, *residency);
-  } else {
-    _old_replSetRescSchemeForCreate;
+    if (*resc != ipc_DEFAULT_RESC) {
+      msiSetDefaultResc(*resc, *residency);
+    } else {
+      _old_replSetRescSchemeForCreate;
+    }
   }
 }
 
@@ -641,4 +644,7 @@ replSetRescSchemeForRepl {
   } else {
     _old_replSetRescSchemeForRepl;
   }
+
+  # XXX iRODS 4.1.10 bug workaround. This prevents irepl from failing
+  temporaryStorage.'repl_$objPath' = 'REPL_RESC_SET';
 }

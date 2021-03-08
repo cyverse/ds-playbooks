@@ -421,9 +421,9 @@ _old_replCopy {
 #        _repl_createOrOverwrite.
 replCopy {
   # TODO once _old_replPut is removed, $rescName should be used
-  (*resc, *_) = _repl_findResc($rescName);
+  (*resc, *_) = _repl_findResc($objPath);
 
-  if ((resc != ipc_DEFAULT_RESC) {
+  if (*resc != ipc_DEFAULT_RESC) {
     (*repl, *_) = _repl_findReplResc(*resc);
     _repl_createOrOverwrite($objPath, *resc, *repl);
   } else {
@@ -559,7 +559,7 @@ _old_replPut {
 
 replPut {
   # TODO once _old_replPut is removed, $rescName should be used
-  (*resc, *_) = _repl_findResc($rescName);
+  (*resc, *_) = _repl_findResc($objPath);
 
   if (*resc != ipc_DEFAULT_RESC) {
     (*repl, *_) = _repl_findReplResc(*resc);

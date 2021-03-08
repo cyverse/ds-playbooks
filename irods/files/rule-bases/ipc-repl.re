@@ -420,9 +420,12 @@ _old_replCopy {
 # TODO - Once deprecated functionality is gone, move common logic with replPut into
 #        _repl_createOrOverwrite.
 replCopy {
-  if ($rescName != ipc_DEFAULT_RESC) {
-    (*repl, *_) = _repl_findReplResc($rescName);
-    _repl_createOrOverwrite($objPath, $rescName, *repl);
+  # TODO once _old_replPut is removed, $rescName should be used
+  (*resc, *_) = _repl_findResc($rescName);
+
+  if ((resc != ipc_DEFAULT_RESC) {
+    (*repl, *_) = _repl_findReplResc(*resc);
+    _repl_createOrOverwrite($objPath, *resc, *repl);
   } else {
     _old_replCopy;
   }
@@ -555,9 +558,12 @@ _old_replPut {
 }
 
 replPut {
-  if ($rescName != ipc_DEFAULT_RESC) {
-    (*repl, *_) = _repl_findReplResc($rescName);
-    _repl_createOrOverwrite($objPath, $rescName, *repl);
+  # TODO once _old_replPut is removed, $rescName should be used
+  (*resc, *_) = _repl_findResc($rescName);
+
+  if (*resc != ipc_DEFAULT_RESC) {
+    (*repl, *_) = _repl_findReplResc(*resc);
+    _repl_createOrOverwrite($objPath, *resc, *repl);
   } else {
     _old_replPut;
   }

@@ -7,8 +7,9 @@ RUN yum --assumeyes install postgresql12 postgresql12-odbc \
 RUN yum --assumeyes install \
       https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-database-plugin-postgres-1.10-centos7-x86_64.rpm
 RUN yum --assumeyes install \
-      jq libselinux-python moreutils python-pip python-requests python-virtualenv
+      jq libselinux-python moreutils python-pip python-requests python-virtualenv which
 RUN pip install pika
+
 RUN touch /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py
 
 COPY ies/config/ipc-housekeeping.re /etc/irods/
@@ -38,5 +39,8 @@ ARG IRODS_ZONE_USER=rods
 
 RUN /tmp/config-irods.sh
 RUN /tmp/prep-svc-script.sh
+
+RUN yum --assumeyes install python3
+RUN python3 -m pip --quiet install python-irodsclient
 
 CMD [ "/service.sh" ]

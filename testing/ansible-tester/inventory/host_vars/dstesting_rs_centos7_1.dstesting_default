@@ -1,4 +1,6 @@
 ---
+ansible_python_interpreter: /usr/bin/python
+
 # XXX - We can't test creating a new user. It causes msiSetAVU to be called on
 # the IES, but the IES doesn't have that module installed unless create_ies.yml
 # is called first.

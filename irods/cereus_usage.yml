@@ -1,0 +1,18 @@
+---
+- import_playbook: mk_storage_resources.yml
+
+
+- name: Configure IES for Cereus
+  hosts: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  run_once: true
+  tasks:
+    - name: create cereus resource
+      irods_resource_hierarchy:
+        hierarchy: "{{ _cereus_resource_hierarchy }}"
+
+    - include_tasks: tasks/create_cereus_project.yml
+      with_items: "{{ _cereus_projects }}"
+      loop_control:
+        loop_var: project

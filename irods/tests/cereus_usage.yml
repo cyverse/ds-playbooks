@@ -1,0 +1,36 @@
+---
+- import_playbook: mk_storage_resources.yml
+
+
+- name: test configure IES for cereus
+  hosts: ies
+  become: true
+  become_user: irods
+  run_once: true
+  tasks:
+    - name: test make cereus resource hierarchy
+      shell: |
+        printf -v expHier 'cereusRes:passthru\n└── cereus'
+        actHier=$(ilsresc cereusRes)
+        [ "$actHier" = "$expHier" ]
+      changed_when: false
+
+    - name: test create project collection
+      shell: ils /testing/home/shared/cereus &> /dev/null
+      changed_when: false
+
+    - name: test assign owner to project Collection
+      shell: ils -A /testing/home/shared/cereus | sed --quiet 2p | grep --quiet rods#testing:own
+      changed_when: false
+
+    - name: test assign collection to Cereus resource
+      shell: |
+        num="$(iquest '%s' \
+                 "select count(META_RESC_ATTR_ID)
+                  where RESC_NAME = 'cereusRes'
+                    and META_RESC_ATTR_NAME = 'ipc::hosted-collection'
+                    and META_RESC_ATTR_VALUE = '/testing/home/shared/cereus'
+                    and META_RESC_ATTR_UNITS = 'preferred'")"
+
+        (( num == 1 ))
+      changed_when: false

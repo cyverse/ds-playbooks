@@ -1,4 +1,6 @@
 ---
+ansible_python_interpreter: /usr/bin/python
+
 irods_default_dir_mode: '0770'
 irods_default_file_mode: '0660'
 
@@ -9,6 +11,10 @@ irods_host_aliases:
 irods_storage_resources:
   - name: avra
     vault: /var/lib/irods/avra_vault
+    context: minimum_free_space_for_create_in_bytes=1048576
+
+  - name: cereus
+    vault: /var/lib/irods/cereus_vault
     context: minimum_free_space_for_create_in_bytes=1048576
 
   - name: pire

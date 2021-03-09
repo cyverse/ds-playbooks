@@ -10,8 +10,12 @@
 #  PRETTY    if this is `true`, more info is dumped and newlines in ouput are
 #            expanded.
 #  HOSTS     the inventory hosts to test against
+#  VERBOSE   if this is set to any value, ansible will be passed the verbose
+#            flag -vvv
 #
 # This program executes and ansible playbook on the test environment.
+
+set -u -o pipefail
 
 
 main()
@@ -20,13 +24,14 @@ main()
   local pretty="$2"
   local playbook="$3"
   local hosts="$4"
+  local verbose="$5"
 
   if [ "$pretty" = true ]
   then
     export ANSIBLE_STDOUT_CALLBACK=minimal
   fi
 
-  do_test "$playbook" "$hosts"
+  do_test "$playbook" "$hosts" "$verbose"
 
   if [ "$inspect" = true ]
   then
@@ -43,10 +48,17 @@ do_test()
 {
   local playbook="$1"
   local hosts="$2"
+  local verbose="$3"
 
   local inventory=/inventory/"$hosts"
   local playbookPath=/playbooks-under-test/"$playbook"
   local testPath=/playbooks-under-test/tests/"$playbook"
+
+  local verbosity
+  if [ -n "$verbose" ]
+  then
+    verbosity=-vvv
+  fi
 
   printf 'Waiting for environment to be ready\n'
   if ! ansible-playbook --inventory-file "$inventory" /wait-for-ready.yml > /dev/null
@@ -61,12 +73,13 @@ do_test()
   fi
 
   printf 'Running playbook\n'
-  if ! ansible-playbook --inventory-file "$inventory" --skip-tags no_testing "$playbookPath"
+  if ! ansible-playbook ${verbosity=} --inventory-file "$inventory" --skip-tags no_testing \
+    "$playbookPath"
   then
     return 1
   fi
 
-  local libPathOption=""
+  local libPathOption
   # add the option for module-path only if a library directory exists
   if [ -d /playbooks-under-test/library ]
   then
@@ -76,7 +89,8 @@ do_test()
   if [ -e "$testPath" ]
   then
     printf 'Checking configuration\n'
-    if ! ansible-playbook --inventory-file "$inventory" "$testPath" ${libPathOption}
+    if ! ansible-playbook ${verbsosity=} --inventory-file "$inventory" ${libPathOption=} \
+      "$testPath"
     then
       return 1
     fi
@@ -98,5 +112,4 @@ do_test()
 }
 
 
-set -u -o pipefail
 main "$@"

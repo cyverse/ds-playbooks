@@ -1,6 +1,7 @@
 FROM williamyeh/ansible:centos7
 
-RUN pip --quiet install --upgrade pip
+RUN yum --assumeyes install python3-pip
+RUN pip3 --quiet install --upgrade pip
 
 ### Upgrading directly from ansible-2.9 or less to ansible-2.10 or greater with pip is known to cause problems.
 #RUN pip --quiet install --upgrade ansible Jinja2

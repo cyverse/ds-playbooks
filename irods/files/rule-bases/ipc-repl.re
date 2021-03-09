@@ -81,8 +81,10 @@
 
 _replicate(*Object, *RescName) {
   _repl_logMsg('replicating *Object to *RescName');
+  temporaryStorage.repl_replicate = 'REPL_FORCED_REPL_RESC';
   *err = errormsg(msiDataObjRepl(*Object, 'backupRescName=*RescName++++verifyChksum=', *status),
                   *msg);
+  temporaryStorage.repl_replicate = '';
 
   if (*err < 0 && *err != -808000 && *err != -817000) {
     _repl_logMsg('failed to replicate *Object, retry in 8 hours');
@@ -635,13 +637,17 @@ _old_replSetRescSchemeForRepl {
 }
 
 replSetRescSchemeForRepl {
-  (*resc, *_) = _repl_findResc($objPath);
+  if (errorcode(temporaryStorage.repl_replicate) < 0
+    || temporaryStorage.repl_replicate != 'REPL_FORCED_REPL_RESC')
+  {
+    (*resc, *_) = _repl_findResc($objPath);
 
-  if (*resc != ipc_DEFAULT_RESC) {
-    (*repl, *residency) = _repl_findReplResc(*resc);
-    msiSetDefaultResc(*repl, *residency);
-  } else {
-    _old_replSetRescSchemeForRepl;
+    if (*resc != ipc_DEFAULT_RESC) {
+      (*repl, *residency) = _repl_findReplResc(*resc);
+      msiSetDefaultResc(*repl, *residency);
+    } else {
+      _old_replSetRescSchemeForRepl;
+    }
   }
 
   # XXX iRODS 4.1.10 bug workaround. This prevents irepl from failing

@@ -653,3 +653,10 @@ replSetRescSchemeForRepl {
   # XXX iRODS 4.1.10 bug workaround. This prevents irepl from failing
   temporaryStorage.'repl_$objPath' = 'REPL_RESC_SET';
 }
+
+
+pep_resource_resolve_hierarchy_pre(*OUT) {
+  on (errorcode(temporaryStorage.repl_replicate) == 0
+    && temporaryStorage.repl_replicate == 'REPL_FORCED_REPL_RESC')
+  {}
+}

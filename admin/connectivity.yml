@@ -3,7 +3,7 @@
   hosts: all:!localhost
   tasks:
     - name: install key
-      ansible.posix.authorized_key:
+      authorized_key:
         user: "{{ ansible_user_id }}"
         state: present
         key: "{{ item }}"

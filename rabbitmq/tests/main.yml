@@ -13,4 +13,4 @@
           - >
             'rabbitmq-server' in ansible_facts.packages and
             ansible_facts.packages['rabbitmq-server'] | length == 1 and
-            ansible_facts.packages['rabbitmq-server'][0].version is version_compare('3.5.1', '>=')
+            ansible_facts.packages['rabbitmq-server'][0].version is version_compare('3.8.14', '>=')

@@ -1,0 +1,7 @@
+---
+- name: test install maintainer keys
+  hosts: all:!localhost
+  tasks:
+    - name: test install key
+      shell: grep --quiet 'testing env maintainer' "$HOME"/.ssh/authorized_keys
+      changed_when: false

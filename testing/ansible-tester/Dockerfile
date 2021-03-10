@@ -6,7 +6,6 @@ RUN pip3 --quiet install --upgrade pip
 ### Upgrading directly from ansible-2.9 or less to ansible-2.10 or greater with pip is known to cause problems.
 #RUN pip --quiet install --upgrade ansible Jinja2
 RUN pip --quiet install --upgrade Jinja2
-RUN pip --quiet uninstall --yes ansible
 RUN pip --quiet install ansible
 
 RUN yum --assumeyes install \

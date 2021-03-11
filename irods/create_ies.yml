@@ -2,8 +2,6 @@
 - name: allow IES to talk to DBMS
   hosts: dbms
   become: true
-  vars:
-    __icat_dbms_dir: /etc/postgresql/12/main
   tasks:
     - name: enable notifications when not testing
       set_fact:
@@ -13,7 +11,7 @@
 
     - name: allow IES to communicate with Postgres DBMS
       blockinfile:
-        path: "{{ __icat_dbms_dir }}/pg_hba.conf"
+        path: "{{ _irods_dbms_pg_hba }}"
         marker: "# {mark} DS IRODS MANAGED BLOCK"
         block: |
           {% for i in groups['ies'] %}
@@ -47,9 +45,38 @@
       tags:
         - no_testing
 
-    - name: ensure PostgreSQL 12 repo installed
+    - name: verify PostgreSQL client version is 9.3 or 12
+      when: _irods_dbms_pg_version != '9.3' and _irods_dbms_pg_version != '12'
+      fail:
+        msg: Only PostgreSQL client versions 9.3 and 12 are supported
+
+    - name: ensure PostgreSQL 9.3 clients are installed
+      when: _irods_dbms_pg_version == '9.3'
       yum:
-        name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+        name:
+          - https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/postgresql93-libs-9.3.25-1PGDG.rhel7.x86_64.rpm
+          - https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/postgresql93-9.3.25-1PGDG.rhel7.x86_64.rpm
+          - https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/postgresql93-odbc-10.03.0000-1PGDG.rhel7.x86_64.rpm
+
+    - when: _irods_dbms_pg_version == '12'
+      block:
+        - name: ensure PostgreSQL 12 repo is installed
+          yum:
+            name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+        - name: ensure PostgreSQL 12 clients are installed
+          package:
+            name:
+              - postgresql12
+              - postgresql12-odbc
+            state: present
+
+        - name: add postgres 12 clients to path
+          copy:
+            src: "{{ item }}"
+            dest: /etc/profile.d
+          with_fileglob:
+            - "files/profile.d/*"
 
     - name: ensure required packages are installed
       package:
@@ -58,22 +85,6 @@
       with_items:
         - mailx
         - parallel
-        - postgresql12
-#        - postgresql12-odbc
-# XXX postgresql12-odbc package is currently unsigned, causing package to fail
-#     to install it. Once it is signed again, revert this change.
-    - yum:
-        name: postgresql12-odbc
-        disable_gpg_check: yes
-
-    - name: ensure PostgreSQL 9 clients are removed
-      package:
-        name:
-          - postgresql93
-          - postgresql93-libs
-          - postgresql93-odbc
-        state: absent
-      notify: stop ies
 
     - name: ensure pika installed
       pip:
@@ -84,20 +95,6 @@
 
     - import_tasks: tasks/install_plugins.yml
 
-    - name: add postgres 12 clients to path
-      copy:
-        src: "{{ item }}"
-        dest: /etc/profile.d
-      with_fileglob:
-        - "files/profile.d/*"
-
-
-  handlers:
-    - name: stop ies
-      become: "{{ _become_svc_acnt }}"
-      become_user: "{{ _irods_service_account_name }}"
-      irods_ctl:
-        state: stopped
 
 - import_playbook: cfg_irods.yml
 

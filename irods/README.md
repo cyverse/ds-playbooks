@@ -41,6 +41,8 @@ Variable                                   | Default                            
 `irods_clerver_user`                       | rods                                 |         | the rodsadmin user to be used by the server being configured
 `irods_db_password`                        | testpassword                         |         | The password iRODS uses when connecting to the ICAT DB.
 `irods_db_user`                            | irods                                |         | The user iRODS uses when connecting to the ICAT DB.
+`irods_dbms_pg_hba`                        | /etc/postgresql/12/main/pg_hba.conf  |         | The absolute path to the pg_hba.conf file on the DBMS hosting the ICAT DB
+`irods_dbms_pg_version`                    | 12                                   | 9.3, 12 | The version of the PostgreSQL client to install.
 `irods_dbms_port`                          | 5432                                 |         | The TCP port the DBMS listens on.
 `irods_default_dir_mode`                   | 0750                                 |         | the default permissions assigned to newly created directories in the vault
 `irods_default_file_mode`                  | 0600                                 |         | the default permissions assigned to newly created files in the vault

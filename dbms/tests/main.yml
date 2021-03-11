@@ -14,12 +14,8 @@
           - cyverse_conf is search("port = '5432'")
           - cyverse_conf is search('max_wal_senders = 120')
           - cyverse_conf is search('wal_keep_segments = 4000')
-
-    - debug:
-        msg: TODO check max_connections
-
-    - debug:
-        msg: TODO check effective_cache_size
+          - cyverse_conf is search('max_connections = 1500')
+          - cyverse_conf is search('effective_cache_size = 1GB')
 
     - debug:
         msg: TODO check shared_buffers

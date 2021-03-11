@@ -26,6 +26,7 @@
         pg_downstream_nodes: "{{ groups['dbms_replicas'] }}"
         pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int // 2 }}MB"
         pg_listen_addresses: "{{ ansible_facts['all_ipv4_addresses'] }}"
+        pg_listen_port: "{{ _dbms_port }}"
         pg_log_min_duration_statement: "{{ _dbms_log_min_duration }}"
         pg_replication_pass: "{{ _dbms_replication_password }}"
         pg_replication_user: "{{ _dbms_replication_user }}"
@@ -41,6 +42,7 @@
       vars:
         pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int // 2 }}MB"
         pg_listen_addresses: "{{ ansible_facts['all_ipv4_addresses'] }}"
+        pg_listen_port: "{{ _dbms_port }}"
         pg_log_min_duration_statement: "{{ _dbms_log_min_duration }}"
         pg_replication_pass: "{{ _dbms_replication_password }}"
         pg_replication_user: "{{ _dbms_replication_user }}"

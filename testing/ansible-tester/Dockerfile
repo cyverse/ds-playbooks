@@ -1,10 +1,10 @@
 FROM williamyeh/ansible:centos7
 
-RUN pip --quiet install --upgrade pip
+RUN pip --quiet install --upgrade 'pip<21'
 
 ### Upgrading directly from ansible-2.9 or less to ansible-2.10 or greater with pip is known to cause problems.
 #RUN pip --quiet install --upgrade ansible Jinja2
-RUN pip --quiet install --upgrade Jinja2
+RUN pip --disable-pip-version-check --quiet install --upgrade Jinja2
 RUN pip --quiet uninstall --yes ansible
 RUN pip --quiet install ansible
 

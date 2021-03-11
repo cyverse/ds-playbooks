@@ -3,13 +3,14 @@ FROM test-env-base:centos7
 RUN yum --assumeyes install \
       https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
-RUN yum --assumeyes install postgresql12 postgresql12-odbc \
+RUN yum --assumeyes install \
+      jq moreutils postgresql12 postgresql12-odbc python-pip python-requests python-virtualenv \
+      python3 which \
       https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icat-4.1.10-centos7-x86_64.rpm
 RUN yum --assumeyes install \
       https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-database-plugin-postgres-1.10-centos7-x86_64.rpm
-RUN yum --assumeyes install \
-      jq libselinux-python moreutils python-pip python-requests python-virtualenv
 RUN pip --disable-pip-version-check install pika
+RUN python3 -m pip --quiet install python-irodsclient
 RUN touch /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py
 
 COPY ies/config/ipc-housekeeping.re /etc/irods/

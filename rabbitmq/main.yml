@@ -23,6 +23,11 @@
       tags:
         no_testing
 
+    - name: place rabbitmq config file
+      template:
+        src: templates/rabbitmq.conf.j2
+        dest: "/etc/rabbitmq/rabbitmq.conf"
+
     - name: start broker
       service:
         name: rabbitmq-server

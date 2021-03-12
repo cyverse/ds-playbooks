@@ -1,0 +1,16 @@
+---
+- name: test set up RabbitMQ broker
+  hosts: rabbitmq
+  become: true
+  tasks:
+    - name: retrieve facts about distro packages
+      package_facts:
+
+    - name: verify correct packages installed
+      assert:
+        that:
+          - "'epel-release' in ansible_facts.packages"
+          - >
+            'rabbitmq-server' in ansible_facts.packages and
+            ansible_facts.packages['rabbitmq-server'] | length == 1 and
+            ansible_facts.packages['rabbitmq-server'][0].version is version_compare('3.8.14', '>=')

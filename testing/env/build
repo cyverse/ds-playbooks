@@ -9,8 +9,7 @@
 #
 # Builds the five docker images with the provided configuration values.
 
-set -e
-
+set -o errexit
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -18,6 +17,7 @@ then
 else
   readonly ExecName=$(readlink --canonicalize "$0")
 fi
+
 
 main()
 {

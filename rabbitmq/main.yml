@@ -74,6 +74,7 @@
         exchange_type: topic
         login_user: "{{ _admin_user }}"
         login_password: "{{ _admin_password }}"
+        login_port: "{{ _rabbitmq_management_port }}"
         vhost: "/{{ _deploy_env }}/data-store"
       tags:
         no_testing

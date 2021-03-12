@@ -49,6 +49,8 @@ _irods_client_server_policy: CS_NEG_REFUSE
 _irods_db_password: "{{ irods_db_password | default('testpassword') }}"
 _irods_db_user: "{{ irods_db_user | default('irods') }}"
 
+_irods_dbms_pg_hba: "{{ irods_dbms_pg_hba | default('/etc/postgresql/12/main/pg_hba.conf') }}"
+_irods_dbms_pg_version: "{{ irods_dbms_pg_version | default('12') }}"
 _irods_dbms_port: "{{ irods_dbms_port | default(5432) }}"
 
 _irods_default_dir_mode: "{{ irods_default_dir_mode if irods_default_dir_mode is defined else

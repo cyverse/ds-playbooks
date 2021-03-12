@@ -99,11 +99,9 @@
       changed_when: false
 
     - name: test start quota usage computation
-      shell: iqstat -a | grep --quiet _ipc_updateQuotaUsage
+      shell: iqstat -a | grep --quiet {{ item }}
+      with_items:
+        - _ipc_updateQuotaUsage
+        - _ipc_determineAllStorageFreeSpace
+        - _ipc_determineAllStorageFreeSpace
       changed_when: false
-
-    - debug:
-        msg: TODO test start storage free space determination
-
-    - debug:
-        msg: TODO test start trash removal

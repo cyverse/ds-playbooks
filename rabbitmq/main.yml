@@ -33,7 +33,7 @@
 
     - name: create data store virtual host
       rabbitmq_vhost:
-        name: /{{ _deploy_env }}/data-store
+        name: "/{{ _deploy_env }}/data-store"
       tags:
         no_testing
 
@@ -41,15 +41,23 @@
       rabbitmq_user:
         user: "{{ _admin_user }}"
         password: "{{ _admin_password }}"
-        permissions:
-          - vhost: /
-            configure_priv: .*
-            read_priv: .*
-            write_priv: .*
-          - vhost: /{{ _deploy_env }}/data-store
-            configure_priv: .*
-            read_priv: .*
-            write_priv: .*
+        vhost: /
+        configure_priv: .*
+        read_priv: .*
+        write_priv: .*
+        tags: administrator
+        state: present
+      tags:
+        no_testing
+
+    - name: set admin user perms on data-store vhost
+      rabbitmq_user:
+        user: "{{ _admin_user }}"
+        password: "{{ _admin_password }}"
+        vhost: "/{{ _deploy_env }}/data-store"
+        configure_priv: .*
+        read_priv: .*
+        write_priv: .*
         tags: administrator
         state: present
       tags:
@@ -61,6 +69,7 @@
         exchange_type: topic
         login_user: "{{ _admin_user }}"
         login_password: "{{ _admin_password }}"
+        vhost: "/{{ _deploy_env }}/data-store"
       tags:
         no_testing
 

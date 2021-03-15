@@ -42,15 +42,6 @@
       loop_control:
         loop_var: pkg
 
-    - package_facts:
-
-    - name: test ensure PostgreSQL 9 clients are removed
-      when: >
-        'postgresql93' in ansible_facts.packages or
-        'postgresql93-libs' in ansible_facts.packages or
-        'postgresql93-odbc' in ansible_facts.packages
-      fail:
-
     - name: test ensure pika installed
       command: pip --disable-pip-version-check show pika
       changed_when: false

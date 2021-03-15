@@ -1,1 +1,1 @@
-deb https://www.rabbitmq.com/debian/ testing main
+#deb https://www.rabbitmq.com/debian/ testing main

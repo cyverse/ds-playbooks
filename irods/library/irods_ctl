@@ -29,7 +29,7 @@ def _call_irodsctl(arg):
 
 
 def _is_running():
-  return "No servers running" not in _call_irodsctl("status")
+  return "No servers running" not in str(_call_irodsctl("status"))
 
 
 def _ensure_started():

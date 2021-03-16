@@ -103,5 +103,5 @@
       with_items:
         - _ipc_updateQuotaUsage
         - _ipc_determineAllStorageFreeSpace
-        - _ipc_determineAllStorageFreeSpace
+        - _ipc_rmTrash
       changed_when: false

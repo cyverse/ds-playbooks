@@ -16,12 +16,8 @@
           - cyverse_conf is search('wal_keep_segments = 4000')
           - cyverse_conf is search('max_connections = 1500')
           - cyverse_conf is search('effective_cache_size = 1GB')
-
-    - debug:
-        msg: TODO check shared_buffers
-
-    - debug:
-        msg: TODO check work_mem
+          - cyverse_conf is search('shared_buffers = 1GB')
+          - cyverse_conf is search('work_mem = 64MB')
 
     - debug:
         msg: TODO check maintenance_work_mem

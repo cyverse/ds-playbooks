@@ -61,11 +61,13 @@
     - name: create ICAT DB
       postgresql_db:
         name: ICAT
+        port: "{{ _dbms_port }}"
 
     - name: create iRODS user
       postgresql_user:
         name: "{{ _dbms_irods_user }}"
         password: "{{ _dbms_irods_password }}"
         db: ICAT
-        priv: ALL
+        priv: all
+        port: "{{ _dbms_port }}"
       no_log: true

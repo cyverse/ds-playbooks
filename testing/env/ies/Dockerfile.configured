@@ -41,7 +41,4 @@ ARG IRODS_ZONE_USER=rods
 RUN /tmp/config-irods.sh
 RUN /tmp/prep-svc-script.sh
 
-RUN yum --assumeyes install python3
-RUN python3 -m pip --quiet install python-irodsclient
-
 CMD [ "/service.sh" ]

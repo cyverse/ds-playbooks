@@ -7,9 +7,8 @@ avra_resource_hierarchy:
   children:
     - name: avra
 
-cereus_projects:
-  - base_collection: /testing/home/shared/cereus
-    owner: rods
+cereus_collections:
+  - /testing/home/shared/cereus
 
 cereus_resource_hierarchy:
   name: cereusRes

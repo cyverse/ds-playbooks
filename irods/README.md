@@ -31,7 +31,7 @@ Variable                                   | Default                            
 `captcn_owners`                            | `[]`                                 |         | a list of users who get ownership of CAP_TCN collections
 `captcn_readers`                           | `[]`                                 |         | a list of users who get read access to CAP_TCN collections
 `captcn_writers`                           | `[]`                                 |         | a list of users who get write access to CAP_TCN collections
-`cereus_projects`                          | `[]`                                 |         | a list of `cereus_project` objects describing the project that host their data in the Cereus resource
+`_cereus_collections`                      | `[]`                                 |         | a list of collections whose data belongs on the Cereus resource, each entry must be an absolute path
 `cereus_resource_hierarchy`                | `irods_resource_hierarchies[0]`      |         | the Cereus resource used for hosting data for Cereus related projects
 `check_routes_timeout`                     | 3                                    |         | the number of seconds the `check_route` playbook will wait for a response during a single port check
 `de_job_irods_user`                        |                                      |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
@@ -118,15 +118,6 @@ Variable                                   | Default                            
 
 
 The `restart_irods` flag is ignored in the `main.yml` playbook.
-
-`cereus_project` entry fields
-
-All of them are required.
-
-Field             | Comments
-------------------|---------
-`base_collection` | The absolute path to the project's base collection.
-`owner`           | The CyVerse account name of the person responsible for the project's data.
 
 `irods_federatation` entry fields
 

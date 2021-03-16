@@ -9,7 +9,7 @@
 #
 # This script configures the common ansible requirements
 
-set -e
+set -o errexit
 
 
 main()

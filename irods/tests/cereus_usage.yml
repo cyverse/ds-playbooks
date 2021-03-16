@@ -15,14 +15,6 @@
         [ "$actHier" = "$expHier" ]
       changed_when: false
 
-    - name: test create project collection
-      shell: ils /testing/home/shared/cereus &> /dev/null
-      changed_when: false
-
-    - name: test assign owner to project Collection
-      shell: ils -A /testing/home/shared/cereus | sed --quiet 2p | grep --quiet rods#testing:own
-      changed_when: false
-
     - name: test assign collection to Cereus resource
       shell: |
         num="$(iquest '%s' \

@@ -12,7 +12,18 @@
       irods_resource_hierarchy:
         hierarchy: "{{ _cereus_resource_hierarchy }}"
 
-    - include_tasks: tasks/create_cereus_project.yml
-      with_items: "{{ _cereus_projects }}"
-      loop_control:
-        loop_var: project
+    - name: assign collection to Cereus resource
+      delegate_to: localhost
+      become: false
+      irods_avu:
+        entity_type: resource
+        entity_name: "{{ _cereus_resource_hierarchy.name }}"
+        attribute: ipc::hosted-collection
+        value: "{{ item }}"
+        units: preferred
+        host: "{{ groups['ies'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        zone: "{{ _irods_zone_name }}"
+        username: "{{ _irods_clerver_user }}"
+        password: "{{ _irods_clerver_password }}"
+      with_items: "{{ _cereus_collections }}"

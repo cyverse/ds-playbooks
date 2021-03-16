@@ -10,7 +10,7 @@ RUN yum --assumeyes install \
       https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-database-plugin-postgres93-1.10-centos7-x86_64.rpm
 RUN yum --assumeyes install \
       jq libselinux-python moreutils python-pip python-requests python-virtualenv which
-RUN pip install pika
+RUN pip --disable-pip-version-check install pika
 
 RUN touch /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py
 

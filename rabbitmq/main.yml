@@ -66,6 +66,7 @@
         write_priv: .*
         tags: administrator
         state: present
+      no_log: true
       tags:
         no_testing
 
@@ -77,6 +78,7 @@
         login_password: "{{ _admin_password }}"
         login_port: "{{ _rabbitmq_management_port }}"
         vhost: "/{{ _deploy_env }}/data-store"
+      no_log: true
       tags:
         no_testing
 

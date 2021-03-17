@@ -4,6 +4,8 @@ _admin_user: "{{ rabbitmq_admin_user | default(_admin_user_default) }}"
 
 _deploy_env: "{{ rabbitmq_deploy_env | default(_deploy_env_default) }}"
 
+_rabbitmq_port: "{{ rabbitmq_port | default(5672) }}"
+_rabbitmq_management_port: "{{ rabbitmq_management_port | default(15672) }}"
 
 _admin_password_default: guest
 _admin_user_default: guest

@@ -132,7 +132,7 @@
               - server_config.zone_user == 'rods'
               - server_config.federation | length == 0
               - 'server_config.environment_variables.IRODS_AMQP_URI
-                   == "amqp://guest:guest@dstesting_amqp_1.dstesting_default:5672/%2F"'
+                   == "amqp://rabbitmq_admin:password@dstesting_amqp_1.dstesting_default:5672/%2F"'
 
         - name: retrieve encoded .odbc.ini
           slurp:

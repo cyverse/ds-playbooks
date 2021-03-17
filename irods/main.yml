@@ -6,19 +6,6 @@
         restart_irods: true
 
 
-- name: configure AMQP broker
-  hosts: rabbitmq[0]
-  become: true
-  roles:
-    - role: cyverse.rabbitmq-vhost
-      rabbitmq_vhost_name: "{{ _rabbitmq_vhost }}"
-      rabbitmq_vhost_users:
-        - name: "{{ _rabbitmq_user }}"
-          configure_priv: .*
-          write_priv: .*
-          read_priv: .*
-
-
 - import_playbook: provision.yml
 
 

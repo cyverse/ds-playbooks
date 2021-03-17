@@ -1,5 +1,10 @@
 ---
 _amqp_exchange: "{{ irods_amqp_exchange | default('irods') }}"
+_amqp_host: "{{ irods_amqp_host | default(_irods_ies) }}"
+_amqp_password: "{{ irods_amqp_password | default('guest') }}"
+_amqp_port: "{{ irods_amqp_port | default(5672) }}"
+_amqp_user: "{{ irods_amqp_user | default('guest') }}"
+_amqp_vhost: "{{ irods_amqp_vhost | default('/') }}"
 
 _avra_base_collection: "{{ avra_base_collection if avra_base_collection is defined else None }}"
 _avra_manager: "{{ avra_manager if avra_manager is defined else _irods_clerver_user }}"
@@ -160,11 +165,6 @@ _load_balancer_webdav_max_conn: "{{ load_balancer_webdav_max_conn | default(100)
 _pire_manager: "{{ pire_manager | default(None) }}"
 _pire_resource_hierarchy: "{{ pire_resource_hierarchy if pire_resource_hierarchy is defined else
                               _irods_resource_hierarchies[0] }}"
-
-_rabbitmq_password: "{{ rabbitmq_password if rabbitmq_password is defined else 'guest' }}"
-_rabbitmq_port: "{{ rabbitmq_port if rabbitmq_port is defined else 5672 }}"
-_rabbitmq_user: "{{ rabbitmq_user if rabbitmq_user is defined else 'guest' }}"
-_rabbitmq_vhost: "{{ rabbitmq_vhost if rabbitmq_vhost is defined else '/' }}"
 
 _report_email_addr: "{{ report_email_addr | default('root@localhost') }}"
 

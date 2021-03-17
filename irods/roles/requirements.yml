@@ -3,10 +3,6 @@
   src: https://github.com/CyVerse-Ansible/ansible-irods-cfg
   version: bb09d0dc81eaa8e985945624a5187012fa523822
 
-- name: cyverse.rabbitmq-vhost
-  src: https://github.com/CyVerse-Ansible/ansible-rabbitmq-vhost
-  version: 937ca7b1853f35b2faa2ef704c3320956a8b33f4
-
 - name: geerlingguy.apache
   src: geerlingguy.apache
 

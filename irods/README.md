@@ -39,6 +39,11 @@ Variable                                   | Default                            
 `firewall_chain`                           | INPUT                                |         | The iptables chain managing authorizing iRODS connections
 `irods_aegis_repl_resource`                | _see description_                    |         | the name of the aegis resource where replicas are written. If `irods_aegis_resource` is defined, it is the default, otherwise,
 `irods_amqp_exchange`                      | irods                                |         | the AMQP exchange used to publish events
+`irods_amqp_host`                          | `irods_ies`                          |         | the FQDN or IP address of the server hosting the AMQP service
+`irods_amqp_password`                      | guest                                |         | The password iRODS uses to connect to the AMQP vhost
+`irods_amqp_port`                          | 5672                                 |         | The TCP port the RabbitMQ broker listens on
+`irods_amqp_user`                          | guest                                |         | The user iRODS uses to connect to the AMQP vhost
+`irods_ampq_vhost`                         | /                                    |         | The AMQP vhost iRODS connects to
 `irods_default_repl_resource` is.
 `irods_aegis_resource`                     | `irods_default_resource`             |         | the name of the aegis resource where newly uploaded files are written
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
@@ -84,10 +89,6 @@ Variable                                   | Default                            
 `load_balancer_webdav_max_conn`            | 100                                  |         | The maximum number of concurrent connections to WebDAV through the load balancer.
 `pire_manager`                             | null                                 |         | The username that owns the PIRE project collection, if `null`, the collection isn't created.
 `pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
-`rabbitmq_password`                        | guest                                |         | The password iRODS uses to connect to the AMQP vhost
-`rabbitmq_port`                            | 5672                                 |         | The TCP port the RabbitMQ broker listens on
-`rabbitmq_user`                            | guest                                |         | The user iRODS uses to connect to the AMQP vhost
-`rabbitmq_vhost`                           | /                                    |         | The AMQP vhost iRODS connects to
 `report_email_addr`                        | root@localhost                       |         | The address where reports are to be emailed.
 `restart_irods`                            | `false`                              |         | iRODS can be restarted on the servers having config file changes, _see below_
 `sernec_owners`                            | `[]`                                 |         | a list of users who get ownership of sernec collections

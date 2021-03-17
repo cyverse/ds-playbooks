@@ -52,6 +52,7 @@
         write_priv: .*
         tags: administrator
         state: present
+      no_log: true
       tags:
         no_testing
 

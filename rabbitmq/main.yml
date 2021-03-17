@@ -38,7 +38,7 @@
 
     - name: create data store virtual host
       rabbitmq_vhost:
-        name: "{{ _rabbitmq_vhost }}"
+        name: "{{ _ds_vhost }}"
       tags:
         no_testing
 
@@ -60,7 +60,7 @@
       rabbitmq_user:
         user: "{{ _admin_user }}"
         password: "{{ _admin_password }}"
-        vhost: "{{ _rabbitmq_vhost }}"
+        vhost: "{{ _ds_vhost }}"
         configure_priv: .*
         read_priv: .*
         write_priv: .*
@@ -76,8 +76,8 @@
         exchange_type: topic
         login_user: "{{ _admin_user }}"
         login_password: "{{ _admin_password }}"
-        login_port: "{{ _rabbitmq_management_port }}"
-        vhost: "{{ _rabbitmq_vhost }}"
+        login_port: "{{ _management_port }}"
+        vhost: "{{ _ds_vhost }}"
       no_log: true
       tags:
         no_testing

@@ -1,8 +1,4 @@
-#!/usr/bin/env {% if ansible_distribution_major_version|int >= 7 -%}
- python
-{% else -%}
- python2.6
-{% endif %}
+#!/usr/bin/env python
 #
 # This always exits with 0 status, as a work around for iRODS msiExecCmd microservice. To detect
 # errors, monitor stderr.

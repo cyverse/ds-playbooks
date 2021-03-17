@@ -13,12 +13,9 @@
       copy:
         src: "{{ item }}"
         dest: /var/lib/irods/iRODS/server/bin/cmd
-        mode: u+x
+        mode: u=rx
       with_fileglob:
         - "files/cmd-common/*"
-
-    - when: inventory_hostname in groups['ies']
-      import_tasks: tasks/install_amqptopicsend.yml
 
     - name: place dynamic rule bases in /etc/irods
       template:

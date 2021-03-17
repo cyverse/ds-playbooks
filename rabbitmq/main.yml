@@ -23,6 +23,11 @@
       tags:
         no_testing
 
+    - name: place rabbitmq config file
+      template:
+        src: templates/rabbitmq.conf.j2
+        dest: "/etc/rabbitmq/rabbitmq.conf"
+
     - name: start broker
       service:
         name: rabbitmq-server
@@ -69,6 +74,7 @@
         exchange_type: topic
         login_user: "{{ _admin_user }}"
         login_password: "{{ _admin_password }}"
+        login_port: "{{ _rabbitmq_management_port }}"
         vhost: "/{{ _deploy_env }}/data-store"
       tags:
         no_testing

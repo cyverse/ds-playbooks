@@ -87,5 +87,6 @@
       rabbitmq_user:
         user: guest
         state: absent
+      no_log: true
       tags:
         no_testing

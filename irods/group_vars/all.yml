@@ -159,7 +159,6 @@ _pire_manager: "{{ pire_manager | default(None) }}"
 _pire_resource_hierarchy: "{{ pire_resource_hierarchy if pire_resource_hierarchy is defined else
                               _irods_resource_hierarchies[0] }}"
 
-_rabbitmq_ephemeral: "{{ rabbitmq_ephemeral if rabbitmq_ephemeral is defined else True }}"
 _rabbitmq_password: "{{ rabbitmq_password if rabbitmq_password is defined else 'guest' }}"
 _rabbitmq_port: "{{ rabbitmq_port if rabbitmq_port is defined else 5672 }}"
 _rabbitmq_user: "{{ rabbitmq_user if rabbitmq_user is defined else 'guest' }}"

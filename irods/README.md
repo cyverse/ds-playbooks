@@ -82,7 +82,6 @@ Variable                                   | Default                            
 `load_balancer_webdav_max_conn`            | 100                                  |         | The maximum number of concurrent connections to WebDAV through the load balancer.
 `pire_manager`                             | null                                 |         | The username that owns the PIRE project collection, if `null`, the collection isn't created.
 `pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
-`rabbitmq_ephemeral`                       | `true`                               |         | whether or not the `irods` AMQP exchange will persist when iRODS disconnects from the AMQP broker
 `rabbitmq_password`                        | guest                                |         | The password iRODS uses to connect to the AMQP vhost
 `rabbitmq_port`                            | 5672                                 |         | The TCP port the RabbitMQ broker listens on
 `rabbitmq_user`                            | guest                                |         | The user iRODS uses to connect to the AMQP vhost

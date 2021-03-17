@@ -15,9 +15,8 @@ import sys
 try:
     logging.basicConfig(stream=sys.stdout)
 
-    ephemeral = sys.argv[1].lower() == 'true'
-    key = sys.argv[2]
-    body = sys.argv[3]
+    key = sys.argv[1]
+    body = sys.argv[2]
 
     exchange = 'irods'
 
@@ -26,17 +25,10 @@ try:
     connection = pika.BlockingConnection(connParams)
     channel = connection.channel()
 
-    channel.exchange_declare(exchange=exchange,
-                             exchange_type='topic',
-                             durable=(not ephemeral),
-                             auto_delete=ephemeral
-    )
-
     channel.basic_publish(exchange=exchange,
                           routing_key=key,
                           body=body,
-                          properties=pika.BasicProperties(delivery_mode=2)
-    )
+                          properties=pika.BasicProperties(delivery_mode=2))
 
     connection.close()
 except BaseException as e:

@@ -1,8 +1,5 @@
 # The production environment rule customizations belong in this file.
 
-ipc_AMQP_EPHEMERAL : boolean
-ipc_AMQP_EPHEMERAL = {% if _rabbitmq_ephemeral %}true{% else %}false{% endif %}
-
 ipc_DEFAULT_REPL_RESC : string
 ipc_DEFAULT_REPL_RESC = '{{ _irods_default_repl_resource }}'
 

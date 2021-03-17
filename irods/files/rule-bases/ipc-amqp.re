@@ -7,9 +7,10 @@
 #   *Msg - The message to send
 #
 ipc_amqpSend(*Key, *Msg) {
+  *exchangeArg = execCmdArg(ipc_AMQP_EXCHANGE);
   *keyArg = execCmdArg(*Key);
   *msgArg = execCmdArg(*Msg);
-  *argStr = '*keyArg *msgArg';
+  *argStr = '*exchangeArg *keyArg *msgArg';
   *status = errormsg(msiExecCmd('amqptopicsend.py', *argStr, ipc_RE_HOST, 'null', 'null', *out),
                      *errMsg);
   if (*status < 0) {

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # This always exits with 0 status, as a work around for iRODS msiExecCmd microservice. To detect
 # errors, monitor stderr.
@@ -11,10 +12,9 @@ import sys
 try:
     logging.basicConfig(stream=sys.stdout)
 
-    key = sys.argv[1]
-    body = sys.argv[2]
-
-    exchange = 'irods'
+    exchange = sys.argv[1]
+    key = sys.argv[2]
+    body = sys.argv[3]
 
     connParams = pika.URLParameters(os.environ['IRODS_AMQP_URI'])
 

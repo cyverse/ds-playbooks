@@ -1,4 +1,6 @@
 ---
+_amqp_exchange: "{{ irods_amqp_exchange | default('irods') }}"
+
 _avra_base_collection: "{{ avra_base_collection if avra_base_collection is defined else None }}"
 _avra_manager: "{{ avra_manager if avra_manager is defined else _irods_clerver_user }}"
 _avra_resource_hierarchy: "{{ avra_resource_hierarchy if avra_resource_hierarchy is defined else

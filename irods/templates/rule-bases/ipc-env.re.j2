@@ -1,5 +1,8 @@
 # The production environment rule customizations belong in this file.
 
+ipc_AMQP_EXCHANGE : string
+ipc_AMQP_EXCHANGE = '{{ _amqp_exchange }}'
+
 ipc_DEFAULT_REPL_RESC : string
 ipc_DEFAULT_REPL_RESC = '{{ _irods_default_repl_resource }}'
 

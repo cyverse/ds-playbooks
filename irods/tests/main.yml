@@ -1,22 +1,4 @@
 ---
-- name: test configure AMQP broker
-  hosts: rabbitmq[0]
-  become: true
-  tasks:
-    - name: test vhost name is correct
-      command: rabbitmqctl list_permissions -p /
-      changed_when: false
-
-    - name: test vhost users are correct
-      shell: |
-        rabbitmqctl list_user_permissions guest \
-          | grep \
-              --quiet \
-              --regexp \
-                '^/[[:blank:]][[:blank:]]*\.\*[[:blank:]][[:blank:]]*\.\*[[:blank:]][[:blank:]]*\.\*'
-      changed_when: false
-
-
 - import_playbook: provision.yml
 
 

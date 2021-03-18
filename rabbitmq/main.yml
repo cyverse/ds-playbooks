@@ -72,7 +72,7 @@
 
     - name: create irods exchange
       rabbitmq_exchange:
-        name: irods
+        name: "{{ _ds_exchange }}"
         exchange_type: topic
         login_user: "{{ _admin_user }}"
         login_password: "{{ _admin_password }}"

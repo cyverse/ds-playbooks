@@ -1,0 +1,92 @@
+---
+- name: set up RabbitMQ broker
+  hosts: rabbitmq
+  become: true
+  tasks:
+    - name: install epel repository
+      package:
+        name: epel-release
+        state: present
+
+    - name: install erlang (stripped-down rabbitmq-provided RPM)
+      yum:
+        name: 'https://github.com/rabbitmq/erlang-rpm/releases/download/v23.2.7/erlang-23.2.7-1.el7.x86_64.rpm'
+
+    - name: install from web
+      yum:
+        name: 'https://github.com/rabbitmq/rabbitmq-server/releases/download/v3.8.14/rabbitmq-server-3.8.14-1.el7.noarch.rpm'
+
+    - name: enable management plugin
+      rabbitmq_plugin:
+        names: rabbitmq_management
+        state: enabled
+      tags:
+        no_testing
+
+    - name: place rabbitmq config file
+      template:
+        src: templates/rabbitmq.conf.j2
+        dest: "/etc/rabbitmq/rabbitmq.conf"
+
+    - name: start broker
+      service:
+        name: rabbitmq-server
+        enabled: true
+        state: started
+      tags:
+        no_testing
+
+    - name: create data store virtual host
+      rabbitmq_vhost:
+        name: "{{ _ds_vhost }}"
+      tags:
+        no_testing
+
+    - name: create admin user
+      rabbitmq_user:
+        user: "{{ _admin_user }}"
+        password: "{{ _admin_password }}"
+        vhost: /
+        configure_priv: .*
+        read_priv: .*
+        write_priv: .*
+        tags: administrator
+        state: present
+      no_log: true
+      tags:
+        no_testing
+
+    - name: set admin user perms on data store vhost
+      rabbitmq_user:
+        user: "{{ _admin_user }}"
+        password: "{{ _admin_password }}"
+        vhost: "{{ _ds_vhost }}"
+        configure_priv: .*
+        read_priv: .*
+        write_priv: .*
+        tags: administrator
+        state: present
+      no_log: true
+      tags:
+        no_testing
+
+    - name: create irods exchange
+      rabbitmq_exchange:
+        name: "{{ _ds_exchange }}"
+        exchange_type: topic
+        login_user: "{{ _admin_user }}"
+        login_password: "{{ _admin_password }}"
+        login_port: "{{ _management_port }}"
+        vhost: "{{ _ds_vhost }}"
+      no_log: true
+      tags:
+        no_testing
+
+    - name: remove guest user
+      when: _admin_user != 'guest'
+      rabbitmq_user:
+        user: guest
+        state: absent
+      no_log: true
+      tags:
+        no_testing

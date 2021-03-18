@@ -1,12 +1,10 @@
 FROM williamyeh/ansible:centos7
 
-RUN yum --assumeyes install dmidecode git python3 python3-pip
+RUN yum --assumeyes install dmidecode git postgresql python3 python3-pip rpm-build wget \
+      https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm
 RUN python3 -m pip --quiet install --upgrade pip
 RUN python3 -m pip --quiet install \
       ansible dnspython netaddr python-irodsclient requests urllib3 wheel
-RUN yum --assumeyes install \
-      postgresql wget \
-      https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm
 RUN mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test /root/.ssh
 
 COPY ansible.cfg /root/.ansible.cfg

@@ -7,10 +7,10 @@
 #   *Msg - The message to send
 #
 ipc_amqpSend(*Key, *Msg) {
-  *ephemeralArg = str(ipc_AMQP_EPHEMERAL);
+  *exchangeArg = execCmdArg(ipc_AMQP_EXCHANGE);
   *keyArg = execCmdArg(*Key);
   *msgArg = execCmdArg(*Msg);
-  *argStr = '*ephemeralArg *keyArg *msgArg';
+  *argStr = '*exchangeArg *keyArg *msgArg';
   *status = errormsg(msiExecCmd('amqptopicsend.py', *argStr, ipc_RE_HOST, 'null', 'null', *out),
                      *errMsg);
   if (*status < 0) {

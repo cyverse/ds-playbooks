@@ -1,0 +1,10 @@
+---
+_admin_password: "{{ rabbitmq_admin_password | default('guest') }}"
+_admin_user: "{{ rabbitmq_admin_user | default('guest') }}"
+
+_broker_port: "{{ rabbitmq_broker_port | default(5672) }}"
+
+_ds_exchange: "{{ rabbitmq_ds_exchange | default('irods') }}"
+_ds_vhost: "{{ rabbitmq_ds_vhost | default('/') }}"
+
+_management_port: "{{ rabbitmq_management_port | default(15672) }}"

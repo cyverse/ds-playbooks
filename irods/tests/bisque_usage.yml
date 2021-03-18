@@ -4,8 +4,14 @@
   become: true
   tasks:
     - name: test ensure /var/log/bisque exists
-      debug:
-        msg: TODO implement
+      stat:
+        path: /var/log/bisque
+      register: response
+      failed_when: >
+        not response.stat.exists or
+        not response.stat.isdir or
+        response.stat.pw_name != 'irods' or
+        not response.stat.wusr
 
 
 - name: test bisque cmd script in place

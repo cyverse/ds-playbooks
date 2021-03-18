@@ -13,12 +13,9 @@
       copy:
         src: "{{ item }}"
         dest: /var/lib/irods/iRODS/server/bin/cmd
-        mode: u+x
+        mode: u=rx
       with_fileglob:
         - "files/cmd-common/*"
-
-    - when: inventory_hostname in groups['ies']
-      import_tasks: tasks/install_amqptopicsend.yml
 
     - name: place dynamic rule bases in /etc/irods
       template:
@@ -44,12 +41,11 @@
       import_role:
         name: cyverse.irods-cfg
       vars:
-        dbms_host: "{{ groups['dbms_primary'][0] }}"
-        rabbitmq_user_info: "{{ _rabbitmq_user }}:{{ _rabbitmq_password }}"
-        rabbitmq_authority: "{{ rabbitmq_user_info }}@{{
-                                groups['rabbitmq'][0] }}:{{ _rabbitmq_port }}"
-        rabbitmq_path: /{{ _rabbitmq_vhost | replace('/', '%2F') }}
-        rabbitmq_uri: amqp://{{ rabbitmq_authority }}{{ rabbitmq_path }}
+        amqp_user_info: "{{ _amqp_user }}:{{ _amqp_password }}"
+        amqp_authority: "{{ amqp_user_info }}@{{ _amqp_host }}:{{ _amqp_port }}"
+        amqp_path: /{{ _amqp_vhost | replace('/', '%2F') }}
+        amqp_uri: amqp://{{ amqp_authority }}{{ amqp_path }}
+        dbms_host: "{{ groups['dbms'][0] }}"
         irods_cfg_client_server_policy: "{{ _irods_client_server_policy }}"
         irods_cfg_default_dir_mode: "{{ _irods_default_dir_mode }}"
         irods_cfg_default_file_mode: "{{ _irods_default_file_mode }}"
@@ -59,7 +55,7 @@
         irods_cfg_default_resource_directory: "{{ _irods_default_vault }}"
         irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
         irods_cfg_environment_variables: "{{
-          { 'IRODS_AMQP_URI': rabbitmq_uri } if inventory_hostname in groups['ies'] else {} }}"
+          { 'IRODS_AMQP_URI': amqp_uri } if inventory_hostname in groups['ies'] else {} }}"
         irods_cfg_federation: "{{ _irods_federation }}"
         irods_cfg_host_entries: "{{ [
             {

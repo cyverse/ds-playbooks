@@ -9,6 +9,9 @@ backend default {
 }
 
 sub vcl_recv {
+    if (req.method == "PURGE") {
+        return (purge);
+    }
     if (req.method != "GET" && req.method != "HEAD") {
         return (pass);
     }

@@ -23,9 +23,10 @@
             LoadModule unique_id_module modules/mod_unique_id.so
           </IfModule>
 
-          <IfModule mpm_prefork_module>
+          <IfModule mpm_worker_module>
+            ServerLimit             {{ _webdav_server_limit }}
+            ThreadsPerChild         {{ _webdav_threads_per_child }}
             MaxRequestWorkers       {{ _webdav_max_request_workers }}
-            ServerLimit             {{ _webdav_max_request_workers }}
           </IfModule>
 
           ForensicLog logs/forensic_log
@@ -286,12 +287,13 @@
         state: directory
         mode: 0777
 
+    # Varnish creates in-memory log upto 4GB.
     - name: mount varnish shared memory
       mount:
         path: /var/lib/varnish
         src: tmpfs
         fstype: tmpfs
-        opts: rw,nodev,nosuid
+        opts: rw,nodev,nosuid,size=4G
         state: mounted
       notify:
         - restart varnish

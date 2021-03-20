@@ -116,6 +116,7 @@
                   {% from 'davrods.j2' import davrods with context %}
                   {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html',
                        [ 'valid-user' ]) }}
+        
         apache_vhosts_ssl:
           - servername: "{{ _canonical_hostname }}"
             certificate_file: "{{ _webdav_tls_cert_file }}"
@@ -239,6 +240,15 @@
       copy:
         src: files/webdav/index.html
         dest: /var/www/html/index.html
+
+    - name: update apache mpm
+      template:
+        src: "templates/webdav/etc/httpd/conf.modules.d/{{ item }}.j2"
+        dest: "/etc/httpd/conf.modules.d/{{ item }}"
+      with_items:
+        - 00-mpm.conf
+      notify:
+        - restart httpd
 
     - when: >
         'varnish' in ansible_facts.packages
@@ -381,6 +391,12 @@
       when: notifications_enabled | default(false)
       systemd:
         daemon_reload: yes
+
+    - name: restart httpd
+      when: notifications_enabled | default(false)
+      service:
+        name: httpd
+        state: restarted
 
     - name: restart varnish
       when: notifications_enabled | default(false)

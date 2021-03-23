@@ -146,6 +146,7 @@
         - davrods
         - mod_proxy_html
         - mod_ssl
+        - mod_qos
       loop_control:
         loop_var: pkg
 
@@ -193,6 +194,16 @@
       register: response
       failed_when: not response.stat.exists
 
+    - name: test apache modules
+      stat:
+        path: /etc/httpd/conf.modules.d/{{ item }}
+      with_items:
+        - 00-mpm.conf
+        - 00-status.conf
+        - 10-mod_qos.conf
+      register: response
+      failed_when: not response.stat.exists
+      
     - name: retrieve encoded irods_environment.json
       slurp:
         src: /etc/httpd/irods/irods_environment.json

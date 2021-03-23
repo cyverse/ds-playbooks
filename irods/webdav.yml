@@ -23,10 +23,13 @@
             LoadModule unique_id_module modules/mod_unique_id.so
           </IfModule>
 
-          <IfModule mpm_prefork_module>
+          <IfModule mpm_worker_module>
+            ServerLimit             {{ _webdav_server_limit }}
+            ThreadsPerChild         {{ _webdav_threads_per_child }}
             MaxRequestWorkers       {{ _webdav_max_request_workers }}
-            ServerLimit             {{ _webdav_max_request_workers }}
           </IfModule>
+
+          QS_ErrorResponseCode 429
 
           ForensicLog logs/forensic_log
           ErrorLogFormat "%{cu}t %-L [pid %P] [%-m:%l] %-a %E: %M"
@@ -56,6 +59,8 @@
           - servername: "{{ _canonical_hostname }}"
             listen_ip: 127.0.0.1
             extra_parameters: |
+              QS_LocRequestLimit /dav {{ _webdav_davrods_access_limit }}
+
               ErrorLog logs/error_log
               CustomLog logs/access_log {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %{X-Forwarded-For}i \"%r\" %>s %L %{forensic-id}n"' }}
               LogLevel warn
@@ -115,6 +120,17 @@
                   {% from 'davrods.j2' import davrods with context %}
                   {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html',
                        [ 'valid-user' ]) }}
+              - path: /server-status
+                comment: Service status monitoring
+                extra_parameters: |
+                    SetHandler server-status
+                    Require host localhost
+              - path: /server-qos
+                comment: Service QOS monitoring
+                extra_parameters: |
+                    SetHandler qos-viewer
+                    Require host localhost
+
         apache_vhosts_ssl:
           - servername: "{{ _canonical_hostname }}"
             certificate_file: "{{ _webdav_tls_cert_file }}"
@@ -122,6 +138,8 @@
             certificate_chain_file: "{{ _webdav_tls_chain_file }}"
             extra_parameters: |
               ServerAlias {{ inventory_hostname }}
+
+              QS_LocRequestLimit /dav {{ _webdav_access_limit }}
 
               ErrorLog logs/https_error_log
               CustomLog logs/https_request_log {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %{SSL_PROTOCOL}x %{SSL_CIPHER}x %a \"%r\" %>s %L %{forensic-id}n"' }}
@@ -239,6 +257,29 @@
         src: files/webdav/index.html
         dest: /var/www/html/index.html
 
+    - name: update apache mpm
+      template:
+        src: "templates/webdav/etc/httpd/conf.modules.d/{{ item }}.j2"
+        dest: "/etc/httpd/conf.modules.d/{{ item }}"
+      with_items:
+        - 00-mpm.conf
+      notify:
+        - restart httpd
+
+    - name: install mod_qos
+      package:
+        name: mod_qos
+
+    - name: update apache modules
+      template:
+        src: "templates/webdav/etc/httpd/conf.modules.d/{{ item }}.j2"
+        dest: "/etc/httpd/conf.modules.d/{{ item }}"
+      with_items:
+        - 00-status.conf
+        - 10-mod_qos.conf
+      notify:
+        - restart httpd
+
     - when: >
         'varnish' in ansible_facts.packages
         and ansible_facts.packages['varnish'][0].version is version_compare('6.5.1', '<')
@@ -286,12 +327,13 @@
         state: directory
         mode: 0777
 
+    # Varnish creates in-memory log upto 4GB.
     - name: mount varnish shared memory
       mount:
         path: /var/lib/varnish
         src: tmpfs
         fstype: tmpfs
-        opts: rw,nodev,nosuid
+        opts: rw,nodev,nosuid,size=4G
         state: mounted
       notify:
         - restart varnish
@@ -380,6 +422,12 @@
       systemd:
         daemon_reload: yes
 
+    - name: restart httpd
+      when: notifications_enabled | default(false)
+      service:
+        name: httpd
+        state: restarted
+        
     - name: restart varnish
       when: notifications_enabled | default(false)
       service:

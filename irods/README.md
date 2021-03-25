@@ -90,7 +90,6 @@ Variable                                   | Default                            
 `load_balancer_stats_port`                 | 81                                   |         | The TCP port used to retrieve HAProxy stats
 `load_balancer_stats_user`                 | haproxy-stats                        |         | The user to authenticate as to access the stats service
 `load_balancer_webdav_check_period`        | 2                                    |         | The amount of time between webdav health checks in seconds
-`load_balancer_webdav_max_conn`            | 100                                  |         | The maximum number of concurrent connections to WebDAV through the load balancer.
 `pire_manager`                             | null                                 |         | The username that owns the PIRE project collection, if `null`, the collection isn't created.
 `pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
 `report_email_addr`                        | root@localhost                       |         | The address where reports are to be emailed.
@@ -114,7 +113,7 @@ Variable                                   | Default                            
 `webdav_cache_max_ttl`                     | 86400                                |         | The maximum cache TTL in seconds
 `webdav_server_limit`                      | 48                                   |         | the number of cpu cores to be used
 `webdav_threads_per_child`                 | 4                                    |         | the number of threads per core to be created
-`webdav_max_request_workers`               | 192                                  |         | the upper limit on the number of simultaneous requests that will be served. This typically have the value of `webdav_server_limit` multiplied by `webdav_threads_per_child` 
+`webdav_max_request_workers`               | 192                                  |         | the upper limit on the number of simultaneous requests that will be served. This typically have the value of `webdav_server_limit` multiplied by `webdav_threads_per_child`
 `webdav_access_limit`                      | 120                                  |         | The upper limit on the number of simultaneous requests that will be served by webdav
 `webdav_davrods_access_limit`              | 80                                   |         | The upper limit on the number of simultaneous requests that will be served by davrods
 `webdav_tls_cert_file`                     | `/etc/ssl/certs/dummy.crt`           |         | The TLS certificate file used for encrypted communication

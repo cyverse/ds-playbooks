@@ -21,10 +21,9 @@
         lookup('dig', groups.webdav[0]) }}{% endif %}"
     webdav_check_periods: inter {{ _load_balancer_webdav_check_period }}s downinter 3s fastinter 1s
     webdav_check: check port 80 fall 2 {{ webdav_check_periods }}
-    webdav_maxconn: maxconn {{ _load_balancer_webdav_max_conn }}
 # XXX: Until we are load balancing WebDAV servers, I'm disabling checks to prevent false positives
-    webdav_server_cfg: "{{ webdav_ip }} {{ webdav_maxconn }}"
-#   webdav_server_cfg: "{{ webdav_ip }} {{ webdav_maxconn }} {{ webdav_check }}"
+    webdav_server_cfg: "{{ webdav_ip }}"
+#   webdav_server_cfg: "{{ webdav_ip }} {{ webdav_check }}"
   tasks:
     - name: enable notifcations when not testing
       set_fact:

@@ -16,13 +16,6 @@
       yum:
         name: 'https://github.com/rabbitmq/rabbitmq-server/releases/download/v3.8.14/rabbitmq-server-3.8.14-1.el7.noarch.rpm'
 
-    - name: enable management plugin
-      rabbitmq_plugin:
-        names: rabbitmq_management
-        state: enabled
-      tags:
-        no_testing
-
     - name: place rabbitmq config file
       template:
         src: templates/rabbitmq.conf.j2
@@ -33,6 +26,13 @@
         name: rabbitmq-server
         enabled: true
         state: started
+      tags:
+        no_testing
+
+    - name: enable management plugin
+      rabbitmq_plugin:
+        names: rabbitmq_management
+        state: enabled
       tags:
         no_testing
 

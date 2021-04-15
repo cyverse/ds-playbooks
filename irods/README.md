@@ -31,7 +31,7 @@ Variable                                   | Default                            
 `captcn_owners`                            | `[]`                                 |         | a list of users who get ownership of CAP_TCN collections
 `captcn_readers`                           | `[]`                                 |         | a list of users who get read access to CAP_TCN collections
 `captcn_writers`                           | `[]`                                 |         | a list of users who get write access to CAP_TCN collections
-`_cereus_collections`                      | `[]`                                 |         | a list of collections whose data belongs on the Cereus resource, each entry must be an absolute path
+`cereus_collections`                      | `[]`                                 |         | a list of collections whose data belongs on the Cereus resource, each entry must be an absolute path
 `cereus_resource_hierarchy`                | `irods_resource_hierarchies[0]`      |         | the Cereus resource used for hosting data for Cereus related projects
 `check_routes_timeout`                     | 3                                    |         | the number of seconds the `check_route` playbook will wait for a response during a single port check
 `de_job_irods_user`                        |                                      |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.

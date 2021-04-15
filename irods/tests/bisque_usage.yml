@@ -1,4 +1,20 @@
 ---
+- name: test bisque template expansion
+  hosts: localhost
+  tasks:
+    - name: test bisque_host set correctly
+      debug:
+        msg: TODO implement
+
+    - name: test bisque_admin_user set correctly
+      debug:
+        msg: TODO implement
+
+    - name: test bisque_admin_pass set  correctly
+      debug:
+        msg: TODO implement
+
+
 - name: test prepare for bisque_paths
   hosts: ies
   become: true

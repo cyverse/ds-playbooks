@@ -27,6 +27,10 @@
   hosts: ies
   become: true
   become_flags: '-i'
+  vars:
+    # NB: The rpm and yum bindings for the test_pkg_installed.yml tasks require
+    #     Python 2 in Ansible 2.9.6
+    ansible_python_interpreter: /usr/bin/python
   tasks:
     - include_tasks: tasks/test_pkg_installed.yml
       with_items:
@@ -37,15 +41,6 @@
         - postgresql12-odbc
       loop_control:
         loop_var: pkg
-
-    - package_facts:
-
-    - name: test ensure PostgreSQL 9 clients are removed
-      when: >
-        'postgresql93' in ansible_facts.packages or
-        'postgresql93-libs' in ansible_facts.packages or
-        'postgresql93-odbc' in ansible_facts.packages
-      fail:
 
     - name: test ensure pika installed
       command: pip --disable-pip-version-check show pika

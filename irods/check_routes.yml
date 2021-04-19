@@ -31,14 +31,22 @@
   tags:
     - non_idempotent
   tasks:
+    - name: check own grid port
+      port_check_sender:
+        destination: "{{ ansible_fqdn }}"
+        tcp_ports:
+          - "{{ _irods_server_control_plane_port }}"
+      ignore_errors: true
+
     - name: check ies grid port
       port_check_sender:
         destination: "{{ item }}"
         tcp_ports:
           - "{{ hostvars[item]._irods_server_control_plane_port }}"
       ignore_errors: true
-      with_items: "{{ groups['ies'] | difference(groups['rs']) }}"
-      
+      with_items: "{{
+        groups['ies'] | difference(groups['rs']) | difference([inventory_hostname]) }}"
+
     - name: check rs port
       port_check_sender:
         destination: "{{ item }}"

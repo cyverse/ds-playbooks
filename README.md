@@ -5,6 +5,12 @@ This is a collection of playbooks for maintaining CyVerse's Data Store.
 
 ## Prerequisites
 
+For CentOS machines, the Docker-CE yum repository needs to be set up.
+
+```bash
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+```
+
 The following system packages need to be installed on control machine.
 
 * `dmidecode` (if control machine runs linux)

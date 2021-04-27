@@ -79,102 +79,137 @@
 
 # DEFERRED FUNCTIONS AND RULES
 
-_replicate(*Object, *RescName) {
-  _repl_logMsg('replicating *Object to *RescName');
-  temporaryStorage.repl_replicate = 'REPL_FORCED_REPL_RESC';
-  *err = errormsg(msiDataObjRepl(*Object, 'backupRescName=*RescName++++verifyChksum=', *status),
-                  *msg);
-  temporaryStorage.repl_replicate = '';
+_repl_replicate(*Object, *RescName) {
+  _repl_logMsg('replicating data object *Object to *RescName');
 
-  if (*err < 0 && *err != -808000 && *err != -817000) {
-    _repl_logMsg('failed to replicate *Object, retry in 8 hours');
-    _repl_logMsg(*msg);
+  *objPath = '';
+  foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
+    *objPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
+  }
+
+  if (*objPath == '') {
+    _repl_logMsg('data object *Object no longer exists');
+  } else {
+    temporaryStorage.repl_replicate = 'REPL_FORCED_REPL_RESC';
+
+    *err = errormsg(
+      msiDataObjRepl(*objPath, 'backupRescName=*RescName++++verifyChksum=', *status), *msg);
+
+    temporaryStorage.repl_replicate = '';
+
+    if (*err < 0 && *err != -808000 && *err != -817000) {
+      _repl_logMsg('failed to replicate data object *Object, retry in 8 hours');
+      _repl_logMsg(*msg);
 # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
 #       iRODS version 4.2.1.
-    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_replicate(*Object, *RescName)}
-  } else {
-    _repl_logMsg('replicated *Object');
+      delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_repl_replicate(*Object, *RescName)}
+    } else {
+      _repl_logMsg('replicated data object *Object');
+    }
   }
 }
 
 
 # DEPRECATED
-_mvReplicas(*DataPath, *IngestResc, *ReplResc) {
-  _repl_logMsg('moving replicas of *DataPath');
+_mvReplicas(*Object, *IngestResc, *ReplResc) {
+  _repl_logMsg('moving replicas of data object *Object');
 
-  *replFail = false;
-  (*ingestName, *ingestOptional) = *IngestResc;
-  (*replName, *replOptional) = *ReplResc;
-
-  if (_replicate(*DataPath, *ingestName) < 0) {
-    *replFail = true;
+  *dataPath = '';
+  foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
+    *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
   }
 
-  if (_replicate(*DataPath, *replName) < 0) {
-    *replFail = true;
-  }
+  if (*dataPath == '') {
+    _repl_logMsg('data object *Object no longer exists');
+  } else {
+    *replFail = false;
+    (*ingestName, *ingestOptional) = *IngestResc;
+    (*replName, *replOptional) = *ReplResc;
 
-  if (*replFail) {
-    fail;
-  }
+    if (_repl_replicate(*Object, *ingestName) < 0) {
+      *replFail = true;
+    }
 
-  # Once a replica exists on all the project's resource, remove the other replicas
-  msiSplitPath(*DataPath, *collPath, *dataName);
+    if (_repl_replicate(*Object, *replName) < 0) {
+      *replFail = true;
+    }
 
-  foreach (*repl in SELECT DATA_RESC_NAME WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName')
-  {
-    *rescName = *repl.DATA_RESC_NAME;
+    if (*replFail) {
+      fail;
+    }
 
-    if (*rescName != *ingestName && *rescName != *replName) {
-      msiDataObjTrim(*DataPath, *rescName, 'null', '1', 'null', *status);
+    # Once a replica exists on all the project's resource, remove the other replicas
+    foreach (*repl in SELECT DATA_RESC_NAME WHERE DATA_ID = '*Object') {
+      *rescName = *repl.DATA_RESC_NAME;
+
+      if (*rescName != *ingestName && *rescName != *replName) {
+        msiDataObjTrim(*dataPath, *rescName, 'null', '1', 'null', *status);
+      }
     }
   }
 }
 
 
-_repl_mvReplicas(*DataPath, *IngestName, *ReplName) {
-  _repl_logMsg('moving replicas of *DataPath');
+_repl_mvReplicas(*Object, *IngestName, *ReplName) {
+  _repl_logMsg('moving replicas of data object *Object');
 
-  *replFail = false;
-
-  if (_replicate(*DataPath, *IngestName) < 0) {
-    *replFail = true;
+  *dataPath = '';
+  foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
+    *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
   }
 
-  if (_replicate(*DataPath, *ReplName) < 0) {
-    *replFail = true;
-  }
+  if (*dataPath == '') {
+    _repl_logMsg('data object *Object no longer exists');
+  } else {
+    *replFail = false;
 
-  if (*replFail) {
-    fail;
-  }
+    if (_repl_replicate(*Object, *IngestName) < 0) {
+      *replFail = true;
+    }
 
-  # Once a replica exists on all the project's resource, remove the other replicas
-  msiSplitPath(*DataPath, *collPath, *dataName);
+    if (_repl_replicate(*Object, *ReplName) < 0) {
+      *replFail = true;
+    }
 
-  foreach (*repl in SELECT DATA_RESC_NAME WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName')
-  {
-    *rescName = *repl.DATA_RESC_NAME;
+    if (*replFail) {
+      fail;
+    }
 
-    if (*rescName != *IngestName && *rescName != *ReplName) {
-      msiDataObjTrim(*DataPath, *rescName, 'null', '1', 'null', *status);
+    # Once a replica exists on all the project's resource, remove the other replicas
+    foreach (*repl in SELECT DATA_RESC_NAME WHERE DATA_ID = '*Object') {
+      *rescName = *repl.DATA_RESC_NAME;
+
+      if (*rescName != *IngestName && *rescName != *ReplName) {
+        msiDataObjTrim(*dataPath, *rescName, 'null', '1', 'null', *status);
+      }
     }
   }
 }
 
 
-_syncReplicas(*Object) {
-  _repl_logMsg('syncing replicas of *Object');
-  *err = errormsg(msiDataObjRepl(*Object, 'all=++++updateRepl=++++verifyChksum=', *status), *msg);
+_repl_syncReplicas(*Object) {
+  _repl_logMsg('syncing replicas of data object *Object');
 
-  if (*err < 0 && *err != -808000) {
-    _repl_logMsg('failed to sync replicas of *Object trying again in 8 hours');
-    _repl_logMsg(*msg);
+  *dataPath = ''
+  foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
+    *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
+  }
+
+  if (*dataPath == '') {
+    _repl_logMsg('data object *Object no longer exists');
+  } else {
+    *err = errormsg(
+      msiDataObjRepl(*dataPath, 'all=++++updateRepl=++++verifyChksum=', *status), *msg);
+
+    if (*err < 0 && *err != -808000) {
+      _repl_logMsg('failed to sync replicas of data object *Object trying again in 8 hours');
+      _repl_logMsg(*msg);
 # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
 #       iRODS version 4.2.1.
-    delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object)}
-  } else {
-    _repl_logMsg('synced replicas of *Object');
+      delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_repl_syncReplicas(*Object)}
+    } else {
+      _repl_logMsg('synced replicas of data object *Object');
+    }
   }
 }
 
@@ -239,17 +274,19 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
   if (*type == '-c') {
     # if the entity is a collection
     foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
-      foreach (*obj in SELECT COLL_NAME, DATA_NAME WHERE COLL_NAME LIKE '*collPat') {
-        *collPath = *obj.COLL_NAME;
-        *dataName = *obj.DATA_NAME;
-        _scheduleMv('*collPath/*dataName',
-                    *ingestName, str(*ingestOptional),
-                    *replName, str(*replOptional));
+      foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
+        *dataId = *rec.DATA_ID;
+        _scheduleMv(*dataId, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
       }
     }
   } else if (*type == '-d') {
     # if the entity is a data object
-    _scheduleMv(*Entity, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
+    msiSplitPath(*Entity, *collPath, *dataName);
+
+    foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName') {
+      *dataId = *rec.DATA_ID;
+      _scheduleMv(*dataId, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
+    }
   }
 }
 
@@ -260,57 +297,68 @@ _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
   if (*type == '-c') {
     # if the entity is a collection
     foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
-      foreach (*obj in SELECT COLL_NAME, DATA_NAME WHERE COLL_NAME LIKE '*collPat') {
-        *collPath = *obj.COLL_NAME;
-        *dataName = *obj.DATA_NAME;
-        _repl_scheduleMv('*collPath/*dataName', *IngestName, *ReplName);
+      foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
+        *dataId = *rec.DATA_ID;
+        _repl_scheduleMv(*dataId, *IngestName, *ReplName);
       }
     }
   } else if (*type == '-d') {
     # if the entity is a data object
-    _repl_scheduleMv(*Entity, *IngestName, *ReplName);
+    msiSplitPath(*Entity, *collPath, *dataName);
+
+    foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName') {
+      *dataId = *rec.DATA_ID;
+      _repl_scheduleMv(*dataId, *IngestName, *ReplName);
+    }
   }
 }
 
 
-_scheduleRepl(*Object, *RescName) {
+_repl_scheduleRepl(*Object, *RescName) {
   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>1s REPEAT 0 TIMES</EF>')
-  {_replicate(*Object, *RescName)}
+  {_repl_replicate(*Object, *RescName)}
 
   _incDelayTime;
 }
 
 
-_scheduleSyncReplicas(*Object) {
-  msiSplitPath(*Object, *collPath, *dataName);
-  foreach (*cnt in SELECT COUNT(DATA_REPL_NUM)
-                   WHERE COLL_NAME = '*collPath'
-                     AND DATA_NAME = '*dataName'
-                     AND DATA_REPL_STATUS = '0') {
-    if (int(*cnt.DATA_REPL_NUM) > 0) {
+_repl_scheduleSyncReplicas(*Object) {
+  foreach (*rec in SELECT COUNT(DATA_REPL_NUM) WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '0')
+  {
+    if (int(*rec.DATA_REPL_NUM) > 0) {
       delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>1s REPEAT 0 TIMES</EF>')
-      { # _syncReplicas(*Object);
-# XXX - Due to https://github.com/irods/irods/issues/3621, _syncReplicas has been inlined. Verify
+# XXX - Due to https://github.com/irods/irods/issues/3621, _repl_syncReplicas has been inlined. Verify
 #       that this is still the case in iRODS 4.2.2.
-        # _repl_logMsg('syncing replicas of *Object');
+#       {_repl_syncReplicas(*Object);}
+      { # _repl_syncReplicas
   # XXX - Due to https://github.com/irods/irods/issues/3621, _repl_logMsg has been inlined. Verify
   #       that this is still the case in iRODS 4.2.2.
-        writeLine('serverLog', 'DS: syncing replicas of *Object');
+  #       _repl_logMsg('syncing replicas of *Object');
+        writeLine('serverLog', 'DS: syncing replicas of data object *Object');
 
-        *err = errormsg(msiDataObjRepl(*Object, 'all=++++updateRepl=++++verifyChksum=', *status),
-                        *msg);
+        *dataPath = '';
+        foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
+          *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
+        }
 
-        if (*err < 0 && *err != -808000) {
-          _repl_logMsg('failed to sync replicas of *Object trying again in 8 hours');
-          _repl_logMsg(*msg);
+        if (*dataPath == '') {
+          _repl_logMsg('data object *Object no longer exists');
+        } else {
+          *err = errormsg(
+            msiDataObjRepl(*dataPath, 'all=++++updateRepl=++++verifyChksum=', *status), *msg);
+
+          if (*err < 0 && *err != -808000) {
+            _repl_logMsg('failed to sync replicas of data object *Object trying again in 8 hours');
+            _repl_logMsg(*msg);
   # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
   #       iRODS version 4.2.1.
-          delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_syncReplicas(*Object)}
-        } else {
-          # _repl_logMsg('synced replicas of *Object');
+            delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_repl_syncReplicas(*Object)}
+          } else {
   # XXX - Due to https://github.com/irods/irods/issues/3621, _repl_logMsg has been inlined. Verify
   #       that this is still the case in iRODS 4.2.2.
-          writeLine('serverLog', 'DS: synced replicas of *Object');
+  #           _repl_logMsg('synced replicas of data object *Object');
+            writeLine('serverLog', 'DS: synced replicas of data object *Object');
+          }
         }
 # XXX - ^^^
       }
@@ -322,26 +370,36 @@ _scheduleSyncReplicas(*Object) {
 
 
 # DEPRECATED
-_createOrOverwrite(*Object, *IngestResc, *ReplResc) {
-  if ($writeFlag == 0) {
-    (*ingestName, *optional) = *IngestResc;
-    (*replName, *optional) = *ReplResc;
+_createOrOverwrite(*DataPath, *IngestResc, *ReplResc) {
+  msiSplitPath(*DataPath, *collName, *dataName);
+
+  foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collName' AND DATA_NAME = '*dataName') {
+    *dataId = *rec.DATA_ID;
+
+    if ($writeFlag == 0) {
+      (*ingestName, *optional) = *IngestResc;
+      (*replName, *optional) = *ReplResc;
 # XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
-#    _scheduleRepl(*Object, if $rescName == *replName then *ingestName else *replName);
-# XXX - ^^^
-  } else {
-    _scheduleSyncReplicas(*Object);
+#       _repl_scheduleRepl(*dataId, if $rescName == *replName then *ingestName else *replName);
+    } else {
+      _repl_scheduleSyncReplicas(*dataId);
+    }
   }
 }
 
 
-_repl_createOrOverwrite(*Object, *IngestResc, *ReplResc) {
-  if ($writeFlag == 0) {
+_repl_createOrOverwrite(*DataPath, *IngestResc, *ReplResc) {
+  msiSplitPath(*DataPath, *collName, *dataName);
+
+  foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collName' AND DATA_NAME = '*dataName') {
+    *dataId = *rec.DATA_ID;
+
+    if ($writeFlag == 0) {
 # XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
-#    _scheduleRepl(*Object, if $rescName == *ReplResc then *IngestResc else *ReplResc);
-# XXX - ^^^
-  } else {
-    _scheduleSyncReplicas(*Object);
+#       _repl_scheduleRepl(*dataId, if $rescName == *ReplResc then *IngestResc else *ReplResc);
+    } else {
+      _repl_scheduleSyncReplicas(*dataId);
+    }
   }
 }
 
@@ -637,9 +695,10 @@ _old_replSetRescSchemeForRepl {
 }
 
 replSetRescSchemeForRepl {
-  if (errorcode(temporaryStorage.repl_replicate) < 0
-    || temporaryStorage.repl_replicate != 'REPL_FORCED_REPL_RESC')
-  {
+  if (
+    if errorcode(temporaryStorage.repl_replicate) < 0 then true
+    else temporaryStorage.repl_replicate != 'REPL_FORCED_REPL_RESC'
+  ) {
     (*resc, *_) = _repl_findResc($objPath);
 
     if (*resc != ipc_DEFAULT_RESC) {
@@ -656,7 +715,9 @@ replSetRescSchemeForRepl {
 
 
 pep_resource_resolve_hierarchy_pre(*OUT) {
-  on (errorcode(temporaryStorage.repl_replicate) == 0
-    && temporaryStorage.repl_replicate == 'REPL_FORCED_REPL_RESC')
-  {}
+  on (
+    if errorcode(temporaryStorage.repl_replicate) == 0
+    then temporaryStorage.repl_replicate == 'REPL_FORCED_REPL_RESC'
+    else false
+  ) {}
 }

@@ -190,7 +190,7 @@ _repl_mvReplicas(*Object, *IngestName, *ReplName) {
 _repl_syncReplicas(*Object) {
   _repl_logMsg('syncing replicas of data object *Object');
 
-  *dataPath = '';
+  *dataPath = ''
   foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
     *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
   }
@@ -275,13 +275,18 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
     # if the entity is a collection
     foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
       foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
-        *dataId = *obj.DATA_NAME;
+        *dataId = *rec.DATA_ID;
         _scheduleMv(*dataId, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
       }
     }
   } else if (*type == '-d') {
     # if the entity is a data object
-    _scheduleMv($dataId, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
+    msiSplitPath(*Entity, *collPath, *dataName);
+
+    foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName') {
+      *dataId = *rec.DATA_ID;
+      _scheduleMv(*dataId, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
+    }
   }
 }
 
@@ -336,7 +341,7 @@ _repl_scheduleSyncReplicas(*Object) {
           *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
         }
 
-        if (*dataPath = '') {
+        if (*dataPath == '') {
           _repl_logMsg('data object *Object no longer exists');
         } else {
           *err = errormsg(
@@ -366,13 +371,19 @@ _repl_scheduleSyncReplicas(*Object) {
 
 # DEPRECATED
 _createOrOverwrite(*DataPath, *IngestResc, *ReplResc) {
-  if ($writeFlag == 0) {
-    (*ingestName, *optional) = *IngestResc;
-    (*replName, *optional) = *ReplResc;
+  msiSplitPath(*DataPath, *collName, *dataName);
+
+  foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collName' AND DATA_NAME = '*dataName') {
+    *dataId = *rec.DATA_ID;
+
+    if ($writeFlag == 0) {
+      (*ingestName, *optional) = *IngestResc;
+      (*replName, *optional) = *ReplResc;
 # XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
-#     _repl_scheduleRepl($dataId, if $rescName == *replName then *ingestName else *replName);
-  } else {
-    _repl_scheduleSyncReplicas($dataId);
+#       _repl_scheduleRepl(*dataId, if $rescName == *replName then *ingestName else *replName);
+    } else {
+      _repl_scheduleSyncReplicas(*dataId);
+    }
   }
 }
 
@@ -684,9 +695,10 @@ _old_replSetRescSchemeForRepl {
 }
 
 replSetRescSchemeForRepl {
-  if (errorcode(temporaryStorage.repl_replicate) < 0
-    || temporaryStorage.repl_replicate != 'REPL_FORCED_REPL_RESC')
-  {
+  if (
+    if errorcode(temporaryStorage.repl_replicate) < 0 then true
+    else temporaryStorage.repl_replicate != 'REPL_FORCED_REPL_RESC'
+  ) {
     (*resc, *_) = _repl_findResc($objPath);
 
     if (*resc != ipc_DEFAULT_RESC) {
@@ -703,7 +715,9 @@ replSetRescSchemeForRepl {
 
 
 pep_resource_resolve_hierarchy_pre(*OUT) {
-  on (errorcode(temporaryStorage.repl_replicate) == 0
-    && temporaryStorage.repl_replicate == 'REPL_FORCED_REPL_RESC')
-  {}
+  on (
+    if errorcode(temporaryStorage.repl_replicate) == 0
+    then temporaryStorage.repl_replicate == 'REPL_FORCED_REPL_RESC'
+    else false
+  ) {}
 }

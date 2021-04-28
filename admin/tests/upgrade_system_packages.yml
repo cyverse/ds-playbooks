@@ -1,8 +1,16 @@
 ---
 - name: test upgrade system packages
-  hosts: localhost
-  gather_facts: false
-  run_once: true
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
   tasks:
-    - debug:
+    - name: test ensure e2fsprogs is never updated by yum
+      debug:
+        msg: TODO implement
+
+    - name: test update apt cache on Ubuntu machines
+      debug:
+        msg: TODO implement
+
+    - name: test upgrade system packages
+      debug:
         msg: TODO implement

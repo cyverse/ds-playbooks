@@ -25,8 +25,7 @@
 set -o errexit -o nounset -o pipefail
 
 
-main()
-{
+main() {
   local zone="$1"
   local admin="$2"
   local uploader="$3"
@@ -66,8 +65,7 @@ main()
 }
 
 
-ensure_owner()
-{
+ensure_owner() {
   local user="$1"
   local coll="$2"
 
@@ -81,8 +79,7 @@ ensure_owner()
 }
 
 
-assign_acl()
-{
+assign_acl() {
   local uploader="$1"
   local entity="$2"
 
@@ -96,8 +93,7 @@ assign_acl()
 }
 
 
-bun()
-{
+bun() {
   local uploader="$1"
   local tarDataPath="$2"
   local destDirName="$3"
@@ -126,8 +122,7 @@ bun()
 }
 
 
-get_file_loc()
-{
+get_file_loc() {
   local dataPath="$1"
 
   local coll dataName
@@ -154,8 +149,7 @@ get_file_loc()
 #
 #writer#zone:write owner#zone:own group#zone:own reader#zone:read
 #
-mk_acl()
-{
+mk_acl() {
   sed --quiet --file - <(cat) <<'SED_SCRIPT'
 2 {
   s/ g:/ /g
@@ -169,8 +163,7 @@ SED_SCRIPT
 }
 
 
-map_metadata()
-{
+map_metadata() {
   local parentColl="$1"
   local metaFile="$2"
 
@@ -178,8 +171,7 @@ map_metadata()
 }
 
 
-mk_imeta_cmds()
-{
+mk_imeta_cmds() {
   local parentColl="$1"
 
   while IFS=, read -r -a fields
@@ -189,6 +181,8 @@ mk_imeta_cmds()
       printf 'adda -d "%s/%s" "%s" "%s" "%s"\n' "$parentColl" "${fields[0]}" "${fields[@]:$idx:3}"
     done
   done
+
+  printf 'quit\n'
 }
 
 

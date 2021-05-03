@@ -44,8 +44,7 @@ main() {
 
   # XXX - Work around for https://github.com/irods/irods/issues/3291
   # if ! clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"
-  if bun "$uploader" "$tarFile" "${tarName%-*}"
-  then
+  if bun "$uploader" "$tarFile" "${tarName%-*}"; then
     ensure_owner "$admin" "$coll"
 
     # XXX - Don't clean up until work around (^^^) is confirmed to work
@@ -56,8 +55,9 @@ main() {
     return "$rc"
   fi
 
-  if map_metadata  "$coll" "$metaFile"
-  then
+  if ! map_metadata  "$coll" "$metaFile"; then
+    printf 'failed to add metadata from %s to files in %s\n' "$metaFile" "$coll" >&2
+  else
     irm -f "$metaFile"
   fi
 
@@ -72,8 +72,7 @@ ensure_owner() {
   local resp
   resp=$(iquest '%s' "select COLL_NAME where COLL_NAME = '$coll'")
 
-  if [[ "$resp" = "$coll" ]]
-  then
+  if [[ "$resp" = "$coll" ]]; then
     ichmod -M -r own "$user" "$coll"
   fi
 }
@@ -83,10 +82,8 @@ assign_acl() {
   local uploader="$1"
   local entity="$2"
 
-  while IFS=: read -r -d ' ' user perm
-  do
-    if [ "$user" != "$uploader" ]
-    then
+  while IFS=: read -r -d ' ' user perm; do
+    if [ "$user" != "$uploader" ]; then
       ichmod -M -r "$perm" "$user" "$entity"
     fi
   done
@@ -167,17 +164,15 @@ map_metadata() {
   local parentColl="$1"
   local metaFile="$2"
 
-  iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null
+  iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null 2>&1
 }
 
 
 mk_imeta_cmds() {
   local parentColl="$1"
 
-  while IFS=, read -r -a fields
-  do
-    for ((idx=1; idx < ${#fields[@]}; idx+=3))
-    do
+  while IFS=, read -r -a fields; do
+    for ((idx=1; idx < ${#fields[@]}; idx+=3)); do
       printf 'adda -d "%s/%s" "%s" "%s" "%s"\n' "$parentColl" "${fields[0]}" "${fields[@]:$idx:3}"
     done
   done

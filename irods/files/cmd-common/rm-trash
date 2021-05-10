@@ -10,10 +10,8 @@ Usage:
 
 This script deletes the trash older than one month. It deletes the oldest trash
 first. It writes a complete report of everything deleted to standard output by
-default with all error messages be written to both standard error. If the output
-is directed to FILE, error messages will still be written to standard error in
-addition to FILE. In any case, each message written is formatted in syslog
-style.
+default along with all error messages. Each message written is formatted in
+syslog style.
 
 Options:
  -h, --help      show help and exit

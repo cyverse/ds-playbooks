@@ -120,6 +120,8 @@ check_dependencies() {
 
 
 map_opts() {
+  # TODO once we are using bash 5+, make mapVar a nameref variable, e.g.,
+  # `declare -n`. That way the `evals` can be removed.
   local mapVar="$1"
   shift
 
@@ -135,15 +137,15 @@ map_opts() {
   do
     case "$1" in
       -h|--help)
-        declare "$mapVar"[help]=help
+        eval "$mapVar"[help]=help
         shift
         ;;
       -L|--log)
-        declare "$mapVar"[log]="$2"
+        eval "$mapVar"[log]="$2"
         shift 2
         ;;
       -v|--version)
-        declare "$mapVar"[version]=version
+        eval "$mapVar"[version]=version
         shift
         ;;
       --)

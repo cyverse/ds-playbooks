@@ -1,7 +1,6 @@
 #!/bin/bash
 
-show_help()
-{
+show_help() {
   cat <<EOF
 
 $ExecName version $Version
@@ -45,8 +44,7 @@ readonly ExecName=$(basename "$ExecAbsPath")
 readonly Concurrency=4
 
 
-main()
-{
+main() {
   if ! check_dependencies
   then
     printf 'missing dependencies\n' >&2
@@ -97,13 +95,22 @@ main()
   # shellcheck disable=SC2064
   trap "rm_temps '$trashTmpFiles' 2> >(disp_err) > >(disp_out)" EXIT
 
-  rm_trash "$trashTmpFiles" 2> >(disp_err) > >(disp_out)
+  if ! rm_trash "$trashTmpFiles" 2> >(disp_err) > >(disp_out)
+  then
+    printf 'Trash removal failed.' >&2
+
+    if [[ -n "${optMap[log]}" ]]
+    then
+      printf 'See %s for details.' "${optMap[log]}" >&2
+    fi
+
+    printf '\n' >&2
+  fi
 }
 
 
-check_dependencies()
-{
-  if ! which parallel > /dev/null
+check_dependencies() {
+  if ! command -v parallel > /dev/null
   then
     # shellcheck disable=SC2016
     printf 'Cannot find `parallel`\n' >&2
@@ -112,8 +119,7 @@ check_dependencies()
 }
 
 
-map_opts()
-{
+map_opts() {
   local mapVar="$1"
   shift
 
@@ -129,15 +135,15 @@ map_opts()
   do
     case "$1" in
       -h|--help)
-        eval "$mapVar[help]=help"
+        declare "$mapVar"[help]=help
         shift
         ;;
       -L|--log)
-        eval "$mapVar[log]='$2'"
+        declare "$mapVar"[log]="$2"
         shift 2
         ;;
       -v|--version)
-        eval "$mapVar[version]=version"
+        declare "$mapVar"[version]=version
         shift
         ;;
       --)
@@ -152,8 +158,7 @@ map_opts()
 }
 
 
-redirect_stdout()
-{
+redirect_stdout() {
   local logFile="$1"
 
   exec 1>&-
@@ -167,8 +172,7 @@ redirect_stdout()
 }
 
 
-rm_temps()
-{
+rm_temps() {
   local trashTempFiles="$1"
 
   xargs --no-run-if-empty rm --force < "$trashTempFiles"
@@ -176,8 +180,7 @@ rm_temps()
 }
 
 
-disp_err()
-{
+disp_err() {
   local parallelPat='(parallel:| Hangup  *parallel) '
 
   local err
@@ -189,12 +192,11 @@ disp_err()
     then
       fmt_msg ERROR "$err"
     fi
-  done | route_err
+  done
 }
 
 
-disp_out()
-{
+disp_out() {
   while IFS= read -r msg
   do
     fmt_msg INFO "$msg"
@@ -202,8 +204,7 @@ disp_out()
 }
 
 
-fmt_msg()
-{
+fmt_msg() {
   local type="$1"
   local body="$2"
 
@@ -211,19 +212,7 @@ fmt_msg()
 }
 
 
-route_err()
-{
-  if [[ -t 1 ]]
-  then
-    cat >&2
-  else
-    tee /dev/stderr
-  fi
-}
-
-
-rm_trash()
-{
+rm_trash() {
   local trashTempFiles="$1"
 
   local zone
@@ -277,8 +266,7 @@ rm_trash()
 }
 
 
-base_collections()
-{
+base_collections() {
   local zone="$1"
 
   quest \
@@ -289,8 +277,7 @@ base_collections()
 }
 
 
-trashed_data()
-{
+trashed_data() {
   local zone="$1"
 
   local upperBound
@@ -305,8 +292,7 @@ trashed_data()
 }
 
 
-prune_children()
-{
+prune_children() {
   local trashTempFiles="$1"
   local parent="$2"
 
@@ -334,8 +320,7 @@ prune_children()
 }
 
 
-prune_collection()
-{
+prune_collection() {
   local trashTempFiles="$1"
   local collection="$2"
 
@@ -369,24 +354,21 @@ prune_collection()
 }
 
 
-count_data()
-{
+count_data() {
   local collection="$1"
 
   quest '%s' "select count(DATA_ID) where COLL_NAME = '$collection' || like '$collection/%'"
 }
 
 
-mk_temp()
-{
+mk_temp() {
   local trashTempFiles="$1"
 
   mktemp | tee --append "$trashTempFiles"
 }
 
 
-quest()
-{
+quest() {
   local fmt="$1"
   local query="$2"
 
@@ -395,8 +377,7 @@ quest()
 }
 
 
-truncate_by_time()
-{
+truncate_by_time() {
   local upperBound="$1"
 
   local dataObj modifyTs
@@ -415,8 +396,7 @@ truncate_by_time()
 }
 
 
-RM_DATA_BATCH()
-{
+RM_DATA_BATCH() {
   trap 'kill -TERM "$PARALLEL_PID"; sleep 1; kill -HUP "$PARALLEL_PID"' TERM
 
   if ! stdbuf --error L --output L irm -f -v "$@" | MK_RM_MSGS "$@"
@@ -429,8 +409,7 @@ RM_DATA_BATCH()
 export -f RM_DATA_BATCH
 
 
-MK_RM_MSGS()
-{
+MK_RM_MSGS() {
   local paths=("$@")
   local idx=0
 

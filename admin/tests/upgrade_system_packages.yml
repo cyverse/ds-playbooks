@@ -3,7 +3,11 @@
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - name: test ensure e2fsprogs is never updated by yum
+    - name: test ensure e2fsprogs is never updated by yum on rs_centos6
+      when: ansible_hostname == 'dstesting_rs_centos6_1_destesting_default'
+      shell: grep --quiet 'exclude=e2fsprogs* libcom_err-* libss-*' /etc/yum.conf
+
+    - name: test ensure e2fsprogs is updated by yum on others CentOS
       debug:
         msg: TODO implement
 

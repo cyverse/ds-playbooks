@@ -12,9 +12,6 @@ insert into R_USER_MAIN values (9002,'public','rodsgroup','ZONE_NAME_TEMPLATE','
 
 /* users */
 insert into R_USER_MAIN values (9010,'ADMIN_NAME_TEMPLATE','rodsadmin','ZONE_NAME_TEMPLATE','','','1170000000','1170000000');
-insert into R_USER_MAIN values (9011,'avra_mgr','rodsuser','ZONE_NAME_TEMPLATE','','Avra project manager','1170000000','1170000000');
-insert into R_USER_MAIN values (9012,'terraref_mgr','rodsuser','ZONE_NAME_TEMPLATE','','TerraREF project manager','1170000000','1170000000');
-insert into R_USER_MAIN values (9013,'pire_mgr','rodsuser','ZONE_NAME_TEMPLATE','','PIRE project manager','1170000000','1170000000');
 
 /* group membership */
 insert into R_USER_GROUP values (9001,9010,'1170000000','1170000000');
@@ -52,3 +49,8 @@ insert into R_OBJT_ACCESS values (9028,9010,1200,'1170000000','1170000000');
 insert into R_RESC_MAIN (resc_id, resc_name, zone_name, resc_type_name, resc_class_name,  resc_net, resc_def_path, free_space, free_space_ts, resc_info, r_comment, resc_status, create_ts, modify_ts) values (9100, 'bundleResc', 'ZONE_NAME_TEMPLATE', 'unixfilesystem', 'bundle', 'localhost', '/bundle', '', '', '', '', '', '1170000000','1170000000');
 
 /* other resources below here */
+insert into R_TOKN_MAIN values ('user_type', 10000, 'ds-service', '', 'a Data Store service', '', '', '1170000000','1170000000');
+
+insert into R_USER_MAIN values (10001,'avra_mgr','rodsuser','ZONE_NAME_TEMPLATE','','Avra project manager','1170000000','1170000000');
+insert into R_USER_MAIN values (10002,'terraref_mgr','rodsuser','ZONE_NAME_TEMPLATE','','TerraREF project manager','1170000000','1170000000');
+insert into R_USER_MAIN values (10003,'pire_mgr','rodsuser','ZONE_NAME_TEMPLATE','','PIRE project manager','1170000000','1170000000');

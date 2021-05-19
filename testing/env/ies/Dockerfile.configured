@@ -13,7 +13,7 @@ RUN pip --disable-pip-version-check install pika
 RUN python3 -m pip --quiet install python-irodsclient
 RUN touch /var/lib/irods/iRODS/server/bin/cmd/bisque_ops.py
 
-COPY ies/config/ipc-housekeeping.re /etc/irods/
+COPY ies/config/pre-config.re /etc/irods/
 COPY ies/scripts/* /tmp/
 
 ARG DB_NAME=ICAT

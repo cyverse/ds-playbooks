@@ -37,7 +37,41 @@
       register: response
       failed_when: not (response.stat.exists and response.stat.isdir)
 
-    - name: test add common command scripts
+    - name: test add amqptopicsend.py
+      stat:
+        path: /tmp/cmd/amqptopicsend.py
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test add calliope-ingest
+      debug:
+        msg: TODO implement
+
+    - name: test add de-archive-data
+      debug:
+        msg: TODO implement
+
+    - name: test add de-create-collection
+      debug:
+        msg: TODO implement
+
+    - name: test add delete-scheduled-rule
+      debug:
+        msg: TODO implement
+
+    - name: test add generateuuid
+      debug:
+        msg: TODO implement
+
+    - name: test add rm-trash
+      debug:
+        msg: TODO implement
+
+    - name: test add set-uuid
+      debug:
+        msg: TODO implement
+
+    - name: test add sparcd-ingest
       debug:
         msg: TODO implement
 

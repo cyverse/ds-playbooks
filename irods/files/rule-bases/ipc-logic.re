@@ -34,8 +34,8 @@ assignUUID(*ItemType, *ItemName) {
   writeLine('serverLog', 'UUID *uuid created');
 # XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
 #       4.2.2.
-#  msiSetAVU(*ItemType, *ItemName, 'ipc_UUID', *uuid, '');
-  *status = errormsg(msiSetAVU(*ItemType, *ItemName, 'ipc_UUID', *uuid, ''), *msg);
+#  msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, '');
+  *status = errormsg(msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, ''), *msg);
 
   if (*status == -818000) {
     # assume it was uploaded by a ticket
@@ -381,7 +381,7 @@ ensureAVUEditable(*Editor, *ItemType, *ItemName, *A, *V, *U) {
 # If an AVU is not protected, it sets the AVU to the given item
 setAVUIfUnprotected(*ItemType, *ItemName, *A, *V, *U) {
   if (!avuProtected(*ItemType, *ItemName, *A)) {
-    msiSetAVU(*ItemType, *ItemName, *A, *V, *U);
+    msiModAVUMetadata(*ItemType, *ItemName, 'set', *A, *V, *U);
   }
 }
 

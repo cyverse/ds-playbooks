@@ -2,7 +2,6 @@
 !cmd/
 !etc/irods/
 !irods-netcdf-build/packages/centos7/*.rpm
-!irods-setavu-plugin/libraries/centos7/libmsiSetAVU.so
 !on-build-instantiate.sh
 !periphery.sh
 !var/lib/irods/.irods/irods_environment.json

@@ -1,11 +1,8 @@
 ---
 ansible_python_interpreter: /usr/bin/python
 
-# XXX - We can't test creating a new user. It causes msiSetAVU to be called on
-# the IES, but the IES doesn't have that module installed unless create_ies.yml
-# is called first.
-# irods_clerver_password: rs7_password
-# irods_clerver_user: rs7_admin
+irods_clerver_password: rs7_password
+irods_clerver_user: rs7_admin
 
 irods_storage_resources:
   - name: rs_centos7

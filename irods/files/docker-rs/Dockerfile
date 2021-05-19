@@ -3,9 +3,6 @@ FROM cyverse/irods-rs:4.1.10
 ### Switch back to root for installation
 USER root
 
-### Install Set AVU plugin
-COPY irods-setavu-plugin/libraries/centos7/libmsiSetAVU.so /var/lib/irods/plugins/microservices
-
 ### Install iRODS NetCDF plugins
 COPY irods-netcdf-build/packages/centos7/*.rpm /tmp/
 RUN yum --assumeyes install \

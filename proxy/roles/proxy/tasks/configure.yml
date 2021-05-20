@@ -1,6 +1,4 @@
 ---
-- import_tasks: validate.yml
-
 - name: allowing proxy to listen on stats port
   seport:
     ports: "{{ stats_port }}"

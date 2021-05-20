@@ -10,17 +10,16 @@
     - name: verify config values expand correctly in cyverse.conf
       assert:
         that:
-          - cyverse_conf is search("listen_addresses = '127.0.0.1'" | regex_escape)
-          - cyverse_conf is search("port = '5432'")
-          - cyverse_conf is search('max_wal_senders = 120')
-          - cyverse_conf is search('wal_keep_segments = 4000')
-          - cyverse_conf is search('max_connections = 1500')
           - cyverse_conf is search('effective_cache_size = 1GB')
+          - cyverse_conf is search("listen_addresses = '127.0.0.1'" | regex_escape)
+          - cyverse_conf is search('maintenance_work_mem = 1GB')
+          - cyverse_conf is search('max_connections = 1500')
+          - cyverse_conf is search('max_wal_senders = 120')
+          - cyverse_conf is search('min_wal_size = 80MB')
+          - cyverse_conf is search("port = '5432'")
           - cyverse_conf is search('shared_buffers = 1GB')
+          - cyverse_conf is search('wal_keep_segments = 4000')
           - cyverse_conf is search('work_mem = 64MB')
-
-    - debug:
-        msg: TODO check maintenance_work_mem
 
     - debug:
         msg: TODO check min_wal_size

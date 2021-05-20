@@ -53,21 +53,14 @@
 
 - name: Prepare for iRODS
   hosts: dbms_primary
-  become: True
+  become: true
   become_user: postgres
-  gather_facts: False
-  run_once: True
-  tasks:
-    - name: create ICAT DB
-      postgresql_db:
-        name: ICAT
-        port: "{{ _dbms_port }}"
-
-    - name: create iRODS user
-      postgresql_user:
-        name: "{{ _dbms_irods_user }}"
-        password: "{{ _dbms_irods_password }}"
-        db: ICAT
-        priv: all
-        port: "{{ _dbms_port }}"
-      no_log: true
+  gather_facts: false
+  run_once: true
+  roles:
+    - role: postgresql_db
+      vars:
+        postgresql_db_dbms_port: "{{ _dbms_port }}"
+        postgresql_db_name: ICAT
+        postgresql_db_admin_user: "{{ _dbms_irods_user }}"
+        postgresql_db_admin_password: "{{ _dbms_irods_password }}"

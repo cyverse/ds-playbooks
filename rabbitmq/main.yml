@@ -8,6 +8,11 @@
         name: epel-release
         state: present
 
+    - name: ensure erlang-erts isn't installed
+      package:
+        name: erlang-erts
+        state: absent
+
     - name: install erlang (stripped-down rabbitmq-provided RPM)
       yum:
         name: 'https://github.com/rabbitmq/erlang-rpm/releases/download/v23.2.7/erlang-23.2.7-1.el7.x86_64.rpm'

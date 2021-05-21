@@ -1,10 +1,22 @@
 FROM williamyeh/ansible:centos7
 
-RUN yum --assumeyes install dmidecode git postgresql python3 python3-pip rpm-build wget \
+RUN yum --assumeyes \
+      install bzip2-devel dmidecode gcc git libffi-devel openssl-devel postgresql rpm-build wget \
       https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm
-RUN python3 -m pip --quiet install --upgrade pip
-RUN python3 -m pip --quiet install \
-      ansible dnspython netaddr python-irodsclient requests urllib3 wheel
+
+ADD https://www.python.org/ftp/python/3.8.1/Python-3.8.1.tgz /root/
+
+RUN tar --extract --directory /root --file /root/Python-3.8.1.tgz
+
+WORKDIR /root/Python-3.8.1
+
+RUN ./configure --enable-optimizations
+RUN make altinstall
+
+WORKDIR /
+
+RUN python3.8 -m pip --disable-pip-version-check --quiet \
+      install ansible dnspython netaddr python-irodsclient  requests urllib3 wheel
 RUN mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test /root/.ssh
 
 COPY ansible.cfg /root/.ansible.cfg

@@ -1,2 +1,2 @@
 ---
-load_balancer_stats_certificate: /etc/haproxy/certs/dumb.pem
+proxy_stats_certificate: /etc/haproxy/certs/dumb.pem

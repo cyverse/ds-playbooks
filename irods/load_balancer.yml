@@ -6,8 +6,8 @@
     ies: "{{ groups['ies'][0] }}"
     ies_server: "{{ ies | regex_replace('\\..*') }}"
     ies_ip: "{{ ies if ies|ipaddr else lookup('dig', ies) }}"
-    ies_maxconn: maxconn {{ _load_balancer_irods_max_conn }}
-    ies_check_periods: inter {{ _load_balancer_irods_check_period }}s downinter 5s fastinter 2s
+    ies_maxconn: maxconn {{ _proxy_irods_max_conn }}
+    ies_check_periods: inter {{ _proxy_irods_check_period }}s downinter 5s fastinter 2s
     ies_check: check port 1247 fall 2 {{ ies_check_periods }}
 # XXX: Until we are load balancing iRODS servers, I'm disabling checks to prevent false positives
     ies_server_cfg: "{{ ies_ip }} {{ ies_maxconn }}"
@@ -19,7 +19,7 @@
         groups.webdav[0] }}{%
       else %}{{
         lookup('dig', groups.webdav[0]) }}{% endif %}"
-    webdav_check_periods: inter {{ _load_balancer_webdav_check_period }}s downinter 3s fastinter 1s
+    webdav_check_periods: inter {{ _proxy_webdav_check_period }}s downinter 3s fastinter 1s
     webdav_check: check port 80 fall 2 {{ webdav_check_periods }}
 # XXX: Until we are load balancing WebDAV servers, I'm disabling checks to prevent false positives
     webdav_server_cfg: "{{ webdav_ip }}"
@@ -130,19 +130,19 @@
         haproxy_default_timeouts:
           - connect 10s
           - client 1d
-          - queue {{ _load_balancer_queue_timeout }}s
+          - queue {{ _proxy_queue_timeout }}s
           - server 1d
 
 # client-fin needs to be less than conntrack's TCP FIN_WAIT timeout, usually 2m.
           - client-fin 1m
 
-        haproxy_ssl_certificate: "{{ _load_balancer_stats_certificate }}"
+        haproxy_ssl_certificate: "{{ _proxy_stats_certificate }}"
         haproxy_stats: true
         haproxy_stats_address: '*'
-        haproxy_stats_port: "{{ _load_balancer_stats_port }}"
+        haproxy_stats_port: "{{ _proxy_stats_port }}"
         haproxy_stats_ssl: true
-        haproxy_stats_user: "{{ _load_balancer_stats_user }}"
-        haproxy_stats_password: "{{ _load_balancer_stats_password }}"
+        haproxy_stats_user: "{{ _proxy_stats_user }}"
+        haproxy_stats_password: "{{ _proxy_stats_password }}"
         haproxy_stats_uri: /
         haproxy_stats_options:
           - refresh 10s
@@ -190,7 +190,8 @@
 #               - send <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
           - irods_throttled:
               servers:
-                - indirect unix@haproxy_irods.sock send-proxy maxconn {{ _load_balancer_irods_extra_max_conn }}
+                - indirect unix@haproxy_irods.sock send-proxy maxconn {{
+                    _proxy_irods_extra_max_conn }}
         haproxy_listen:
           - webdav:
               binds:
@@ -229,26 +230,30 @@
         marker: "# {mark} DS MANAGED BLOCK (load_balancer raw)"
         block: |
           *raw
-          -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport 80 -j NOTRACK
-          -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport 80 -j NOTRACK
+          -A PREROUTING -s {{ _proxy_irods_allowed_src }} -p tcp --dport 80 -j NOTRACK
+          -A OUTPUT -d {{ _proxy_irods_allowed_src }} -p tcp --sport 80 -j NOTRACK
           {% for w in groups.webdav %}
           {%   set addr = w if w|ipaddr else lookup('dig', w) %}
           -A PREROUTING -s {{ addr }} -p tcp --sport 80 -j NOTRACK
           -A OUTPUT -d {{ addr }} -p tcp --dport 80 -j NOTRACK
           {% endfor %}
-          -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport 443 -j NOTRACK
-          -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport 443 -j NOTRACK
+          -A PREROUTING -s {{ _proxy_irods_allowed_src }} -p tcp --dport 443 -j NOTRACK
+          -A OUTPUT -d {{ _proxy_irods_allowed_src }} -p tcp --sport 443 -j NOTRACK
           {% for w in groups.webdav %}
           {%   set addr = w if w|ipaddr else lookup('dig', w) %}
           -A PREROUTING -s {{ addr }} -p tcp --sport 443 -j NOTRACK
           -A OUTPUT -d {{ addr }} -p tcp --dport 443 -j NOTRACK
           {% endfor %}
-          -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ _canonical_irods_port }} -j NOTRACK
-          -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport {{ _canonical_irods_port }} -j NOTRACK
+          -A PREROUTING -s {{ _proxy_irods_allowed_src }} -p tcp --dport {{ _canonical_irods_port
+            }} -j NOTRACK
+          -A OUTPUT -d {{ _proxy_irods_allowed_src }} -p tcp --sport {{ _canonical_irods_port
+            }} -j NOTRACK
           -A PREROUTING -s {{ ies_ip }} -p tcp --sport {{ _irods_zone_port }} -j NOTRACK
           -A OUTPUT -d {{ ies_ip }} -p tcp --dport {{ _irods_zone_port }} -j NOTRACK
-          -A PREROUTING -s {{ _load_balancer_irods_allowed_src }} -p tcp --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
-          -A OUTPUT -d {{ _load_balancer_irods_allowed_src }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
+          -A PREROUTING -s {{ _proxy_irods_allowed_src
+            }} -p tcp --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
+          -A OUTPUT -d {{ _proxy_irods_allowed_src
+            }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
           -A PREROUTING -s {{ ies_ip }} -p tcp --sport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
           -A OUTPUT -d {{ ies_ip }} -p tcp --dport {{ reconn_ports_start }}:{{ reconn_ports_end }} -j NOTRACK
           COMMIT
@@ -262,7 +267,8 @@
         marker: "# {mark} DS MANAGED BLOCK (load_balancer filter)"
         block: |
           -A INPUT -m state --state UNTRACKED -j ACCEPT
-          -A INPUT -m state --state NEW -s {{ _load_balancer_stats_allowed_src }} -p tcp --dport {{ _load_balancer_stats_port }} -j ACCEPT
+          -A INPUT -m state --state NEW -s {{ _proxy_stats_allowed_src
+            }} -p tcp --dport {{ _proxy_stats_port }} -j ACCEPT
       notify:
         - restart firewall
 

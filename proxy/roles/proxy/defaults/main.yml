@@ -1,4 +1,6 @@
 ---
+proxy_no_guardrails: false
+
 proxy_default_max_conn: "{{ _default_max_conn }}"
 proxy_default_queue_timeout: none
 

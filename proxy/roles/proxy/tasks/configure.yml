@@ -1,17 +1,25 @@
 ---
-- name: allowing proxy to listen on stats port
+- name: disable testing
+  set_fact:
+    proxy_no_guardrails: true
+  tags:
+    - no_testing
+
+- name: configure | allowing proxy to listen on stats port
+  when: ansible_selinux.status == 'enabled'
   seport:
     ports: "{{ stats_port }}"
     proto: tcp
     setype: tor_port_t
 
-- name: enabling SELinux booleans for proxy
+- name: configure | enabling SELinux booleans for proxy
+  when: ansible_selinux.status == 'enabled'
   seboolean:
     name: haproxy_connect_any
     state: true
     persistent: true
 
-- name: open firewall for relevant connections
+- name: configure | open firewall for relevant connections
   blockinfile:
     path: /etc/sysconfig/iptables
     insertbefore: -A INPUT -j REJECT
@@ -25,7 +33,7 @@
   notify:
     - reload firewall
 
-- name: disable conntrack for proxied connections
+- name: configure | disable conntrack for proxied connections
   blockinfile:
     path: /etc/sysconfig/iptables
     marker: "# {mark} DS MANAGED BLOCK (proxy raw)"
@@ -57,14 +65,14 @@
   notify:
     - reload firewall
 
-- name: place iRODS VIP list
+- name: configure | place iRODS VIP list
   template:
     src: vip.lst.j2
     dest: /etc/haproxy/vip.lst
   notify:
     - reload haproxy
 
-- name: place haproxy config file
+- name: configure | place haproxy config file
   template:
     src: haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg

@@ -6,7 +6,7 @@ _default_irods_host: localhost
 _default_irods_port: 1247
 _default_irods_reconn_first_port: 20000
 _default_irods_reconn_last_port: 20199
-_default_irods_vip_source_hosts: []
+_default_irods_vip_client_hosts: []
 _default_max_conn: 500
 _default_stats_port: 81
 _default_webdav_backend_hosts:

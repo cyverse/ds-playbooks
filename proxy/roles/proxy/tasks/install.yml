@@ -1,23 +1,33 @@
 ---
-- name: ensure nonlocal binding allowed
+- name: disable testing
+  set_fact:
+    proxy_no_guardrails: true
+  tags:
+    - no_testing
+
+- name: install | ensure nonlocal binding allowed
   sysctl:
     name: net.ipv4.ip_nonlocal_bind
-    value: 1
+    value: '1'
     sysctl_set: true
-    file: /etc/sysctl.d/haproxy.conf
+    sysctl_file: /etc/sysctl.d/haproxy.conf
     reload: true
     state: present
+  tags:
+    - no_testing
 
-- name: ensure IP forwarding allowed
+- name: install | ensure IP forwarding allowed
   sysctl:
     name: net.ipv4.ip_forward
-    value: 1
+    value: '1'
     sysctl_set: true
-    file: /etc/sysctl.d/haproxy.conf
+    sysctl_file: /etc/sysctl.d/haproxy.conf
     reload: true
     state: present
+  tags:
+    - no_testing
 
-- name: configure rsyslog to listen on UDP socket
+- name: install | configure rsyslog to listen on UDP socket
   blockinfile:
     path: /etc/rsyslog.conf
     insertafter: '# Provides UDP syslog reception'
@@ -27,38 +37,40 @@
       $UDPServerRun 514
       $UDPServerAddress 127.0.0.1
   notify:
-    - restart syslog
+    - restart rsyslog
 
-- name: place rsyslog config for HAProxy
+- name: install | place rsyslog config for HAProxy
   copy:
     src: rsyslog-haproxy.conf
     dest: /etc/rsyslog.d
   notify:
-    - restart syslog
+    - restart rsyslog
 
-- name: place logrotate config for HAProxy
+- name: install | place logrotate config for HAProxy
   copy:
     src: logrotate-haproxy
     dest: /etc/logrotate.d
 
-- name: ensure CentOS 7 stock HAProxy is not installed
+- name: install | ensure CentOS 7 stock HAProxy is not installed
   package:
     name: haproxy
     state: absent
 
-- name: ensure Software Collections repository is installed
+- name: install | ensure Software Collections repository is installed
   package:
     name: centos-release-scl
 
-- name: ensure HAProxy version 1.8 is installed
+- name: install | ensure HAProxy version 1.8 is installed
   package:
     name: "{{ item }}"
   with_items:
     - rh-haproxy18-haproxy
     - rh-haproxy18-haproxy-syspaths
 
-- name: ensure HAProxy starts on reboot
+- name: install | ensure HAProxy starts on reboot
   service:
     name: rh-haproxy18-haproxy
     enabled: true
     state: started
+  tags:
+    - no_testing

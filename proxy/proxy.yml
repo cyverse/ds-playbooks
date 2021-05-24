@@ -1,6 +1,6 @@
 ---
 - name: Set up proxy
-  hosts: proxy
+  hosts: load_balancer
   become: true
   roles:
     - role: proxy

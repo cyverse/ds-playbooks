@@ -20,7 +20,7 @@ dstesting_ies_configured_1.dstesting_default
 dstesting_rs_centos6_1.dstesting_default
 dstesting_rs_centos7_1.dstesting_default
 
-[load_balancer]
+[proxy]
 dstesting_proxy_1.dstesting_default
 
 [rabbitmq]

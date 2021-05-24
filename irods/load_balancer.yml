@@ -1,6 +1,6 @@
 ---
 - name: install HAPRoxy
-  hosts: load_balancer
+  hosts: proxy
   become: true
   vars:
     ies: "{{ groups['ies'][0] }}"

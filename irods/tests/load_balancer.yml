@@ -1,6 +1,6 @@
 ---
 - name: test install HAProxy
-  hosts: load_balancer
+  hosts: proxy
   become: true
   tasks:
     - name: test configure rsyslog to listen on UDP socket

@@ -1,7 +1,15 @@
 localhost ansible_connection=local
 
-[dbms]
-dstesting_dbms_1.dstesting_default
+[dbms:children]
+dbms_primary
+dbms_replicas
+
+[dbms_primary]
+dstesting_dbms_configured_1.dstesting_default
+dstesting_dbms_unconfigured_1.dstesting_default
+
+[dbms_replicas]
+dstesting_dbms_unconfigured_2.dstesting_default
 
 [irods:children]
 ies

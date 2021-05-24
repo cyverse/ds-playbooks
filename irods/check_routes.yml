@@ -24,14 +24,30 @@
       changed_when: false
 
 
-- name: check rs ports from ies
+- name: check ports from ies
   hosts: ies
   gather_facts: false
   serial: 1
   tags:
     - non_idempotent
   tasks:
-    - name: check port
+    - name: check own grid port
+      port_check_sender:
+        destination: "{{ ansible_fqdn }}"
+        tcp_ports:
+          - "{{ _irods_server_control_plane_port }}"
+      ignore_errors: true
+
+    - name: check ies grid port
+      port_check_sender:
+        destination: "{{ item }}"
+        tcp_ports:
+          - "{{ hostvars[item]._irods_server_control_plane_port }}"
+      ignore_errors: true
+      with_items: "{{
+        groups['ies'] | difference(groups['rs']) | difference([inventory_hostname]) }}"
+
+    - name: check rs port
       port_check_sender:
         destination: "{{ item }}"
         tcp_ports:

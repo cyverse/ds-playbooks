@@ -9,47 +9,24 @@
       tags:
         - no_testing
 
-    - name: allow IES communication through firewall
-      blockinfile:
-        path: /etc/sysconfig/iptables
-        insertbefore: -A {{ _firewall_chain }} -j REJECT
-        marker: "# {mark} DS MANAGED BLOCK"
-        block: |
-          {% for i in groups['ies'] %}
-          {%   set addr = i if i|ipaddr else lookup('dig', i) %}
-          {%   if inventory_hostname != i %}
-          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport {{ _dbms_port
-             }} -j ACCEPT
-          {%   endif %}
-          {% endfor %}
-      notify:
-        - restart firewall
-
     - name: allow IES to communicate with Postgres DBMS
       blockinfile:
-        path: /var/lib/pgsql/9.3/data/pg_hba.conf
-        insertafter: '# IPv4 local connections:'
-        marker: "# {mark} DS MANAGED BLOCK"
+        path: "{{ _irods_dbms_pg_hba }}"
+        marker: "# {mark} DS IRODS MANAGED BLOCK"
         block: |
           {% for i in groups['ies'] %}
           {%   set addr = i if i|ipaddr else lookup('dig', i) %}
-          {{ '%-8s %-15s %-15s %-23s %s' | format('host', 'ICAT', _dbms_username, addr ~ '/32', 'md5')
-            }}
+          {{   '%-7s %-15s %-15s %-23s %s'
+                 | format('host', 'ICAT', hostvars[i]._irods_db_user, addr ~ '/32', 'md5') }}
           {% endfor %}
       notify:
         - reload postgresql
 
   handlers:
-    - name: restart firewall
-      when: notifications_enabled | default(false)
-      service:
-        name: iptables
-        state: restarted
-
     - name: reload postgresql
       when: notifications_enabled | default(false)
       service:
-        name: postgresql-9.3
+        name: postgresql
         state: reloaded
 
 
@@ -59,6 +36,10 @@
 - name: provision additional for IES
   hosts: ies
   become: true
+  vars:
+    # NB: The rpm and yum bindings for the package module require Python 2 in
+    #     Ansible 2.9.6
+    ansible_python_interpreter: /usr/bin/python
   tasks:
     - name: configure linux kernel
       sysctl:
@@ -68,17 +49,46 @@
       tags:
         - no_testing
 
-    - name: ensure mail client is installed
-      package:
-        name: mailx
-        state: present
+    - name: verify PostgreSQL client version is 9.3 or 12
+      when: _irods_dbms_pg_version != '9.3' and _irods_dbms_pg_version != '12'
+      fail:
+        msg: Only PostgreSQL client versions 9.3 and 12 are supported
 
-    - name: ensure GNU parallel installed
+    - name: ensure PostgreSQL 9.3 clients are installed
+      when: _irods_dbms_pg_version == '9.3'
+      yum:
+        name:
+          - https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/postgresql93-libs-9.3.25-1PGDG.rhel7.x86_64.rpm
+          - https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/postgresql93-9.3.25-1PGDG.rhel7.x86_64.rpm
+          - https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/postgresql93-odbc-10.03.0000-1PGDG.rhel7.x86_64.rpm
+
+    - when: _irods_dbms_pg_version == '12'
+      block:
+        - name: ensure PostgreSQL 12 repo is installed
+          yum:
+            name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+        - name: ensure PostgreSQL 12 clients are installed
+          package:
+            name:
+              - postgresql12
+              - postgresql12-odbc
+            state: present
+
+        - name: add postgres 12 clients to path
+          copy:
+            src: "{{ item }}"
+            dest: /etc/profile.d
+          with_fileglob:
+            - "files/profile.d/*"
+
+    - name: ensure required packages are installed
       package:
-        name: "{{ 'moreutils' if ansible_distribution == 'CentOS' and
-                                 ansible_distribution_version is version ('7', '<') else
-                  'parallel' }}"
+        name: "{{ item }}"
         state: present
+      with_items:
+        - mailx
+        - parallel
 
     - name: ensure pika installed
       pip:

@@ -40,7 +40,10 @@
         (init_rodsadmin_perms is not defined and (init_rodsadmin_perms_default | default(true)))
         or init_rodsadmin_perms
       script: scripts/init-rodsadmin-perms.sh '{{
-        groups['dbms'][0] }}' '{{ _dbms_port }}' '{{ _dbms_username }}' '{{ _irods_zone_name }}'
+        groups['dbms_primary'][0] }}' '{{
+        _irods_dbms_port }}' '{{
+        _irods_db_user }}' '{{
+        _irods_zone_name }}'
       register: response
       changed_when: response.stdout == 'true'
 

@@ -21,10 +21,9 @@
         lookup('dig', groups.webdav[0]) }}{% endif %}"
     webdav_check_periods: inter {{ _load_balancer_webdav_check_period }}s downinter 3s fastinter 1s
     webdav_check: check port 80 fall 2 {{ webdav_check_periods }}
-    webdav_maxconn: maxconn {{ _load_balancer_webdav_max_conn }}
 # XXX: Until we are load balancing WebDAV servers, I'm disabling checks to prevent false positives
-    webdav_server_cfg: "{{ webdav_ip }} {{ webdav_maxconn }}"
-#   webdav_server_cfg: "{{ webdav_ip }} {{ webdav_maxconn }} {{ webdav_check }}"
+    webdav_server_cfg: "{{ webdav_ip }}"
+#   webdav_server_cfg: "{{ webdav_ip }} {{ webdav_check }}"
   tasks:
     - name: enable notifcations when not testing
       set_fact:
@@ -137,14 +136,11 @@
 # client-fin needs to be less than conntrack's TCP FIN_WAIT timeout, usually 2m.
           - client-fin 1m
 
+        haproxy_ssl_certificate: "{{ _load_balancer_stats_certificate }}"
         haproxy_stats: true
         haproxy_stats_address: '*'
-
-# XXX - As of  uoi-io/ansible-haproxy version
-# 2d0213a2c5b3ef10d2e4abea9ac29e19611e0090 (2017/06/06), there is no support for
-# having the stats endpoint use HTTPS. This hack works around this limitation.
-        haproxy_stats_port: "{{ _load_balancer_stats_port }} ssl crt {{ _load_balancer_stats_certificate }}"
-
+        haproxy_stats_port: "{{ _load_balancer_stats_port }}"
+        haproxy_stats_ssl: true
         haproxy_stats_user: "{{ _load_balancer_stats_user }}"
         haproxy_stats_password: "{{ _load_balancer_stats_password }}"
         haproxy_stats_uri: /

@@ -1,45 +1,45 @@
 ---
-- name: test install dmidecode required by ansible gather_facts
-  hosts: all:!unmanaged_systems:!localhost
-  become: true
-  tasks:
-    - name: test install dmidcode support for CentOS
-      include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: dmidecode
-
-
 - name: test install required packages for ansible
   hosts: all:!unmanaged_systems:!localhost
   become: true
-  gather_facts: false
   tasks:
-    - name: test install EPEL repo
+    - name: test install packages on CentOS
       when: ansible_distribution == 'CentOS'
       include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: epel-release
+      with_items:
+        - dmidecode
+        - epel-release
+        - iproute
+        - jq
+        - libselinux-python
+        - python-dns
+      loop_control:
+        loop_var: pkg
 
-    - name: test jq installed
+    - name: test install packages on Ubuntu
+      when: ansible_distribution == 'Ubuntu'
       include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: jq
+      with_items:
+        - dmidecode
+        - iproute2
+        - jq
+        - python3-selinux
+      loop_control:
+        loop_var: pkg
 
-    - name: test python-selinux package installed on CentOS
-      when: ansible_distribution == 'CentOS'
+    - name: test install packages elsewhere
+      when: ansible_distribution != 'CentOS' and ansible_distribution != 'Ubuntu'
       include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: libselinux-python
+      with_items:
+        - dmidecode
+        - iproute
+        - jq
+        - python-selinux
+        - python-dns
+      loop_control:
+        loop_var: pkg
 
-    - name: test python-selinux package installed on Ubuntu
-      debug:
-        msg: TODO implement
-
-    - name: test python-selinux package installed elsewhere
-      debug:
-        msg: TODO implement
-
-    - name: test python-dns installed
+    - name: test python-dns installed on Ubuntu
       debug:
         msg: TODO implement
 

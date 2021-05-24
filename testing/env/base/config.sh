@@ -9,11 +9,10 @@
 #
 # This script configures the common ansible requirements
 
-set -e
+set -o errexit -o nounset -o pipefail
 
 
-main()
-{
+main() {
   if [[ "$#" -lt 1 ]]
   then
     printf 'The OS name is required as the first argument\n' >&2
@@ -33,11 +32,13 @@ main()
   if [[ "$os" = centos ]]
   then
     install_centos_packages "$version"
-  else
+  elif [[ "$os" == debian ]]; then
     install_debian_packages "$version"
 
     # Allow root to login without a password
     sed --in-place 's/nullok_secure/nullok/' /etc/pam.d/common-auth
+  else
+    install_ubuntu_packages "$version"
   fi
 
   # Remove root's password
@@ -63,8 +64,7 @@ main()
 }
 
 
-install_centos_packages()
-{
+install_centos_packages() {
   local version="$1"
 
   rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
@@ -72,24 +72,33 @@ install_centos_packages()
   yum --assumeyes install epel-release
   rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
 
-  yum --assumeyes install iptables-services libselinux-python openssh-server sudo
+  yum --assumeyes install iproute iptables-services libselinux-python openssh-server sudo
 }
 
 
-install_debian_packages()
-{
+install_debian_packages() {
   local version="$1"
 
   apt-get update -qq
   apt-get install -qq -y apt-utils 2> /dev/null
 
   apt-get install -qq -y \
-    iptables jq openssh-server python-pip python-selinux python-virtualenv sudo
+      iproute iptables jq openssh-server python-pip python-selinux python-virtualenv sudo \
+    2> /dev/null
 }
 
 
-update_sshd_config()
-{
+install_ubuntu_packages() {
+  local version="$1"
+
+  apt-get update --quiet=2
+  apt-get install --yes --quiet=2 apt-utils 2> /dev/null
+
+  apt-get install --yes --quiet=2 iproute2 openssh-server python3-apt sudo
+}
+
+
+update_sshd_config() {
   cat <<EOF | sed --in-place  --regexp-extended --file - /etc/ssh/sshd_config
 s/#?PermitRootLogin .*/PermitRootLogin yes/
 s/#?PermitEmptyPasswords no/PermitEmptyPasswords yes/

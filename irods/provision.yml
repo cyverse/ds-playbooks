@@ -2,6 +2,10 @@
 - name: provision for iRODS
   hosts: irods:!unmanaged_systems
   become: true
+  vars:
+    # NB: The rpm and yum bindings for the package module require Python 2 in
+    #     Ansible 2.9.6
+    ansible_python_interpreter: /usr/bin/python
   tasks:
     - name: install required packages
       package:

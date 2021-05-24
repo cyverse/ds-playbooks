@@ -1,31 +1,133 @@
 ---
-- name: test Prepare for PostgreSQL
-  hosts: dbms
-  run_once: true
+- name: test postgresql12 role default template expansion
+  hosts: localhost
   gather_facts: false
+  vars_files:
+    - ../roles/postgres12/defaults/main.yml
+  vars:
+    - cyverse_conf: "{{ lookup('template', '../roles/postgres12/templates/cyverse.conf.j2') }}"
+  tasks:
+    - name: verify config values expand correctly in cyverse.conf
+      assert:
+        that:
+          - cyverse_conf is search("listen_addresses = '127.0.0.1'" | regex_escape)
+          - cyverse_conf is search("port = '5432'")
+          - cyverse_conf is search('max_wal_senders = 120')
+          - cyverse_conf is search('wal_keep_segments = 4000')
+          - cyverse_conf is search('max_connections = 1500')
+          - cyverse_conf is search('effective_cache_size = 1GB')
+          - cyverse_conf is search('shared_buffers = 1GB')
+          - cyverse_conf is search('work_mem = 64MB')
+
+    - debug:
+        msg: TODO check maintenance_work_mem
+
+    - debug:
+        msg: TODO check min_wal_size
+
+    - debug:
+        msg: TODO check max_wal_size
+
+    - debug:
+        msg: TODO check checkpoint_timeout
+
+    - debug:
+        msg: TODO check checkpoint_completion_target
+
+    - debug:
+        msg: TODO check random_page_cost
+
+    - debug:
+        msg: TODO check standard_conforming_strings
+
+    - debug:
+        msg: TODO check log_min_duration_statement
+
+    - debug:
+        msg: TODO check log_line_prefix
+
+    - name: test pg_downstream_nodes enables archive
+      debug:
+        msg: TODO implement
+
+    - name: test pg_upstream_node enables hot standby
+      debug:
+        msg: TODO implement
+
+    - name: test default .pgpass expansion
+      debug:
+        msg: TODO implement
+
+
+- name: test postgresql12 role custom var template expansion
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement
+
+
+- name: test postgresql12 role
+  hosts: dbms
   pre_tasks:
     - name: package_facts uses auto, setup for next task
       package_facts:
         manager: "auto"
+
   tasks:
-    - name: verify PostgreSQL server is installed correctly
+    - name: verify required packages installed
       assert:
         that:
-          - "'postgresql93-server' in ansible_facts.packages"
+          - "'postgresql' in ansible_facts.packages"
+          - "'postgresql-client' in ansible_facts.packages"
+          - "'python3-psycopg2' in ansible_facts.packages"
 
-    - name: Remove PostgreSQL server
-      package:
-        name: postgresql93-server
-        state: absent
+    - name: verify locale en_US.UTF-8 exists
+      shell: locale --all-locales | grep --quiet en_US.utf8
+      changed_when: false
 
-    - name: Remove yum repo for PostgreSQL
-      include_tasks: tasks/remove_postgresql_yum_repo.yml
+    - debug:
+        msg: TODO test cyverse.conf template expansion
 
-    - name: Re-add PostgreSQL yum repo
-      include_tasks: ../tasks/add_postgresql_yum_repo.yml
+    - debug:
+        msg: TODO test cyverse.conf deposition
 
-    - name: Install PostgreSQL server
-      package:
-        name: postgresql93-server
-        state: present
+    - debug:
+        msg: TODO test configure | ensure block in pg_hba.conf exists
 
+    - debug:
+        msg: TODO test configure | ensure archive dir exists
+
+    - debug:
+        msg: TODO test configure | template pgpass file
+
+    - debug:
+        msg: TODO test replication.yml
+
+
+- name: Test Set up primary DBMS
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement
+
+
+- name: Test Set up replica DBMSs
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement
+
+
+- name: Test Prepare for iRODS
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  tasks:
+    - debug:
+        msg: TODO implement

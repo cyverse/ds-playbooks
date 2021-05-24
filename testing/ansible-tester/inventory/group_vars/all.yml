@@ -3,5 +3,10 @@ check_routes_timeout: 5
 
 domain_name: testing_default
 
+irods_icat_password: testpassword
+
 irods_version: 4.1.10
 irods_zone_name: testing
+
+maintainer_keys:
+  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMNAkCWfBgthPFt3580sM8H0BXpCQVrEI8Y2Kpq9bO+N testing env maintainer

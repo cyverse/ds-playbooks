@@ -7,6 +7,15 @@ avra_resource_hierarchy:
   children:
     - name: avra
 
+cereus_collections:
+  - /testing/home/shared/cereus
+
+cereus_resource_hierarchy:
+  name: cereusRes
+  type: passthru
+  children:
+    - name: cereus
+
 de_job_irods_user: de_job
 
 irods_amqp_host: "{{ groups['rabbitmq'][0] }}"

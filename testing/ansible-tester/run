@@ -19,6 +19,8 @@
 #  IRODS_ZONE_NAME      The name of the iRODS zone inside the testing
 #                       environment
 
+set -e
+
 
 main()
 {
@@ -34,10 +36,8 @@ main()
              --env PGHOST="$DBMS_HOST" \
              --network "$DOMAIN" \
              --volume "$playbooks":/playbooks-under-test:ro \
-             ansible-tester "$doInspect" "$pretty" "$playbook" "$hosts"
+             ansible-tester "$doInspect" "$pretty" "$playbook" "$hosts" ''
 }
 
-
-set -e
 
 main "$@"

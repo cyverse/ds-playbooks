@@ -1,0 +1,8 @@
+---
+
+- name: variables | verify required vars exist
+  assert:
+    that:
+      - pg_replication_user is defined
+      - pg_replication_pass is defined
+  when: pg_upstream_node or pg_downstream_nodes|length > 0

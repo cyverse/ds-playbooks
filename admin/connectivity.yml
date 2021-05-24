@@ -1,0 +1,10 @@
+---
+- name: install maintainer keys
+  hosts: all:!localhost
+  tasks:
+    - name: install key
+      authorized_key:
+        user: "{{ ansible_user_id }}"
+        state: present
+        key: "{{ item }}"
+      with_items: "{{ _maintainer_keys }}"

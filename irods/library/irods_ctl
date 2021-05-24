@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # An ansible module for executing irodsctl, i.e., controling the state of an
 # iRODS server.
@@ -29,7 +30,7 @@ def _call_irodsctl(arg):
 
 
 def _is_running():
-  return "No servers running" not in _call_irodsctl("status")
+  return "No servers running" not in str(_call_irodsctl("status"))
 
 
 def _ensure_started():

@@ -9,6 +9,13 @@
         name: /etc/yum.conf
         line: exclude=e2fsprogs* libcom_err-* libss-*
 
+    - name: update apt cache on Ubuntu machines
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        update_cache: yes
+      tags:
+        - non_idempotent
+        
     - name: upgrade system packages
       when: _rebootable | bool
       package:

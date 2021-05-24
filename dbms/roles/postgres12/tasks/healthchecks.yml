@@ -1,0 +1,25 @@
+---
+
+# http://www.sraoss.jp/pipermail/pgpool-general/2018-October/006318.html
+- name: healthchecks | create healthcheck user
+  postgresql_user:
+    db: "{{ pg_db }}"
+    port: "{{ pg_listen_port }}" # this is required because the module uses it to build the string for the socket
+    name: "{{ pg_health_and_repl_check_user }}"
+    role_attr_flags: login
+    groups: pg_monitor
+    password: '{{ pg_health_and_repl_check_pass }}'
+  when: "'primary_postgres_node' in group_names"
+  become: true
+  become_user: postgres
+
+# - name: healthchecks | grant pg_monitor to healthcheck user
+#   postgresql_privs:
+#     db: "{{ pg_db }}"
+#     port: "{{ pg_listen_port }}" # this is required because the module uses it to build the string for the socket
+#     name: "{{ pg_health_and_repl_check_user }}"
+#     role_attr_flags: login
+#     password: '{{ pg_health_and_repl_check_pass }}'
+#   when: "'primary_postgres_node' in group_names"
+#   become: true
+#   become_user: postgres

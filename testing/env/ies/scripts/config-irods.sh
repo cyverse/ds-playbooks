@@ -37,6 +37,7 @@
 #                             communication.
 # IRODS_ZONE_USER             The main rodsadmin user.
 
+set -e
 
 readonly CfgDir=/etc/irods
 readonly DbCfg="$CfgDir"/database_config.json
@@ -169,7 +170,8 @@ populate_server_cfg()
   sed --in-place '/"default_resource_directory"/d' "$ServerCfg"
 
   # Inject ipc-housekeeping.re stub rules
-  jq '.re_rulebase_set[1].filename |= "ipc-housekeeping"' "$ServerCfg" | sponge "$ServerCfg"
+  jq '.re_rulebase_set = [ { "filename": "pre-config" } ] + .re_rulebase_set' "$ServerCfg" \
+    | sponge "$ServerCfg"
 }
 
 
@@ -215,7 +217,5 @@ validate_32_byte_key()
   fi
 }
 
-
-set -e
 
 main

@@ -31,10 +31,9 @@ Variable                                   | Default                            
 `captcn_owners`                            | `[]`                                 |         | a list of users who get ownership of CAP_TCN collections
 `captcn_readers`                           | `[]`                                 |         | a list of users who get read access to CAP_TCN collections
 `captcn_writers`                           | `[]`                                 |         | a list of users who get write access to CAP_TCN collections
+`cereus_collections`                      | `[]`                                 |         | a list of collections whose data belongs on the Cereus resource, each entry must be an absolute path
+`cereus_resource_hierarchy`                | `irods_resource_hierarchies[0]`      |         | the Cereus resource used for hosting data for Cereus related projects
 `check_routes_timeout`                     | 3                                    |         | the number of seconds the `check_route` playbook will wait for a response during a single port check
-`dbms_password`                            | irods                                |         | The password iRODS uses when connecting to the DBMS hosting the ICAT DB.
-`dbms_port`                                | 5432                                 |         | The TCP port the DBMS listens on.
-`dbms_username`                            | irods                                |         | The user iRODS uses when connecting to the DBMS hosting the ICAT DB.
 `de_job_irods_user`                        |                                      |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
 `firewall_chain`                           | INPUT                                |         | The iptables chain managing authorizing iRODS connections
 `irods_aegis_repl_resource`                | _see description_                    |         | the name of the aegis resource where replicas are written. If `irods_aegis_resource` is defined, it is the default, otherwise,
@@ -49,6 +48,11 @@ Variable                                   | Default                            
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
 `irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | rods                                 |         | the rodsadmin user to be used by the server being configured
+`irods_db_password`                        | testpassword                         |         | The password iRODS uses when connecting to the ICAT DB.
+`irods_db_user`                            | irods                                |         | The user iRODS uses when connecting to the ICAT DB.
+`irods_dbms_pg_hba`                        | /etc/postgresql/12/main/pg_hba.conf  |         | The absolute path to the pg_hba.conf file on the DBMS hosting the ICAT DB
+`irods_dbms_pg_version`                    | 12                                   | 9.3, 12 | The version of the PostgreSQL client to install.
+`irods_dbms_port`                          | 5432                                 |         | The TCP port the DBMS listens on.
 `irods_default_dir_mode`                   | 0750                                 |         | the default permissions assigned to newly created directories in the vault
 `irods_default_file_mode`                  | 0600                                 |         | the default permissions assigned to newly created files in the vault
 `irods_default_number_of_transfer_threads` | 4                                    |         | the default maximum number of transfer streams for parallel transfer
@@ -86,7 +90,6 @@ Variable                                   | Default                            
 `load_balancer_stats_port`                 | 81                                   |         | The TCP port used to retrieve HAProxy stats
 `load_balancer_stats_user`                 | haproxy-stats                        |         | The user to authenticate as to access the stats service
 `load_balancer_webdav_check_period`        | 2                                    |         | The amount of time between webdav health checks in seconds
-`load_balancer_webdav_max_conn`            | 100                                  |         | The maximum number of concurrent connections to WebDAV through the load balancer.
 `pire_manager`                             | null                                 |         | The username that owns the PIRE project collection, if `null`, the collection isn't created.
 `pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
 `report_email_addr`                        | root@localhost                       |         | The address where reports are to be emailed.
@@ -105,10 +108,14 @@ Variable                                   | Default                            
 `webdav_auth_name`                         | CyVerse                              |         | Authorization realm to use for the Data Store
 `webdav_cache_dir`                         | `/var/cache/varnish`                 |         | The directory varnish-cache will use for the WebDAV cache
 `webdav_cache_size`                        | 1000                                 |         | The maximum size in mebibytes the cache can be
-`webdav_cache_max_file_size`               | 10                                   |         | The maximum size in mebibytes of the largest WebDAV file varnish-cache will cache.
+`webdav_cache_max_file_size`               | 10                                   |         | The maximum size in mebibytes of the largest WebDAV file varnish-cache will cache
 `webdav_cache_ttl_fraction`                | 0.1                                  |         | The fraction elapsed time since the last-modified time of a file for cache TTL (Time-to-live) configuration
 `webdav_cache_max_ttl`                     | 86400                                |         | The maximum cache TTL in seconds
-`webdav_max_request_workers`               | 256                                  |         | the upper limit on the number of simultaneous requests that will be served
+`webdav_server_limit`                      | 48                                   |         | the number of cpu cores to be used
+`webdav_threads_per_child`                 | 4                                    |         | the number of threads per core to be created
+`webdav_max_request_workers`               | 192                                  |         | the upper limit on the number of simultaneous requests that will be served. This typically have the value of `webdav_server_limit` multiplied by `webdav_threads_per_child`
+`webdav_access_limit`                      | 120                                  |         | The upper limit on the number of simultaneous requests that will be served by webdav
+`webdav_davrods_access_limit`              | 80                                   |         | The upper limit on the number of simultaneous requests that will be served by davrods
 `webdav_tls_cert_file`                     | `/etc/ssl/certs/dummy.crt`           |         | The TLS certificate file used for encrypted communication
 `weddav_tls_chain_file`                    | `/etc/ssl/certs/dummy-chain.crt`     |         | The TLS certificate chain file used for encrypted communication
 `webdav_tls_key_file`                      | `/etc/ssl/certs/dummy.key`           |         | The TLS key file used for encrypted communication

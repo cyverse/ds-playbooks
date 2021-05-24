@@ -1,8 +1,0 @@
----
-- name: validate | verify that if stats auth exists it has correct fields
-  when: stats_auth
-  assert:
-    that:
-      - stats_auth.username is defined and (stats_auth.username | string | length) >= 1
-      - stats_auth.password is defined and (stats_auth.password | string | length) >= 1
-  run_once: true

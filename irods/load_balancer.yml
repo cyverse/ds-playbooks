@@ -31,11 +31,22 @@
       tags:
         - no_testing
 
+    - name: change rsyslog.conf block Id to proxy
+      shell: |
+        if grep --quiet 'DS MANAGED BLOCK (load_balancer)' /etc/rsyslog.conf; then
+          sed --in-place \
+            's/^\(# [^ ]\+ DS MANAGED BLOCK\) (load_balancer)/\1 (proxy)/' /etc/rsyslog.conf
+
+          echo changed
+        fi
+      register: result
+      changed_when: result.stdout == 'changed'
+
     - name: configure rsyslog to listen on UDP socket
       blockinfile:
         path: /etc/rsyslog.conf
         insertafter: '# Provides UDP syslog reception'
-        marker: "# {mark} DS MANAGED BLOCK (load_balancer)"
+        marker: "# {mark} DS MANAGED BLOCK (proxy)"
         block: |
           $ModLoad imudp
           $UDPServerRun 514
@@ -224,10 +235,21 @@
       tags:
         - no_testing
 
+    - name: change iptables load_balancer block Ids to proxy
+      shell: |
+        if grep --quiet 'DS MANAGED BLOCK (load_balancer' /etc/rsyslog.conf; then
+          sed --in-place \
+            's/^\(# [^ ]\+ DS MANAGED BLOCK (\)load_balancer\(.*\)/\1proxy\2/' /etc/rsyslog.conf
+
+          echo changed
+        fi
+      register: result
+      changed_when: result.stdout == 'changed'
+
     - name: disable conntrack for proxied connections
       blockinfile:
         path: /etc/sysconfig/iptables
-        marker: "# {mark} DS MANAGED BLOCK (load_balancer raw)"
+        marker: "# {mark} DS MANAGED BLOCK (proxy raw)"
         block: |
           *raw
           -A PREROUTING -s {{ _proxy_irods_allowed_src }} -p tcp --dport 80 -j NOTRACK
@@ -264,7 +286,7 @@
       blockinfile:
         path: /etc/sysconfig/iptables
         insertbefore: -A INPUT -j REJECT
-        marker: "# {mark} DS MANAGED BLOCK (load_balancer filter)"
+        marker: "# {mark} DS MANAGED BLOCK (proxy filter)"
         block: |
           -A INPUT -m state --state UNTRACKED -j ACCEPT
           -A INPUT -m state --state NEW -s {{ _proxy_stats_allowed_src

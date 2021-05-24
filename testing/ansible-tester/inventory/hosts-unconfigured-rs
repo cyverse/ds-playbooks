@@ -21,7 +21,7 @@ dstesting_rs_centos6_1.dstesting_default
 dstesting_rs_centos7_1.dstesting_default
 
 [load_balancer]
-dstesting_load_balancer_1.dstesting_default
+dstesting_proxy_1.dstesting_default
 
 [rabbitmq]
 dstesting_amqp_1.dstesting_default

@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: postgresql/Dockerfile.unconfigured
     tty: true
-    
+
   ies_configured:
     build:
       context: .
@@ -53,7 +53,7 @@ services:
     hostname: "$IRODS_IES_UNCONF_HOST"
     tty: true
 
-  load_balancer:
+  proxy:
     build:
       context: .
       dockerfile: haproxy/Dockerfile

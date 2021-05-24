@@ -1,9 +1,9 @@
 ---
-- name: Set up proxy
+- name: Set up HAProxy
   hosts: proxy
   become: true
   roles:
-    - role: proxy
+    - role: haproxy
       vars:
         proxy_default_max_conn: 500
         proxy_default_queue_timeout: 10m

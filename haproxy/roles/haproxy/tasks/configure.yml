@@ -1,7 +1,7 @@
 ---
 - name: disable testing
   set_fact:
-    proxy_no_guardrails: true
+    haproxy_no_guardrails: true
   tags:
     - no_testing
 

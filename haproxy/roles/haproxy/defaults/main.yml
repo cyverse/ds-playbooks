@@ -1,25 +1,25 @@
 ---
-proxy_no_guardrails: false
+haproxy_no_guardrails: false
 
-proxy_default_max_conn: "{{ _default_max_conn }}"
-proxy_default_queue_timeout: none
+haproxy_default_max_conn: "{{ _default_max_conn }}"
+haproxy_default_queue_timeout: none
 
-proxy_stats_port: "{{ _default_stats_port }}"
-proxy_stats_tls_crt: none
-proxy_stats_auth: none
-proxy_stats_client_hosts: "{{ _default_client_hosts }}"
+haproxy_stats_port: "{{ _default_stats_port }}"
+haproxy_stats_tls_crt: none
+haproxy_stats_auth: none
+haproxy_stats_client_hosts: "{{ _default_client_hosts }}"
 
-proxy_irods_port: "{{ _default_irods_port }}"
-proxy_irods_reconn_first_port: "{{ _default_irods_reconn_first_port }}"
-proxy_irods_reconn_last_port: "{{ _default_irods_reconn_last_port }}"
-proxy_irods_backend_host: "{{ _default_backend_host }}"
-proxy_irods_backend_port: "{{ proxy_irods_port }}"
-proxy_irods_single_max_conn: "{{ proxy_default_max_conn }}"
-proxy_irods_extra_max_conn: "{{ proxy_default_max_conn }}"
-proxy_irods_client_hosts: "{{ _default_client_hosts }}"
-proxy_irods_vip_client_hosts: "{{ _default_irods_vip_client_hosts }}"
+haproxy_irods_port: "{{ _default_irods_port }}"
+haproxy_irods_reconn_first_port: "{{ _default_irods_reconn_first_port }}"
+haproxy_irods_reconn_last_port: "{{ _default_irods_reconn_last_port }}"
+haproxy_irods_backend_host: "{{ _default_backend_host }}"
+haproxy_irods_backend_port: "{{ haproxy_irods_port }}"
+haproxy_irods_single_max_conn: "{{ haproxy_default_max_conn }}"
+haproxy_irods_extra_max_conn: "{{ haproxy_default_max_conn }}"
+haproxy_irods_client_hosts: "{{ _default_client_hosts }}"
+haproxy_irods_vip_client_hosts: "{{ _default_irods_vip_client_hosts }}"
 
-proxy_webdav_port: "{{ _default_webdav_port }}"
-proxy_webdav_tls_port: "{{ _default_webdav_tls_port }}"
-proxy_webdav_backend_hosts: "{{ _default_webdav_backend_hosts }}"
-proxy_webdav_client_hosts: "{{ _default_client_hosts }}"
+haproxy_webdav_port: "{{ _default_webdav_port }}"
+haproxy_webdav_tls_port: "{{ _default_webdav_tls_port }}"
+haproxy_webdav_backend_hosts: "{{ _default_webdav_backend_hosts }}"
+haproxy_webdav_client_hosts: "{{ _default_client_hosts }}"

@@ -4,16 +4,18 @@
 #         GLOBAL         #
 ##########################
 global
-  chroot                     /var/lib/haproxy
-  user                       haproxy
-  group                      haproxy
   daemon
-  nbproc                     1
-  cpu-map                    1 0
-  pidfile                    /var/run/haproxy.pid
-  log                        127.0.0.1 local0 debug
-  stats socket               /var/run/haproxy.sock mode 600 level admin
-  stats timeout              2m
+  chroot         /var/lib/haproxy
+  cpu-map        1 0
+  user           haproxy
+  group          haproxy
+  log            127.0.0.1 local0 debug
+  nbproc         1
+  pidfile        /var/run/haproxy.pid
+  stats socket   /var/run/haproxy.sock mode 600 level admin
+  stats timeout  2m
+  unix-bind      prefix /var/lib/haproxy/ mode 770 user haproxy
+
   maxconn                    4000
   spread-checks              2
   tune.ssl.default-dh-param  2048
@@ -24,23 +26,23 @@ global
 ##########################
 
 defaults
-  mode                        tcp
-  maxconn                     {{ default_max_conn }}
-  retries                     3
   log                         global
+  maxconn                     {{ default_max_conn }}
+  mode                        tcp
+  retries                     3
+  timeout client-fin          1m
+  timeout client              1d
+  timeout server              1d
+  timeout server-fin          1m
+  timeout connect             10s
+{% if queue_timeout %}
+  timeout queue               {{ queue_timeout }}
+{% endif %}
   option clitcpka
   option srvtcpka
   option dontlognull
   option log-separate-errors
   option tcplog
-  timeout connect             10s
-{% if default_queue_timeout %}
-  timeout queue               {{ default_queue_timeout }}
-{% endif %}
-  timeout client              1d
-  timeout server              1d
-  timeout client-fin          1m
-  timeout server-fin          1m
 
 
 ##########################
@@ -56,61 +58,62 @@ listen stats
 {% endif %}
   maxconn                10
   stats enable
+  stats hide-version
+  stats show-legends
 {% if stats_auth %}
   stats auth             {{ stats_auth.username }}:{{ stats_auth.password }}
 {%   if stats_auth.realm %}
   stats realm            {{ stats_auth.realm }}
 {%   endif %}
 {% endif %}
-  stats uri              /
-  stats hide-version
-  stats show-legends
   stats refresh          10s
-  option dontlog-normal
-  timeout connect        100s
-  timeout queue          100s
+  stats uri              /
   timeout client         100s
   timeout server         100s
+  timeout connect        100s
+  timeout queue          100s
+  option dontlog-normal
 
 
 ##########################
 #         IRODS          #
 ##########################
-{% set irods_backend_ip
-     = irods_backend_host if irods_backend_host | ipaddr else lookup('dig', irods_backend_host) %}
 
 frontend irods_main
-  bind                    :{{ irods_port }}
-  default_backend         irods_single_conn
-  stick-table             type ip size 100k store conn_cur
-  acl                     vip-src        src -f /etc/haproxy/vip.lst
-  acl                     multiple-conn  src_conn_cur ge 2
-  tcp-request connection  track-sc0 src if !vip-src
-  use_backend             irods_extra_conn if multiple-conn
+  bind                       :{{ irods_port }}
+  stick-table                type ip size 100k store conn_cur
+  acl                        is-conn        capture.req.hdr(0) -m str RODS_CONNECT
+  acl                        too-many-conn  sc1_conn_cur gt 1
+  acl                        vip-src        src -f /etc/haproxy/vip.lst
+  tcp-request inspect-delay  5s
+  tcp-request content        capture req.payload_lv(0,4),regsub(^\s*<MsgHeader_PI\s*>[\s\S]*<type\s*>,),regsub(</type\s*>[\s\S]*</MsgHeader_PI\s*>\s*$,) len 16
+  tcp-request content        reject unless is-conn
+  tcp-request content        track-sc1 src if !vip-src
+  use_backend                irods_throttled if too-many-conn
+  default_backend            irods_direct
 
-backend irods_single_conn
-  server                 ies {{ irods_backend_ip }}:{{ irods_backend_port }} check inter 20s maxconn {{ irods_single_max_conn }}
-  option tcp-check
-  tcp-check connect
-  tcp-check send-binary  0000006e
-  tcp-check send         <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>216</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option></option></StartupPack_PI>
-  tcp-check expect       string <MsgHeader_PI>\n<type>RODS_VERSION</type>
-  tcp-check send-binary  0000006f
-  tcp-check send         <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
+frontend irods_reconn
+  bind             :{{ irods_reconn_first_port }}-{{ irods_reconn_last_port }}
+  default_backend  irods_direct
 
-backend irods_extra_conn
-  server                 ies {{ irods_backend_ip }}:{{ irods_backend_port }} check inter 20s maxconn {{ irods_extra_max_conn }}
-  option tcp-check
-  tcp-check connect
-  tcp-check send-binary  0000006e
-  tcp-check send         <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>216</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option></option></StartupPack_PI>
-  tcp-check expect       string <MsgHeader_PI>\n<type>RODS_VERSION</type>
-  tcp-check send-binary  0000006f
-  tcp-check send         <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
+backend irods_throttled
+  server  indirect unix@haproxy_irods.sock send-proxy maxconn {{ irods_extra_max_conn }}
 
-listen irods_reconn
-  bind    :{{ irods_reconn_first_port }}-{{ irods_reconn_last_port }}
-  server  ies {{ irods_backend_ip }} check port {{ irods_backend_port }} inter 20s
+frontend irods_indirect
+  bind             unix@haproxy_irods.sock accept-proxy
+  default_backend  irods_direct
+
+backend irods_direct
+{# XXX: Until we are load balancing iRODS servers, I'm disabling checks to prevent false positives #}
+  server                 ies {{ irods_backend_host if irods_backend_host|ipaddr else lookup('dig', irods_backend_host) }} {# check inter {{ irods_check_period }}s maxconn #}{{ irods_max_conn }}
+{#  option tcp-check
+ #  tcp-check connect
+ #  tcp-check send-binary  0000006e
+ #  tcp-check send         <MsgHeader_PI><type>RODS_CONNECT</type><msgLen>216</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI><StartupPack_PI><proxyUser>PING</proxyUser><proxyRcatZone></proxyRcatZone><clientUser></clientUser><clientRcatZone></clientRcatZone><relVersion></relVersion><apiVersion></apiVersion><option></option></StartupPack_PI>
+ #  tcp-check expect       string <MsgHeader_PI>\n<type>RODS_VERSION</type>
+ #  tcp-check send-binary  0000006f
+ #  tcp-check send         <MsgHeader_PI><type>RODS_DISCONNECT</type><msgLen>0</msgLen><errorLen></errorLen><bsLen></bsLen></MsgHeader_PI>
+ #}
 
 
 ##########################
@@ -118,9 +121,11 @@ listen irods_reconn
 ##########################
 
 listen webdav
-  bind                :{{ webdav_port }},:{{ webdav_tls_port }}
-{% for host in webdav_backend_hosts %}
-  server              dav-{{ loop.index }} {{ host if host | ipaddr else lookup('dig', host) }} check port {{ webdav_port }} inter 20s maxconn 100
-{% endfor %}
-  option httpchk      OPTIONS /
-  http_checks expect  status 200
+  bind            :{{ webdav_port }},:{{ webdav_tls_port }}
+{# XXX: Our caching is too dumb right now to support multiple webdav servers #}
+  server          dav {{ webdav_backend_hosts[0] if webdav_backend_hosts[0]|ipaddr else lookup('dig', webdav_backend_hosts[0]) }}
+{#{% for w in webdav_backend_hosts %}
+ #  server          dav-{{ loop.index }} {{ w if w|ipaddr else lookup('dig', w) }} check port 80 fall 2 inter {{ webdav_check_period }}s downinter 3s fastinter 1s
+ #{% endfor %}
+ #  option httpchk  OPTIONS /
+ #}

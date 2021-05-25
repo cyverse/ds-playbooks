@@ -1,4 +1,10 @@
 ---
+- name: disable testing
+  set_fact:
+    _full_os: true
+  tags:
+    - no_testing
+
 - import_tasks: install.yml
 
 - import_tasks: configure.yml

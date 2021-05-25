@@ -1,56 +1,4 @@
 ---
-- name: disable testing
-  set_fact:
-    haproxy_no_guardrails: true
-  tags:
-    - no_testing
-
-- name: install | ensure nonlocal binding allowed
-  sysctl:
-    name: net.ipv4.ip_nonlocal_bind
-    value: '1'
-    sysctl_set: true
-    sysctl_file: /etc/sysctl.d/haproxy.conf
-    reload: true
-    state: present
-  tags:
-    - no_testing
-
-- name: install | ensure IP forwarding allowed
-  sysctl:
-    name: net.ipv4.ip_forward
-    value: '1'
-    sysctl_set: true
-    sysctl_file: /etc/sysctl.d/haproxy.conf
-    reload: true
-    state: present
-  tags:
-    - no_testing
-
-- name: install | configure rsyslog to listen on UDP socket
-  blockinfile:
-    path: /etc/rsyslog.conf
-    insertafter: '# Provides UDP syslog reception'
-    marker: "# {mark} DS MANAGED BLOCK (proxy)"
-    block: |
-      $ModLoad imudp
-      $UDPServerRun 514
-      $UDPServerAddress 127.0.0.1
-  notify:
-    - restart rsyslog
-
-- name: install | place rsyslog config for HAProxy
-  copy:
-    src: rsyslog-haproxy.conf
-    dest: /etc/rsyslog.d
-  notify:
-    - restart rsyslog
-
-- name: install | place logrotate config for HAProxy
-  copy:
-    src: logrotate-haproxy
-    dest: /etc/logrotate.d
-
 - name: install | ensure CentOS 7 stock HAProxy is not installed
   package:
     name: haproxy
@@ -66,11 +14,47 @@
   with_items:
     - rh-haproxy18-haproxy
     - rh-haproxy18-haproxy-syspaths
+  notify:
+    - restart haproxy
+
+- name: install | ensure /usr/sbin/haproxy points to the haproxy exec
+  file:
+    src: /opt/rh/rh-haproxy18/root/usr/sbin/haproxy
+    dest: /usr/sbin/haproxy
+    state: link
+
+- name: install | ensure /etc/haproxy exists
+  file:
+    path: /etc/haproxy
+    state: directory
 
 - name: install | ensure HAProxy starts on reboot
   service:
     name: rh-haproxy18-haproxy
     enabled: true
-    state: started
+  tags:
+    - no_testing
+
+- name: install | ensure nonlocal binding allowed
+  sysctl:
+    name: net.ipv4.ip_nonlocal_bind
+    value: '1'
+    sysctl_set: true
+    sysctl_file: /etc/sysctl.d/haproxy.conf
+    reload: true
+    state: present
+  notify:
+    - restart haproxy
+  tags:
+    - no_testing
+
+- name: install | ensure IP forwarding allowed
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: true
+    sysctl_file: /etc/sysctl.d/haproxy.conf
+    reload: true
+    state: present
   tags:
     - no_testing

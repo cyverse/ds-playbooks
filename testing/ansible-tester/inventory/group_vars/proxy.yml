@@ -1,2 +1,2 @@
 ---
-proxy_stats_certificate: /etc/haproxy/certs/dumb.pem
+haproxy_stats_tls_crt: /etc/haproxy/certs/dumb.pem

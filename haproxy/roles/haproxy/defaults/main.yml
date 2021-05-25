@@ -1,8 +1,6 @@
 ---
-haproxy_no_guardrails: false
-
 haproxy_default_max_conn: "{{ _default_max_conn }}"
-haproxy_default_queue_timeout: none
+haproxy_queue_timeout: none
 
 haproxy_stats_port: "{{ _default_stats_port }}"
 haproxy_stats_tls_crt: none
@@ -13,9 +11,9 @@ haproxy_irods_port: "{{ _default_irods_port }}"
 haproxy_irods_reconn_first_port: "{{ _default_irods_reconn_first_port }}"
 haproxy_irods_reconn_last_port: "{{ _default_irods_reconn_last_port }}"
 haproxy_irods_backend_host: "{{ _default_backend_host }}"
-haproxy_irods_backend_port: "{{ haproxy_irods_port }}"
-haproxy_irods_single_max_conn: "{{ haproxy_default_max_conn }}"
+haproxy_irods_max_conn: "{{ haproxy_default_max_conn }}"
 haproxy_irods_extra_max_conn: "{{ haproxy_default_max_conn }}"
+haproxy_irods_check_period: "{{ _default_check_period }}"
 haproxy_irods_client_hosts: "{{ _default_client_hosts }}"
 haproxy_irods_vip_client_hosts: "{{ _default_irods_vip_client_hosts }}"
 
@@ -23,3 +21,4 @@ haproxy_webdav_port: "{{ _default_webdav_port }}"
 haproxy_webdav_tls_port: "{{ _default_webdav_tls_port }}"
 haproxy_webdav_backend_hosts: "{{ _default_webdav_backend_hosts }}"
 haproxy_webdav_client_hosts: "{{ _default_client_hosts }}"
+haproxy_webdav_check_period: "{{ _default_check_period }}"

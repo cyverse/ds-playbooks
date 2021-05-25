@@ -1,10 +1,4 @@
 ---
-- name: disable testing
-  set_fact:
-    haproxy_no_guardrails: true
-  tags:
-    - no_testing
-
 - name: configure | allowing proxy to listen on stats port
   when: ansible_selinux.status == 'enabled'
   seport:
@@ -19,55 +13,47 @@
     state: true
     persistent: true
 
-- name: configure | open firewall for relevant connections
-  blockinfile:
-    path: /etc/sysconfig/iptables
-    insertbefore: -A INPUT -j REJECT
-    marker: "# {mark} DS MANAGED BLOCK (proxy filter)"
-    block: |
-      -A INPUT -m state --state UNTRACKED -j ACCEPT
-      {% for host in stats_client_hosts %}
-      {%   set addr = host if host | ipaddr else lookup('dig', host) %}
-      -A INPUT -m state --state NEW -s {{ addr }} -p tcp --dport {{ stats_port }} -j ACCEPT
-      {% endfor %}
-  notify:
-    - reload firewall
+- name: configure | change rsyslog.conf block Id to proxy
+  shell: |
+    if grep --quiet 'DS MANAGED BLOCK (load_balancer)' /etc/rsyslog.conf; then
+      sed --in-place \
+        's/^\(# [^ ]\+ DS MANAGED BLOCK\) (load_balancer)/\1 (haproxy)/' /etc/rsyslog.conf
+      echo changed
+    fi
+  register: result
+  changed_when: result.stdout == 'changed'
 
-- name: configure | disable conntrack for proxied connections
+- name: configure | configure rsyslog to listen on UDP socket
   blockinfile:
-    path: /etc/sysconfig/iptables
-    marker: "# {mark} DS MANAGED BLOCK (proxy raw)"
+    path: /etc/rsyslog.conf
+    insertafter: '# Provides UDP syslog reception'
+    marker: "# {mark} DS MANAGED BLOCK (haproxy)"
     block: |
-      *raw
-      {% for host in irods_client_hosts %}
-      {%   set addr = host if host | ipaddr else lookup('dig', host) %}
-      -A PREROUTING -s {{ addr }} -p tcp --dport {{ irods_port }} -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --sport {{ irods_port }} -j NOTRACK
-      {% endfor %}
-      {% set irods_addr = irods_backend_host if irods_backend_host | ipaddr else lookup('dig', irods_backend_host) %}
-      -A OUTPUT -d {{ irods_addr }} -p tcp --dport {{ irods_backend_port }} -j NOTRACK
-      -A PREROUTING -s {{ irods_addr }} -p --sport {{ irods_backend_port }} -j NOTRACK
-      {% for host in webdav_client_hosts %}
-      {%   set addr = host if host | ipaddr else lookup('dig', host) %}
-      -A PREROUTING -s {{ addr }} -p tcp --dport {{ webdav_port }} -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --sport {{ webdav_port }} -j NOTRACK
-      -A PREROUTING -s {{ addr }} -p tcp --dport {{ webdav_tls_port }} -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --sport {{ webdav_tls_port }} -j NOTRACK
-      {% endfor %}
-      {% for host in webdav_backend_hosts %}
-      {%   set addr = host if host | ipaddr else lookup('dig', host) %}
-      -A OUTPUT -d {{ addr }} -p tcp --dport {{ webdav_port }} -j NOTRACK
-      -A PREROUTING -s {{ addr }} -p tcp --sport {{ webdav_port }}  -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --dport {{ webdav_tls_port }} -j NOTRACK
-      -A PREROUTING -s {{ addr }} -p tcp --sport {{ webdav_tls_port }}  -j NOTRACK
-      {% endfor %}
-      COMMIT
+      $ModLoad imudp
+      $UDPServerRun 514
+      $UDPServerAddress 127.0.0.1
   notify:
-    - reload firewall
+    - restart rsyslog
 
-- name: configure | place iRODS VIP list
+- name: configure | place rsyslog config for HAProxy
+  copy:
+    src: rsyslog-haproxy.conf
+    dest: /etc/rsyslog.d/haproxy.conf
+  notify:
+    - restart rsyslog
+
+- name: configure | place logrotate config for HAProxy
+  copy:
+    src: logrotate-haproxy
+    dest: /etc/logrotate.d/haproxy
+
+- name: configure | add TLS certificates
+  debug:
+    msg: TODO implement
+
+- name: configure | place VIP list
   template:
-    src: vip.lst.j2
+    src: templates/vip.lst.j2
     dest: /etc/haproxy/vip.lst
   notify:
     - reload haproxy
@@ -79,4 +65,74 @@
   notify:
     - reload haproxy
 
-# TODO place TLS certs
+- name: configure | ensure /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg points to cfg
+  file:
+    src: /etc/haproxy/haproxy.cfg
+    dest: /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg
+    state: link
+    follow: false
+    force: true
+  notify:
+    - reload haproxy
+
+- name: configure | change iptables load_balancer block Ids to proxy
+  shell: |
+    if grep --quiet 'DS MANAGED BLOCK (load_balancer filter)' /etc/sysconfig/iptables; then
+      sed --in-place \
+        's/^\(# [^ ]\+ DS MANAGED BLOCK (\)load_balancer\( .*)\)/\1haproxy\2/' \
+        /etc/sysconfig/iptables
+      echo changed
+    fi
+  register: result
+  changed_when: result.stdout == 'changed'
+
+- name: configure | disable conntrack for proxied connections
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    marker: "# {mark} DS MANAGED BLOCK (haproxy raw)"
+    block: |
+      *raw
+      {% for c in webdav_client_hosts %}
+      {%   set addr = c if c|ipaddr else lookup('dig', c) %}
+      -A PREROUTING -s {{ addr }} -p tcp --dport 80 -j NOTRACK
+      -A OUTPUT -d {{ addr }} -p tcp --sport 80 -j NOTRACK
+      -A PREROUTING -s {{ addr }} -p tcp --dport 443 -j NOTRACK
+      -A OUTPUT -d {{ addr }} -p tcp --sport 443 -j NOTRACK
+      {% endfor %}
+      {% for w in webdav_backend_hosts %}
+      {%   set addr = w if w|ipaddr else lookup('dig', w) %}
+      -A PREROUTING -s {{ addr }} -p tcp --sport 80 -j NOTRACK
+      -A OUTPUT -d {{ addr }} -p tcp --dport 80 -j NOTRACK
+      -A PREROUTING -s {{ addr }} -p tcp --sport 443 -j NOTRACK
+      -A OUTPUT -d {{ addr }} -p tcp --dport 443 -j NOTRACK
+      {% endfor %}
+      {% for c in irods_client_hosts %}
+      {%   set addr = c if c|ipaddr else lookup('dig', c) %}
+      -A PREROUTING -s {{ addr }} -p tcp --dport {{ irods_port }} -j NOTRACK
+      -A OUTPUT -d {{ addr }} -p tcp --sport {{ irods_port }} -j NOTRACK
+      -A PREROUTING -s {{ addr }} -p tcp --dport {{ irods_reconn_first_port }}:{{ irods_reconn_last_port }} -j NOTRACK
+      -A OUTPUT -d {{ addr }} -p tcp --sport {{ irods_reconn_first_port }}:{{ irods_reconn_last_port }} -j NOTRACK
+      {% endfor %}
+      {% set irods_addr =
+           irods_backend_host if irods_backend_host|ipaddr else lookup('dig', irods_backend_host) %}
+      -A PREROUTING -s {{ irods_addr  }} -p tcp --sport {{ irods_port }} -j NOTRACK
+      -A OUTPUT -d {{ irods_addr }} -p tcp --dport {{ irods_port }} -j NOTRACK
+      -A PREROUTING -s {{ irods_addr }} -p tcp --sport {{ irods_reconn_first_port }}:{{ irods_reconn_last_port }} -j NOTRACK
+      -A OUTPUT -d {{ irods_addr }} -p tcp --dport {{ irods_reconn_first_port }}:{{ irods_reconn_last_port }} -j NOTRACK
+      COMMIT
+  notify:
+    - restart firewall
+
+- name: configure | open firewall for relevant connections
+  blockinfile:
+    path: /etc/sysconfig/iptables
+    insertbefore: -A INPUT -j REJECT
+    marker: "# {mark} DS MANAGED BLOCK (haproxy filter)"
+    block: |
+      -A INPUT -m state --state UNTRACKED -j ACCEPT
+      {% for c in stats_client_hosts %}
+      {%   set addr = c if c|ipaddr else lookup('dig', c) %}
+      -A INPUT -m state --state NEW -s {{ addr }} -p tcp --dport {{ stats_port }} -j ACCEPT
+      {% endfor %}
+  notify:
+    - restart firewall

@@ -1,18 +1,24 @@
 ---
-- name: reload firewall
-  when: haproxy_no_guardrails
-  service:
-    name: iptables
-    state: reloaded
-
 - name: reload haproxy
-  when: haproxy_no_guardrails
+  when: _full_os
   service:
     name: rh-haproxy18-proxy
     state: reloaded
 
+- name: restart haproxy
+  when: _full_os
+  service:
+    name: rh-haproxy18-proxy
+    state: restarted
+
+- name: restart firewall
+  when: _full_os
+  service:
+    name: iptables
+    state: restarted
+
 - name: restart rsyslog
-  when: haproxy_no_guardrails
+  when: _full_os
   service:
     name: rsyslog
     state: restarted

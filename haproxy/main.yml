@@ -6,7 +6,7 @@
     - role: haproxy
       vars:
         haproxy_default_max_conn: 500
-        haproxy_default_queue_timeout: 10m
+        haproxy_queue_timeout: 10m
 
         haproxy_stats_port: 81
         haproxy_stats_tls_crt: /etc/haproxy/certs/cyverse_pem.pem
@@ -22,7 +22,6 @@
         haproxy_irods_reconn_first_port: 20000
         haproxy_irods_reconn_last_port: 20099
         haproxy_irods_backend_host: 128.196.65.26
-        haproxy_irods_backend_port: 1247
         haproxy_irods_backend_reconn_first_port: 20000
         haproxy_irods_backend_reconn_last_port: 20099
         haproxy_irods_single_max_conn: 300

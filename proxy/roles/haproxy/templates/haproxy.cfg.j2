@@ -1,4 +1,4 @@
-# Ansible managed
+{{ ansible_managed | comment }}
 
 ##########################
 #         GLOBAL         #
@@ -27,7 +27,7 @@ global
 
 defaults
   log                         global
-  maxconn                     {{ default_max_conn }}
+  maxconn                     {{ haproxy_default_max_conn }}
   mode                        tcp
   retries                     3
   timeout client-fin          1m
@@ -35,8 +35,8 @@ defaults
   timeout server              1d
   timeout server-fin          1m
   timeout connect             10s
-{% if queue_timeout %}
-  timeout queue               {{ queue_timeout }}
+{% if haproxy_queue_timeout %}
+  timeout queue               {{ haproxy_queue_timeout }}
 {% endif %}
   option clitcpka
   option srvtcpka
@@ -51,19 +51,19 @@ defaults
 
 listen stats
   mode                   http
-{% if stats_tls_crt %}
-  bind                   :{{ stats_port }} ssl crt {{ stats_tls_crt }}
+{% if haproxy_stats_tls_crt %}
+  bind                   :{{ haproxy_stats_port }} ssl crt {{ haproxy_stats_tls_crt }}
 {% else %}
-  bind                   :{{ stats_port }}
+  bind                   :{{ haproxy_stats_port }}
 {% endif %}
   maxconn                10
   stats enable
   stats hide-version
   stats show-legends
-{% if stats_auth %}
-  stats auth             {{ stats_auth.username }}:{{ stats_auth.password }}
-{%   if stats_auth.realm %}
-  stats realm            {{ stats_auth.realm }}
+{% if haproxy_stats_auth %}
+  stats auth             {{ haproxy_stats_auth.username }}:{{ haproxy_stats_auth.password }}
+{%   if haproxy_stats_auth.realm %}
+  stats realm            {{ haproxy_stats_auth.realm }}
 {%   endif %}
 {% endif %}
   stats refresh          10s
@@ -80,7 +80,7 @@ listen stats
 ##########################
 
 frontend irods_main
-  bind                       :{{ irods_port }}
+  bind                       :{{ haproxy_irods_port }}
   stick-table                type ip size 100k store conn_cur
   acl                        is-conn        capture.req.hdr(0) -m str RODS_CONNECT
   acl                        too-many-conn  sc1_conn_cur gt 1
@@ -93,11 +93,11 @@ frontend irods_main
   default_backend            irods_direct
 
 frontend irods_reconn
-  bind             :{{ irods_reconn_first_port }}-{{ irods_reconn_last_port }}
+  bind             :{{ haproxy_irods_reconn_ports }}
   default_backend  irods_direct
 
 backend irods_throttled
-  server  indirect unix@haproxy_irods.sock send-proxy maxconn {{ irods_extra_max_conn }}
+  server  indirect unix@haproxy_irods.sock send-proxy maxconn {{ haproxy_irods_throttled_max_conn }}
 
 frontend irods_indirect
   bind             unix@haproxy_irods.sock accept-proxy
@@ -105,7 +105,7 @@ frontend irods_indirect
 
 backend irods_direct
 {# XXX: Until we are load balancing iRODS servers, I'm disabling checks to prevent false positives #}
-  server                 ies {{ irods_backend_host if irods_backend_host|ipaddr else lookup('dig', irods_backend_host) }} {# check inter {{ irods_check_period }}s maxconn #}{{ irods_max_conn }}
+  server                 ies {{ haproxy_irods_host if haproxy_irods_host|ipaddr else lookup('dig', haproxy_irods_host) }} {# check inter {{ haproxy_irods_check_period }} maxconn #}{{ haproxy_irods_direct_max_conn }}
 {#  option tcp-check
  #  tcp-check connect
  #  tcp-check send-binary  0000006e
@@ -121,11 +121,11 @@ backend irods_direct
 ##########################
 
 listen webdav
-  bind            :{{ webdav_port }},:{{ webdav_tls_port }}
+  bind            :{{ haproxy_webdav_port }},:{{ haproxy_webdav_tls_port }}
 {# XXX: Our caching is too dumb right now to support multiple webdav servers #}
-  server          dav {{ webdav_backend_hosts[0] if webdav_backend_hosts[0]|ipaddr else lookup('dig', webdav_backend_hosts[0]) }}
-{#{% for w in webdav_backend_hosts %}
- #  server          dav-{{ loop.index }} {{ w if w|ipaddr else lookup('dig', w) }} check port 80 fall 2 inter {{ webdav_check_period }}s downinter 3s fastinter 1s
+  server          dav {{ haproxy_webdav_hosts[0] if haproxy_webdav_hosts[0]|ipaddr else lookup('dig', haproxy_webdav_hosts[0]) }}
+{#{% for w in haproxy_webdav_hosts %}
+ #  server          dav-{{ loop.index }} {{ w if w|ipaddr else lookup('dig', w) }} check port {{ haproxy_webdav_port }} fall 2 inter {{ haproxy_webdav_check_period }} downinter 3s fastinter 1s
  #{% endfor %}
  #  option httpchk  OPTIONS /
  #}

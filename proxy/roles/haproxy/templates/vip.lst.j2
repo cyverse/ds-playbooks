@@ -1,3 +1,5 @@
-{% for host in irods_vip_client_hosts %}
-{{ host if host|ipaddr else lookup('dig', host) }}
+{{ ansible_managed | comment }}
+
+{% for v in haproxy_irods_vip_client_hosts %}
+{{ v if v|ipaddr else lookup('dig', v) }}
 {% endfor %}

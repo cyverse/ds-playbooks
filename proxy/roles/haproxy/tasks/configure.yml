@@ -2,7 +2,7 @@
 - name: configure | allowing proxy to listen on stats port
   when: ansible_selinux.status == 'enabled'
   seport:
-    ports: "{{ stats_port }}"
+    ports: "{{ haproxy_stats_port }}"
     proto: tcp
     setype: tor_port_t
 
@@ -91,34 +91,35 @@
     path: /etc/sysconfig/iptables
     marker: "# {mark} DS MANAGED BLOCK (haproxy raw)"
     block: |
+      {% set irods_reconn_port_range = haproxy_irods_reconn_ports | regex_replace('-', ':') %}
       *raw
-      {% for c in webdav_client_hosts %}
+      {% for c in haproxy_webdav_client_hosts %}
       {%   set addr = c if c|ipaddr else lookup('dig', c) %}
-      -A PREROUTING -s {{ addr }} -p tcp --dport 80 -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --sport 80 -j NOTRACK
-      -A PREROUTING -s {{ addr }} -p tcp --dport 443 -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --sport 443 -j NOTRACK
+      -A PREROUTING -s {{ addr }} -p tcp --dport {{ haproxy_webdav_port }} -j NOTRACK
+      -A OUTPUT -d {{ addr }} -p tcp --sport {{ haproxy_webdav_port }} -j NOTRACK
+      -A PREROUTING -s {{ addr }} -p tcp --dport {{ haproxy_webdav_tls_port }} -j NOTRACK
+      -A OUTPUT -d {{ addr }} -p tcp --sport {{ haproxy_webdav_tls_port }} -j NOTRACK
       {% endfor %}
-      {% for w in webdav_backend_hosts %}
+      {% for w in haproxy_webdav_hosts %}
       {%   set addr = w if w|ipaddr else lookup('dig', w) %}
-      -A PREROUTING -s {{ addr }} -p tcp --sport 80 -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --dport 80 -j NOTRACK
-      -A PREROUTING -s {{ addr }} -p tcp --sport 443 -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --dport 443 -j NOTRACK
+      -A PREROUTING -s {{ addr }} -p tcp --sport {{ haproxy_webdav_port }} -j NOTRACK
+      -A OUTPUT -d {{ addr }} -p tcp --dport {{ haproxy_webdav_port }} -j NOTRACK
+      -A PREROUTING -s {{ addr }} -p tcp --sport {{ haproxy_webdav_tls_port }} -j NOTRACK
+      -A OUTPUT -d {{ addr }} -p tcp --dport {{ haproxy_webdav_tls_port }} -j NOTRACK
       {% endfor %}
-      {% for c in irods_client_hosts %}
+      {% for c in haproxy_irods_client_hosts %}
       {%   set addr = c if c|ipaddr else lookup('dig', c) %}
-      -A PREROUTING -s {{ addr }} -p tcp --dport {{ irods_port }} -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --sport {{ irods_port }} -j NOTRACK
-      -A PREROUTING -s {{ addr }} -p tcp --dport {{ irods_reconn_first_port }}:{{ irods_reconn_last_port }} -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --sport {{ irods_reconn_first_port }}:{{ irods_reconn_last_port }} -j NOTRACK
+      -A PREROUTING -s {{ addr }} -p tcp --dport {{ haproxy_irods_port }} -j NOTRACK
+      -A OUTPUT -d {{ addr }} -p tcp --sport {{ haproxy_irods_port }} -j NOTRACK
+      -A PREROUTING -s {{ addr }} -p tcp --dport {{ irods_reconn_port_range }} -j NOTRACK
+      -A OUTPUT -d {{ addr }} -p tcp --sport {{ irods_reconn_port_range }} -j NOTRACK
       {% endfor %}
       {% set irods_addr =
-           irods_backend_host if irods_backend_host|ipaddr else lookup('dig', irods_backend_host) %}
-      -A PREROUTING -s {{ irods_addr  }} -p tcp --sport {{ irods_port }} -j NOTRACK
-      -A OUTPUT -d {{ irods_addr }} -p tcp --dport {{ irods_port }} -j NOTRACK
-      -A PREROUTING -s {{ irods_addr }} -p tcp --sport {{ irods_reconn_first_port }}:{{ irods_reconn_last_port }} -j NOTRACK
-      -A OUTPUT -d {{ irods_addr }} -p tcp --dport {{ irods_reconn_first_port }}:{{ irods_reconn_last_port }} -j NOTRACK
+           haproxy_irods_host if haproxy_irods_host|ipaddr else lookup('dig', haproxy_irods_host) %}
+      -A PREROUTING -s {{ irods_addr  }} -p tcp --sport {{ haproxy_irods_port }} -j NOTRACK
+      -A OUTPUT -d {{ irods_addr }} -p tcp --dport {{ haproxy_irods_port }} -j NOTRACK
+      -A PREROUTING -s {{ irods_addr }} -p tcp --sport {{ irods_reconn_port_range }} -j NOTRACK
+      -A OUTPUT -d {{ irods_addr }} -p tcp --dport {{ irods_reconn_port_range }} -j NOTRACK
       COMMIT
   notify:
     - restart firewall
@@ -130,9 +131,9 @@
     marker: "# {mark} DS MANAGED BLOCK (haproxy filter)"
     block: |
       -A INPUT -m state --state UNTRACKED -j ACCEPT
-      {% for c in stats_client_hosts %}
+      {% for c in haproxy_stats_client_hosts %}
       {%   set addr = c if c|ipaddr else lookup('dig', c) %}
-      -A INPUT -m state --state NEW -s {{ addr }} -p tcp --dport {{ stats_port }} -j ACCEPT
+      -A INPUT -m state --state NEW -s {{ addr }} -p tcp --dport {{ haproxy_stats_port }} -j ACCEPT
       {% endfor %}
   notify:
     - restart firewall

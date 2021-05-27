@@ -61,7 +61,7 @@ listen stats
   stats hide-version
   stats show-legends
 {% if haproxy_stats_auth %}
-  stats auth             {{ haproxy_stats_auth.username }}:{{ haproxy_stats_auth.password }}
+  stats auth             {{ haproxy_stats_auth.username | default(_default_stats_auth_username) }}:{{ haproxy_stats_auth.password }}
 {%   if haproxy_stats_auth.realm %}
   stats realm            {{ haproxy_stats_auth.realm }}
 {%   endif %}

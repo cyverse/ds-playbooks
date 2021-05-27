@@ -31,7 +31,7 @@
       -A PREROUTING -s {{ addr }} -p tcp --sport {{ haproxy_webdav_tls_port }} -j NOTRACK
       -A OUTPUT -d {{ addr }} -p tcp --dport {{ haproxy_webdav_tls_port }} -j NOTRACK
       {% endfor %}
-      {% for c in haproxy_irods_client_hosts %}
+      {% for c in haproxy_irods_client_hosts | union(haproxy_webdav_hosts) %}
       {%   set addr = c if c|ipaddr else lookup('dig', c) %}
       -A PREROUTING -s {{ addr }} -p tcp --dport {{ haproxy_irods_port }} -j NOTRACK
       -A OUTPUT -d {{ addr }} -p tcp --sport {{ haproxy_irods_port }} -j NOTRACK

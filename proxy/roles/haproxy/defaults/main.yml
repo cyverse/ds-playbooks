@@ -1,7 +1,7 @@
 ---
 haproxy_queue_timeout: null
 
-haproxy_default_check_period: 20s
+haproxy_default_check_period: 10s
 haproxy_default_client_hosts:
   - 0.0.0.0/0
 haproxy_default_max_conn: 500

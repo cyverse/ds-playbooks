@@ -2,13 +2,13 @@
 - name: reload haproxy
   when: _full_os
   service:
-    name: rh-haproxy18-proxy
+    name: rh-haproxy18-haproxy
     state: reloaded
 
 - name: restart haproxy
   when: _full_os
   service:
-    name: rh-haproxy18-proxy
+    name: rh-haproxy18-haproxy
     state: restarted
 
 - name: restart firewall

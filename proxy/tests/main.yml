@@ -1,4 +1,40 @@
 ---
+- name: test VIP list template default expansion
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../roles/haproxy/defaults/main.yml
+  vars:
+    vip: "{{ lookup('template', '../roles/haproxy/templates/vip.lst.j2') }}"
+  tasks:
+    - name: verify the file has nothing below the header comment
+      assert:
+        that:
+          - vip is search('^#')
+          - vip is not search('\n[^#\n]')
+
+
+- name: test VIP list template custom expansion
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../roles/haproxy/defaults/main.yml
+  vars:
+    vip: "{{ lookup('template', '../roles/haproxy/templates/vip.lst.j2') }}"
+  tasks:
+    - name: verify the ip address passes through
+      debug:
+        msg: TODO implement
+
+    - name: verify the host name converted to address
+      debug:
+        msg: TODO implement
+
+    - name: verify CIDR block passes through
+      debug:
+        msg: TODO implement
+
+
 - name: test set up HAProxy
   hosts: proxy
   become: true
@@ -58,7 +94,7 @@
       debug:
         msg: TODO implement
 
-    - name: test VIP list placement and template expansion
+    - name: test VIP list placement
       debug:
         msg: TODO implement
 
@@ -86,6 +122,3 @@
     - name: test open firewall for relevant connections
       debug:
         msg: TODO implement
-
-    - debug:
-        msg: TODO test rest of configure.yml

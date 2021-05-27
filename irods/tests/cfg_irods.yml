@@ -60,7 +60,7 @@
       stat:
         path: /var/lib/irods/iRODS/server/bin/cmd/{{ item }}
       register: response
-      failed_when:  |
+      failed_when: |
         not response.stat.exists
         or response.stat.pw_name != 'irods'
         or not response.stat.xusr

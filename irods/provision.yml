@@ -17,14 +17,14 @@
     - name: create service group
       group:
         name: "{{ _irods_service_group_name }}"
-        system: yes
+        system: true
 
     - name: create service account
       user:
         name: "{{ _irods_service_account_name }}"
-        system: yes
+        system: true
         home: /var/lib/irods
-        createhome: yes
+        createhome: true
         group: "{{ _irods_service_group_name }}"
         comment: iRODS Administrator
 

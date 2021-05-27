@@ -4,11 +4,11 @@
   become: true
   roles:
     - role: adfinis_sygroup.grub
-      grub_console: False
+      grub_console: false
       grub_consoles: []
       grub_serial: []
       grub_timeout: 0
-      grub_disable_network_predictable_interface_names: False
+      grub_disable_network_predictable_interface_names: false
       grub_cmdline_linux_default_list:
         - maybe-ubiquity
         - transparent_hugepage=never

@@ -27,6 +27,8 @@
   file:
     path: /etc/haproxy
     state: directory
+    owner: haproxy
+    mode: u+r
 
 - name: install | ensure HAProxy starts on reboot
   service:

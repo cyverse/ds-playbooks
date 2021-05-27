@@ -62,7 +62,7 @@
         state: present
         host: "{{ groups['ies'][0] }}"
         port: 1247
-        admin_user: rods 
+        admin_user: rods
         admin_password: rods
         zone: testing
       register: resp

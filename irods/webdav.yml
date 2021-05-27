@@ -420,14 +420,14 @@
     - name: reload systemd
       when: notifications_enabled | default(false)
       systemd:
-        daemon_reload: yes
+        daemon_reload: true
 
     - name: restart httpd
       when: notifications_enabled | default(false)
       service:
         name: httpd
         state: restarted
-        
+
     - name: restart varnish
       when: notifications_enabled | default(false)
       service:

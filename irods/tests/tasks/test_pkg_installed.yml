@@ -4,7 +4,8 @@
 # pkg      The name of the package
 # version  (optional) The package version that should be installed
 
-- package_facts:
+- name: determine which packages are installed
+  package_facts:
     strategy: all
 
 - name: check correct {{ pkg }} package installed

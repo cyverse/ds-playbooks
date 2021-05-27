@@ -1,9 +1,9 @@
 ---
 - name: test checkout irods-netcdf-build repo
-  run_once: true
-  become: false
-  local_action:
-    module: stat
+  stat:
     path: /tmp/irods-netcdf-build
   register: response
+  run_once: true
+  delegate_to: localhost
+  become: false
   failed_when: not response.stat.exists

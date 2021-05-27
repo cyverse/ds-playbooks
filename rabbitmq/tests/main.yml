@@ -5,7 +5,7 @@
   tasks:
     - debug:
         msg: TODO implement
-        
+
 
 - name: test set up RabbitMQ broker
   hosts: rabbitmq

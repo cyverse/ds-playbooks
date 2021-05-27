@@ -39,6 +39,7 @@
   copy:
     src: rsyslog-haproxy.conf
     dest: /etc/rsyslog.d/haproxy.conf
+    mode: u+r
   notify:
     - restart rsyslog
 
@@ -46,6 +47,7 @@
   copy:
     src: logrotate-haproxy
     dest: /etc/logrotate.d/haproxy
+    mode: u+r
 
 - name: configure | add TLS certificates
   debug:
@@ -55,6 +57,8 @@
   template:
     src: templates/vip.lst.j2
     dest: /etc/haproxy/vip.lst
+    owner: haproxy
+    mode: u+r
   notify:
     - reload haproxy
 
@@ -62,6 +66,8 @@
   template:
     src: haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
+    owner: haproxy
+    mode: u=r
   notify:
     - reload haproxy
 

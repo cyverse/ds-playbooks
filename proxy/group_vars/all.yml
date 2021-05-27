@@ -1,8 +1,7 @@
 ---
 proxy_stats_auth: null
 proxy_stats_tls_crt: null
-proxy_stats_client_hosts:
-  - localhost
+proxy_stats_client_hosts: []
 
 proxy_irods_reconn_ports: 20000-20399
 proxy_irods_vip_client_hosts: []

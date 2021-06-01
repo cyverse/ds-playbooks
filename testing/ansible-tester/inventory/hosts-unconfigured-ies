@@ -1,5 +1,8 @@
 localhost ansible_connection=local
 
+[amqp]
+dstesting_amqp_1.dstesting_default
+
 [dbms:children]
 dbms_primary
 dbms_replicas
@@ -22,9 +25,6 @@ dstesting_rs_centos6_1.dstesting_default
 
 [proxy]
 dstesting_proxy_1.dstesting_default
-
-[rabbitmq]
-dstesting_amqp_1.dstesting_default
 
 [webdav]
 

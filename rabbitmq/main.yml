@@ -1,6 +1,6 @@
 ---
 - name: set up RabbitMQ broker
-  hosts: rabbitmq
+  hosts: amqp
   become: true
   tasks:
     - name: install epel repository

@@ -12,5 +12,5 @@
         rabbitmq_ds_vhost_name: "{{ _ampq_vhost }}"
         rabbitmq_ds_vhost_admin_username: "{{ _amqp_user }}"
         rabbitmq_ds_vhost_admin_password: "{{ _amqp_password }}"
-      delegate_to: "{{ groups['rabbitmq'][0] }}"
+      delegate_to: "{{ groups['amqp'][0] }}"
       delegate_facts: true

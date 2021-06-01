@@ -1,6 +1,7 @@
 ---
 - name: create AMQP exchange
   hosts: ies
+  become: true
   run_once: true
   gather_facts: false
   tasks:

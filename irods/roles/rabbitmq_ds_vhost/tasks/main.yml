@@ -9,7 +9,7 @@
   rabbitmq_user:
     vhost: "{{ rabbitmq_ds_vhost_name }}"
     user: "{{ rabbitmq_ds_vhost_admin_username }}"
-    password: "{{ rabbitmq_ds_vhost_password }}"
+    password: "{{ rabbitmq_ds_vhost_admin_password }}"
     configure_priv: .*
     read_priv: .*
     write_priv: .*
@@ -26,7 +26,7 @@
     exchange_type: topic
     login_port: "{{ rabbitmq_ds_vhost_mgmt_port }}"
     login_user: "{{ rabbitmq_ds_vhost_admin_username }}"
-    login_password: "{{ rabbitmq_ds_vhost_admin_username }}"
+    login_password: "{{ rabbitmq_ds_vhost_admin_password }}"
   no_log: true
   tags:
     no_testing

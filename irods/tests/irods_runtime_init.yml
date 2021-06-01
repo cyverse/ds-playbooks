@@ -11,7 +11,6 @@
                    "select TOKEN_ID where TOKEN_NAMESPACE = 'user_type'
                                     and TOKEN_NAME = 'ds-service'
                                     and TOKEN_VALUE2 = 'a Data Store service'")
-
         ! [[ "$resp" =~ ^CAT_NO_ROWS_FOUND ]]
       changed_when: false
 
@@ -23,6 +22,16 @@
 
     - name: verify /zone/home/shared does exist
       command: ils /testing/home/shared
+      changed_when: false
+
+    - name: verify /zone/trash/home/public doesn't exist
+      command: ils /testing/trash/home/public
+      register: response
+      changed_when: false
+      failed_when: response is succeeded
+
+    - name: verify /zone/trash/home/shared does exist
+      command: ils /testing/trash/home/shared
       changed_when: false
 
     - name: test ensure CyVerse curated collection base collection exists

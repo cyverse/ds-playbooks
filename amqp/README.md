@@ -1,6 +1,6 @@
-# CyVerse DS RabbitMQ Playbooks
+# CyVerse DS AMQP Playbooks
 
-This is a collection of playbooks for deploying a RabbitMQ broker for the CyVerse Data Store.
+This is a collection of playbooks for deploying a AMQP broker for the CyVerse Data Store.
 
 ## Tags
 
@@ -10,9 +10,9 @@ This is a collection of playbooks for deploying a RabbitMQ broker for the CyVers
 
 None of these variables are required.
 
-Variable                   | Default | Choices | Comments
--------------------------- | ------- | ------- | --------
-`rabbitmq_admin_password`  | guest   |         | The password for `rabbitmq_admin_user`
-`rabbitmq_admin_user`      | guest   |         | The RabbitMQ broker admin user
-`rabbitmq_broker_port`     | 5672    |         | The port used by the broker
-`rabbitmq_management_port` | 15672   |         | The port used by the management interface
+Variable               | Default | Choices | Comments
+---------------------- | ------- | ------- | --------
+`amqp_admin_username`  | guest   |         | The AMQP broker admin user
+`amqp_admin_password`  | guest   |         | The password for `amqp_admin_username`
+`amqo_broker_port`     | 5672    |         | The port used by the broker
+`amqp_management_port` | 15672   |         | The port used by the management interface

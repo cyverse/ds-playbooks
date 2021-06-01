@@ -1,7 +1,7 @@
 ---
-_admin_password: "{{ rabbitmq_admin_password | default('guest') }}"
-_admin_user: "{{ rabbitmq_admin_user | default('guest') }}"
+_admin_username: "{{ amqp_admin_user | default('guest') }}"
+_admin_password: "{{ amqp_admin_password | default('guest') }}"
 
-_broker_port: "{{ rabbitmq_broker_port | default(5672) }}"
+_broker_port: "{{ amqp_broker_port | default(5672) }}"
 
-_management_port: "{{ rabbitmq_management_port | default(15672) }}"
+_management_port: "{{ amqp_management_port | default(15672) }}"

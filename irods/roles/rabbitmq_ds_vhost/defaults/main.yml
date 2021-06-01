@@ -1,0 +1,5 @@
+---
+rabbitmq_ds_vhost_name: /ds
+rabbitmq_ds_vhost_admin_username: ipc
+rabbitmq_ds_vhost_exchange: irods
+rabbitmq_ds_vhost_mgmt_port: 15672

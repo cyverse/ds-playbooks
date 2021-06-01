@@ -39,6 +39,7 @@ Variable                                   | Default                            
 `irods_aegis_repl_resource`                | _see description_                    |         | the name of the aegis resource where replicas are written. If `irods_aegis_resource` is defined, it is the default, otherwise,
 `irods_amqp_exchange`                      | irods                                |         | the AMQP exchange used to publish events
 `irods_amqp_host`                          | `irods_ies`                          |         | the FQDN or IP address of the server hosting the AMQP service
+`irods_amqp_mgmt_port`                     | 15672                                |         | The TCP port used for management of the AMQP vhost
 `irods_amqp_password`                      | guest                                |         | The password iRODS uses to connect to the AMQP vhost
 `irods_amqp_port`                          | 5672                                 |         | The TCP port the RabbitMQ broker listens on
 `irods_amqp_user`                          | guest                                |         | The user iRODS uses to connect to the AMQP vhost

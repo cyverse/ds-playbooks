@@ -1,0 +1,16 @@
+---
+- name: create AMQP exchange
+  hosts: ies
+  run_once: true
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: rabbitmq_ds_vhost
+      vars:
+        rabbitmq_ds_vhost_exchange: "{{ _amqp_exchange }}"
+        rabbitmq_ds_vhost_mgmt_port: "{{ _amqp_mgmt_port }}"
+        rabbitmq_ds_vhost_name: "{{ _ampq_vhost }}"
+        rabbitmq_ds_vhost_admin_username: "{{ _amqp_user }}"
+        rabbitmq_ds_vhost_admin_password: "{{ _amqp_password }}"
+      delegate_to: "{{ groups['rabbitmq'][0] }}"
+      delegate_facts: true

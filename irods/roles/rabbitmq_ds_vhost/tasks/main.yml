@@ -1,0 +1,32 @@
+---
+- name: create data store virtual host
+  rabbitmq_vhost:
+    name: "{{ rabbitmq_ds_vhost_name }}"
+  tags:
+    no_testing
+
+- name: set admin user perms on data store vhost
+  rabbitmq_user:
+    vhost: "{{ rabbitmq_ds_vhost_name }}"
+    user: "{{ rabbitmq_ds_vhost_admin_username }}"
+    password: "{{ rabbitmq_ds_vhost_password }}"
+    configure_priv: .*
+    read_priv: .*
+    write_priv: .*
+    tags: administrator
+    state: present
+  no_log: true
+  tags:
+    no_testing
+
+- name: create irods exchange
+  rabbitmq_exchange:
+    vhost: "{{ rabbitmq_ds_vhost_name }}"
+    name: "{{ rabbitmq_ds_vhost_exchange }}"
+    exchange_type: topic
+    login_port: "{{ rabbitmq_ds_vhost_mgmt_port }}"
+    login_user: "{{ rabbitmq_ds_vhost_admin_username }}"
+    login_password: "{{ rabbitmq_ds_vhost_admin_username }}"
+  no_log: true
+  tags:
+    no_testing

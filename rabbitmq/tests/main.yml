@@ -1,5 +1,18 @@
 ---
-- name: test rabbitmq.conf template expansion
+- name: test rabbitmq.conf template default expansion
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: verify listeners.tcp.1 set correctly
+      debug:
+        msg: TODO implement
+
+    - name: verify management.tcp.port set correctly
+      debug:
+        msg: TODO implement
+
+
+- name: test rabbitmq.conf template custom expansion
   hosts: localhost
   gather_facts: false
   tasks:
@@ -18,10 +31,13 @@
       assert:
         that:
           - "'epel-release' in ansible_facts.packages"
-          - >
-            'rabbitmq-server' in ansible_facts.packages and
-            ansible_facts.packages['rabbitmq-server'] | length == 1 and
-            ansible_facts.packages['rabbitmq-server'][0].version is version_compare('3.8.14', '>=')
+          - "'rabbitmq-server' in ansible_facts.packages"
+          - ansible_facts.packages['rabbitmq-server'] | length == 1
+          - ansible_facts.packages['rabbitmq-server'][0].version is version_compare('3.8.14', '>=')
+
+    - name: verify correct version of erlang installed
+      debug:
+        msg: TODO implement
 
     - name: test place rabbitmq config file
       debug:

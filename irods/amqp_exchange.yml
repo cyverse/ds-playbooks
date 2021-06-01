@@ -9,7 +9,7 @@
       vars:
         rabbitmq_ds_vhost_exchange: "{{ _amqp_exchange }}"
         rabbitmq_ds_vhost_mgmt_port: "{{ _amqp_mgmt_port }}"
-        rabbitmq_ds_vhost_name: "{{ _ampq_vhost }}"
+        rabbitmq_ds_vhost_name: "{{ _amqp_vhost }}"
         rabbitmq_ds_vhost_admin_username: "{{ _amqp_user }}"
         rabbitmq_ds_vhost_admin_password: "{{ _amqp_password }}"
       delegate_to: "{{ groups['amqp'][0] }}"

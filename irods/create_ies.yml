@@ -92,7 +92,7 @@
 
     - name: ensure pika installed
       pip:
-        name: pika
+        name: pika<1.2
         state: present
 
     - import_tasks: tasks/install_ies_pkgs.yml

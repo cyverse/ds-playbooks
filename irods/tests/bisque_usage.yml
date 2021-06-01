@@ -1,6 +1,7 @@
 ---
-- name: test bisque template expansion
+- name: test bisque template default expansion
   hosts: localhost
+  gather_facts: false
   tasks:
     - name: test bisque_host set correctly
       debug:
@@ -12,6 +13,14 @@
 
     - name: test bisque_admin_pass set  correctly
       debug:
+        msg: TODO implement
+
+
+- name: test bisque template custom expansion
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - debug:
         msg: TODO implement
 
 

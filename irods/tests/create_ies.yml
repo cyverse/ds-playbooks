@@ -43,8 +43,11 @@
         loop_var: pkg
 
     - name: test ensure pika installed
-      command: pip --disable-pip-version-check show pika
+      shell: |
+        pip --disable-pip-version-check show pika | sed --quiet 's/^Version: //p' 2> /dev/null
+      register: resp
       changed_when: false
+      failed_when: resp.stdout is version('1.2', '>=')
 
     - import_tasks: tasks/test_install_ies_pkgs.yml
 

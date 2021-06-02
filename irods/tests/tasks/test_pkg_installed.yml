@@ -1,16 +1,21 @@
 ---
 # Tests that a system package is installed
 #
-# pkg      The name of the package
-# version  (optional) The package version that should be installed
+# pkg  The name of the package
+# ver  (optional) The package version that should be installed
 
 - name: determine which packages are installed
   package_facts:
     strategy: all
 
 - name: check correct {{ pkg }} package installed
-  when: |
-    pkg not in ansible_facts.packages or
-    ansible_facts.packages[pkg] | length != 1 or
-    version is defined and ansible_facts.packages[pkg][0].version is version_compare(version, '!=')
-  fail:
+  assert:
+    that:
+      - pkg in ansible_facts.packages
+      - ansible_facts.packages[pkg]|length == 1
+
+- name: check {{ pkg }} package has correct version
+  assert:
+    that:
+      - ansible_facts.packages[pkg][0].version is version(ver, '==')
+  when: ver | default(false) | bool

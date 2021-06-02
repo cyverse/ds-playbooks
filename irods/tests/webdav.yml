@@ -175,12 +175,12 @@
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: irods-icommands
-        version: '4.1.10'
+        ver: '4.1.10'
 
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: irods-runtime
-        version: '4.1.10'
+        ver: '4.1.10'
 
     - name: test add davrods irods directory contents
       stat:

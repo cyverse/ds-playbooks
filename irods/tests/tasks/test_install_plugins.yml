@@ -2,6 +2,6 @@
 - include_tasks: test_pkg_installed.yml
   vars:
     pkg: irods-runtime
-    version: 4.1.10
+    ver: 4.1.10
 
 - import_tasks: test_build_plugins.yml

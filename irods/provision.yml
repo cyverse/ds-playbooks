@@ -26,6 +26,7 @@
         home: /var/lib/irods
         createhome: true
         group: "{{ _irods_service_group_name }}"
+        groups: tty
         comment: iRODS Administrator
 
 

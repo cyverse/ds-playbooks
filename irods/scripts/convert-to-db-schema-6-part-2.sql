@@ -11,10 +11,12 @@
 
 \timing on
 
-SET SESSION work_mem = '1GB';
+SET SESSION work_mem = '2GB';
 SET SESSION maintenance_work_mem = '32GB';
-SET SESSION max_parallel_maintenance_workers = 15;
+SET SESSION max_parallel_workers = 16;
+SET SESSION max_parallel_maintenance_workers = 16;
 
+\echo
 \echo creating indexes deferred when adding resc_id to r_data_main
 CREATE INDEX CONCURRENTLY idx_data_main1 ON r_data_main (data_id);
 CREATE INDEX CONCURRENTLY idx_data_main3 ON r_data_main (coll_id);
@@ -22,6 +24,7 @@ CREATE INDEX CONCURRENTLY idx_data_main4 ON r_data_main (data_name);
 CREATE INDEX CONCURRENTLY idx_data_main5 ON r_data_main (data_type_name);
 CREATE INDEX CONCURRENTLY idx_data_main6 ON r_data_main (data_path);
 
+\echo
 \echo creating indexes deferred when converting schema to version 6
 CREATE INDEX CONCURRENTLY idx_data_main7 ON r_data_main (resc_id);
 CREATE INDEX CONCURRENTLY idx_data_main8 ON r_data_main (data_is_dirty);

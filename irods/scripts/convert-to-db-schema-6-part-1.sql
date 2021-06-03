@@ -13,7 +13,8 @@
 --     wal_level = minimal
 --     work_mem = 2GB
 --     maintenance_work_mem = 64GB
---     max_parallel_maintenance_workers = 30
+--     max_parallel_workers = 32
+--     max_parallel_maintenance_workers = 32
 --
 -- After this script completes, convert-to-db-schema-6-part-2.sql should be run.
 -- `irodsctl start` can be executed at the same time as that SQL script.
@@ -24,6 +25,7 @@
 -- can be mostly skipped. We are mssing a specific query that was supposed to be
 -- added in version 3. The follow statement will add that query.
 
+\echo
 \echo adding missing the DataObjInCollReCur specific query.
 INSERT INTO r_specific_query (alias, sqlStr, create_ts)
 VALUES (
@@ -104,9 +106,11 @@ CREATE UNIQUE INDEX idx_data_main2 ON r_data_main (coll_id, data_name, data_repl
 
 COMMIT;
 
+\echo
 \echo adding resc_parent_context column to r_resc_main
 ALTER TABLE r_resc_main ADD resc_parent_context VARCHAR(4000);
 
+\echo
 \echo changing definition of the DataObjInCollReCur specific query
 -- It will use r_data_main.resc_id to identify the storage resource instead of
 -- the defunct r_data_main.resc_hier column.
@@ -115,12 +119,14 @@ SET sqlstr =
 	'WITH coll AS (SELECT coll_id, coll_name FROM R_COLL_MAIN WHERE R_COLL_MAIN.coll_name = ? OR R_COLL_MAIN.coll_name LIKE ?) SELECT DISTINCT d.data_id, (SELECT coll_name FROM coll WHERE coll.coll_id = d.coll_id) coll_name, d.data_name, d.data_repl_num, d.resc_name, d.data_path, d.resc_id FROM R_DATA_MAIN d WHERE d.coll_id = ANY(ARRAY(SELECT coll_id FROM coll)) ORDER BY coll_name, d.data_name, d.data_repl_num'
 WHERE alias = 'DataObjInCollReCur';
 
+\echo
 \echo repurposing r_resc_main.resc_parent as a foreign key to r_resc_main.resc_id
 UPDATE r_resc_main AS rdm
 SET resc_parent = am.resc_id
 FROM (SELECT resc_name, resc_id FROM r_resc_main) AS am
 WHERE am.resc_name = rdm.resc_parent;
 
+\echo
 \echo populating r_resc_main.resc_parent_context
 -- For each child resource in r_resc_main, set the value of resc_parent_context
 -- from its value in the parent resource's resc_children entry. Here's a

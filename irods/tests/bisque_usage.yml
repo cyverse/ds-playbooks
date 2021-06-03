@@ -7,14 +7,11 @@
   vars:
     bisque: "{{ lookup('template', '../templates/bisque.j2') }}"
   tasks:
-    - name: test bisque_admin_user set correctly
+    - name: test cfg values set correctly
       assert:
         that:
           - bisque is search('\nbisque_admin_user = admin\n')
-
-    - name: test bisque_admin_pass set  correctly
-      debug:
-        msg: TODO implement
+          - bisque is search('\nbisque_admin_pass = admin\n')
 
 
 - name: test bisque template custom expansion

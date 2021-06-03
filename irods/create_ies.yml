@@ -40,6 +40,12 @@
     # NB: The rpm and yum bindings for the package module require Python 2 in
     #     Ansible 2.9.6
     ansible_python_interpreter: /usr/bin/python
+    odbc_description: "{{
+      lookup('ini', 'Description file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}"
+    odbc_driver: "{{
+      lookup('ini', 'Driver file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}"
+    odbc_setup: "{{
+      lookup('ini', 'Setup file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}"
   tasks:
     - name: configure linux kernel
       sysctl:
@@ -81,6 +87,28 @@
             dest: /etc/profile.d
           with_fileglob:
             - "files/profile.d/*"
+
+        - name: install PostgreSQL 12 ODBC Driver
+          shell: |
+            if driverDef="$(odbcinst -q -d -n PostgreSQL)"; then
+              description="$(sed --quiet 's/^Description=//p' <<< "$driverDef")"
+              driver="$(sed --quiet 's/^Driver=//p' <<< "$driverDef")"
+              setup="$(sed --quiet 's/^Setup=//p' <<< "$driverDef")"
+              if [[ "$description" == '{{ odbc_description }}' \
+                && "$driver" == '{{ odbc_driver }}' \
+                && "$setup" == '{{ odbc_setup }}' ]]
+              then
+                exit 0
+              fi
+            fi
+            if ! odbcinst -i -d -r -v; then
+              exit 1
+            fi
+            echo changed
+          args:
+            stdin: "{{ lookup('file', 'files/postgresql-odbc-tmpl.ini') }}"
+          register: result
+          changed_when: result.stdout == 'changed'
 
     - name: ensure required packages are installed
       package:

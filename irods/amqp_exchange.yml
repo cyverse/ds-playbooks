@@ -1,17 +1,22 @@
 ---
 - name: create AMQP exchange
   hosts: ies
-  become: true
   run_once: true
-  gather_facts: false
-  tasks:
-    - import_role:
-        name: rabbitmq_ds_vhost
+  roles:
+    - role: cyverse.rabbitmq_vhost
       vars:
-        rabbitmq_ds_vhost_exchange: "{{ _amqp_exchange }}"
-        rabbitmq_ds_vhost_mgmt_port: "{{ _amqp_mgmt_port }}"
-        rabbitmq_ds_vhost_name: "{{ _amqp_vhost }}"
-        rabbitmq_ds_vhost_admin_username: "{{ _amqp_user }}"
-        rabbitmq_ds_vhost_admin_password: "{{ _amqp_password }}"
-      delegate_to: "{{ groups['amqp'][0] }}"
-      delegate_facts: true
+        rabbitmq_host: "{{ _amqp_host }}"
+        rabbitmq_mgmt_port: "{{ _amqp_mgmt_port }}"
+        rabbitmq_admin_user: "{{ _amqp_user }}"
+        rabbitmq_admin_password: "{{ _amqp_password }}"
+        rabbitmq_vhost_name: "{{ _amqp_vhost }}"
+        rabbitmq_vhost_users:
+          - name: "{{ _amqp_user }}"
+            configure_priv: .*
+            read_priv: .*
+            write_priv: .*
+        rabbitmq_vhost_exchanges:
+          - name: "{{ _amqp_exchange }}"
+            type: topic
+  tags:
+    - no_testing

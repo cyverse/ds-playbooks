@@ -64,7 +64,7 @@ services:
   rs_centos6:
     build:
       context: .
-      dockerfile: rs/Dockerfile.centos6
+      dockerfile: rs/Dockerfile.configured
       args:
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
         IRODS_DEFAULT_VAULT: "$IRODS_VAULT"
@@ -83,7 +83,7 @@ services:
   rs_centos7:
     build:
       context: .
-      dockerfile: rs/Dockerfile.centos7
+      dockerfile: rs/Dockerfile.unconfigured
       args:
         IRODS_IES: "$IRODS_IES_CONF_HOST"
     hostname: "$IRODS_RS7_HOST"

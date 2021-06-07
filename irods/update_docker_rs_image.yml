@@ -13,8 +13,6 @@
         irods_default_resource: _IRODS_DEFAULT_RESOURCE_
         irods_default_repl_resource: _IRODS_DEFAULT_RESOURCE_
 
-    - include_tasks: tasks/build_plugins.yml
-
     - name: create command scripts staging directory
       file:
         path: "{{ _build_dir }}/cmd"

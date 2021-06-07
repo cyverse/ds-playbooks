@@ -17,8 +17,23 @@
 - name: test bisque template custom expansion
   hosts: localhost
   gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+    - group_vars/bisque_opts.yml
+  vars:
+    bisque: "{{ lookup('template', '../templates/bisque.j2') }}"
   tasks:
-    - debug:
+    - name: test bisque_host set correctly
+      assert:
+        that:
+          - bisque is search('\nbisque_host = http://localhost.localdomain/\n')
+
+    - name: test bisque_admin_user set correctly
+      debug:
+        msg: TODO implement
+
+    - name: test bisque_admin_pass set correctly
+      debug:
         msg: TODO implement
 
 

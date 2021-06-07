@@ -29,8 +29,6 @@
           - include_group_vars_yaml == 'yaml'
           - include_group_vars_yml == 'yml'
 
-    - import_tasks: tasks/test_build_plugins.yml
-
     - name: test create command scripts staging directory
       stat:
         path: /tmp/cmd

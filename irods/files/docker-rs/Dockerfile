@@ -7,10 +7,6 @@ USER root
 COPY irods-netcdf-build/packages/centos7/*.rpm /tmp/
 RUN yum --assumeyes install \
         https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-runtime-4.1.10-centos7-x86_64.rpm && \
-    yum --assumeyes install \
-        /tmp/irods-api-plugin-netcdf-1.0-centos7.rpm \
-        /tmp/irods-icommands-netcdf-1.0-centos7.rpm \
-        /tmp/irods-microservice-plugin-netcdf-1.0-centos7.rpm && \
 ### Install support for UUID generation
     yum --assumeyes install uuidd && \
 ### Install support for periphery script

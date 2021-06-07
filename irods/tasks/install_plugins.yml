@@ -5,19 +5,24 @@
     pkg: irods-runtime
     pkg_ver: "{{ _irods_version }}"
 
-- delegate_to: localhost
-  run_once: true
-  become: false
-  import_tasks: build_plugins.yml
+- name: ensure netcdf plugins not installed
+  package:
+    name:
+      - irods-icommands-netcdf
+      - irods-microservice-plugin-netcdf
+      - irods-api-plugin-netcdf
+    state: absent
 
-- include_tasks: install_netcdf_plugin.yml
-  vars:
-    plugin: "{{ item }}"
-    rpm: "{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm"
+- name: ensure netcdf rpms removed
+  file:
+    path: /root/{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm
+    state: absent
   with_items:
-    - irods-api-plugin-netcdf
     - irods-icommands-netcdf
     - irods-microservice-plugin-netcdf
-  tags:
-    # docker in docker is a no no.
-    - no_testing
+    - irods-api-plugin-netcdf
+
+- name: ensure msiSetAVU microservice is absent
+  file:
+    path: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
+    state: absent

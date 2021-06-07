@@ -1,0 +1,15 @@
+---
+- name: stop the webdav services
+  hosts: webdav
+  tasks:
+    - name: stop apache
+      service:
+        name: httpd
+        state: stopped
+
+    - name: stop varnish
+      service:
+        name: varnish
+        state: stoppped
+  tags:
+    - no_testing

@@ -20,14 +20,9 @@
 # Returns:
 #  It writes 'true' to standard output if at least one permission was changed,
 #  otherwise it writes 'false'.
-#
-# XXX: Since this needs to run on bash version 4.1+, the script can't rely on
-# 'shopt -s lastpipe' to propagate errors from gather_changes. When none of
-# our iRODS IES run on CentOS 6, this script should be modified to use this
-# instead of relying on the stdout of gather_changes to pass up the exit status.
 
-set -eu
-
+shopt -s lastpipe
+set -o errexit -o nounset
 
 readonly Changes=$(mktemp)
 

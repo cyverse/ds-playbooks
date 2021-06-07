@@ -40,10 +40,10 @@ export IRODS_IES_SYSTEM_GROUP=irods_ies
 export IRODS_LAST_EPHEMERAL_PORT=20009
 
 # The name of the storage resource hosted on the configured resource server
-export IRODS_RS6_NAME=rs_ingest
+export IRODS_RS_CONF_NAME=rs_ingest
 
 # The name of the storage resource hosted on the unconfigured resource server
-export IRODS_RS7_NAME=rs_repl
+export IRODS_RS_UNCONF_NAME=rs_repl
 
 # The URI for the schema used to validate the configuration files or 'off'
 export IRODS_SCHEMA_VALIDATION=off
@@ -55,7 +55,7 @@ export IRODS_VAULT=/var/lib/irods/Vault
 export IRODS_ZONE_NAME=testing
 
 # The name of the default resource to use
-export IRODS_DEFAULT_RESOURCE="$IRODS_RS6_NAME"
+export IRODS_DEFAULT_RESOURCE="$IRODS_RS_CONF_NAME"
 
 # The host name of the configured IES
 export IRODS_IES_CONF_HOST="$ENV_NAME"_ies_configured_1."$DOMAIN"
@@ -64,8 +64,8 @@ export IRODS_IES_CONF_HOST="$ENV_NAME"_ies_configured_1."$DOMAIN"
 export IRODS_IES_UNCONF_HOST="$ENV_NAME"_ies_unconfigured_1."$DOMAIN"
 
 # The host name of the configured resource server
-export IRODS_RS6_HOST="$ENV_NAME"_rs_configured_1."$DOMAIN"
+export IRODS_RS_CONF_HOST="$ENV_NAME"_rs_configured_1."$DOMAIN"
 
 # The host name of the unconfigured resource server
-export IRODS_RS7_HOST="$ENV_NAME"_rs_unconfigured_1."$DOMAIN"
+export IRODS_RS_UNCONF_HOST="$ENV_NAME"_rs_unconfigured_1."$DOMAIN"
 ```

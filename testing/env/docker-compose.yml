@@ -15,7 +15,7 @@ services:
       context: .
       dockerfile: postgresql/Dockerfile.configured
       args:
-        IRODS_RESOURCES: "$IRODS_RS6_NAME:$IRODS_RS6_HOST:$IRODS_VAULT $IRODS_RS7_NAME:$IRODS_RS7_HOST:$IRODS_VAULT"
+        IRODS_RESOURCES: "$IRODS_RS_CONF_NAME:$IRODS_RS_CONF_HOST:$IRODS_VAULT $IRODS_RS_UNCONF_NAME:$IRODS_RS_UNCONF_HOST:$IRODS_VAULT"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     tty: true
 
@@ -68,14 +68,14 @@ services:
       args:
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
         IRODS_DEFAULT_VAULT: "$IRODS_VAULT"
-        IRODS_HOST: "$IRODS_RS6_HOST"
+        IRODS_HOST: "$IRODS_RS_CONF_HOST"
         IRODS_IES: "$IRODS_IES_CONF_HOST"
         IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     cap_add:
       - NET_ADMIN
-    hostname: "$IRODS_RS6_HOST"
+    hostname: "$IRODS_RS_CONF_HOST"
     tty: true
     depends_on:
       - ies_configured
@@ -86,5 +86,5 @@ services:
       dockerfile: rs/Dockerfile.unconfigured
       args:
         IRODS_IES: "$IRODS_IES_CONF_HOST"
-    hostname: "$IRODS_RS7_HOST"
+    hostname: "$IRODS_RS_UNCONF_HOST"
     tty: true

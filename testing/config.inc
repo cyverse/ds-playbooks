@@ -16,5 +16,5 @@ export IRODS_ZONE_NAME=testing
 export IRODS_DEFAULT_RESOURCE="$IRODS_RS6_NAME"
 export IRODS_IES_CONF_HOST="$ENV_NAME"_ies_configured_1."$DOMAIN"
 export IRODS_IES_UNCONF_HOST="$ENV_NAME"_ies_unconfigured_1."$DOMAIN"
-export IRODS_RS6_HOST="$ENV_NAME"_"$IRODS_RS6_NAME"_1."$DOMAIN"
-export IRODS_RS7_HOST="$ENV_NAME"_"$IRODS_RS7_NAME"_1."$DOMAIN"
+export IRODS_RS6_HOST="$ENV_NAME"_rs_configured_1."$DOMAIN"
+export IRODS_RS7_HOST="$ENV_NAME"_rs_unconfigured_1."$DOMAIN"

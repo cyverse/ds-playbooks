@@ -61,7 +61,7 @@ services:
       - apache
       - ies_configured
 
-  rs_centos6:
+  rs_configured:
     build:
       context: .
       dockerfile: rs/Dockerfile.configured
@@ -80,7 +80,7 @@ services:
     depends_on:
       - ies_configured
 
-  rs_centos7:
+  rs_unconfigured:
     build:
       context: .
       dockerfile: rs/Dockerfile.unconfigured

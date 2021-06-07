@@ -20,8 +20,8 @@ rs
 dstesting_ies_configured_1.dstesting_default
 
 [rs]
-dstesting_rs_centos6_1.dstesting_default
-dstesting_rs_centos7_1.dstesting_default
+dstesting_rs_configured_1.dstesting_default
+dstesting_rs_unconfigured_1.dstesting_default
 
 [proxy]
 dstesting_proxy_1.dstesting_default

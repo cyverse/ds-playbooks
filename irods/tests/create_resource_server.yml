@@ -15,7 +15,7 @@
 
 
 - name: test bootstrap iRODS start
-  hosts: dstesting_rs_centos7_1.dstesting_default
+  hosts: dstesting_rs_unconfigured.dstesting_default
   become: true
   become_user: irods
   tasks:

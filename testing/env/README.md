@@ -9,9 +9,9 @@ RabbitMQ broker that in turn hosts the `irods` exchange, where the Data Store
 publishes messages to. The `dbms_configured` container hosts the PostgreSQL
 server that in turn hosts the ICAT DB. The `proxy` container hosts the HAProxy
 for the IES. The `ies_configured` container hosts a configured IES server. The
-`ies_unconfigured` container hosts an unconfigured IES server. The `rs_centos6`
-container hosts the resource server running on CentOS 6. Finally, the
-q`rs_centos7` container hosts the resource server running on CentOS 7.
+`ies_unconfigured` container hosts an unconfigured IES server. The
+`rs_configured` container hosts a configured resource server. Finally, the
+`rs_unconfigured` container hosts an unconfigured resource server.
 
 The environment is controlled by docker-compose, but there are three programs
 that simplify the usage of docker-compose. `build` can be used to create all of
@@ -39,10 +39,10 @@ export IRODS_IES_SYSTEM_GROUP=irods_ies
 # The beginning of the range is 20000.
 export IRODS_LAST_EPHEMERAL_PORT=20009
 
-# The name of the storage resource hosted on the CentOS 6 resource server
+# The name of the storage resource hosted on the configured resource server
 export IRODS_RS6_NAME=rs_centos6
 
-# The name of the storage resource hosted on the CentOS 7 resource server
+# The name of the storage resource hosted on the unconfigured resource server
 export IRODS_RS7_NAME=rs_centos7
 
 # The URI for the schema used to validate the configuration files or 'off'
@@ -63,9 +63,9 @@ export IRODS_IES_CONF_HOST="$ENV_NAME"_ies_configured_1."$DOMAIN"
 # The host name of the unconfigured IES
 export IRODS_IES_UNCONF_HOST="$ENV_NAME"_ies_unconfigured_1."$DOMAIN"
 
-# The host name of the CentOS 6 resource server
-export IRODS_RS6_HOST="$ENV_NAME"_"$IRODS_RS6_NAME"_1."$DOMAIN"
+# The host name of the configured resource server
+export IRODS_RS6_HOST="$ENV_NAME"_rs_configured_1."$DOMAIN"
 
-# The host name of the CentOS 7 resource server
-export IRODS_RS7_HOST="$ENV_NAME"_"$IRODS_RS7_NAME"_1."$DOMAIN"
+# The host name of the unconfigured resource server
+export IRODS_RS7_HOST="$ENV_NAME"_rs_unconfigured_1."$DOMAIN"
 ```

@@ -12,10 +12,10 @@ The environment consists of seven containers. The `amqp` container hosts the
 RabbitMQ broker that in turn hosts the `irods` exchange, where the Data Store
 publishes messages to. The `dbms_configured` container hosts the PostgreSQL
 server that in turn hosts the ICAT DB. The `proxy` container hosts the HAProxy
-for the IES. The `ies_configured` container hosts a configured IES running. The
-`ies_unconfigured` container hosts an unconfigured IES. The `rs_centos6`
-container hosts the resource server running on CentOS 6. Finally, the
-`rs_centos7` container hosts the resource server running on CentOS 7.
+for the IES. The `ies_configured` container hosts a configured IES. The
+`ies_unconfigured` container hosts an unconfigured IES. The `rs_configured`
+container hosts a configured resource server. Finally, the `rs_unconfigured`
+container hosts the resource server.
 
 ## Building the Harness
 

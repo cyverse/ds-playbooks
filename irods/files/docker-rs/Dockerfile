@@ -3,8 +3,7 @@ FROM cyverse/irods-rs:4.1.10
 ### Switch back to root for installation
 USER root
 
-### Install iRODS NetCDF plugins
-COPY irods-netcdf-build/packages/centos7/*.rpm /tmp/
+### Install iRODS plugin support library
 RUN yum --assumeyes install \
         https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-runtime-4.1.10-centos7-x86_64.rpm && \
 ### Install support for UUID generation
@@ -13,7 +12,7 @@ RUN yum --assumeyes install \
     yum --assumeyes install moreutils && \
 ### Clean up installation artifacts
     yum --assumeyes clean all && \
-    rm --force --recursive /var/cache/yum /tmp/* && \
+    rm --force --recursive /var/cache/yum && \
 ### Create vault base
     mkdir /irods_vault
 

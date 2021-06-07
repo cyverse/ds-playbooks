@@ -21,7 +21,7 @@ irods_storage_resources:
     vault: /var/lib/irods/pire_vault
     context: minimum_free_space_for_create_in_bytes=1048576
 
-  - name: rs_centos6
+  - name: rs_ingest
     vault: "{{ irods_default_vault }}"
     context: minimum_free_space_for_create_in_bytes=1048576
 

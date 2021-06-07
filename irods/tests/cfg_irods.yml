@@ -100,7 +100,7 @@
           - irods_environment.irods_client_server_negotiation == 'request_server_negotiation'
           - irods_environment.irods_client_server_policy == 'CS_NEG_REFUSE'
           - irods_environment.irods_default_hash_scheme == 'MD5'
-          - irods_environment.irods_default_resource == 'rs_centos6'
+          - irods_environment.irods_default_resource == 'rs_ingest'
           - irods_environment.irods_user_name == 'rods'
           - irods_environment.irods_zone_name == 'testing'
 
@@ -120,7 +120,7 @@
             that:
               - server_config.default_dir_mode == '0750'
               - server_config.default_file_mode == '0600'
-              - server_config.default_resource_name == 'rs_centos6'
+              - server_config.default_resource_name == 'rs_ingest'
               - server_config.icat_host == inventory_hostname
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
               - server_config.re_rulebase_set[0].filename == 'ipc-custom'
@@ -184,7 +184,7 @@
           assert:
             that:
               - server_config.default_resource_directory == '/var/lib/irods/Vault'
-              - server_config.default_resource_name == 'rs_centos6'
+              - server_config.default_resource_name == 'rs_ingest'
               - server_config.icat_host == 'dstesting_ies_configured_1.dstesting_default'
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
               - server_config.re_rulebase_set[0].filename == 'ipc-custom'

@@ -40,10 +40,10 @@ export IRODS_IES_SYSTEM_GROUP=irods_ies
 export IRODS_LAST_EPHEMERAL_PORT=20009
 
 # The name of the storage resource hosted on the configured resource server
-export IRODS_RS6_NAME=rs_centos6
+export IRODS_RS6_NAME=rs_ingest
 
 # The name of the storage resource hosted on the unconfigured resource server
-export IRODS_RS7_NAME=rs_centos7
+export IRODS_RS7_NAME=rs_repl
 
 # The URI for the schema used to validate the configuration files or 'off'
 export IRODS_SCHEMA_VALIDATION=off

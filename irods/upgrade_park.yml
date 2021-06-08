@@ -1,0 +1,21 @@
+---
+- name: remove periodic rules
+  hosts: ies
+  run_once: true
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+#  become_flags: '-i'
+  tasks:
+    - name: remove periodic rules
+      shell: |
+        set -o pipefail
+        ids="$(iqstat -a | tail --lines=+2 | cut --delimiter=' ' --fields=1)"
+        if [[ -n "$ids" ]]; then
+          xargs iqdel <<< "$ids" > /dev/null
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+
+- import_playbook: stop_all.yml

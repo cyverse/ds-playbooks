@@ -1,0 +1,61 @@
+---
+- name: start iRODS service
+  hosts: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  become_flags: '-i'
+  tasks:
+    - name: start iRODS service
+      command: /var/lib/irods/irodsctl start
+      register: response
+      changed_when: response.stderr is not search('iRODS already running')
+      failed_when: response|failed and response.stderr is not search('iRODS already running')
+      throttle: 1
+
+    - name: update information
+      run_once: true
+      shell: |
+        if [[ ! -e /var/lib/irods/stales-updated ]]; then
+          python /var/lib/irods/scripts/update_deprecated_database_columns.py > /dev/null
+          touch /var/lib/irods/stales-updated
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: generate scripts for protecting resources during rs upgrades
+      shell: |
+        if [[ ! -e /var/lib/irods/pre-rs-script.sh || ! -e /var/lib/irods/post-rs-script.sh ]]; then
+          python /var/lib/irods/scripts/generate_iadmin_commands_for_41_to_42_upgrade.py \
+            > /var/lib/irods/both-rs-scripts.sh
+          awk 'BEGIN{RS="#"} {if(NR==2){ printf "#%s", $0 }}' < /var/lib/irods/both-rs-scripts.sh \
+            > /var/lib/irods/pre-rs-script.sh
+          awk 'BEGIN{RS="#"} {if(NR==3){ printf "#%s", $0 }}' < /var/lib/irods/both-rs-scripts.sh \
+            > /var/lib/irods/post-rs-script.sh
+          rm --force /var/lib/irods/both-rs-scripts.sh
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: start protecting resources during rs upgrade
+      shell: |
+        if [[ ! -e /var/lib/irods/pre-rs-script-run ]]; then
+          bash /var/lib/irods/pre-rs-script.sh > /dev/null
+          touch /var/lib/irods/pre-rs-script-run
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+
+- name: upgrade resource servers
+  hosts: rs
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tasks:
+    - name: start iRODS service
+      command: /var/lib/irods/irodsctl start
+      register: response
+      changed_when: response.stderr is not search('iRODS already running')
+      failed_when: response|failed and response.stderr is not search('iRODS already running')

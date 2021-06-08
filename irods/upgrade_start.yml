@@ -1,0 +1,121 @@
+---
+- name: prepare for iRODS upgrade
+  hosts: irods:!unmanaged_systems
+  become: true
+  tasks:
+    - name: ensure software required by the upgrade process is installed
+      package:
+        name: wget
+        state: present
+
+    - name: remove msiSetAVU plugin
+      file:
+        path: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
+        state: absent
+
+    - name: ensure old netcdf plugins not installed
+      package:
+        name:
+          - irods-icommands-netcdf
+          - irods-microservice-plugin-netcdf
+          - irods-api-plugin-netcdf
+        state: absent
+
+    - name: ensure old netcdf rpms removed
+      file:
+        path: /root/{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm
+        state: absent
+      with_items:
+        - irods-icommands-netcdf
+        - irods-microservice-plugin-netcdf
+        - irods-api-plugin-netcdf
+
+    - name: install iRODS package repository signing key
+      rpm_key:
+        key: https://packages.irods.org/irods-signing-key.asc
+        state: present
+
+    - name: install iRODS repository
+      get_url:
+        url: https://packages.irods.org/renci-irods.yum.repo
+        dest: /etc/yum.repos.d/renci-irods.yum.repo
+
+    - name: preserve version history
+      copy:
+        src: /var/lib/irods/VERSION.json
+        dest: /var/lib/irods/VERSION.json.previous
+        remote_src: true
+        owner: "{{ _irods_service_account_name }}"
+        group: "{{ _irods_service_group_name }}"
+
+    - name: install irods server package
+      package:
+        name: irods-server
+        state: present
+
+    - name: install new netcdf packages
+      yum:
+        name:
+          - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-client_modules-4.2.8.0-centos-7-x86_64.rpm
+          - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-icommands-4.2.8.0-centos-7-x86_64.rpm
+          - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm
+        state: present
+
+    - name: ensure irods owns new command script location
+      file:
+        path: /var/lib/irods/msiExecCmd_bin
+        state: directory
+        owner: "{{ _irods_service_account_name }}"
+        group: "{{ _irods_service_group_name }}"
+
+
+- name: install PostgreSQL 12 ODBC Driver
+  hosts: ies
+  become: true
+  gather_facts: false
+    - name: install PostgreSQL 12 ODBC Driver
+      shell: |
+        if driverDef="$(odbcinst -q -d -n PostgreSQL)"; then
+          description="$(sed --quiet 's/^Description=//p' <<< "$driverDef")"
+          driver="$(sed --quiet 's/^Driver=//p' <<< "$driverDef")"
+          setup="$(sed --quiet 's/^Setup=//p' <<< "$driverDef")"
+          if [[ "$description" == '{{ odbc_description }}' \
+            && "$driver" == '{{ odbc_driver }}' \
+            && "$setup" == '{{ odbc_setup }}' ]]
+          then
+            exit 0
+          fi
+        fi
+        if ! odbcinst -i -d -r -v; then
+          exit 1
+        fi
+        echo changed
+      args:
+        stdin: "{{ lookup('file', 'files/postgresql-odbc-tmpl.ini') }}"
+      register: result
+      changed_when: result.stdout == 'changed'
+
+    - name: fix odbc field in in database_config.json
+      replace:
+        path: /etc/irods/database_config.json
+        regexp: '"db_odbc_type": "unix"'
+        replace: '"db_odbc_driver": "PostgreSQL"'
+
+
+- name: stage manual ICAT conversion scripts
+  host: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  become_flags: '-i'
+  gather_facts: false
+    - name: stage serial part of optimized ICAT DB conversion
+      copy:
+        src: scripts/convert-to-db-schema-6-part-1.sql
+        dest: /var/lib/irods/
+        mode: u+r
+
+    - name: stage conncurrent part of optimized ICAT DB conversion
+      copy:
+        src: scripts/convert-to-db-schema-6-part-2.sql
+        dest: /var/lib/irods/
+        mode: u+r

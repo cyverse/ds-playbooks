@@ -1,0 +1,11 @@
+---
+- name: stop proxy
+  hosts: proxy
+  become: true
+  tasks:
+    - name: stop haproxy
+      service:
+        name: haproxy
+        state: stopped
+  tags:
+    - no_testing

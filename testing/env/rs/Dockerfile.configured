@@ -1,7 +1,7 @@
 FROM test-env-base:centos7
 
 RUN yum --assumeyes install \
-      jq python-dns python-virtualenv python2-pip \
+      jq python-dns python-virtualenv python2-pip which \
       https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-resource-4.1.10-centos7-x86_64.rpm
 
 COPY rs/scripts/* /tmp/

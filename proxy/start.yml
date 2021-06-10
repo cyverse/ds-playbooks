@@ -1,0 +1,12 @@
+---
+- name: start proxy
+  hosts: proxy
+  become: true
+  tags:
+    - no_testing
+  tasks:
+    - name: start haproxy
+      service:
+        name: haproxy
+        state: started
+        enabled: true

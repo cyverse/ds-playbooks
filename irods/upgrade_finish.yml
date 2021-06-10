@@ -151,7 +151,7 @@
 
     - name: remove vestigal plugins folder
       file:
-        path: var/lib/irods/plugins
+        path: /var/lib/irods/plugins
         state: absent
 
     - name: install converted cmd scripts

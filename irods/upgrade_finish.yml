@@ -129,15 +129,16 @@
 
     - name: remove backups of config files
       shell: |
-        set -o errexit
-        if [[ -e /etc/irods/*.prev.* \
-          || -e /var/lib/irods/.irods/irods_environment.json.prev.* \
-          || -e /var/lib/irods/VERSION.json.previous ]]
-        then
-          rm --force \
+        set -o errexit 
+        if ! res="$(\
+          rm --force --verbose \
             /etc/irods/*.prev.* \
             /var/lib/irods/.irods/irods_environment.json.prev.* \
-            /var/lib/irods/VERSION.json.previous
+            /var/lib/irods/VERSION.json.previous )"
+        then
+          exit 1
+        fi
+        if [[ -n "$res" ]]; then
           echo changed
         fi
       register: response

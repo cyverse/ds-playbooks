@@ -146,54 +146,37 @@ _bisque_Rm(*Client, *Path) {
 
 _bisque_scheduleLn(*Permission, *Client, *Path) {
   _bisque_logMsg("scheduling linking of *Path for *Client with permission *Permission");
-
-  delay("<PLUSET>1s</PLUSET>") { # _bisque_Ln(*Permission, *Client, *Path);
-# XXX - Due to https://github.com/irods/irods/issues/3621, _bisque_Ln has been inlined. Undo this
-#       the next iRODS upgrade.
-    _bisque_logMsg("linking *Path for *Client with permission *Permission");
-
-    *pArg = execCmdArg(*Permission);
-    *aliasArg = execCmdArg(*Client);
-    *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
-    *argStr = '--alias *aliasArg ln -P *pArg *pathArg';
-    *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
-
-    if (*status != 0) {
-      msiGetStderrInExecCmdOut(*out, *resp);
-      _bisque_logMsg('FAILURE - *resp');
-      _bisque_logMsg('failed to link *Path for *Client with permission *Permission');
-      fail;
-    } else {
-      msiGetStdoutInExecCmdOut(*out, *resp);
-      *props = split(trimr(triml(*resp, ' '), '/'), ' ')
-      msiStrArray2String(*props, *kvStr);
-      msiString2KeyValPair(*kvStr, *kvs);
-      msiGetValByKey(*kvs, 'resource_uniq', *qId);
-      *id = substr(*qId, 1, strlen(*qId) - 1);
-      msiGetValByKey(*kvs, 'uri', *qURI);
-      *uri = substr(*qURI, 1, strlen(*qURI) - 1);
-
-      msiString2KeyValPair(_bisque_ID_ATTR ++ '=' ++ *id ++ '%' ++ _bisque_URI_ATTR ++ '=' ++ *uri,
-                           *kv);
-
-      msiSetKeyValuePairsToObj(*kv, *Path, '-d');
-
-      _bisque_logMsg('linked *Path for *Client with permission *Permission');
-    }
-# XXX - ^^^
-  }
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
+#       https://github.com/irods/irods/issues/5413.
+  #delay("<PLUSET>1s</PLUSET>") {_bisque_Ln(*Permission, *Client, *Path)};
+  delay(
+    ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+      <PLUSET>1s</PLUSET> '
+  ) {_bisque_Ln(*Permission, *Client, *Path)};
 }
 
 
 _bisque_scheduleMv(*Client, *OldPath, *NewPath) {
   _bisque_logMsg('scheduling link move from *OldPath to *NewPath for *Client');
-  delay("<PLUSET>1s</PLUSET>") {_bisque_Mv(*Client, *OldPath, *NewPath);}
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
+#       https://github.com/irods/irods/issues/5413.
+  #delay("<PLUSET>1s</PLUSET>") {_bisque_Mv(*Client, *OldPath, *NewPath);}
+  delay(
+    ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+      <PLUSET>1s</PLUSET> '
+  ) {_bisque_Mv(*Client, *OldPath, *NewPath);}
 }
 
 
 _bisque_scheduleRm(*Client, *Path) {
   _bisque_logMsg("scheduling removal of linking to *Path for *Client");
-  delay("<PLUSET>1s</PLUSET>") {_bisque_Rm(*Client, *Path);}
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
+#       https://github.com/irods/irods/issues/5413.
+  #delay("<PLUSET>1s</PLUSET>") {_bisque_Rm(*Client, *Path);}
+  delay(
+    ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+      <PLUSET>1s</PLUSET> '
+  ) {_bisque_Rm(*Client, *Path);}
 }
 
 
@@ -218,31 +201,14 @@ bisque_acPostProcForCollCreate {
   }
 }
 
-# Add a call to this rule from inside the acPostProcForPut PEP.
-bisque_acPostProcForPut {
-  _bisque_handleObjCreate($userNameClient, $objPath);
-}
-
-
-# Add a call to this rule from inside the acPostProcForCopy PEP.
-bisque_acPostProcForCopy {
-  _bisque_handleObjCreate($userNameClient, $objPath);
-}
-
-
-# Add a call to this rule from inside the acPostProcForFilePathReg PEP.
-bisque_acPostProcForFilePathReg {
-  _bisque_handleObjCreate($userNameClient, $objPath);
-}
-
 
 # Add a call to this rule from inside the acPostProcForObjRename PEP.
 bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   *client = _bisque_getClient($userNameClient, *SrcEntity);
   *forBisque = _bisque_isForBisque($userNameClient, *DestEntity);
-  msiGetObjType(*DestEntity, *type);
+  *type = ipc_getEntityType(*DestEntity);
 
-  if (*type == '-c') {
+  if (*type == '-C') {
     if (*forBisque) {
       ipc_giveAccessColl(_bisque_USER, 'write', *DestEntity);
     }
@@ -284,4 +250,9 @@ bisque_acPostProcForDelete {
   if (temporaryStorage.'bisque_$objPath' == 'rm') {
     _bisque_scheduleRm(_bisque_getClient($userNameClient, $objPath), $objPath);
   }
+}
+
+
+bisque_dataObjCreated(*User, *_, *DATA_OBJ_INFO) {
+  _bisque_handleObjCreate(*User, *DATA_OBJ_INFO.logical_path);
 }

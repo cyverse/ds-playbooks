@@ -31,12 +31,14 @@ Variable                                   | Default                            
 `captcn_owners`                            | `[]`                                 |         | a list of users who get ownership of CAP_TCN collections
 `captcn_readers`                           | `[]`                                 |         | a list of users who get read access to CAP_TCN collections
 `captcn_writers`                           | `[]`                                 |         | a list of users who get write access to CAP_TCN collections
-`cereus_collections`                      | `[]`                                 |         | a list of collections whose data belongs on the Cereus resource, each entry must be an absolute path
+`cereus_collections`                       | `[]`                                 |         | a list of collections whose data belongs on the Cereus resource, each entry must be an absolute path
 `cereus_resource_hierarchy`                | `irods_resource_hierarchies[0]`      |         | the Cereus resource used for hosting data for Cereus related projects
 `check_routes_timeout`                     | 3                                    |         | the number of seconds the `check_route` playbook will wait for a response during a single port check
 `de_job_irods_user`                        |                                      |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
 `firewall_chain`                           | INPUT                                |         | The iptables chain managing authorizing iRODS connections
-`irods_aegis_repl_resource`                | _see description_                    |         | the name of the aegis resource where replicas are written. If `irods_aegis_resource` is defined, it is the default, otherwise,
+`irods_admin_username`                     | rods                                 |         | the iRODS admin account name
+`irods_aegis_repl_resource`                | _see description_                    |         | the name of the aegis resource where replicas are writte
+n. If `irods_aegis_resource` is defined, it is the default, otherwise,
 `irods_amqp_exchange`                      | irods                                |         | the AMQP exchange used to publish events
 `irods_amqp_host`                          | `irods_ies`                          |         | the FQDN or IP address of the server hosting the AMQP service
 `irods_amqp_mgmt_port`                     | 15672                                |         | The TCP port used for management of the AMQP vhost
@@ -48,7 +50,7 @@ Variable                                   | Default                            
 `irods_aegis_resource`                     | `irods_default_resource`             |         | the name of the aegis resource where newly uploaded files are written
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
 `irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
-`irods_clerver_user`                       | rods                                 |         | the rodsadmin user to be used by the server being configured
+`irods_clerver_user`                       | `irods_admin_username`               |         | the rodsadmin user to be used by the server being configured
 `irods_db_password`                        | testpassword                         |         | The password iRODS uses when connecting to the ICAT DB.
 `irods_db_user`                            | irods                                |         | The user iRODS uses when connecting to the ICAT DB.
 `irods_dbms_pg_hba`                        | /etc/postgresql/12/main/pg_hba.conf  |         | The absolute path to the pg_hba.conf file on the DBMS hosting the ICAT DB

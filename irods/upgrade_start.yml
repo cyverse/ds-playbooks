@@ -2,10 +2,13 @@
 - name: prepare for iRODS upgrade
   hosts: irods:!unmanaged_systems
   become: true
+  collections:
+    - community.general
   tasks:
-    - name: ensure software required by the upgrade process is installed
+    - name: install software needed for upgrade
       package:
-        name: wget
+        name:
+          - yum-plugin-versionlock
         state: present
 
     - name: remove msiSetAVU plugin
@@ -30,16 +33,6 @@
         - irods-microservice-plugin-netcdf
         - irods-api-plugin-netcdf
 
-    - name: install iRODS package repository signing key
-      rpm_key:
-        key: https://packages.irods.org/irods-signing-key.asc
-        state: present
-
-    - name: install iRODS repository
-      get_url:
-        url: https://packages.irods.org/renci-irods.yum.repo
-        dest: /etc/yum.repos.d/renci-irods.yum.repo
-
     - name: preserve version history
       copy:
         src: /var/lib/irods/VERSION.json
@@ -48,8 +41,36 @@
         owner: "{{ _irods_service_account_name }}"
         group: "{{ _irods_service_group_name }}"
 
-    - name: install irods server package
-      package:
+    - name: install iRODS package repository signing key
+      rpm_key:
+        key: https://packages.irods.org/irods-signing-key.asc
+
+    - name: install iRODS repository
+      get_url:
+        url: https://packages.irods.org/renci-irods.yum.repo
+        dest: /etc/yum.repos.d/renci-irods.yum.repo
+
+    - name: force import of GPG key
+      shell: |
+        if ! resp="$(yum --assumeyes updateinfo)"; then
+          exit 1
+        fi
+        if [[ "$resp" =~ renci-irods ]]; then
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: lock irods packages to version 4.2.8
+      yum_versionlock:
+        name: 
+          - irods-database-plugin-postgres-4.2.8
+          - irods-runtime-4.2.8
+          - irods-server-4.2.8
+        state: present
+
+    - name: install irods server packages
+      yum:
         name: irods-server
         state: present
 
@@ -73,15 +94,16 @@
   hosts: ies
   become: true
   gather_facts: false
+  tasks:
     - name: install PostgreSQL 12 ODBC Driver
       shell: |
         if driverDef="$(odbcinst -q -d -n PostgreSQL)"; then
           description="$(sed --quiet 's/^Description=//p' <<< "$driverDef")"
           driver="$(sed --quiet 's/^Driver=//p' <<< "$driverDef")"
           setup="$(sed --quiet 's/^Setup=//p' <<< "$driverDef")"
-          if [[ "$description" == '{{ odbc_description }}' \
-            && "$driver" == '{{ odbc_driver }}' \
-            && "$setup" == '{{ odbc_setup }}' ]]
+          if [[ "$description" == 'PostgreSQL 12 ODBC Driver' \
+            && "$driver" == '/usr/pgsql-12/lib/psqlodbc.so' \
+            && "$setup" == '/usr/pgsql-12/lib/psqlodbcw.so' ]]
           then
             exit 0
           fi
@@ -103,11 +125,11 @@
 
 
 - name: stage manual ICAT conversion scripts
-  host: ies
+  hosts: ies
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
-  become_flags: '-i'
   gather_facts: false
+  tasks:
     - name: stage serial part of optimized ICAT DB conversion
       copy:
         src: scripts/convert-to-db-schema-6-part-1.sql

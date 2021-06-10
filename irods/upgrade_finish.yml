@@ -1,9 +1,10 @@
 ---
-- name: start iRODS service
+- name: upgrade ies
   hosts: ies
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
-  become_flags: '-i'
+  tags:
+    - no_testing
   tasks:
     - name: start iRODS service
       command: /var/lib/irods/irodsctl start
@@ -39,6 +40,7 @@
       changed_when: response.stdout == 'changed'
 
     - name: start protecting resources during rs upgrade
+      run_once: true
       shell: |
         if [[ ! -e /var/lib/irods/pre-rs-script-run ]]; then
           bash /var/lib/irods/pre-rs-script.sh > /dev/null
@@ -53,9 +55,136 @@
   hosts: rs
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
+  tags:
+    - no_testing
   tasks:
     - name: start iRODS service
       command: /var/lib/irods/irodsctl start
       register: response
       changed_when: response.stderr is not search('iRODS already running')
       failed_when: response|failed and response.stderr is not search('iRODS already running')
+
+
+- name: finish upgrading - catalog provider only tasks
+  hosts: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
+  tasks:
+    - name: stop protecting resources
+      run_once: true
+      shell: |
+          set -o errexit
+          if [[ ! -e /var/lib/irods/post-rs-script-run ]]; then
+            bash /var/lib/irods/post-rs-script.sh > /dev/null
+            touch /var/lib/irods/post-rs-script-run
+            echo changed
+          fi
+      register: response
+      changed_when: response.stdout == 'changed'
+      tags:
+        - no_testing
+
+    - name: remove postgres section from .odbc.ini
+      replace:
+        path: /var/lib/irods/.odbc.ini
+        regexp: '\[postgres\][^\[]*'
+
+    - name: remove old dbms related files
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /var/lib/irods/.pgpass
+        - /var/lib/irods/.psql_history
+        - /etc/irods/database_config.json
+
+
+- name: finish upgrading - general
+  hosts: irods
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
+  tasks:
+    - name: add default rule engine plugin to server_config.json
+      shell: |
+        set -o errexit
+        if ! grep --quiet irods_rule_engine_plugin-cpp_default_policy /etc/irods/server_config.json
+        then
+          re='{
+              "instance_name": "irods_rule_engine_plugin-cpp_default_policy-instance",
+              "plugin_name": "irods_rule_engine_plugin-cpp_default_policy",
+              "plugin_specific_configuration": {}
+            }'
+          jq ".plugin_configuration.rule_engines += [ $re ]" /etc/irods/server_config.json \
+              > /etc/irods/server_config.json.new \
+            && mv /etc/irods/server_config.json.new /etc/irods/server_config.json
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: remove backups of config files
+      shell: |
+        set -o pipefail
+        if [[ -e /etc/irods/*.prev.* \
+          || -e /var/lib/irods/.irods/irods_environment.prev.* \
+          || -e /var/lib/irods/VERSION.json.previous ]]
+        then
+          rm --force \
+            /etc/irods/*.prev.* \
+            /var/lib/irods/.irods/irods_environment.prev.* \
+            /var/lib/irods/VERSION.json.previous
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: removed vestigal iRODS folder
+      file:
+        path: /var/lib/irods/iRODS
+        state: absent
+
+    - name: remove vestigal plugins folder
+      file:
+        path: var/lib/irods/plugins
+        state: absent
+
+    - name: install converted cmd scripts
+      copy:
+        src: files/cmd-common/
+        dest: /var/lib/irods/msiExecCmd_bin/
+        mode: u+x
+
+    - name: install converted rule bases
+      copy:
+        src: files/rule-bases/
+        dest: /etc/irods/
+      notify:
+        - reload rules
+
+  handlers:
+    - name: reload rules
+      command: touch /etc/irods/core.re
+
+
+- name: reschedule periodic rules
+  hosts: ies
+  run_once: true
+  gather_facts: false
+  tags:
+    - no_testing
+  tasks:
+    - name: schedule rule
+      command: >
+        irule --rule-engine-plugin-instance irods_rule_engine_plugin-irods_rule_language-instance
+           {{ item.rule }} null ruleExecOut
+      register: results
+      changed_when: results.stdout == item.change_msg
+      with_items:
+        - rule: ipc_rescheduleQuotaUsageUpdate
+          change_msg: scheduled quota usage updates
+        - rule: ipc_rescheduleStorageFreeSpaceDetermination
+          change_msg: scheduled storage determination
+        - rule: ipc_rescheduleTrashRemoval
+          change_msg: scheduled trash removal

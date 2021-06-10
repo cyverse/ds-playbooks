@@ -22,6 +22,9 @@
 #
 # This script must be run on the resource server hosting TARFILE
 
+# NB: One it is confirmed that the tar file extraction logic in iRODS is robust,
+#     we should consider moving this logic back into iRODS rules.
+
 set -o errexit -o nounset -o pipefail
 
 
@@ -34,21 +37,20 @@ main() {
   local rc=0
 
   local parentColl
-  parentColl=$(dirname "$tarFile")
+  parentColl="$(dirname "$tarFile")"
 
   local tarName
-  tarName=$(basename "$tarFile" .tar)
+  tarName="$(basename "$tarFile" .tar)"
 
   local coll="$parentColl"/"${tarName%-*}"
   local metaFile="$coll"/meta-"${tarName##*-}".csv
 
-  # XXX - Work around for https://github.com/irods/irods/issues/3291
-  # if ! clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"
-  if bun "$uploader" "$tarFile" "${tarName%-*}"; then
+  if clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"; then
     ensure_owner "$admin" "$coll"
 
-    # XXX - Don't clean up until work around (^^^) is confirmed to work
-    # irm -f "$tarFile"
+# TODO: Ask Susan if she wants to resume deleting tar files after successfully
+# extracting them
+#   irm -f "$tarFile"
   else
     local rc="$?"
     ensure_owner "$admin" "$coll" || true
@@ -70,7 +72,7 @@ ensure_owner() {
   local coll="$2"
 
   local resp
-  resp=$(iquest '%s' "select COLL_NAME where COLL_NAME = '$coll'")
+  resp="$(iquest '%s' "select COLL_NAME where COLL_NAME = '$coll'")"
 
   if [[ "$resp" = "$coll" ]]; then
     ichmod -M -r own "$user" "$coll"
@@ -82,40 +84,12 @@ assign_acl() {
   local uploader="$1"
   local entity="$2"
 
+  local user perm
   while IFS=: read -r -d ' ' user perm; do
-    if [ "$user" != "$uploader" ]; then
+    if [[ "$user" != "$uploader" ]]; then
       ichmod -M -r "$perm" "$user" "$entity"
     fi
   done
-}
-
-
-bun() {
-  local uploader="$1"
-  local tarDataPath="$2"
-  local destDirName="$3"
-
-  local tarColl tarName
-  tarColl=$(dirname "$tarDataPath")
-  tarName=$(basename "$tarDataPath")
-
-  local rescHier tarFilePath
-  read -r rescHier tarFilePath < <(get_file_loc "$tarDataPath")
-
-  local tarDir
-  tarDir=$(dirname "$tarFilePath")
-
-  local destDirPath="$tarDir"/"$destDirName"
-  mkdir --parents "$destDirPath"
-  tar --extract --no-overwrite-dir --directory "$destDirPath" --file "$tarFilePath"
-
-  local storeResc="${rescHier##*;}"
-  local destCollPath="$tarColl"/"$destDirName"
-
-  # XXX - ireg -R fails when clientUserName is set
-  #clientUserName="$uploader" ireg -C -f -K -R "$storeResc" "$destDirPath" "$destCollPath"
-  ireg -C -f -K -R "$storeResc" "$destDirPath" "$destCollPath"
-  ichmod -M -r own "$uploader" "$destCollPath"
 }
 
 
@@ -123,8 +97,8 @@ get_file_loc() {
   local dataPath="$1"
 
   local coll dataName
-  coll=$(dirname "$dataPath")
-  dataName=$(basename "$dataPath")
+  coll="$(dirname "$dataPath")"
+  dataName="$(basename "$dataPath")"
 
   iquest \
     '%s %s' \
@@ -164,7 +138,34 @@ map_metadata() {
   local parentColl="$1"
   local metaFile="$2"
 
-  iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null 2>&1
+# XXX: This doesn't work in iRODS 4.2.8. See
+# https://github.com/irods/irods/issues/5518
+#   iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null 2>&1
+  local metaEntries
+  IFS=$'\n' readarray -t metaEntries < <(iget "$metaFile" -)
+
+  local entry
+  for entry in "${metaEntries[@]}"; do
+    local fields
+    IFS=, read -r -a fields <<< "$entry"
+
+    # if $entry ended in a ",", i.e., the unit of the last AVU was empty, read
+    # will create an array entry for the empty AVU, so we need to do this.
+    if [[ "$entry" =~ ,$ ]]; then
+      fields[${#fields[@]}]=''
+    fi
+
+    local obj="${fields[0]}"
+
+    local idx
+    for (( idx=1; idx < ${#fields[@]}; idx+=3 )); do
+      local attr="${fields[$(( idx + 0 ))]}"
+      local val="${fields[$(( idx + 1 ))]}"
+      local units="${fields[$(( idx + 2 ))]}"
+      imeta adda -d "$parentColl"/"$obj" "$attr" "$val" "$units"
+    done
+  done
+# XXX: ^^^
 }
 
 
@@ -172,7 +173,8 @@ mk_imeta_cmds() {
   local parentColl="$1"
 
   while IFS=, read -r -a fields; do
-    for ((idx=1; idx < ${#fields[@]}; idx+=3)); do
+    local idx
+    for (( idx=1; idx < ${#fields[@]}; idx+=3 )); do
       printf 'adda -d "%s/%s" "%s" "%s" "%s"\n' "$parentColl" "${fields[0]}" "${fields[@]:$idx:3}"
     done
   done

@@ -16,8 +16,9 @@
     - name: update information
       run_once: true
       shell: |
+        set -o errexit
         if [[ ! -e /var/lib/irods/stales-updated ]]; then
-          python /var/lib/irods/scripts/update_deprecated_database_columns.py > /dev/null
+          yes | python /var/lib/irods/scripts/update_deprecated_database_columns.py > /dev/null
           touch /var/lib/irods/stales-updated
           echo changed
         fi
@@ -26,6 +27,7 @@
 
     - name: generate scripts for protecting resources during rs upgrades
       shell: |
+        set -o errexit
         if [[ ! -e /var/lib/irods/pre-rs-script.sh || ! -e /var/lib/irods/post-rs-script.sh ]]; then
           python /var/lib/irods/scripts/generate_iadmin_commands_for_41_to_42_upgrade.py \
             > /var/lib/irods/both-rs-scripts.sh
@@ -42,6 +44,7 @@
     - name: start protecting resources during rs upgrade
       run_once: true
       shell: |
+        set -o errexit
         if [[ ! -e /var/lib/irods/pre-rs-script-run ]]; then
           bash /var/lib/irods/pre-rs-script.sh > /dev/null
           touch /var/lib/irods/pre-rs-script-run
@@ -126,7 +129,7 @@
 
     - name: remove backups of config files
       shell: |
-        set -o pipefail
+        set -o errexit
         if [[ -e /etc/irods/*.prev.* \
           || -e /var/lib/irods/.irods/irods_environment.prev.* \
           || -e /var/lib/irods/VERSION.json.previous ]]
@@ -165,7 +168,9 @@
 
   handlers:
     - name: reload rules
-      command: touch /etc/irods/core.re
+      file:
+        path: /etc/irods/core.re
+        state: touch
 
 
 - name: reschedule periodic rules

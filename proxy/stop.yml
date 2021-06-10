@@ -7,5 +7,6 @@
       service:
         name: haproxy
         state: stopped
+        enabled: false
   tags:
     - no_testing

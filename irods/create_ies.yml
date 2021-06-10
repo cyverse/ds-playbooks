@@ -88,15 +88,15 @@
           with_fileglob:
             - "files/profile.d/*"
 
-        - name: install PostgreSQL 12 ODBC Driver
+        - name: define PostgreSQL 12 ODBC Driver
           shell: |
             if driverDef="$(odbcinst -q -d -n PostgreSQL)"; then
               description="$(sed --quiet 's/^Description=//p' <<< "$driverDef")"
               driver="$(sed --quiet 's/^Driver=//p' <<< "$driverDef")"
               setup="$(sed --quiet 's/^Setup=//p' <<< "$driverDef")"
-              if [[ "$description" == '{{ odbc_description }}' \
-                && "$driver" == '{{ odbc_driver }}' \
-                && "$setup" == '{{ odbc_setup }}' ]]
+              if [[ "$description" == 'PostgreSQL 12 ODBC Driver' \
+                && "$driver" == '/usr/pgsql-12/lib/psqlodbc.so' \
+                && "$setup" == '/usr/pgsql-12/lib/psqlodbcw.so' ]]
               then
                 exit 0
               fi

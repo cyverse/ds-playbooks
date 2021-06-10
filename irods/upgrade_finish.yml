@@ -10,7 +10,7 @@
       command: /var/lib/irods/irodsctl start
       register: response
       changed_when: response.stderr is not search('iRODS already running')
-      failed_when: response|failed and response.stderr is not search('iRODS already running')
+      failed_when: response.rc != 0 and response.stderr is not search('iRODS already running')
       throttle: 1
 
     - name: update information
@@ -62,7 +62,7 @@
       command: /var/lib/irods/irodsctl start
       register: response
       changed_when: response.stderr is not search('iRODS already running')
-      failed_when: response|failed and response.stderr is not search('iRODS already running')
+      failed_when: response.rc != 0 and response.stderr is not search('iRODS already running')
 
 
 - name: finish upgrading - catalog provider only tasks

@@ -27,10 +27,10 @@ ipc_ZONE = '{{ _irods_zone_name }}'
 
 {% if _single_threaded_resources|length > 0 %}
 acSetNumThreads {
-{% for resc in _single_threaded_resources %}
-  ON($rescName == '{{ resc }}' && $clientAddr == ipc_IES_IP) {
+{%   for resc in _single_threaded_resources %}
+  on ($rescName == '{{ resc }}' && $clientAddr == ipc_IES_IP) {
     msiSetNumThreads('default', '0', 'default');
   }
-{% endfor %}
+{%   endfor %}
 }
 {% endif %}

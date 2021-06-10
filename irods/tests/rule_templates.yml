@@ -200,10 +200,12 @@
     - name: verify acSetNumThreads defined correctly in ipc-env.re
       assert:
         that:
-          - ipc_env is search("ON($rescName == 'resource-1' && $clientAddr == ipc_IES_IP)"
-                              | regex_escape)
-          - ipc_env is search("ON($rescName == 'resource-2' && $clientAddr == ipc_IES_IP)"
-                              | regex_escape)
+          - >
+              ipc_env is
+              search("on ($rescName == 'resource-1' && $clientAddr == ipc_IES_IP)" | regex_escape)
+          - > 
+              ipc_env is 
+              search("on ($rescName == 'resource-2' && $clientAddr == ipc_IES_IP)" | regex_escape)
 
 
 - name: test Avra params are set correctly

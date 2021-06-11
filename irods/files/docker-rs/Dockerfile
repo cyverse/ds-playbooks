@@ -1,11 +1,13 @@
-FROM cyverse/irods-rs:4.1.10
+FROM cyverse/irods-catalog-consumer:4.2.8
 
 ### Switch back to root for installation
 USER root
 
-### Install iRODS plugin support library
+### Install NetCDF plugins
 RUN yum --assumeyes install \
-        https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-runtime-4.1.10-centos7-x86_64.rpm && \
+      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-client_modules-4.2.8.0-centos-7-x86_64.rpm \
+      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-icommands-4.2.8.0-centos-7-x86_64.rpm \
+      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm && \
 ### Install support for UUID generation
     yum --assumeyes install uuidd && \
 ### Install support for periphery script
@@ -17,9 +19,9 @@ RUN yum --assumeyes install \
     mkdir /irods_vault
 
 ### Install cmd scripts
-COPY cmd/* /var/lib/irods/iRODS/server/bin/cmd/
-RUN chown irods:irods /var/lib/irods/iRODS/server/bin/cmd/* && \
-    chmod ug+x /var/lib/irods/iRODS/server/bin/cmd/*
+COPY cmd/* /var/lib/irods/msiExecCmd_bin/
+RUN chown irods:irods /var/lib/irods/msiExecCmd_bin/* && \
+    chmod ug+x /var/lib/irods/msiExecCmd_bin/*
 
 ### Install iRODS configuration files
 COPY etc/irods/* /etc/irods/
@@ -27,14 +29,14 @@ COPY var/lib/irods/.irods/irods_environment.json /var/lib/irods/.irods
 RUN chown irods:irods /etc/irods/* /var/lib/irods/.irods/irods_environment.json && \
     chmod -R ug+r /var/lib/irods && \
 ### Ensure /etc/irods/, .irods/, and log/ are group writeable
-    chmod -R ug+rw /etc/irods/ /var/lib/irods/.irods /var/lib/irods/iRODS/server/log
+    chmod -R ug+rw /etc/irods/ /var/lib/irods/.irods /var/lib/irods/log
 
 ### Add script to handle start and stop extras
 COPY periphery.sh /periphery
 RUN chown irods:irods /periphery && \
     chmod ug+x /periphery
 
-VOLUME /var/lib/irods/iRODS/server/log /var/lib/irods/iRODS/server/log/proc
+VOLUME /var/lib/irods/log /var/lib/irods/log/proc
 
 EXPOSE 1247/tcp 1248/tcp 20000-20009/tcp 20000-20009/udp
 

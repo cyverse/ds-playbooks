@@ -1,4 +1,4 @@
-FROM cyverse/irods-catalog-consumer:4.2.8
+FROM cyverse/irods:4.2.8
 
 ### Switch back to root for installation
 USER root

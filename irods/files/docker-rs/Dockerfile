@@ -31,6 +31,15 @@ RUN chown irods:irods /etc/irods/* /var/lib/irods/.irods/irods_environment.json 
 ### Ensure /etc/irods/, .irods/, and log/ are group writeable
     chmod -R ug+rw /etc/irods/ /var/lib/irods/.irods /var/lib/irods/log
 
+### Convert configuration files to 4.2.8 style
+USER irods
+COPY upgrade_config_files.py /var/lib/irods/scripts/
+RUN  mv /var/lib/irods/VERSION.json /var/lib/irods/VERSION.json.previous
+RUN python /var/lib/irods/scripts/update_config_files
+RUN rm --force /etc/irods/*.prev.* /var/lib/irods/.irods/irods_environment.json.prev.*
+RUN rm --force /var/lib/irods/scripts/upgrade_config_files.py
+USER root
+
 ### Add script to handle start and stop extras
 COPY periphery.sh /periphery
 RUN chown irods:irods /periphery && \

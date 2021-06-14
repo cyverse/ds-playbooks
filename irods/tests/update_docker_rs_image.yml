@@ -25,14 +25,8 @@
             - de-create-collection
             - delete-scheduled-rule
             - generateuuid
-
-        - name: test add rm-trash
-          debug:
-            msg: TODO implement
-
-        - name: test add set-uuid
-          debug:
-            msg: TODO implement
+            - rm-trash
+            - set-uuid
 
         - name: test add sparcd-ingest
           debug:

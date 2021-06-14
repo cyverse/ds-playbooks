@@ -41,7 +41,7 @@ RUN python /var/lib/irods/scripts/upgrade_config_files.py && \
             } \
           ]' \
         /etc/irods/server_config.json \
-      | sponge /etc/irods/server_config.json
+      | sponge /etc/irods/server_config.json && \
     rm --force /etc/irods/*.prev.* /var/lib/irods/.irods/irods_environment.json.prev.* && \
     rm --force /var/lib/irods/scripts/upgrade_config_files.py
 USER root

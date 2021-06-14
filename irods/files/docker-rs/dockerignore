@@ -3,4 +3,5 @@
 !etc/irods/
 !on-build-instantiate.sh
 !periphery.sh
+!upgrade_config_files.py
 !var/lib/irods/.irods/irods_environment.json

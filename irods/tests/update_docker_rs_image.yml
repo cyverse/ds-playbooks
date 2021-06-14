@@ -23,14 +23,8 @@
             - calliope-ingest
             - de-archive-data
             - de-create-collection
-
-        - name: test add delete-scheduled-rule
-          debug:
-            msg: TODO implement
-
-        - name: test add generateuuid
-          debug:
-            msg: TODO implement
+            - delete-scheduled-rule
+            - generateuuid
 
         - name: test add rm-trash
           debug:

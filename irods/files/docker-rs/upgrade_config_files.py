@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 import json
 import sys
 
 from irods import upgrade_configuration
 from irods.configuration import IrodsConfig
 
-Version = "/var/lib/irods/VERSION.json"
+Version = "/var/lib/irods/VERSION.json.dist"
 IrodsEnv = "/var/lib/irods/.irods/irods_environment.json"
 ServerCfg = "/etc/irods/server_config.json"
 HostsCfg = "/etc/irods/hosts_config.json"
@@ -37,7 +39,7 @@ def main():
         upgrade_configuration.upgrade_config_file(
             cfg, IrodsEnv, new_version, schema_name="service_account_environment")
     except Exception as e:
-        print(e.message)
+        print(e, file=sys.stderr)
         return 1
 
     return 0

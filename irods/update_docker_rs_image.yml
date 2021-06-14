@@ -94,6 +94,7 @@
             - on-build-instantiate.sh
             - periphery.sh
             - Dockerfile
+            - upgrade_config_files.py
 
         - when: _irods_publish_rs_image | bool
           block:

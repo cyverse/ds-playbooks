@@ -3,13 +3,19 @@
   hosts: rs
   run_once: true
   gather_facts: false
+  vars:
+    build_time: "{{ hostvars['localhost'].ansible_date_time.iso8601_basic_short }}"
   tasks:
     - delegate_to: localhost
-      delegate_facts: true
       block:
+        - name: gather localhost facts
+          setup:
+          delegate_facts: true
+
         - set_fact:
             irods_default_resource: _IRODS_DEFAULT_RESOURCE_
             irods_default_repl_resource: _IRODS_DEFAULT_RESOURCE_
+          delegate_facts: true
 
         - name: create command scripts staging directory
           file:
@@ -127,7 +133,7 @@
             build:
               path: "{{ _build_dir }}"
               pull: true
-            tag: "{{ ansible_date_time.iso8601_basic_short }}"
+            tag: "{{ build_time }}"
             force_source: true
           register: response
           changed_when: |
@@ -140,7 +146,7 @@
           when: response is not changed
           docker_image:
             name: "{{ _irods_rs_image }}"
-            tag: "{{ ansible_date_time.iso8601_basic_short }}"
+            tag: "{{ build_time }}"
             state: absent
           tags:
             - no_testing
@@ -149,7 +155,7 @@
           block:
             - name: tag new image as latest
               docker_tag:
-                source: "{{ _irods_rs_image }}:{{ ansible_date_time.iso8601_basic_short }}"
+                source: "{{ _irods_rs_image }}:{{ build_time }}"
                 target: "{{ _irods_rs_image }}:latest"
 
             - name: Create published tag
@@ -158,7 +164,7 @@
                 source: "{{ _irods_rs_image }}:{{ item }}"
                 target: cyverse/ds-irods-rs-onbuild:{{ item }}
               with_items:
-                - "{{ ansible_date_time.iso8601_basic_short }}"
+                - "{{ build_time }}"
                 - latest
 
             - name: push published tag
@@ -169,7 +175,7 @@
                 tag: "{{ item }}"
                 push: true
               with_items:
-                - "{{ ansible_date_time.iso8601_basic_short }}"
+                - "{{ build_time }}"
                 - latest
           tags:
             - no_testing

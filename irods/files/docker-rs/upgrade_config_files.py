@@ -9,7 +9,8 @@ import sys
 from irods import upgrade_configuration
 from irods.configuration import IrodsConfig
 
-Version = "/var/lib/irods/VERSION.json.dist"
+Version = "/var/lib/irods/VERSION.json"
+VersionDist = "/var/lib/irods/VERSION.json.dist"
 IrodsEnv = "/var/lib/irods/.irods/irods_environment.json"
 ServerCfg = "/etc/irods/server_config.json"
 HostsCfg = "/etc/irods/hosts_config.json"
@@ -20,7 +21,7 @@ def main():
     try:
         cfg = IrodsConfig()
 
-        with open(Version, 'r') as f:
+        with open(VersionDist, 'r') as f:
             new_version = json.load(f)
 
         new_version['previous_version'] = {
@@ -38,6 +39,8 @@ def main():
 
         upgrade_configuration.upgrade_config_file(
             cfg, IrodsEnv, new_version, schema_name="service_account_environment")
+
+        cfg.commit(new_version, Version, make_backup=False)
     except Exception as e:
         print(e, file=sys.stderr)
         return 1

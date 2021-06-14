@@ -27,13 +27,19 @@
             - generateuuid
             - rm-trash
             - set-uuid
+            - sparcd-ingest
 
-        - name: test add sparcd-ingest
+        - name: verify server_config.json
           debug:
             msg: TODO implement
 
-        - debug:
-            msg: TODO import cyverse.irods-cfg
+        - name: verfiy hosts_config.json
+          debug:
+            msg: TODO implement
+
+        - name: verify irods_environment.json
+          debug:
+            msg: TODO implement
 
         - name: test stage dynamic rule bases
           debug:

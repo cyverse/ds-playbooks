@@ -20,29 +20,39 @@ RUN yum --assumeyes install \
 
 ### Install cmd scripts
 COPY cmd/* /var/lib/irods/msiExecCmd_bin/
-RUN chown irods:irods /var/lib/irods/msiExecCmd_bin/* && \
-    chmod ug+x /var/lib/irods/msiExecCmd_bin/*
+RUN chown irods:irods /var/lib/irods/msiExecCmd_bin/*
 
 ### Install iRODS configuration files
 COPY etc/irods/* /etc/irods/
 COPY var/lib/irods/.irods/irods_environment.json /var/lib/irods/.irods
-RUN chown irods:irods /etc/irods/* /var/lib/irods/.irods/irods_environment.json && \
-    chmod -R ug+r /var/lib/irods && \
-### Ensure /etc/irods/, .irods/, and log/ are group writeable
-    chmod -R ug+rw /etc/irods/ /var/lib/irods/.irods /var/lib/irods/log
+RUN chown irods:irods /etc/irods/* /var/lib/irods/.irods/irods_environment.json
 
 ### Convert configuration files to 4.2.8 style
 USER irods
 COPY upgrade_config_files.py /var/lib/irods/scripts/
 RUN python /var/lib/irods/scripts/upgrade_config_files.py && \
+    jq \
+        '.plugin_configuration.rule_engines += \
+          [ \
+            { \
+              "instance_name": "irods_rule_engine_plugin-cpp_default_policy-instance", \
+              "plugin_name": "irods_rule_engine_plugin-cpp_default_policy", \
+              "plugin_specific_configuration": {} \
+            } \
+          ]' \
+        /etc/irods/server_config.json \
+      | sponge /etc/irods/server_config.json
     rm --force /etc/irods/*.prev.* /var/lib/irods/.irods/irods_environment.json.prev.* && \
     rm --force /var/lib/irods/scripts/upgrade_config_files.py
 USER root
 
 ### Add script to handle start and stop extras
 COPY periphery.sh /periphery
-RUN chown irods:irods /periphery && \
-    chmod ug+x /periphery
+RUN chown irods:irods /periphery
+
+### Ensure correct permissions
+RUN chmod -R ug+rw /etc/irods /var/lib/irods /var/lib/irods/.irods && \
+    chmod ug+x /periphery /var/lib/irods/irodsctl /var/lib/irods/msiExecCmd_bin/*
 
 VOLUME /var/lib/irods/log /var/lib/irods/log/proc
 

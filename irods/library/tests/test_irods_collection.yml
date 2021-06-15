@@ -114,10 +114,10 @@
           - response.exc_msg == ""
 
     - name: create a collection, without creating parents
-      failed_when: not response.failed # should fail when creating collection whose parent collection does not exists
+      failed_when: not response.failed  # should fail when creating collection whose parent collection does not exists
       irods_collection:
         path: /testing/home/rods/test_coll1/sub_coll
-        parents: no
+        parents: false
         state: present
         host: "{{ groups['ies'][0] }}"
         port: 1247
@@ -137,7 +137,7 @@
     - name: create a collection, create parents collection as well
       irods_collection:
         path: /testing/home/rods/test_coll1/sub_coll
-        parents: yes
+        parents: true
         state: present
         host: "{{ groups['ies'][0] }}"
         port: 1247

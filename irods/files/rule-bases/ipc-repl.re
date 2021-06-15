@@ -100,9 +100,7 @@ _repl_replicate(*Object, *RescName) {
     if (*err < 0 && *err != -808000 && *err != -817000) {
       _repl_logMsg('failed to replicate data object *Object, retry in 8 hours');
       _repl_logMsg(*msg);
-# XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
-#       iRODS version 4.2.1.
-      delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_repl_replicate(*Object, *RescName)}
+      *err;
     } else {
       _repl_logMsg('replicated data object *Object');
     }
@@ -190,7 +188,7 @@ _repl_mvReplicas(*Object, *IngestName, *ReplName) {
 _repl_syncReplicas(*Object) {
   _repl_logMsg('syncing replicas of data object *Object');
 
-  *dataPath = ''
+  *dataPath = '';
   foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
     *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
   }
@@ -204,9 +202,7 @@ _repl_syncReplicas(*Object) {
     if (*err < 0 && *err != -808000) {
       _repl_logMsg('failed to sync replicas of data object *Object trying again in 8 hours');
       _repl_logMsg(*msg);
-# XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
-#       iRODS version 4.2.1.
-      delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_repl_syncReplicas(*Object)}
+      *err;
     } else {
       _repl_logMsg('synced replicas of data object *Object');
     }
@@ -249,16 +245,28 @@ _repl_logMsg(*Msg) {
 #       See https://github.com/irods/irods/issues/3634 for Boolean support.
 # TODO - verify that this is still the case in iRODS 4.2.2.
 _scheduleMv(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalStr) {
-  delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
-  {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)))}
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
+#       https://github.com/irods/irods/issues/5413.
+#   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
+  delay(
+    ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+      <PLUSET>' ++ str(_delayTime) ++ 's</PLUSET>
+      <EF>8h REPEAT UNTIL SUCCESS</EF> ' )
+  {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)));}
 
   _incDelayTime;
 }
 
 
 _repl_scheduleMv(*Object, *IngestName, *ReplName) {
-  delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
-  {_repl_mvReplicas(*Object, *IngestName, *ReplName)}
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
+#       https://github.com/irods/irods/issues/5413.
+#   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
+  delay(
+    ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+      <PLUSET>' ++ str(_delayTime) ++ 's</PLUSET>
+      <EF>8h REPEAT UNTIL SUCCESS</EF> ' )
+  {_repl_mvReplicas(*Object, *IngestName, *ReplName);}
 
   _incDelayTime;
 }
@@ -268,10 +276,9 @@ _repl_scheduleMv(*Object, *IngestName, *ReplName) {
 _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
   (*ingestName, *ingestOptional) = *IngestResc;
   (*replName, *replOptional) = *ReplResc;
+  *type = getEntityType(*Entity);
 
-  msiGetObjType(*Entity, *type);
-
-  if (*type == '-c') {
+  if (*type == '-C') {
     # if the entity is a collection
     foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
       foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
@@ -292,9 +299,9 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
 
 
 _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
-  msiGetObjType(*Entity, *type);
+  *type = getEntityType(*Entity);
 
-  if (*type == '-c') {
+  if (*type == '-C') {
     # if the entity is a collection
     foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
       foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
@@ -315,8 +322,14 @@ _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
 
 
 _repl_scheduleRepl(*Object, *RescName) {
-  delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>1s REPEAT 0 TIMES</EF>')
-  {_repl_replicate(*Object, *RescName)}
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
+#       https://github.com/irods/irods/issues/5413.
+  #delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
+  delay(
+    ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+      <PLUSET>' ++ str(_delayTime) ++ 's</PLUSET>
+      <EF>8h REPEAT UNTIL SUCCESS</EF> ' )
+  {_repl_replicate(*Object, *RescName);}
 
   _incDelayTime;
 }
@@ -326,7 +339,13 @@ _repl_scheduleSyncReplicas(*Object) {
   foreach (*rec in SELECT COUNT(DATA_REPL_NUM) WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '0')
   {
     if (int(*rec.DATA_REPL_NUM) > 0) {
-      delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>1s REPEAT 0 TIMES</EF>')
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
+#       https://github.com/irods/irods/issues/5413.
+#       delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
+      delay(
+        ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+          <PLUSET>' ++ str(_delayTime) ++ 's</PLUSET>
+          <EF>8h REPEAT UNTIL SUCCESS</EF> ' )
 # XXX - Due to https://github.com/irods/irods/issues/3621, _repl_syncReplicas has been inlined. Verify
 #       that this is still the case in iRODS 4.2.2.
 #       {_repl_syncReplicas(*Object);}
@@ -350,9 +369,7 @@ _repl_scheduleSyncReplicas(*Object) {
           if (*err < 0 && *err != -808000) {
             _repl_logMsg('failed to sync replicas of data object *Object trying again in 8 hours');
             _repl_logMsg(*msg);
-  # XXX - Nesting delay rules is a hack to work around `delay` ignoring `succeed`.  This is fixed in
-  #       iRODS version 4.2.1.
-            delay('<PLUSET>8h</PLUSET><EF>1s REPEAT 0 TIMES</EF>') {_repl_syncReplicas(*Object)}
+            *err;
           } else {
   # XXX - Due to https://github.com/irods/irods/issues/3621, _repl_logMsg has been inlined. Verify
   #       that this is still the case in iRODS 4.2.2.
@@ -370,13 +387,13 @@ _repl_scheduleSyncReplicas(*Object) {
 
 
 # DEPRECATED
-_createOrOverwrite(*DataPath, *IngestResc, *ReplResc) {
+_createOrOverwrite(*DataPath, *IngestResc, *ReplResc, *IsNew) {
   msiSplitPath(*DataPath, *collName, *dataName);
 
   foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collName' AND DATA_NAME = '*dataName') {
     *dataId = *rec.DATA_ID;
 
-    if ($writeFlag == 0) {
+    if (*IsNew) {
       (*ingestName, *optional) = *IngestResc;
       (*replName, *optional) = *ReplResc;
 # XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
@@ -388,13 +405,13 @@ _createOrOverwrite(*DataPath, *IngestResc, *ReplResc) {
 }
 
 
-_repl_createOrOverwrite(*DataPath, *IngestResc, *ReplResc) {
+_repl_createOrOverwrite(*DataPath, *IngestResc, *ReplResc, *IsNew) {
   msiSplitPath(*DataPath, *collName, *dataName);
 
   foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collName' AND DATA_NAME = '*dataName') {
     *dataId = *rec.DATA_ID;
 
-    if ($writeFlag == 0) {
+    if (*IsNew) {
 # XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
 #       _repl_scheduleRepl(*dataId, if $rescName == *ReplResc then *IngestResc else *ReplResc);
     } else {
@@ -455,42 +472,6 @@ _repl_findReplResc(*Resc) {
 
 
 # REPLICATION RULES
-
-# This rule ensures that copies of files are replicated.
-
-# DEPRECATED
-_old_replCopy {
-  on (aegis_replBelongsTo(/$objPath)) {
-    _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
-  }
-  on (avra_replBelongsTo(/$objPath)) {
-  }
-  on (de_replBelongsTo(/$objPath)) {
-    _createOrOverwrite($objPath, de_replIngestResc, de_replReplResc);
-  }
-  on (pire_replBelongsTo(/$objPath)) {
-  }
-  on (terraref_replBelongsTo(/$objPath)) {
-  }
-}
-_old_replCopy {
-  _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
-}
-
-# TODO - Once deprecated functionality is gone, move common logic with replPut into
-#        _repl_createOrOverwrite.
-replCopy {
-  # TODO once _old_replPut is removed, $rescName should be used
-  (*resc, *_) = _repl_findResc($objPath);
-
-  if (*resc != ipc_DEFAULT_RESC) {
-    (*repl, *_) = _repl_findReplResc(*resc);
-    _repl_createOrOverwrite($objPath, *resc, *repl);
-  } else {
-    _old_replCopy;
-  }
-}
-
 
 # This rule updates the replicas if needed after a collection or data object has
 # been moved
@@ -561,71 +542,6 @@ replEntityRename(*SourceObject, *DestObject) {
     }
   } else {
     _old_replEntityRename(*SourceObject, *DestObject);
-  }
-}
-
-
-# This rule ensures that registered files are replicated.
-
-# DEPRECATED
-_old_replFilePathReg {
-  on (aegis_replBelongsTo(/$objPath)) {
-    _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
-  }
-  on (avra_replBelongsTo(/$objPath)) {
-  }
-  on (de_replBelongsTo(/$objPath)) {
-    _createOrOverwrite($objPath, de_replIngestResc, de_replReplResc);
-  }
-  on (pire_replBelongsTo(/$objPath)) {
-  }
-  on (terraref_replBelongsTo(/$objPath)) {
-  }
-}
-_old_replFilePathReg {
-  _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
-}
-
-replFilePathReg {
-  if ($rescName != ipc_DEFAULT_RESC) {
-    (*repl, *_) = _repl_findReplResc($rescName);
-    _repl_createOrOverwrite($objPath, $rescName, *repl);
-  } else {
-    _old_replFilePathReg;
-  }
-}
-
-
-# This rule ensures that uploaded files are replicated.
-
-# DEPRECATED
-_old_replPut {
-  on (aegis_replBelongsTo(/$objPath)) {
-    _createOrOverwrite($objPath, aegis_replIngestResc, aegis_replReplResc);
-  }
-  on (avra_replBelongsTo(/$objPath)) {
-  }
-  on (de_replBelongsTo(/$objPath)) {
-    _createOrOverwrite($objPath, de_replIngestResc, de_replReplResc);
-  }
-  on (pire_replBelongsTo(/$objPath)) {
-  }
-  on (terraref_replBelongsTo(/$objPath)) {
-  }
-}
-_old_replPut {
-  _createOrOverwrite($objPath, _defaultIngestResc, _defaultReplResc);
-}
-
-replPut {
-  # TODO once _old_replPut is removed, $rescName should be used
-  (*resc, *_) = _repl_findResc($objPath);
-
-  if (*resc != ipc_DEFAULT_RESC) {
-    (*repl, *_) = _repl_findReplResc(*resc);
-    _repl_createOrOverwrite($objPath, *resc, *repl);
-  } else {
-    _old_replPut;
   }
 }
 
@@ -714,7 +630,49 @@ replSetRescSchemeForRepl {
 }
 
 
-pep_resource_resolve_hierarchy_pre(*OUT) {
+# This rule ensures that uploaded files are replicated.
+
+# DEPRECATED
+_old_replPut(*ObjPath, *IsNew) {
+  on (aegis_replBelongsTo(/*ObjPath)) {
+    _createOrOverwrite(*ObjPath, aegis_replIngestResc, aegis_replReplResci, *IsNew);
+  }
+  on (avra_replBelongsTo(/*ObjPath)) {}
+  on (de_replBelongsTo(/*ObjPath)) {
+    _createOrOverwrite(*ObjPath, de_replIngestResc, de_replReplResc, *IsNew);
+  }
+  on (pire_replBelongsTo(/*ObjPath)) {}
+  on (terraref_replBelongsTo(/*ObjPath)) {}
+}
+_old_replPut(*ObjPath, *IsNew) {
+  _createOrOverwrite(*ObjPath, _defaultIngestResc, _defaultReplResc, *IsNew);
+}
+
+_replPut(*ObjPath, *IsNew) {
+  # TODO once _old_replPut is removed, the dynamic equivalent of $rescName
+  # should be used
+  (*resc, *_) = _repl_findResc(*ObjPath);
+
+  if (*resc != ipc_DEFAULT_RESC) {
+    (*repl, *_) = _repl_findReplResc(*resc);
+    _repl_createOrOverwrite(*ObjPath, *resc, *repl, *IsNew);
+  } else {
+    _old_replPut(*ObjPath, *IsNew);
+  }
+}
+
+
+repl_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
+  _replPut(*DATA_OBJ_INFO.logical_path, true);
+}
+
+
+repl_dataObjModified(*_, *_, *DATA_OBJ_INFO) {
+  _replPut(*DATA_OBJ_INFO.logical_path, false);
+}
+
+
+pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST, *PARSER, *VOTE) {
   on (
     if errorcode(temporaryStorage.repl_replicate) == 0
     then temporaryStorage.repl_replicate == 'REPL_FORCED_REPL_RESC'

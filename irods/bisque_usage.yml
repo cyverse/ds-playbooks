@@ -19,7 +19,7 @@
   tasks:
     - name: install bisque_paths.py
       get_url:
-        validate_certs: no
+        validate_certs: false
         url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
         dest: /var/lib/irods/iRODS/server/bin/cmd
         mode: u+wx

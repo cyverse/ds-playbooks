@@ -12,6 +12,8 @@
   template:
     src: templates/webdav/var/{{ item.src }}
     dest: /var/www/html/{{ svc }}/{{ item.dest }}
+    owner: apache
+    mode: u+r
   with_items:
     - src: index.html.j2
       dest: index.html

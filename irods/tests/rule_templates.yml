@@ -200,10 +200,12 @@
     - name: verify acSetNumThreads defined correctly in ipc-env.re
       assert:
         that:
-          - ipc_env is search("ON($rescName == 'resource-1' && $clientAddr == ipc_IES_IP)"
-                              | regex_escape)
-          - ipc_env is search("ON($rescName == 'resource-2' && $clientAddr == ipc_IES_IP)"
-                              | regex_escape)
+          - >
+              ipc_env is
+              search("on ($rescName == 'resource-1' && $clientAddr == ipc_IES_IP)" | regex_escape)
+          - > 
+              ipc_env is 
+              search("on ($rescName == 'resource-2' && $clientAddr == ipc_IES_IP)" | regex_escape)
 
 
 - name: test Avra params are set correctly
@@ -236,7 +238,7 @@
     - name: verify bisque_env
       assert:
         that:
-         - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://custom.irods.host'")
+          - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://custom.irods.host'")
 
 
 - name: test PIRE params are set correctly
@@ -275,9 +277,9 @@
     - name: verify captcn_env
       assert:
         that:
-         - captcn_env is search('captcn_OWNERS = list("own1", "own2")' | regex_escape)
-         - captcn_env is search('captcn_WRITERS = list("write1", "write2")' | regex_escape)
-         - captcn_env is search('captcn_READERS = list("read1", "read2")' | regex_escape)
+          - captcn_env is search('captcn_OWNERS = list("own1", "own2")' | regex_escape)
+          - captcn_env is search('captcn_WRITERS = list("write1", "write2")' | regex_escape)
+          - captcn_env is search('captcn_READERS = list("read1", "read2")' | regex_escape)
 
 
 - name: test that sernec perm groups are generated correctly
@@ -300,9 +302,9 @@
     - name: verify sernec_env
       assert:
         that:
-         - sernec_env is search('sernec_OWNERS = list("own1", "own2")' | regex_escape)
-         - sernec_env is search('sernec_WRITERS = list("write1", "write2")' | regex_escape)
-         - sernec_env is search('sernec_READERS = list("read1", "read2")' | regex_escape)
+          - sernec_env is search('sernec_OWNERS = list("own1", "own2")' | regex_escape)
+          - sernec_env is search('sernec_WRITERS = list("write1", "write2")' | regex_escape)
+          - sernec_env is search('sernec_READERS = list("read1", "read2")' | regex_escape)
 
 
 - name: test Sparcd default base collection when admin

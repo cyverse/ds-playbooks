@@ -2,7 +2,7 @@
 - include_tasks: test_pkg_installed.yml
   vars:
     pkg: irods-resource
-    version: '4.1.10'
+    ver: '4.1.10'
 
 - include_tasks: test_irods_ownership.yml
   vars:

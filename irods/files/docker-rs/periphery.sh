@@ -45,7 +45,7 @@ set_resource_status()
 {
   local status="$1"
 
-  printf 'bringing %s %s\n' "$IRODS_STORAGE_RES" "$status"
+  printf 'Bringing %s %s\n' "$IRODS_STORAGE_RES" "$status"
   iadmin modresc "$IRODS_STORAGE_RES" status "$status"
 }
 

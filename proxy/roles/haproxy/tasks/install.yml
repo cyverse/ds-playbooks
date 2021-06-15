@@ -1,0 +1,64 @@
+---
+- import_tasks: _testing.yml
+
+- name: install | ensure CentOS 7 stock HAProxy is not installed
+  package:
+    name: haproxy
+    state: absent
+
+- name: install | ensure Software Collections repository is installed
+  package:
+    name: centos-release-scl
+
+- name: install | ensure HAProxy version 1.8 is installed
+  package:
+    name: "{{ item }}"
+  with_items:
+    - rh-haproxy18-haproxy
+    - rh-haproxy18-haproxy-syspaths
+  notify:
+    - restart haproxy
+
+- name: install | ensure /usr/sbin/haproxy points to the haproxy exec
+  file:
+    src: /opt/rh/rh-haproxy18/root/usr/sbin/haproxy
+    dest: /usr/sbin/haproxy
+    state: link
+
+- name: install | ensure /etc/haproxy exists
+  file:
+    path: /etc/haproxy
+    state: directory
+    owner: haproxy
+    mode: u+r
+
+- name: install | ensure HAProxy starts on reboot
+  service:
+    name: rh-haproxy18-haproxy
+    enabled: true
+  tags:
+    - no_testing
+
+- name: install | ensure nonlocal binding allowed
+  sysctl:
+    name: net.ipv4.ip_nonlocal_bind
+    value: '1'
+    sysctl_set: true
+    sysctl_file: /etc/sysctl.d/haproxy.conf
+    reload: true
+    state: present
+  notify:
+    - restart haproxy
+  tags:
+    - no_testing
+
+- name: install | ensure IP forwarding allowed
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: true
+    sysctl_file: /etc/sysctl.d/haproxy.conf
+    reload: true
+    state: present
+  tags:
+    - no_testing

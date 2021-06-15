@@ -14,22 +14,11 @@ coge_acPostProcForCollCreate {
 }
 
 
-coge_acPostProcForCopy {
-  ipc_ensureAccessOnCreateObj(_coge_USER, _coge_COLL, _coge_PERM, $objPath);
-}
-
-
-# Add a call to this rule from inside the acPostProcForFilePathReg PEP.
-coge_acPostProcForFilePathReg {
-  ipc_ensureAccessOnCreateObj(_coge_USER, _coge_COLL, _coge_PERM, $objPath);
-}
-
-
-coge_acPostProcForPut {
-  ipc_ensureAccessOnCreateObj(_coge_USER, _coge_COLL, _coge_PERM, $objPath);
-}
-
-
 coge_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   ipc_ensureAccessOnMv(_coge_USER, _coge_COLL, _coge_PERM, *SrcEntity, *DestEntity);
+}
+
+
+coge_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
+  ipc_ensureAccessOnCreateObj(_coge_USER, _coge_COLL, _coge_PERM, *DATA_OBJ_INFO.logical_path);
 }

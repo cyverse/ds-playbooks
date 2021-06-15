@@ -3,10 +3,10 @@
   hosts: irods:!unmanaged_systems
   become: true
   vars:
-    group_name: "{{ 'irods_ies' if inventory_hostname in groups['ies'] else 'irods' }}"
-    # NB: The rpm and yum bindings for the test_pkg_installed.yml tasks require
     #     Python 2 in Ansible 2.9.6
+    # NB: The rpm and yum bindings for the test_pkg_installed.yml tasks require
     ansible_python_interpreter: /usr/bin/python
+    group_name: "{{ 'irods_ies' if inventory_hostname in groups['ies'] else 'irods' }}"
   tasks:
     - include_tasks: tasks/test_pkg_installed.yml
       with_items:
@@ -16,9 +16,21 @@
         loop_var: pkg
 
     - name: test create service group
-      command: grep --quiet --regexp '^{{ group_name }}:x:[0-9]*:' /etc/group
+      command:
+        cmd: sed --quiet 's/^{{ group_name }}:x:\([0-9]\+\):.*/\1/p' /etc/group
+        warn: false
+      register: gid_resp
       changed_when: false
+      failed_when: gid_resp.stdout|length == 0
 
     - name: verify that the system user has correct comment
-      command: grep --quiet --regexp '^irods:[^:]*:[^:]*:[^:]*:iRODS Administrator:' /etc/passwd
+      command:
+        cmd: >
+          grep --quiet --regexp '^irods:x:[0-9]*:{{ gid_resp.stdout }}:iRODS Administrator:'
+          /etc/passwd
+      changed_when: false
+
+    - name: verify that system user belongs to tty group
+      command:
+        cmd: grep --quiet --regexp '^tty:x:[0-9]*:\(.\+,\)\?irods\(,.\+\)\?$' /etc/group
       changed_when: false

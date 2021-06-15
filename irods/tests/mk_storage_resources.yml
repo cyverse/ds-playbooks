@@ -9,8 +9,8 @@
       - bundleResc
       - cereus
       - pire
-      - rs_centos6
-      - rs_centos7
+      - rs_ingest
+      - rs_repl
       - terraref
   tasks:
     - name: test create vault directory

@@ -47,7 +47,13 @@ _sparcd_handle_new_object(*User, *Object) {
       remote(ipc_RE_HOST, '') {
         _sparcd_logMsg('scheduling ingest of *Object for *User');
 
-        delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
+#       https://github.com/irods/irods/issues/5413.
+        #delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
+        delay(
+          ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+            <PLUSET>1s</PLUSET>
+            <EF>1s REPEAT 0 TIMES</EF> ' )
         {_sparcd_ingest(*User, *Object);}
       }
     }
@@ -62,20 +68,6 @@ sparcd_acPostProcForCollCreate {
 }
 
 
-# Add a call to this rule from inside the acPostProcForFilePathReg PEP.
-sparcd_acPostProcForFilePathReg {
-  _sparcd_handle_new_object($userNameClient, $objPath);
-}
-
-
-sparcd_acPostProcForPut {
-  _sparcd_handle_new_object($userNameClient, $objPath);
-}
-
-
-acSetChkFilePathPerm {
-  on (str(sparcd_BASE_COLL) != ''
-      && $objPath like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/.*$') {
-    msiSetChkFilePathPerm('noChkPathPerm');
-  }
+sparcd_dataObjCreated(*User, *_, *DATA_OBJ_INFO) {
+  _sparcd_handle_new_object(*User, *DATA_OBJ_INFO.logical_path);
 }

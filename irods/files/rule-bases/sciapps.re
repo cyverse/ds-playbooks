@@ -20,22 +20,12 @@ sciapps_acPostProcForCollCreate {
 }
 
 
-sciapps_acPostProcForCopy {
-  ipc_ensureAccessOnCreateObj(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, $objPath);
-}
-
-
-sciapps_acPostProcForPut {
-  ipc_ensureAccessOnCreateObj(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, $objPath);
-}
-
-
-# Add a call to this rule from inside the acPostProcForFilePathReg PEP.
-sciapps_acPostProcForFilePathReg {
-  ipc_ensureAccessOnCreateObj(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, $objPath);
-}
-
-
 sciapps_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   ipc_ensureAccessOnMv(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, *SrcEntity, *DestEntity);
+}
+
+
+sciapps_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
+  ipc_ensureAccessOnCreateObj(
+    _sciapps_USER, _sciapps_COLL, _sciapps_PERM, *DATA_OBJ_INFO.logical_path);
 }

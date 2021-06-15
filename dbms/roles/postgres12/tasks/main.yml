@@ -6,8 +6,9 @@
 
 - include: configure.yml
 
-- meta: flush_handlers
+- name: main | ensure postgresql is running
+  meta: flush_handlers
 
 - include: replication.yml
 
-#- include: healthchecks.yml
+# - include: healthchecks.yml

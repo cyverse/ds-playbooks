@@ -1,0 +1,198 @@
+---
+- name: upgrade ies
+  hosts: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tags:
+    - no_testing
+  tasks:
+    - name: start iRODS service
+      command: /var/lib/irods/irodsctl start
+      register: response
+      changed_when: response.stderr is not search('iRODS already running')
+      failed_when: response.rc != 0 and response.stderr is not search('iRODS already running')
+      throttle: 1
+
+    - name: update information
+      run_once: true
+      shell: |
+        set -o errexit
+        if [[ ! -e /var/lib/irods/stales-updated ]]; then
+          yes | python /var/lib/irods/scripts/update_deprecated_database_columns.py > /dev/null
+          touch /var/lib/irods/stales-updated
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: generate scripts for protecting resources during rs upgrades
+      shell: |
+        set -o errexit
+        if [[ ! -e /var/lib/irods/pre-rs-script.sh || ! -e /var/lib/irods/post-rs-script.sh ]]; then
+          python /var/lib/irods/scripts/generate_iadmin_commands_for_41_to_42_upgrade.py \
+            > /var/lib/irods/both-rs-scripts.sh
+          awk 'BEGIN{RS="#"} {if(NR==2){ printf "#%s", $0 }}' < /var/lib/irods/both-rs-scripts.sh \
+            > /var/lib/irods/pre-rs-script.sh
+          awk 'BEGIN{RS="#"} {if(NR==3){ printf "#%s", $0 }}' < /var/lib/irods/both-rs-scripts.sh \
+            > /var/lib/irods/post-rs-script.sh
+          rm --force /var/lib/irods/both-rs-scripts.sh
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: start protecting resources during rs upgrade
+      run_once: true
+      shell: |
+        set -o errexit
+        if [[ ! -e /var/lib/irods/pre-rs-script-run ]]; then
+          bash /var/lib/irods/pre-rs-script.sh > /dev/null
+          touch /var/lib/irods/pre-rs-script-run
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+
+- name: upgrade resource servers
+  hosts: rs
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tags:
+    - no_testing
+  tasks:
+    - name: start iRODS service
+      command: /var/lib/irods/irodsctl start
+      register: response
+      changed_when: response.stderr is not search('iRODS already running')
+      failed_when: response.rc != 0 and response.stderr is not search('iRODS already running')
+
+
+- name: finish upgrading - catalog provider only tasks
+  hosts: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
+  tasks:
+    - name: stop protecting resources
+      run_once: true
+      shell: |
+        set -o errexit
+        if [[ ! -e /var/lib/irods/post-rs-script-run ]]; then
+          bash /var/lib/irods/post-rs-script.sh > /dev/null
+          touch /var/lib/irods/post-rs-script-run
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+      tags:
+        - no_testing
+
+    - name: remove postgres section from .odbc.ini
+      replace:
+        path: /var/lib/irods/.odbc.ini
+        regexp: '\[postgres\][^\[]*'
+
+    - name: remove old dbms related files
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /var/lib/irods/.pgpass
+        - /var/lib/irods/.psql_history
+        - /etc/irods/database_config.json
+
+
+- name: finish upgrading - general
+  hosts: irods
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
+  tasks:
+    - name: add default rule engine plugin to server_config.json
+      shell: |
+        set -o errexit
+        if ! grep --quiet irods_rule_engine_plugin-cpp_default_policy /etc/irods/server_config.json
+        then
+          re='{
+              "instance_name": "irods_rule_engine_plugin-cpp_default_policy-instance",
+              "plugin_name": "irods_rule_engine_plugin-cpp_default_policy",
+              "plugin_specific_configuration": {}
+            }'
+          jq ".plugin_configuration.rule_engines += [ $re ]" /etc/irods/server_config.json \
+              > /etc/irods/server_config.json.new \
+            && mv /etc/irods/server_config.json.new /etc/irods/server_config.json
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: remove backups of config files
+      shell: |
+        set -o errexit 
+        if ! res="$(\
+          rm --force --verbose \
+            /etc/irods/*.prev.* \
+            /var/lib/irods/.irods/irods_environment.json.prev.* \
+            /var/lib/irods/VERSION.json.previous )"
+        then
+          exit 1
+        fi
+        if [[ -n "$res" ]]; then
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: removed vestigal iRODS folder
+      file:
+        path: /var/lib/irods/iRODS
+        state: absent
+
+    - name: remove vestigal plugins folder
+      file:
+        path: /var/lib/irods/plugins
+        state: absent
+
+    - name: install converted cmd scripts
+      copy:
+        src: files/cmd-common/
+        dest: /var/lib/irods/msiExecCmd_bin/
+        mode: u+x
+
+    - name: install converted rule bases
+      copy:
+        src: files/rule-bases/
+        dest: /etc/irods/
+      notify:
+        - reload rules
+
+  handlers:
+    - name: reload rules
+      file:
+        path: /etc/irods/core.re
+        state: touch
+
+
+- name: reschedule periodic rules
+  hosts: ies
+  run_once: true
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
+  tags:
+    - no_testing
+  tasks:
+    - name: schedule rule
+      command: >
+        irule --rule-engine-plugin-instance irods_rule_engine_plugin-irods_rule_language-instance
+           {{ item.rule }} null ruleExecOut
+      register: results
+      changed_when: results.stdout == item.change_msg
+      with_items:
+        - rule: ipc_rescheduleQuotaUsageUpdate
+          change_msg: scheduled quota usage updates
+        - rule: ipc_rescheduleStorageFreeSpaceDetermination
+          change_msg: scheduled storage determination
+        - rule: ipc_rescheduleTrashRemoval
+          change_msg: scheduled trash removal

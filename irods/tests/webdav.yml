@@ -175,12 +175,12 @@
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: irods-icommands
-        version: '4.1.10'
+        ver: '4.1.10'
 
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: irods-runtime
-        version: '4.1.10'
+        ver: '4.1.10'
 
     - name: test add davrods irods directory contents
       stat:
@@ -203,7 +203,7 @@
         - 10-mod_qos.conf
       register: response
       failed_when: not response.stat.exists
-      
+
     - name: retrieve encoded irods_environment.json
       slurp:
         src: /etc/httpd/irods/irods_environment.json

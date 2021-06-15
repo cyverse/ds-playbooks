@@ -1,0 +1,10 @@
+---
+ansible_python_interpreter: /usr/bin/python
+
+irods_clerver_password: rs7_password
+irods_clerver_user: rs7_admin
+
+irods_storage_resources:
+  - name: rs_repl
+    vault: "{{ irods_default_vault }}"
+    context: minimum_free_space_for_create_in_bytes=1048576

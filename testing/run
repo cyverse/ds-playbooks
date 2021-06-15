@@ -1,14 +1,5 @@
 #!/bin/bash
 
-
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-  readonly ExecName=$(greadlink -f "$0")
-else
-  readonly ExecName=$(readlink --canonicalize "$0")
-fi
-
-
 show_help()
 {
   cat <<EOF
@@ -33,6 +24,15 @@ hosts file is provided, it will use 'hosts-all'. If no playbook is provided, it
 will attempt to run the playbook <playbook_folder>/main.yml.
 EOF
 }
+
+
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+  readonly ExecName=$(greadlink -f "$0")
+else
+  readonly ExecName=$(readlink --canonicalize "$0")
+fi
+
 
 printHelpText(){
   if [[ "$OSTYPE" == "darwin"* ]]

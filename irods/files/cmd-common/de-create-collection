@@ -1,22 +1,23 @@
 #!/bin/bash
 #
-# Creates a collection as a given user for a given DE app execution
+# Creates an archival collection as a given user for a given DE app execution 
+# and gives the user read access the corresponding staging collection.
 #
 # USAGE:
-#  de-create-collection clientUser collPath analId execId
+#  de-create-collection clientUser stagePath archivePath execId appId
 #
 # PARAMETERS:
-#  clientUser   The iRODS user name of the client who owns the data
-#  stagePath    The staging path of the object being moved.
-#  archivePath  The path to where the object is moved.
-#  execId       The Id of the DE app execution that is generating the data
-#               object
+#  clientUser   The iRODS user creating the archival collection
+#  stagePath    The absolute path to the associated staging collection
+#  archivePath  The absolute path to the archival collection
+#  execId       The Id of the DE app execution that generated the staged data
 #  appId        The Id of the DE app that was executed
 
+set -o errexit -o nounset -o pipefail
 
-main()
-{
-  if [ "$#" -lt 4 ]
+
+main() {
+  if [[ "$#" -lt 5 ]]
   then
     printf 'Too few input parameters\n' >&2
     return 1
@@ -28,14 +29,17 @@ main()
   local execId="$4"
   local appId="$5"
 
-  if ! ichmod -M read "$clientUser" "$stagePath" 2>&1
-  then
-    printf 'WARN: Unable to give %s read access to %s\n' "$clientUser" "$stagePath"
-  fi
-
   if ! clientUserName="$clientUser" imkdir -p "$archivePath"
   then
     return 1
+  fi
+
+  local exitStatus=0
+
+  if ! ichmod -M read "$clientUser" "$stagePath"
+  then
+    printf 'Unable to give %s read access to %s\n' "$clientUser" "$stagePath" >&2
+    exitStatus=1
   fi
 
   local kvs
@@ -50,9 +54,10 @@ main()
 
   if ! [[ "$kvs" =~ $execKV ]]
   then
-    if ! imeta adda -c "$archivePath" ipc-execution-id "$execId" UUID 2>&1
+    if ! imeta adda -C "$archivePath" ipc-execution-id "$execId" UUID
     then
-      printf 'WARN: Unable to assign execution Id %s to collection %s\n' "$execId" "$archivePath"
+      printf 'Unable to assign execution Id %s to collection %s\n' "$execId" "$archivePath" >&2
+      exitStatus=1
     fi
   fi
 
@@ -60,16 +65,18 @@ main()
 
   if ! [[ "$kvs" =~ $appKV ]]
   then
-    if ! imeta adda -c "$archivePath" ipc-analysis-id "$appId" UUID 2>&1
+    if ! imeta adda -C "$archivePath" ipc-analysis-id "$appId" UUID
     then
-      printf 'WARN: Unable to assign app Id %s to collection %s\n' "$appId" "$archivePath"
+      printf 'Unable to assign app Id %s to collection %s\n' "$appId" "$archivePath" >&2
+      exitStatus=1
     fi
   fi
+
+  return $exitStatus
 }
 
 
-query_kvs()
-{
+query_kvs() {
   local collPath="$1"
 
   iquest '%s=%s' "select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE where COLL_NAME = '$collPath'" \

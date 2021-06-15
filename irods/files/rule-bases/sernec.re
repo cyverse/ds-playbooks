@@ -9,8 +9,8 @@ sernec_isForSernec(*Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/sernec/\
 
 
 sernec_assignPerms(*Path, *UserNameClient) {
-  msiGetObjType(*Path, *type);
-  *recursiveFlag = if *type == '-c' then 'recursive' else 'default';
+  *type = ipc_getEntityType(*Path);
+  *recursiveFlag = if *type == '-C' then 'recursive' else 'default';
   msiSetACL(*recursiveFlag, 'own', *UserNameClient, *Path);
 
   foreach(*user in sernec_OWNERS) {
@@ -29,7 +29,7 @@ sernec_assignPerms(*Path, *UserNameClient) {
     }
   }
 
-  if (*type == '-c') {
+  if (*type == '-C') {
     msiSetACL(*recursiveFlag, 'inherit', 'null', *Path);
   }
 }

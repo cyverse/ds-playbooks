@@ -4,11 +4,11 @@
   become: true
   roles:
     - role: adfinis_sygroup.grub
-      grub_console: False
+      grub_console: false
       grub_consoles: []
       grub_serial: []
       grub_timeout: 0
-      grub_disable_network_predictable_interface_names: False
+      grub_disable_network_predictable_interface_names: false
       grub_cmdline_linux_default_list:
         - transparent_hugepage=never
       tags:
@@ -48,25 +48,3 @@
         pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
         pg_upstream_node: "{{ groups['dbms_primary'][0] }}"
         pg_destroy_default_db_on_init: "{{ _dbms_replication_start }}"
-
-
-- name: Prepare for iRODS
-  hosts: dbms_primary
-  become: True
-  become_user: postgres
-  gather_facts: False
-  run_once: True
-  tasks:
-    - name: create ICAT DB
-      postgresql_db:
-        name: ICAT
-        port: "{{ _dbms_port }}"
-
-    - name: create iRODS user
-      postgresql_user:
-        name: "{{ _dbms_irods_user }}"
-        password: "{{ _dbms_irods_password }}"
-        db: ICAT
-        priv: all
-        port: "{{ _dbms_port }}"
-      no_log: true

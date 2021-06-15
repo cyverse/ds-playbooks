@@ -18,17 +18,17 @@ cereus_resource_hierarchy:
 
 de_job_irods_user: de_job
 
-irods_amqp_host: "{{ groups['rabbitmq'][0] }}"
-irods_amqp_user: rabbitmq_admin
+irods_amqp_host: "{{ groups['amqp'][0] }}"
+irods_amqp_user: amqp_admin
 irods_amqp_password: password
 
 irods_calliope_project_coll: /testing/home/shared/calliope
 
-irods_default_repl_resource: rs_centos7
+irods_default_repl_resource: rs_repl
 
 irods_resource_hierarchies:
-  - name: rs_centos6
-  - name: rs_centos7
+  - name: rs_ingest
+  - name: rs_repl
 
 irods_server_port_range_end: 20009
 

@@ -7,5 +7,5 @@
       vars:
         pkg: sendmail
 
-    # The rest of the playbook can't be tested, since none of the hostnames in
-    # the testing environment are IP addresses.
+# The rest of the playbook can't be tested, since none of the hostnames in the
+# testing environment are IP addresses.

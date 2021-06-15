@@ -13,4 +13,4 @@
     - name: start apache
       service:
         name: httpd
-        state: stopped
+        state: started

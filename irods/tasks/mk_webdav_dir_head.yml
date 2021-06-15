@@ -7,3 +7,5 @@
   template:
     src: templates/webdav/etc/httpd/head.html.j2
     dest: /etc/httpd/irods/{{ head_file }}
+    owner: apache
+    mode: u+r

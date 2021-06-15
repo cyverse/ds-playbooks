@@ -1,0 +1,7 @@
+---
+- name: test block client access
+  hosts: proxy
+  become: true
+  tasks:
+    - debug:
+        msg: TODO implement

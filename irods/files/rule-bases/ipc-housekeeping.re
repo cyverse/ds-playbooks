@@ -6,14 +6,22 @@
 
 _ipc_schedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
   writeLine('serverLog', 'DS: scheduling *Desc');
-  eval(``delay('<PLUSET>0s</PLUSET><EF>*Freq</EF>') {`` ++ *RuleName ++ ``}``);
+  # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
+  #       https://github.com/irods/irods/issues/5413.
+  #eval(``delay('<PLUSET>0s</PLUSET><EF>*Freq</EF>') {`` ++ *RuleName ++ ``}`` );
+  eval(
+    ``delay(
+        '<INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+         <PLUSET>0s</PLUSET>
+         <EF>*Freq</EF>'
+      ) {`` ++ *RuleName ++ ``}`` );
 }
 
 
 _ipc_reschedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
   *scheduled = false;
 
-  foreach(*row in SELECT RULE_EXEC_ID, RULE_EXEC_FREQUENCY WHERE RULE_EXEC_NAME = '*RuleName|') {
+  foreach(*row in SELECT RULE_EXEC_ID, RULE_EXEC_FREQUENCY WHERE RULE_EXEC_NAME = '*RuleName') {
     if (*scheduled || *row.RULE_EXEC_FREQUENCY != *Freq) {
       writeLine('serverLog', 'DS: unscheduling *Desc');
 
@@ -124,7 +132,7 @@ _ipc_rmTrash {
   writeLine('serverLog', 'DS: starting trash removal');
 
   msiGetFormattedSystemTime(*date, 'human', '%d-%02d-%02d');
-  *logFileArg = execCmdArg("/var/lib/irods/iRODS/server/log/trash-removal.log-*date");
+  *logFileArg = execCmdArg("/var/lib/irods/log/trash-removal.log-*date");
 
   if (0 == errorcode(msiExecCmd('rm-trash', "--log *logFileArg", 'null', 'null', 'null', *out))) {
     *subject = ipc_ZONE ++ ' trash removal of succeeded';

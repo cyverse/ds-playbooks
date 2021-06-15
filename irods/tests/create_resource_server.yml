@@ -15,7 +15,7 @@
 
 
 - name: test bootstrap iRODS start
-  hosts: dstesting_rs_centos7_1.dstesting_default
+  hosts: dstesting_rs_unconfigured.dstesting_default
   become: true
   become_user: irods
   tasks:
@@ -62,7 +62,7 @@
         state: present
         host: "{{ groups['ies'][0] }}"
         port: 1247
-        admin_user: rods 
+        admin_user: rods
         admin_password: rods
         zone: testing
       register: resp

@@ -47,12 +47,14 @@ pire_replReplResc = pire_replIngestResc
 
 
 # Restrict the PIRE resource to files in the PIRE collection
-pep_resource_resolve_hierarchy_pre(*OUT) {
-  on (pire_RESC != ipc_DEFAULT_RESC
-      && $KVPairs.resc_hier == pire_RESC
-      && !_pire_isForPIRE($KVPairs.logical_path)) {
+pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST, *PARSER, *VOTE) {
+  on (
+    pire_RESC != ipc_DEFAULT_RESC
+    && *CONTEXT.resc_hier == pire_RESC
+    && !_pire_isForPIRE(*CONTEXT.logical_path)
+  ) {
     *msg = 'CYVERSE ERROR:  ' ++ pire_RESC ++ ' usage is limited to the EHT collection, '
-           ++ str(pire_PUBLIC_BASE_COLL);
+      ++ str(pire_PUBLIC_BASE_COLL);
 
     failmsg(-32000, *msg);
   }

@@ -34,16 +34,20 @@
       rm /etc/httpd/conf.d/ssl.conf
       %triggerun -- mod_ssl
       rm /etc/httpd/conf.d/ssl.conf
+    mode: u+rw
+  register: spec
 
 - name: build RPM package on control node
+  when: spec is changed
   run_once: true
   delegate_to: localhost
-  shell: rpmbuild -bb --define "_topdir {{ rpm_build_dir.path }}" {{ rpm_build_dir.path }}/mod_ssl-rm_ssl_conf.spec
+  command: rpmbuild -bb --define "_topdir {{ rpm_build_dir.path }}" {{ rpm_build_dir.path }}/mod_ssl-rm_ssl_conf.spec
 
 - name: copy RPM to managed node
   copy:
     src: "{{ rpm_build_dir.path }}/RPMS/noarch/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm"
     dest: "/tmp/mod_ssl-rm_ssl_conf-1.0-1.noarch.rpm"
+    mode: u+rw
 
 - name: install RPM package on managed node
   yum:

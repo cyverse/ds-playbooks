@@ -31,14 +31,17 @@ Variable                                   | Default                            
 `captcn_owners`                            | `[]`                                 |         | a list of users who get ownership of CAP_TCN collections
 `captcn_readers`                           | `[]`                                 |         | a list of users who get read access to CAP_TCN collections
 `captcn_writers`                           | `[]`                                 |         | a list of users who get write access to CAP_TCN collections
-`cereus_collections`                      | `[]`                                 |         | a list of collections whose data belongs on the Cereus resource, each entry must be an absolute path
+`cereus_collections`                       | `[]`                                 |         | a list of collections whose data belongs on the Cereus resource, each entry must be an absolute path
 `cereus_resource_hierarchy`                | `irods_resource_hierarchies[0]`      |         | the Cereus resource used for hosting data for Cereus related projects
 `check_routes_timeout`                     | 3                                    |         | the number of seconds the `check_route` playbook will wait for a response during a single port check
 `de_job_irods_user`                        |                                      |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
 `firewall_chain`                           | INPUT                                |         | The iptables chain managing authorizing iRODS connections
-`irods_aegis_repl_resource`                | _see description_                    |         | the name of the aegis resource where replicas are written. If `irods_aegis_resource` is defined, it is the default, otherwise,
+`irods_admin_username`                     | rods                                 |         | the iRODS admin account name
+`irods_aegis_repl_resource`                | _see description_                    |         | the name of the aegis resource where replicas are writte
+n. If `irods_aegis_resource` is defined, it is the default, otherwise,
 `irods_amqp_exchange`                      | irods                                |         | the AMQP exchange used to publish events
 `irods_amqp_host`                          | `irods_ies`                          |         | the FQDN or IP address of the server hosting the AMQP service
+`irods_amqp_mgmt_port`                     | 15672                                |         | The TCP port used for management of the AMQP vhost
 `irods_amqp_password`                      | guest                                |         | The password iRODS uses to connect to the AMQP vhost
 `irods_amqp_port`                          | 5672                                 |         | The TCP port the RabbitMQ broker listens on
 `irods_amqp_user`                          | guest                                |         | The user iRODS uses to connect to the AMQP vhost
@@ -47,7 +50,7 @@ Variable                                   | Default                            
 `irods_aegis_resource`                     | `irods_default_resource`             |         | the name of the aegis resource where newly uploaded files are written
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
 `irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
-`irods_clerver_user`                       | rods                                 |         | the rodsadmin user to be used by the server being configured
+`irods_clerver_user`                       | `irods_admin_username`               |         | the rodsadmin user to be used by the server being configured
 `irods_db_password`                        | testpassword                         |         | The password iRODS uses when connecting to the ICAT DB.
 `irods_db_user`                            | irods                                |         | The user iRODS uses when connecting to the ICAT DB.
 `irods_dbms_pg_hba`                        | /etc/postgresql/12/main/pg_hba.conf  |         | The absolute path to the pg_hba.conf file on the DBMS hosting the ICAT DB
@@ -78,18 +81,6 @@ Variable                                   | Default                            
 `irods_version`                            | 4.1.11                               |         | the version of iRODS to work with
 `irods_zone_key`                           | TEMPORARY_zone_key                   |         | the zone key
 `irods_zone_name`                          | tempZone                             |         | the name of the zone
-`load_balancer_irods_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS through the load balancer.
-`load_balancer_irods_check_period`         | 2                                    |         | The amount of time between irods health checks in seconds
-`load_balancer_irods_extra_max_conn`       | 100                                  |         | The maximum number of concurrent connections to iRODS through the load balancer for connections coming from jobs.
-`load_balancer_irods_max_conn`             | 200                                  |         | The maximum number of concurrent connections to iRODS through the load balancer.
-`load_balancer_irods_vip_srcs`             | `[]`                                 |         | A list of IP address ranges that aren't considered for queuing.
-`load_balancer_queue_timeout`              | 120                                  |         | The number of seconds a connection can be queued.
-`load_balancer_stats_allowed_src`          | 0.0.0.0/0                            |         | The network/mask for hosts allowed to see the HAProxy stats web page.
-`load_balancer_stats_certificate`          | /etc/haproxy/certs/stats.pem         |         | The TLS certificate used by the stats endpoint
-`load_balancer_stats_password`             | B1Gp4sSw0rD!!                        |         | The password used to authetnicate access to the stats service
-`load_balancer_stats_port`                 | 81                                   |         | The TCP port used to retrieve HAProxy stats
-`load_balancer_stats_user`                 | haproxy-stats                        |         | The user to authenticate as to access the stats service
-`load_balancer_webdav_check_period`        | 2                                    |         | The amount of time between webdav health checks in seconds
 `pire_manager`                             | null                                 |         | The username that owns the PIRE project collection, if `null`, the collection isn't created.
 `pire_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
 `report_email_addr`                        | root@localhost                       |         | The address where reports are to be emailed.

@@ -9,5 +9,5 @@
       command: ilsresc {{ item }}
       changed_when: false
       with_items:
-        - rs_centos6
-        - rs_centos7
+        - rs_ingest
+        - rs_repl

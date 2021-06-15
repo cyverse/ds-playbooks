@@ -6,9 +6,9 @@
 # Parameters:
 #  INSPECT   if this is `true`, a shell will be opened that allows access to the
 #            volumes in the env containers.
-#  PLAYBOOK  the name of the playbook being tested.
 #  PRETTY    if this is `true`, more info is dumped and newlines in ouput are
 #            expanded.
+#  PLAYBOOK  the name of the playbook being tested.
 #  HOSTS     the inventory hosts to test against
 #  VERBOSE   if this is set to any value, ansible will be passed the verbose
 #            flag -vvv

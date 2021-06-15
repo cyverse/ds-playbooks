@@ -18,7 +18,7 @@
     - name: update apt cache on Ubuntu machines
       when: ansible_distribution == 'Ubuntu'
       apt:
-        update_cache: yes
+        update_cache: true
       tags:
         - non_idempotent
 

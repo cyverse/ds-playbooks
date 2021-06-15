@@ -45,12 +45,14 @@ terraref_replReplResc = terraref_replIngestResc
 
 
 # Restrict the TerraREF resource to files in the TerraREF collection
-pep_resource_resolve_hierarchy_pre(*OUT) {
-  on (terraref_RESC != ipc_DEFAULT_RESC
-      && $KVPairs.resc_hier == terraref_RESC
-      && !_terraref_isForTerraRef($KVPairs.logical_path)) {
+pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST, *PARSER, *VOTE) {
+  on (
+    terraref_RESC != ipc_DEFAULT_RESC
+    && *CONTEXT.resc_hier == terraref_RESC
+    && !_terraref_isForTerraRef(*CONTEXT.logical_path)
+  ) {
     *msg = 'CYVERSE ERROR:  ' ++ terraref_RESC ++ ' usage is limited to the TerraREF collection, '
-           ++ str(terraref_BASE_COLL);
+      ++ str(terraref_BASE_COLL);
 
     failmsg(-32000, *msg);
   }

@@ -54,7 +54,7 @@
         name: test_user1
         type: rodsuser
         state: present
-        password: rods321 # different password
+        password: rods321  # different password
         host: "dstesting_ies_configured_1.dstesting_default"
         port: 1247
         admin_user: rods

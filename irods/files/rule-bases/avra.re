@@ -45,12 +45,14 @@ avra_replReplResc = avra_replIngestResc
 
 
 # Restrict the Avra resource to files in the Avra collection
-pep_resource_resolve_hierarchy_pre(*OUT) {
-  on (avra_RESC != ipc_DEFAULT_RESC
-      && $KVPairs.resc_hier == avra_RESC
-      && !_avra_isForAvra($KVPairs.logical_path)) {
+pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST, *PARSER, *VOTE) {
+  on (
+    avra_RESC != ipc_DEFAULT_RESC
+    && *CONTEXT.resc_hier == avra_RESC
+    && ! _avra_isForAvra(*CONTEXT.logical_path)
+  ) {
     *msg = 'CYVERSE ERROR:  ' ++ avra_RESC ++ ' usage is limited to the Avra collection, '
-           ++ str(avra_BASE_COLL);
+      ++ str(avra_BASE_COLL);
 
     failmsg(-32000, *msg);
   }

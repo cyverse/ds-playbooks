@@ -42,9 +42,16 @@
       loop_control:
         loop_var: pkg
 
-    - name: test ensure pika installed
-      command: pip --disable-pip-version-check show pika
+    - name: test install PostgreSQL 12 ODBC Driver
+      shell: odbcinst -q -d -n PostgreSQL
       changed_when: false
+
+    - name: test ensure pika installed
+      shell: |
+        pip --disable-pip-version-check show pika | sed --quiet 's/^Version: //p' 2> /dev/null
+      register: resp
+      changed_when: false
+      failed_when: resp.stdout is version('1.2', '>=')
 
     - import_tasks: tasks/test_install_ies_pkgs.yml
 

@@ -9,8 +9,8 @@ captcn_isForCapTcn(*Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/CAP_TCN/
 
 
 captcn_assignPerms(*Path) {
-  msiGetObjType(*Path, *type);
-  *recursiveFlag = if *type == '-c' then 'recursive' else 'default';
+  *type = ipc_getEntityType(*Path);
+  *recursiveFlag = if *type == '-C' then 'recursive' else 'default';
 
   foreach(*user in captcn_OWNERS) {
     msiSetACL(*recursiveFlag, 'own', *user, *Path);
@@ -24,7 +24,7 @@ captcn_assignPerms(*Path) {
     msiSetACL(*recursiveFlag, 'read', *user, *Path);
   }
 
-  if (*type == '-c') {
+  if (*type == '-C') {
     msiSetACL(*recursiveFlag, 'inherit', 'null', *Path);
   }
 }

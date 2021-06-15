@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Provides an ansible module for creating and removing iRODS collection.
@@ -382,9 +382,17 @@ class IRODSPermissionModule:
                 empty list if no permission
         """
         if obj_type == Collection:
+# XXX - in iRODS < 4.2, CollectionUser.name isn't supported.
+#            query = self.session.query(Collection, CollectionAccess).filter(
+#                CollectionUser.name == username, Collection.name == path)
+#            result = [self.perm_str_mapping[row[CollectionAccess.name]] for row in query
+            query = self.session.query(User.id).filter(User.name == username)
+            for row in query:
+                id = row[User.id]
             query = self.session.query(Collection, CollectionAccess).filter(
-                CollectionUser.name == username, Collection.name == path)
+                CollectionAccess.user_id == id, Collection.name == path)
             result = [self.perm_str_mapping[row[CollectionAccess.name]] for row in query]
+### XXX - ^^^
             return result
         if obj_type == DataObject:
             conditions = [

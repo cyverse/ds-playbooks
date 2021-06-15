@@ -1,4 +1,10 @@
 ---
+# TODO: When upgrading to iRODS 4.2.9, remove this task.
+- name: ensure unixODBC is installed (irods issue 5389)
+  package:
+    name: unixODBC
+    state: present
+
 - include_tasks: tasks/install_irods_pkg.yml
   vars:
     os: centos{{ ansible_distribution_major_version }}

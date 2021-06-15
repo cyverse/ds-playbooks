@@ -1,0 +1,16 @@
+---
+- name: start the webdav services
+  hosts: webdav
+  become: true
+  tags:
+    - no_testing
+  tasks:
+    - name: start varnish
+      service:
+        name: varnish
+        state: started
+
+    - name: start apache
+      service:
+        name: httpd
+        state: started

@@ -4,4 +4,30 @@
     pkg: irods-runtime
     version: 4.1.10
 
-- import_tasks: test_build_plugins.yml
+- name: retrieve installed package info
+  package_facts:
+
+- name: test ensure netcdf plugins not installed
+  assert:
+    that:
+      - not "{{ item }}" in ansible_facts.packages
+  with_items:
+    - irods-icommands-netcdf
+    - irods-microservice-plugin-netcdf
+    - irods-api-plugin-netcdf
+
+- name: test ensure netcdf rpms removed
+  stat:
+    path: /root/{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm
+  register: response
+  failed_when: response.stat.exists
+  with_items:
+    - irods-icommands-netcdf
+    - irods-microservice-plugin-netcdf
+    - irods-api-plugin-netcdf
+
+- name: test ensure msiSetAVU microservice is absent
+  stat:
+    path: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
+  register: response
+  failed_when: response.stat.exists

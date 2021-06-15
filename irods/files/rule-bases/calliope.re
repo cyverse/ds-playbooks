@@ -36,22 +36,20 @@ _calliope_ingest(*Uploader, *TarPath) {
 }
 
 
-calliope_acPostProcForPut {
-  if (_calliope_isForCalliope($objPath)) {
-    _calliope_logMsg('scheduling ingest of $objPath for $userNameClient');
+calliope_dataObjCreated(*User, *_, *DATA_OBJ_INFO) {
+  if (_calliope_isForCalliope(*DATA_OBJ_INFO.logical_path)) {
+    _calliope_logMsg(
+      'scheduling ingest of ' ++ *DATA_OBJ_INP.logical_path ++ ' for ' ++ *User);
 
-    delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
-    {_calliope_ingest($userNameClient, $objPath);}
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
+#       https://github.com/irods/irods/issues/5413.
+    #delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
+    delay(
+      ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+        <PLUSET>0s</PLUSET>
+        <EF>1s REPEAT 0 TIMES</EF> ' )
+    {_calliope_ingest(*User, *DATA_OBJ_INFO.logical_path);}
   }
 }
 
 
-# Add a call to this rule from inside the acPostProcForFilePathReg PEP.
-calliope_acPostProcForFilePathReg {
-  if (_calliope_isForCalliope($objPath)) {
-    _calliope_logMsg('scheduling ingest of $objPath for $userNameClient');
-
-    delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
-    {_calliope_ingest($userNameClient, $objPath);}
-  }
-}

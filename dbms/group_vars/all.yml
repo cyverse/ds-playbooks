@@ -1,7 +1,4 @@
 ---
-_dbms_irods_password: "{{ dbms_irods_password | mandatory }}"
-_dbms_irods_user: "{{ dbms_irods_user | default('irods') }}"
-
 _dbms_log_min_duration: "{{ dbms_log_min_duration | default(1000) }}"
 
 _dbms_port: "{{ dbms_port | default(5432) }}"

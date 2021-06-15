@@ -16,11 +16,19 @@
           ignore_errors: true
 
         - name: wait for server to stop
+          wait_for:
+            host: "{{ inventory_hostname }}"
+            port: "{{ _port }}"
+            state: stopped
+          delegate_to: localhost
           become: false
-          local_action: wait_for host={{ inventory_hostname }} port={{ _port }} state=stopped
 
         - name: verify server up
+          wait_for:
+            host: "{{ inventory_hostname }}"
+            port: "{{ _port }}"
+            state: started
+          delegate_to: localhost
           become: false
-          local_action: wait_for host={{ inventory_hostname }} port={{ _port }} state=started
   tags:
     - no_testing

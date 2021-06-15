@@ -1,0 +1,46 @@
+---
+- name: test rabbitmq.conf template default expansion
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: verify listeners.tcp.1 set correctly
+      debug:
+        msg: TODO implement
+
+    - name: verify management.tcp.port set correctly
+      debug:
+        msg: TODO implement
+
+
+- name: test rabbitmq.conf template custom expansion
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - debug:
+        msg: TODO implement
+
+
+- name: test set up RabbitMQ broker
+  hosts: amqp
+  become: true
+  tasks:
+    - name: retrieve facts about distro packages
+      package_facts:
+
+    - name: verify correct packages installed
+      assert:
+        that:
+          - "'epel-release' in ansible_facts.packages"
+          - "'erlang' in ansible_facts.packages"
+          - ansible_facts.packages['erlang'] | length == 1
+          - ansible_facts.packages['erlang'][0].version is version_compare('23.2.7', '>=')
+          - "'rabbitmq-server' in ansible_facts.packages"
+          - ansible_facts.packages['rabbitmq-server'] | length == 1
+          - ansible_facts.packages['rabbitmq-server'][0].version is version_compare('3.8.14', '>=')
+
+    - debug:
+        msg: TODO verify erlang-erts isn't installed
+
+    - name: test place rabbitmq config file
+      debug:
+        msg: TODO implement

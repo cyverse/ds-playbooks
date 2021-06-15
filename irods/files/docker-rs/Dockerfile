@@ -1,48 +1,60 @@
-FROM cyverse/irods-rs:4.1.10
+FROM cyverse/irods:4.2.8
 
 ### Switch back to root for installation
 USER root
 
-### Install Set AVU plugin
-COPY irods-setavu-plugin/libraries/centos7/libmsiSetAVU.so /var/lib/irods/plugins/microservices
-
-### Install iRODS NetCDF plugins
-COPY irods-netcdf-build/packages/centos7/*.rpm /tmp/
+### Install NetCDF plugins
 RUN yum --assumeyes install \
-        https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-runtime-4.1.10-centos7-x86_64.rpm && \
-    yum --assumeyes install \
-        /tmp/irods-api-plugin-netcdf-1.0-centos7.rpm \
-        /tmp/irods-icommands-netcdf-1.0-centos7.rpm \
-        /tmp/irods-microservice-plugin-netcdf-1.0-centos7.rpm && \
+      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-client_modules-4.2.8.0-centos-7-x86_64.rpm \
+      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-icommands-4.2.8.0-centos-7-x86_64.rpm \
+      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm && \
 ### Install support for UUID generation
     yum --assumeyes install uuidd && \
 ### Install support for periphery script
     yum --assumeyes install moreutils && \
 ### Clean up installation artifacts
     yum --assumeyes clean all && \
-    rm --force --recursive /var/cache/yum /tmp/* && \
+    rm --force --recursive /var/cache/yum && \
 ### Create vault base
     mkdir /irods_vault
 
 ### Install cmd scripts
-COPY cmd/* /var/lib/irods/iRODS/server/bin/cmd/
-RUN chown irods:irods /var/lib/irods/iRODS/server/bin/cmd/* && \
-    chmod ug+x /var/lib/irods/iRODS/server/bin/cmd/*
+COPY cmd/* /var/lib/irods/msiExecCmd_bin/
+RUN chown irods:irods /var/lib/irods/msiExecCmd_bin/*
 
 ### Install iRODS configuration files
 COPY etc/irods/* /etc/irods/
 COPY var/lib/irods/.irods/irods_environment.json /var/lib/irods/.irods
-RUN chown irods:irods /etc/irods/* /var/lib/irods/.irods/irods_environment.json && \
-    chmod -R ug+r /var/lib/irods && \
-### Ensure /etc/irods/, .irods/, and log/ are group writeable
-    chmod -R ug+rw /etc/irods/ /var/lib/irods/.irods /var/lib/irods/iRODS/server/log
+RUN chown irods:irods /etc/irods/* /var/lib/irods/.irods/irods_environment.json
+
+### Convert configuration files to 4.2.8 style
+USER irods
+COPY upgrade_config_files.py /var/lib/irods/scripts/
+RUN python /var/lib/irods/scripts/upgrade_config_files.py && \
+    jq \
+        '.plugin_configuration.rule_engines += \
+          [ \
+            { \
+              "instance_name": "irods_rule_engine_plugin-cpp_default_policy-instance", \
+              "plugin_name": "irods_rule_engine_plugin-cpp_default_policy", \
+              "plugin_specific_configuration": {} \
+            } \
+          ]' \
+        /etc/irods/server_config.json \
+      | sponge /etc/irods/server_config.json && \
+    rm --force /etc/irods/*.prev.* /var/lib/irods/.irods/irods_environment.json.prev.* && \
+    rm --force /var/lib/irods/scripts/upgrade_config_files.py
+USER root
 
 ### Add script to handle start and stop extras
 COPY periphery.sh /periphery
-RUN chown irods:irods /periphery && \
-    chmod ug+x /periphery
+RUN chown irods:irods /periphery
 
-VOLUME /var/lib/irods/iRODS/server/log /var/lib/irods/iRODS/server/log/proc
+### Ensure correct permissions
+RUN chmod -R ug+rw /etc/irods /var/lib/irods /var/lib/irods/.irods && \
+    chmod ug+x /periphery /var/lib/irods/irodsctl /var/lib/irods/msiExecCmd_bin/*
+
+VOLUME /var/lib/irods/log /var/lib/irods/log/proc
 
 EXPOSE 1247/tcp 1248/tcp 20000-20009/tcp 20000-20009/udp
 

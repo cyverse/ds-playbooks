@@ -1,0 +1,131 @@
+---
+- name: test VIP list template default expansion
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../roles/haproxy/defaults/main.yml
+  vars:
+    vip: "{{ lookup('template', '../roles/haproxy/templates/vip.lst.j2') }}"
+  tasks:
+    - name: verify the file has nothing below the header comment
+      assert:
+        that:
+          - vip is search('^#')
+          - vip is not search('\n[^#\n]')
+
+
+- name: test VIP list template custom expansion
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../roles/haproxy/defaults/main.yml
+    - vars/vip_clients.yml
+  vars:
+    vip: "{{ lookup('template', '../roles/haproxy/templates/vip.lst.j2') }}"
+    dirk_ip: "{{ lookup('dig', 'dirk.cyverse.org') }}"
+  tasks:
+    - debug:
+        var: vip
+
+    - name: verify the ip address passes through
+      assert:
+        that:
+          - vip is search('\n' ~ ('1.2.3.4'|regex_escape) ~ '\n')
+          - vip is search('\n' ~ (dirk_ip|regex_escape) ~ '\n')
+
+    - name: verify the host name converted to address
+      debug:
+        msg: TODO implement
+
+    - name: verify CIDR block passes through
+      debug:
+        msg: TODO implement
+
+
+- name: test set up HAProxy
+  hosts: proxy
+  become: true
+  tasks:
+    - package_facts:
+        strategy: all
+
+    - name: verify HAProxy is installed
+      assert:
+        that:
+          - "'haproxy' not in ansible_facts.packages"
+          - "'centos-release-scl' in ansible_facts.packages"
+          - "'rh-haproxy18-haproxy' in ansible_facts.packages"
+          - "'rh-haproxy18-haproxy-syspaths' in ansible_facts.packages"
+
+    - name: verify /usr/sbin/haproxy points to the haproxy exec
+      stat:
+        path: /usr/sbin/haproxy
+      register: exec
+      failed_when: >
+        not exec.stat.exists or
+        not exec.stat.islnk or
+        exec.stat.lnk_source != '/opt/rh/rh-haproxy18/root/usr/sbin/haproxy' or
+        not exec.stat.executable
+
+    - name: verify /etc/haproxy exists
+      stat:
+        path: /etc/haproxy
+      register: cfgdir
+      failed_when: not cfgdir.stat.exists or not cfgdir.stat.isdir
+
+    - name: test change rsyslog.conf block Id to proxy
+      command: "grep --invert --quiet 'DS MANAGED BLOCK (load_balancer)' /etc/rsyslog.conf"
+      changed_when: false
+
+    - name: test configure rsyslog to listen on UDP socket
+      shell: |
+        printf -v expSettings '$ModLoad imudp\n$UDPServerRun 514\n$UDPServerAddress 127.0.0.1'
+        actSettings=$(sed --quiet \
+          '/^# BEGIN DS MANAGED BLOCK (haproxy)/{N;N;N;s/^[^\n]*\n//;p}' /etc/rsyslog.conf)
+        [[ "$actSettings" = "$expSettings" ]]
+      changed_when: false
+
+    - name: test place rsyslog config for HAProxy
+      stat:
+        path: /etc/rsyslog.d/haproxy.conf
+      register: result
+      failed_when: not result.stat.exists
+
+    - name: test place logrotate config for HAProxy
+      stat:
+        path: /etc/logrotate.d/haproxy
+      register: result
+      failed_when: not result.stat.exists
+
+    - name: test add TLS certificates
+      debug:
+        msg: TODO implement
+
+    - name: test VIP list placement
+      debug:
+        msg: TODO implement
+
+    - name: test haproxy config placement and template expansion
+      debug:
+        msg: TODO implement
+
+    - name: verify /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg points to cfg
+      stat:
+        path: /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg
+      register: cfg
+      failed_when: >
+        not cfg.stat.exists or
+        not cfg.stat.islnk or
+        cfg.stat.lnk_source != '/etc/haproxy/haproxy.cfg'
+
+    - name: test change iptables load_balancer Ids to proxy Ids
+      command: "grep --invert --quiet 'DS MANAGED BLOCK (load_balancer' /etc/sysconfig/iptables"
+      changed_when: false
+
+    - name: test disable conntrack for proxied connections
+      debug:
+        msg: TODO implement
+
+    - name: test open firewall for relevant connections
+      debug:
+        msg: TODO implement

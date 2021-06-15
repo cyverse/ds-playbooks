@@ -1,0 +1,7 @@
+---
+- name: disable testing
+  set_fact:
+    _full_os: true
+  run_once: true
+  tags:
+    - no_testing

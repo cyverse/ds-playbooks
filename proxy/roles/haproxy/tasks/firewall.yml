@@ -1,4 +1,6 @@
 ---
+- import_tasks: _testing.yml
+
 - name: firewall | change iptables load_balancer block Ids to proxy
   shell: |
     if grep --quiet 'DS MANAGED BLOCK (load_balancer filter)' /etc/sysconfig/iptables; then

@@ -1,4 +1,6 @@
 ---
+- import_tasks: _testing.yml
+
 - name: install | ensure CentOS 7 stock HAProxy is not installed
   package:
     name: haproxy

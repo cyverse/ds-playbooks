@@ -2,7 +2,14 @@
 - name: upgrade WebDAV services
   hosts: webdav
   become: true
+  collections:
+    - community.general
   tasks:
+    - name: install software needed for upgrade
+      package:
+        name: yum-plugin-versionlock
+        state: present
+
     - name: remove iCommands
       package:
         name: irods-icommands
@@ -16,6 +23,22 @@
       get_url:
         url: https://packages.irods.org/renci-irods.yum.repo
         dest: /etc/yum.repos.d/renci-irods.yum.repo
+
+    - name: force import of GPG key
+      shell: |
+        if ! resp="$(yum --assumeyes updateinfo)"; then
+          exit 1
+        fi
+        if [[ "$resp" =~ irods-signing-key ]]; then
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: lock irods-runtime to version 4.2.8
+      yum_versionlock:
+        name: irods-runtime-4.2.8
+        state: present
 
     - name: upgrade davrods
       yum:

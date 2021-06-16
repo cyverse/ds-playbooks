@@ -1,6 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
+
+# Copyright: (c) 2021, The Arizona Board of Regents
+# Standard BSD License | CyVerse (see https://cyverse.org/license)
+
+ANSIBLE_METADATA = {
+    "metadata_version": "1.1",
+    "status": ["preview"],
+    "supported_by": "community"
+}
+
 # An ansible module for executing irodsctl, i.e., controling the state of an
 # iRODS server.
 #
@@ -11,66 +20,96 @@
 #  state  The state irods-server should be in upon success. It should be one of
 #         'restarted', 'started', or 'stopped'. The default is 'started'.
 
+from os import path
 from subprocess import PIPE, Popen
 
 from ansible.module_utils.basic import AnsibleModule
 
+_irods_home = "/var/lib/irods"
+_irodsctl_old = _irods_home + "/iRODS/irodsctl"
+_irodsctl_new = _irods_home + "/irodsctl"
 
-_irodsctl = "/var/lib/irods/iRODS/irodsctl"
+
+def _is_new():
+    return path.isfile(_irodsctl_new)
+
+
+def _find_irodsctl():
+    if _is_new():
+        return _irodsctl_new
+    else:
+        return _irodsctl_old
 
 
 def _call_irodsctl(arg):
-   cmd = Popen(args=[_irodsctl, arg], stdout=PIPE, stderr=PIPE)
-   (resp, err) = cmd.communicate()
+    cmd = Popen(args=[_find_irodsctl(), arg], stdout=PIPE, stderr=PIPE)
+    (resp, err) = cmd.communicate()
 
-   if cmd.returncode != 0 or err:
-      raise Exception(err)
+    if cmd.returncode != 0 or err:
+        # NB: Due to a bug in irodsctl in iRODS 4.2.8, an error isn't always an
+        # error. See https://github.com/irods/irods/issues/5700
+        # raise Exception(err)
+        if not (_is_new() and "Success" in str(resp)):
+            raise Exception(err)
 
-   return resp
+    return resp
 
 
 def _is_running():
-  return "No servers running" not in str(_call_irodsctl("status"))
+    status = str(_call_irodsctl("status"))
+
+    if _is_new():
+        return "No iRODS servers running" not in status
+    else:
+        return "No servers running" not in status
 
 
 def _ensure_started():
-  if not _is_running():
-    _call_irodsctl("start")
-    return True
-  else:
-    return False
+    if not _is_running():
+        _call_irodsctl("start")
+        return True
+    else:
+        return False
 
 
 def _ensure_stopped():
-  if _is_running():
-    _call_irodsctl("stop")
-    return True
-  else:
-    return False
+    if _is_running():
+        _call_irodsctl("stop")
+        return True
+    else:
+        return False
 
 
 def _restart():
-  _call_irodsctl("restart")
-  return True
+    if _is_running():
+        _call_irodsctl("restart")
+    else:
+        _call_irodsctl("start")
+
+    return True
 
 
 def _ensure_state(state):
-  return { 'restarted' : _restart,
-           'started'   : _ensure_started,
-           'stopped'   : _ensure_stopped,
-         }[state]()
+    return {
+        'restarted' : _restart,
+        'started'   : _ensure_started,
+        'stopped'   : _ensure_stopped,
+    }[state]()
 
 
 def main():
-  module = AnsibleModule(
-    argument_spec = dict(
-      state = dict(type='str', choices=["restarted","started","stopped"], default="started")))
+    module = AnsibleModule(
+        argument_spec = dict(
+            state = dict(
+                type='str',
+                choices=["restarted","started","stopped"],
+                default="started")))
 
-  try:
-    module.exit_json(params=module.params, changed=_ensure_state(module.params['state']))
-  except Exception as e:
-    module.fail_json(msg=str(e))
+    try:
+        module.exit_json(params=module.params, changed=_ensure_state(module.params['state']))
+    except Exception as e:
+        module.fail_json(msg=str(e))
 
 
 if __name__ == '__main__':
-  main()
+    main()

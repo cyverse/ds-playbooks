@@ -10,7 +10,6 @@
       grub_timeout: 0
       grub_disable_network_predictable_interface_names: false
       grub_cmdline_linux_default_list:
-        - maybe-ubiquity
         - transparent_hugepage=never
       tags:
         - no_testing

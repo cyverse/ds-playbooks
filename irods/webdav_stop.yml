@@ -2,15 +2,17 @@
 - name: stop the webdav services
   hosts: webdav
   become: true
+  tags:
+    - no_testing
   tasks:
     - name: stop apache
       service:
         name: httpd
         state: stopped
+        enabled: false
 
     - name: stop varnish
       service:
         name: varnish
         state: stopped
-  tags:
-    - no_testing
+        enabled: false

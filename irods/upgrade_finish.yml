@@ -17,9 +17,11 @@
       run_once: true
       shell: |
         set -o errexit
-        if [[ ! -e /var/lib/irods/stales-updated ]]; then
-          yes | python /var/lib/irods/scripts/update_deprecated_database_columns.py > /dev/null
-          touch /var/lib/irods/stales-updated
+        if ! resp="$(yes | python /var/lib/irods/scripts/update_deprecated_database_columns.py)"
+        then
+          exit 1
+        fi
+        if [[ ! "$resp" =~ 'No rows will be updated' ]]; then
           echo changed
         fi
       register: response
@@ -88,20 +90,6 @@
       tags:
         - no_testing
 
-    - name: remove postgres section from .odbc.ini
-      replace:
-        path: /var/lib/irods/.odbc.ini
-        regexp: '\[postgres\][^\[]*'
-
-    - name: remove old dbms related files
-      file:
-        path: "{{ item }}"
-        state: absent
-      with_items:
-        - /var/lib/irods/.pgpass
-        - /var/lib/irods/.psql_history
-        - /etc/irods/database_config.json
-
 
 - name: finish upgrading - general
   hosts: irods
@@ -126,33 +114,6 @@
         fi
       register: response
       changed_when: response.stdout == 'changed'
-
-    - name: remove backups of config files
-      shell: |
-        set -o errexit 
-        if ! res="$(\
-          rm --force --verbose \
-            /etc/irods/*.prev.* \
-            /var/lib/irods/.irods/irods_environment.json.prev.* \
-            /var/lib/irods/VERSION.json.previous )"
-        then
-          exit 1
-        fi
-        if [[ -n "$res" ]]; then
-          echo changed
-        fi
-      register: response
-      changed_when: response.stdout == 'changed'
-
-    - name: removed vestigal iRODS folder
-      file:
-        path: /var/lib/irods/iRODS
-        state: absent
-
-    - name: remove vestigal plugins folder
-      file:
-        path: /var/lib/irods/plugins
-        state: absent
 
     - name: install converted cmd scripts
       copy:

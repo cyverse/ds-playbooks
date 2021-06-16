@@ -9,8 +9,10 @@
       service:
         name: varnish
         state: started
+        enabled: true
 
     - name: start apache
       service:
         name: httpd
         state: started
+        enabled: true

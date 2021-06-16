@@ -11,8 +11,7 @@
   tasks:
     - name: install software needed for upgrade
       package:
-        name:
-          - yum-plugin-versionlock
+        name: yum-plugin-versionlock
         state: present
 
     - name: remove msiSetAVU plugin
@@ -37,7 +36,11 @@
         - irods-microservice-plugin-netcdf
         - irods-api-plugin-netcdf
 
+    - name: retrieve installed package info
+      package_facts:
+
     - name: preserve version history
+      when: "'irods-icat' in ansible_facts.packages or 'irods-resource' in ansible_facts.packages"
       copy:
         src: /var/lib/irods/VERSION.json
         dest: /var/lib/irods/VERSION.json.previous
@@ -59,7 +62,7 @@
         if ! resp="$(yum --assumeyes updateinfo)"; then
           exit 1
         fi
-        if [[ "$resp" =~ renci-irods ]]; then
+        if [[ "$resp" =~ irods-signing-key ]]; then
           echo changed
         fi
       register: response
@@ -67,8 +70,9 @@
 
     - name: lock irods packages to version 4.2.8
       yum_versionlock:
-        name: 
+        name:
           - irods-database-plugin-postgres-4.2.8
+          - irods-icommands-4.2.8
           - irods-runtime-4.2.8
           - irods-server-4.2.8
         state: present
@@ -121,7 +125,13 @@
       register: result
       changed_when: result.stdout == 'changed'
 
+    - name: determine if database_config.json exists
+      stat:
+        path: /etc/irods/database_config.json
+      register: databaseConfig
+
     - name: fix odbc field in in database_config.json
+      when: databaseConfig.stat.exists
       replace:
         path: /etc/irods/database_config.json
         regexp: '"db_odbc_type": "unix"'

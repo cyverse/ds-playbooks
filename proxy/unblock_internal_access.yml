@@ -1,0 +1,35 @@
+---
+- name: restore internal client access
+  hosts: proxy
+  become: true
+  tasks:
+    - name: disable testing
+      set_fact:
+        _full_os: true
+      tags:
+        - no_testing
+
+    - name: stop rejecting all incoming packets
+      blockinfile:
+        path: /etc/sysconfig/iptables
+        marker: "# {mark} DS MANAGED BLOCK (haproxy reject)"
+        state: absent
+      notify:
+        - reload firewall rules
+
+    - import_role:
+        name: haproxy
+        tasks_from: firewall
+      vars:
+        haproxy_irods_host: "{{ groups['ies'][0] }}"
+        haproxy_irods_reconn_ports: "{{ proxy_irods_reconn_ports }}"
+        haproxy_irods_client_hosts: "{{ proxy_internal_client_hosts | union(groups['webdav']) }}"
+        haproxy_webdav_hosts: "{{ groups['webdav'] }}"
+        haproxy_webdav_client_hosts: "{{ proxy_internal_client_hosts }}"
+
+  handlers:
+    - name: reload firewall rules
+      when: _full_os | default(false)
+      service:
+        name: iptables
+        state: restarted

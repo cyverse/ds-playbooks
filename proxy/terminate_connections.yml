@@ -12,7 +12,7 @@
     - name: reject all incoming packets
       blockinfile:
         path: /etc/sysconfig/iptables
-        insertbefore: '-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT'
+        insertbefore: '-A INPUT -m state --state .*ESTABLISHED.* -j ACCEPT'
         marker: "# {mark} DS MANAGED BLOCK (haproxy reject)"
         block: |
           -A INPUT -p tcp --dport 80 -j REJECT

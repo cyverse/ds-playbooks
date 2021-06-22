@@ -135,7 +135,7 @@ _ipc_rmTrash {
   *logFileArg = execCmdArg("/var/lib/irods/log/trash-removal.log-*date");
 
   if (0 == errorcode(msiExecCmd('rm-trash', "--log *logFileArg", 'null', 'null', 'null', *out))) {
-    *subject = ipc_ZONE ++ ' trash removal of succeeded';
+    *subject = ipc_ZONE ++ ' trash removal succeeded';
     *body = 'SSIA';
   } else {
     *subject = ipc_ZONE ++ ' trash removal failed';

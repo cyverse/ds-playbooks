@@ -3,10 +3,10 @@
 show_help() {
 	cat <<EOF
 
-$ExecName version $Version
+$EXEC_NAME version $VERSION
 
 Usage:
- $ExecName [options]
+ $EXEC_NAME [options]
 
 This script deletes the trash older than one month. It deletes the oldest trash
 first. It writes a complete report of everything deleted to standard output by
@@ -24,7 +24,7 @@ EOF
 }
 
 
-readonly Version=3
+readonly VERSION=3
 
 set -o nounset -o pipefail
 trap 'exit 130' INT
@@ -37,9 +37,9 @@ fi
 
 export UNKNOWN_ERROR=3
 
-readonly ExecAbsPath=$(readlink --canonicalize "$0")
-readonly ExecName=$(basename "$ExecAbsPath")
-readonly Concurrency=4
+readonly EXEC_ABS_PATH=$(readlink --canonicalize "$0")
+readonly EXEC_NAME=$(basename "$EXEC_ABS_PATH")
+readonly CONCURRENCY=4
 
 
 main() {
@@ -70,7 +70,7 @@ main() {
 
 	if [[ -n "${optMap[version]}" ]]
 	then
-		printf '%s\n' "$Version"
+		printf '%s\n' "$VERSION"
 		return 0
 	fi
 
@@ -124,7 +124,7 @@ map_opts() {
 	shift
 
 	local opts
-	if ! opts=$(getopt --longoptions help,log:,version --options hL:v --name "$ExecName" -- "$@")
+	if ! opts=$(getopt --longoptions help,log:,version --options hL:v --name "$EXEC_NAME" -- "$@")
 	then
 		return 1
 	fi
@@ -216,7 +216,7 @@ rm_trash() {
 	local trashTempFiles="$1"
 
 	local zone
-	zone=$(ienv | sed --quiet 's/NOTICE: irods_zone_name - //p')
+	zone=$(ienv | sed --quiet 's/irods_zone_name - //p')
 
 	local trashList
 	trashList=$(mk_temp "$trashTempFiles")
@@ -232,7 +232,7 @@ rm_trash() {
 	printf '%d data objects will be deleted\n' "$delTot"
 
 	parallel --line-buffer --no-notice --no-run-if-empty \
-			--delimiter '\n' --max-args 100 --max-procs "$Concurrency" \
+			--delimiter '\n' --max-args 100 --max-procs "$CONCURRENCY" \
 			RM_DATA_BATCH \
 		< "$trashList"
 	local rc="$?"

@@ -6,7 +6,7 @@
 -- https://github.com/irods/irods/blob/4.2.8/scripts/irods/database_upgrade.py.
 
 -- Prior to running this script add the following to
--- /etc/postgres/12/main/conf.d/cyverse.conf, and restart postgres. After
+-- /etc/postgresql/12/main/conf.d/cyverse.conf, and restart postgres. After
 -- running the script, remove them, and restart postgres again.
 --
 --     max_wal_senders = 0

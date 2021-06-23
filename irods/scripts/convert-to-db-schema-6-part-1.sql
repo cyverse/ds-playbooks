@@ -94,6 +94,8 @@ ALTER TABLE r_data_main_new
 	ALTER COLUMN data_is_dirty SET DEFAULT 0,
 	ALTER COLUMN data_map_id SET DEFAULT 0;
 
+GRANT SELECT ON r_data_main_new TO icat_reader, metrician;
+
 DROP TABLE r_data_main;
 ALTER TABLE r_data_main_new RENAME TO r_data_main;
 

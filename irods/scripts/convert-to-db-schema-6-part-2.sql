@@ -61,4 +61,3 @@ ON r_objt_metamap (meta_id, object_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_main_ipc1
 ON r_user_main (user_id)
 INCLUDE (user_name, zone_name);
-

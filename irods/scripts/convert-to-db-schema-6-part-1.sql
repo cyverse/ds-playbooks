@@ -6,7 +6,7 @@
 -- https://github.com/irods/irods/blob/4.2.8/scripts/irods/database_upgrade.py.
 
 -- Prior to running this script add the following to
--- /etc/postgres/12/main/conf.d/cyverse.conf, and restart postgres. After
+-- /etc/postgresql/12/main/conf.d/cyverse.conf, and restart postgres. After
 -- running the script, remove them, and restart postgres again.
 --
 --     max_wal_senders = 0
@@ -93,6 +93,8 @@ ALTER TABLE r_data_main_new
 	ALTER COLUMN data_owner_zone SET NOT NULL,
 	ALTER COLUMN data_is_dirty SET DEFAULT 0,
 	ALTER COLUMN data_map_id SET DEFAULT 0;
+
+GRANT SELECT ON r_data_main_new TO icat_reader, metrician;
 
 DROP TABLE r_data_main;
 ALTER TABLE r_data_main_new RENAME TO r_data_main;

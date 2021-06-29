@@ -20,10 +20,8 @@
 # This script assumes that the executor of this script is authenicated as a
 # rodsadmin user.
 #
-# This script must be run on the resource server hosting TARFILE
-
-# NB: One it is confirmed that the tar file extraction logic in iRODS is robust,
-#     we should consider moving this logic back into iRODS rules.
+# NB: Once it is confirmed that the tar file extraction logic in iRODS is 
+#     robust, we should consider moving this logic back into iRODS rules.
 
 set -o errexit -o nounset -o pipefail
 
@@ -33,8 +31,6 @@ main() {
 	local admin="$2"
 	local uploader="$3"
 	local tarFile="$4"
-
-	local rc=0
 
 	local parentColl
 	parentColl="$(dirname "$tarFile")"
@@ -46,15 +42,24 @@ main() {
 	local metaFile="$coll"/meta-"${tarName##*-}".csv
 
 	if clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"; then
-		ensure_owner "$admin" "$coll"
+		if ! ensure_owner "$admin" "$coll"; then
+			local rc=$?
+			printf 'failed to ensure %s owns %s and everything in it\n' "$admin" "$coll" >&2
+			return $rc  
+		fi
 
 # TODO: Ask Susan if she wants to resume deleting tar files after successfully
 # extracting them
-#   irm -f "$tarFile"
+# 		irm -f "$tarFile"
 	else
-		local rc="$?"
+		local rc=$?
+
+		printf 'failed to extract the contents of %s into %s as %s\n' "$tarFile" "$coll" "$uploader" \
+				>&2 \
+			|| true
+
 		ensure_owner "$admin" "$coll" || true
-		return "$rc"
+		return $rc
 	fi
 
 	if ! map_metadata  "$coll" "$metaFile"; then
@@ -140,7 +145,7 @@ map_metadata() {
 
 # XXX: This doesn't work in iRODS 4.2.8. See
 # https://github.com/irods/irods/issues/5518
-#   iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null 2>&1
+# 	iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null 2>&1
 	local metaEntries
 	IFS=$'\n' readarray -t metaEntries < <(iget "$metaFile" -)
 

@@ -1,9 +1,4 @@
 ---
-_aegis_repl_resource: "{{
-  irods_aegis_repl_resource if irods_aegis_repl_resource is defined else
-  (irods_aegis_resource | default(_irods_default_repl_resource)) }}"
-_aegis_resource: "{{ irods_aegis_resource | default(_irods_default_resource) }}"
-
 _amqp_exchange: "{{ irods_amqp_exchange | default('irods') }}"
 _amqp_host: "{{ irods_amqp_host | default(_irods_ies) }}"
 _amqp_mgmt_port: "{{ irods_amqp_mgmt_port | default(15672) }}"

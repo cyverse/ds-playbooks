@@ -483,11 +483,6 @@ _repl_findReplResc(*Resc) {
 
 # DEPRECATED
 _old_replEntityRename(*SourceObject, *DestObject) {
-  on (aegis_replBelongsTo(/*DestObject)) {
-    if (!aegis_replBelongsTo(/*SourceObject)) {
-      _scheduleMoves(*DestObject, aegis_replIngestResc, aegis_replReplResc);
-    }
-  }
   on (avra_replBelongsTo(/*DestObject)) {
     if (!avra_replBelongsTo(/*SourceObject)) {
       _scheduleMoves(*DestObject, avra_replIngestResc, avra_replReplResc);
@@ -507,9 +502,6 @@ _old_replEntityRename(*SourceObject, *DestObject) {
   }
 }
 _old_replEntityRename(*SourceObject, *DestObject) {
-  on (aegis_replBelongsTo(/*SourceObject)) {
-    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
-  }
   on (avra_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
@@ -551,9 +543,6 @@ replEntityRename(*SourceObject, *DestObject) {
 
 # DEPRECATED
 _old_replSetRescSchemeForCreate {
-  on (aegis_replBelongsTo(/$objPath)) {
-    _setDefaultResc(aegis_replIngestResc);
-  }
   on (avra_replBelongsTo(/$objPath)) {
     _setDefaultResc(avra_replIngestResc);
   }
@@ -590,9 +579,6 @@ replSetRescSchemeForCreate {
 
 # DEPRECATED
 _old_replSetRescSchemeForRepl {
-  on (aegis_replBelongsTo(/$objPath)) {
-    _setDefaultResc(aegis_replReplResc);
-  }
   on (avra_replBelongsTo(/$objPath)) {
     _setDefaultResc(avra_replReplResc);
   }
@@ -634,9 +620,6 @@ replSetRescSchemeForRepl {
 
 # DEPRECATED
 _old_replPut(*ObjPath, *IsNew) {
-  on (aegis_replBelongsTo(/*ObjPath)) {
-    _createOrOverwrite(*ObjPath, aegis_replIngestResc, aegis_replReplResci, *IsNew);
-  }
   on (avra_replBelongsTo(/*ObjPath)) {}
   on (de_replBelongsTo(/*ObjPath)) {
     _createOrOverwrite(*ObjPath, de_replIngestResc, de_replReplResc, *IsNew);

@@ -37,8 +37,6 @@ Variable                                   | Default                            
 `de_job_irods_user`                        |                                      |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
 `firewall_chain`                           | INPUT                                |         | The iptables chain managing authorizing iRODS connections
 `irods_admin_username`                     | rods                                 |         | the iRODS admin account name
-`irods_aegis_repl_resource`                | _see description_                    |         | the name of the aegis resource where replicas are writte
-n. If `irods_aegis_resource` is defined, it is the default, otherwise,
 `irods_amqp_exchange`                      | irods                                |         | the AMQP exchange used to publish events
 `irods_amqp_host`                          | `irods_ies`                          |         | the FQDN or IP address of the server hosting the AMQP service
 `irods_amqp_mgmt_port`                     | 15672                                |         | The TCP port used for management of the AMQP vhost
@@ -47,7 +45,6 @@ n. If `irods_aegis_resource` is defined, it is the default, otherwise,
 `irods_amqp_user`                          | guest                                |         | The user iRODS uses to connect to the AMQP vhost
 `irods_ampq_vhost`                         | /                                    |         | The AMQP vhost iRODS connects to
 `irods_default_repl_resource` is.
-`irods_aegis_resource`                     | `irods_default_resource`             |         | the name of the aegis resource where newly uploaded files are written
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
 `irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | `irods_admin_username`               |         | the rodsadmin user to be used by the server being configured

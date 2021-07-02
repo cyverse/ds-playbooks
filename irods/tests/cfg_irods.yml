@@ -16,8 +16,6 @@
         or response.stat.pw_name != 'irods'
         or not response.stat.rusr
       with_items:
-        - aegis.re
-        - aegis-env.re
         - avra.re
         - avra-env.re
         - bisque.re

@@ -26,7 +26,6 @@
 # prefixed with the name of the rule file and suffixed with the name of the rule
 # hook that will call the custome rule.
 
-@include 'aegis'
 @include 'avra'
 @include 'bisque'
 @include 'calliope'

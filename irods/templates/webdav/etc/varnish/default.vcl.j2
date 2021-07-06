@@ -20,9 +20,8 @@ sub vcl_recv {
         return (pass); 
     }
     if (req.http.Cache-Control ~ "no-cache" || req.http.Pragma == "no-cache") {
-        # do not use cache, always miss cache
-        set req.hash_always_miss = true;
-        return (hash);
+        # invalidate cache
+        return (purge);
     }
     return (hash);
 }
@@ -46,6 +45,11 @@ sub vcl_hash {
 }
 
 sub vcl_purge {
+    if (req.method == "GET") {
+        # set no-store to follow another path in vcl_recv
+        set req.http.Cache-Control = "no-store";
+        return (restart);
+    }
     return (synth(200, "Purged"));
 }
 

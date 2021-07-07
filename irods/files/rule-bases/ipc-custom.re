@@ -1,7 +1,9 @@
-# VERSION: 4
+# This rulebase contains the rules attached to Policy Execution Points for the 
+# core CyVerse Data Store policies. All policy logic is in this file or 
+# included by this file.
 #
-# All customizations done to the iRODS rule logic are placed in this file or
-# should be included by this file.
+# © 2021 The Arizona Board of Regents on behalf of The University of Arizona. 
+# For license information, see https://cyverse.org/license.
 
 # The environment specific rule customizations belong in the file ipc-env.re.
 # These rules have the highest priority. Implementations in ipc-custom.re of

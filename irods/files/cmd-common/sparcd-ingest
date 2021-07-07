@@ -20,89 +20,94 @@
 # This script assumes that the executor of this script is authenicated as a
 # rodsadmin user.
 #
-# This script must be run on the resource server hosting TARFILE
-
-# NB: One it is confirmed that the tar file extraction logic in iRODS is robust,
-#     we should consider moving this logic back into iRODS rules.
+# NB: Once it is confirmed that the tar file extraction logic in iRODS is 
+#     robust, we should consider moving this logic back into iRODS rules.
 
 set -o errexit -o nounset -o pipefail
 
 
 main() {
-  local zone="$1"
-  local admin="$2"
-  local uploader="$3"
-  local tarFile="$4"
+	local zone="$1"
+	local admin="$2"
+	local uploader="$3"
+	local tarFile="$4"
 
-  local rc=0
+	local parentColl
+	parentColl="$(dirname "$tarFile")"
 
-  local parentColl
-  parentColl="$(dirname "$tarFile")"
+	local tarName
+	tarName="$(basename "$tarFile" .tar)"
 
-  local tarName
-  tarName="$(basename "$tarFile" .tar)"
+	local coll="$parentColl"/"${tarName%-*}"
+	local metaFile="$coll"/meta-"${tarName##*-}".csv
 
-  local coll="$parentColl"/"${tarName%-*}"
-  local metaFile="$coll"/meta-"${tarName##*-}".csv
-
-  if clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"; then
-    ensure_owner "$admin" "$coll"
+	if clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"; then
+		if ! ensure_owner "$admin" "$coll"; then
+			local rc=$?
+			printf 'failed to ensure %s owns %s and everything in it\n' "$admin" "$coll" >&2
+			return $rc  
+		fi
 
 # TODO: Ask Susan if she wants to resume deleting tar files after successfully
 # extracting them
-#   irm -f "$tarFile"
-  else
-    local rc="$?"
-    ensure_owner "$admin" "$coll" || true
-    return "$rc"
-  fi
+# 		irm -f "$tarFile"
+	else
+		local rc=$?
 
-  if ! map_metadata  "$coll" "$metaFile"; then
-    printf 'failed to add metadata from %s to files in %s\n' "$metaFile" "$coll" >&2
-  else
-    irm -f "$metaFile"
-  fi
+		printf 'failed to extract the contents of %s into %s as %s\n' "$tarFile" "$coll" "$uploader" \
+				>&2 \
+			|| true
 
-  ils -A "$parentColl" | mk_acl | assign_acl "$uploader"\#"$zone" "$coll"
+		ensure_owner "$admin" "$coll" || true
+		return $rc
+	fi
+
+	if ! map_metadata  "$coll" "$metaFile"; then
+		printf 'failed to add metadata from %s to files in %s\n' "$metaFile" "$coll" >&2
+	else
+		irm -f "$metaFile"
+	fi
+
+	ils -A "$parentColl" | mk_acl | assign_acl "$uploader"\#"$zone" "$coll"
 }
 
 
 ensure_owner() {
-  local user="$1"
-  local coll="$2"
+	local user="$1"
+	local coll="$2"
 
-  local resp
-  resp="$(iquest '%s' "select COLL_NAME where COLL_NAME = '$coll'")"
+	local resp
+	resp="$(iquest '%s' "select COLL_NAME where COLL_NAME = '$coll'")"
 
-  if [[ "$resp" = "$coll" ]]; then
-    ichmod -M -r own "$user" "$coll"
-  fi
+	if [[ "$resp" = "$coll" ]]; then
+		ichmod -M -r own "$user" "$coll"
+	fi
 }
 
 
 assign_acl() {
-  local uploader="$1"
-  local entity="$2"
+	local uploader="$1"
+	local entity="$2"
 
-  local user perm
-  while IFS=: read -r -d ' ' user perm; do
-    if [[ "$user" != "$uploader" ]]; then
-      ichmod -M -r "$perm" "$user" "$entity"
-    fi
-  done
+	local user perm
+	while IFS=: read -r -d ' ' user perm; do
+		if [[ "$user" != "$uploader" ]]; then
+			ichmod -M -r "$perm" "$user" "$entity"
+		fi
+	done
 }
 
 
 get_file_loc() {
-  local dataPath="$1"
+	local dataPath="$1"
 
-  local coll dataName
-  coll="$(dirname "$dataPath")"
-  dataName="$(basename "$dataPath")"
+	local coll dataName
+	coll="$(dirname "$dataPath")"
+	dataName="$(basename "$dataPath")"
 
-  iquest \
-    '%s %s' \
-    "select DATA_RESC_HIER, DATA_PATH where COLL_NAME = '$coll' and DATA_NAME = '$dataName'"
+	iquest \
+		'%s %s' \
+		"select DATA_RESC_HIER, DATA_PATH where COLL_NAME = '$coll' and DATA_NAME = '$dataName'"
 }
 
 
@@ -121,65 +126,66 @@ get_file_loc() {
 #writer#zone:write owner#zone:own group#zone:own reader#zone:read
 #
 mk_acl() {
-  sed --quiet --file - <(cat) <<'SED_SCRIPT'
+	sed --quiet --file - <(cat) <<'SED_SCRIPT'
 2 {
-  s/ g:/ /g
-  s/read object/read/g
-  s/modify object/write/g
-  s/  */ /g
-  s/^ ACL - //
-  p
+	s/ g:/ /g
+	s/read object/read/g
+	s/modify object/write/g
+	s/  */ /g
+	s/^ ACL - //
+	p
 }
 SED_SCRIPT
 }
 
 
 map_metadata() {
-  local parentColl="$1"
-  local metaFile="$2"
+	local parentColl="$1"
+	local metaFile="$2"
 
 # XXX: This doesn't work in iRODS 4.2.8. See
 # https://github.com/irods/irods/issues/5518
-#   iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null 2>&1
-  local metaEntries
-  IFS=$'\n' readarray -t metaEntries < <(iget "$metaFile" -)
+# 	iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null 2>&1
+	local metaEntries
+	IFS=$'\n' readarray -t metaEntries < <(iget "$metaFile" -)
 
-  local entry
-  for entry in "${metaEntries[@]}"; do
-    local fields
-    IFS=, read -r -a fields <<< "$entry"
+	local entry
+	for entry in "${metaEntries[@]}"; do
+		local fields
+		IFS=, read -r -a fields <<< "$entry"
 
-    # if $entry ended in a ",", i.e., the unit of the last AVU was empty, read
-    # will create an array entry for the empty AVU, so we need to do this.
-    if [[ "$entry" =~ ,$ ]]; then
-      fields[${#fields[@]}]=''
-    fi
+		# if $entry ended in a ",", i.e., the unit of the last AVU was empty, read
+		# will create an array entry for the empty AVU, so we need to do this.
+		if [[ "$entry" =~ ,$ ]]; then
+			fields[${#fields[@]}]=''
+		fi
 
-    local obj="${fields[0]}"
+		local obj="${fields[0]}"
 
-    local idx
-    for (( idx=1; idx < ${#fields[@]}; idx+=3 )); do
-      local attr="${fields[$(( idx + 0 ))]}"
-      local val="${fields[$(( idx + 1 ))]}"
-      local units="${fields[$(( idx + 2 ))]}"
-      imeta adda -d "$parentColl"/"$obj" "$attr" "$val" "$units"
-    done
-  done
+		local idx
+		for (( idx=1; idx < ${#fields[@]}; idx+=3 )); do
+			local attr="${fields[$(( idx + 0 ))]}"
+			local val="${fields[$(( idx + 1 ))]}"
+			local units="${fields[$(( idx + 2 ))]}"
+			imeta adda -d "$parentColl"/"$obj" "$attr" "$val" "$units"
+		done
+	done
 # XXX: ^^^
 }
 
 
 mk_imeta_cmds() {
-  local parentColl="$1"
+	local parentColl="$1"
 
-  while IFS=, read -r -a fields; do
-    local idx
-    for (( idx=1; idx < ${#fields[@]}; idx+=3 )); do
-      printf 'adda -d "%s/%s" "%s" "%s" "%s"\n' "$parentColl" "${fields[0]}" "${fields[@]:$idx:3}"
-    done
-  done
+	while IFS=, read -r -a fields; do
+		local idx
+		for (( idx=1; idx < ${#fields[@]}; idx+=3 )); do
+			printf 'adda -d "%s/%s" "%s" "%s" "%s"\n' \
+				"$parentColl" "${fields[0]}" "${fields[@]:$idx:3}"
+		done
+	done
 
-  printf 'quit\n'
+	printf 'quit\n'
 }
 
 

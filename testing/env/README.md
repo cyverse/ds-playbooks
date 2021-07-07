@@ -7,11 +7,12 @@ an iRODS grid.
 The environment consists of size containers. The `amqp` container hosts the
 RabbitMQ broker that in turn hosts the `irods` exchange, where the Data Store
 publishes messages to. The `dbms_configured` container hosts the PostgreSQL
-server that in turn hosts the ICAT DB. The `proxy` container hosts the HAProxy
-for the IES. The `ies_configured` container hosts a configured IES server. The
-`ies_unconfigured` container hosts an unconfigured IES server. The
-`rs_configured` container hosts a configured resource server. Finally, the
-`rs_unconfigured` container hosts an unconfigured resource server.
+server that in turn hosts the ICAT DB. The `proxy` container hosts HAProxy.
+The `provider_configured` container hosts a configured iRODS catalog service 
+provider. The `provider_unconfigured` container hosts an unconfigured service
+provider. The `consumer_configured` container hosts a configured catalog service
+consumer acting as a resource server. Finally, the `consumer_unconfigured`
+container hosts an unconfigured service consumer.
 
 The environment is controlled by docker-compose, but there are three programs
 that simplify the usage of docker-compose. `build` can be used to create all of
@@ -32,18 +33,19 @@ export DOMAIN="$ENV_NAME"_default
 # The host name of the PostgreSQL server
 export DBMS_HOST="$ENV_NAME"_dbms_configured_1."$DOMAIN"
 
-# The name of the primary group the irods service account belongs to on IES.
-export IRODS_IES_SYSTEM_GROUP=irods_ies
-
 # The end of the port range available for parallel transfer and reconnections.
 # The beginning of the range is 20000.
 export IRODS_LAST_EPHEMERAL_PORT=20009
 
+# The name of the primary group the irods service account belongs to on the 
+# catalog service provider.
+export IRODS_PROVIDER_SYSTEM_GROUP=irods_provider
+
 # The name of the storage resource hosted on the configured resource server
-export IRODS_RS_CONF_NAME=rs_ingest
+export IRODS_RES_CONF_NAME=ingestRes
 
 # The name of the storage resource hosted on the unconfigured resource server
-export IRODS_RS_UNCONF_NAME=rs_repl
+export IRODS_RES_UNCONF_NAME=replRes
 
 # The URI for the schema used to validate the configuration files or 'off'
 export IRODS_SCHEMA_VALIDATION=off
@@ -54,18 +56,18 @@ export IRODS_VAULT=/var/lib/irods/Vault
 # The name of the iRODS zone
 export IRODS_ZONE_NAME=testing
 
+# The host name of the configured catalog service consumer
+export IRODS_CONSUMER_CONF_HOST="$ENV_NAME"_consumer_configured_1."$DOMAIN"
+
+# The host name of the unconfigured service consumer
+export IRODS_CONSUMER_UNCONF_HOST="$ENV_NAME"_consumer_unconfigured_1."$DOMAIN"
+
 # The name of the default resource to use
-export IRODS_DEFAULT_RESOURCE="$IRODS_RS_CONF_NAME"
+export IRODS_DEFAULT_RESOURCE="$IRODS_RES_CONF_NAME"
 
-# The host name of the configured IES
-export IRODS_IES_CONF_HOST="$ENV_NAME"_ies_configured_1."$DOMAIN"
+# The host name of the configured catalog service provider
+export IRODS_PROVIDER_CONF_HOST="$ENV_NAME"_provider_configured_1."$DOMAIN"
 
-# The host name of the unconfigured IES
-export IRODS_IES_UNCONF_HOST="$ENV_NAME"_ies_unconfigured_1."$DOMAIN"
-
-# The host name of the configured resource server
-export IRODS_RS_CONF_HOST="$ENV_NAME"_rs_configured_1."$DOMAIN"
-
-# The host name of the unconfigured resource server
-export IRODS_RS_UNCONF_HOST="$ENV_NAME"_rs_unconfigured_1."$DOMAIN"
+# The host name of the unconfigured service provider
+export IRODS_PROVIDER_UNCONF_HOST="$ENV_NAME"_provider_unconfigured_1."$DOMAIN"
 ```

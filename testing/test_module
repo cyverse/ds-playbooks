@@ -4,8 +4,8 @@ Usage:
     test_module <module_folder> <module_name>
 
 Positional Arguments:
-    <module_folder>                 The folder the module is in
-    <module_name>                   The name of the module file
+    <module_folder>  The folder the module is in
+    <module_name>    The name of the module file
 
 Optional Arguments:
     -I, --inventory-hosts <hosts>   the name of the inventory hosts file to use
@@ -18,7 +18,7 @@ Optional Arguments:
     -v, --verbose                   lots of information will be written to
                                     output.
 Example:
-    ./test_module ../irods/library irods_group -i
+    ./test_module --inspect ../irods/library irods_group
 """
 
 import os
@@ -133,7 +133,7 @@ def run_tester(do_inspect, pretty, module_dir, playbook, hosts, verbose):
     cmd = """
     source {0} && \
     (docker run --interactive --rm --tty \
-            --env IRODS_HOST="$IRODS_IES_CONF_HOST" \
+            --env IRODS_HOST="$IRODS_PROVIDER_CONF_HOST" \
             --env IRODS_ZONE_NAME="$IRODS_ZONE_NAME" \
             --env PGHOST="$DBMS_HOST" \
             --network "$DOMAIN" \

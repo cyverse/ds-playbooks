@@ -5,7 +5,7 @@
   vars_files:
     - ../group_vars/all.yml
   vars:
-    expected_bisque_irods_url: irods://dstesting_ies_configured_1.dstesting_default
+    expected_bisque_irods_url: irods://dstesting_provider_configured_1.dstesting_default
     avra_env: "{{ lookup('template', '../templates/rule-bases/avra-env.re.j2') }}"
     aegis_env: "{{ lookup('template', '../templates/rule-bases/aegis-env.re.j2') }}"
     bisque_env: "{{ lookup('template', '../templates/rule-bases/bisque-env.re.j2') }}"
@@ -13,7 +13,6 @@
     ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
     pire_env: "{{ lookup('template', '../templates/rule-bases/pire-env.re.j2') }}"
     sernec_env: "{{ lookup('template', '../templates/rule-bases/sernec-env.re.j2') }}"
-    sparcd_env: "{{ lookup('template', '../templates/rule-bases/sparcd-env.re.j2') }}"
     terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
   tasks:
     - name: verify constants expand correctly in ipc-env.re.j2
@@ -23,7 +22,7 @@
           - ipc_env is search("ipc_DEFAULT_REPL_RESC = 'demoResc'")
           - ipc_env is search("ipc_DEFAULT_RESC = 'demoResc'")
           - ipc_env is search("ipc_MAX_NUM_RE_PROCS = 4")
-          - ipc_env is search("ipc_RE_HOST = 'dstesting_ies_configured_1.dstesting_default'")
+          - ipc_env is search("ipc_RE_HOST = 'dstesting_provider_configured_1.dstesting_default'")
 
     - name: verify constants expand correctly in aegis-env.re.j2
       assert:
@@ -39,9 +38,10 @@
 
     - name: verify constants expand correctly in bisque-env.re.j2
       assert:
-        that:
-          - bisque_env
-              is search("bisque_IRODS_URL_BASE = 'irods://dstesting_ies_configured_1.dstesting_default'")
+        that: >-
+          bisque_env
+          is search(
+            "bisque_IRODS_URL_BASE = 'irods://dstesting_provider_configured_1.dstesting_default'" )
 
     - name: verify constants expand correctly in captcn-env.re.j2
       assert:
@@ -61,12 +61,6 @@
           - sernec_env is search('sernec_OWNERS = list()' | regex_escape)
           - sernec_env is search('sernec_WRITERS = list()' | regex_escape)
           - sernec_env is search('sernec_READERS = list()' | regex_escape)
-
-    - name: verify constants expand correctly in sparcd-env.re.j2
-      assert:
-        that:
-          - sparcd_env is search("sparcd_ADMIN = ''" | regex_escape)
-          - sparcd_env is search("sparcd_BASE_COLL = ''" | regex_escape)
 
     - name: verify constants expand correctly in terraref-env.re.j2
       assert:
@@ -305,37 +299,6 @@
           - sernec_env is search('sernec_OWNERS = list("own1", "own2")' | regex_escape)
           - sernec_env is search('sernec_WRITERS = list("write1", "write2")' | regex_escape)
           - sernec_env is search('sernec_READERS = list("read1", "read2")' | regex_escape)
-
-
-- name: test Sparcd default base collection when admin
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    sparcd_admin: admin
-    sparcd_env: "{{ lookup('template', '../templates/rule-bases/sparcd-env.re.j2') }}"
-  tasks:
-    - name: verify params
-      assert:
-        that:
-          - sparcd_env is search("sparcd_ADMIN = 'admin'")
-          - sparcd_env is search("sparcd_BASE_COLL = '/testing/home/admin/Sparcd/Collections'")
-
-
-- name: test Sparcd custom base collection
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    sparcd_base_collection: base
-    sparcd_env: "{{ lookup('template', '../templates/rule-bases/sparcd-env.re.j2') }}"
-  tasks:
-    - name: verify params
-      assert:
-        that:
-          - sparcd_env is search("sparcd_BASE_COLL = 'base'")
 
 
 - name: test TerraREF params are set correctly

@@ -12,10 +12,6 @@ sub vcl_recv {
     if (req.method == "PURGE") {
         return (purge);
     }
-    if (req.method == "XXX_GET_RESTART") {
-        req.method = "GET";
-        return (hash);
-    }
     if (req.method != "GET" && req.method != "HEAD") {
         return (pass);
     }
@@ -50,7 +46,9 @@ sub vcl_hash {
 
 sub vcl_purge {
     if (req.method == "GET") {
-        set req.method = "XXX_GET_RESTART";
+        # clear no-cache header
+        unset req.http.Cache-Control;
+        unset req.http.Pragma;
         return (restart);
     }
     return (synth(200, "Purged"));

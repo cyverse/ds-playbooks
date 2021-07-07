@@ -12,6 +12,10 @@ sub vcl_recv {
     if (req.method == "PURGE") {
         return (purge);
     }
+    if (req.method == "XXX_GET_RESTART") {
+        req.method = "GET";
+        return (hash);
+    }
     if (req.method != "GET" && req.method != "HEAD") {
         return (pass);
     }
@@ -46,8 +50,7 @@ sub vcl_hash {
 
 sub vcl_purge {
     if (req.method == "GET") {
-        # set no-store to follow another path in vcl_recv
-        set req.http.Cache-Control = "no-store";
+        set req.method = "XXX_GET_RESTART";
         return (restart);
     }
     return (synth(200, "Purged"));

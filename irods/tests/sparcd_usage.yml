@@ -1,0 +1,74 @@
+---
+- name: "test the default variables populate SPARC'd environment rules correctly"
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    sparcd_env: "{{ lookup('template', '../templates/rule-bases/sparcd-env.re.j2') }}"
+  tasks:
+    - name: verify constants expand correctly in sparcd-env.re.j2
+      assert:
+        that:
+          - sparcd_env is search("sparcd_ADMIN = ''" | regex_escape)
+          - sparcd_env is search("sparcd_BASE_COLL = ''" | regex_escape)
+
+
+- name: "test SPARC'd default base collection when admin"
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    sparcd_admin: admin
+    sparcd_env: "{{ lookup('template', '../templates/rule-bases/sparcd-env.re.j2') }}"
+  tasks:
+    - name: verify params
+      assert:
+        that:
+          - sparcd_env is search("sparcd_ADMIN = 'admin'")
+          - sparcd_env is search("sparcd_BASE_COLL = '/testing/home/admin/Sparcd/Collections'")
+
+
+- name: "test SPARC'd custom base collection"
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    sparcd_base_collection: base
+    sparcd_env: "{{ lookup('template', '../templates/rule-bases/sparcd-env.re.j2') }}"
+  tasks:
+    - name: verify params
+      assert:
+        that: sparcd_env is search("sparcd_BASE_COLL = 'base'")
+
+
+- name: "test SPARC'd integration"
+  hosts: irods
+  become: true
+  become_user: irods
+  tasks:
+    - name: "test add SPARC'd cmd" 
+      stat:
+        path: /var/lib/irods/msiExecCmd_bin/sparcd-ingest
+      register: response
+      failed_when: >
+        not response.stat.exists or 
+        response.stat.pw_name != 'irods' or 
+        not response.stat.xusr or response.stat.xgrp or response.stat.xoth
+
+    - name: "test add SPARC'd environment rule base"
+      stat:
+        path: /etc/irods/sparcd-env.re
+      register: response
+      failed_when: >
+        not response.stat.exists or response.stat.pw_name != 'irods' or not response.stat.rusr
+    
+    - name: "test add SPARC'd logic rule base"
+      stat:
+        path: /etc/irods/sparcd.re
+      register: response
+      failed_when: >
+        not response.stat.exists or response.stat.pw_name != 'irods' or not response.stat.rusr
+    

@@ -15,9 +15,16 @@
         src: templates/rule-bases/sparcd-env.re.j2
         dest: /etc/irods/sparcd-env.re
         mode: ug=r,o-rwx
+      notify: reload rules
 
     - name: "add SPARC'd logic rule base"
       copy:
         src: files/rule-bases/sparcd.re
         dest: /etc/irods
         mode: ug=r,o-rwx
+      notify: reload rules
+
+  handlers:
+    - name: reload rules
+      command: touch /etc/irods/core.re
+      changed_when: false

@@ -41,13 +41,13 @@ main() {
 	local coll="$parentColl"/"${tarName%-*}"
 	local metaFile="$coll"/meta-"${tarName##*-}".csv
 
-	extract "$uploader"\#"$zone" "$tarFile" "$coll"
+	extract "$uploader" "$tarFile" "$coll"
 
 	local rc=0
 	
 	ensure_owner "$admin" "$coll" || rc=$(( rc || $? ))
 	map_metadata "$coll" "$metaFile" || rc=$(( rc || $? ))
-	inherit_acl "$parentColl" "$coll" "$uploader"\#"$zone" || rc=$(( rc || $? ))
+	inherit_acl "$zone" "$parentColl" "$coll" "$uploader" || rc=$(( rc || $? ))
 
 	if (( rc != 0 )); then
 		return $rc
@@ -106,12 +106,13 @@ extract() {
 
 
 inherit_acl() {
-	local parentColl="$1"
-	local childColl="$2"
-	local owner="$3"
+	local zone="$1"
+	local parentColl="$2"
+	local childColl="$3"
+	local owner="$4"
 
 	local rc=0
-	ils -A "$parentColl" | mk_acl | assign_acl "$owner" "$childColl" || rc=$?
+	ils -A "$parentColl" | mk_acl | assign_acl "$zone" "$owner" "$childColl" || rc=$?
 	if (( rc != 0 )); then	
 		rc=$?
 		printf 'The script failed to assign the permission on the parent collection to %s.\n' \
@@ -160,8 +161,6 @@ map_metadata() {
 	fi
 
 	if (( rc != 0 )); then
-# 		rc=$?
-#	
 # XXX: ^^^
 		printf 'The script failed to add all metadata from %s to files in %s.\n' "$metaFile" "$coll" \
 				>&2 \
@@ -186,13 +185,14 @@ rm_metadata_file() {
 
 
 assign_acl() {
-	local uploader="$1"
-	local entity="$2"
+	local zone="$1"
+	local uploader="$2"
+	local entity="$3"
 
-	local user perm
-	while IFS=: read -r -d ' ' user perm; do
-		if [[ "$user" != "$uploader" ]]; then
-			ichmod -M -r "$perm" "$user" "$entity"
+	local userAndZone perm
+	while IFS=: read -r -d ' ' userAndZone perm; do
+		if [[ "$userAndZone" != "$uploader#$zone" ]]; then
+			ichmod -M -r "$perm" "$userAndZone" "$entity"
 		fi
 	done
 }
@@ -203,14 +203,15 @@ assign_acl() {
 #
 # In other words, it converts
 #
-#/zone/path/to/entity:
-#       ACL - writer#zone:modify object   owner#zone:own   g:group#zone:own   reader#zone:read object
-#       Inheritance - Disabled
+# /zone1/path/to/entity:
+#        ACL - writer#zone1:modify object   owner#zone1:own   g:group#zone1:own   reader#zone2:read object
+#        Inheritance - Disabled
 # ...
 #
 # into
 #
-#writer#zone:write owner#zone:own group#zone:own reader#zone:read
+# writer#zone1:write owner#zone1:own group#zone1:own reader#zone2:read
+# ...
 #
 mk_acl() {
 	sed --quiet --file - <(cat) <<'SED_SCRIPT'

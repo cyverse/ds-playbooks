@@ -44,18 +44,10 @@ main() {
 	extract "$uploader"\#"$zone" "$tarFile" "$coll"
 
 	local rc=0
-
-	if ! ensure_owner "$admin" "$coll"; then
-		rc=$(( rc || $? ))
-	fi
-
-	if ! map_metadata  "$coll" "$metaFile"; then
-		rc=$(( rc || $? ))
-	fi
-
-	if ! inherit_acl "$parentColl" "$coll" "$uploader"\#"$zone"; then
-		rc=$(( rc || $? ))
-	fi
+	
+	ensure_owner "$admin" "$coll" || rc=$(( rc || $? ))
+	map_metadata "$coll" "$metaFile" || rc=$(( rc || $? ))
+	inherit_acl "$parentColl" "$coll" "$uploader"\#"$zone" || rc=$(( rc || $? ))
 
 	if (( rc != 0 )); then
 		return $rc
@@ -66,8 +58,8 @@ main() {
 # TODO: Ask Susan if she wants to resume deleting tar files after successfully
 # extracting them
 # 	# TODO: Move this logic into iRODS rules
-# 	if ! irm -f "$tarFile"; then
-# 		local rc=$?
+# 	irm -f "$tarFile" || rc=$(( rc || $? ))
+# 	if (( rc != 0 )); then
 # 		printf 'The script failed to delete the image bundle %s.\n' "$tarFile" >&2 || true
 # 		return $rc
 # 	fi
@@ -81,14 +73,9 @@ ensure_owner() {
 	local rc=0
 
 	local resp
-	if ! resp="$(iquest '%s' "select COLL_NAME where COLL_NAME = '$coll'")"; then
-		rc=$?
-	else
-		if [[ "$resp" == "$coll" ]]; then
-			if ! ichmod -M -r own "$user" "$coll"; then
-				rc=$?
-			fi
-		fi
+	resp="$(iquest '%s' "select COLL_NAME where COLL_NAME = '$coll'")" || rc=$?
+	if (( rc == 0 )) && [[ "$resp" == "$coll" ]]; then
+		ichmod -M -r own "$user" "$coll" || rc=$(( rc || $? ))
 	fi
 
 	if (( rc != 0 )); then
@@ -105,16 +92,16 @@ extract() {
 	local tarFile="$2"
 	local coll="$3"
 
-	if ! clientUserName="$owner" ibun -b -x -D tar "$tarFile" "$coll"; then
-		local rc=$?
-
+	local rc=0
+	clientUserName="$owner" ibun -b -x -D tar "$tarFile" "$coll" || rc=$?
+	if (( rc != 0 )); then
 		printf 'The script failed to extract the contents of the image bundle %s into %s as %s.\n' \
 					"$tarFile" "$coll" "$owner" \
 				>&2 \
 			|| true
-
-		return $rc
 	fi
+
+	return $rc
 }
 
 
@@ -124,8 +111,8 @@ inherit_acl() {
 	local owner="$3"
 
 	local rc=0
-
-	if ! ils -A "$parentColl" | mk_acl | assign_acl "$owner" "$childColl"; then	
+	ils -A "$parentColl" | mk_acl | assign_acl "$owner" "$childColl" || rc=$?
+	if (( rc != 0 )); then	
 		rc=$?
 		printf 'The script failed to assign the permission on the parent collection to %s.\n' \
 					"$childColl" \
@@ -147,9 +134,8 @@ map_metadata() {
 # https://github.com/irods/irods/issues/5518
 # 	if ! iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null 2>&1; then
 	local metaEntries
-	if ! IFS=$'\n' readarray -t metaEntries < <(iget "$metaFile" -); then
-		rc=$?
-	else
+	IFS=$'\n' readarray -t metaEntries < <(iget "$metaFile" -) || rc=$?
+	if (( rc == 0 )); then
 		local entry
 		for entry in "${metaEntries[@]}"; do
 			local fields
@@ -168,9 +154,7 @@ map_metadata() {
 				local attr="${fields[$(( idx + 0 ))]}"
 				local val="${fields[$(( idx + 1 ))]}"
 				local units="${fields[$(( idx + 2 ))]}"
-				if ! imeta adda -d "$parentColl"/"$obj" "$attr" "$val" "$units"; then
-					rc=$(( rc || $? ))
-				fi
+				imeta adda -d "$parentColl"/"$obj" "$attr" "$val" "$units" || rc=$(( rc || $? ))
 			done
 		done
 	fi
@@ -191,11 +175,13 @@ map_metadata() {
 rm_metadata_file() {
 	local file="$1"
 
-	if ! irm -f "$file"; then
-		local rc=$?
+	local rc=0
+	irm -f "$file" || rc=$?
+	if (( rc != 0 )); then
 		printf 'The script failed to delete the metadata file %s.\n' "$file" >&2 || true
-		return $rc
 	fi
+
+	return $rc
 }
 
 

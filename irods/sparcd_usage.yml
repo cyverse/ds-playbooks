@@ -26,5 +26,6 @@
 
   handlers:
     - name: reload rules
-      command: touch /etc/irods/core.re
-      changed_when: false
+      file:
+        path: /etc/irods/core.re
+        state: touch

@@ -17,10 +17,10 @@ ies
 rs
 
 [ies]
-dstesting_ies_configured_1.dstesting_default
+dstesting_provider_configured_1.dstesting_default
 
 [rs]
-dstesting_rs_configured_1.dstesting_default
+dstesting_consumer_configured_1.dstesting_default
 
 [proxy]
 dstesting_proxy_1.dstesting_default

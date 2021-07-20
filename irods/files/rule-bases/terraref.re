@@ -54,6 +54,7 @@ pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST,
     *msg = 'CYVERSE ERROR:  ' ++ terraref_RESC ++ ' usage is limited to the TerraREF collection, '
       ++ str(terraref_BASE_COLL);
 
+    cut;
     failmsg(-32000, *msg);
   }
 }

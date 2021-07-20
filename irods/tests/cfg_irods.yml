@@ -43,8 +43,6 @@
         - sernec-env.re
         - server_config.json
         - service_account.config
-        - sparcd.re
-        - sparcd-env.re
         - terraref.re
         - terraref-env.re
 
@@ -71,7 +69,6 @@
         - generateuuid
         - rm-trash
         - set-uuid
-        - sparcd-ingest
 
     - name: Verify IES only files only on IES
       stat:
@@ -98,7 +95,7 @@
           - irods_environment.irods_client_server_negotiation == 'request_server_negotiation'
           - irods_environment.irods_client_server_policy == 'CS_NEG_REFUSE'
           - irods_environment.irods_default_hash_scheme == 'MD5'
-          - irods_environment.irods_default_resource == 'rs_ingest'
+          - irods_environment.irods_default_resource == 'ingestRes'
           - irods_environment.irods_user_name == 'rods'
           - irods_environment.irods_zone_name == 'testing'
 
@@ -118,7 +115,7 @@
             that:
               - server_config.default_dir_mode == '0750'
               - server_config.default_file_mode == '0600'
-              - server_config.default_resource_name == 'rs_ingest'
+              - server_config.default_resource_name == 'ingestRes'
               - server_config.icat_host == inventory_hostname
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
               - server_config.re_rulebase_set[0].filename == 'ipc-custom'
@@ -182,8 +179,8 @@
           assert:
             that:
               - server_config.default_resource_directory == '/var/lib/irods/Vault'
-              - server_config.default_resource_name == 'rs_ingest'
-              - server_config.icat_host == 'dstesting_ies_configured_1.dstesting_default'
+              - server_config.default_resource_name == 'ingestRes'
+              - server_config.icat_host == 'dstesting_provider_configured_1.dstesting_default'
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
               - server_config.re_rulebase_set[0].filename == 'ipc-custom'
               - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'
@@ -195,14 +192,14 @@
               - server_config.federation | length == 0
               - server_config.environment_variables == {}
 
-        - name: verify rs_configured specific server_config.json
-          when: inventory_hostname == 'dstesting_rs_configured_1.dstesting_default'
+        - name: verify consumer_configured specific server_config.json
+          when: inventory_hostname == 'dstesting_consumer_configured_1.dstesting_default'
           assert:
             that:
               - server_config.default_dir_mode == '0770'
               - server_config.default_file_mode == '0660'
 
-    - when: inventory_hostname == 'dstesting_rs_configured_1.dstesting_default'
+    - when: inventory_hostname == 'dstesting_consumer_configured_1.dstesting_default'
       block:
         - name: retrieve encoded hosts_config.json
           slurp:
@@ -217,7 +214,8 @@
           assert:
             that:
               - hosts_config.host_entries[0].address_type == 'local'
-              - "hosts_config.host_entries[0].addresses[0].address
-                  == 'dstesting_rs_configured_1.dstesting_default'"
+              - >-
+                hosts_config.host_entries[0].addresses[0].address
+                == 'dstesting_consumer_configured_1.dstesting_default'
               - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
               - hosts_config.host_entries[0].addresses[2].address == 'alias-2'

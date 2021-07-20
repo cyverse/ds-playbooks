@@ -1,16 +1,14 @@
 FROM test-env-base:centos7
 
-RUN yum --assumeyes install jq
-
-COPY rs/scripts/service.sh.template /tmp/
-COPY rs/scripts/prep-svc-script.sh /tmp/prep-svc-script
-
 ARG IRODS_IES=ies
 ARG IRODS_SYSTEM_GROUP=irods
 ARG IRODS_SYSTEM_USER=irods
 ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 
+# Create service script
+COPY irods-consumer/scripts/service.sh.template /tmp/
+COPY irods-consumer/scripts/prep-svc-script.sh /tmp/prep-svc-script
 RUN /tmp/prep-svc-script
 
 CMD [ "/service.sh" ]

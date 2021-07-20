@@ -1,13 +1,31 @@
-# VERSION: 6
-#
 # These are the custom rules for the Sparc'd project
 
 @include "sparcd-env"
 
 _sparcd_PERM = 'own'
 
+
+_sparcd_encode_subject(*Subject) =
+  let *enc = '' in
+  let *len = strlen(*Subject) in
+  let *pos = 0 in
+  let *_ = while (*len > *pos) {
+    *c = substr(*Subject, *pos, *pos + 1);
+    *enc = *enc ++ if *c like regex '[a-zA-Z0-9,./ ]' then *c else '.';
+    *pos = *pos + 1 } 
+  in *enc
+
+
 _sparcd_logMsg(*Msg) {
   writeLine('serverLog', 'SPARCD: *Msg');
+}
+
+
+_sparcd_notify(*Subject, *Body) {
+  *encSubj = 'SPARCD ' ++ _sparcd_encode_subject(*Subject);
+  if (0 != errorcode(msiSendMail(sparcd_REPORT_EMAIL_ADDR, *encSubj, *Body))) {
+    writeLine('serverLog', 'SPARCD: failed to send notification');
+  }
 }
 
 
@@ -21,15 +39,28 @@ _sparcd_ingest(*Uploader, *TarPath) {
   *args = "*zoneArg *adminArg *uploaderArg *tarArg";
   *status = errormsg(msiExecCmd("sparcd-ingest", *args, "null", *TarPath, "null", *out), *err);
 
-  if (*status != 0) {
-    _sparcd_logMsg(*err);
+  *coll = trimr(*TarPath, '-');
+  *url = 'https://' ++ sparcd_WEBDAV_HOST ++ '/dav' ++ *coll ++ '/';   
 
+  if (*status == 0) {
+    _sparcd_notify(
+      "ingest success for *TarPath", 
+      "*Uploader successfully ingested the image bundle *TarPath into *coll (*url)." );
+  } else {
+    _sparcd_logMsg(*err);
     msiGetStderrInExecCmdOut(*out, *resp);
 
     foreach (*err in split(*resp, '\n')) {
       _sparcd_logMsg(*err);
     }
 
+    *notificationBody =
+      "*Uploader failed to completely ingest the image bundle *TarPath into *coll (*url). The " ++
+      "error is as follows.\n" ++
+      "\n" ++ 
+      *resp;
+
+    _sparcd_notify("ingest failure for *TarPath", *notificationBody);
     failmsg(*status, 'SPARCD: failed to fully ingest *TarPath');
   }
 }

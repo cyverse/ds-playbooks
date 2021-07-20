@@ -6,7 +6,7 @@
     #     Python 2 in Ansible 2.9.6
     # NB: The rpm and yum bindings for the test_pkg_installed.yml tasks require
     ansible_python_interpreter: /usr/bin/python
-    group_name: "{{ 'irods_ies' if inventory_hostname in groups['ies'] else 'irods' }}"
+    group_name: "{{ 'irods_provider' if inventory_hostname in groups['ies'] else 'irods' }}"
   tasks:
     - include_tasks: tasks/test_pkg_installed.yml
       with_items:

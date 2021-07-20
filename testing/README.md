@@ -11,11 +11,12 @@ situations.
 The environment consists of seven containers. The `amqp` container hosts the
 RabbitMQ broker that in turn hosts the `irods` exchange, where the Data Store
 publishes messages to. The `dbms_configured` container hosts the PostgreSQL
-server that in turn hosts the ICAT DB. The `proxy` container hosts the HAProxy
-for the IES. The `ies_configured` container hosts a configured IES. The
-`ies_unconfigured` container hosts an unconfigured IES. The `rs_configured`
-container hosts a configured resource server. Finally, the `rs_unconfigured`
-container hosts the resource server.
+server that in turn hosts the ICAT DB. The `proxy` container hosts HAProxy,
+The `provider_configured` container hosts a configured iRODS catalog service 
+provider. The `provider_unconfigured` container hosts an unconfigured service
+provider. The `consumer_configured` container hosts a configured catalog service
+consumer acting as a resource server. Finally, the `consumer_unconfigured`
+container hosts an unconfigured service consumer.
 
 ## Building the Harness
 

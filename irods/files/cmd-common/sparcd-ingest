@@ -41,34 +41,28 @@ main() {
 	local coll="$parentColl"/"${tarName%-*}"
 	local metaFile="$coll"/meta-"${tarName##*-}".csv
 
-	if clientUserName="$uploader" ibun -b -x -D tar "$tarFile" "$coll"; then
-		if ! ensure_owner "$admin" "$coll"; then
-			local rc=$?
-			printf 'failed to ensure %s owns %s and everything in it\n' "$admin" "$coll" >&2
-			return $rc  
-		fi
+	extract "$uploader" "$tarFile" "$coll"
 
-# TODO: Ask Susan if she wants to resume deleting tar files after successfully
-# extracting them
-# 		irm -f "$tarFile"
-	else
-		local rc=$?
+	local rc=0
+	
+	ensure_owner "$admin" "$coll" || rc=$(( rc || $? ))
+	map_metadata "$coll" "$metaFile" || rc=$(( rc || $? ))
+	inherit_acl "$zone" "$parentColl" "$coll" "$uploader" || rc=$(( rc || $? ))
 
-		printf 'failed to extract the contents of %s into %s as %s\n' "$tarFile" "$coll" "$uploader" \
-				>&2 \
-			|| true
-
-		ensure_owner "$admin" "$coll" || true
+	if (( rc != 0 )); then
 		return $rc
 	fi
 
-	if ! map_metadata  "$coll" "$metaFile"; then
-		printf 'failed to add metadata from %s to files in %s\n' "$metaFile" "$coll" >&2
-	else
-		irm -f "$metaFile"
-	fi
+	rm_metadata_file "$metaFile"
 
-	ils -A "$parentColl" | mk_acl | assign_acl "$uploader"\#"$zone" "$coll"
+# TODO: Ask Susan if she wants to resume deleting tar files after successfully
+# extracting them
+# 	# TODO: Move this logic into iRODS rules
+# 	irm -f "$tarFile" || rc=$(( rc || $? ))
+# 	if (( rc != 0 )); then
+# 		printf 'The script failed to delete the image bundle %s.\n' "$tarFile" >&2 || true
+# 		return $rc
+# 	fi
 }
 
 
@@ -76,38 +70,131 @@ ensure_owner() {
 	local user="$1"
 	local coll="$2"
 
-	local resp
-	resp="$(iquest '%s' "select COLL_NAME where COLL_NAME = '$coll'")"
+	local rc=0
 
-	if [[ "$resp" = "$coll" ]]; then
-		ichmod -M -r own "$user" "$coll"
+	local resp
+	resp="$(iquest '%s' "select COLL_NAME where COLL_NAME = '$coll'")" || rc=$?
+	if (( rc == 0 )) && [[ "$resp" == "$coll" ]]; then
+		ichmod -M -r own "$user" "$coll" || rc=$(( rc || $? ))
 	fi
+
+	if (( rc != 0 )); then
+		printf 'The script failed to ensure %s owns %s and everything in it.\n' "$user" "$coll" >&2 \
+			|| true
+	fi
+
+	return $rc
+}
+
+
+extract() {
+	local owner="$1"
+	local tarFile="$2"
+	local coll="$3"
+
+	local rc=0
+	clientUserName="$owner" ibun -b -x -D tar "$tarFile" "$coll" || rc=$?
+	if (( rc != 0 )); then
+		printf 'The script failed to extract the contents of the image bundle %s into %s as %s.\n' \
+					"$tarFile" "$coll" "$owner" \
+				>&2 \
+			|| true
+	fi
+
+	return $rc
+}
+
+
+inherit_acl() {
+	local zone="$1"
+	local parentColl="$2"
+	local childColl="$3"
+	local owner="$4"
+
+	local rc=0
+	ils -A "$parentColl" | mk_acl | assign_acl "$zone" "$owner" "$childColl" || rc=$?
+	if (( rc != 0 )); then	
+		rc=$?
+		printf 'The script failed to assign the permission on the parent collection to %s.\n' \
+					"$childColl" \
+				>&2 \
+			|| true
+	fi
+
+	return $rc
+}
+
+
+map_metadata() {
+	local parentColl="$1"
+	local metaFile="$2"
+
+	local rc=0
+
+# XXX: This doesn't work in iRODS 4.2.8. See
+# https://github.com/irods/irods/issues/5518
+# 	if ! iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null 2>&1; then
+	local metaEntries
+	IFS=$'\n' readarray -t metaEntries < <(iget "$metaFile" -) || rc=$?
+	if (( rc == 0 )); then
+		local entry
+		for entry in "${metaEntries[@]}"; do
+			local fields
+			IFS=, read -r -a fields <<< "$entry"
+
+			# if $entry ended in a ",", i.e., the unit of the last AVU was empty, read
+			# will create an array entry for the empty AVU, so we need to do this.
+			if [[ "$entry" =~ ,$ ]]; then
+				fields[${#fields[@]}]=''
+			fi
+
+			local obj="${fields[0]}"
+
+			local idx
+			for (( idx=1; idx < ${#fields[@]}; idx+=3 )); do
+				local attr="${fields[$(( idx + 0 ))]}"
+				local val="${fields[$(( idx + 1 ))]}"
+				local units="${fields[$(( idx + 2 ))]}"
+				imeta adda -d "$parentColl"/"$obj" "$attr" "$val" "$units" || rc=$(( rc || $? ))
+			done
+		done
+	fi
+
+	if (( rc != 0 )); then
+# XXX: ^^^
+		printf 'The script failed to add all metadata from %s to files in %s.\n' "$metaFile" "$coll" \
+				>&2 \
+			|| true
+	fi
+
+	return $rc
+}
+
+
+rm_metadata_file() {
+	local file="$1"
+
+	local rc=0
+	irm -f "$file" || rc=$?
+	if (( rc != 0 )); then
+		printf 'The script failed to delete the metadata file %s.\n' "$file" >&2 || true
+	fi
+
+	return $rc
 }
 
 
 assign_acl() {
-	local uploader="$1"
-	local entity="$2"
+	local zone="$1"
+	local uploader="$2"
+	local entity="$3"
 
-	local user perm
-	while IFS=: read -r -d ' ' user perm; do
-		if [[ "$user" != "$uploader" ]]; then
-			ichmod -M -r "$perm" "$user" "$entity"
+	local userAndZone perm
+	while IFS=: read -r -d ' ' userAndZone perm; do
+		if [[ "$userAndZone" != "$uploader#$zone" ]]; then
+			ichmod -M -r "$perm" "$userAndZone" "$entity"
 		fi
 	done
-}
-
-
-get_file_loc() {
-	local dataPath="$1"
-
-	local coll dataName
-	coll="$(dirname "$dataPath")"
-	dataName="$(basename "$dataPath")"
-
-	iquest \
-		'%s %s' \
-		"select DATA_RESC_HIER, DATA_PATH where COLL_NAME = '$coll' and DATA_NAME = '$dataName'"
 }
 
 
@@ -116,14 +203,15 @@ get_file_loc() {
 #
 # In other words, it converts
 #
-#/zone/path/to/entity:
-#       ACL - writer#zone:modify object   owner#zone:own   g:group#zone:own   reader#zone:read object
-#       Inheritance - Disabled
+# /zone1/path/to/entity:
+#        ACL - writer#zone1:modify object   owner#zone1:own   g:group#zone1:own   reader#zone2:read object
+#        Inheritance - Disabled
 # ...
 #
 # into
 #
-#writer#zone:write owner#zone:own group#zone:own reader#zone:read
+# writer#zone1:write owner#zone1:own group#zone1:own reader#zone2:read
+# ...
 #
 mk_acl() {
 	sed --quiet --file - <(cat) <<'SED_SCRIPT'
@@ -136,41 +224,6 @@ mk_acl() {
 	p
 }
 SED_SCRIPT
-}
-
-
-map_metadata() {
-	local parentColl="$1"
-	local metaFile="$2"
-
-# XXX: This doesn't work in iRODS 4.2.8. See
-# https://github.com/irods/irods/issues/5518
-# 	iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null 2>&1
-	local metaEntries
-	IFS=$'\n' readarray -t metaEntries < <(iget "$metaFile" -)
-
-	local entry
-	for entry in "${metaEntries[@]}"; do
-		local fields
-		IFS=, read -r -a fields <<< "$entry"
-
-		# if $entry ended in a ",", i.e., the unit of the last AVU was empty, read
-		# will create an array entry for the empty AVU, so we need to do this.
-		if [[ "$entry" =~ ,$ ]]; then
-			fields[${#fields[@]}]=''
-		fi
-
-		local obj="${fields[0]}"
-
-		local idx
-		for (( idx=1; idx < ${#fields[@]}; idx+=3 )); do
-			local attr="${fields[$(( idx + 0 ))]}"
-			local val="${fields[$(( idx + 1 ))]}"
-			local units="${fields[$(( idx + 2 ))]}"
-			imeta adda -d "$parentColl"/"$obj" "$attr" "$val" "$units"
-		done
-	done
-# XXX: ^^^
 }
 
 

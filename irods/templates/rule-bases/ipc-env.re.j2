@@ -26,6 +26,11 @@ ipc_ZONE = '{{ _irods_zone_name }}'
 
 
 {% if _single_threaded_resources|length > 0 %}
+# This rule ensures that the catalog service provider will only use streaming
+# transfers for data object replicas on certain servers.
+#
+# Session Variables: rescName, clientAddr
+#
 acSetNumThreads {
 {%   for resc in _single_threaded_resources %}
   on ($rescName == '{{ resc }}' && $clientAddr == ipc_IES_IP) {

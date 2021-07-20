@@ -22,7 +22,8 @@ _sparcd_logMsg(*Msg) {
 
 
 _sparcd_notify(*Subject, *Body) {
-  if (0 != errorcode(msiSendMail(sparcd_REPORT_EMAIL_ADDR, *Subject, *Body))) {
+  *encSubj = 'SPARCD ' ++ _sparcd_encode_subject(*Subject);
+  if (0 != errorcode(msiSendMail(sparcd_REPORT_EMAIL_ADDR, *encSubj, *Body))) {
     writeLine('serverLog', 'SPARCD: failed to send notification');
   }
 }
@@ -39,11 +40,11 @@ _sparcd_ingest(*Uploader, *TarPath) {
   *status = errormsg(msiExecCmd("sparcd-ingest", *args, "null", *TarPath, "null", *out), *err);
 
   *coll = trimr(*TarPath, '-');
-  *url = 'https://' ++ _WEBDAV_HOST ++ '/dav' ++ *coll ++ '/';   
+  *url = 'https://' ++ sparcd_WEBDAV_HOST ++ '/dav' ++ *coll ++ '/';   
 
   if (*status == 0) {
     _sparcd_notify(
-      "SPARC'd ingest success for *TarPath", 
+      "ingest success for *TarPath", 
       "*Uploader successfully ingested the image bundle *TarPath into *coll (*url)." );
   } else {
     _sparcd_logMsg(*err);
@@ -59,7 +60,7 @@ _sparcd_ingest(*Uploader, *TarPath) {
       "\n" ++ 
       *resp;
 
-    _sparcd_notify("SPARC'd ingest failure for *TarPath", *notificationBody);
+    _sparcd_notify("ingest failure for *TarPath", *notificationBody);
     failmsg(*status, 'SPARCD: failed to fully ingest *TarPath');
   }
 }

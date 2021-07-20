@@ -4,6 +4,18 @@
 
 _sparcd_PERM = 'own'
 
+
+_sparcd_encode_subject(*Subject) =
+  let *enc = '' in
+  let *len = strlen(*Subject) in
+  let *pos = 0 in
+  let *_ = while (*len > *pos) {
+    *c = substr(*Subject, *pos, *pos + 1);
+    *enc = *enc ++ if *c like regex '[a-zA-Z0-9,./ ]' then *c else '.';
+    *pos = *pos + 1 } 
+  in *enc
+
+
 _sparcd_logMsg(*Msg) {
   writeLine('serverLog', 'SPARCD: *Msg');
 }

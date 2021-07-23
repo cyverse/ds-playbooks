@@ -29,8 +29,8 @@ _captcn_readers: "{{ captcn_readers | default([]) }}"
 _captcn_writers: "{{ captcn_writers | default([]) }}"
 
 _cereus_collections: "{{ cereus_collections | default([]) }}"
-_cereus_resource_hierarchy: "{{
-  cereus_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}"
+_cereus_resource_hierarchy: >-
+  {{ cereus_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}
 
 _check_routes_timeout: "{{ check_routes_timeout | default(3) }}"
 
@@ -49,11 +49,11 @@ _irods_dbms_pg_version: "{{ irods_dbms_pg_version | default('12') }}"
 _irods_dbms_port: "{{ irods_dbms_port | default(5432) }}"
 _irods_default_dir_mode: "{{ irods_default_dir_mode | default('0750') }}"
 _irods_default_file_mode: "{{ irods_default_file_mode | default('0600') }}"
-_irods_default_number_of_transfer_threads: "{{
-  irods_default_number_of_transfer_threads | default(None) }}"
+_irods_default_number_of_transfer_threads: >-
+  {{ irods_default_number_of_transfer_threads | default(None) }}
 _irods_default_repl_resource: "{{ irods_default_repl_resource | default(_irods_default_resource) }}"
-_irods_default_resource: "{{
-  irods_default_resource | default(_irods_resource_hierarchies[0].name) }}"
+_irods_default_resource: >-
+  {{ irods_default_resource | default(_irods_resource_hierarchies[0].name) }}
 _irods_default_vault: "{{ irods_default_vault | default(None) }}"
 _irods_federation: "{{ irods_federation | default([]) }}"
 _irods_host_aliases: "{{ irods_host_aliases | default([]) }}"
@@ -63,10 +63,11 @@ _irods_negotiation_key: "{{ irods_negotiation_key | default(None) }}"
 _irods_other_host_entries: "{{ irods_other_host_entries | default([]) }}"
 _irods_parallel_transfer_buffer_size: "{{ irods_parallel_transfer_buffer_size | default(None) }}"
 _irods_publish_rs_image: "{{ irods_publish_rs_image | default(false) }}"
-_irods_resource_hierarchies: '{{
-  irods_resource_hierarchies
-    if irods_resource_hierarchies is defined and irods_resource_hierarchies|length > 0 else
-  [ { "name": "demoResc" } ] }}'
+_irods_resource_hierarchies: >-
+  {{ 
+    irods_resource_hierarchies
+      if irods_resource_hierarchies is defined and irods_resource_hierarchies|length > 0 else
+    [ { "name": "demoResc" } ] }}
 _irods_rs_image: "{{ irods_rs_image | default('ds-irods-rs-onbuild') }}"
 _irods_server_port_range_end: "{{ irods_server_port_range_end | default(20199) }}"
 _irods_server_port_range_start: "{{ irods_server_port_range_start | default(20000) }}"
@@ -74,7 +75,8 @@ _irods_server_control_plane_key: "{{ irods_server_control_plane_key | default(No
 _irods_service_account_name: "{{ irods_service_account_name | default('irods') }}"
 _irods_service_group_name: "{{ irods_service_group_name | default(_irods_service_account_name) }}"
 _irods_storage_resources: "{{ irods_storage_resources | default([]) }}"
-_irods_version: "{{ irods_version | default('4.1.11') }}"
+_irods_user_password_salt: "{{ irods_user_password_salt | default(None) }}"
+_irods_version: "{{ irods_version | default('4.2.8') }}"
 _irods_zone_key: "{{ irods_zone_key | default(None) }}"
 _irods_zone_name: "{{ irods_zone_name | default('tempZone') }}"
 
@@ -105,8 +107,8 @@ _sysctl_kernel: "{{ sysctl_kernel | default([]) }}"
 
 _terraref_base_collection: "{{ terraref_base_collection | default(None) }}"
 _terraref_manager: "{{ terraref_manager | default(_irods_clerver_user) }}"
-_terraref_resource_hierarchy: "{{
-  terraref_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}"
+_terraref_resource_hierarchy: >-
+  {{ terraref_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}
 
 _webdav_allowed_src: "{{ webdav_allowed_src | default(['0.0.0.0/0']) }}"
 _webdav_auth_name: "{{ webdav_auth_name | default('CyVerse') }}"

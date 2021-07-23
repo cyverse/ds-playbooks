@@ -1,7 +1,7 @@
 ---
-- name: cyverse.irods-cfg
+- name: cyverse.irods_cfg
   src: https://github.com/CyVerse-Ansible/ansible-irods-cfg
-  version: bb09d0dc81eaa8e985945624a5187012fa523822
+  version: ae308f208c1f36ea7041602f44f7f0320df200d2
 
 - name: cyverse.rabbitmq_vhost
   src: https://github.com/CyVerse-Ansible/ansible-rabbitmq-vhost

@@ -85,6 +85,16 @@ exclusive_acPostProcForCopy {
 
 # POLICIES
 
+# This rule administratively creates a collection, e.g., 
+# creating a home collection when a user is created. It
+# ensures all collection creation policies are applied to
+# then newly created collection.
+#
+# Parameters:
+#  *ParColl    the absolute path to the parent of the 
+#              collection being created
+#  *ChildColl  the name of the collection being created
+#
 acCreateCollByAdmin(*ParColl, *ChildColl) {
   msiCreateCollByAdmin(*ParColl, *ChildColl);
 

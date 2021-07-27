@@ -24,6 +24,8 @@
         zone: testing
       register: resp
       failed_when: not resp.changed
+      tags:
+        - non_idempotent
 
     - name: check if group is created
       become: true

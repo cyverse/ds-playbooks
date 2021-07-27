@@ -3,14 +3,14 @@
 # Usage:
 #  service (start|stop)
 #
-# This script starts or stops the IES server inside the container if there is
-# one.
+# This script starts or stops a catalog service provider inside the container if 
+# there is one.
 #
 # It requires the following environment variable to be defined.
 #
 # IRODS_SYSTEM_USER  the system user who executes iRODS
 #
-# If there is an IES inside the cotainer when it starts, the following
+# If there is a provider inside the container when it starts, the following
 # additional environment variables need to be defined.
 #
 # DBMS_HOST            The FQDN or IP address of the PostgreSQL server

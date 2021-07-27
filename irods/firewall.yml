@@ -17,7 +17,7 @@
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport {{ _irods_zone_port }} -j ACCEPT
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport {{ _irods_server_control_plane_port }} -j ACCEPT
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport {{ ports }} -j ACCEPT
-          {% if inventory_hostname in groups['rs'] %}
+          {% if inventory_hostname in groups['irods_resource'] %}
           -A {{ _firewall_chain }} -m state --state NEW -p udp -s {{ i if i|ipaddr else lookup('dig', i) }} --dport {{ ports }} -j ACCEPT
           {% endif %}
           {% endif %}
@@ -30,7 +30,7 @@
           {% endfor %}
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport {{ _irods_zone_port }} -j ACCEPT
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport {{ ports }} -j ACCEPT
-          {% if inventory_hostname in groups['rs'] %}
+          {% if inventory_hostname in groups['irods_resource'] %}
           -A {{ _firewall_chain }} -m state --state NEW -p udp -s {{ _irods_allowed_clients }} --dport {{ ports }} -j ACCEPT
           {% endif %}
       notify:

@@ -70,11 +70,11 @@
         - rm-trash
         - set-uuid
 
-    - name: Verify .odbc.ini only on IES
+    - name: Verify .odbc.ini only on catalog service providers
       stat:
         path: /var/lib/irods/.odbc.ini
       register: response
-      failed_when: response.stat.exists != ((inventory_hostname in groups['ies']) | bool)
+      failed_when: response.stat.exists != ((inventory_hostname in groups['irods_catalog']) | bool)
 
     - name: Verify database_config.json does not exist
       stat:
@@ -110,7 +110,7 @@
           - irods_environment.irods_default_hash_scheme == 'MD5'
           - irods_environment.irods_default_resource == 'ingestRes'
           
-    - when: inventory_hostname in groups['ies']
+    - when: inventory_hostname in groups['irods_catalog']
       block:
         - name: retrieve encoded server_config.json
           slurp:
@@ -191,7 +191,7 @@
                 is search(
                   'Servername = dstesting_dbms_configured_1.dstesting_default' | regex_escape )
 
-    - when: inventory_hostname in groups['rs']
+    - when: inventory_hostname in groups['irods_resource']
       block:
         - name: retrieve encoded server_config.json
           slurp:
@@ -212,7 +212,7 @@
               - >-
                 server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes
                 == 4
-              - server_config.catalog_provider_hosts == groups['ies']
+              - server_config.catalog_provider_hosts == groups['irods_catalog']
               - server_config.catalog_service_role == 'consumer'
               - server_config.default_hash_scheme == 'MD5'
               - server_config.default_resource_directory == '/var/lib/irods/Vault'

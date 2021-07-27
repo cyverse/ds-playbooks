@@ -2,8 +2,8 @@
 - import_playbook: mk_storage_resources.yml
 
 
-- name: test configure IES for cereus
-  hosts: ies
+- name: test configure iRODS for cereus
+  hosts: irods_catalog
   become: true
   become_user: irods
   run_once: true

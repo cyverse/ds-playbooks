@@ -6,7 +6,8 @@
 # write permission. For everything else, rodsadmin group will be given own
 # permission.
 #
-# This script is intended to be executed on an IES by the service account.
+# This script is intended to be executed on a catalog service provider by the 
+# service account.
 #
 # Usage:
 #  init-rodsadmin-perms.sh DBMS_HOST DBMS_PORT DB_USER

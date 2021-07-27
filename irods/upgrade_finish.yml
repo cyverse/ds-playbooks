@@ -1,6 +1,6 @@
 ---
-- name: upgrade ies
-  hosts: ies
+- name: upgrade catalog servive providers
+  hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tags:
@@ -27,7 +27,7 @@
       register: response
       changed_when: response.stdout == 'changed'
 
-    - name: generate scripts for protecting resources during rs upgrades
+    - name: generate scripts for protecting resources during resoure server upgrades
       shell: |
         set -o errexit
         if [[ ! -e /var/lib/irods/pre-rs-script.sh || ! -e /var/lib/irods/post-rs-script.sh ]]; then
@@ -43,7 +43,7 @@
       register: response
       changed_when: response.stdout == 'changed'
 
-    - name: start protecting resources during rs upgrade
+    - name: start protecting resources during resource server upgrade
       run_once: true
       shell: |
         set -o errexit
@@ -57,7 +57,7 @@
 
 
 - name: upgrade resource servers
-  hosts: rs
+  hosts: irods_resource
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tags:
@@ -71,7 +71,7 @@
 
 
 - name: finish upgrading - catalog provider only tasks
-  hosts: ies
+  hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
@@ -92,7 +92,7 @@
 
 
 - name: finish upgrading - general
-  hosts: irods
+  hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
@@ -136,7 +136,7 @@
 
 
 - name: reschedule periodic rules
-  hosts: ies
+  hosts: irods_catalog
   run_once: true
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"

@@ -1,6 +1,6 @@
 ---
 - name: prepare for bisque_paths
-  hosts: ies
+  hosts: irods_catalog
   become: true
   tasks:
     - name: ensure /var/log/bisque exists
@@ -13,7 +13,7 @@
 
 
 - name: configure bisque client
-  hosts: ies
+  hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:

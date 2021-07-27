@@ -2,8 +2,8 @@
 - import_playbook: mk_storage_resources.yml
 
 
-- name: Configure IES for Cereus
-  hosts: ies
+- name: Configure iRODS for Cereus
+  hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
@@ -21,7 +21,7 @@
         attribute: ipc::hosted-collection
         value: "{{ item }}"
         units: preferred
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"
         zone: "{{ _irods_zone_name }}"
         username: "{{ _irods_clerver_user }}"

@@ -220,12 +220,12 @@
         name: https://github.com/UtrechtUniversity/davrods/releases/download/4.1_1.4.1/davrods-4.1_1.4.1-1.el7.centos.x86_64.rpm
 
     - include_role:
-        name: cyverse.irods-cfg
+        name: cyverse.irods_cfg
         tasks_from: client.yml
       vars:
         irods_cfg_environment_file: etc/httpd/irods/irods_environment.json
         irods_cfg_chown: false
-        irods_cfg_host: "{{ _irods_ies }}"
+        irods_cfg_host: "{{ _irods_catalog_provider }}"
         irods_cfg_zone_name: "{{ _irods_zone_name }}"
         irods_cfg_zone_user: anonymous
         irods_cfg_home: /{{ _irods_zone_name }}
@@ -280,7 +280,7 @@
       notify:
         - restart httpd
 
-    - when: >
+    - when: >-
         'varnish' in ansible_facts.packages
         and ansible_facts.packages['varnish'][0].version is version_compare('6.5.1', '<')
       block:

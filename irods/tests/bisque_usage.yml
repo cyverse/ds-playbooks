@@ -38,7 +38,7 @@
 
 
 - name: test prepare for bisque_paths
-  hosts: ies
+  hosts: irods_catalog
   become: true
   tasks:
     - name: test ensure /var/log/bisque exists
@@ -53,7 +53,7 @@
 
 
 - name: test bisque cmd script in place
-  hosts: ies
+  hosts: irods_catalog
   tasks:
     - name: Verify that bisque_paths.py is in place
       stat:

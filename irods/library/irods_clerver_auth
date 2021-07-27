@@ -1,16 +1,17 @@
 #!/bin/bash
 #
-# An ansible module for initializing the clerver connection to the IES.
+# An ansible module for initializing the clerver connection to the catalog 
+# service providers.
 #
 # Module Name:
 #  irods_clerver_auth
 #
 # Required Variables:
-#  password  the password used by the clerver to connect to the IES
+#  password  the password used by the clerver to connect
 #
 # Optional Variables:
-#  ies  The FQDN for the IES. If this isn't provided, it is assume that the
-#       local host is the IES.
+#  ies  The FQDN of the iRODS server. If this isn't provided, it is assume that 
+#       the local host is the server.
 
 
 main()

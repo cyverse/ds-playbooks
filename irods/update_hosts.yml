@@ -9,19 +9,19 @@
         path: /etc/hosts
         marker: '# {mark} DS MANAGED BLOCK'
         block: |
-          {% if inventory_hostname in groups['ies'] %}
+          {% if inventory_hostname in groups['irods_catalog'] %}
           {%  for d in groups['dbms'] %}
           {%   if inventory_hostname != d and not d|ipaddr %}
           {{    lookup('dig', d) }} {{ d }}
           {%   endif %}
           {%  endfor %}
           {% endif %}
-          {% for i in groups['ies'] %}
+          {% for i in groups['irods_catalog'] %}
           {%  if inventory_hostname != i and not i|ipaddr %}
           {{   lookup('dig', i) }} {{ i }}
           {%  endif %}
           {% endfor %}
-          {% for r in groups['rs'] | difference(groups['ies']) %}
+          {% for r in groups['irods_resource'] | difference(groups['irods_catalog']) %}
           {%  if inventory_hostname != r and not r|ipaddr %}
           {{   lookup('dig', r) }} {{ r }}
           {%  endif %}
@@ -31,7 +31,7 @@
           {{   lookup('dig', f.icat_host) }} {{ f.icat_host }}
           {%  endif %}
           {% endfor %}
-          {% if inventory_hostname in groups['ies']
+          {% if inventory_hostname in groups['irods_catalog']
                and inventory_hostname != _amqp_host
                and not _amqp_host|ipaddr %}
           {{  lookup('dig', _amqp_host) }} {{ _amqp_host }}

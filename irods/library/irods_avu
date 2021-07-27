@@ -128,7 +128,7 @@ EXAMPLES = r'''
     state: absent
     entity_type: resource
     entity_name: demoResc
-    host: ies.localdomain
+    host: provider.localdomain
     zone: tempZone
     password: rods
 

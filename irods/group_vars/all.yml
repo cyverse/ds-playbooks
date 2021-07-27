@@ -57,12 +57,12 @@ _irods_default_resource: >-
 _irods_default_vault: "{{ irods_default_vault | default(None) }}"
 _irods_federation: "{{ irods_federation | default([]) }}"
 _irods_host_aliases: "{{ irods_host_aliases | default([]) }}"
-_irods_catalog_provider: "{{ irods_catalog_provider | default(groups['irods_catalog'][0]) }}"
 _irods_max_num_re_procs: "{{ irods_max_num_re_procs | default(4) }}"
 _irods_negotiation_key: "{{ irods_negotiation_key | default(None) }}"
 _irods_other_host_entries: "{{ irods_other_host_entries | default([]) }}"
 _irods_parallel_transfer_buffer_size: "{{ irods_parallel_transfer_buffer_size | default(None) }}"
 _irods_publish_rs_image: "{{ irods_publish_rs_image | default(false) }}"
+_irods_re_host: "{{ irods_re_host | default(groups['irods_catalog'][0]) }}"
 _irods_resource_hierarchies: >-
   {{ 
     irods_resource_hierarchies

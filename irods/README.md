@@ -45,7 +45,6 @@ Variable                                   | Default                            
 `irods_amqp_user`                          | guest                                |         | The user iRODS uses to connect to the AMQP vhost
 `irods_ampq_vhost`                         | /                                    |         | The AMQP vhost iRODS connects to `irods_default_repl_resource` is.
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
-`irods_catalog_provider`                   | `group_vars['irods_catalog'][0]`     |         | the FQDN or IP address of the primary iRODS catalog service provider
 `irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | `irods_admin_username`               |         | the rodsadmin user to be used by the server being configured
 `irods_db_password`                        | testpassword                         |         | The password iRODS uses when connecting to the ICAT DB.
@@ -66,6 +65,7 @@ Variable                                   | Default                            
 `irods_other_host_entries`                 | []                                   |         | a list of other FQDNs to add to /etc/hosts
 `irods_parallel_transfer_buffer_size`      | 4                                    |         | the transfer buffer size in MiB for each stream during parallel transfer
 `irods_publish_rs_image`                   | false                                |         | Whether or not to publish a freshly build resource server docker image to dockerhub.
+`irods_re_host`                            | `group_vars['irods_catalog'][0]`     |         | the FQDN or IP address of the iRODS rule engine host
 `irods_resource_hierarchies`               | `[ { "name": "demoResc" } ]`         |         | the list of resource hierarchies that need to exist, _see below_
 `irods_rs_image`                           | ds-irods-rs-onbuild                  |         | the name of the unpublished RS image to be generated
 `irods_server_control_plane_key`           | TEMPORARY__32byte_ctrl_plane_key     |         | the server control plane key

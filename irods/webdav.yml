@@ -225,7 +225,7 @@
       vars:
         irods_cfg_environment_file: etc/httpd/irods/irods_environment.json
         irods_cfg_chown: false
-        irods_cfg_host: "{{ _irods_catalog_provider }}"
+        irods_cfg_host: "{{ _canonical_hostname }}"
         irods_cfg_zone_name: "{{ _irods_zone_name }}"
         irods_cfg_zone_user: anonymous
         irods_cfg_home: /{{ _irods_zone_name }}

@@ -1,6 +1,6 @@
 ---
 _amqp_exchange: "{{ irods_amqp_exchange | default('irods') }}"
-_amqp_host: "{{ irods_amqp_host | default(_irods_catalog_provider) }}"
+_amqp_host: "{{ irods_amqp_host | default(groups['amqp'][0]) }}"
 _amqp_mgmt_port: "{{ irods_amqp_mgmt_port | default(15672) }}"
 _amqp_password: "{{ irods_amqp_password | default('guest') }}"
 _amqp_port: "{{ irods_amqp_port | default(5672) }}"

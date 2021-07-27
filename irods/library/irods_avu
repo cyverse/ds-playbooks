@@ -8,6 +8,7 @@ from ansible.module_utils.basic import AnsibleModule
 from typing import Mapping, Optional, Union
 from ssl import Purpose
 import ssl
+
 ANSIBLE_METADATA = {
     "metadata_version": "1.1",
     "status": ["preview"],

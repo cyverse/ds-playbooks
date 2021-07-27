@@ -21,7 +21,7 @@ _bisque_user: "{{ bisque_user | default('admin') }}"
 
 _build_dir: "{{ build_dir | default('/tmp') }}"
 
-_canonical_hostname: "{{ canonical_hostname | default(_irods_catalog_provider) }}"
+_canonical_hostname: "{{ canonical_hostname | default(groups['irods_catalog'][0]) }}"
 _canonical_irods_port: "{{ canonical_irods_port | default(_irods_zone_port) }}"
 
 _captcn_owners: "{{ captcn_owners | default([]) }}"

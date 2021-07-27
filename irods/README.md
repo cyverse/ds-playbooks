@@ -26,7 +26,7 @@ Variable                                   | Default                            
 `bisque_url`                               |                                      |         | The URL for the BisQue server to connect to
 `bisque_user`                              | admin                                |         | The user to connect to BisQue as
 `build_dir`                                | /tmp                                 |         | The directory used for building artifacts for deployment
-`canonical_hostname`                       | `irods_catalog_provider`             |         | The external FQDN used to access the data store services
+`canonical_hostname`                       | `groups['irods_catalog'][0]`         |         | The external FQDN used to access the data store services
 `canonical_irods_port`                     | 1247                                 |         | The port on the `canonical_hostname` host listening for connections to iRODS
 `captcn_owners`                            | `[]`                                 |         | a list of users who get ownership of CAP_TCN collections
 `captcn_readers`                           | `[]`                                 |         | a list of users who get read access to CAP_TCN collections

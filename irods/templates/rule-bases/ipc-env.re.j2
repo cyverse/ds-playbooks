@@ -9,9 +9,6 @@ ipc_DEFAULT_REPL_RESC = '{{ _irods_default_repl_resource }}'
 ipc_DEFAULT_RESC : string
 ipc_DEFAULT_RESC = '{{ _irods_default_resource }}'
 
-ipc_CATALOG_PROVIDER_IP : string
-ipc_CATALOG_PROVIDER_IP = '{{ _irods_catalog_provider if _irods_catalog_provider|ipaddr else lookup("dig", _irods_catalog_provider) }}'
-
 ipc_MAX_NUM_RE_PROCS : integer
 ipc_MAX_NUM_RE_PROCS = {{ _irods_max_num_re_procs }}
 
@@ -23,19 +20,3 @@ ipc_REPORT_EMAIL_ADDR = '{{ _report_email_addr }}'
 
 ipc_ZONE : string
 ipc_ZONE = '{{ _irods_zone_name }}'
-
-
-{% if _single_threaded_resources|length > 0 %}
-# This rule ensures that the catalog service provider will only use streaming
-# transfers for data object replicas on certain servers.
-#
-# Session Variables: rescName, clientAddr
-#
-acSetNumThreads {
-{%   for resc in _single_threaded_resources %}
-  on ($rescName == '{{ resc }}' && $clientAddr == ipc_CATALOG_PROVIDER_IP) {
-    msiSetNumThreads('default', '0', 'default');
-  }
-{%   endfor %}
-}
-{% endif %}

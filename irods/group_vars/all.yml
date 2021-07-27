@@ -91,8 +91,6 @@ _sernec_owners: "{{ sernec_owners if sernec_owners is defined else [] }}"
 _sernec_readers: "{{ sernec_readers if sernec_readers is defined else [] }}"
 _sernec_writers: "{{ sernec_writers if sernec_writers is defined else [] }}"
 
-_single_threaded_resources: "{{ single_threaded_resources | default([]) }}"
-
 _sparcd_admin: "{{ sparcd_admin | default(None) }}"
 _sparcd_base_collection: >-
   {{ sparcd_base_collection 

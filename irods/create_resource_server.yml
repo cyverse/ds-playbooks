@@ -59,7 +59,7 @@
 
     - name: initialize resource server connection to catalog service providers
       irods_clerver_auth:
-        ies: "{{ groups['irods_catalog'][0] }}"
+        provider: "{{ groups['irods_catalog'][0] }}"
         password: "{{ _irods_clerver_password }}"
 
     - name: start iRODS

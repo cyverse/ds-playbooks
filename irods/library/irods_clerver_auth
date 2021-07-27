@@ -10,15 +10,14 @@
 #  password  the password used by the clerver to connect
 #
 # Optional Variables:
-#  ies  The FQDN of the iRODS server. If this isn't provided, it is assume that 
-#       the local host is the server.
-
+#  provider  The FQDN of the iRODS server. If this isn't provided, it assumes 
+#            the local host is the server.
 
 main()
 {
   local varFile="$1"
 
-  local ies
+  local provider
   local password
   . "$varFile"
 
@@ -37,9 +36,9 @@ main()
     succeed false
   fi
 
-  if [ -n "$ies" ]
+  if [ -n "$provider" ]
   then
-    export IRODS_HOST="$ies"
+    export IRODS_HOST="$provider"
   fi
 
   local errMsg

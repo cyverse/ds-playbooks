@@ -99,6 +99,10 @@ exclusive_acPostProcForCopy {
 #  *ParColl    the absolute path to the parent of the collection being created
 #  *ChildColl  the name of the collection being created
 #
+# Error Codes:
+#  -43000 (SYS_NO_RCAT_SERVER_ERR)
+#  -160000 (SYS_SERVICE_ROLE_NOT_SUPPORTED)
+#
 acCreateCollByAdmin(*ParColl, *ChildColl) {
   msiCreateCollByAdmin(*ParColl, *ChildColl);
 

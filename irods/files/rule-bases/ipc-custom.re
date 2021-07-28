@@ -46,6 +46,13 @@
 # For events occur that should belong to one and only one project,
 # the following rules may be extended with ON conditions.
 
+# This rule applies the project specific collection creation policies to 
+# administratively created collections
+#
+# Parameters:
+#  *ParColl    the absolute path to the parent of the collection being created
+#  *ChildColl  the name of the collection being created
+#
 exclusive_acCreateCollByAdmin(*ParColl, *ChildColl) {
   ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl);
 }
@@ -82,17 +89,14 @@ exclusive_acPostProcForCopy {
 }
 
 
-
 # POLICIES
 
-# This rule administratively creates a collection, e.g., 
-# creating a home collection when a user is created. It
-# ensures all collection creation policies are applied to
-# then newly created collection.
+# This rule administratively creates a collection, e.g., creating a home 
+# collection when a user is created. It ensures all collection creation policies
+# are applied to then newly created collection.
 #
 # Parameters:
-#  *ParColl    the absolute path to the parent of the 
-#              collection being created
+#  *ParColl    the absolute path to the parent of the collection being created
 #  *ChildColl  the name of the collection being created
 #
 acCreateCollByAdmin(*ParColl, *ChildColl) {

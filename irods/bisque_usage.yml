@@ -21,8 +21,8 @@
       get_url:
         validate_certs: false
         url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
-        dest: /var/lib/irods/iRODS/server/bin/cmd
-        mode: u+wx
+        dest: /var/lib/irods/msiExecCmd_bin
+        mode: u+rx
 
     - name: place .bisque
       when: _bisque_url is defined

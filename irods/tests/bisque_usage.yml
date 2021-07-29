@@ -23,18 +23,12 @@
   vars:
     bisque: "{{ lookup('template', '../templates/bisque.j2') }}"
   tasks:
-    - name: test bisque_host set correctly
+    - name: test .bisque generated correctly
       assert:
         that:
           - bisque is search('\nbisque_host = http://localhost.localdomain/\n')
-
-    - name: test bisque_admin_user set correctly
-      debug:
-        msg: TODO implement
-
-    - name: test bisque_admin_pass set correctly
-      debug:
-        msg: TODO implement
+          - bisque is search('\nbisque_admin_user = irods\n')
+          - bisque is search('\nbisque_admin_pass = password\n')
 
 
 - name: test prepare for bisque_paths
@@ -45,7 +39,7 @@
       stat:
         path: /var/log/bisque
       register: response
-      failed_when: >
+      failed_when: >-
         not response.stat.exists or
         not response.stat.isdir or
         response.stat.pw_name != 'irods' or
@@ -57,7 +51,7 @@
   tasks:
     - name: Verify that bisque_paths.py is in place
       stat:
-        path: /var/lib/irods/iRODS/server/bin/cmd/bisque_paths.py
+        path: /var/lib/irods/msiExecCmd_bin/bisque_paths.py
       register: response
       failed_when: not response.stat.exists
 

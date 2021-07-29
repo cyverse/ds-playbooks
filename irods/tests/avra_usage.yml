@@ -10,9 +10,9 @@
   tasks:
     - name: test make Avra resource hierarchy
       shell: |
-        printf -v expHier 'avraRes:passthru\n└── avra'
-        actHier=$(ilsresc avraRes)
-        [ "$actHier" = "$expHier" ]
+        printf -v expHier 'avraRes:passthru\n└── avra:unixfilesystem'
+        actHier="$(ilsresc avraRes)"
+        [[ "$actHier" == "$expHier" ]]
       changed_when: false
 
     - name: test create project collection

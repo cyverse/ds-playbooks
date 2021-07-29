@@ -15,7 +15,6 @@ The following system packages need to be installed on control machine.
 
 * `dmidecode` (if control machine runs linux)
 * `docker-ce`
-* `git`
 * `python3`
 * `python3-pip`
 * `rpm-build` (`rpm`) if control machine runs Debian or Ubuntu)

@@ -10,19 +10,19 @@
   tasks:
     - name: test make cereus resource hierarchy
       shell: |
-        printf -v expHier 'cereusRes:passthru\n└── cereus'
-        actHier=$(ilsresc cereusRes)
-        [ "$actHier" = "$expHier" ]
+        printf -v expHier 'cereusRes:passthru\n└── cereus:unixfilesystem'
+        actHier="$(ilsresc cereusRes)"
+        [[ "$actHier" == "$expHier" ]]
       changed_when: false
 
     - name: test assign collection to Cereus resource
       shell: |
-        num="$(iquest '%s' \
-                 "select count(META_RESC_ATTR_ID)
-                  where RESC_NAME = 'cereusRes'
-                    and META_RESC_ATTR_NAME = 'ipc::hosted-collection'
-                    and META_RESC_ATTR_VALUE = '/testing/home/shared/cereus'
-                    and META_RESC_ATTR_UNITS = 'preferred'")"
-
+        num="$(iquest \
+          '%s' \
+          "select count(META_RESC_ATTR_ID)
+            where RESC_NAME = 'cereusRes'
+              and META_RESC_ATTR_NAME = 'ipc::hosted-collection'
+              and META_RESC_ATTR_VALUE = '/testing/home/shared/cereus'
+              and META_RESC_ATTR_UNITS = 'preferred'" )"
         (( num == 1 ))
       changed_when: false

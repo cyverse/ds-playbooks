@@ -304,8 +304,41 @@
         not response.stat.islnk or
         response.stat.lnk_source != '/usr/lib/systemd/system/varnish.service'
 
-    - debug:
-        msg: TODO test ensure varnishncsa runs when apache run
+    - name: test ensure varnishncsa runs when apache run
+      stat:
+        path: /etc/systemd/system/httpd.service.requires/varnishncsa.service
+      register: response
+      failed_when: >
+        not response.stat.exists or
+        not response.stat.islnk or
+        response.stat.lnk_source != '/usr/lib/systemd/system/varnishncsa.service'
+
+    - name: test purgeman installed
+      stat:
+        path: /usr/bin/purgeman
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test purgeman.cfg deployed
+      stat:
+        path: /etc/purgeman/purgeman.conf
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test purgeman.service deployed
+      stat:
+        path: /usr/lib/systemd/system/purgeman.service
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test ensure purgeman runs when apache run
+      stat:
+        path: /etc/systemd/system/httpd.service.requires/purgeman.service
+      register: response
+      failed_when: >
+        not response.stat.exists or
+        not response.stat.islnk or
+        response.stat.lnk_source != '/usr/lib/systemd/system/purgeman.service'
 
     - name: test open HTTP connection in firewall
       script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables

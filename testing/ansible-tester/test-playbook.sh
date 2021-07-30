@@ -15,7 +15,7 @@
 #
 # This program executes and ansible playbook on the test environment.
 
-set -u -o pipefail
+set -o nounset -o pipefail
 
 
 main()
@@ -36,7 +36,6 @@ main()
   if [ "$inspect" = true ]
   then
     printf 'Opening shell for inspection of volumes\n'
-    iinit "$IRODS_PASSWORD"
     bash
   fi
 

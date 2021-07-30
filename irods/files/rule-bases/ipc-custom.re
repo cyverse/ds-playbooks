@@ -83,6 +83,9 @@ exclusive_acPostProcForCollCreate {
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
+# This rule applies the project specific policies to a data object created 
+# through copying another data object.
+#
 exclusive_acPostProcForCopy {
   *err = errormsg(captcn_acPostProcForCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }

@@ -379,6 +379,12 @@
         - restart varnish
         - restart varnishncsa
 
+    - name: create a download dir for purgeman package 
+      file:
+        path: "{{ ansible_env.HOME }}/purgeman_setup"
+        recurse: true
+        state: directory
+
     - name: download purgeman package from github and uncompress
       unarchive:
         src: "https://github.com/cyverse/purgeman/releases/download/v0.1/purgeman_0.1.tar.gz"
@@ -390,6 +396,11 @@
         chdir: "{{ ansible_env.HOME }}/purgeman_setup"
         target: install_centos
       become: yes
+
+    - name: remove the download dir for purgeman package 
+      file:
+        path: "{{ ansible_env.HOME }}/purgeman_setup"
+        state: absent
     
     - name: configure purgeman
       template:

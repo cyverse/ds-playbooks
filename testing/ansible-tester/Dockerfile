@@ -1,9 +1,15 @@
 FROM williamyeh/ansible:centos7
 
+# The latest version of pip (21.2.1) is breaking on centos7 without following encoding setup.
+ENV LANG en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
+
 RUN yum --assumeyes \
       install \
         bzip2-devel dmidecode gcc git libffi-devel openssl-devel postgresql python3 rpm-build wget \
         https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm
+
+
 RUN python3 -m pip --quiet install --upgrade pip
 RUN python3 -m pip --quiet \
       install ansible==3.3 dnspython netaddr python-irodsclient requests urllib3 wheel

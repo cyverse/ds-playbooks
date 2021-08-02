@@ -5,9 +5,8 @@
 # © 2021 The Arizona Board of Regents on behalf of The University of Arizona. 
 # For license information, see https://cyverse.org/license.
 
-# The environment specific rule customizations belong in the file ipc-env.re.
-# These rules have the highest priority. Implementations in ipc-custom.re of
-# rules also in ipc-env.re will be ignored.
+# The environment-specific configuration constants belong in the file 
+# ipc-env.re.
 
 @include 'ipc-env'
 

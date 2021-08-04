@@ -1,4 +1,11 @@
 ---
+aegis_base_collection: /testing/home/shared/aegis
+aegis_resource_hierarchy:
+  name: aegisRes
+  type: passthru
+  children:
+    - name: aegis
+
 avra_base_collection: /testing/home/shared/avra
 avra_manager: avra_mgr
 avra_resource_hierarchy:

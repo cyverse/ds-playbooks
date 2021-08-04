@@ -1,11 +1,12 @@
-# VERSION: 4
+# This rulebase contains the rules attached to Policy Execution Points for the 
+# core CyVerse Data Store policies. All policy logic is in this file or 
+# included by this file.
 #
-# All customizations done to the iRODS rule logic are placed in this file or
-# should be included by this file.
+# © 2021 The Arizona Board of Regents on behalf of The University of Arizona. 
+# For license information, see https://cyverse.org/license.
 
-# The environment specific rule customizations belong in the file ipc-env.re.
-# These rules have the highest priority. Implementations in ipc-custom.re of
-# rules also in ipc-env.re will be ignored.
+# The environment-specific configuration constants belong in the file 
+# ipc-env.re.
 
 @include 'ipc-env'
 
@@ -44,10 +45,20 @@
 # For events occur that should belong to one and only one project,
 # the following rules may be extended with ON conditions.
 
+# This rule applies the project specific collection creation policies to an
+# administratively created collection.
+#
+# Parameters:
+#  *ParColl    the absolute path to the parent of the collection being created
+#  *ChildColl  the name of the collection being created
+#
 exclusive_acCreateCollByAdmin(*ParColl, *ChildColl) {
   ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl);
 }
 
+# This rule applies the project specific collection creation policies to a newly
+# created collection that wasn't created administratively.
+#
 exclusive_acPostProcForCollCreate {
   *err = errormsg(ipc_archive_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
@@ -71,6 +82,9 @@ exclusive_acPostProcForCollCreate {
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
+# This rule applies the project specific policies to a data object created 
+# through copying another data object.
+#
 exclusive_acPostProcForCopy {
   *err = errormsg(captcn_acPostProcForCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
@@ -80,9 +94,20 @@ exclusive_acPostProcForCopy {
 }
 
 
-
 # POLICIES
 
+# This rule administratively creates a collection, e.g., creating a home 
+# collection when a user is created. It ensures all collection creation policies
+# are applied to then newly created collection.
+#
+# Parameters:
+#  *ParColl    the absolute path to the parent of the collection being created
+#  *ChildColl  the name of the collection being created
+#
+# Error Codes:
+#  -43000 (SYS_NO_RCAT_SERVER_ERR)
+#  -160000 (SYS_SERVICE_ROLE_NOT_SUPPORTED)
+#
 acCreateCollByAdmin(*ParColl, *ChildColl) {
   msiCreateCollByAdmin(*ParColl, *ChildColl);
 
@@ -255,7 +280,16 @@ acPostProcForParallelTransferReceived(*LeafResource) {
 
 ## SUPPORTING FUNCTIONS AND RULES ##
 
-_ipc_mkDataObjSessVar(*Path) = 'ipc-data-obj-*Path'
+# generates a unique session variable name for a data object 
+#
+# Parameters:
+#  *Path  the absolute path to the data object
+#
+# Return:
+#  the session variable name
+#
+_ipc_mkDataObjSessVar: path -> string
+_ipc_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 
 
 # XXX - Because of https://github.com/irods/irods/issues/5540 
@@ -405,7 +439,7 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
 # _ipc_dataObjCreated needs to be called here when not created through file 
 # registration
   if (! *handled && errorcode(*REG_PARAM.dataSize) == 0) {
-    *pathVar = _ipc_mkDataObjSessVar(*DATA_OBJ_INFO.logical_path);
+    *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
 
     if (
       (
@@ -433,7 +467,7 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
   # If modification timestamp is being modified, the data object has been 
   # modified, so publish a data-object.mod message.
   if (! *handled && errorcode(*REG_PARAM.dataModify) == 0) {
-    *pathVar = _ipc_mkDataObjSessVar(*DATA_OBJ_INFO.logical_path);
+    *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
 
     if (
       if errorcode(temporaryStorage.'*pathVar') != 0 then true
@@ -479,7 +513,7 @@ pep_database_reg_data_obj_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO) {
   *DATA_OBJ_INFO.data_owner_name = *CONTEXT.user_user_name;
   *DATA_OBJ_INFO.data_owner_zone = *CONTEXT.user_rods_zone;
 # XXX - ^^^
-  *pathVar = _ipc_mkDataObjSessVar(*DATA_OBJ_INFO.logical_path);
+  *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
 # XXX - Because of https://github.com/irods/irods/issues/5538, the CONTEXT 
 # variables need to passed through temporaryStorage
 #   temporaryStorage.'*pathVar' = 'CREATE *DATA_OBJ_INFO';

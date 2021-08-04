@@ -54,6 +54,8 @@ pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST,
     *msg = 'CYVERSE ERROR:  ' ++ avra_RESC ++ ' usage is limited to the Avra collection, '
       ++ str(avra_BASE_COLL);
 
+    cut;
     failmsg(-32000, *msg);
   }
 }
+

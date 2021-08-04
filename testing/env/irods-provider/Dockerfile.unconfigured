@@ -1,16 +1,14 @@
 FROM test-env-base:centos7
 
-RUN yum install --assumeyes jq python-pip python-setuptools
-
-COPY ies/scripts/prep-svc-script.sh /tmp/prep-svc-script
-COPY ies/scripts/service.sh.template /tmp/
-
 ARG DBMS_HOST=dbms_configured
 ARG DBMS_PORT=5432
 ARG IRODS_SYSTEM_GROUP=irods
 ARG IRODS_SYSTEM_USER=irods
 ARG IRODS_ZONE_PASSWORD=rods
 
+### Create service script
+COPY irods-provider/scripts/service.sh.template /tmp/
+COPY irods-provider/scripts/prep-svc-script.sh /tmp/prep-svc-script
 RUN /tmp/prep-svc-script
 
 CMD [ "/service.sh" ]

@@ -52,9 +52,9 @@ start()
     printf 'Authenticating clerver user\n'
     su --command "IRODS_HOST='$IRODS_IES' iinit '$IRODS_ZONE_PASSWORD'" --login "$IRODS_SYSTEM_USER"
 
-    if ! su --command '/var/lib/irods/iRODS/irodsctl start' --login "$IRODS_SYSTEM_USER"
+    if ! su --command '/var/lib/irods/irodsctl start' --login "$IRODS_SYSTEM_USER"
     then
-      cat /var/lib/irods/iRODS/server/log/rodsLog* >&2
+      cat /var/lib/irods/log/rodsLog* >&2
       return 1
     fi
 
@@ -67,7 +67,7 @@ stop()
 {
   if su --command imiscsvrinfo --login "$IRODS_SYSTEM_USER" >& /dev/null
   then
-    su --command '/var/lib/irods/iRODS/irodsctl stop' --login "$IRODS_SYSTEM_USER"
+    su --command '/var/lib/irods/irodsctl stop' --login "$IRODS_SYSTEM_USER"
     rm --force /var/lock/subsys/irods
   fi
 }

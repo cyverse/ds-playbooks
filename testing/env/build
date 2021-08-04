@@ -37,7 +37,6 @@ main()
 
   . "$cfg"
 
-  docker build --file "$baseDir"/base/Dockerfile.centos6 --tag test-env-base:centos6 "$baseDir"
   docker build --file "$baseDir"/base/Dockerfile.centos7 --tag test-env-base:centos7 "$baseDir"
 
   docker build --file "$baseDir"/base/Dockerfile.ubuntu2004 --tag test-env-base:ubuntu2004 \
@@ -47,4 +46,4 @@ main()
 }
 
 
-main "$*"
+main "$@"

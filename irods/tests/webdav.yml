@@ -217,7 +217,7 @@
       assert:
         that:
           - irods_environment.irods_home == '/testing'
-          - irods_environment.irods_host == 'dstesting_ies_configured_1.dstesting_default'
+          - irods_environment.irods_host == 'dstesting_provider_configured_1.dstesting_default'
           - irods_environment.irods_user_name == 'anonymous'
           - irods_environment.irods_zone_name == 'testing'
 

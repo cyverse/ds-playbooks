@@ -77,8 +77,13 @@
           - irods-server-4.2.8
         state: present
 
+    - name: install missing dependency unixODBC
+      package:
+        name: unixODBC
+        state: present
+
     - name: install irods server packages
-      yum:
+      package:
         name: irods-server
         state: present
 

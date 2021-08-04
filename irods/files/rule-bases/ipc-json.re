@@ -1,5 +1,5 @@
-# These are rules for constructing serialized JSON documents. This version only supports string and
-# object field types.
+# This is a collection of functions and rules for constructing serialized JSON 
+# documents. This version only supports string and object field types.
 
 encodeObject(*SerialFields) {
   *res = '{';

@@ -8,9 +8,9 @@
       - avra
       - bundleResc
       - cereus
+      - ingestRes
       - pire
-      - rs_ingest
-      - rs_repl
+      - replRes
       - terraref
   tasks:
     - name: test create vault directory

@@ -8,22 +8,22 @@
         iinit rods
         iadmin mkuser tester rodsuser
         iadmin moduser tester password password
-        iput -f -R rs_ingest /tmp/object add-object
-        iput -f -R rs_ingest /tmp/object set-object
+        iput -f -R ingestRes /tmp/object add-object
+        iput -f -R ingestRes /tmp/object set-object
         imeta add -d set-object set-a1 set-v1 set-u
         imeta add -d set-object set-a1 set-v2
         imeta add -d set-object set-a2 set-v2
-        imeta add -R rs_ingest rm-a1 rm-v1
-        imeta add -R rs_ingest rm-a1 rm-v1 rm-u
-        imeta add -R rs_ingest rm-a1 rm-v2
-        imeta add -R rs_ingest rm-a2 rm-v1
+        imeta add -R ingestRes rm-a1 rm-v1
+        imeta add -R ingestRes rm-a1 rm-v1 rm-u
+        imeta add -R ingestRes rm-a1 rm-v2
+        imeta add -R ingestRes rm-a2 rm-v1
       args:
         warn: false
       tags:
         - non_idempotent
 
 - name: test irods_avu
-  hosts: dstesting_ies_configured_1.dstesting_default
+  hosts: dstesting_provider_configured_1.dstesting_default
   become: true
   become_user: irods
   tasks:
@@ -143,7 +143,7 @@
         attribute: rm-a1
         value: rm-v1
         entity_type: resource
-        entity_name: rs_ingest
+        entity_name: ingestRes
         zone: testing
         password: rods
         state: absent
@@ -154,7 +154,7 @@
         value: rm-v1
         units: rm-u
         entity_type: resource
-        entity_name: rs_ingest
+        entity_name: ingestRes
         zone: testing
         password: rods
         state: absent
@@ -164,7 +164,7 @@
         attribute: rm-a1
         value: rm-v2
         entity_type: resource
-        entity_name: rs_ingest
+        entity_name: ingestRes
         zone: testing
         password: rods
         state: absent
@@ -174,7 +174,7 @@
         attribute: rm-a1
         value: rm-v2
         entity_type: resource
-        entity_name: rs_ingest
+        entity_name: ingestRes
         zone: testing
         password: rods
         state: absent
@@ -184,7 +184,7 @@
         attribute: rm-a2
         value: rm-v1
         entity_type: resource
-        entity_name: rs_ingest
+        entity_name: ingestRes
         zone: testing
         password: rods
         state: absent

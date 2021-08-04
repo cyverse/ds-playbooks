@@ -16,6 +16,9 @@ None of these variables are required.
 
 Variable                                   | Default                              | Choices | Comments
 ------------------------------------------ | ------------------------------------ | ------- | --------
+`aegis_base_collection`                    |                                      |         | the base collection for the Aegis project
+`aegis_resource_hierarchy`                 | `irods_resource_hierarchies[0]`      |         | the resource used by the Aegis project
+`aegis_storage_resource`                   |                                      |         | an Aegis storage resource hosted on the server being configured, _see below_
 `avra_base_collection`                     |                                      |         | The base collection for the Avra project. If it isn't present no Avra rules will fire.
 `avra_manager`                             | `irods_clerver_user`                 |         | The iRODS user who is responsible for Avra data.
 `avra_resource_hierarchy`                  | `irods_resource_hierarchies[0]`      |         | The resource used by the Avra project
@@ -87,7 +90,8 @@ Variable                                   | Default                            
 `sernec_writers`                           | `[]`                                 |         | a list of users who get write access to sernec collections
 `single_threaded_resources`                | `[]`                                 |         | a list of resources that only support single threaded transfers
 `sparcd_admin`                             | null                                 |         | The user name of the Sparc'd administrator. If this isn't set, no sparcd rules will fire.
-`sparcd_base_collection`                   | _see description_                    |         | The base iRODS collection used by Sparc'd. If `{{ sparcd_admin }}` is `null`, the default is `null`, otherwise the default is `/{{ irods_zone_name }}/home/{{ sparcd_admin }}/Sparcd/Collections`.
+`sparcd_base_collection`                   | _see description_                    |         | The base iRODS collection used by Sparc'd. If `sparcd_admin` is `null`, the default is `null`, otherwise it is `/{{ irods_zone_name }}/home/{{ sparcd_admin }}/Sparcd/Collections`.
+`sparcd_report_email_addr`                 | _see description_                    |         | The email address where SPARC'd notifications are sent. If `sparcd_admin` is `null`, the default is `null`, otherwise it is `report_email_addr`.
 `sysctl_kernel`                            | `[]`                                 |         | a list of sysctl kernel parameters to set for the IES, _see_below_
 `terraref_base_collection`                 |                                      |         | The base collection for the TerraREF project. If it isn't present no TerraREF rules will fire.
 `terraref_manager`                         | `irods_clerver_user`                 |         | The iRODS user who is responsible for TerraREF data.

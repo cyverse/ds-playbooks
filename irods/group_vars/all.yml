@@ -1,4 +1,9 @@
 ---
+_aegis_base_collection: "{{ aegis_base_collection | default(None) }}"
+_aegis_resource_hierarchy: >-
+  {{ aegis_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}
+_aegis_storage_resource: "{{ aegis_storage_resource | default(None) }}"
+
 _amqp_exchange: "{{ irods_amqp_exchange | default('irods') }}"
 _amqp_host: "{{ irods_amqp_host | default(_irods_ies) }}"
 _amqp_mgmt_port: "{{ irods_amqp_mgmt_port | default(15672) }}"
@@ -85,17 +90,21 @@ _report_email_addr: "{{ report_email_addr | default('root@localhost') }}"
 
 _restart_irods: "{{ restart_irods | default(false) }}"
 
-_sparcd_admin: "{{ sparcd_admin | default(None) }}"
-_sparcd_base_collection: "{{
-  sparcd_base_collection if sparcd_base_collection is defined else
-  '/' + _irods_zone_name + '/home/' + _sparcd_admin + '/Sparcd/Collections' if _sparcd_admin else
-  None }}"
-
 _sernec_owners: "{{ sernec_owners if sernec_owners is defined else [] }}"
 _sernec_readers: "{{ sernec_readers if sernec_readers is defined else [] }}"
 _sernec_writers: "{{ sernec_writers if sernec_writers is defined else [] }}"
 
 _single_threaded_resources: "{{ single_threaded_resources | default([]) }}"
+
+_sparcd_admin: "{{ sparcd_admin | default(None) }}"
+_sparcd_base_collection: >-
+  {{ sparcd_base_collection 
+    | default(
+      '/' + _irods_zone_name + '/home/' + _sparcd_admin + '/Sparcd/Collections' 
+        if _sparcd_admin else 
+      None ) }}
+_sparcd_report_email_addr: >-
+  {{ sparcd_report_email_addr | default(_report_email_addr if _sparcd_admin else None) }}
 
 _sysctl_kernel: "{{ sysctl_kernel | default([]) }}"
 

@@ -21,6 +21,8 @@
 #          |          |         |   of resource. For a storage resource this
 #          |          |         |   should not be provided.
 
+set -e
+
 # WANT_JSON
 
 Changed=false
@@ -43,10 +45,10 @@ add_child()
   local parent="$1"
   local child="$2"
 
-  local curParent
-  curParent=$(quest "select RESC_PARENT where RESC_NAME = '$child'")
+  local curParentId
+  curParentId="$(quest "select RESC_PARENT where RESC_NAME = '$child'")"
 
-  if [ -z "$curParent" ]
+  if [ -z "$curParentId" ]
   then
     local errMsg
     if ! errMsg=$(iadmin addchildtoresc "$parent" "$child" 2>&1)
@@ -55,9 +57,14 @@ add_child()
     fi
 
     Changed=true
-  elif [ "$curParent" != "$parent" ]
-  then
-    fail "The current parent of $child is $curParent, not $parent"
+  else
+    local curParent
+    curParent="$(quest "select RESC_NAME where RESC_ID = '$curParentId'")"
+
+    if [ "$curParent" != "$parent" ]
+    then
+      fail "The current parent of $child is $curParent, not $parent"
+    fi
   fi
 }
 
@@ -216,5 +223,4 @@ succeed()
 }
 
 
-set -e
 main "$@" 2>&1

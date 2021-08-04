@@ -11,7 +11,7 @@
         group: "{{ _irods_service_group_name }}"
         mode: 'ug=rwx,o-rwx'
         state: directory
-      when: _aegis_base_collection is defined and _aegis_storage_resource is defined
+      when: _aegis_base_collection|bool and _aegis_storage_resource|bool
 
 
 - name: create aegis storage resource
@@ -28,7 +28,7 @@
         context: "{{ _aegis_storage_resource.context }}"
         status: down
         init_free_space: true
-      when: _aegis_base_collection is defined and _aegis_storage_resource is defined
+      when: _aegis_base_collection|bool and _aegis_storage_resource|bool
 
 
 - name: configure iRODS for Aegis
@@ -37,7 +37,7 @@
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - when: _aegis_base_collection is defined 
+    - when: _aegis_base_collection|bool
       block:
         - name: ensure base collection exists
           delegate_to: localhost

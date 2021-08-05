@@ -1,0 +1,97 @@
+---
+- name: create aegis vault
+  hosts: rs
+  become: true
+  tasks:
+    - name: create vault directory
+      file:
+        path: "{{ _aegis_storage_resource.vault }}"
+        follow: true
+        owner: "{{ _irods_service_account_name }}"
+        group: "{{ _irods_service_group_name }}"
+        mode: 'ug=rwx,o-rwx'
+        state: directory
+      when: _aegis_base_collection != '' and _aegis_storage_resource is mapping
+
+
+- name: create aegis storage resource
+  hosts: rs
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
+  tasks:
+    - name: create storage resource
+      irods_unixfilesystem_resource:
+        name: "{{ _aegis_storage_resource.name }}"
+        host: "{{ inventory_hostname }}"
+        vault: "{{ _aegis_storage_resource.vault }}"
+        context: "{{ _aegis_storage_resource.context }}"
+        status: down
+        init_free_space: true
+      when: _aegis_base_collection != '' and _aegis_storage_resource is mapping
+
+
+- name: configure iRODS for Aegis
+  hosts: ies
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  run_once: true
+  tasks:
+    - when: _aegis_base_collection != ''
+      block:
+        - name: ensure base collection exists
+          delegate_to: localhost
+          become: false
+          irods_collection:
+            path: "{{ _aegis_base_collection }}"
+            parents: true
+            state: present
+            host: "{{ inventory_hostname }}"
+            port: "{{ _irods_zone_port }}"
+            zone: "{{ _irods_zone_name }}"
+            admin_user: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+
+        - name: create resource hierarchy
+          irods_resource_hierarchy:
+            hierarchy: "{{ _aegis_resource_hierarchy }}"
+
+        - name: assign collection to resource
+          delegate_to: localhost
+          become: false
+          irods_avu:
+            entity_type: resource
+            entity_name: "{{ _aegis_resource_hierarchy.name }}"
+            attribute: ipc::hosted-collection
+            value: "{{ _aegis_base_collection }}"
+            units: required
+            host: "{{ inventory_hostname }}"
+            port: "{{ _irods_zone_port }}"
+            zone: "{{ _irods_zone_name }}"
+            username: "{{ _irods_clerver_user }}"
+            password: "{{ _irods_clerver_password }}"
+
+
+- name: remove aegis related rules
+  hosts: irods
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tasks:
+    - name: remove aegis-specific replication logic
+      replace:
+        dest: /etc/irods/ipc-repl.re
+        regexp: "{{ '  on (aegis_replBelongsTo('|regex_escape }}[\\s\\S]+?(?=  on )"
+
+    - name: remove include from ipc-custom.re
+      lineinfile:
+        path: /etc/irods/ipc-custom.re
+        line: "@include 'aegis'"
+        state: absent  
+
+    - name: remove aegis rule bases
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - aegis.re
+        - aegis-env.re

@@ -1,6 +1,11 @@
 ---
 ansible_python_interpreter: /usr/bin/python
 
+aegis_storage_resource:
+  name: aegis
+  vault: /var/lib/irods/aegis_vault
+  context: minimum_free_space_for_create_in_bytes=1048576
+
 irods_default_dir_mode: '0770'
 irods_default_file_mode: '0660'
 

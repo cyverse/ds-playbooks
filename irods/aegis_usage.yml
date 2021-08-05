@@ -58,6 +58,7 @@
 
         - name: assign collection to resource
           delegate_to: localhost
+          delegate_facts: true
           become: false
           irods_avu:
             entity_type: resource

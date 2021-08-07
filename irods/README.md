@@ -77,7 +77,8 @@ Variable                                   | Default                            
 `irods_service_account_name`               | irods                                |         | the system account used to run the iRODS server processes
 `irods_service_group_name`                 | `irods_service_account_name`         |         | the system group used to run the iRODS server processes
 `irods_storage_resources`                  | `[]`                                 |         | a list of storage resources hosted on the server being configured, _see below_
-`irods_version`                            | 4.1.11                               |         | the version of iRODS to work with
+`irods_user_password_salt`                 |                                      |         | the salt used when obfuscating user passwords stored in the catalog database
+`irods_version`                            | 4.2.8                                |         | the version of iRODS to work with
 `irods_zone_key`                           | TEMPORARY_zone_key                   |         | the zone key
 `irods_zone_name`                          | tempZone                             |         | the name of the zone
 `pire_manager`                             | null                                 |         | The username that owns the PIRE project collection, if `null`, the collection isn't created.

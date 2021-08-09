@@ -7,16 +7,20 @@
 - name: start receivers
   hosts: irods
   vars:
-    ephemeral_ports: "{{
-      range(_irods_server_port_range_start | int, (_irods_server_port_range_end | int) + 1) |
-      list }}"
+    ephemeral_ports: >-
+      {{ range(_irods_server_port_range_start|int, _irods_server_port_range_end|int + 1) | list }}
   tags:
     - non_idempotent
   tasks:
+    - name: wait for active zone port connections to close
+      wait_for:
+        port: "{{ _irods_zone_port }}"
+        state: drained
+ 
     - name: start receiver
       port_check_receiver:
-        tcp_ports: "{{
-          [ _irods_zone_port, _irods_server_control_plane_port ] | union(ephemeral_ports) }}"
+        tcp_ports: >-
+          {{ [ _irods_zone_port, _irods_server_control_plane_port ] | union(ephemeral_ports) }}
         udp_ports: "{{ ephemeral_ports }}"
       async: 600
       poll: 0
@@ -80,19 +84,26 @@
     - name: check other resource servers ports
       port_check_sender:
         destination: "{{ item }}"
-        tcp_ports: "{{ [ hostvars[item]._irods_zone_port ]
-                       | union(range(hostvars[item]._irods_server_port_range_start | int,
-                                     (hostvars[item]._irods_server_port_range_end | int) + 1)
-                               | list) }}"
-        udp_ports: "{{ range(hostvars[item]._irods_server_port_range_start | int,
-                             (hostvars[item]._irods_server_port_range_end | int) + 1)
-                       | list }}"
+        tcp_ports: >-
+          {{ 
+            [ hostvars[item]._irods_zone_port ]
+              | union(
+                range(
+                    hostvars[item]._irods_server_port_range_start|int, 
+                    hostvars[item]._irods_server_port_range_end|int + 1 ) 
+                  | list ) }}
+        udp_ports: >-
+          {{ 
+            range(
+                hostvars[item]._irods_server_port_range_start|int, 
+                hostvars[item]._irods_server_port_range_end|int + 1 ) 
+              | list }}
         timeout: "{{ _check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['irods_resource'] | difference([inventory_hostname]) }}"
 
 
-- name: stop receiver
+- name: stop receivers
   hosts: irods
   gather_facts: false
   tags:
@@ -124,7 +135,6 @@
   hosts: irods
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
-  become_flags: '-i'
   gather_facts: false
   tasks:
     - when: stop_irods_result is changed

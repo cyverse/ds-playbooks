@@ -26,6 +26,19 @@ irods_calliope_project_coll: /testing/home/shared/calliope
 
 irods_default_repl_resource: replRes
 
+irods_federation:
+  - catalog_provider_hosts:
+      - 128.196.65.155
+      - 128.196.65.45
+    negotiation_key: FAKE___32_byte_negotiation_key_1
+    zone_key: FAKE_zone_key_1
+    zone_name: cyverse.dev
+  - catalog_provider_hosts:
+      - data.cyverse.rocks
+    negotiation_key: FAKE___32_byte_negotiation_key_2
+    zone_key: FAKE_zone_key_2
+    zone_name: cyverse
+
 irods_resource_hierarchies:
   - name: ingestRes
   - name: replRes

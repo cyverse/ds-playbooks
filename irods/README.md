@@ -116,12 +116,12 @@ The `restart_irods` flag is ignored in the `main.yml` playbook.
 
 All of them are required.
 
-Field             | Comments
------------------ | --------
-`icat_host`       | the FQDN or IP address of the catalog service provider in the federate
-`negotiation_key` | the 32-byte encryption key of the federate
-`zone_key`        | the shared authentication secret of the federate
-`zone_name`       | the name of the federated zone
+Field                    | Comments
+------------------------ | --------
+`catalog_provider_hosts` | a list of the catalog service providers in the federate, each indicated by its FQDN or IP address
+`negotiation_key`        | the 32-byte encryption key of the federate
+`zone_key`               | the shared authentication secret of the federate
+`zone_name`              | the name of the federated zone
 
 `irods_resource_hierarchies` entry fields
 

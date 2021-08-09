@@ -20,18 +20,11 @@ $(printHelpText)
 
 Summary:
 This script runs a playbook with in the testing environment. If no inventory
-hosts file is provided, it will use 'hosts-all'. If no playbook is provided, it
-will attempt to run the playbook <playbook_folder>/main.yml.
+hosts file is provided, it will use 'hosts-all'. If no playbook is provided, no
+playbook will be run. When combined with -i, this allows the environment to be 
+started in interactive mode.
 EOF
 }
-
-
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-  readonly ExecName=$(greadlink -f "$0")
-else
-  readonly ExecName=$(readlink --canonicalize "$0")
-fi
 
 
 printHelpText(){
@@ -65,10 +58,16 @@ EOF
 }
 
 
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+  readonly ExecName=$(greadlink -f "$0")
+else
+  readonly ExecName=$(readlink --canonicalize "$0")
+fi
+
 readonly BaseDir=$(dirname "$ExecName")
 readonly Cfg="$BaseDir"/config.inc
 readonly DefaultHosts=hosts-all
-readonly DefaultPlaybook=main.yml
 
 
 main()
@@ -123,9 +122,12 @@ main()
   playbooks=$(resolve_playbook_dir "$1")
 
   local playbook
-  playbook=$(resolve_playbook "$playbooks" "$playbookInput")
+  if [[ -n "${playbookInput-}" ]]
+  then
+    playbook="$(resolve_playbook "$playbooks" "$playbookInput")"
+  fi
 
-  do_run "$doInspect" "$pretty" "$playbooks" "$playbook" "$hosts"
+  do_run "$doInspect" "$pretty" "$playbooks" "$hosts" "${playbook-}"
 }
 
 
@@ -134,12 +136,12 @@ do_run()
   local doInspect="$1"
   local pretty="$2"
   local playbooks="$3"
-  local playbook="$4"
-  local hosts="$5"
+  local hosts="$4"
+  local playbook="$5"
 
   if "$BaseDir"/env/controller "$Cfg" start
   then
-    "$BaseDir"/ansible-tester/run "$doInspect" "$pretty" "$playbooks" "$playbook" "$hosts"
+    "$BaseDir"/ansible-tester/run "$doInspect" "$pretty" "$playbooks" "$hosts" "$playbook"
   fi
 
   "$BaseDir"/env/controller "$Cfg" stop
@@ -183,8 +185,6 @@ resolve_playbook()
 {
   local playbooks="$1"
   local playbook="$2"
-
-  : "${playbook:=$DefaultPlaybook}"
 
   if [[ "$playbook" != *.* ]]
   then

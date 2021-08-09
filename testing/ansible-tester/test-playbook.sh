@@ -1,50 +1,61 @@
 #!/bin/bash
 #
 # Usage:
-#  test-playbook INSPECT PRETTY PLAYBOOK
+#  test-playbook INSPECT HOSTS [PLAYBOOK PRETTY [VERBOSE]] 
 #
 # Parameters:
+#  HOSTS     the inventory hosts to test against
 #  INSPECT   if this is `true`, a shell will be opened that allows access to the
 #            volumes in the env containers.
+#  PLAYBOOK  the name of the playbook being tested.
 #  PRETTY    if this is `true`, more info is dumped and newlines in ouput are
 #            expanded.
-#  PLAYBOOK  the name of the playbook being tested.
-#  HOSTS     the inventory hosts to test against
 #  VERBOSE   if this is set to any value, ansible will be passed the verbose
 #            flag -vvv
 #
 # This program executes and ansible playbook on the test environment.
 
-set -o nounset -o pipefail
+set -o errexit -o nounset -o pipefail
 
 
-main()
-{
+main() {
   local inspect="$1"
-  local pretty="$2"
-  local playbook="$3"
-  local hosts="$4"
-  local verbose="$5"
+  local hosts="$2"
 
-  if [ "$pretty" = true ]
+  local playbook pretty
+  if (( $# >= 3 ))
   then
-    export ANSIBLE_STDOUT_CALLBACK=minimal
+    playbook="$3"
+    pretty="$4"
   fi
 
-  do_test "$playbook" "$hosts" "$verbose"
+  local verbose
+  if (( $# >= 5 ))
+  then
+    verbose="$5"
+  fi
+  
+  if [[ "${playbook-}" ]]
+  then
+    if [ "$pretty" = true ]
+    then
+      export ANSIBLE_STDOUT_CALLBACK=minimal
+    fi
+
+    do_test "$playbook" "$hosts" "${verbose-}"
+  fi || true
 
   if [ "$inspect" = true ]
   then
     printf 'Opening shell for inspection of volumes\n'
     bash
-  fi
+  fi || true
 
   return 0
 }
 
 
-do_test()
-{
+do_test() {
   local playbook="$1"
   local hosts="$2"
   local verbose="$3"

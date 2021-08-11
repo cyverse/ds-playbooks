@@ -21,6 +21,7 @@ ipc_IES_IP = '{{ _irods_ies if _irods_ies|ipaddr else lookup("dig", _irods_ies) 
 ipc_MAX_NUM_RE_PROCS: integer
 ipc_MAX_NUM_RE_PROCS = {{ _irods_max_num_re_procs }}
 
+# the rule engine host
 ipc_RE_HOST: string
 ipc_RE_HOST = '{{ _irods_ies }}'
 

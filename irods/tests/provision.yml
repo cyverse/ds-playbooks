@@ -7,7 +7,7 @@
     # NB: The rpm and yum bindings for the test_pkg_installed.yml tasks require
     ansible_python_interpreter: /usr/bin/python
     group_name: >-
-      {{ 'irods_catalog' if inventory_hostname in groups['irods_catalog'] else 'irods' }}
+      {{ 'irods_provider' if inventory_hostname in groups['irods_catalog'] else 'irods' }}
   tasks:
     - include_tasks: tasks/test_pkg_installed.yml
       with_items:

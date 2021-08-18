@@ -23,7 +23,7 @@
 #  otherwise it writes 'false'.
 
 shopt -s lastpipe
-set -o errexit -o nounset
+set -o errexit -o nounset -o pipefail
 
 readonly Changes=$(mktemp)
 
@@ -40,23 +40,28 @@ trap finish_up EXIT
 
 main()
 {
-  if [ "$#" -lt 4 ]
+  if [ "$#" -lt 5 ]
   then
-    printf 'requires four input parameters\n' >&2
+    printf 'requires five input parameters\n' >&2
     return 1
   fi
 
   local dbmsHost="$1"
-  local dbmsPort="$2"
-  local dbUser="$3"
-  local zone="$4"
+  local dbmsSvcUser="$2"
+  local sshDbmsPort="$3"
+  local sshDbmsUser="$4"
+  local irodsHost="$5"
+  local irodsSvcUser="$6"
+  local sshIrodsPort="$7"
+  local sshIrodsUser="$8"
+  local zone="$9"
 
-  gather_changes "$dbmsHost" "$dbmsPort" "$dbUser" "$zone" > "$Changes"
+  gather_changes "$dbmsHost" "$sshDbmsPort" "$sshDbmsUser" "$dbmsSvcUser" "$zone" > "$Changes"
 
   if [ -s "$Changes" ]
   then
-    set_permissions write < "$Changes"
-    set_permissions own < "$Changes"
+    set_permissions "$irodsHost" "$sshIrodsPort" "$sshIrodsUser" "$irodsSvcUser" write < "$Changes"
+    set_permissions "$irodsHost" "$sshIrodsPort" "$sshIrodsUser" "$irodsSvcUser" own < "$Changes"
     printf true
   else
     printf false
@@ -75,13 +80,15 @@ extract_path()
 
 gather_changes()
 {
-  local host="$1"
-  local port="$2"
-  local user="$3"
-  local zone="$4"
+  local dbmsHost="$1"
+  local sshDbmsPort="$2"
+  local sshDbmsUser="$3"
+  local dbmsSvcUser="$4"
+  local zone="$5"
 
-  psql --no-align --quiet --record-separator-zero --tuples-only --host "$host" --port "$port" \
-       ICAT "$user" \
+  ssh -q -p "$sshDbmsPort" "$sshDbmsUser"@"$dbmsHost" \
+      "sudo --login --user='$dbmsSvcUser' \\
+        psql --no-align --quiet --record-separator-zero --tuples-only ICAT" \
     <<SQL
 BEGIN;
 
@@ -114,7 +121,11 @@ SQL
 
 set_permissions()
 {
-  local perm="$1"
+  local irodsHost="$1"
+  local sshIrodsPort="$2"
+  local sshIrodsUser="$3"
+  local irodsSvcUser="$4"
+  local perm="$5"
 
   local permLabel
   if [ "$perm" = write ]
@@ -126,7 +137,9 @@ set_permissions()
 
   grep --null-data --regexp "^$permLabel" \
     | extract_path \
-    | xargs --no-run-if-empty --null ichmod -M "$perm" rodsadmin
+    | ssh -q -p "$sshIrodsPort" "$sshIrodsUser"@"$irodsHost" \
+      "sudo --login --user '$irodsSvcUser' \\
+        xargs --no-run-if-empty --null ichmod -M "$perm" rodsadmin"
 }
 
 

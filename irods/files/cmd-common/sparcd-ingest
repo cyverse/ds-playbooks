@@ -129,14 +129,31 @@ map_metadata() {
 	local parentColl="$1"
 	local metaFile="$2"
 
-	local rc=0
-
 # XXX: This doesn't work in iRODS 4.2.8. See
 # https://github.com/irods/irods/issues/5518
 # 	if ! iget "$metaFile" - | mk_imeta_cmds "$parentColl" | imeta > /dev/null 2>&1; then
+# 		printf 'The script failed to add all metadata from %s to files in %s.\n' \
+# 					"$metaFile" "$parentColl" \
+# 				>&2 \
+# 			|| true
+# 		return 1
+# 	fi
+	if ! iget "$metaFile" - | apply_metadata "$parentColl"; then
+		printf 'The script failed to add all metadata from %s to files in %s.\n' \
+					"$metaFile" "$parentColl" \
+				>&2 \
+			|| true
+		return 1
+	fi
+}
+apply_metadata() {
+	local parentColl="$1"
+
+	local rc=0
+
 	local metaEntries
-	IFS=$'\n' readarray -t metaEntries < <(iget "$metaFile" -) || rc=$?
-	if (( rc == 0 )); then
+	IFS=$'\n' readarray -t metaEntries
+	if [[ -n "${metaEntries-}" ]]; then
 		local entry
 		for entry in "${metaEntries[@]}"; do
 			local fields
@@ -160,14 +177,8 @@ map_metadata() {
 		done
 	fi
 
-	if (( rc != 0 )); then
-# XXX: ^^^
-		printf 'The script failed to add all metadata from %s to files in %s.\n' "$metaFile" "$coll" \
-				>&2 \
-			|| true
-	fi
-
 	return $rc
+# XXX: ^^^
 }
 
 

@@ -9,7 +9,8 @@
   vars:
     head: "{{ lookup('template', '../templates/webdav/etc/httpd/head.html.j2') }}"
     default_vcl: "{{ lookup('template', '../templates/webdav/etc/varnish/default.vcl.j2') }}"
-    varnish_service: "{{ lookup('template', '../templates/webdav/usr/lib/systemd/system/varnish.service.j2') }}"
+    varnish_service: >-
+      {{ lookup('template', '../templates/webdav/usr/lib/systemd/system/varnish.service.j2') }}
   tasks:
     - name: verify head.html expands correctly
       assert:
@@ -20,21 +21,24 @@
     - name: verify default.vcl expands correctly
       assert:
         that:
-          - default_vcl
-              is search('set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * 0.1'
-                        | regex_escape)
+          - >-
+            default_vcl
+            is search(
+              'set beresp.ttl = (now - std.time(beresp.http.Last-Modified, now)) * 0.1'
+                | regex_escape )
           - default_vcl is search('beresp.ttl >= 86400s' | regex_escape)
           - default_vcl is search('set beresp.ttl = 86400s' | regex_escape)
-          - default_vcl
-              is search('if (std.integer(beresp.http.Content-Length, 0) > 10485760)' | regex_escape)
+          - >-
+            default_vcl
+            is search('if (std.integer(beresp.http.Content-Length, 0) > 10485760)' | regex_escape)
 
     - name: verify varnish.service expands correctly
       assert:
         that:
           - varnish_service is search('-a :6081,HTTP')
-          - varnish_service
-              is search('-s file,/var/cache/varnish/varnish_cache.bin,1000M'
-                        | regex_escape)
+          - >-
+            varnish_service 
+            is search('-s file,/var/cache/varnish/varnish_cache.bin,1000M' | regex_escape)
 
 
 - name: test WebDAV dav html template expansion
@@ -55,18 +59,21 @@
           - index is search('<title>WebDAV Service Landing Page</title>')
           - index is search('Data Store WebDAV Access')
           - index is search('WebDAV services. If a')
+          - >-
+            index
+            is search(
+              '<a href="testing/commons/community_released/">testing/commons/community_released/</a>' 
+            )
           - index
-              is search('<a href="testing/commons/community_released/">testing/commons/community_released/</a>')
-          - index
-              is search('<a href="testing/commons/cyverse_curated/">testing/commons/cyverse_curated/</a>')
+            is search(
+              '<a href="testing/commons/cyverse_curated/">testing/commons/cyverse_curated/</a>' )
           - index is search('<a href="testing/projects/">testing/projects/</a>')
           - index is search('<a href="testing/home/">testing/home/</a>')
           - index is search('accessible without authentication.')
 
     - name: verify index.html expands correctly, part 2
       assert:
-        that:
-          - index is not search('has four anonymous, read-only')
+        that: index is not search('has four anonymous, read-only')
 
     - name: verify zone/index.html expands correctly
       assert:
@@ -125,8 +132,7 @@
 
     - name: verify zone/index.html expands correctly, part 2
       assert:
-        that:
-          - zone_index is not search('<a href="home/">home/</a>')
+        that: zone_index is not search('<a href="home/">home/</a>')
 
     - name: verify zone/commons/index.html expands correctly
       assert:
@@ -147,40 +153,31 @@
         - mod_proxy_html
         - mod_ssl
         - mod_qos
+        - yum-plugin-versionlock
       loop_control:
         loop_var: pkg
+
+    - name: test install iRODS package repository signing key
+      debug:
+        msg: TODO implement
+
+    - name: test install iRODS repository
+      debug:
+        msg: TODO implement
+
+    - name: test force import of GPG key
+      debug:
+        msg: TODO implement
+
+    - name: test lock irods-runtime to version 4.2.8
+      debug:
+        msg: TODO implement
 
     - name: test ssl.conf is gone
       stat:
         path: /etc/httpd/conf.d/ssl.conf
       register: response
       failed_when: response.stat.exists
-
-    - name: remove mod_ssl
-      package:
-        name: mod_ssl
-        state: absent
-
-    - name: install mod_ssl
-      package:
-        name: mod_ssl
-        state: present
-
-    - name: test ssl.conf is gone after reinstall (simulate update)
-      stat:
-        path: /etc/httpd/conf.d/ssl.conf
-      register: response
-      failed_when: response.stat.exists
-
-    - include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: irods-icommands
-        ver: '4.1.10'
-
-    - include_tasks: tasks/test_pkg_installed.yml
-      vars:
-        pkg: irods-runtime
-        ver: '4.1.10'
 
     - name: test add davrods irods directory contents
       stat:
@@ -250,7 +247,7 @@
       stat:
         path: /var/lib/varnish
       register: response
-      failed_when:
+      failed_when: >-
         not response.stat.exists or
         not response.stat.isdir or
         response.stat.mode != '0777'
@@ -259,7 +256,7 @@
       stat:
         path: /cache_vol
       register: response
-      failed_when: >
+      failed_when: >-
         not response.stat.exists or
         not response.stat.isdir or
         response.stat.pw_name != 'varnish' or
@@ -270,7 +267,7 @@
       stat:
         path: /var/log/varnish
       register: response
-      failed_when: >
+      failed_when: >-
         not response.stat.exists or
         not response.stat.isdir or
         response.stat.pw_name != 'varnishlog' or
@@ -299,7 +296,7 @@
       stat:
         path: /etc/systemd/system/httpd.service.requires/varnish.service
       register: response
-      failed_when: >
+      failed_when: >-
         not response.stat.exists or
         not response.stat.islnk or
         response.stat.lnk_source != '/usr/lib/systemd/system/varnish.service'

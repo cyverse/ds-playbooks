@@ -319,7 +319,7 @@
       register: response
       failed_when: not response.stat.exists
 
-    - name: test purgeman.cfg deployed
+    - name: test purgeman.conf deployed
       stat:
         path: /etc/purgeman/purgeman.conf
       register: response

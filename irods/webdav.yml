@@ -387,7 +387,7 @@
 
     - name: download purgeman package from github and uncompress
       unarchive:
-        src: "https://github.com/cyverse/purgeman/releases/download/v0.1/purgeman_0.1.tar.gz"
+        src: "https://github.com/cyverse/purgeman/releases/download/v0.2/purgeman_0.2.tar.gz"
         dest: "{{ ansible_env.HOME }}/purgeman_setup"
         remote_src: True
 

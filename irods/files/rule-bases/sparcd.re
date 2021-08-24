@@ -4,7 +4,6 @@
 
 _sparcd_PERM = 'own'
 
-
 _sparcd_encode_subject(*Subject) =
   let *enc = '' in
   let *len = strlen(*Subject) in
@@ -15,7 +14,17 @@ _sparcd_encode_subject(*Subject) =
     *pos = *pos + 1 } 
   in *enc
 
+_sparcd_encode_url(*Url) =
+  let *enc = '' in
+  let *len = strlen(*Url) in
+  let *pos = 0 in
+  let *_ = while (*len > *pos) {
+    *c = substr(*Url, *pos, *pos + 1);
+    *enc = *enc ++ if *c == ' ' then '%20' else *c;
+    *pos = *pos + 1 }
+  in *enc
 
+ 
 _sparcd_logMsg(*Msg) {
   writeLine('serverLog', 'SPARCD: *Msg');
 }
@@ -40,7 +49,7 @@ _sparcd_ingest(*Uploader, *TarPath) {
   *status = errormsg(msiExecCmd("sparcd-ingest", *args, "null", *TarPath, "null", *out), *err);
 
   *coll = trimr(*TarPath, '-');
-  *url = 'https://' ++ sparcd_WEBDAV_HOST ++ '/dav' ++ *coll ++ '/';   
+  *url = _sparcd_encode_url('https://' ++ sparcd_WEBDAV_HOST ++ '/dav' ++ *coll ++ '/');   
 
   if (*status == 0) {
     _sparcd_notify(

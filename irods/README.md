@@ -47,7 +47,6 @@ Variable                                   | Default                            
 `irods_amqp_port`                          | 5672                                 |         | The TCP port the RabbitMQ broker listens on
 `irods_amqp_user`                          | guest                                |         | The user iRODS uses to connect to the AMQP vhost
 `irods_ampq_vhost`                         | /                                    |         | The AMQP vhost iRODS connects to
-`irods_default_repl_resource` is.
 `irods_allowed_clients`                    | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
 `irods_clerver_password`                   | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | `irods_admin_username`               |         | the rodsadmin user to be used by the server being configured

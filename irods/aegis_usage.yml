@@ -58,6 +58,7 @@
 
         - name: assign collection to resource
           delegate_to: localhost
+          delegate_facts: true
           become: false
           irods_avu:
             entity_type: resource
@@ -90,7 +91,7 @@
 
     - name: remove aegis rule bases
       file:
-        path: "{{ item }}"
+        path: /etc/irods/{{ item }}
         state: absent
       with_items:
         - aegis.re

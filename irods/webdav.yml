@@ -2,6 +2,8 @@
 - name: Install and configure apache
   hosts: webdav
   become: true
+  collections:
+    - community.general
   roles:
     - role: geerlingguy.apache
       vars:
@@ -176,7 +178,9 @@
               <Directory "/var/www/cgi-bin">
                 SSLOptions +StdEnvVars
               </Directory>
-            comment: This proxy handles TLS, corrects requests, enables caching, and anonymous access for XMLHttpRequests
+            comment: >-
+              This proxy handles TLS, corrects requests, enables caching, and anonymous access for 
+              XMLHttpRequests
         apache_vhosts_template: ../../templates/webdav/etc/httpd/conf.d/vhosts.conf.j2
       tags:
         - no_testing
@@ -191,6 +195,36 @@
     - name: package_facts uses auto, setup for next task
       package_facts:
 
+    - name: install yum versionlock
+      package:
+        name: yum-plugin-versionlock
+        state: present
+    
+    - name: install iRODS package repository signing key
+      rpm_key:
+        key: https://packages.irods.org/irods-signing-key.asc
+
+    - name: install iRODS repository
+      get_url:
+        url: https://packages.irods.org/renci-irods.yum.repo
+        dest: /etc/yum.repos.d/renci-irods.yum.repo
+
+    - name: force import of GPG key
+      shell: |
+        if ! resp="$(yum --assumeyes updateinfo)"; then
+          exit 1
+        fi
+        if [[ "$resp" =~ irods-signing-key ]]; then
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: lock irods-runtime to version 4.2.8
+      yum_versionlock:
+        name: irods-runtime-4.2.8
+        state: present
+      
     - name: install mod_proxy_html
       package:
         name: mod_proxy_html
@@ -203,21 +237,10 @@
       package:
         name: mod_ssl
 
-    - include_tasks: tasks/install_irods_pkg.yml
-      vars:
-        os: centos{{ ansible_distribution_major_version }}
-        pkg: irods-icommands
-        pkg_ver: "{{ _irods_version }}"
-
-    - include_tasks: tasks/install_irods_pkg.yml
-      vars:
-        os: centos{{ ansible_distribution_major_version }}
-        pkg: irods-runtime
-        pkg_ver: "{{ _irods_version }}"
-
     - name: install davrods
       yum:
-        name: https://github.com/UtrechtUniversity/davrods/releases/download/4.1_1.4.1/davrods-4.1_1.4.1-1.el7.centos.x86_64.rpm
+        name: https://github.com/UtrechtUniversity/davrods/releases/download/4.2.8_1.5.0/davrods-4.2.8_1.5.0-1.rpm
+        state: present
 
     - include_role:
         name: cyverse.irods-cfg
@@ -280,7 +303,7 @@
       notify:
         - restart httpd
 
-    - when: >
+    - when: >-
         'varnish' in ansible_facts.packages
         and ansible_facts.packages['varnish'][0].version is version_compare('6.5.1', '<')
       block:

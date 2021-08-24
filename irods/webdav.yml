@@ -243,7 +243,7 @@
         state: present
 
     - include_role:
-        name: cyverse.irods-cfg
+        name: cyverse.irods_cfg
         tasks_from: client.yml
       vars:
         irods_cfg_environment_file: etc/httpd/irods/irods_environment.json

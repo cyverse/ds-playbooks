@@ -30,7 +30,7 @@
             - "files/cmd-common/*"
 
         - import_role:
-            name: cyverse.irods-cfg
+            name: cyverse.irods_cfg
           vars:
             irods_cfg_chown: false
             irods_cfg_client_server_policy: "{{ _irods_client_server_policy }}"

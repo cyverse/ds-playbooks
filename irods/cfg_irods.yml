@@ -39,7 +39,7 @@
 
     - name: generate configuration files
       import_role:
-        name: cyverse.irods-cfg
+        name: cyverse.irods_cfg
       vars:
         amqp_user_info: "{{ _amqp_user }}:{{ _amqp_password }}"
         amqp_authority: "{{ amqp_user_info }}@{{ _amqp_host }}:{{ _amqp_port }}"

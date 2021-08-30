@@ -1,5 +1,8 @@
 # The general Data Store rule independent of environment specific rule 
 # customizations.
+#
+# © 2021 The Arizona Board of Regents on behalf of The University of Arizona. 
+# For license information, see https://cyverse.org/license.
 
 @include 'ipc-amqp'
 @include 'ipc-json'

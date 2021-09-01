@@ -240,36 +240,78 @@ _repl_logMsg(*Msg) {
 
 
 # DEPRECATED
-# XXX - As of 4.2.1, Booleans and tuples are not supported by packing instructions. The resource
+# XXX - As of 4.2.10, Booleans and tuples are not supported by packing instructions. The resource
 #       description tuple must be expanded, and the second term needs to be converted to a string.
 #       See https://github.com/irods/irods/issues/3634 for Boolean support.
-# TODO - verify that this is still the case in iRODS 4.2.2.
 _scheduleMv(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalStr) {
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5413.
+#     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
+#       https://github.com/irods/irods/issues/5257
 #   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
+#   {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)));}
+#
+#   _incDelayTime;
+# }
   delay(
     ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
       <PLUSET>' ++ str(_delayTime) ++ 's</PLUSET>
-      <EF>8h REPEAT UNTIL SUCCESS</EF> ' )
-  {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)));}
+      <EF>0s REPEAT 0 TIMES</EF> ' )
+  {#_mvReplicas
+    _mvReplicas_workaround(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalStr);
+  }
 
   _incDelayTime;
 }
+_mvReplicas_workaround(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalStr) {
+  *ingestRes = (*IngestName, bool(*IngestOptionalStr));
+  *replRes = (*ReplName, bool(*ReplOptionalStr));
+
+  if (errorcode(_mvReplicas(*Object, *ingestRes, *replRes)) < 0) {
+    delay(
+      ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+        <PLUSET>8h</PLUSET>
+        <EF>0s REPEAT 0 TIMES</EF> ' )
+    {#_mvReplicas
+      _mvReplicas_workaround(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalStr);
+    }
+  }
+}
+# XXX - ^^^
 
 
 _repl_scheduleMv(*Object, *IngestName, *ReplName) {
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5413.
+#     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
+#       https://github.com/irods/irods/issues/5257
 #   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
+#   {_repl_mvReplicas(*Object, *IngestName, *ReplName);}
+#
+#   _incDelayTime;
+# }
   delay(
     ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
       <PLUSET>' ++ str(_delayTime) ++ 's</PLUSET>
-      <EF>8h REPEAT UNTIL SUCCESS</EF> ' )
-  {_repl_mvReplicas(*Object, *IngestName, *ReplName);}
+      <EF>0s REPEAT 0 TIMES</EF> ' )
+  {#_repl_mvReplicas
+    _repl_mvReplicas_workaround(*Object, *IngestName, *ReplName);
+  }
 
   _incDelayTime;
 }
+_repl_mvReplicas_workaround(*Object, *IngestName, *ReplName) {
+  if (errorcode(_repl_mvReplicas(*Object, *IngestName, *ReplName)) < 0) {
+    delay(
+      ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+        <PLUSET>8h</PLUSET>
+        <EF>0s REPEAT 0 TIMES</EF> ' )
+    {#_repl_mvReplicas
+      _repl__mvReplicas_workaround(*Object, *IngestName, *ReplName);
+    }
+  }
+}
+# XXX - ^^^
 
 
 # DEPRECATED
@@ -324,15 +366,35 @@ _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
 _repl_scheduleRepl(*Object, *RescName) {
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5413.
-  #delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
+#     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
+#       https://github.com/irods/irods/issues/5257
+#   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
+#   {_repl_replicate(*Object, *RescName);}
+#
+#   _incDelayTime;
+# }
   delay(
     ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
       <PLUSET>' ++ str(_delayTime) ++ 's</PLUSET>
-      <EF>8h REPEAT UNTIL SUCCESS</EF> ' )
-  {_repl_replicate(*Object, *RescName);}
+      <EF>0s REPEAT 0 TIMES</EF> ' )
+  {#_repl_replicate
+    _repl_replicate_workaround(*Object, *RescName);
+  }
 
   _incDelayTime;
 }
+_repl_replicate_workaround(*Object, *RescName) {
+  if (errorcode(_repl_replicate(*Object, *RescName)) < 0) {
+    delay(
+      ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+        <PLUSET>8h</PLUSET>
+        <EF>0s REPEAT 0 TIMES</EF> ' )
+    {#_repl_replicate
+      _repl__replicate_workaround(*Object, *RescName);
+    }
+  }
+}
+# XXX - ^^^
 
 
 _repl_scheduleSyncReplicas(*Object) {
@@ -341,49 +403,39 @@ _repl_scheduleSyncReplicas(*Object) {
     if (int(*rec.DATA_REPL_NUM) > 0) {
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5413.
+#     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
+#       https://github.com/irods/irods/issues/5257
 #       delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
+#       {_repl_syncReplicas(*Object)}
+#
+#       _incDelayTime;
+#     }
+#   }
+# }
       delay(
         ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
           <PLUSET>' ++ str(_delayTime) ++ 's</PLUSET>
-          <EF>8h REPEAT UNTIL SUCCESS</EF> ' )
-# XXX - Due to https://github.com/irods/irods/issues/3621, _repl_syncReplicas has been inlined. Verify
-#       that this is still the case in iRODS 4.2.2.
-#       {_repl_syncReplicas(*Object);}
-      { # _repl_syncReplicas
-  # XXX - Due to https://github.com/irods/irods/issues/3621, _repl_logMsg has been inlined. Verify
-  #       that this is still the case in iRODS 4.2.2.
-  #       _repl_logMsg('syncing replicas of *Object');
-        writeLine('serverLog', 'DS: syncing replicas of data object *Object');
-
-        *dataPath = '';
-        foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
-          *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
-        }
-
-        if (*dataPath == '') {
-          _repl_logMsg('data object *Object no longer exists');
-        } else {
-          *err = errormsg(
-            msiDataObjRepl(*dataPath, 'all=++++updateRepl=++++verifyChksum=', *status), *msg);
-
-          if (*err < 0 && *err != -808000) {
-            _repl_logMsg('failed to sync replicas of data object *Object trying again in 8 hours');
-            _repl_logMsg(*msg);
-            *err;
-          } else {
-  # XXX - Due to https://github.com/irods/irods/issues/3621, _repl_logMsg has been inlined. Verify
-  #       that this is still the case in iRODS 4.2.2.
-  #           _repl_logMsg('synced replicas of data object *Object');
-            writeLine('serverLog', 'DS: synced replicas of data object *Object');
-          }
-        }
-# XXX - ^^^
+          <EF>0s REPEAT 0 TIMES</EF> ' )
+      {#_repl_syncReplicas
+        _repl_syncReplicas_workaround(*Object);
       }
 
       _incDelayTime;
     }
   }
 }
+_repl_syncReplicas_workaround(*Object) {
+  if (errorcode(_repl_syncReplicas(*Object)) < 0) {
+    delay(
+      ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+        <PLUSET>8h</PLUSET>
+        <EF>0s REPEAT 0 TIMES</EF> ' )
+    {#_repl_syncReplicas
+      _repl__syncReplicas_workaround(*Object);
+    }
+  }
+}
+# XXX - ^^^
 
 
 # DEPRECATED

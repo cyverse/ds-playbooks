@@ -346,39 +346,7 @@ _repl_scheduleSyncReplicas(*Object) {
         ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
           <PLUSET>' ++ str(_delayTime) ++ 's</PLUSET>
           <EF>8h REPEAT UNTIL SUCCESS</EF> ' )
-# XXX - Due to https://github.com/irods/irods/issues/3621, _repl_syncReplicas has been inlined. Verify
-#       that this is still the case in iRODS 4.2.2.
-#       {_repl_syncReplicas(*Object);}
-      { # _repl_syncReplicas
-  # XXX - Due to https://github.com/irods/irods/issues/3621, _repl_logMsg has been inlined. Verify
-  #       that this is still the case in iRODS 4.2.2.
-  #       _repl_logMsg('syncing replicas of *Object');
-        writeLine('serverLog', 'DS: syncing replicas of data object *Object');
-
-        *dataPath = '';
-        foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
-          *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
-        }
-
-        if (*dataPath == '') {
-          _repl_logMsg('data object *Object no longer exists');
-        } else {
-          *err = errormsg(
-            msiDataObjRepl(*dataPath, 'all=++++updateRepl=++++verifyChksum=', *status), *msg);
-
-          if (*err < 0 && *err != -808000) {
-            _repl_logMsg('failed to sync replicas of data object *Object trying again in 8 hours');
-            _repl_logMsg(*msg);
-            *err;
-          } else {
-  # XXX - Due to https://github.com/irods/irods/issues/3621, _repl_logMsg has been inlined. Verify
-  #       that this is still the case in iRODS 4.2.2.
-  #           _repl_logMsg('synced replicas of data object *Object');
-            writeLine('serverLog', 'DS: synced replicas of data object *Object');
-          }
-        }
-# XXX - ^^^
-      }
+      {_repl_syncReplicas(*Object)}
 
       _incDelayTime;
     }

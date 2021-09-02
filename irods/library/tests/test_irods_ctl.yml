@@ -1,0 +1,22 @@
+---
+- name: test irods_ctl
+  hosts: irods
+  become: true
+  become_user: irods
+  tasks:
+    - name: test started state
+      debug:
+        msg: TODO implement
+
+    - name: test restarted state
+      debug:
+        msg: TODO implement
+
+    - name: stop service
+      irods_ctl:
+        state: stopped
+
+    - name: verify service is stopped
+      shell: /var/lib/irods/irodsctl status | grep --quiet 'No iRODS servers running'
+      changed_when: false
+      

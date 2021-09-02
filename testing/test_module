@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Usage:
     test_module <module_folder> <module_name>
@@ -142,8 +143,14 @@ def run_tester(do_inspect, pretty, module_dir, playbook, hosts, verbose):
             ansible-tester "{2}" "{3}" "{4}" "{5}" "{6}";
      rmdir {1}/tests/library)
     """
-    cmd = cmd.format(CFG, module_dir, sh_bool(do_inspect), sh_bool(pretty),
-                     playbook, hosts, verbose)
+    cmd = cmd.format(
+        CFG, 
+        module_dir, 
+        sh_bool(do_inspect), 
+        hosts, 
+        playbook, 
+        sh_bool(pretty), 
+        verbose )
 
     proc = Popen(cmd, shell=True, executable="/bin/bash")
     return_code = proc.wait()

@@ -1,6 +1,6 @@
 ---
 - name: test mk_resource_hierarchies
-  hosts: ies
+  hosts: irods_catalog
   become: true
   become_user: irods
   run_once: true

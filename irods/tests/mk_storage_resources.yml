@@ -1,6 +1,6 @@
 ---
 - name: test mk_storage_resources
-  hosts: rs
+  hosts: irods_resource
   become: true
   become_user: irods
   vars:

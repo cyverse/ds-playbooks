@@ -1,0 +1,7 @@
+---
+- name: test irods_clerver_auth module
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - debug:
+        msg: TODO implement

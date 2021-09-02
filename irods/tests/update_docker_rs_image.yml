@@ -1,6 +1,6 @@
 ---
 - name: test build image
-  hosts: rs
+  hosts: irods_resource
   run_once: true
   gather_facts: false
   tasks:

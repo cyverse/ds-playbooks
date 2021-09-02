@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """
 Provides an ansible module for creating and removing an iRODS group.
 """
@@ -105,6 +105,7 @@ class IRODSGroupModule:
     """
     Module class
     """
+
     def __init__(self):
         """
         Initialize the module
@@ -286,12 +287,14 @@ class IRODSGroupModule:
             # not well documented.
             self._fail("Unable to query irods group {}".format(group_name), exc)
 
+
 def main():
     """
     Entrypoint for the ansible module
     """
     module = IRODSGroupModule()
     module.run()
+
 
 if __name__ == "__main__":
     main()

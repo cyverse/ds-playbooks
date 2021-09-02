@@ -13,13 +13,13 @@ dstesting_dbms_configured_1.dstesting_default
 [dbms_replicas]
 
 [irods:children]
-ies
-rs
+irods_catalog
+irods_resource
 
-[ies]
+[irods_catalog]
 dstesting_provider_configured_1.dstesting_default
 
-[rs]
+[irods_resource]
 dstesting_consumer_configured_1.dstesting_default
 dstesting_consumer_unconfigured_1.dstesting_default
 

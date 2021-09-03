@@ -2,11 +2,11 @@
 - when: inventory_hostname in groups['irods_resource'] | difference(groups['irods_catalog'])
   include_tasks: stop_irods.yml
 
-- name: restart ICAT enabled servers
+- name: restart catalog service providers
   when: inventory_hostname in groups['irods_catalog']
   irods_ctl:
     state: restarted
 
-- name: start resource servers
+- name: start catalog service consumers
   when: inventory_hostname in groups['irods_resource'] | difference(groups['irods_catalog'])
   irods_ctl:

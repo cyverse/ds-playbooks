@@ -4,36 +4,37 @@
 #
 # It requires the following environment variables to be defined.
 #
-# IRODS_CONTROL_PLANE_KEY     The encryption key required for communicating with
-#                             the grid control plane.
-# IRODS_CONTROL_PLANE_PORT    The port on which the control plane operates.
-# IRODS_DEFAULT_RESOURCE      The name of the default resource to use
-# IRODS_DEFAULT_VAULT         The absolute path to the vault of the resource
-#                             server.
-# IRODS_FIRST_EPHEMERAL_PORT  The beginning of the port range available for
-#                             parallel transfer and reconnections.
-# IRODS_HOST                  The FQDN or IP address of the server being
-#                             configured.
-# IRODS_IES                   The FQDN or IP address of the IES.
-# IRODS_LAST_EPHEMERAL_PORT   The end of the port range available for parallel
-#                             transfer and reconnections.
-# IRODS_NEGOTIATION_KEY       The shared encryption key used by the zone in
+# IRODS_CATALOG_PROVIDER      the FQDN or IP address of the catalog service 
+#                             provider
+# IRODS_CONTROL_PLANE_KEY     the encryption key required for communicating with
+#                             the grid control plane
+# IRODS_CONTROL_PLANE_PORT    the port on which the control plane operates
+# IRODS_DEFAULT_RESOURCE      the name of the default resource to use
+# IRODS_DEFAULT_VAULT         the absolute path to the vault of the resource
+#                             server
+# IRODS_FIRST_EPHEMERAL_PORT  the beginning of the port range available for
+#                             parallel transfer and reconnections
+# IRODS_HOST                  the FQDN or IP address of the server being
+#                             configured
+# IRODS_LAST_EPHEMERAL_PORT   the end of the port range available for parallel
+#                             transfer and reconnections
+# IRODS_NEGOTIATION_KEY       the shared encryption key used by the zone in
 #                             advanced negotiation handshake a the beginning of
 #                             a client connection
-# IRODS_SCHEMA_VALIDATION     The URI for the schema used to validate the
-#                             configuration files or 'off'.
-# IRODS_SYSTEM_GROUP          The system group for the iRODS process
-# IRODS_SYSTEM_USER           The system user for the iRODS process
-# IRODS_ZONE_KEY              The shared secred used for authentication during
+# IRODS_SCHEMA_VALIDATION     the URI for the schema used to validate the
+#                             configuration files or 'off'
+# IRODS_SYSTEM_GROUP          the system group for the iRODS process
+# IRODS_SYSTEM_USER           the system user for the iRODS process
+# IRODS_ZONE_KEY              the shared secred used for authentication during
 #                             server-to-server communication
-# IRODS_ZONE_NAME             The name of the iRODS zone.
-# IRODS_ZONE_PASSWORD         The password used to authenticate the
-#                             IRODS_ZONE_USER user.
-# IRODS_ZONE_PORT             The main TCP port used by the zone for
-#                             communication.
-# IRODS_ZONE_USER             The main rodsadmin user.
+# IRODS_ZONE_NAME             the name of the iRODS zone.
+# IRODS_ZONE_PASSWORD         the password used to authenticate the
+#                             IRODS_ZONE_USER user
+# IRODS_ZONE_PORT             the main TCP port used by the zone for
+#                             communication
+# IRODS_ZONE_USER             the main rodsadmin user
 
-set -o errexit
+set -o errexit -o nounset -o pipefail
 
 readonly CfgDir=/etc/irods
 readonly HostAccessControlCfg="$CfgDir"/host_access_control_config.json
@@ -42,7 +43,7 @@ readonly ServerCfg="$CfgDir"/server_config.json
 readonly SvcAccount="$CfgDir"/service_account.config
 
 readonly HomeDir=/var/lib/irods
-readonly Version="$Home"/VERSION.json
+readonly Version="$HomeDir"/VERSION.json
 
 readonly EnvDir="$HomeDir"/.irods
 readonly EnvCfg="$EnvDir"/irods_environment.json
@@ -145,7 +146,7 @@ JQ
 mk_server_cfg()
 {
   jq --sort-keys --from-file /dev/stdin /var/lib/irods/packaging/server_config.json.template <<JQ
-.catalog_provider_hosts |= [ "$IRODS_IES" ] |
+.catalog_provider_hosts |= [ "$IRODS_CATALOG_PROVIDER" ] |
 .catalog_service_role |= "consumer" |
 .default_resource_name |= "$IRODS_DEFAULT_RESOURCE" |
 .default_resource_directory |= "$IRODS_DEFAULT_VAULT" |

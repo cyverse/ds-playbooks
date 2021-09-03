@@ -11,7 +11,7 @@
         name: test_user1
         type: rodsuser
         password: ''
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -21,7 +21,7 @@
         name: test_user2
         type: rodsuser
         password: ''
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -35,7 +35,7 @@
       environment:
         IRODS_PORT: 1247
         IRODS_USER_NAME: rods
-        IRODS_HOST: "{{ groups['ies'][0] }}"
+        IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
         IRODS_PASSWORD: rods
         IRODS_ZONE_NAME: testing
 
@@ -47,7 +47,7 @@
       environment:
         IRODS_PORT: 1247
         IRODS_USER_NAME: rods
-        IRODS_HOST: "{{ groups['ies'][0] }}"
+        IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
         IRODS_PASSWORD: rods
         IRODS_ZONE_NAME: testing
 
@@ -58,7 +58,7 @@
       environment:
         IRODS_PORT: 1247
         IRODS_USER_NAME: rods
-        IRODS_HOST: "{{ groups['ies'][0] }}"
+        IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
         IRODS_PASSWORD: rods
         IRODS_ZONE_NAME: testing
       register: resource_servers
@@ -78,7 +78,7 @@
       environment:
         IRODS_PORT: 1247
         IRODS_USER_NAME: rods
-        IRODS_HOST: "{{ groups['ies'][0] }}"
+        IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
         IRODS_PASSWORD: rods
         IRODS_ZONE_NAME: testing
   tasks:
@@ -89,7 +89,7 @@
             subject: test_user1
             permission: read
             object: "{{ TEST_COLLECTION1 }}"
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -110,7 +110,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -124,7 +124,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -134,7 +134,7 @@
             subject: test_user1
             permission: read
             object: "{{ TEST_COLLECTION1 }}"
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -155,7 +155,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -166,7 +166,7 @@
             permission: read
             object: "{{ TEST_COLLECTION1 }}"
             recursive: true
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -188,7 +188,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -199,7 +199,7 @@
             permission: read
             object: "{{ TEST_COLLECTION1 }}"
             recursive: true
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -221,7 +221,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -231,7 +231,7 @@
             subject: test_user1
             permission: write
             object: "{{ TEST_COLLECTION1 }}"
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -252,7 +252,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -262,7 +262,7 @@
             subject: test_user1
             permission: own
             object: "{{ TEST_COLLECTION1 }}"
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -283,7 +283,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -293,7 +293,7 @@
             subject: test_user1
             permission: "null"
             object: "{{ TEST_COLLECTION1 }}"
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -315,7 +315,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -326,7 +326,7 @@
             permission: "null"
             object: "{{ TEST_COLLECTION1 }}"
             recursive: true
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -348,7 +348,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -359,7 +359,7 @@
             permission: "null"
             object: "{{ TEST_COLLECTION1 }}"
             recursive: true
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -381,7 +381,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -394,7 +394,7 @@
             subject: test_user1
             permission: read
             object: "{{ TEST_DATA_OBJECT1 }}"
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -412,7 +412,7 @@
             subject: test_user1
             permission: read
             object: "{{ TEST_DATA_OBJECT1 }}"
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -433,7 +433,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -443,7 +443,7 @@
             subject: test_user1
             permission: write
             object: "{{ TEST_DATA_OBJECT1 }}"
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -464,7 +464,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -474,7 +474,7 @@
             subject: test_user1
             permission: own
             object: "{{ TEST_DATA_OBJECT1 }}"
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -495,7 +495,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -505,7 +505,7 @@
             subject: test_user1
             permission: "null"
             object: "{{ TEST_DATA_OBJECT1 }}"
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -527,7 +527,7 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing
           register: result
@@ -538,7 +538,7 @@
             subject_zone: other_zone
             permission: "read"
             object: "{{ TEST_DATA_OBJECT1 }}"
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: 1247
             admin_user: rods
             admin_password: rods
@@ -559,6 +559,6 @@
           environment:
             IRODS_PORT: 1247
             IRODS_USER_NAME: rods
-            IRODS_HOST: "{{ groups['ies'][0] }}"
+            IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
             IRODS_PASSWORD: rods
             IRODS_ZONE_NAME: testing

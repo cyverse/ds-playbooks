@@ -2,8 +2,8 @@
 - import_playbook: mk_storage_resources.yml
 
 
-- name: test Configure IES for TerraREF
-  hosts: ies
+- name: test Configure iRODS for TerraREF
+  hosts: irods_catalog
   become: true
   become_user: irods
   run_once: true

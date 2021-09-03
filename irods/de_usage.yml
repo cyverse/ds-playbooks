@@ -1,6 +1,6 @@
 ---
 - name: Customize for DE
-  hosts: ies
+  hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
@@ -15,7 +15,7 @@
         info: DE job
         password: ''
         state: present
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"
         admin_user: "{{ _irods_clerver_user }}"
         admin_password: "{{ _irods_clerver_password }}"
@@ -27,7 +27,7 @@
       irods_collection:
         path: /{{ _irods_zone_name }}/jobs
         state: present
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"
         admin_user: "{{ _irods_clerver_user }}"
         admin_password: "{{ _irods_clerver_password }}"

@@ -3,7 +3,7 @@
 
 
 - name: test install resource server package
-  hosts: rs:!ies:!unmanaged_systems
+  hosts: irods_resource:!irods_catalog:!unmanaged_systems
   become: true
   tasks:
     - import_tasks: tasks/test_install_resource_pkg.yml
@@ -20,33 +20,28 @@
   become_user: irods
   tasks:
     - name: test create clerver user
-      delegate_to: "{{ groups['ies'][0] }}"
+      delegate_to: "{{ groups['irods_catalog'][0] }}"
       shell: |
         userType=$(iquest '%s' "select USER_TYPE where USER_NAME = 'rods'")
-        if [ "$?" -ne 0 ]
-        then
-          printf 'IES appears to be down on {{ groups['ies'][0] }}\n' >&2
+        if (( $? != 0 )); then
+          printf \
+              'Catalog service provider appears to be down on {{ groups['irods_catalog'][0] }}\n' \
+             >&2
           exit 1
         fi
-
-        if [[ "$userType" =~ ^CAT_NO_ROWS_FOUND ]]
-        then
+        if [[ "$userType" =~ ^CAT_NO_ROWS_FOUND ]]; then
           printf 'rods does not exist\n' >&2
           exit 1
         fi
-
-        if [ "$userType" != rodsadmin ]
-        then
+        if [[ "$userType" != rodsadmin ]]; then
           printf 'rods is not a rodsadmin user\n' >&2
           exit 1
         fi
-
-        IRODS_HOST='{{ groups['ies'][0] }}' \
+        IRODS_HOST='{{ groups['irods_catalog'][0] }}' \
         IRODS_USER_NAME=rods \
-        IRODS_AUTHENTICATION_FILE=$(mktemp) \
+        IRODS_AUTHENTICATION_FILE="$(mktemp)" \
         iinit rods
-        if [ "$?" -ne 0 ]
-        then
+        if (( $? != 0 )); then
           printf 'rods has incorrect password\n' >&2
           exit 1
         fi
@@ -60,7 +55,7 @@
         users:
           - rods
         state: present
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -69,7 +64,7 @@
       failed_when: resp.changed
 
 
-    - name: test initialize resource server connection to IES
+    - name: test initialize resource server connection to catalog service providers
       stat:
         path: /var/lib/irods/.irods/.irodsA
       register: response

@@ -1,6 +1,6 @@
 ---
 - name: testing irods_group_member module
-  hosts: ies[0]
+  hosts: irods_catalog[0]
   pre_tasks:
     - name: group should be absent
       become: true
@@ -37,7 +37,7 @@
           - test_user2
           - test_user3
         state: present
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -65,7 +65,7 @@
           - test_user2
           - test_user3
         state: present
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -81,7 +81,7 @@
           - test_user1
           - test_user2
         state: absent
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -116,7 +116,7 @@
           - test_user1
           - test_user2
         state: absent
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods

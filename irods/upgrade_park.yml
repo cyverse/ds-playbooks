@@ -1,6 +1,6 @@
 ---
 - name: remove housekeeping rules
-  hosts: ies
+  hosts: irods_catalog
   run_once: true
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"

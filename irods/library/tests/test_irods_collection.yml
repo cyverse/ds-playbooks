@@ -7,7 +7,7 @@
       shell: |
           ils /testing/home/rods/ <<< "rods"
       environment:
-        IRODS_HOST: "{{ groups['ies'][0] }}"
+        IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
         IRODS_PORT: 1247
         IRODS_USERNAME: rods
         IRODS_USER_ZONE: testing
@@ -16,7 +16,7 @@
       irods_collection:
         path: /testing/home/rods/test_coll1
         state: present
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -36,7 +36,7 @@
       shell: |
           ils /testing/home/rods/test_coll1 <<< "rods"
       environment:
-        IRODS_HOST: "{{ groups['ies'][0] }}"
+        IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
         IRODS_PORT: 1247
         IRODS_USERNAME: rods
         IRODS_USER_ZONE: testing
@@ -45,7 +45,7 @@
       irods_collection:
         path: /testing/home/rods/test_coll1
         state: present
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -64,7 +64,7 @@
       irods_collection:
         path: /testing/home/rods/test_coll1
         state: absent
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -88,7 +88,7 @@
             exit 0
           fi
       environment:
-        IRODS_HOST: "{{ groups['ies'][0] }}"
+        IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
         IRODS_PORT: 1247
         IRODS_USERNAME: rods
         IRODS_USER_ZONE: testing
@@ -97,7 +97,7 @@
       irods_collection:
         path: /testing/home/rods/test_coll1
         state: absent
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -119,7 +119,7 @@
         path: /testing/home/rods/test_coll1/sub_coll
         parents: false
         state: present
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -139,7 +139,7 @@
         path: /testing/home/rods/test_coll1/sub_coll
         parents: true
         state: present
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -159,7 +159,7 @@
       shell: |
           ils /testing/home/rods/test_coll1/sub_coll <<< "rods"
       environment:
-        IRODS_HOST: "{{ groups['ies'][0] }}"
+        IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
         IRODS_PORT: 1247
         IRODS_USERNAME: rods
         IRODS_USER_ZONE: testing
@@ -168,7 +168,7 @@
       irods_collection:
         path: /non_existing/collection/path
         state: absent
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods

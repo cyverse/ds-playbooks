@@ -1,6 +1,6 @@
 ---
 - name: create ICAT DB
-  hosts: ies
+  hosts: irods_catalog
   run_once: true
   become: true
   gather_facts: false

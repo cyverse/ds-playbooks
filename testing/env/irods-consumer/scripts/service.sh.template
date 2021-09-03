@@ -6,6 +6,8 @@
 # This script starts or stops the resource server inside the container if there
 # is one.
 
+set -e
+
 
 main()
 {
@@ -40,9 +42,9 @@ start()
   then
     chown --recursive "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" /etc/irods /var/lib/irods
 
-    until exec 3<> /dev/tcp/"$IRODS_IES"/"$IRODS_ZONE_PORT"
+    until exec 3<> /dev/tcp/"$IRODS_CATALOG_PROVIDER"/"$IRODS_ZONE_PORT"
     do
-      printf 'Waiting for IES\n'
+      printf 'Waiting for catalog service provider\n'
       sleep 1
     done 2> /dev/null
 
@@ -50,7 +52,9 @@ start()
     exec 3>&-
 
     printf 'Authenticating clerver user\n'
-    su --command "IRODS_HOST='$IRODS_IES' iinit '$IRODS_ZONE_PASSWORD'" --login "$IRODS_SYSTEM_USER"
+    su \
+      --command "IRODS_HOST='$IRODS_CATALOG_PROVIDER' iinit '$IRODS_ZONE_PASSWORD'" \
+      --login "$IRODS_SYSTEM_USER"
 
     if ! su --command '/var/lib/irods/irodsctl start' --login "$IRODS_SYSTEM_USER"
     then
@@ -72,7 +76,5 @@ stop()
   fi
 }
 
-
-set -e
 
 main "$@"

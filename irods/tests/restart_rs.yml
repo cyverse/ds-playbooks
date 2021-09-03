@@ -1,6 +1,6 @@
 ---
 - name: test restart_rs
-  hosts: rs
+  hosts: irods_resource
   become: true
   become_user: irods
   tasks:

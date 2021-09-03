@@ -1,6 +1,6 @@
 ---
 - name: create AMQP exchange
-  hosts: ies
+  hosts: irods_catalog
   become: true
   run_once: true
   gather_facts: false

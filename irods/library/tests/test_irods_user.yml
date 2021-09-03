@@ -15,14 +15,13 @@
         admin_password: rods
         zone: testing
       register: response
-
-    - name: check returned result
-      assert:
-        that:
-          - response.changed
-          - response.exc == ""
-          - response.exc_msg == ""
-          - response.user == "test_user1"
+      failed_when: >-
+        not response.changed 
+        or response.exc != '' 
+        or response.exc_msg != '' 
+        or response.user != 'test_user1'
+      tags:
+        - non_idempotent
 
     - name: check user exist and is correct type via iadmin
       shell: |
@@ -61,6 +60,8 @@
         admin_password: rods
         zone: testing
       register: response
+      tags:
+        - non_idempotent
 
       # should thrown exception for different password
     - name: check returned result
@@ -130,6 +131,8 @@
         admin_password: rods
         zone: testing
       register: response
+      tags:
+        - non_idempotent
 
     - name: check returned result
       assert:
@@ -224,6 +227,8 @@
         admin_password: rods
         zone: testing
       register: response
+      tags:
+        - non_idempotent
 
     - name: check returned result
       assert:
@@ -254,6 +259,8 @@
         admin_password: rods
         zone: testing
       register: response
+      tags:
+        - non_idempotent
 
     - name: check returned result
       assert:

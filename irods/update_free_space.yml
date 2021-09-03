@@ -1,6 +1,6 @@
 ---
 - name: update resource free space
-  hosts: rs
+  hosts: irods_resource
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:

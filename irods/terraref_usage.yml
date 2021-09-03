@@ -2,8 +2,8 @@
 - import_playbook: mk_storage_resources.yml
 
 
-- name: Configure IES for TerraREF
-  hosts: ies
+- name: Configure iRODS for TerraREF
+  hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
@@ -21,7 +21,7 @@
             path: "{{ _terraref_base_collection }}"
             parents: true
             state: present
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: "{{ _irods_zone_port }}"
             admin_user: "{{ _irods_clerver_user }}"
             admin_password: "{{ _irods_clerver_password }}"
@@ -35,7 +35,7 @@
             permission: own
             object: "{{ _terraref_base_collection }}"
             recursive: true
-            host: "{{ groups['ies'][0] }}"
+            host: "{{ groups['irods_catalog'][0] }}"
             port: "{{ _irods_zone_port }}"
             admin_user: "{{ _irods_clerver_user }}"
             admin_password: "{{ _irods_clerver_password }}"

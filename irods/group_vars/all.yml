@@ -5,7 +5,7 @@ _aegis_resource_hierarchy: >-
 _aegis_storage_resource: "{{ aegis_storage_resource | default(None) }}"
 
 _amqp_exchange: "{{ irods_amqp_exchange | default('irods') }}"
-_amqp_host: "{{ irods_amqp_host | default(_irods_ies) }}"
+_amqp_host: "{{ irods_amqp_host | default(groups['amqp'][0]) }}"
 _amqp_mgmt_port: "{{ irods_amqp_mgmt_port | default(15672) }}"
 _amqp_password: "{{ irods_amqp_password | default('guest') }}"
 _amqp_port: "{{ irods_amqp_port | default(5672) }}"
@@ -18,7 +18,7 @@ _avra_resource_hierarchy: "{{ avra_resource_hierarchy | default(_irods_resource_
 
 _become_svc_acnt: "{{ become_svc_acnt | default(true) }}"
 
-_bisque_irods_host: "{{ bisque_irods_host | default(_irods_ies) }}"
+_bisque_irods_host: "{{ bisque_irods_host | default(_canonical_hostname) }}"
 _bisque_password: "{{ bisque_password | default('admin') }}"
 _bisque_projects: "{{ bisque_projects | default([]) }}"
 _bisque_url: "{{ bisque_url | default(None) }}"
@@ -26,7 +26,7 @@ _bisque_user: "{{ bisque_user | default('admin') }}"
 
 _build_dir: "{{ build_dir | default('/tmp') }}"
 
-_canonical_hostname: "{{ canonical_hostname | default(_irods_ies) }}"
+_canonical_hostname: "{{ canonical_hostname | default(groups['irods_catalog'][0]) }}"
 _canonical_irods_port: "{{ canonical_irods_port | default(_irods_zone_port) }}"
 
 _captcn_owners: "{{ captcn_owners | default([]) }}"
@@ -62,12 +62,12 @@ _irods_default_resource: >-
 _irods_default_vault: "{{ irods_default_vault | default(None) }}"
 _irods_federation: "{{ irods_federation | default([]) }}"
 _irods_host_aliases: "{{ irods_host_aliases | default([]) }}"
-_irods_ies: "{{ irods_ies | default(groups['ies'][0]) }}"
 _irods_max_num_re_procs: "{{ irods_max_num_re_procs | default(4) }}"
 _irods_negotiation_key: "{{ irods_negotiation_key | default(None) }}"
 _irods_other_host_entries: "{{ irods_other_host_entries | default([]) }}"
 _irods_parallel_transfer_buffer_size: "{{ irods_parallel_transfer_buffer_size | default(None) }}"
 _irods_publish_rs_image: "{{ irods_publish_rs_image | default(false) }}"
+_irods_re_host: "{{ irods_re_host | default(groups['irods_catalog'][0]) }}"
 _irods_resource_hierarchies: >-
   {{ 
     irods_resource_hierarchies
@@ -95,8 +95,6 @@ _restart_irods: "{{ restart_irods | default(false) }}"
 _sernec_owners: "{{ sernec_owners if sernec_owners is defined else [] }}"
 _sernec_readers: "{{ sernec_readers if sernec_readers is defined else [] }}"
 _sernec_writers: "{{ sernec_writers if sernec_writers is defined else [] }}"
-
-_single_threaded_resources: "{{ single_threaded_resources | default([]) }}"
 
 _sparcd_admin: "{{ sparcd_admin | default(None) }}"
 _sparcd_base_collection: >-

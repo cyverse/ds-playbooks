@@ -4,11 +4,11 @@
 #
 # It requires the following environment variables to be defined
 #
-# IRODS_IES            The FQDN or IP address of the IES.
-# IRODS_SYSTEM_GROUP   The system group for the iRODS process
-# IRODS_SYSTEM_USER    The system user for the iRODS process
-# IRODS_ZONE_PASSWORD  The password used to authenticate the clever user.
-# IRODS_ZONE_PORT      The main TCP port used by the zone for communication.
+# IRODS_CATALOG_PROVIDER  the FQDN or IP address of the catalog service provider
+# IRODS_SYSTEM_GROUP      the system group for the iRODS process
+# IRODS_SYSTEM_USER       the system user for the iRODS process
+# IRODS_ZONE_PASSWORD     the password used to authenticate the clever user
+# IRODS_ZONE_PORT         the main TCP port used by the zone for communication
 
 
 main()
@@ -33,7 +33,7 @@ escape()
 expand_tmpl()
 {
   cat <<EOF | sed --file - /tmp/service.sh.template
-s/\$IRODS_IES/$(escape "$IRODS_IES")/g
+s/\$IRODS_CATALOG_PROVIDER/$(escape "$IRODS_CATALOG_PROVIDER")/g
 s/\$IRODS_SYSTEM_GROUP/$(escape "$IRODS_SYSTEM_GROUP")/g
 s/\$IRODS_SYSTEM_USER/$(escape "$IRODS_SYSTEM_USER")/g
 s/\$IRODS_ZONE_PASSWORD/$(escape "$IRODS_ZONE_PASSWORD")/g
@@ -43,4 +43,5 @@ EOF
 
 
 set -e
-main
+
+main "$@"

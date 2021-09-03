@@ -1,6 +1,6 @@
 ---
 - name: restart resource servers
-  hosts: rs:!ies
+  hosts: irods_resource:!ies
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   become_flags: '-i'

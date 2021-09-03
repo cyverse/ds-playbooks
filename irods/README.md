@@ -38,7 +38,7 @@ Variable                                   | Default                            
 `firewall_chain`                           | INPUT                                |         | The iptables chain managing authorizing iRODS connections
 `irods_admin_username`                     | rods                                 |         | the iRODS admin account name
 `irods_amqp_exchange`                      | irods                                |         | the AMQP exchange used to publish events
-`irods_amqp_host`                          | `group_vars['amqp'][0]`              |         | the FQDN or IP address of the server hosting the AMQP service
+`irods_amqp_host`                          | `groups['amqp'][0]`                  |         | the FQDN or IP address of the server hosting the AMQP service
 `irods_amqp_mgmt_port`                     | 15672                                |         | The TCP port used for management of the AMQP vhost
 `irods_amqp_password`                      | guest                                |         | The password iRODS uses to connect to the AMQP vhost
 `irods_amqp_port`                          | 5672                                 |         | The TCP port the RabbitMQ broker listens on

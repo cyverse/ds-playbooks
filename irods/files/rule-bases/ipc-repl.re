@@ -318,7 +318,7 @@ _repl_mvReplicas_workaround(*Object, *IngestName, *ReplName) {
 _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
   (*ingestName, *ingestOptional) = *IngestResc;
   (*replName, *replOptional) = *ReplResc;
-  *type = getEntityType(*Entity);
+  *type = ipc_getEntityType(*Entity);
 
   if (*type == '-C') {
     # if the entity is a collection
@@ -341,7 +341,7 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
 
 
 _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
-  *type = getEntityType(*Entity);
+  *type = ipc_getEntityType(*Entity);
 
   if (*type == '-C') {
     # if the entity is a collection

@@ -27,9 +27,9 @@
           {%   endif %}
           {% endfor %}
           {% for f in _irods_federation %}
-          {%   for cp in f.catalog_providers %}
-          {%     if not f.cp|ipaddr %}
-          {{ lookup('dig', f.cp) }} {{ f.cp }}
+          {%   for cp in f.catalog_provider_hosts %}
+          {%     if not cp|ipaddr %}
+          {{ lookup('dig', cp) }} {{ cp }}
           {%     endif %}
           {%   endfor %}
           {% endfor %}

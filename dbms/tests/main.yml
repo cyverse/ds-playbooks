@@ -10,6 +10,7 @@
     - name: verify config values expand correctly in cyverse.conf
       assert:
         that:
+          - cyverse_conf is search('checkpoint_completion_target = 0.9' | regex_escape)
           - cyverse_conf is search('checkpoint_timeout = 15min')
           - cyverse_conf is search('effective_cache_size = 1GB')
           - cyverse_conf is search("listen_addresses = '127.0.0.1'" | regex_escape)
@@ -19,15 +20,10 @@
           - cyverse_conf is search('max_wal_size = 1GB')
           - cyverse_conf is search('min_wal_size = 80MB')
           - cyverse_conf is search("port = '5432'")
+          - cyverse_conf is search('random_page_cost = 2.0' | regex_escape)
           - cyverse_conf is search('shared_buffers = 1GB')
           - cyverse_conf is search('wal_keep_segments = 4000')
           - cyverse_conf is search('work_mem = 64MB')
-
-    - debug:
-        msg: TODO check checkpoint_completion_target
-
-    - debug:
-        msg: TODO check random_page_cost
 
     - debug:
         msg: TODO check standard_conforming_strings

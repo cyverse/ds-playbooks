@@ -1,32 +1,73 @@
-listen_addresses = '{{ ([ '127.0.0.1' ] + pg_listen_addresses) | join(",") }}'
+#------------------------------------------------------------------------------
+# CONNECTIONS AND AUTHENTICATION
+#------------------------------------------------------------------------------
 
-port = '{{ pg_listen_port }}'
-
-max_wal_senders = {{ pg_max_wal_senders }}
-wal_keep_segments = {{ pg_wal_keep_segments }}
-
+# - Connection Settings -
+listen_addresses = '{{ ([ 'localhost' ] + pg_extra_listen_addresses) | join(",") }}'
+port = {{ pg_listen_port }}
 max_connections = {{ pg_max_connections }}
 
-effective_cache_size = {{ pg_effective_cache_size }}
-shared_buffers = {{ pg_shared_buffers }}
-work_mem = {{ pg_work_memory }}
-maintenance_work_mem = {{ pg_maintenance_work_memory }}
+#------------------------------------------------------------------------------
+# RESOURCE USAGE (except WAL)
+#------------------------------------------------------------------------------
 
-min_wal_size = {{ pg_min_wal_size }}
-max_wal_size = {{ pg_max_wal_size }}
+# - Memory -
+shared_buffers = {{ pg_shared_buffers }}
+work_mem = {{ pg_work_mem }}
+maintenance_work_mem = {{ pg_maintenance_work_mem }}
+
+
+#------------------------------------------------------------------------------
+# WRITE-AHEAD LOG
+#------------------------------------------------------------------------------
+
+# - Checkpoints -
 checkpoint_timeout = {{ pg_checkpoint_timeout }}
+max_wal_size = {{ pg_max_wal_size }}
+min_wal_size = {{ pg_min_wal_size }}
 checkpoint_completion_target = {{ pg_checkpoint_completion_target }}
 
-random_page_cost = {{ pg_random_page_cost }}
 
-standard_conforming_strings = {{ pg_standard_conforming_strings }}
+#------------------------------------------------------------------------------
+# REPLICATION
+#------------------------------------------------------------------------------
 
-log_min_duration_statement = {{ pg_log_min_duration_statement }}
-log_line_prefix = '{{ pg_log_line_prefix }}'
+# - Sending Servers -
+{% if pg_downstream_nodes|length > 0 %}
+max_wal_senders = {{ pg_max_wal_senders }}
+wal_keep_segments = {{ pg_wal_keep_segments }}
+{% endif %}
 
+# - Standby Servers -
 {% if pg_upstream_node %}
 hot_standby = on
-{%   if pg_hot_standby_feedback | default(false) %}
-hot_standby_feedback = on
-{%   endif %}
+hot_standby_feedback = {{ pg_hot_standby_feedback }}
 {% endif %}
+
+
+#------------------------------------------------------------------------------
+# QUERY TUNING
+#------------------------------------------------------------------------------
+
+# - Planner Cost Constants -
+random_page_cost = {{ pg_random_page_cost }}
+effective_cache_size = {{ pg_effective_cache_size }}
+
+
+#------------------------------------------------------------------------------
+# REPORTING AND LOGGING
+#------------------------------------------------------------------------------
+
+# - When to Log -
+log_min_duration_statement = {{ pg_log_min_duration_statement }}
+
+# - What to Log -
+log_line_prefix = '{{ pg_log_line_prefix }}'
+
+
+#------------------------------------------------------------------------------
+# VERSION AND PLATFORM COMPATIBILITY
+#------------------------------------------------------------------------------
+
+# - Previous PostgreSQL Versions -
+standard_conforming_strings = {{ pg_standard_conforming_strings }}

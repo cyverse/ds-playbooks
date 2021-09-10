@@ -22,14 +22,23 @@
   roles:
     - role: postgres12
       vars:
-        pg_downstream_nodes: "{{ groups['dbms_replicas'] }}"
+        pg_checkpoint_completion_target: "{{ _dbms_checkpoint_completion_target }}"
+        pg_checkpoint_timeout: "{{ _dbms_checkpoint_timeout }}min"
         pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int // 2 }}MB"
-        pg_listen_addresses: "{{ ansible_facts['all_ipv4_addresses'] }}"
+        pg_extra_listen_addresses: "{{ ansible_facts['all_ipv4_addresses'] }}"
         pg_listen_port: "{{ _dbms_port }}"
+        pg_log_line_prefix: "{{ _dbms_log_line_prefix }}"
         pg_log_min_duration_statement: "{{ _dbms_log_min_duration }}"
+        pg_maintenance_work_mem: "{{ _dbms_maintenance_work_mem }}GB"
+        pg_max_connections: "{{ _dbms_max_connections }}"
+        pg_random_page_cost: "{{ _dbms_random_page_cost }}"
         pg_replication_pass: "{{ _dbms_replication_password }}"
         pg_replication_user: "{{ _dbms_replication_user }}"
         pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
+        pg_standard_conforming_strings: 'off'
+        pg_work_mem: "{{ _dbms_work_mem }}"
+        pg_downstream_nodes: "{{ groups['dbms_replicas'] }}"
+        pg_wal_keep_segments: "{{ _dbms_wal_keep_segments }}"
 
 
 - name: Set up replica DBMSs
@@ -39,12 +48,20 @@
   roles:
     - role: postgres12
       vars:
+        pg_checkpoint_completion_target: "{{ _dbms_checkpoint_completion_target }}"
+        pg_checkpoint_timeout: "{{ _dbms_checkpoint_timeout }}min"
+        pg_destroy_default_db_on_init: "{{ _dbms_replication_start }}"
         pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int // 2 }}MB"
-        pg_listen_addresses: "{{ ansible_facts['all_ipv4_addresses'] }}"
+        pg_extra_listen_addresses: "{{ ansible_facts['all_ipv4_addresses'] }}"
         pg_listen_port: "{{ _dbms_port }}"
+        pg_log_line_prefix: "{{ _dbms_log_line_prefix }}"
         pg_log_min_duration_statement: "{{ _dbms_log_min_duration }}"
+        pg_maintenance_work_mem: "{{ _dbms_maintenance_work_mem }}GB"
+        pg_max_connections: "{{ _dbms_max_connections }}"
+        pg_random_page_cost: "{{ _dbms_random_page_cost }}"
         pg_replication_pass: "{{ _dbms_replication_password }}"
         pg_replication_user: "{{ _dbms_replication_user }}"
         pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
+        pg_standard_conforming_strings: 'off'
+        pg_work_mem: "{{ _dbms_work_mem }}"
         pg_upstream_node: "{{ groups['dbms_primary'][0] }}"
-        pg_destroy_default_db_on_init: "{{ _dbms_replication_start }}"

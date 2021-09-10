@@ -1,8 +1,23 @@
 ---
+_dbms_checkpoint_completion_target: "{{ dbms_checkpoint_completion_target | default(0.9) }}"
+_dbms_checkpoint_timeout: "{{ dbms_checkpoint_timeout | default(15) }}"
+
+_dbms_log_line_prefix: "{{ dbms_log_line_prefix | default('< %m %r >') }}"
 _dbms_log_min_duration: "{{ dbms_log_min_duration | default(1000) }}"
 
+_dbms_maintenance_work_mem: "{{ dbms_maintenance_work_mem | default(1) }}"
+
+_dbms_max_connections: "{{ dbms_max_connections | default(1500) }}"
+_dbms_max_wal_senders: "{{ dbms_max_wal_senders | default(120) }}"
+
 _dbms_port: "{{ dbms_port | default(5432) }}"
+
+_dbms_random_page_cost: "{{ dmbs_random_page_cost | default(1.0) }}"
 
 _dbms_replication_password: "{{ dbms_replication_password | default(None) }}"
 _dbms_replication_start: "{{ dbms_replication_start | default(false) }}"
 _dbms_replication_user: "{{ dbms_replication_user | default('postgres') }}"
+
+_dbms_wal_keep_segments: "{{ dbms_wal_keep_segments | default(4000) }}"
+
+_dbms_work_mem: "{{ dbms_work_mem | default(32) }}MB"

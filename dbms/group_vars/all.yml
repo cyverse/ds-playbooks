@@ -8,7 +8,6 @@ _dbms_log_min_duration: "{{ dbms_log_min_duration | default(1000) }}"
 _dbms_maintenance_work_mem: "{{ dbms_maintenance_work_mem | default(1) }}"
 
 _dbms_max_connections: "{{ dbms_max_connections | default(1500) }}"
-_dbms_max_wal_senders: "{{ dbms_max_wal_senders | default(120) }}"
 
 _dbms_port: "{{ dbms_port | default(5432) }}"
 
@@ -19,5 +18,8 @@ _dbms_replication_start: "{{ dbms_replication_start | default(false) }}"
 _dbms_replication_user: "{{ dbms_replication_user | default('postgres') }}"
 
 _dbms_wal_keep_segments: "{{ dbms_wal_keep_segments | default(4000) }}"
+_dbms_max_wal_senders: "{{ dbms_max_wal_senders | default(120) }}"
+_dbms_max_wal_size: "{{ dbms_max_wal_size | default(100) }}"
+_dbms_min_wal_size: "{{ dbms_min_wal_size | default(2) }}"
 
 _dbms_work_mem: "{{ dbms_work_mem | default(32) }}MB"

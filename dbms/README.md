@@ -18,6 +18,8 @@ Variable                            | Required | Default   | Comments
 `dbms_maintenance_work_mem`         | no       | 1         | the amount of memory in gibibytes for maintenance operations 
 `dbms_max_connections`              | no       | 1500      | the maximum number of connections allowed to the DBMS (change requires restart)
 `dbms_max_wal_senders`              | no       | 120       | the maximum number of walsender processes (change requires restart)
+`dbms_max_wal_size`                 | no       | 100       | the maximum size of a WAL file in gibibytes
+`dbms_min_wal_size`                 | no       | 2         | the minimum size of a WAL file in gibibytes
 `dbms_port`                         | no       | 5432      | the TCP port used by the DBMS (change requires restart)
 `dbms_random_page_cost`             | no       | 1.0       | the query planning cost of a random page retrieval relative to other costs
 `dbms_replication_password`         | maybe*   |           | the password for authenticating `dbms_replication_user`, *this is required if replication is being set up

@@ -169,6 +169,22 @@ _ipc_sendDataObjectAdd(
 }
 
 
+# Publish a data-object.mod message to AMQP exchange
+_ipc_sendDataObjectMod(
+  *AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
+) {
+  *msg = ipc_jsonDocument(
+    list(
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
+      mkEntityField(*Object),
+      mkUserObject('creator', *OwnerName, *OwnerZone),
+      ipc_jsonNumber('size', *Size),
+      ipc_jsonString('type', *Type) ) );
+
+  sendMsg(DATA_OBJECT_TYPE ++ '.mod', *msg);
+}
+
+
 sendCollectionInheritModified(*Recursive, *Inherit, *Collection) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
                                    mkEntityField(*Collection),
@@ -211,22 +227,6 @@ sendDataObjectAclModified(*AccessLevel, *Username, *Zone, *Data) =
 _ipc_sendDataObjectMetadataModified(*AuthorName, *AuthorZone, *Data) {
   *msg = ipc_jsonDocument(list(_ipc_mkAuthorField(*AuthorName, *AuthorZone), mkEntityField(*Data)));
   sendMsg(DATA_OBJECT_TYPE ++ '.sys-metadata.mod', *msg);
-}
-
-
-# Publish a data-object.mod message to AMQP exchange
-_ipc_sendDataObjectMod(
-  *AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
-) {
-  *msg = ipc_jsonDocument(
-    list(
-      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
-      *Object,
-      mkUserObject('creator', *OwnerName, *OwnerZone),
-      ipc_jsonNumber('size', *Size),
-      ipc_jsonString('type', *Type)));
-
-  sendMsg(DATA_OBJECT_TYPE ++ '.mod', *msg);
 }
 
 

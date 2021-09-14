@@ -11,8 +11,21 @@
         state: stopped
         enabled: false
 
+    - name: stop purgeman
+      service:
+        name: purgeman
+        state: stopped
+        enabled: false
+
+    - name: stop varnishncsa
+      service:
+        name: varnishncsa
+        state: stopped
+        enabled: false
+
     - name: stop varnish
       service:
         name: varnish
         state: stopped
         enabled: false
+        

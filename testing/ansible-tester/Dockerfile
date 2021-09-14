@@ -1,9 +1,13 @@
 FROM williamyeh/ansible:centos7
 
+# The latest version of pip (21.2.1) is breaking on centos7 without following encoding setup.
+ENV LANG en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
+
 ### Install additional ansible support
 RUN yum --assumeyes install dmidecode python3 rpm-build wget && \
     # NB: pip 21.1 has a bug in it that generates a noisy warning
-    python3 -m pip --quiet install --upgrade 'pip<21.1' && \
+    python3 -m pip --quiet install --upgrade pip && \
     python3 -m pip --disable-pip-version-check --quiet install \
       ansible==3.3 dnspython netaddr python-irodsclient requests urllib3 wheel
 

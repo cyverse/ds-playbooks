@@ -49,4 +49,9 @@ DavRodsRxBufferKbs 32768
 DavRodsHtmlHead /etc/httpd/irods/{{ htmlHead }}
 
 Header set Vary Authorization
+
+# if request is made by clients other than web-browser, let them download the file
+<If "-z %{HTTP_ACCEPT} || %{HTTP_ACCEPT} == '*/*' " >
+  ForceType application/octet-stream
+</If>
 {%- endmacro %}

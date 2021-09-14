@@ -402,6 +402,40 @@
         - restart varnish
         - restart varnishncsa
 
+    - name: create a download dir for purgeman package 
+      file:
+        path: "{{ ansible_env.HOME }}/purgeman_setup"
+        recurse: true
+        state: directory
+
+    - name: download purgeman package from github and uncompress
+      unarchive:
+        src: "https://github.com/cyverse/purgeman/releases/download/v0.2.1/purgeman_0.2.1.tar.gz"
+        dest: "{{ ansible_env.HOME }}/purgeman_setup"
+        remote_src: True
+
+    - name: install purgeman service
+      make: 
+        chdir: "{{ ansible_env.HOME }}/purgeman_setup"
+        target: install_centos
+      become: yes
+
+    - name: remove the download dir for purgeman package 
+      file:
+        path: "{{ ansible_env.HOME }}/purgeman_setup"
+        state: absent
+    
+    - name: configure purgeman
+      template:
+        src: "templates/webdav/etc/purgeman/{{ item }}.j2"
+        dest: "/etc/purgeman/{{ item }}"
+        owner: purgeman
+        mode: 0660
+      with_items:
+        - purgeman.conf
+      notify:
+        - restart purgeman
+
   post_tasks:
     - name: create apache systemd service dependencies directory
       file:
@@ -419,6 +453,12 @@
       file:
         path: /etc/systemd/system/httpd.service.requires/varnishncsa.service
         src: /usr/lib/systemd/system/varnishncsa.service
+        state: link
+
+    - name: ensure purgeman runs when apache run
+      file:
+        path: /etc/systemd/system/httpd.service.requires/purgeman.service
+        src: /usr/lib/systemd/system/purgeman.service
         state: link
 
     - name: open HTTP connection in firewall
@@ -461,4 +501,10 @@
       when: notifications_enabled | default(false)
       service:
         name: varnishncsa
+        state: restarted
+
+    - name: restart purgeman
+      when: notifications_enabled | default(false)
+      service:
+        name: purgeman
         state: restarted

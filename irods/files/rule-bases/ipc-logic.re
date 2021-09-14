@@ -129,7 +129,7 @@ mkAvuObject(*Field, *Name, *Value, *Unit) =
                               ipc_jsonString('unit', *Unit)))
 
 
-getEntityType(*ItemType) =
+_getAmqpEntityType(*ItemType) =
   match *ItemType with
     | '-C' => COLLECTION_TYPE
     | '-d' => DATA_OBJECT_TYPE
@@ -166,6 +166,22 @@ _ipc_sendDataObjectAdd(
       ipc_jsonString('type', *Type)));
 
   sendMsg(DATA_OBJECT_TYPE ++ '.add', *msg);
+}
+
+
+# Publish a data-object.mod message to AMQP exchange
+_ipc_sendDataObjectMod(
+  *AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
+) {
+  *msg = ipc_jsonDocument(
+    list(
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
+      mkEntityField(*Object),
+      mkUserObject('creator', *OwnerName, *OwnerZone),
+      ipc_jsonNumber('size', *Size),
+      ipc_jsonString('type', *Type) ) );
+
+  sendMsg(DATA_OBJECT_TYPE ++ '.mod', *msg);
 }
 
 
@@ -214,22 +230,6 @@ _ipc_sendDataObjectMetadataModified(*AuthorName, *AuthorZone, *Data) {
 }
 
 
-# Publish a data-object.mod message to AMQP exchange
-_ipc_sendDataObjectMod(
-  *AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
-) {
-  *msg = ipc_jsonDocument(
-    list(
-      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
-      *Object,
-      mkUserObject('creator', *OwnerName, *OwnerZone),
-      ipc_jsonNumber('size', *Size),
-      ipc_jsonString('type', *Type)));
-
-  sendMsg(DATA_OBJECT_TYPE ++ '.mod', *msg);
-}
-
-
 sendEntityMove(*EntityType, *Entity, *OldPath, *NewPath) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
                                    mkEntityField(*Entity),
@@ -250,14 +250,14 @@ sendAvuMod(*ItemType, *Item, *OldName, *OldValue, *OldUnit, *NewName, *NewValue,
                                    mkEntityField(*Item),
                                    mkAvuObject('old-metadatum', *OldName, *OldValue, *OldUnit),
                                    mkAvuObject('new-metadatum', *NewName, *NewValue, *NewUnit)))
-  in sendMsg(getEntityType(*ItemType) ++ '.metadata.mod', *msg)
+  in sendMsg(_getAmqpEntityType(*ItemType) ++ '.metadata.mod', *msg)
 
 
 sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
                                    mkEntityField(*Item),
                                    mkAvuObject('metadatum', *AName, *AValue, *AUnit)))
-  in sendMsg(getEntityType(*ItemType) ++ '.metadata.' ++ *Option, *msg)
+  in sendMsg(_getAmqpEntityType(*ItemType) ++ '.metadata.' ++ *Option, *msg)
 
 
 sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit) =
@@ -273,15 +273,18 @@ sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit) =
                                    ipc_jsonString('attribute-pattern', *AName),
                                    ipc_jsonString('value-pattern', *AValue),
                                    ipc_jsonString('unit-pattern', *AUnit)))
-  in sendMsg(getEntityType(*ItemType) ++ '.metadata.rmw', *msg)
+  in sendMsg(_getAmqpEntityType(*ItemType) ++ '.metadata.rmw', *msg)
 
 
 sendAvuCopy(*SourceItemType, *TargetItemType, *Source, *Target) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   ipc_jsonString('source', *Source),
-                                   ipc_jsonString('source-type', getEntityType(*SourceItemType)),
-                                   ipc_jsonString('destination', *Target)))
-  in sendMsg(getEntityType(*TargetItemType) ++ '.metadata.cp', *msg)
+  let *srcType = _getAmqpEntityType(*SourceItemType) in
+  let *msg = ipc_jsonDocument(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      ipc_jsonString('source', *Source),
+      ipc_jsonString('source-type', *srcType),
+      ipc_jsonString('destination', *Target) ) )
+  in sendMsg(_getAmqpEntityType(*TargetItemType) ++ '.metadata.cp', *msg)
 
 
 resolveAdminPerm(*Item) = if *Item like regex '^/[^/]*(/[^/]*)?$' then 'write' else 'own'

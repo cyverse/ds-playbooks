@@ -23,8 +23,7 @@
 set -o errexit -o nounset -o pipefail
 
 
-main()
-{
+main() {
   local doInspect="$1"
   local pretty="$2"
   local playbooks="$3"
@@ -42,7 +41,7 @@ main()
     --env PGHOST="$DBMS_HOST" \
     --network "$DOMAIN" \
     --volume "$playbooks":/playbooks-under-test:ro \
-    ansible-tester "$doInspect" "$hosts" "$playbook" "$pretty" ''
+    ansible-tester "$doInspect" "$hosts" "${playbook-}" "$pretty" ''
 }
 
 

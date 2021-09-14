@@ -12,25 +12,27 @@
         marker: "# {mark} DS MANAGED BLOCK (irods)"
         block: |
           {% for i in groups['irods'] %}
-          {% set addr = i if i|ipaddr else lookup('dig', i) %}
-          {% if inventory_hostname != i %}
+          {%   set addr = i if i|ipaddr else lookup('dig', i) %}
+          {%   if inventory_hostname != i %}
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport {{ _irods_zone_port }} -j ACCEPT
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport {{ _irods_server_control_plane_port }} -j ACCEPT
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ addr }} --dport {{ ports }} -j ACCEPT
-          {% if inventory_hostname in groups['rs'] %}
+          {%     if inventory_hostname in groups['irods_resource'] %}
           -A {{ _firewall_chain }} -m state --state NEW -p udp -s {{ i if i|ipaddr else lookup('dig', i) }} --dport {{ ports }} -j ACCEPT
-          {% endif %}
-          {% endif %}
+          {%     endif %}
+          {%   endif %}
           {% endfor %}
           {% for f in _irods_federation %}
-          {% set f_addr = f.icat_host if f.icat_host|ipaddr else lookup('dig', f.icat_host) %}
-          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ f_addr }} --dport {{ _irods_zone_port }} -j ACCEPT
-          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ f_addr }} --dport {{ ports }} -j ACCEPT
-          -A {{ _firewall_chain }} -m state --state NEW -p udp -s {{ f_addr }} --dport {{ ports }} -j ACCEPT
+          {%   for cp in f.catalog_providers %}
+          {%     set cp_addr = cp if cp|ipaddr else lookup('dig', cp) %}
+          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ cp_addr }} --dport {{ _irods_zone_port }} -j ACCEPT
+          -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ cp_addr }} --dport {{ ports }} -j ACCEPT
+          -A {{ _firewall_chain }} -m state --state NEW -p udp -s {{ cp_addr }} --dport {{ ports }} -j ACCEPT
+          {%   endfor %}
           {% endfor %}
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport {{ _irods_zone_port }} -j ACCEPT
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ _irods_allowed_clients }} --dport {{ ports }} -j ACCEPT
-          {% if inventory_hostname in groups['rs'] %}
+          {% if inventory_hostname in groups['irods_resource'] %}
           -A {{ _firewall_chain }} -m state --state NEW -p udp -s {{ _irods_allowed_clients }} --dport {{ ports }} -j ACCEPT
           {% endif %}
       notify:

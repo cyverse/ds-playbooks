@@ -1,7 +1,8 @@
-# The iPLANT specific, environment idependent rule customizations.
+# The general Data Store rule independent of environment specific rule 
+# customizations.
 #
-# These rules will be called by the hooks implemented in ipc-custom.re.  The rule names should be
-# prefixed with 'ipc' and suffixed with the name of the rule hook that will call the custom rule.
+# © 2021 The Arizona Board of Regents on behalf of The University of Arizona. 
+# For license information, see https://cyverse.org/license.
 
 @include 'ipc-amqp'
 @include 'ipc-json'
@@ -18,6 +19,7 @@ getTimestamp() {
   *timestamp
 }
 
+
 contains(*item, *list) {
   *result = false;
   foreach (*currItem in *list) {
@@ -27,6 +29,7 @@ contains(*item, *list) {
   }
   *result;
 }
+
 
 # Assign a UUID to a given collection or data object.
 assignUUID(*ItemType, *ItemName) {
@@ -57,6 +60,7 @@ assignUUID(*ItemType, *ItemName) {
   *uuid;
 }
 
+
 # Looks up the UUID of a collection from its path.
 retrieveCollectionUUID(*Coll) {
   *uuid = '';
@@ -66,6 +70,7 @@ retrieveCollectionUUID(*Coll) {
   }
   *uuid;
 }
+
 
 # Looks up the UUID of a data object from its path.
 retrieveDataUUID(*Data) {
@@ -81,6 +86,7 @@ retrieveDataUUID(*Data) {
   *uuid;
 }
 
+
 # Looks up the UUID for a given type of entity (collection or data object)
 retrieveUUID(*EntityType, *EntityPath) {
   if (*EntityType == '-C') {
@@ -92,10 +98,12 @@ retrieveUUID(*EntityType, *EntityPath) {
   }
 }
 
+
 sendMsg(*Topic, *Msg) {
   errorcode(ipc_amqpSend(*Topic, *Msg));
   0;
 }
+
 
 mkUserObject(*Field, *Name, *Zone) =
   if (*Zone == '') then
@@ -105,29 +113,36 @@ mkUserObject(*Field, *Name, *Zone) =
     ipc_jsonObject(*Field, list(ipc_jsonString('name', *Name),
                                 ipc_jsonString('zone', *Zone)))
 
+
 _ipc_mkAuthorField(*Name, *Zone) = mkUserObject('author', *Name, *Zone)
+
 
 mkEntityField(*UUID) = ipc_jsonString('entity', *UUID)
 
+
 mkPathField(*Path) = ipc_jsonString('path', *Path)
+
 
 mkAvuObject(*Field, *Name, *Value, *Unit) =
   ipc_jsonObject(*Field, list(ipc_jsonString('attribute', *Name),
                               ipc_jsonString('value', *Value),
                               ipc_jsonString('unit', *Unit)))
 
-getEntityType(*ItemType) =
+
+_getAmqpEntityType(*ItemType) =
   match *ItemType with
     | '-C' => COLLECTION_TYPE
     | '-d' => DATA_OBJECT_TYPE
     | '-R' => RESOURCE_TYPE
     | '-u' => USER_TYPE
 
+
 sendCollectionAdd(*Collection, *Path) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
                                    mkEntityField(*Collection),
                                    mkPathField(*Path)))
   in sendMsg(COLLECTION_TYPE ++ '.add', *msg)
+
 
 sendDataObjectOpen(*Data) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
@@ -136,6 +151,7 @@ sendDataObjectOpen(*Data) =
                                    ipc_jsonNumber('size', $dataSize),
                                    ipc_jsonString('timestamp', getTimestamp())))
   in sendMsg(DATA_OBJECT_TYPE ++ '.open', *msg)
+
 
 _ipc_sendDataObjectAdd(
   *AuthorName, *AuthorZone, *Data, *Path, *OwnerName, *OwnerZone, *Size, *Type
@@ -152,12 +168,30 @@ _ipc_sendDataObjectAdd(
   sendMsg(DATA_OBJECT_TYPE ++ '.add', *msg);
 }
 
+
+# Publish a data-object.mod message to AMQP exchange
+_ipc_sendDataObjectMod(
+  *AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
+) {
+  *msg = ipc_jsonDocument(
+    list(
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
+      mkEntityField(*Object),
+      mkUserObject('creator', *OwnerName, *OwnerZone),
+      ipc_jsonNumber('size', *Size),
+      ipc_jsonString('type', *Type) ) );
+
+  sendMsg(DATA_OBJECT_TYPE ++ '.mod', *msg);
+}
+
+
 sendCollectionInheritModified(*Recursive, *Inherit, *Collection) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
                                    mkEntityField(*Collection),
                                    ipc_jsonBoolean('recursive', *Recursive),
                                    ipc_jsonBoolean('inherit', *Inherit)))
   in sendMsg(COLLECTION_TYPE ++ '.acl.mod', *msg)
+
 
 sendCollectionAclModified(*Recursive, *AccessLevel, *Username, *Zone, *Collection) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
@@ -166,6 +200,7 @@ sendCollectionAclModified(*Recursive, *AccessLevel, *Username, *Zone, *Collectio
                                    ipc_jsonString('permission', *AccessLevel),
                                    mkUserObject('user', *Username, *Zone)))
   in sendMsg(COLLECTION_TYPE ++ '.acl.mod', *msg)
+
 
 sendCollectionAccessModified(*Recursive, *AccessLevel, *Username, *Zone, *Collection) {
   if (*AccessLevel == 'inherit') {
@@ -179,6 +214,7 @@ sendCollectionAccessModified(*Recursive, *AccessLevel, *Username, *Zone, *Collec
   }
 }
 
+
 sendDataObjectAclModified(*AccessLevel, *Username, *Zone, *Data) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
                                    mkEntityField(*Data),
@@ -186,25 +222,11 @@ sendDataObjectAclModified(*AccessLevel, *Username, *Zone, *Data) =
                                    mkUserObject('user', *Username, *Zone)))
   in sendMsg(DATA_OBJECT_TYPE ++ '.acl.mod', *msg)
 
+
 # Publish a data-object.sys-metadata.mod message to AMQP exchange
 _ipc_sendDataObjectMetadataModified(*AuthorName, *AuthorZone, *Data) {
   *msg = ipc_jsonDocument(list(_ipc_mkAuthorField(*AuthorName, *AuthorZone), mkEntityField(*Data)));
   sendMsg(DATA_OBJECT_TYPE ++ '.sys-metadata.mod', *msg);
-}
-
-# Publish a data-object.mod message to AMQP exchange
-_ipc_sendDataObjectMod(
-  *AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
-) {
-  *msg = ipc_jsonDocument(
-    list(
-      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
-      *Object,
-      mkUserObject('creator', *OwnerName, *OwnerZone),
-      ipc_jsonNumber('size', *Size),
-      ipc_jsonString('type', *Type)));
-
-  sendMsg(DATA_OBJECT_TYPE ++ '.mod', *msg);
 }
 
 
@@ -215,24 +237,28 @@ sendEntityMove(*EntityType, *Entity, *OldPath, *NewPath) =
                                    ipc_jsonString('new-path', *NewPath)))
   in sendMsg(*EntityType ++ '.mv', *msg)
 
+
 sendEntityRemove(*EntityType, *Entity, *Path) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
                                    mkEntityField(*Entity),
                                    ipc_jsonString('path', *Path)))
   in sendMsg(*EntityType ++ '.rm', *msg)
 
+
 sendAvuMod(*ItemType, *Item, *OldName, *OldValue, *OldUnit, *NewName, *NewValue, *NewUnit) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
                                    mkEntityField(*Item),
                                    mkAvuObject('old-metadatum', *OldName, *OldValue, *OldUnit),
                                    mkAvuObject('new-metadatum', *NewName, *NewValue, *NewUnit)))
-  in sendMsg(getEntityType(*ItemType) ++ '.metadata.mod', *msg)
+  in sendMsg(_getAmqpEntityType(*ItemType) ++ '.metadata.mod', *msg)
+
 
 sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
                                    mkEntityField(*Item),
                                    mkAvuObject('metadatum', *AName, *AValue, *AUnit)))
-  in sendMsg(getEntityType(*ItemType) ++ '.metadata.' ++ *Option, *msg)
+  in sendMsg(_getAmqpEntityType(*ItemType) ++ '.metadata.' ++ *Option, *msg)
+
 
 sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
@@ -240,26 +266,34 @@ sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit) =
                                    mkAvuObject('metadatum', *AName, *AValue, *AUnit)))
   in sendMsg(DATA_OBJECT_TYPE ++ '.metadata.addw', *msg)
 
+
 sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit) =
   let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
                                    mkEntityField(*Item),
                                    ipc_jsonString('attribute-pattern', *AName),
                                    ipc_jsonString('value-pattern', *AValue),
                                    ipc_jsonString('unit-pattern', *AUnit)))
-  in sendMsg(getEntityType(*ItemType) ++ '.metadata.rmw', *msg)
+  in sendMsg(_getAmqpEntityType(*ItemType) ++ '.metadata.rmw', *msg)
+
 
 sendAvuCopy(*SourceItemType, *TargetItemType, *Source, *Target) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   ipc_jsonString('source', *Source),
-                                   ipc_jsonString('source-type', getEntityType(*SourceItemType)),
-                                   ipc_jsonString('destination', *Target)))
-  in sendMsg(getEntityType(*TargetItemType) ++ '.metadata.cp', *msg)
+  let *srcType = _getAmqpEntityType(*SourceItemType) in
+  let *msg = ipc_jsonDocument(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      ipc_jsonString('source', *Source),
+      ipc_jsonString('source-type', *srcType),
+      ipc_jsonString('destination', *Target) ) )
+  in sendMsg(_getAmqpEntityType(*TargetItemType) ++ '.metadata.cp', *msg)
+
 
 resolveAdminPerm(*Item) = if *Item like regex '^/[^/]*(/[^/]*)?$' then 'write' else 'own'
+
 
 setAdminGroupPerm(*Item) {
   msiSetACL('default', resolveAdminPerm(*Item), 'rodsadmin', *Item);
 }
+
 
 canModProtectedAVU(*User) {
   *canMod = false;
@@ -275,10 +309,12 @@ canModProtectedAVU(*User) {
   *canMod;
 }
 
-# Gets the original unit for an AVU modification. The argument that is used for the original unit
-# in the AVU modification may contain the original unit or, if the unit was empty in the original
-# AVU then this argument may contain the first of the new AVU settings instead. We can distinguish
-# this case from the others by the presence of a prefix in the value. The prefix is always a single
+
+# Gets the original unit for an AVU modification. The argument that is used for 
+# the original unit in the AVU modification may contain the original unit or, if 
+# the unit was empty in the original AVU then this argument may contain the 
+# first of the new AVU settings instead. We can distinguish this case from the 
+# others by the presence of a prefix in the value. The prefix is always a single 
 # character followed by a colon.
 #
 getOrigUnit(*candidate) =
@@ -286,9 +322,11 @@ getOrigUnit(*candidate) =
   else if substr(*candidate, 1, 1) != ':' then *candidate
   else '';
 
-# Gets the new AVU setting from a list of candidates. New AVU settings are passed in an arbitrary
-# order and the type of AVU setting is identified by a prefix. This function looks for values
-# matching the given prefix. If multiple matching values are found then the last one wins.
+
+# Gets the new AVU setting from a list of candidates. New AVU settings are 
+# passed in an arbitrary order and the type of AVU setting is identified by a 
+# prefix. This function looks for values matching the given prefix. If multiple
+#  matching values are found then the last one wins.
 #
 getNewAVUSetting(*orig, *prefix, *candidates) {
   *setting = *orig
@@ -302,13 +340,15 @@ getNewAVUSetting(*orig, *prefix, *candidates) {
   *setting;
 }
 
-# Determines whether or not the string in the first argument starts with the string in the second
-# argument.
+
+# Determines whether or not the string in the first argument starts with the 
+# string in the second argument.
 #
 startsWith(*str, *prefix) =
   if strlen(*str) < strlen(*prefix) then false
   else if substr(*str, 0, strlen(*prefix)) != *prefix then false
   else true;
+
 
 # Removes a prefix from a string.
 #
@@ -341,14 +381,16 @@ avuProtected(*ItemType, *ItemName, *Attribute) {
   }
 }
 
-# Verifies that an attribute can be modified. If it can't it fails and sends an error message to
-# the caller.
+
+# Verifies that an attribute can be modified. If it can't it fails and sends an
+# error message to the caller.
 ensureAVUEditable(*Editor, *ItemType, *ItemName, *A, *V, *U) {
   if (avuProtected(*ItemType, *ItemName, *A) && !canModProtectedAVU(*Editor)) {
     cut;
     failmsg(-830000, 'CYVERSE ERROR:  attempt to alter protected AVU <*A, *V, *U>');
   }
 }
+
 
 # If an AVU is not protected, it sets the AVU to the given item
 setAVUIfUnprotected(*ItemType, *ItemName, *A, *V, *U) {
@@ -366,6 +408,7 @@ cpUnprotectedCollAVUs(*Coll, *TargetType, *TargetName) =
                         *avu.META_COLL_ATTR_VALUE, *avu.META_COLL_ATTR_UNITS);
   }
 
+
 # Copies the unprotected AVUs from a given data object to the given item.
 cpUnprotectedDataObjAVUs(*ObjPath, *TargetType, *TargetName) {
   msiSplitPath(*ObjPath, *parentColl, *objName);
@@ -376,6 +419,7 @@ cpUnprotectedDataObjAVUs(*ObjPath, *TargetType, *TargetName) {
   }
 }
 
+
 # Copies the unprotected AVUs from a given resource to the given item.
 cpUnprotectedRescAVUs(*Resc, *TargetType, *TargetName) =
   foreach (*avu in SELECT META_RESC_ATTR_NAME, META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
@@ -383,6 +427,7 @@ cpUnprotectedRescAVUs(*Resc, *TargetType, *TargetName) =
     setAVUIfUnprotected(*TargetType, *TargetName, *avu.META_RESC_ATTR_NAME,
                         *avu.META_RESC_ATTR_VALUE, *avu.META_RESC_ATTR_UNITS);
   }
+
 
 # Copies the unprotected AVUs from a given user to the given item.
 cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) =
@@ -398,6 +443,7 @@ ipc_acCreateUser {
   msiCreateUser ::: msiRollback;
   msiCommit;
 }
+
 
 # Refuse SSL connections
 #
@@ -424,10 +470,12 @@ ipc_acCreateCollByAdmin(*ParColl, *ChildColl) {
   msiSetACL('default', 'admin:*perm', 'rodsadmin', *coll);
 }
 
+
 ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl) {
   *coll = '*ParColl/*ChildColl';
   sendCollectionAdd(assignUUID('-C', *coll), *coll);
 }
+
 
 # This rule pushes a collection.rm message into the irods exchange.
 #
@@ -440,9 +488,8 @@ ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
 }
 
 
-
-# This rule prevents the user from removing rodsadmin's ownership from an ACL unless the user is of
-# type rodsadmin.
+# This rule prevents the user from removing rodsadmin's ownership from an ACL 
+# unless the user is of type rodsadmin.
 #
 ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
   if (*UserName == 'rodsadmin') {
@@ -454,12 +501,13 @@ ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zo
 }
 
 
-# This rule makes the admin owner of any created collection.  This rule is not applied to
-# collections created when a TAR file is expanded. (i.e. ibun -x)
+# This rule makes the admin owner of any created collection.  This rule is not 
+# applied to collections created when a TAR file is expanded. (i.e. ibun -x)
 #
 ipc_acPostProcForCollCreate {
   setAdminGroupPerm($collName);
 }
+
 
 # This rule ensures that archival collections are given a UUID and an AMQP
 # message is published indicating the collection is created.
@@ -468,26 +516,33 @@ ipc_archive_acPostProcForCollCreate {
   sendCollectionAdd(assignUUID('-C', $collName), $collName);
 }
 
+
 ipc_acPostProcForOpen {
   *uuid = retrieveDataUUID($objPath);
   if (*uuid != '') { sendDataObjectOpen(*uuid); }
 }
 
+
 ipc_acPreprocForRmColl { temporaryStorage.'$collName' = retrieveCollectionUUID($collName); }
+
 
 ipc_acPostProcForRmColl {
   *uuid = temporaryStorage.'$collName';
   if (*uuid != '') { sendEntityRemove(COLLECTION_TYPE, *uuid, $collName); }
 }
 
+
 ipc_acDataDeletePolicy { temporaryStorage.'$objPath' = retrieveDataUUID($objPath); }
+
 
 ipc_acPostProcForDelete {
   *uuid = temporaryStorage.'$objPath';
   if (*uuid != '') { sendEntityRemove(DATA_OBJECT_TYPE, *uuid, $objPath); }
 }
 
-# This sends a collection or data-object ACL modification message for the updated object.
+
+# This sends a collection or data-object ACL modification message for the 
+# updated object.
 #
 ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
   *level = removePrefix(*AccessLevel, list('admin:'));
@@ -502,7 +557,9 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Z
   }
 }
 
-# This rule schedules a rename entry job for the data object or collection being renamed.
+
+# This rule schedules a rename entry job for the data object or collection being
+# renamed.
 #
 ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   *type = ipc_getEntityType(*DestEntity);
@@ -565,6 +622,7 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
   ensureAVUEditable($userNameClient, *ItemType, *ItemName, *newName, *newValue, *newUnit);
 }
 
+
 # This rule checks that AVU being added, set or removed isn't a protected one.
 # Only rodsadmin users are allowed to add, remove or update protected AVUs.
 ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
@@ -607,7 +665,9 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
   }
 }
 
-# This rule ensures that only the non-protected AVUs are copied from one item to another.
+
+# This rule ensures that only the non-protected AVUs are copied from one item to
+#  another.
 ipc_acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *SourceItemName,
                                   *TargetItemName) {
   if (!canModProtectedAVU($userNameClient)) {
@@ -626,6 +686,7 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *So
     failmsg(0, 'CYVERSE SUCCESS:  Successfully copied the unprotected metadata.');
   }
 }
+
 
 # This rule sends a message indicating that an AVU was modified.
 #
@@ -646,7 +707,9 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValu
   }
 }
 
-# This rule sends one of the AVU metadata set messages, depending on which subcommand was used.
+
+# This rule sends one of the AVU metadata set messages, depending on which 
+# subcommand was used.
 #
 ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
   if (*AName != 'ipc_UUID') {
@@ -752,6 +815,7 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 }
 # XXX - ^^^
 
+
 # XXX - Because of https://github.com/irods/irods/issues/5540
 # ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO) {
 #   *err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
@@ -799,4 +863,3 @@ ipc_dataObjMetadataModified(*User, *Zone, *Object) {
     _ipc_sendDataObjectMetadataModified(*User, *Zone, *uuid);
   }
 }
-

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # An ansible module for listening on a set of ports. It's meant to work in
 # tandem with port_check_sender to verify network routes are open.
@@ -25,6 +25,7 @@
 import select
 import socket
 import struct
+import traceback
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -65,9 +66,9 @@ class SocketSet:
     return self.inputs
 
   def remove(self, sock):
-    remove_input(sock)
-    remove_messenger(sock)
-    remove_output(sock)
+    self.remove_input(sock)
+    self.remove_messenger(sock)
+    self.remove_output(sock)
 
   def remove_input(self, input):
     if input in self.inputs:
@@ -85,27 +86,32 @@ class SocketSet:
     return select.select(self.inputs, self.outputs, self.inputs, timeout)
 
 
-class TCPConnection(socket.socket):
+class TCPConnection:
 
   def __init__(self, sock):
-    connection, _ = sock.accept()
-    super(TCPConnection, self).__init__(_sock=connection)
-    self.setblocking(0)
+    self._sock, _ = sock.accept()
+    self._sock.setblocking(0)
 
+  def close(self):
+    self._sock.close()
+
+  def fileno(self):
+    return self._sock.fileno()
+    
   def transition_readable(self, states):
-   states.add_messenger(self)
+    states.add_messenger(self)
 
   def transition_messenger(self, states):
-    data = self.recv(128)
-    self.send("pong")
+    data = self._sock.recv(128)
+    self._sock.send(b'pong')
     states.add_output(self)
-    return data
+    return data    
 
   def transition_writable(self, states):
     states.remove_output(self)
 
   def transition_exceptional(self, states):
-    self.close()
+    self._sock.close()
     states.remove(self)
 
 
@@ -145,84 +151,80 @@ class UDPSocket(socket.socket):
     self.sendto("pong", sender)
     states.add_input(self)
     return data
-
+ 
   def transition_exceptional(self, states):
     states.remove(self)
     self.close()
 
-
+ 
 def receive(tcp_ports, udp_ports, stop_command, timeout):
-  failures = []
-  timedOut = False
-  socks = SocketSet()
+  try:
+    failures = []
+    socks = SocketSet()
 
-  for port in tcp_ports:
-    try:
-      socks.add_input(TCPSocket(port))
-    except Exception as e:
-      failures.append("%d/tcp: %s" % (port, str(e)))
+    for port in tcp_ports:
+      try:
+        socks.add_input(TCPSocket(port))
+      except OSError:
+        failures.append("port %s/tcp already in use" % (port))
 
-  for port in udp_ports:
-    try:
-      socks.add_input(UDPSocket(port))
-    except Exception as e:
-      failures.append("%d/tcp: %s" % (port, str(e)))
+    for port in udp_ports:
+      try:
+        socks.add_input(UDPSocket(port))
+      except OSError:
+        failures.append("port %s/tcp already in use" % (port))
 
-  tearDown = not socks.has_inputs()
+    tearDown = bool(failures) or not socks.has_inputs()
 
-  while not tearDown:
-    readable, writable, exceptional = socks.select(timeout)
+    while not tearDown:
+      readable, writable, exceptional = socks.select(timeout)
 
-    if readable + writable + exceptional:
-      for r in readable:
-        r.transition_readable(socks)
+      if readable + writable + exceptional:
+        for r in readable:
+          r.transition_readable(socks)
 
-      for w in writable:
-        w.transition_writable(socks)
+        for w in writable:
+          w.transition_writable(socks)
 
-      for e in exceptional:
-        e.transition_exceptional(socks)
+        for e in exceptional:
+          e.transition_exceptional(socks)
 
-      for m in socks.get_messengers():
-        if m.transition_messenger(socks) == stop_command:
+        for m in socks.get_messengers():
+          msg = m.transition_messenger(socks).decode('utf-8')
+          if  msg == stop_command:
+            tearDown = True
+
+        if not socks.has_inputs():
           tearDown = True
-
-      if not socks.has_inputs():
+      else:
+        failures.append("receiver: timed out")
         tearDown = True
-    else:
-      failures.append("receiver: timed out")
-      tearDown = True
 
-  socks.closeall()
-  return failures
+    socks.closeall()
+    return failures
+  except:
+    return ["Unexpected error:"] + traceback.format_exc().splitlines()
 
 
 def main():
-  module = AnsibleModule(
-    argument_spec = dict(
-      tcp_ports = dict(type='list', default=[]),
-      udp_ports = dict(type='list', default=[]),
-      stop_command = dict(type='str', default="finished"),
-      timeout = dict(type='int', default=300)
-    )
-  )
+  module_args = dict(
+    tcp_ports = dict(type='list', default=[]),
+    udp_ports = dict(type='list', default=[]),
+    stop_command = dict(type='str', default="finished"),
+    timeout = dict(type='int', default=300) ) 
 
-  try:
-    tcp_ports = module.params['tcp_ports']
-    udp_ports = module.params['udp_ports']
-    stop_command = module.params['stop_command']
-    timeout = module.params['timeout']
-    failures = receive(tcp_ports, udp_ports, stop_command, timeout)
+  module = AnsibleModule(argument_spec=module_args)
 
-    if failures:
-      msg=""
-      for failure in failures:
-        msg += failure + "\n"
-        module.fail_json(msg=msg)
-    else:
-        module.exit_json()
-  except Exception as e:
-    module.fail_json(msg=str(e))
+  tcp_ports = module.params['tcp_ports']
+  udp_ports = module.params['udp_ports']
+  stop_command = module.params['stop_command']
+  timeout = module.params['timeout']
+  failures = receive(tcp_ports, udp_ports, stop_command, timeout)
+
+  if failures:
+    module.fail_json(msg='\n'.join(failures))
+  else:
+    module.exit_json()
 
 
 if __name__ == '__main__':

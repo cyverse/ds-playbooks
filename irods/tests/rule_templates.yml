@@ -45,8 +45,7 @@
 
     - name: verify constants expand correctly in pire-env.re.j2
       assert:
-        that:
-          - pire_env is search("pire_RESC = 'demoResc'")
+        that: pire_env is search("pire_RESC = 'demoResc'")
 
     - name: verify constants expand correctly in sernec-env.re.j2
       assert:
@@ -73,8 +72,7 @@
   tasks:
     - name: verify resource constants
       assert:
-        that:
-          - ipc_env is search("ipc_AMQP_EXCHANGE = 'exchange'")
+        that: ipc_env is search("ipc_AMQP_EXCHANGE = 'exchange'")
 
 
 - name: test that custom default resc set correctly in ipc-env.re
@@ -120,30 +118,7 @@
   tasks:
     - name: verify ipc_MAX_NUM_RE_PROCS
       assert:
-        that:
-          - ipc_env is search("ipc_MAX_NUM_RE_PROCS = 1")
-
-
-- name: test that single threaded resources are correctly added to ipc-env.re
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    single_threaded_resources:
-      - resource-1
-      - resource-2
-    ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
-  tasks:
-    - name: verify acSetNumThreads defined correctly in ipc-env.re
-      assert:
-        that:
-          - >
-              ipc_env is
-              search("on ($rescName == 'resource-1' && $clientAddr == ipc_IES_IP)" | regex_escape)
-          - > 
-              ipc_env is 
-              search("on ($rescName == 'resource-2' && $clientAddr == ipc_IES_IP)" | regex_escape)
+        that: ipc_env is search("ipc_MAX_NUM_RE_PROCS = 1")
 
 
 - name: test Avra params are set correctly
@@ -191,8 +166,7 @@
   tasks:
     - name: verify params
       assert:
-        that:
-          - pire_env is search("pire_RESC = 'pireRes'")
+        that: pire_env is search("pire_RESC = 'pireRes'")
 
 
 - name: test that CAP_TCN perm groups are generated correctly

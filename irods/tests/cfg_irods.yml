@@ -11,7 +11,7 @@
       stat:
         path: /etc/irods/{{ item }}
       register: response
-      failed_when: |
+      failed_when: >-
         not response.stat.exists
         or response.stat.pw_name != 'irods'
         or not response.stat.rusr
@@ -54,9 +54,9 @@
 
     - name: Verify common command scripts are in place
       stat:
-        path: /var/lib/irods/iRODS/server/bin/cmd/{{ item }}
+        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
       register: response
-      failed_when: |
+      failed_when: >-
         not response.stat.exists
         or response.stat.pw_name != 'irods'
         or not response.stat.xusr
@@ -70,16 +70,24 @@
         - rm-trash
         - set-uuid
 
-    - name: Verify IES only files only on IES
+    - name: Verify .odbc.ini only on catalog service providers
       stat:
-        path: "{{ item }}"
+        path: /var/lib/irods/.odbc.ini
       register: response
-      failed_when: response.stat.exists != ((inventory_hostname in groups['ies']) | bool)
-      with_items:
-        - /etc/irods/database_config.json
-        - /var/lib/irods/.odbc.ini
-        - /var/lib/irods/.pgpass
+      failed_when: response.stat.exists != ((inventory_hostname in groups['irods_catalog']) | bool)
 
+    - name: Verify database_config.json does not exist
+      stat:
+        path: /etc/irods/database_config.json
+      register: response
+      failed_when: response.stat.exists
+
+    - name: Verify .pgpass does not exist
+      stat:
+        path: /var/lib/irods/.pgpass
+      register: response
+      failed_when: response.stat.exists
+      
     - name: retrieve encoded irods_environment.json
       slurp:
         src: /var/lib/irods/.irods/irods_environment.json
@@ -92,14 +100,17 @@
     - name: verify irods_environment.json has correct contents
       assert:
         that:
-          - irods_environment.irods_client_server_negotiation == 'request_server_negotiation'
-          - irods_environment.irods_client_server_policy == 'CS_NEG_REFUSE'
-          - irods_environment.irods_default_hash_scheme == 'MD5'
-          - irods_environment.irods_default_resource == 'ingestRes'
+          - irods_environment.irods_host == inventory_hostname
+          - irods_environment.irods_port == 1247
           - irods_environment.irods_user_name == 'rods'
           - irods_environment.irods_zone_name == 'testing'
-
-    - when: inventory_hostname in groups['ies']
+          - irods_environment.irods_client_server_policy == 'CS_NEG_REFUSE'
+          - irods_environment.irods_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
+          - irods_environment.irods_control_plane_port == 1248
+          - irods_environment.irods_default_hash_scheme == 'MD5'
+          - irods_environment.irods_default_resource == 'ingestRes'
+          
+    - when: inventory_hostname in groups['irods_catalog']
       block:
         - name: retrieve encoded server_config.json
           slurp:
@@ -113,21 +124,59 @@
         - name: verify server_config.json has correct contents
           assert:
             that:
+              - server_config.advanced_settings.default_number_of_transfer_threads == 4
+              - >-
+                server_config.advanced_settings.maximum_number_of_concurrent_rule_engine_server_processes
+                == 4
+              - >-
+                server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes
+                == 4
+              - server_config.catalog_provider_hosts | length == 1
+              - server_config.catalog_provider_hosts[0] == inventory_hostname
+              - server_config.catalog_service_role == 'provider'
               - server_config.default_dir_mode == '0750'
               - server_config.default_file_mode == '0600'
+              - server_config.default_hash_scheme == 'MD5'
+              - server_config.default_resource_directory is not defined
               - server_config.default_resource_name == 'ingestRes'
-              - server_config.icat_host == inventory_hostname
+              - server_config.environment_variables.IRODS_DATABASE_USER_PASSWORD_SALT == 'salt'
+              - >-
+                server_config.environment_variables.IRODS_AMQP_URI
+                == "amqp://amqp_admin:password@dstesting_amqp_1.dstesting_default:5672/%2F"
+              - server_config.federation | length == 2
+              - server_config.federation[0].catalog_provider_hosts | length == 2
+              - server_config.federation[0].catalog_provider_hosts[0] == '128.196.65.155'
+              - server_config.federation[0].negotiation_key == 'FAKE___32_byte_negotiation_key_1'
+              - server_config.federation[0].zone_key == 'FAKE_zone_key_1'
+              - server_config.federation[0].zone_name == 'cyverse.dev'
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
-              - server_config.re_rulebase_set[0].filename == 'ipc-custom'
-              - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'
+              - >-
+                server_config.plugin_configuration.database.postgres.db_host 
+                == 'dstesting_dbms_configured_1.dstesting_default'
+              - server_config.plugin_configuration.database.postgres.db_password == 'testpassword'
+              - server_config.plugin_configuration.database.postgres.db_port == 5432
+              - server_config.plugin_configuration.database.postgres.db_username == 'irods'
+              - >-
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set 
+                  | length 
+                == 3
+              - >-
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[0] 
+                == 'ipc-custom'
+              - >-
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1] 
+                == 'ipc-housekeeping'
+              - >-
+                server_config.schema_validation_base_uri 
+                == 'file:///var/lib/irods/configuration_schemas'
               - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
+              - server_config.server_control_plane_port == 1248
               - server_config.server_port_range_end == 19999
               - server_config.server_port_range_start == 19990
               - server_config.zone_key == 'TEMPORARY_zone_key'
+              - server_config.zone_name == 'testing'
+              - server_config.zone_port == 1247
               - server_config.zone_user == 'rods'
-              - server_config.federation | length == 0
-              - 'server_config.environment_variables.IRODS_AMQP_URI
-                   == "amqp://amqp_admin:password@dstesting_amqp_1.dstesting_default:5672/%2F"'
 
         - name: retrieve encoded .odbc.ini
           slurp:
@@ -141,30 +190,13 @@
         - name: verify .odbc.ini contents
           assert:
             that:
-              - odbc is search('driver = /usr/pgsql-12/lib/psqlodbc.so' | regex_escape)
-              - odbc is search('Database = ICAT')
               - odbc is search('Port = 5432')
-              - odbc
-                  is search('Servername = dstesting_dbms_configured_1.dstesting_default'
-                    | regex_escape)
+              - >-
+                odbc
+                is search(
+                  'Servername = dstesting_dbms_configured_1.dstesting_default' | regex_escape )
 
-        - name: retrieve encoded .pgpass
-          slurp:
-            src: /var/lib/irods/.pgpass
-          register: pEncoded
-
-        - name: decode .pgpass
-          set_fact:
-            pgpass: "{{ pEncoded.content | b64decode }}"
-
-        - name: verify .pgpass contents
-          assert:
-            that:
-              - "pgpass
-                   is search('dstesting_dbms_configured_1.dstesting_default:5432:ICAT:irods:testpassword'
-                             | regex_escape)"
-
-    - when: inventory_hostname in groups['rs']
+    - when: inventory_hostname in groups['irods_resource']
       block:
         - name: retrieve encoded server_config.json
           slurp:
@@ -178,19 +210,43 @@
         - name: verify server_config.json has correct contents
           assert:
             that:
+              - server_config.advanced_settings.default_number_of_transfer_threads == 4
+              - >-
+                server_config.advanced_settings.maximum_number_of_concurrent_rule_engine_server_processes
+                == 4
+              - >-
+                server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes
+                == 4
+              - server_config.catalog_provider_hosts == groups['irods_catalog']
+              - server_config.catalog_service_role == 'consumer'
+              - server_config.default_hash_scheme == 'MD5'
               - server_config.default_resource_directory == '/var/lib/irods/Vault'
               - server_config.default_resource_name == 'ingestRes'
-              - server_config.icat_host == 'dstesting_provider_configured_1.dstesting_default'
+              - server_config.environment_variables == {}
+              - server_config.federation | length == 2
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
-              - server_config.re_rulebase_set[0].filename == 'ipc-custom'
-              - server_config.re_rulebase_set[1].filename == 'ipc-housekeeping'
+              - server_config.plugin_configuration.database is not defined 
+              - >-
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set 
+                  | length 
+                == 3
+              - >-
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[0] 
+                == 'ipc-custom'
+              - >-
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1] 
+                == 'ipc-housekeeping'
+              - >-
+                server_config.schema_validation_base_uri 
+                == 'file:///var/lib/irods/configuration_schemas'
               - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
+              - server_config.server_control_plane_port == 1248
               - server_config.server_port_range_end == 20009
               - server_config.server_port_range_start == 20000
               - server_config.zone_key == 'TEMPORARY_zone_key'
+              - server_config.zone_name == 'testing'
+              - server_config.zone_port == 1247
               - server_config.zone_user == 'rods'
-              - server_config.federation | length == 0
-              - server_config.environment_variables == {}
 
         - name: verify consumer_configured specific server_config.json
           when: inventory_hostname == 'dstesting_consumer_configured_1.dstesting_default'

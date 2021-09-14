@@ -1,6 +1,6 @@
 ---
 - name: create vaults
-  hosts: rs:!unmanaged_systems
+  hosts: irods_resource:!unmanaged_systems
   become: true
   tasks:
     - name: create vault directory
@@ -15,7 +15,7 @@
 
 
 - name: create storage resources
-  hosts: rs
+  hosts: irods_resource
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:

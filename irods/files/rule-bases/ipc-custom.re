@@ -5,9 +5,8 @@
 # © 2021 The Arizona Board of Regents on behalf of The University of Arizona. 
 # For license information, see https://cyverse.org/license.
 
-# The environment specific rule customizations belong in the file ipc-env.re.
-# These rules have the highest priority. Implementations in ipc-custom.re of
-# rules also in ipc-env.re will be ignored.
+# The environment-specific configuration constants belong in the file 
+# ipc-env.re.
 
 @include 'ipc-env'
 
@@ -46,10 +45,22 @@
 # For events occur that should belong to one and only one project,
 # the following rules may be extended with ON conditions.
 
+
+# This rule applies the project specific collection creation policies to an
+# administratively created collection.
+#
+# Parameters:
+#  *ParColl    the absolute path to the parent of the collection being created
+#  *ChildColl  the name of the collection being created
+#
 exclusive_acCreateCollByAdmin(*ParColl, *ChildColl) {
   ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl);
 }
 
+
+# This rule applies the project specific collection creation policies to a newly
+# created collection that wasn't created administratively.
+#
 exclusive_acPostProcForCollCreate {
   *err = errormsg(ipc_archive_acPostProcForCollCreate, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
@@ -73,6 +84,10 @@ exclusive_acPostProcForCollCreate {
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
+
+# This rule applies the project specific policies to a data object created 
+# through copying another data object.
+#
 exclusive_acPostProcForCopy {
   *err = errormsg(captcn_acPostProcForCopy, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
@@ -82,9 +97,21 @@ exclusive_acPostProcForCopy {
 }
 
 
-
 # POLICIES
 
+
+# This rule administratively creates a collection, e.g., creating a home 
+# collection when a user is created. It ensures all collection creation policies
+# are applied to then newly created collection.
+#
+# Parameters:
+#  *ParColl    the absolute path to the parent of the collection being created
+#  *ChildColl  the name of the collection being created
+#
+# Error Codes:
+#  -43000 (SYS_NO_RCAT_SERVER_ERR)
+#  -160000 (SYS_SERVICE_ROLE_NOT_SUPPORTED)
+#
 acCreateCollByAdmin(*ParColl, *ChildColl) {
   msiCreateCollByAdmin(*ParColl, *ChildColl);
 
@@ -94,21 +121,25 @@ acCreateCollByAdmin(*ParColl, *ChildColl) {
   exclusive_acCreateCollByAdmin(*ParColl, *ChildColl);
 }
 
+
 acCreateUser {
   ON ($otherUserType == 'ds-service') {
     ipc_acCreateUser;
   }
 }
 
+
 acDataDeletePolicy {
   bisque_acDataDeletePolicy;
   ipc_acDataDeletePolicy;
 }
 
+
 acDeleteCollByAdmin(*ParColl, *ChildColl) {
   msiDeleteCollByAdmin(*ParColl, *ChildColl);
   ipc_acDeleteCollByAdmin(*ParColl, *ChildColl);
 }
+
 
 acDeleteCollByAdminIfPresent(*ParColl, *ChildColl) {
   *status = errormsg(ipc_acDeleteCollByAdmin(*ParColl, *ChildColl), *msg);
@@ -120,15 +151,20 @@ acDeleteCollByAdminIfPresent(*ParColl, *ChildColl) {
   }
 }
 
+
 acPreConnect(*OUT) { ipc_acPreConnect(*OUT); }
 
+
 acSetNumThreads { ipc_acSetNumThreads; }
+
 
 acSetRescSchemeForCreate {
   replSetRescSchemeForCreate;
 }
 
+
 acSetRescSchemeForRepl { replSetRescSchemeForRepl; }
+
 
 acSetReServerNumProc { ipc_acSetReServerNumProc; }
 
@@ -142,9 +178,11 @@ acSetReServerNumProc { ipc_acSetReServerNumProc; }
 # before any IPC pre-proc rules to ensure that third party rules don't
 # invalidate IPC rules.
 
+
 acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
   ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
 }
+
 
 acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName,
                               *NAValue, *NAUnit) {
@@ -152,9 +190,11 @@ acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *A
                                     *NAName, *NAValue, *NAUnit);
 }
 
+
 acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
   ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit);
 }
+
 
 acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *SourceItemName,
                               *TargetItemName) {
@@ -162,9 +202,11 @@ acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *Source
                                     *TargetItemName);
 }
 
+
 acPreProcForObjRename(*SourceObject, *DestObject) {
   de_acPreProcForObjRename(*SourceObject, *DestObject);
 }
+
 
 # NOTE: The camelcasing is inconsistent here
 acPreprocForRmColl { ipc_acPreprocForRmColl; }
@@ -177,9 +219,11 @@ acPreprocForRmColl { ipc_acPreprocForRmColl; }
 # before any IPC post-proc rules to ensure that third party rules don't
 # invalidate IPC rules.
 
+
 acPostProcForCopy {
   exclusive_acPostProcForCopy;
 }
+
 
 acPostProcForCollCreate {
   *err = errormsg(ipc_acPostProcForCollCreate, *msg);
@@ -188,12 +232,15 @@ acPostProcForCollCreate {
   exclusive_acPostProcForCollCreate;
 }
 
+
 acPostProcForOpen {
   *err = errormsg(ipc_acPostProcForOpen, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
+
 acPostProcForRmColl { ipc_acPostProcForRmColl; }
+
 
 acPostProcForDelete {
   *err = errormsg(ipc_acPostProcForDelete, *msg);
@@ -202,6 +249,7 @@ acPostProcForDelete {
   *err = errormsg(bisque_acPostProcForDelete, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
+
 
 acPostProcForObjRename(*SourceObject, *DestObject) {
   *err = errormsg(ipc_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
@@ -226,9 +274,11 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
   if (*err < 0) { writeLine('serverLog', *msg); }
 }
 
+
 acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
   ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
 }
+
 
 acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName,
                                *NAValue, *NAUnit) {
@@ -236,15 +286,18 @@ acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *
                                      *NAName, *NAValue, *NAUnit);
 }
 
+
 acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
   ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit);
 }
+
 
 acPostProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *SourceItemName,
                                *TargetItemName) {
   ipc_acPostProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *SourceItemName,
                                      *TargetItemName);
 }
+
 
 acPostProcForParallelTransferReceived(*LeafResource) {
   ipc_acPostProcForParallelTransferReceived(*LeafResource);
@@ -257,7 +310,17 @@ acPostProcForParallelTransferReceived(*LeafResource) {
 
 ## SUPPORTING FUNCTIONS AND RULES ##
 
-_ipc_mkDataObjSessVar(*Path) = 'ipc-data-obj-*Path'
+
+# generates a unique session variable name for a data object 
+#
+# Parameters:
+#  *Path  the absolute path to the data object
+#
+# Return:
+#  the session variable name
+#
+_ipc_mkDataObjSessVar: path -> string
+_ipc_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 
 
 # XXX - Because of https://github.com/irods/irods/issues/5540 
@@ -356,6 +419,7 @@ _ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 
 # CLOSE
 
+
 pep_database_close_post(*INSTANCE, *CONTEXT, *OUT) {
 # XXX - Because of https://github.com/irods/irods/issues/5540, 
 # nothing can be done here
@@ -400,6 +464,7 @@ pep_database_close_finally(*INSTANCE, *CONTEXT, *OUT) {
 
 # MOD DATA OBJ META
 
+
 pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *REG_PARAM) {
   *handled = false;
 
@@ -407,7 +472,7 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
 # _ipc_dataObjCreated needs to be called here when not created through file 
 # registration
   if (! *handled && errorcode(*REG_PARAM.dataSize) == 0) {
-    *pathVar = _ipc_mkDataObjSessVar(*DATA_OBJ_INFO.logical_path);
+    *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
 
     if (
       (
@@ -435,7 +500,7 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
   # If modification timestamp is being modified, the data object has been 
   # modified, so publish a data-object.mod message.
   if (! *handled && errorcode(*REG_PARAM.dataModify) == 0) {
-    *pathVar = _ipc_mkDataObjSessVar(*DATA_OBJ_INFO.logical_path);
+    *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
 
     if (
       if errorcode(temporaryStorage.'*pathVar') != 0 then true
@@ -476,12 +541,13 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
 
 # REG DATA OBJ
 
+
 pep_database_reg_data_obj_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO) {
 # XXX - These fields are empty. See https://github.com/irods/irods/issues/5554
   *DATA_OBJ_INFO.data_owner_name = *CONTEXT.user_user_name;
   *DATA_OBJ_INFO.data_owner_zone = *CONTEXT.user_rods_zone;
 # XXX - ^^^
-  *pathVar = _ipc_mkDataObjSessVar(*DATA_OBJ_INFO.logical_path);
+  *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
 # XXX - Because of https://github.com/irods/irods/issues/5538, the CONTEXT 
 # variables need to passed through temporaryStorage
 #   temporaryStorage.'*pathVar' = 'CREATE *DATA_OBJ_INFO';
@@ -509,6 +575,7 @@ pep_database_reg_data_obj_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO) {
 ## RESOURCE ##
 
 # RESOLVE HIERARCHY
+
 
 # This rule is meant for project specific implementations where an project
 # implementation is within an `on` block that restricts the resource resolution

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script scripts the service.sh script for an IES.
+# This script creates the service.sh script for an catalog service provider.
 #
 # It requires the following environment variables to be defined
 #

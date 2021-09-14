@@ -1,6 +1,6 @@
 ---
 - name: test build image
-  hosts: rs
+  hosts: irods_resource
   run_once: true
   gather_facts: false
   tasks:
@@ -29,7 +29,13 @@
             - set-uuid
             - sparcd-ingest
 
-        - name: verify server_config.json
+        - name: verify deposition of server_config.json
+          stat:
+            path: /tmp/etc/irods/server_config.json
+          register: response
+          failed_when: not response.stat.exists
+
+        - name: verify contents of server_config.json
           debug:
             msg: TODO implement
 

@@ -12,8 +12,8 @@
 - import_playbook: cfg_irods.yml
 
 
-- name: start iRODS on IES
-  hosts: ies
+- name: start iRODS on the catalog service providers
+  hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   become_flags: '-i'
@@ -24,7 +24,7 @@
 
 
 - name: start iRODS on resource servers
-  hosts: rs:!ies
+  hosts: irods_resource:!irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   become_flags: '-i'

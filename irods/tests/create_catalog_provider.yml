@@ -1,9 +1,9 @@
 ---
-- name: test allow IES to talk to DBMS
+- name: test allow catalog service providers to talk to DBMS
   hosts: dbms
   become: true
   tasks:
-    - name: test allow IES to communicate with Postgres DBMS
+    - name: test allow communication with Postgres DBMS
       shell: |
         sed --quiet \
             '/^# BEGIN DS IRODS MANAGED BLOCK$/{
@@ -23,8 +23,8 @@
 - import_playbook: provision.yml
 
 
-- name: test install IES packages
-  hosts: ies
+- name: test install catalog service provider packages
+  hosts: irods_catalog
   become: true
   become_flags: '-i'
   vars:
@@ -66,8 +66,8 @@
 - import_playbook: cfg_irods.yml
 
 
-- name: test start iRODS on IES
-  hosts: ies
+- name: test start iRODS on catalog service providers
+  hosts: irods_catalog
   become: true
   become_user: irods
   gather_facts: false

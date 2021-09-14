@@ -1,5 +1,5 @@
 ---
-- name: allow IES to talk to DBMS
+- name: allow catalog service providers to talk to DBMS
   hosts: dbms
   become: true
   tasks:
@@ -9,12 +9,12 @@
       tags:
         - no_testing
 
-    - name: allow IES to communicate with Postgres DBMS
+    - name: allow communication with Postgres DBMS
       blockinfile:
         path: "{{ _irods_dbms_pg_hba }}"
         marker: "# {mark} DS IRODS MANAGED BLOCK"
         block: |
-          {% for i in groups['ies'] %}
+          {% for i in groups['irods_catalog'] %}
           {%   set addr = i if i|ipaddr else lookup('dig', i) %}
           {{   '%-7s %-15s %-15s %-23s %s'
                  | format('host', 'ICAT', hostvars[i]._irods_db_user, addr ~ '/32', 'md5') }}
@@ -33,8 +33,8 @@
 - import_playbook: provision.yml
 
 
-- name: provision additional for IES
-  hosts: ies
+- name: provision additional for catalog service providers
+  hosts: irods_catalog
   become: true
   vars:
     # NB: The rpm and yum bindings for the package module require Python 2 in
@@ -131,8 +131,8 @@
 - import_playbook: cfg_irods.yml
 
 
-- name: start iRODS on IES
-  hosts: ies
+- name: start iRODS on catalog service providers
+  hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   become_flags: '-i'
@@ -143,7 +143,7 @@
 
     - name: authenticate clerver
       irods_clerver_auth:
-        ies: "{{ inventory_hostname }}"
+        provider: "{{ inventory_hostname }}"
         password: "{{ _irods_clerver_password }}"
 
 

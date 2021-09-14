@@ -4,24 +4,42 @@ FROM williamyeh/ansible:centos7
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 
-RUN yum --assumeyes \
-      install \
-        bzip2-devel dmidecode gcc git libffi-devel openssl-devel postgresql python3 rpm-build wget \
-        https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-icommands-4.1.10-centos7-x86_64.rpm
+### Install additional ansible support
+RUN yum --assumeyes install dmidecode python3 rpm-build wget && \
+    # NB: pip 21.1 has a bug in it that generates a noisy warning
+    python3 -m pip --quiet install --upgrade pip && \
+    python3 -m pip --disable-pip-version-check --quiet install \
+      ansible==3.3 dnspython netaddr python-irodsclient requests urllib3 wheel
 
+### Install inspection support
+ADD https://packages.irods.org/renci-irods.yum.repo /etc/yum.repos.d/renci-irods.yum.repo
 
-RUN python3 -m pip --quiet install --upgrade pip
-RUN python3 -m pip --quiet \
-      install ansible==3.3 dnspython netaddr python-irodsclient requests urllib3 wheel
-RUN mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test /root/.ssh
+RUN yum --assumeyes install epel-release && \
+    python -m pip uninstall --quiet --yes urllib3 && \
+    yum --assumeyes install irods-icommands-4.2.8 postgresql && \
+    mkdir /root/.ssh
+
+COPY ssh-config /root/.ssh/config
+RUN chmod --recursive go-rwx /root/.ssh
+
+ENV IRODS_HOST=localhost
+ENV IRODS_PASSWORD=rods
+ENV IRODS_PORT=1247
+ENV IRODS_USER_NAME=rods
+ENV IRODS_ZONE_NAME=tempZone
+ENV PGDATABASE=ICAT
+ENV PGHOST=localhost
+ENV PGPASSWORD=testpassword
+ENV PGUSER=irods
+
+# NB: Due to a bug in iCommands 4.2.8, irods_environment.json needs to exist prior to `iinit` 
+#     execution.
+RUN mkdir /root/.irods && \
+    echo '{}' > /root/.irods/irods_environment.json && \
+### Configure testing infrastructure
+    mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test
 
 COPY ansible.cfg /root/.ansible.cfg
-COPY ssh-config /root/.ssh/config
-
-COPY test-playbook.sh /test-playbook
-
-RUN chmod --recursive go-rwx /root/.ssh
-RUN chmod u+x /test-playbook
 
 COPY inventory/* /inventory/
 COPY inventory/host_vars/* /inventory/host_vars/
@@ -30,14 +48,7 @@ COPY wait-for-ready.yml /
 
 VOLUME /playbooks-under-test
 
-ENV IRODS_HOST=ies
-ENV IRODS_PASSWORD=rods
-ENV IRODS_PORT=1247
-ENV IRODS_USER_NAME=rods
-ENV IRODS_ZONE_NAME=tempZone
-ENV PGDATABASE=ICAT
-ENV PGHOST=dbms
-ENV PGPASSWORD=testpassword
-ENV PGUSER=irods
+COPY test-playbook.sh /test-playbook
+RUN chmod u+x /test-playbook
 
 ENTRYPOINT [ "/test-playbook" ]

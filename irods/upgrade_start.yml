@@ -104,7 +104,7 @@
 
 
 - name: install PostgreSQL 12 ODBC Driver
-  hosts: ies
+  hosts: irods_catalog
   become: true
   gather_facts: false
   tasks:
@@ -144,7 +144,7 @@
 
 
 - name: stage manual ICAT conversion scripts
-  hosts: ies
+  hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: false

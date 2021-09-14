@@ -10,41 +10,25 @@
     - name: verify config values expand correctly in cyverse.conf
       assert:
         that:
-          - cyverse_conf is search('checkpoint_timeout = 15min')
-          - cyverse_conf is search('effective_cache_size = 1GB')
-          - cyverse_conf is search("listen_addresses = '127.0.0.1'" | regex_escape)
-          - cyverse_conf is search('maintenance_work_mem = 1GB')
-          - cyverse_conf is search('max_connections = 1500')
-          - cyverse_conf is search('max_wal_senders = 120')
+          - cyverse_conf is search('checkpoint_completion_target = 0.5' | regex_escape)
+          - cyverse_conf is search('checkpoint_timeout = 5min')
+          - cyverse_conf is search('effective_cache_size = 4GB')
+          - cyverse_conf is not search('^hot_standby = ')
+          - cyverse_conf is not search('^hot_standby_feedback = ')
+          - cyverse_conf is search("listen_addresses = 'localhost'")
+          - cyverse_conf is search("log_line_prefix = '%m [%p] %q%u@%d '" | regex_escape)
+          - cyverse_conf is search('log_min_duration_statement = -1')
+          - cyverse_conf is search('maintenance_work_mem = 64MB')
+          - cyverse_conf is search('max_connections = 100')
+          - cyverse_conf is not search('^max_wal_senders =')
           - cyverse_conf is search('max_wal_size = 1GB')
           - cyverse_conf is search('min_wal_size = 80MB')
-          - cyverse_conf is search("port = '5432'")
-          - cyverse_conf is search('shared_buffers = 1GB')
-          - cyverse_conf is search('wal_keep_segments = 4000')
-          - cyverse_conf is search('work_mem = 64MB')
-
-    - debug:
-        msg: TODO check checkpoint_completion_target
-
-    - debug:
-        msg: TODO check random_page_cost
-
-    - debug:
-        msg: TODO check standard_conforming_strings
-
-    - debug:
-        msg: TODO check log_min_duration_statement
-
-    - debug:
-        msg: TODO check log_line_prefix
-
-    - name: test pg_downstream_nodes enables archive
-      debug:
-        msg: TODO implement
-
-    - name: test pg_upstream_node enables hot standby
-      debug:
-        msg: TODO implement
+          - cyverse_conf is search('port = 5432')
+          - cyverse_conf is search('random_page_cost = 4.0' | regex_escape)
+          - cyverse_conf is search('shared_buffers = 128MB')
+          - cyverse_conf is search('standard_conforming_strings = on')
+          - cyverse_conf is not search('^wal_keep_segments = ')
+          - cyverse_conf is search('work_mem = 4MB')
 
     - name: test default .pgpass expansion
       debug:

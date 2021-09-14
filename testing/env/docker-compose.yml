@@ -61,10 +61,10 @@ services:
       context: .
       dockerfile: irods-consumer/Dockerfile.configured
       args:
+        IRODS_CATALOG_PROVIDER: "$IRODS_PROVIDER_CONF_HOST"
         IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
         IRODS_DEFAULT_VAULT: "$IRODS_VAULT"
         IRODS_HOST: "$IRODS_CONSUMER_CONF_HOST"
-        IRODS_IES: "$IRODS_PROVIDER_CONF_HOST"
         IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
@@ -80,7 +80,7 @@ services:
       context: .
       dockerfile: irods-consumer/Dockerfile.unconfigured
       args:
-        IRODS_IES: "$IRODS_PROVIDER_CONF_HOST"
+        IRODS_CATALOG_PROVIDER: "$IRODS_PROVIDER_CONF_HOST"
     hostname: "$IRODS_CONSUMER_UNCONF_HOST"
     tty: true
     depends_on:

@@ -1,6 +1,6 @@
 ---
 - name: testing irods_group module
-  hosts: ies[0]
+  hosts: irods_catalog[0]
   pre_tasks:
     - name: group should be absent
       become: true
@@ -17,13 +17,15 @@
       irods_group:
         group: test_group1
         state: present
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
         zone: testing
       register: resp
       failed_when: not resp.changed
+      tags:
+        - non_idempotent
 
     - name: check if group is created
       become: true
@@ -39,7 +41,7 @@
       irods_group:
         group: test_group1
         state: present
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -52,7 +54,7 @@
       irods_group:
         group: test_group1
         state: absent
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -74,7 +76,7 @@
       irods_group:
         group: test_group1
         state: absent
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
         admin_password: rods

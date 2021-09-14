@@ -9,37 +9,39 @@
         path: /etc/hosts
         marker: '# {mark} DS MANAGED BLOCK'
         block: |
-          {% if inventory_hostname in groups['ies'] %}
-          {%  for d in groups['dbms'] %}
-          {%   if inventory_hostname != d and not d|ipaddr %}
-          {{    lookup('dig', d) }} {{ d }}
-          {%   endif %}
-          {%  endfor %}
+          {% if inventory_hostname in groups['irods_catalog'] %}
+          {%   for d in groups['dbms'] %}
+          {%     if inventory_hostname != d and not d|ipaddr %}
+          {{ lookup('dig', d) }} {{ d }}
+          {%     endif %}
+          {%   endfor %}
           {% endif %}
-          {% for i in groups['ies'] %}
-          {%  if inventory_hostname != i and not i|ipaddr %}
-          {{   lookup('dig', i) }} {{ i }}
-          {%  endif %}
+          {% for i in groups['irods_catalog'] %}
+          {%   if inventory_hostname != i and not i|ipaddr %}
+          {{ lookup('dig', i) }} {{ i }}
+          {%   endif %}
           {% endfor %}
-          {% for r in groups['rs'] | difference(groups['ies']) %}
-          {%  if inventory_hostname != r and not r|ipaddr %}
-          {{   lookup('dig', r) }} {{ r }}
-          {%  endif %}
+          {% for r in groups['irods_resource'] | difference(groups['irods_catalog']) %}
+          {%   if inventory_hostname != r and not r|ipaddr %}
+          {{ lookup('dig', r) }} {{ r }}
+          {%   endif %}
           {% endfor %}
           {% for f in _irods_federation %}
-          {%  if not f.icat_host|ipaddr %}
-          {{   lookup('dig', f.icat_host) }} {{ f.icat_host }}
-          {%  endif %}
+          {%   for cp in f.catalog_provider_hosts %}
+          {%     if not cp|ipaddr %}
+          {{ lookup('dig', cp) }} {{ cp }}
+          {%     endif %}
+          {%   endfor %}
           {% endfor %}
-          {% if inventory_hostname in groups['ies']
+          {% if inventory_hostname in groups['irods_catalog']
                and inventory_hostname != _amqp_host
                and not _amqp_host|ipaddr %}
-          {{  lookup('dig', _amqp_host) }} {{ _amqp_host }}
+          {{ lookup('dig', _amqp_host) }} {{ _amqp_host }}
           {% endif %}
           {% for e in _irods_other_host_entries %}
-          {%  if not e|ipaddr %}
-          {{   lookup('dig', e) }} {{ e }}
-          {%  endif %}
+          {%   if not e|ipaddr %}
+          {{ lookup('dig', e) }} {{ e }}
+          {%   endif %}
           {% endfor %}
       tags:
         - no_testing

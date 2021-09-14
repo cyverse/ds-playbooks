@@ -23,7 +23,6 @@
 
 
 import socket
-import time
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -50,7 +49,7 @@ class TCPChecker(Checker):
 
   def check_on(self, sock, address, msg):
     sock.connect(address)
-    sock.sendall(msg)
+    sock.sendall(msg.encode('utf-8'))
     sock.recv(128)
 
   def close_socket(self, sock):
@@ -67,8 +66,8 @@ class TCPChecker(Checker):
 class UDPChecker(Checker):
 
   def check_on(self, sock, address, msg):
-    sock.sendto(msg, address)
-    data, server = sock.recvfrom(128)
+    sock.sendto(msg.encode('utf-8'), address)
+    sock.recvfrom(128)
 
   def close_socket(self, sock):
     sock.close()

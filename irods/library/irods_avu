@@ -4,6 +4,11 @@
 # Copyright: (c) 2021, The Arizona Board of Regents
 # Standard BSD License | CyVerse (see https://cyverse.org/license)
 
+from ansible.module_utils.basic import AnsibleModule
+from typing import Mapping, Optional, Union
+from ssl import Purpose
+import ssl
+
 ANSIBLE_METADATA = {
     "metadata_version": "1.1",
     "status": ["preview"],
@@ -71,7 +76,7 @@ options:
       - set
 
   host:
-    description: This is the FQDN or IP address of the IES.
+    description: This is the FQDN or IP address of the iRODS server to connect to.
     default: localhost.localdomain
     type: str
 
@@ -81,7 +86,7 @@ options:
     type: int
 
   zone:
-    description: This is the local zone served by the IES.
+    description: This is the local zone served by iRODS.
     required: true
     type: str
 
@@ -115,7 +120,7 @@ EXAMPLES = r'''
     zone: tempZone
     password: rods
 
-- name: ensure a resource of a remote IES does not have an AVU
+- name: ensure a resource of a remote iRODS does not have an AVU
   irods_avu:
     attribute: a
     value: v
@@ -123,11 +128,11 @@ EXAMPLES = r'''
     state: absent
     entity_type: resource
     entity_name: demoResc
-    host: ies.localdomain
+    host: provider.localdomain
     zone: tempZone
     password: rods
 
-- name: ensure a data object on an IES listening on a custom port has an AVU
+- name: ensure a data object on an iRODS listening on a custom port has an AVU
   irods_avu:
     attribute: a
     value: v
@@ -151,12 +156,6 @@ EXAMPLES = r'''
 
 RETURN = ''' # '''
 
-
-import ssl
-from ssl import Purpose
-from typing import Mapping, Optional, Union
-
-from ansible.module_utils.basic import AnsibleModule
 
 _IRODSCLIENT_PACK_ERR: Optional[Exception] = None
 

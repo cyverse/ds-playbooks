@@ -1,16 +1,16 @@
 #!/bin/bash
 #
 # Usage:
-#  run INSPECT PRETTY PLAYBOOKS PLAYBOOK INVENTORY
+#  run INSPECT PRETTY PLAYBOOKS INVENTORY [PLAYBOOK]
 #
 # Parameters:
+#  HOSTS      the inventory hosts to test against
 #  INSPECT    if this is `true`, a shell will be opened that allows access to
 #             the volumes in the env containers.
+#  PLAYBOOK   the name of the playbook being tested.
+#  PLAYBOOKS  the base directory for the set of playbooks containing PLAYBOOK.
 #  PRETTY     if this is `true`, more info is dumped and newlines in ouput are
 #             expanded.
-#  PLAYBOOKS  the base directory for the set of playbooks containing PLAYBOOK.
-#  PLAYBOOK   the name of the playbook being tested.
-#  HOSTS      the inventory hosts to test against
 #
 # Envinroment Variables:
 #  DBMS_HOST                 The hostname of the PostgreSQL server to connect to
@@ -20,24 +20,28 @@
 #  IRODS_ZONE_NAME           The name of the iRODS zone inside the testing
 #                            environment
 
-set -o errexit
+set -o errexit -o nounset -o pipefail
 
 
-main()
-{
+main() {
   local doInspect="$1"
   local pretty="$2"
   local playbooks="$3"
-  local playbook="$4"
-  local hosts="$5"
+  local hosts="$4"
+
+  local playbook
+  if (( $# >= 5 ))
+  then
+    playbook="$5"
+  fi
 
   docker run --interactive --rm --tty \
-             --env IRODS_HOST="$IRODS_PROVIDER_CONF_HOST" \
-             --env IRODS_ZONE_NAME="$IRODS_ZONE_NAME" \
-             --env PGHOST="$DBMS_HOST" \
-             --network "$DOMAIN" \
-             --volume "$playbooks":/playbooks-under-test:ro \
-             ansible-tester "$doInspect" "$pretty" "$playbook" "$hosts" ''
+    --env IRODS_HOST="$IRODS_PROVIDER_CONF_HOST" \
+    --env IRODS_ZONE_NAME="$IRODS_ZONE_NAME" \
+    --env PGHOST="$DBMS_HOST" \
+    --network "$DOMAIN" \
+    --volume "$playbooks":/playbooks-under-test:ro \
+    ansible-tester "$doInspect" "$hosts" "${playbook-}" "$pretty" ''
 }
 
 

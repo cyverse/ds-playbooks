@@ -3,7 +3,7 @@
 
 
 - name: install resource server package
-  hosts: rs:!ies:!unmanaged_systems
+  hosts: irods_resource:!irods_catalog:!unmanaged_systems
   become: true
   tasks:
     - import_tasks: tasks/install_resource_pkg.yml
@@ -14,8 +14,8 @@
 - import_playbook: cfg_irods.yml
 
 
-- name: ensure IES is started
-  hosts: ies
+- name: ensure catalog service providers are started
+  hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
@@ -24,7 +24,7 @@
 
 
 - name: bootstrap iRODS start
-  hosts: rs:!ies
+  hosts: irods_resource:!irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   become_flags: '-i'
@@ -37,7 +37,7 @@
         type: rodsadmin
         state: present
         password: "{{ _irods_clerver_password }}"
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"
         admin_user: "{{ _irods_clerver_user }}"
         admin_password: "{{ _irods_clerver_password }}"
@@ -51,15 +51,15 @@
         users:
           - "{{ _irods_clerver_user }}"
         state: present
-        host: "{{ groups['ies'][0] }}"
+        host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"
         admin_user: "{{ _irods_clerver_user }}"
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: initialize resource server connection to IES
+    - name: initialize resource server connection to catalog service providers
       irods_clerver_auth:
-        ies: "{{ groups['ies'][0] }}"
+        provider: "{{ groups['irods_catalog'][0] }}"
         password: "{{ _irods_clerver_password }}"
 
     - name: start iRODS

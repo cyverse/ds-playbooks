@@ -248,6 +248,8 @@ _scheduleMv(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalSt
 #       https://github.com/irods/irods/issues/5413.
 #     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5257
+#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See 
+#       https://github.com/irods/irods/issues/4055
 #   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
 #   {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)));}
 #
@@ -264,13 +266,16 @@ _scheduleMv(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalSt
   _incDelayTime;
 }
 _mvReplicas_workaround(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalStr) {
-  *ingestRes = (*IngestName, bool(*IngestOptionalStr));
-  *replRes = (*ReplName, bool(*ReplOptionalStr));
+  *err = errorcode(
+    _mvReplicas(
+      *Object,
+      (*IngestName, bool(*IngestOptionalStr)),
+      (*ReplName, bool(*ReplOptionalStr)) ) );
 
-  if (errorcode(_mvReplicas(*Object, *ingestRes, *replRes)) < 0) {
+  if (*err < 0) {
     delay(
       ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
-        <PLUSET>8h</PLUSET>
+        <PLUSET>28800s</PLUSET>
         <EF>0s REPEAT 0 TIMES</EF> ' )
     {#_mvReplicas
       _mvReplicas_workaround(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalStr);
@@ -285,6 +290,8 @@ _repl_scheduleMv(*Object, *IngestName, *ReplName) {
 #       https://github.com/irods/irods/issues/5413.
 #     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5257
+#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See 
+#       https://github.com/irods/irods/issues/4055
 #   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
 #   {_repl_mvReplicas(*Object, *IngestName, *ReplName);}
 #
@@ -304,7 +311,7 @@ _repl_mvReplicas_workaround(*Object, *IngestName, *ReplName) {
   if (errorcode(_repl_mvReplicas(*Object, *IngestName, *ReplName)) < 0) {
     delay(
       ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
-        <PLUSET>8h</PLUSET>
+        <PLUSET>28800s</PLUSET>
         <EF>0s REPEAT 0 TIMES</EF> ' )
     {#_repl_mvReplicas
       _repl__mvReplicas_workaround(*Object, *IngestName, *ReplName);
@@ -368,6 +375,8 @@ _repl_scheduleRepl(*Object, *RescName) {
 #       https://github.com/irods/irods/issues/5413.
 #     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5257
+#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See 
+#       https://github.com/irods/irods/issues/4055
 #   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
 #   {_repl_replicate(*Object, *RescName);}
 #
@@ -387,7 +396,7 @@ _repl_replicate_workaround(*Object, *RescName) {
   if (errorcode(_repl_replicate(*Object, *RescName)) < 0) {
     delay(
       ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
-        <PLUSET>8h</PLUSET>
+        <PLUSET>28800s</PLUSET>
         <EF>0s REPEAT 0 TIMES</EF> ' )
     {#_repl_replicate
       _repl__replicate_workaround(*Object, *RescName);
@@ -405,6 +414,8 @@ _repl_scheduleSyncReplicas(*Object) {
 #       https://github.com/irods/irods/issues/5413.
 #     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5257
+#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See 
+#       https://github.com/irods/irods/issues/4055
 #       delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
 #       {_repl_syncReplicas(*Object)}
 #
@@ -428,7 +439,7 @@ _repl_syncReplicas_workaround(*Object) {
   if (errorcode(_repl_syncReplicas(*Object)) < 0) {
     delay(
       ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
-        <PLUSET>8h</PLUSET>
+        <PLUSET>28800s</PLUSET>
         <EF>0s REPEAT 0 TIMES</EF> ' )
     {#_repl_syncReplicas
       _repl__syncReplicas_workaround(*Object);

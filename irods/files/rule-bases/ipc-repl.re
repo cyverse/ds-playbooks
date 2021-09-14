@@ -117,9 +117,7 @@ _mvReplicas(*Object, *IngestResc, *ReplResc) {
     *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
   }
 
-  if (*dataPath == '') {
-    _repl_logMsg('data object *Object no longer exists');
-  } else {
+  if (*dataPath != '') {
     *replFail = false;
     (*ingestName, *ingestOptional) = *IngestResc;
     (*replName, *replOptional) = *ReplResc;
@@ -128,23 +126,34 @@ _mvReplicas(*Object, *IngestResc, *ReplResc) {
       *replFail = true;
     }
 
-    if (_repl_replicate(*Object, *replName) < 0) {
-      *replFail = true;
+    if (*replName != *ingestName) {
+      if (_repl_replicate(*Object, *replName) < 0) {
+        *replFail = true;
+      }
+    }
+
+    if (!*replFail) {
+      # Once a replica exists on all the project's resource, remove the other replicas
+      foreach (*rec in SELECT DATA_RESC_HIER, RESC_NAME WHERE DATA_ID = '*Object') {
+        *rescHier = *rec.DATA_RESC_HIER;
+        *rescName = *rec.RESC_NAME;
+
+        if (!(*rescHier like regex '^(*ingestName|*replName)(;.*)?$')) {
+          if (errorcode(msiDataObjTrim(*dataPath, *rescName, 'null', '1', 'null', *status)) < 0) {
+            _repl_logMsg('failed to trim replica of *Object on *rescHier (*status)');
+            *replFail = true;
+          }
+        }
+      }
     }
 
     if (*replFail) {
+      _repl_logMsg('failed to completely move replicas of data object *Object');
       fail;
     }
-
-    # Once a replica exists on all the project's resource, remove the other replicas
-    foreach (*repl in SELECT DATA_RESC_NAME WHERE DATA_ID = '*Object') {
-      *rescName = *repl.DATA_RESC_NAME;
-
-      if (*rescName != *ingestName && *rescName != *replName) {
-        msiDataObjTrim(*dataPath, *rescName, 'null', '1', 'null', *status);
-      }
-    }
   }
+
+  _repl_logMsg('moved replicas of data object *Object');
 }
 
 
@@ -156,17 +165,17 @@ _repl_mvReplicas(*Object, *IngestName, *ReplName) {
     *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
   }
 
-  if (*dataPath == '') {
-    _repl_logMsg('data object *Object no longer exists');
-  } else {
+  if (*dataPath != '') {
     *replFail = false;
 
     if (_repl_replicate(*Object, *IngestName) < 0) {
       *replFail = true;
     }
 
-    if (_repl_replicate(*Object, *ReplName) < 0) {
-      *replFail = true;
+    if (*ReplName != *IngestName) {
+      if (_repl_replicate(*Object, *ReplName) < 0) {
+        *replFail = true;
+      }
     }
 
     if (*replFail) {
@@ -174,14 +183,25 @@ _repl_mvReplicas(*Object, *IngestName, *ReplName) {
     }
 
     # Once a replica exists on all the project's resource, remove the other replicas
-    foreach (*repl in SELECT DATA_RESC_NAME WHERE DATA_ID = '*Object') {
-      *rescName = *repl.DATA_RESC_NAME;
+    foreach (*rec in SELECT DATA_RESC_HIER, RESC_NAME WHERE DATA_ID = '*Object') {
+      *rescHier = *rec.DATA_RESC_HIER;
+      *rescName = *rec.RESC_NAME;
 
-      if (*rescName != *IngestName && *rescName != *ReplName) {
-        msiDataObjTrim(*dataPath, *rescName, 'null', '1', 'null', *status);
+      if (!(*rescHier like regex '^(*IngestName|*ReplName)(;.*)?$')) {
+        if (errorcode(msiDataObjTrim(*dataPath, *rescName, 'null', '1', 'null', *status)) < 0) {
+          _repl_logMsg('failed to trim replica of *Object on *rescHier (*status)');
+          *replFail = true;
+        }
       }
     }
+
+    if (*replFail) {
+      _repl_logMsg('failed to completely move replicas of data object *Object');
+      fail;
+    }
   }
+
+  _repl_logMsg('moved replicas of data object *Object');
 }
 
 

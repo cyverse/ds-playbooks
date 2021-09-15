@@ -43,10 +43,10 @@ _de_job_irods_user: "{{ de_job_irods_user | default(None) }}"
 
 _firewall_chain: "{{ firewall_chain | default('INPUT') }}"
 
-_irods_admin_username: "{{ irods_admin_username | default('rods') }}"
+_irods_admin_username: "{{ irods_admin_username | default(_irods_clerver_user) }}"
 _irods_allowed_clients: "{{ irods_allowed_src | default('0.0.0.0/0') }}"
 _irods_clerver_password: "{{ irods_clerver_password | default('rods') }}"
-_irods_clerver_user: "{{ irods_clerver_user | default(_irods_admin_username) }}"
+_irods_clerver_user: "{{ irods_clerver_user | default('rods') }}"
 _irods_db_password: "{{ irods_db_password | default('testpassword') }}"
 _irods_db_user: "{{ irods_db_user | default('irods') }}"
 _irods_dbms_pg_hba: "{{ irods_dbms_pg_hba | default('/etc/postgresql/12/main/pg_hba.conf') }}"
@@ -130,7 +130,7 @@ _webdav_tls_chain_file: "{{ webdav_tls_chain_file | default('/etc/ssl/certs/dumm
 _webdav_tls_key_file: "{{ webdav_tls_key_file | default('/etc/ssl/certs/dummy.key') }}"
 _webdav_varnish_service_port: "{{ webdav_varnish_service_port | default(6081) }}"
 _webdav_purgeman_irods_user: "{{ webdav_purgeman_irods_user | default(_irods_admin_username) }}"
-_webdav_purgeman_irods_password: "{{ webdav_purgeman_irods_password | default('testpassword') }}"
+_webdav_purgeman_irods_password: "{{ webdav_purgeman_irods_password | mandatory }}"
 
 # The following are internal constants
 

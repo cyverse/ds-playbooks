@@ -15,7 +15,7 @@
     - name: verify head.html expands correctly
       assert:
         that:
-          - head is search('/\* Style for the testing/base/ davrods \*/')
+          - head is search('/* Style for the testing/base/ davrods */' | regex_escape)
           - "head is search('content: \"/testing/base/\";')"
 
     - name: verify default.vcl expands correctly
@@ -158,12 +158,15 @@
         loop_var: pkg
 
     - name: test install iRODS package repository signing key
-      debug:
-        msg: TODO implement
+      shell: |
+        rpm --query --queryformat='%{SUMMARY}\n' gpg-pubkey | grep --quiet 'iRODS Consortium'
+      changed_when: false
 
     - name: test install iRODS repository
-      debug:
-        msg: TODO implement
+      stat:
+        path: /etc/yum.repos.d/renci-irods.yum.repo
+      register: resp
+      failed_when: not resp.stat.exists
 
     - name: test force import of GPG key
       debug:
@@ -291,7 +294,7 @@
         path: /etc/systemd/system/httpd.service.requires
       register: response
       failed_when: not response.stat.exists or not response.stat.isdir
-
+        
     - name: test ensure varnish runs when apache run
       stat:
         path: /etc/systemd/system/httpd.service.requires/varnish.service
@@ -301,8 +304,45 @@
         not response.stat.islnk or
         response.stat.lnk_source != '/usr/lib/systemd/system/varnish.service'
 
-    - debug:
-        msg: TODO test ensure varnishncsa runs when apache run
+    - name: test create varnish systemd service dependencies directory
+      debug:
+        msg: TODO implement
+
+    - name: test ensure varnishncsa runs when varnish run
+      stat:
+        path: /etc/systemd/system/varnish.service.requires/varnishncsa.service
+      register: response
+      failed_when: >
+        not response.stat.exists or
+        not response.stat.islnk or
+        response.stat.lnk_source != '/usr/lib/systemd/system/varnishncsa.service'
+
+    - name: test purgeman installed
+      stat:
+        path: /usr/bin/purgeman
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test purgeman.conf deployed
+      stat:
+        path: /etc/purgeman/purgeman.conf
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test purgeman.service deployed
+      stat:
+        path: /usr/lib/systemd/system/purgeman.service
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test ensure purgeman runs when varnish run
+      stat:
+        path: /etc/systemd/system/varnish.service.requires/purgeman.service
+      register: response
+      failed_when: >
+        not response.stat.exists or
+        not response.stat.islnk or
+        response.stat.lnk_source != '/usr/lib/systemd/system/purgeman.service'
 
     - name: test open HTTP connection in firewall
       script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables

@@ -1,0 +1,14 @@
+PURGEMAN_AMQP_HOST={{ _amqp_host }}
+PURGEMAN_AMQP_PORT={{ _amqp_port }}
+PURGEMAN_AMQP_VHOST={{ _amqp_vhost }}
+PURGEMAN_AMQP_EXCHANGE={{ _amqp_exchange }}
+PURGEMAN_AMQP_USERNAME={{ _amqp_user }}
+PURGEMAN_AMQP_PASSWORD={{ _amqp_password }}
+
+PURGEMAN_IRODS_HOST={{ _canonical_hostname }}
+PURGEMAN_IRODS_PORT={{ _canonical_irods_port }}
+PURGEMAN_IRODS_USERNAME={{ _webdav_purgeman_irods_user }}
+PURGEMAN_IRODS_PASSWORD={{ _webdav_purgeman_irods_password }}
+PURGEMAN_IRODS_ZONE={{ _irods_zone_name }}
+
+PURGEMAN_VARNISH_URLS=http://127.0.0.1:{{ _webdav_varnish_service_port }}/dav,http://127.0.0.1:{{ _webdav_varnish_service_port }}/dav-anon

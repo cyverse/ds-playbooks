@@ -111,7 +111,8 @@ Variable                                   | Default                            
 `weddav_tls_chain_file`                    | `/etc/ssl/certs/dummy-chain.crt`     |         | The TLS certificate chain file used for encrypted communication
 `webdav_tls_key_file`                      | `/etc/ssl/certs/dummy.key`           |         | The TLS key file used for encrypted communication
 `webdav_varnish_service_port`              | 6081                                 |         | The service port number for varnish-cache
-
+`webdav_purgeman_irods_user`               | `irods_admin_username`               |         | The irods user who converts data object uuid to path
+`webdav_purgeman_irods_password`           | testpassword                         |         | The password of the purgeman irods user
 
 The `restart_irods` flag is ignored in the `main.yml` playbook.
 

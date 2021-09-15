@@ -208,6 +208,7 @@
       get_url:
         url: https://packages.irods.org/renci-irods.yum.repo
         dest: /etc/yum.repos.d/renci-irods.yum.repo
+        timeout: 20
 
     - name: force import of GPG key
       shell: |
@@ -303,9 +304,9 @@
       notify:
         - restart httpd
 
-    - when: >-
-        'varnish' in ansible_facts.packages
-        and ansible_facts.packages['varnish'][0].version is version_compare('6.5.1', '<')
+    - when:
+        - "'varnish' in ansible_facts.packages"
+        - ansible_facts.packages['varnish'][0].version is version_compare('6.5.1', '<')
       block:
         - name: ensure varnish not running
           service:
@@ -406,7 +407,6 @@
     - name: create apache systemd service dependencies directory
       file:
         path: /etc/systemd/system/httpd.service.requires
-        recurse: true
         state: directory
 
     - name: ensure varnish runs when apache run
@@ -415,10 +415,50 @@
         src: /usr/lib/systemd/system/varnish.service
         state: link
 
-    - name: ensure varnishncsa runs when apache run
+    - name: create varnish systemd service dependencies directory
       file:
-        path: /etc/systemd/system/httpd.service.requires/varnishncsa.service
+        path: /etc/systemd/system/varnish.service.requires
+        state: directory
+
+    - name: ensure varnishncsa runs when varnish run
+      file:
+        path: /etc/systemd/system/varnish.service.requires/varnishncsa.service
         src: /usr/lib/systemd/system/varnishncsa.service
+        state: link
+
+    - name: create a build dir for purgeman package 
+      file:
+        path: /tmp/purgeman_setup
+        state: directory
+
+    - name: download purgeman package from github and uncompress
+      unarchive:
+        src: https://github.com/cyverse/purgeman/releases/download/v0.2.1/purgeman_0.2.1.tar.gz
+        dest: /tmp/purgeman_setup
+        remote_src: True
+      register: unarchiveResp
+     
+    - name: install purgeman service
+      when: unarchiveResp is changed
+      make: 
+        chdir: /tmp/purgeman_setup
+        target: install_centos
+    
+    - name: configure purgeman
+      template:
+        src: templates/webdav/etc/purgeman/{{ item }}.j2
+        dest: /etc/purgeman/{{ item }}
+        owner: purgeman
+        mode: 0660
+      with_items:
+        - purgeman.conf
+      notify:
+        - restart purgeman
+
+    - name: ensure purgeman runs when varnish run
+      file:
+        path: /etc/systemd/system/varnish.service.requires/purgeman.service
+        src: /usr/lib/systemd/system/purgeman.service
         state: link
 
     - name: open HTTP connection in firewall
@@ -461,4 +501,10 @@
       when: notifications_enabled | default(false)
       service:
         name: varnishncsa
+        state: restarted
+
+    - name: restart purgeman
+      when: notifications_enabled | default(false)
+      service:
+        name: purgeman
         state: restarted

@@ -242,7 +242,7 @@
       yum:
         name: https://github.com/UtrechtUniversity/davrods/releases/download/4.2.8_1.5.0/davrods-4.2.8_1.5.0-1.rpm
         state: present
-
+    
     - include_role:
         name: cyverse.irods_cfg
         tasks_from: client.yml

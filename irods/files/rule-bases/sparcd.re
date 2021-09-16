@@ -32,7 +32,6 @@ _sparcd_logMsg(*Msg) {
 
 _sparcd_notify(*Subject, *Body) {
   *encSubj = 'SPARCD ' ++ _sparcd_encode_subject(*Subject);
-
   if (0 != errorcode(msiSendMail(sparcd_REPORT_EMAIL_ADDR, *encSubj, *Body))) {
     writeLine('serverLog', 'SPARCD: failed to send notification');
   }
@@ -47,7 +46,7 @@ _sparcd_ingest(*Uploader, *TarPath) {
   *uploaderArg = execCmdArg(*Uploader);
   *tarArg = execCmdArg(*TarPath);
   *args = "*zoneArg *adminArg *uploaderArg *tarArg";
-  *status = errormsg(msiExecCmd("sparcd-ingest", *args, "null", *TarPath, "null", *out), *err);
+  *status = errormsg(msiExecCmd("sparcd-ingest", *args, ipc_RE_HOST, "null", "null", *out), *err);
 
   *coll = trimr(*TarPath, '-');
   *url = _sparcd_encode_url('https://' ++ sparcd_WEBDAV_HOST ++ '/dav' ++ *coll ++ '/');   
@@ -85,16 +84,18 @@ _sparcd_handle_new_object(*User, *Object) {
     ipc_giveAccessObj(sparcd_ADMIN, _sparcd_PERM, *Object);
 
     if (*Object like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
-      _sparcd_logMsg('scheduling ingest of *Object for *User');
+      remote(ipc_RE_HOST, '') {
+        _sparcd_logMsg('scheduling ingest of *Object for *User');
 
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
 #       https://github.com/irods/irods/issues/5413.
-#       delay('<PLUSET>0s</PLUSET><EF>0s REPEAT 0 TIMES</EF>')
-      delay(
-        ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
-          <PLUSET>0s</PLUSET>
-          <EF>0s REPEAT 0 TIMES</EF> ' 
-      ) {_sparcd_ingest(*User, *Object);}
+        #delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
+        delay(
+          ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+            <PLUSET>1s</PLUSET>
+            <EF>1s REPEAT 0 TIMES</EF> ' )
+        {_sparcd_ingest(*User, *Object);}
+      }
     }
   }
 }

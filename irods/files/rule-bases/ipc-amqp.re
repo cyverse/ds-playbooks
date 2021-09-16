@@ -4,11 +4,14 @@
 # For license information, see https://cyverse.org/license.
 
 
-# Sends a message to a given AMQP topic exchange
+# sends a message to a given AMQP topic exchange
 #
-# PARAMETERS:
-#   *Key - The topic of the message
-#   *Msg - The message to send
+# Parameters:
+#  *Key  (string) the topic of the message
+#  *Msg  (string) the message to send
+#
+# Remote Execution:
+#  It executes the amqptopicsend.py command script on the rule engine host
 #
 ipc_amqpSend(*Key, *Msg) {
   *exchangeArg = execCmdArg(ipc_AMQP_EXCHANGE);

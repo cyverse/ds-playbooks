@@ -2,6 +2,8 @@
 
 @include "sparcd-env"
 
+_sparcd_MAX_RETRIES = 2
+
 _sparcd_PERM = 'own'
 
 _sparcd_encode_subject(*Subject) =
@@ -92,7 +94,7 @@ _sparcd_handle_new_object(*User, *Object) {
       delay(
         ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
           <PLUSET>0s</PLUSET>
-           <EF>0s REPEAT 0 TIMES</EF> ' 
+          <EF>0s REPEAT ' ++ _sparcd_MAX_RETRIES ++ ' TIMES</EF> ' 
       ) {_sparcd_ingest(*User, *Object);}
 # XXX - ^^^
     }

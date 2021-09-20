@@ -84,18 +84,17 @@ _sparcd_handle_new_object(*User, *Object) {
     ipc_giveAccessObj(sparcd_ADMIN, _sparcd_PERM, *Object);
 
     if (*Object like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
-      remote(ipc_RE_HOST, '') {
-        _sparcd_logMsg('scheduling ingest of *Object for *User');
+      _sparcd_logMsg('scheduling ingest of *Object for *User');
 
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
 #       https://github.com/irods/irods/issues/5413.
-        #delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
-        delay(
-          ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
-            <PLUSET>1s</PLUSET>
-            <EF>1s REPEAT 0 TIMES</EF> ' )
-        {_sparcd_ingest(*User, *Object);}
-      }
+#       delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
+      delay(
+        ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+          <PLUSET>0s</PLUSET>
+           <EF>0s REPEAT 0 TIMES</EF> ' 
+      ) {_sparcd_ingest(*User, *Object);}
+# XXX - ^^^
     }
   }
 }

@@ -30,7 +30,6 @@
         - de.re
         - host_access_control_config.json
         - hosts_config.json
-        - ipc-amqp.re
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re

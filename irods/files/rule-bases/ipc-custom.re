@@ -472,7 +472,12 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
 # _ipc_dataObjCreated needs to be called here when not created through file 
 # registration
   if (! *handled && errorcode(*REG_PARAM.dataSize) == 0) {
-    *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
+  # XXX - Because of https://github.com/irods/irods/issues/5870, 
+  # *DATA_OBJ_INFO.logical_path cannot directly be converted to a path.
+  #     *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
+    *logicalPath = *DATA_OBJ_INFO.logical_path;
+    *pathVar = _ipc_mkDataObjSessVar(/*logicalPath);
+  # XXX - ^^^
 
     if (
       (
@@ -500,7 +505,12 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
   # If modification timestamp is being modified, the data object has been 
   # modified, so publish a data-object.mod message.
   if (! *handled && errorcode(*REG_PARAM.dataModify) == 0) {
-    *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
+# XXX - Because of https://github.com/irods/irods/issues/5870, 
+# *DATA_OBJ_INFO.logical_path cannot directly be converted to a path.
+#     *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
+    *logicalPath = *DATA_OBJ_INFO.logical_path;
+    *pathVar = _ipc_mkDataObjSessVar(/*logicalPath);
+# XXX - ^^^
 
     if (
       if errorcode(temporaryStorage.'*pathVar') != 0 then true
@@ -547,7 +557,12 @@ pep_database_reg_data_obj_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO) {
   *DATA_OBJ_INFO.data_owner_name = *CONTEXT.user_user_name;
   *DATA_OBJ_INFO.data_owner_zone = *CONTEXT.user_rods_zone;
 # XXX - ^^^
-  *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
+# XXX - Because of https://github.com/irods/irods/issues/5870, 
+# *DATA_OBJ_INFO.logical_path cannot directly be converted to a path.
+#   *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
+  *logicalPath = *DATA_OBJ_INFO.logical_path;
+  *pathVar = _ipc_mkDataObjSessVar(/*logicalPath);
+# XXX - ^^^
 # XXX - Because of https://github.com/irods/irods/issues/5538, the CONTEXT 
 # variables need to passed through temporaryStorage
 #   temporaryStorage.'*pathVar' = 'CREATE *DATA_OBJ_INFO';

@@ -18,12 +18,16 @@
 # everything extracted.
 #
 # This script assumes that the executor of this script is authenicated as a
-# rodsadmin user.
+# rodsadmin user. Also, the script uses the file 
+# `/tmp/sparcd-ingest-locks-<collection name>` as a lock file to ensure only
+# one process at at time modifies permissions on `<collection name>`.
 #
 # NB: Once it is confirmed that the tar file extraction logic in iRODS is 
 #     robust, we should consider moving this logic back into iRODS rules.
 
 set -o errexit -o nounset -o pipefail
+
+readonly LOCK_FILE_BASE=/tmp/sparcd-ingest-locks
 
 
 main() {
@@ -200,10 +204,13 @@ assign_acl() {
 	local uploader="$2"
 	local entity="$3"
 
+	local lockFile
+	lockFile="$LOCK_FILE_BASE"-"$(basename "$entity")"
+
 	local userAndZone perm
 	while IFS=: read -r -d ' ' userAndZone perm; do
 		if [[ "$userAndZone" != "$uploader#$zone" ]]; then
-			ichmod -M -r "$perm" "$userAndZone" "$entity"
+			flock "$lockFile" ichmod -M -r "$perm" "'$userAndZone'" "'$entity'"
 		fi
 	done
 }

@@ -90,16 +90,34 @@ _sparcd_handle_new_object(*User, *Object) {
 
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
 #       https://github.com/irods/irods/issues/5413.
+#     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
+#       https://github.com/irods/irods/issues/5257
 #       delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
+#     }
+#   }
+# }
       delay(
         ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
           <PLUSET>0s</PLUSET>
-          <EF>0s REPEAT ' ++ _sparcd_MAX_RETRIES ++ ' TIMES</EF> ' 
-      ) {_sparcd_ingest(*User, *Object);}
-# XXX - ^^^
+          <EF>0s REPEAT 0 TIMES</EF> ' 
+      ) {#_sparcd_ingest
+          _sparcd_ingest_workaround(*User, *Object, _sparcd_MAX_RETRIES);
+      }
     }
   }
 }
+_sparcd_ingest_workaround(*Uploader, *TarPath, *Retries) {
+  if (errorcode(_sparcd_ingest(*Uploader, *TarPath)) < 0 && *Retries > 0) {
+    delay(
+      ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+        <PLUSET>0s</PLUSET>
+        <EF>0s REPEAT 0 TIMES</EF> '
+    ) {#_sparcd_ingest
+      _sparcd_ingest_workaround(*Uploader, *TarPath, *Retries - 1);
+    }   
+  }
+}
+# XXX - ^^^
 
 
 sparcd_acPostProcForCollCreate {

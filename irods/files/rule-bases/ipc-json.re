@@ -1,5 +1,9 @@
 # This is a collection of functions and rules for constructing serialized JSON 
-# documents. This version only supports string and object field types.
+# documents.
+#
+# © 2021 The Arizona Board of Regents on behalf of The University of Arizona. 
+# For license information, see https://cyverse.org/license.
+
 
 encodeObject(*SerialFields) {
   *res = '{';

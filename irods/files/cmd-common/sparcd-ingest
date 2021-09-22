@@ -257,8 +257,8 @@ add_metadatum() {
 	local rc=0
 
 	local resp
-	resp="$(imeta adda -d "$obj" "$attr" "$val" "$units 2>&1)" || rc=$?
-	if (( rc != 0 )) && ! [[ "$resp" =~ -809000 CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME ]]; then
+	resp="$(imeta adda -d "$obj" "$attr" "$val" "$units" 2>&1)" || rc=$?
+	if (( rc != 0 )) && ! [[ "$resp" =~ -809000\ CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME ]]; then
 		echo "$resp" &>2
 		return $rc
 	else

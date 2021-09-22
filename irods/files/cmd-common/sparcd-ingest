@@ -118,7 +118,6 @@ inherit_acl() {
 	local rc=0
 	ils -A "$parentColl" | mk_acl | assign_acl "$zone" "$owner" "$childColl" || rc=$?
 	if (( rc != 0 )); then	
-		rc=$?
 		printf 'The script failed to assign the permission on the parent collection to %s.\n' \
 					"$childColl" \
 				>&2 \

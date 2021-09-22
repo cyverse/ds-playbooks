@@ -15,9 +15,6 @@ This is a collection of playbooks for deploying iRODS for the CyVerse Data Store
 
 Variable                                   | Required | Default                              | Choices | Comments
 ------------------------------------------ | -------- | ------------------------------------ | ------- | --------
-`aegis_base_collection`                    | no       |                                      |         | the base collection for the Aegis project
-`aegis_resource_hierarchy`                 | no       | `irods_resource_hierarchies[0]`      |         | the resource used by the Aegis project
-`aegis_storage_resource`                   | no       |                                      |         | an Aegis storage resource hosted on the server being configured, _see below_
 `avra_base_collection`                     | no       |                                      |         | The base collection for the Avra project. If it isn't present no Avra rules will fire.
 `avra_manager`                             | no       | `irods_clerver_user`                 |         | The iRODS user who is responsible for Avra data.
 `avra_resource_hierarchy`                  | no       | `irods_resource_hierarchies[0]`      |         | The resource used by the Avra project

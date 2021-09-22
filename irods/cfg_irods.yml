@@ -26,6 +26,11 @@
       notify:
         - reload rules
 
+    - name: ensure ipc-amqp.re is gone
+      file:
+        path: /etc/irods/ipc-amqp.re
+        state: absent
+        
     - name: place static config in /etc/irods
       copy:
         src: "{{ item }}"

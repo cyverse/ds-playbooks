@@ -18,12 +18,16 @@
 # everything extracted.
 #
 # This script assumes that the executor of this script is authenicated as a
-# rodsadmin user.
+# rodsadmin user. Also, the script uses the file 
+# `/tmp/sparcd-ingest-locks-<collection name>` as a lock file to ensure only
+# one process at at time modifies permissions on `<collection name>`.
 #
 # NB: Once it is confirmed that the tar file extraction logic in iRODS is 
 #     robust, we should consider moving this logic back into iRODS rules.
 
 set -o errexit -o nounset -o pipefail
+
+readonly LOCK_FILE_BASE=/tmp/sparcd-ingest-locks
 
 
 main() {
@@ -93,7 +97,7 @@ extract() {
 	local coll="$3"
 
 	local rc=0
-	clientUserName="$owner" ibun -b -x -D tar "$tarFile" "$coll" || rc=$?
+	clientUserName="$owner" ibun -b -x -f -D tar "$tarFile" "$coll" || rc=$?
 	if (( rc != 0 )); then
 		printf 'The script failed to extract the contents of the image bundle %s into %s as %s.\n' \
 					"$tarFile" "$coll" "$owner" \
@@ -114,7 +118,6 @@ inherit_acl() {
 	local rc=0
 	ils -A "$parentColl" | mk_acl | assign_acl "$zone" "$owner" "$childColl" || rc=$?
 	if (( rc != 0 )); then	
-		rc=$?
 		printf 'The script failed to assign the permission on the parent collection to %s.\n' \
 					"$childColl" \
 				>&2 \
@@ -172,7 +175,7 @@ apply_metadata() {
 				local attr="${fields[$(( idx + 0 ))]}"
 				local val="${fields[$(( idx + 1 ))]}"
 				local units="${fields[$(( idx + 2 ))]}"
-				imeta adda -d "$parentColl"/"$obj" "$attr" "$val" "$units" || rc=$(( rc || $? ))
+				add_metadatum "$parentColl"/"$obj" "$attr" "$val" "$units" || rc=$(( rc || $? ))
 			done
 		done
 	fi
@@ -200,12 +203,19 @@ assign_acl() {
 	local uploader="$2"
 	local entity="$3"
 
+	local rc=0
+
+	local lockFile
+	lockFile="$LOCK_FILE_BASE"-"$(basename "$entity")"
+
 	local userAndZone perm
 	while IFS=: read -r -d ' ' userAndZone perm; do
 		if [[ "$userAndZone" != "$uploader#$zone" ]]; then
-			ichmod -M -r "$perm" "$userAndZone" "$entity"
+			flock "$lockFile" ichmod -M -r "$perm" "$userAndZone" "$entity" || rc=$(( rc || $? ))
 		fi
 	done
+
+	return $rc
 }
 
 
@@ -235,6 +245,25 @@ mk_acl() {
 	p
 }
 SED_SCRIPT
+}
+
+
+add_metadatum() {
+	local obj="$1"
+	local attr="$2"
+	local val="$3"
+	local units="$4"
+
+	local rc=0
+
+	local resp
+	resp="$(imeta adda -d "$obj" "$attr" "$val" "$units" 2>&1)" || rc=$?
+	if (( rc != 0 )) && ! [[ "$resp" =~ -809000\ CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME ]]; then
+		echo "$resp" &>2
+		return $rc
+	else
+		return 0
+	fi
 }
 
 

@@ -7,6 +7,12 @@
   become: true
   become_user: irods
   tasks:
+    - name: test ensure ipc-amqp.re is gone 
+      stat:
+        path: /etc/irods/ipc-amqp.re
+      register: response
+      failed_when: response.stat.exists
+
     - name: check common configuration files in place
       stat:
         path: /etc/irods/{{ item }}
@@ -30,7 +36,6 @@
         - de.re
         - host_access_control_config.json
         - hosts_config.json
-        - ipc-amqp.re
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re

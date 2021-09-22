@@ -1,9 +1,4 @@
 ---
-_aegis_base_collection: "{{ aegis_base_collection | default(None) }}"
-_aegis_resource_hierarchy: >-
-  {{ aegis_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}
-_aegis_storage_resource: "{{ aegis_storage_resource | default(None) }}"
-
 _amqp_exchange: "{{ irods_amqp_exchange | default('irods') }}"
 _amqp_host: "{{ irods_amqp_host | default(groups['amqp'][0]) }}"
 _amqp_mgmt_port: "{{ irods_amqp_mgmt_port | default(15672) }}"

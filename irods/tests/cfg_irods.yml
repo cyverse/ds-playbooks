@@ -7,12 +7,6 @@
   become: true
   become_user: irods
   tasks:
-    - name: test ensure ipc-amqp.re is gone 
-      stat:
-        path: /etc/irods/ipc-amqp.re
-      register: response
-      failed_when: response.stat.exists
-
     - name: check common configuration files in place
       stat:
         path: /etc/irods/{{ item }}
@@ -50,6 +44,12 @@
         - service_account.config
         - terraref.re
         - terraref-env.re
+
+    - name: test ensure ipc-amqp.re is gone 
+      stat:
+        path: /etc/irods/ipc-amqp.re
+      register: response
+      failed_when: response.stat.exists
 
     - name: Verify irods_environment.json is in place
       stat:

@@ -61,7 +61,7 @@
           - servername: "{{ _canonical_hostname }}"
             listen_ip: 127.0.0.1
             extra_parameters: |
-              {% if _webdav_davrods_access_limit|bool %}
+              {% if _webdav_davrods_access_limit %}
               QS_LocRequestLimit /dav {{ _webdav_davrods_access_limit }}
               {% endif %}
 
@@ -143,7 +143,7 @@
             extra_parameters: |
               ServerAlias {{ inventory_hostname }}
 
-              {% if _webdav_access_limit|bool %}
+              {% if _webdav_access_limit %}
               QS_LocRequestLimit /dav {{ _webdav_access_limit }}
 
               {% endif -%}
@@ -242,20 +242,12 @@
           - mod_qos
           - mod_ssl
 
-    - name: update apache mpm
-      copy:
-        src: files/webdav/00-mpm.conf
-        dest: /etc/httpd/conf.modules.d/00-mpm.conf
-      notify:
-        - restart httpd
-
     - name: update apache modules
-      template:
-        src: "templates/webdav/etc/httpd/conf.modules.d/{{ item }}.j2"
-        dest: "/etc/httpd/conf.modules.d/{{ item }}"
-      with_items:
-        - 00-status.conf
-        - 10-mod_qos.conf
+      copy:
+        src: "{{ item }}"
+        dest: /etc/httpd/conf.modules.d
+      with_fileglob:
+        - 'files/webdav/etc/httpd/conf.modules.d/*'
       notify:
         - restart httpd
 
@@ -299,7 +291,7 @@
 
     - name: add root web page
       copy:
-        src: files/webdav/index.html
+        src: files/webdav/var/www/html/index.html
         dest: /var/www/html/index.html
 
     - when:

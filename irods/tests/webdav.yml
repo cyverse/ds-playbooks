@@ -12,6 +12,14 @@
     varnish_service: >-
       {{ lookup('template', '../templates/webdav/usr/lib/systemd/system/varnish.service.j2') }}
   tasks:
+    - name: verify 00-status.conf expands correctly
+      debug:
+        msg: TODO implement
+
+    - name: verify 10-mod_qos.conf expands correctly
+      debug:
+        msg: TODO implement
+
     - name: verify head.html expands correctly
       assert:
         that:
@@ -39,10 +47,6 @@
           - >-
             varnish_service 
             is search('-s file,/var/cache/varnish/varnish_cache.bin,1000M' | regex_escape)
-
-    - name: verfiy 00-mpm.conf expands correctly
-      debug:
-        msg: TODO implement
 
 
 - name: test WebDAV dav html template expansion
@@ -155,8 +159,8 @@
       with_items:
         - davrods
         - mod_proxy_html
-        - mod_ssl
         - mod_qos
+        - mod_ssl
         - yum-plugin-versionlock
       loop_control:
         loop_var: pkg
@@ -253,10 +257,6 @@
         - dav-anon/testing/commons/index.html
       register: response
       failed_when: not response.stat.exists
-
-    - name: test update apache mpm
-      debug:
-        msg: TODO implement
 
     - include_tasks: tasks/test_pkg_installed.yml
       vars:

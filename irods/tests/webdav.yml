@@ -40,6 +40,10 @@
             varnish_service 
             is search('-s file,/var/cache/varnish/varnish_cache.bin,1000M' | regex_escape)
 
+    - name: verfiy 00-mpm.conf expands correctly
+      debug:
+        msg: TODO implement
+
 
 - name: test WebDAV dav html template expansion
   hosts: localhost
@@ -249,6 +253,10 @@
         - dav-anon/testing/commons/index.html
       register: response
       failed_when: not response.stat.exists
+
+    - name: test update apache mpm
+      debug:
+        msg: TODO implement
 
     - include_tasks: tasks/test_pkg_installed.yml
       vars:

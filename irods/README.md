@@ -91,24 +91,24 @@ Variable                                   | Required | Default                 
 `terraref_base_collection`                 | no       |                                      |         | The base collection for the TerraREF project. If it isn't present no TerraREF rules will fire.
 `terraref_manager`                         | no       | `irods_clerver_user`                 |         | The iRODS user who is responsible for TerraREF data.
 `terraref_resource_hierarchy`              | no       | `irods_resource_hierarchies[0]`      |         | The resource used by the TerraREF project.
+`webdav_access_limit`                      | no       |                                      |         | if defined, the upper limit on the number of simultaneous requests that will be served by webdav
 `webdav_allowed_src`                       | no       | [ "0.0.0.0/0" ]                      |         | A list of network/masks for the clients allowed direct access to the WebDAV servers
 `webdav_auth_name`                         | no       | CyVerse                              |         | Authorization realm to use for the Data Store
 `webdav_cache_dir`                         | no       | `/var/cache/varnish`                 |         | The directory varnish-cache will use for the WebDAV cache
-`webdav_cache_size`                        | no       | 1000                                 |         | The maximum size in mebibytes the cache can be
 `webdav_cache_max_file_size`               | no       | 10                                   |         | The maximum size in mebibytes of the largest WebDAV file varnish-cache will cache
-`webdav_cache_ttl_fraction`                | no       | 0.1                                  |         | The fraction elapsed time since the last-modified time of a file for cache TTL (Time-to-live) configuration
 `webdav_cache_max_ttl`                     | no       | 86400                                |         | The maximum cache TTL in seconds
+`webdav_cache_size`                        | no       | 1000                                 |         | The maximum size in mebibytes the cache can be
+`webdav_cache_ttl_fraction`                | no       | 0.1                                  |         | The fraction elapsed time since the last-modified time of a file for cache TTL (Time-to-live) configuration
+`webdav_davrods_access_limit`              | no       |                                      |         | if defined, the upper limit on the number of simultaneous requests that will be served by davrods
+`webdav_max_request_workers`               | no       | 192                                  |         | the upper limit on the number of simultaneous requests that will be served. This typically have the value of `webdav_server_limit` multiplied by `webdav_threads_per_child`
+`webdav_purgeman_irods_user`               | no       | `irods_admin_username`               |         | The irods user who converts data object uuid to path
+`webdav_purgeman_irods_password`           | yes      |                                      |         | The password of the purgeman irods user
 `webdav_server_limit`                      | no       | 48                                   |         | the number of cpu cores to be used
 `webdav_threads_per_child`                 | no       | 4                                    |         | the number of threads per core to be created
-`webdav_max_request_workers`               | no       | 192                                  |         | the upper limit on the number of simultaneous requests that will be served. This typically have the value of `webdav_server_limit` multiplied by `webdav_threads_per_child`
-`webdav_access_limit`                      | no       | 120                                  |         | The upper limit on the number of simultaneous requests that will be served by webdav
-`webdav_davrods_access_limit`              | no       | 80                                   |         | The upper limit on the number of simultaneous requests that will be served by davrods
 `webdav_tls_cert_file`                     | no       | /etc/ssl/certs/dummy.crt             |         | The TLS certificate file used for encrypted communication
 `weddav_tls_chain_file`                    | no       | /etc/ssl/certs/dummy-chain.crt       |         | The TLS certificate chain file used for encrypted communication
 `webdav_tls_key_file`                      | no       | /etc/ssl/certs/dummy.key             |         | The TLS key file used for encrypted communication
 `webdav_varnish_service_port`              | no       | 6081                                 |         | The service port number for varnish-cache
-`webdav_purgeman_irods_user`               | no       | `irods_admin_username`               |         | The irods user who converts data object uuid to path
-`webdav_purgeman_irods_password`           | yes      |                                      |         | The password of the purgeman irods user
 
 The `restart_irods` flag is ignored in the `main.yml` playbook.
 

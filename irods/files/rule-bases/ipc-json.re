@@ -4,17 +4,15 @@
 # © 2021 The Arizona Board of Regents on behalf of The University of Arizona. 
 # For license information, see https://cyverse.org/license.
 
+_ipcJson_accumEncodedList: string * list string -> string
+_ipcJson_accumEncodedList(*Base, *SerialElmts) =
+  if size(*SerialElmts) == 0 then *Base
+  else 
+	  let *prefix = if *Base == '' then '' else *Base ++ ',' in
+    _ipcJson_accumEncodedList(*prefix ++ hd(*SerialElmts), tl(*SerialElmts))
 
-_ipcJson_encodeObject(*SerialFields) {
-  *res = '{';
-  if (size(*SerialFields) > 0) {
-	*res = *res ++ hd(*SerialFields);
-    foreach(*field in tl(*SerialFields)) {
-      *res = *res ++ ',' ++ *field;
-    }
-  }
-  *res ++ '}';
-}
+_ipcJson_encodeObject: list string -> string
+_ipcJson_encodeObject(*SerialFields) = '{' ++ _ipcJson_accumEncodedList('', *SerialFields) ++ '}'
 
 _ipcJson_encodeString(*Str) {
   *escStr = '';

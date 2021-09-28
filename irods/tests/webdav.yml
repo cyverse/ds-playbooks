@@ -12,6 +12,14 @@
     varnish_service: >-
       {{ lookup('template', '../templates/webdav/usr/lib/systemd/system/varnish.service.j2') }}
   tasks:
+    - name: verify 00-status.conf expands correctly
+      debug:
+        msg: TODO implement
+
+    - name: verify 10-mod_qos.conf expands correctly
+      debug:
+        msg: TODO implement
+
     - name: verify head.html expands correctly
       assert:
         that:
@@ -151,8 +159,8 @@
       with_items:
         - davrods
         - mod_proxy_html
-        - mod_ssl
         - mod_qos
+        - mod_ssl
         - yum-plugin-versionlock
       loop_control:
         loop_var: pkg

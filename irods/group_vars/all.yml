@@ -108,24 +108,24 @@ _terraref_manager: "{{ terraref_manager | default(_irods_clerver_user) }}"
 _terraref_resource_hierarchy: >-
   {{ terraref_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}
 
+_webdav_access_limit: "{{ webdav_access_limit | default(None) }}"
 _webdav_allowed_src: "{{ webdav_allowed_src | default(['0.0.0.0/0']) }}"
 _webdav_auth_name: "{{ webdav_auth_name | default('CyVerse') }}"
 _webdav_cache_dir: "{{ webdav_cache_dir | default('/var/cache/varnish') }}"
-_webdav_cache_size: "{{ webdav_cache_size | default(1000) }}"
 _webdav_cache_max_file_size: "{{ webdav_cache_max_file_size | default(10) }}"
-_webdav_cache_ttl_fraction: "{{ webdav_cache_ttl_fraction | default(0.1) }}"
 _webdav_cache_max_ttl: "{{ webdav_cache_max_ttl | default(86400) }}"
+_webdav_cache_size: "{{ webdav_cache_size | default(1000) }}"
+_webdav_cache_ttl_fraction: "{{ webdav_cache_ttl_fraction | default(0.1) }}"
+_webdav_davrods_access_limit: "{{ webdav_davrods_access_limit | default(None) }}"
+_webdav_max_request_workers: "{{ webdav_max_request_workers | default(192) }}"
+_webdav_purgeman_irods_user: "{{ webdav_purgeman_irods_user | default(_irods_admin_username) }}"
+_webdav_purgeman_irods_password: "{{ webdav_purgeman_irods_password | mandatory }}"
 _webdav_server_limit: "{{ webdav_server_limit | default(48) }}"
 _webdav_threads_per_child: "{{ webdav_threads_per_child | default(4) }}"
-_webdav_max_request_workers: "{{ webdav_max_request_workers | default(192) }}"
-_webdav_access_limit: "{{ webdav_access_limit | default(120) }}"
-_webdav_davrods_access_limit: "{{ webdav_davrods_access_limit | default(80) }}"
 _webdav_tls_cert_file: "{{ webdav_tls_cert_file | default('/etc/ssl/certs/dummy.crt') }}"
 _webdav_tls_chain_file: "{{ webdav_tls_chain_file | default('/etc/ssl/certs/dummy-chain.crt') }}"
 _webdav_tls_key_file: "{{ webdav_tls_key_file | default('/etc/ssl/certs/dummy.key') }}"
 _webdav_varnish_service_port: "{{ webdav_varnish_service_port | default(6081) }}"
-_webdav_purgeman_irods_user: "{{ webdav_purgeman_irods_user | default(_irods_admin_username) }}"
-_webdav_purgeman_irods_password: "{{ webdav_purgeman_irods_password | mandatory }}"
 
 # The following are internal constants
 

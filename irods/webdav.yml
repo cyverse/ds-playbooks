@@ -294,6 +294,11 @@
         src: files/webdav/var/www/html/index.html
         dest: /var/www/html/index.html
 
+    - name: add robots.txt
+      copy:
+        src: files/webdav/var/www/html/robots.txt
+        dest: /var/www/html/robots.txt
+
     - when:
         - "'varnish' in ansible_facts.packages"
         - ansible_facts.packages['varnish'][0].version is version_compare('6.5.1', '<')

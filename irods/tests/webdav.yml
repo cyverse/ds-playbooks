@@ -236,11 +236,12 @@
       register: response
       failed_when: not (response.stat.exists and response.stat.isdir)
 
-    - name: test add root web page
+    - name: test add web pages
       stat:
         path: /var/www/html/{{ item }}
       with_items:
         - index.html
+        - robots.txt
         - dav/index.html
         - dav/testing/index.html
         - dav/testing/commons/index.html
@@ -314,8 +315,10 @@
         response.stat.lnk_source != '/usr/lib/systemd/system/varnish.service'
 
     - name: test create varnish systemd service dependencies directory
-      debug:
-        msg: TODO implement
+      stat:
+        path: /etc/systemd/system/varnish.service.requires
+      register: response
+      failed_when: not response.stat.exists or not response.stat.isdir
 
     - name: test ensure varnishncsa runs when varnish run
       stat:

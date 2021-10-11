@@ -314,8 +314,10 @@
         response.stat.lnk_source != '/usr/lib/systemd/system/varnish.service'
 
     - name: test create varnish systemd service dependencies directory
-      debug:
-        msg: TODO implement
+      stat:
+        path: /etc/systemd/system/varnish.service.requires
+      register: response
+      failed_when: not response.stat.exists or not response.stat.isdir
 
     - name: test ensure varnishncsa runs when varnish run
       stat:

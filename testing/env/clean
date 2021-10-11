@@ -10,17 +10,9 @@
 # Deletes the four docker images.
 
 
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-  readonly ExecName=$(greadlink -f "$0")
-else
-  readonly ExecName=$(readlink --canonicalize "$0")
-fi
-
 main()
 {
-  local baseDir=$(dirname "$ExecName")
-  local cfg="$@"
+  local cfg="$1"
 
   if [ -z "$cfg" ]
   then
@@ -33,13 +25,21 @@ main()
     cfg="$(pwd)"/"$cfg"
   fi
 
+  #shellcheck disable=1090
   . "$cfg"
 
   while read -r repository rest
   do
     docker rmi "$repository"
   done < <(docker images --filter reference="$ENV_NAME"_* | tail --lines +2)
+
+  local bases
+  readarray -t bases < <(docker images --quiet --filter reference=test-env-base)
+
+  if [[ -n "${bases-}" ]]; then
+    docker rmi "${bases[@]}"
+  fi
 }
 
 
-main "$*"
+main "$@"

@@ -433,6 +433,17 @@
         dest: /tmp/purgeman_setup
         remote_src: True
       register: unarchiveResp
+
+    - name: check if purgeman service exists
+      stat: 
+        path: /usr/lib/systemd/system/purgeman.service
+      register: response
+
+    - name: stop purgeman service if running
+      service:
+        name: purgeman
+        state: stopped
+      when: response.stat.exists
      
     - name: install purgeman service
       when: unarchiveResp is changed

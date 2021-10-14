@@ -422,7 +422,12 @@
         src: /usr/lib/systemd/system/varnishncsa.service
         state: link
 
-    - name: create a build dir for purgeman package 
+    - name: delete stale build dir for purgeman package if exists
+      file:
+        path: /tmp/purgeman_setup
+        state: absent
+
+    - name: create build dir for purgeman package 
       file:
         path: /tmp/purgeman_setup
         state: directory

@@ -442,13 +442,13 @@
     - name: check if purgeman service exists
       stat: 
         path: /usr/lib/systemd/system/purgeman.service
-      register: response
+      register: serviceResp
 
     - name: stop purgeman service if running
       service:
         name: purgeman
         state: stopped
-      when: response.stat.exists
+      when: serviceResp.stat.exists
      
     - name: install purgeman service
       when: unarchiveResp is changed

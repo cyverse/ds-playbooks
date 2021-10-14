@@ -455,6 +455,11 @@
       make: 
         chdir: /tmp/purgeman_setup
         target: install_centos
+
+    - name: delete build dir for purgeman package
+      file:
+        path: /tmp/purgeman_setup
+        state: absent
     
     - name: configure purgeman
       template:

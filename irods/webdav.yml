@@ -443,12 +443,16 @@
       stat: 
         path: /usr/lib/systemd/system/purgeman.service
       register: serviceResp
+      tags:
+        - no_testing
 
     - name: stop purgeman service if running
       service:
         name: purgeman
         state: stopped
       when: serviceResp.stat.exists
+      tags:
+        - no_testing
      
     - name: install purgeman service
       when: unarchiveResp is changed

@@ -9,6 +9,16 @@ backend default {
 }
 
 sub vcl_recv {
+    # handle PIPE
+    # request is restarted from the previous request
+    if (req.restarts == 0) {
+        # guard against infinite loop
+        unset req.http.X-Restart-And-Pipe;
+    }
+    if (req.http.X-Restart-And-Pipe && req.restarts > 0) {
+        return (pipe);
+    }
+
     if (req.method == "PURGE") {
         return (purge);
     }
@@ -63,6 +73,15 @@ sub vcl_miss {
 }
 
 sub vcl_deliver {
+    # restart the request to use pipe
+    # set the request header to use pipe
+    # accessing the request header is available here
+    # (not available in backend vcl functions)
+    if (resp.http.X-Restart-And-Pipe) {
+        set req.http.X-Restart-And-Pipe = "1";
+        return (restart);
+    }
+
     if (obj.hits > 0) {
         set resp.http.X-Cache = "HIT";
     } else {
@@ -70,6 +89,15 @@ sub vcl_deliver {
     }
     unset resp.http.X-Varnish;
     return (deliver);
+}
+
+sub vcl_backend_fetch {
+    # guard against infinite loop
+    if (bereq.retries == 0 ) {
+        unset bereq.http.X-Restart-And-Pipe;
+    }
+
+    return (fetch);
 }
 
 sub vcl_backend_response {
@@ -83,9 +111,16 @@ sub vcl_backend_response {
     # Determine cache or not
     if (std.integer(beresp.http.Content-Length, 0) > {{ _webdav_cache_max_file_size|int * 1024 * 1024 }}) {
         # this determines how long the file will not be cached
-        set beresp.ttl = 1m;
+        # raise an error to restart without caching 
+        set beresp.http.X-Restart-And-Pipe = "1";
+        set beresp.ttl = 1s;
+        set beresp.grace = 0s;
+        set beresp.keep = 0s;
         set beresp.uncacheable = true;
+    } else {
+        # guard against infinite loop
+        unset bereq.http.X-Restart-And-Pipe;
     }
-
+    
     return (deliver);
 }

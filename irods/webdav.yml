@@ -428,7 +428,7 @@
 
     - name: download purgeman package from github and uncompress
       unarchive:
-        src: https://github.com/cyverse/purgeman/releases/download/v0.2.1/purgeman_0.2.1.tar.gz
+        src: https://github.com/cyverse/purgeman/releases/download/v0.3.0/purgeman_0.3.0.tar.gz
         dest: /tmp/purgeman_setup
         remote_src: True
       register: unarchiveResp

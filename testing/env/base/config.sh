@@ -72,7 +72,8 @@ install_centos_packages() {
 	yum --assumeyes install epel-release
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
 
-	yum --assumeyes install iproute iptables-services libselinux-python openssh-server sudo
+	yum --assumeyes \
+		install ca-certificates iproute iptables-services libselinux-python openssh-server sudo
 }
 
 
@@ -83,7 +84,15 @@ install_debian_packages() {
 	apt-get install -qq -y apt-utils 2> /dev/null
 
 	apt-get install -qq -y \
-			iproute iptables jq openssh-server python-pip python-selinux python-virtualenv sudo \
+			ca-certificates \
+			iproute \
+			iptables \
+			jq \
+			openssh-server \
+			python-pip \
+			python-selinux \
+			python-virtualenv \
+			sudo \
 		2> /dev/null
 }
 
@@ -94,7 +103,7 @@ install_ubuntu_packages() {
 	apt-get update --quiet=2
 	apt-get install --yes --quiet=2 apt-utils 2> /dev/null
 
-	apt-get install --yes --quiet=2 iproute2 openssh-server python3-apt sudo
+	apt-get install --yes --quiet=2 ca-certificates iproute2 openssh-server python3-apt sudo
 }
 
 

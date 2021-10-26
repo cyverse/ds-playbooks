@@ -12,11 +12,12 @@ RUN yum --assumeyes install dmidecode python3 rpm-build wget && \
       ansible==3.3 dnspython netaddr python-irodsclient requests urllib3 wheel
 
 ### Install inspection support
+RUN yum --assumeyes install ca-certificates epel-release && \
+    python -m pip uninstall --quiet --yes urllib3
+
 ADD https://packages.irods.org/renci-irods.yum.repo /etc/yum.repos.d/renci-irods.yum.repo
 
-RUN yum --assumeyes install epel-release && \
-    python -m pip uninstall --quiet --yes urllib3 && \
-    yum --assumeyes install irods-icommands-4.2.8 postgresql && \
+RUN yum --assumeyes install irods-icommands-4.2.8 postgresql && \
     mkdir /root/.ssh
 
 COPY ssh-config /root/.ssh/config

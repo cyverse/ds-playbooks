@@ -236,11 +236,12 @@
       register: response
       failed_when: not (response.stat.exists and response.stat.isdir)
 
-    - name: test add root web page
+    - name: test add web pages
       stat:
         path: /var/www/html/{{ item }}
       with_items:
         - index.html
+        - robots.txt
         - dav/index.html
         - dav/testing/index.html
         - dav/testing/commons/index.html

@@ -435,6 +435,7 @@
       shell: /usr/bin/purgeman -v -v | jq '.serviceVersion' | tr -d '"'
       register: purgemanVersion
       when: purgemanResp.stat.exists
+      changed_when: false
 
     - name: check purgeman service account
       shell: id purgeman

@@ -208,18 +208,12 @@
     - name: install iRODS package repository signing key
       rpm_key:
         key: https://packages.irods.org/irods-signing-key.asc
-# XXX There is something wonky with the SSL cert on packages.irods.org
-        validate_certs: no
-# XXX ^^^
 
     - name: install iRODS repository
       get_url:
         url: https://packages.irods.org/renci-irods.yum.repo
         dest: /etc/yum.repos.d/renci-irods.yum.repo
         timeout: 20
-# XXX There is something wonky with the SSL cert on packages.irods.org
-        validate_certs: no
-# XXX ^^^
 
     - name: force import of GPG key
       shell: |

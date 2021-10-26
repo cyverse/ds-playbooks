@@ -19,18 +19,17 @@ _ipcJson_encodeString(*Str) =
   let *escStr = '' in
   let *len = strlen(*Str) in
   let *pos = 0 in
-  let *_ = 
-    while (*len > *pos) {
-      let *c = substr(*Str, *pos, *pos + 1) in
-      let *escC = 
-        if *c == '"' then '\\"' else
-        if *c == '\t' then '\\t' else
-        if *c == '\n' then '\\n' else
-        if *c == '\r' then '\\r' else
-        if *c == '\\' then '\\\\' else
-        *c
-      in *escStr = *escStr ++ *escC;
-      *pos = *pos + 1; }
+  let *_ = while (*len > *pos) {
+    let *c = substr(*Str, *pos, *pos + 1) in
+    let *escC = 
+      if *c == '"' then '\\"' else
+      if *c == '\t' then '\\t' else
+      if *c == '\n' then '\\n' else
+      if *c == '\r' then '\\r' else
+      if *c == '\\' then '\\\\' else
+      *c
+    in *escStr = *escStr ++ *escC;
+    *pos = *pos + 1; }
   in '"' ++ *escStr ++ '"'
 
 _ipcJson_mkField(*Label, *SerialVal) = '"' ++ *Label ++ '":' ++ *SerialVal

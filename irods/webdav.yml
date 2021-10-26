@@ -437,10 +437,9 @@
       when: purgemanResp.stat.exists
 
     - name: check purgeman service account
-      shell: grep purgeman -q /etc/passwd
+      shell: id purgeman
       register: purgemanAccount
-      ignore_errors: true
-      changed_when: false
+      failed_when: false
 
     - when: (not purgemanResp.stat.exists) or (purgemanVersion.stdout != 'v0.3.0') or (purgemanAccount.rc != 0)
       block:

@@ -483,13 +483,11 @@
             state: absent
     
     - name: configure purgeman
-      template:
-        src: templates/webdav/etc/purgeman/{{ item }}.j2
-        dest: /etc/purgeman/{{ item }}
+      copy:
+        src: files/webdav/etc/purgeman/purgeman.conf
+        dest: /etc/purgeman/purgeman.conf
         owner: purgeman
         mode: 0660
-      with_items:
-        - purgeman.conf
       notify:
         - restart purgeman
 

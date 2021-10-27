@@ -32,6 +32,7 @@ _ipcJson_encodeString(*Str) =
     *pos = *pos + 1; }
   in '"' ++ *escStr ++ '"'
 
+_ipcJson_mkField: string * string -> string
 _ipcJson_mkField(*Label, *SerialVal) = '"' ++ *Label ++ '":' ++ *SerialVal
 
 # construct a serialized JSON number field. This version performs no error checking.

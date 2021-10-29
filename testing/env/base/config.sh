@@ -64,6 +64,8 @@ install_centos_packages() {
 
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
 
+	yum --assumeyes install yum-plugin-versionlock
+
 	yum --assumeyes install epel-release
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
 
@@ -104,7 +106,7 @@ install_ubuntu_packages() {
 
 
 update_sshd_config() {
-	cat <<EOF | sed --in-place  --regexp-extended --file - /etc/ssh/sshd_config
+	cat <<'EOF' | sed --in-place  --regexp-extended --file - /etc/ssh/sshd_config
 s/#?PermitRootLogin .*/PermitRootLogin yes/
 s/#?PermitEmptyPasswords no/PermitEmptyPasswords yes/
 EOF

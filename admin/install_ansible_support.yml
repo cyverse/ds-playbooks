@@ -4,6 +4,13 @@
   become: true
   gather_facts: false
   tasks:
+    # NB: The rpm and yum bindings for the package module require Python 2 in
+    #     Ansible 2.9.6
+    - name: ensure correct python for yum and rpm
+      when: package_manager|default(None) == 'yum'
+      set_fact:
+        ansible_python_interpreter: /usr/bin/python
+
     - name: install dmidecode support
       package:
         name: dmidecode
@@ -26,6 +33,12 @@
       when: ansible_distribution == 'CentOS'
       package:
         name: epel-release
+        state: present
+
+    - name: install yum-plugin-versionlock on CentOS machines
+      when: ansible_distribution == 'CentOS'
+      package:
+        name: yum-plugin-versionlock
         state: present
 
     - name: install packages

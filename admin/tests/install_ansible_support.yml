@@ -13,6 +13,7 @@
         - jq
         - libselinux-python
         - python-dns
+        - yum-plugin-versionlock
       loop_control:
         loop_var: pkg
 
@@ -23,6 +24,7 @@
         - dmidecode
         - iproute2
         - jq
+        - python3-dns
         - python3-selinux
       loop_control:
         loop_var: pkg
@@ -38,10 +40,6 @@
         - python-dns
       loop_control:
         loop_var: pkg
-
-    - name: test python-dns installed on Ubuntu
-      debug:
-        msg: TODO implement
 
     - name: test Python PIP package installed
       debug:

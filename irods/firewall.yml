@@ -23,7 +23,7 @@
           {%   endif %}
           {% endfor %}
           {% for f in _irods_federation %}
-          {%   for cp in f.catalog_providers %}
+          {%   for cp in f.catalog_provider_hosts %}
           {%     set cp_addr = cp if cp|ipaddr else lookup('dig', cp) %}
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ cp_addr }} --dport {{ _irods_zone_port }} -j ACCEPT
           -A {{ _firewall_chain }} -m state --state NEW -p tcp -s {{ cp_addr }} --dport {{ ports }} -j ACCEPT

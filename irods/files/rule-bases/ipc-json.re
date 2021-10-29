@@ -41,8 +41,8 @@ _ipcJson_mkField(*Label, *SerialVal) = '"' ++ *Label ++ '":' ++ *SerialVal
 #   *Label - the name of the field
 #   *Val - the value of the field
 #
-ipc_jsonNumber: string * double -> string
-ipc_jsonNumber(*Label, *Val) = _ipcJson_mkField(*Label, '*Val')
+ipcJson_number: string * double -> string
+ipcJson_number(*Label, *Val) = _ipcJson_mkField(*Label, '*Val')
 
 # construct a serialized JSON string field
 #
@@ -50,7 +50,7 @@ ipc_jsonNumber(*Label, *Val) = _ipcJson_mkField(*Label, '*Val')
 #   *Label - the name of the field
 #   *Val - the value of the field
 #
-ipc_jsonString(*Label, *Val) = _ipcJson_mkField(*Label, _ipcJson_encodeString(*Val))
+ipcJson_string(*Label, *Val) = _ipcJson_mkField(*Label, _ipcJson_encodeString(*Val))
 
 # construct a serialized JSON array field from its serialized elements
 #
@@ -58,7 +58,7 @@ ipc_jsonString(*Label, *Val) = _ipcJson_mkField(*Label, _ipcJson_encodeString(*V
 #   *Label - the name of the field
 #   *Val - the serialized array values
 #
-ipc_jsonStringArray(*Label, *Values) {
+ipcJson_stringArray(*Label, *Values) {
   *serialArray = '[';
   if (size(*Values) > 0) {
     *serialArray = *serialArray ++ _ipcJson_encodeString(hd(*Values));
@@ -76,15 +76,15 @@ ipc_jsonStringArray(*Label, *Values) {
 #   *Label - the name of the object field
 #   *SerialFields - the list of pre-serialized fields ot include in the object
 #
-ipc_jsonObject(*Label, *SerialFields) = 
-  _ipcJson_mkField(*Label, _ipcJson_encodeObject(*SerialFields))
+ipcJson_object(*Label, *SerialFields) = _ipcJson_mkField(
+  *Label, _ipcJson_encodeObject(*SerialFields) )
 
 # construct a serialized JSON document from its serialized fields
 #
 # Parameters:
 #   *SerialFields - A list of pre-serialized fields to include in the document
 #
-ipc_jsonDocument(*SerialFields) = _ipcJson_encodeObject(*SerialFields)
+ipcJson_document(*SerialFields) = _ipcJson_encodeObject(*SerialFields)
 
 # construct a serialized JSON object field from a Boolean value
 #
@@ -92,7 +92,7 @@ ipc_jsonDocument(*SerialFields) = _ipcJson_encodeObject(*SerialFields)
 #   *Label - the name of the object field
 #   *flag - the Boolean value of the field.
 #
-ipc_jsonBoolean(*Label, *flag) {
+ipcJson_boolean(*Label, *flag) {
   if (*flag) {
     _ipcJson_mkField(*Label, "true");
   } else {

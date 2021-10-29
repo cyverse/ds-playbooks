@@ -432,7 +432,7 @@
       register: purgemanResp
 
     - name: check purgeman version
-      shell: /usr/bin/purgeman -v -v | jq '.serviceVersion' | tr -d '"'
+      shell: /usr/bin/purgeman -v | grep 'serviceVersion' | tr -d '",' | awk '{print $2}'
       register: purgemanVersion
       when: purgemanResp.stat.exists
       changed_when: false
@@ -442,7 +442,7 @@
       register: purgemanAccount
       failed_when: false
 
-    - when: (not purgemanResp.stat.exists) or (purgemanVersion.stdout != 'v0.3.0') or (purgemanAccount.rc != 0)
+    - when: (not purgemanResp.stat.exists) or (purgemanAccount.rc != 0) or (purgemanVersion.stdout != 'v0.3.0')
       block:
         - name: check if purgeman service exists
           stat: 

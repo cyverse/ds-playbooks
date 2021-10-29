@@ -13,14 +13,12 @@ set -o errexit -o nounset -o pipefail
 
 
 main() {
-	if [[ "$#" -lt 1 ]]
-	then
+	if [[ "$#" -lt 1 ]]; then
 		printf 'The OS name is required as the first argument\n' >&2
 		return 1
 	fi
 
-	if [[ "$#" -lt 2 ]]
-	then
+	if [[ "$#" -lt 2 ]]; then
 		printf 'The OS version number is required as the second argument\n' >&2
 		return 1
 	fi
@@ -29,8 +27,7 @@ main() {
 	local version="$2"
 
 	# Install required packages
-	if [[ "$os" = centos ]]
-	then
+	if [[ "$os" = centos ]]; then
 		install_centos_packages "$version"
 	elif [[ "$os" == debian ]]; then
 		install_debian_packages "$version"
@@ -47,13 +44,11 @@ main() {
 	# Configure passwordless root ssh access
 	ssh-keygen -q -f /etc/ssh/ssh_host_key -N '' -t rsa
 
-	if ! [[ -e /etc/ssh/ssh_host_dsa_key ]]
-	then
+	if ! [[ -e /etc/ssh/ssh_host_dsa_key ]]; then
 		ssh-keygen -q -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
 	fi
 
-	if ! [[ -e /etc/ssh/ssh_host_rsa_key ]]
-	then
+	if ! [[ -e /etc/ssh/ssh_host_rsa_key ]]; then
 		ssh-keygen -q -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
 	fi
 
@@ -72,8 +67,8 @@ install_centos_packages() {
 	yum --assumeyes install epel-release
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
 
-	yum --assumeyes \
-		install ca-certificates iproute iptables-services libselinux-python openssh-server sudo
+	yum --assumeyes install \
+		ca-certificates iproute iptables-services libselinux-python openssh-server python2-pip sudo
 }
 
 
@@ -103,7 +98,8 @@ install_ubuntu_packages() {
 	apt-get update --quiet=2
 	apt-get install --yes --quiet=2 apt-utils 2> /dev/null
 
-	apt-get install --yes --quiet=2 ca-certificates iproute2 openssh-server python3-apt sudo
+	apt-get install --yes --quiet=2 \
+		ca-certificates iproute2 openssh-server python3-apt python3-pip sudo
 }
 
 

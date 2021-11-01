@@ -441,6 +441,7 @@
       shell: id purgeman
       register: purgemanAccount
       failed_when: false
+      changed_when: false
 
     - when: (not purgemanResp.stat.exists) or (purgemanAccount.rc != 0) or (purgemanVersion.stdout != 'v0.3.0')
       block:

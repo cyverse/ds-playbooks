@@ -126,26 +126,27 @@ sendMsg(*Topic, *Msg) {
 
 mkUserObject(*Field, *Name, *Zone) =
   if (*Zone == '') then
-    ipc_jsonObject(*Field, list(ipc_jsonString('name', *Name),
-                                ipc_jsonString('zone', $rodsZoneClient)))
+    ipcJson_object(
+      *Field, list(ipcJson_string('name', *Name), ipcJson_string('zone', $rodsZoneClient)) )
   else
-    ipc_jsonObject(*Field, list(ipc_jsonString('name', *Name),
-                                ipc_jsonString('zone', *Zone)))
+    ipcJson_object(*Field, list(ipcJson_string('name', *Name), ipcJson_string('zone', *Zone)))
 
 
 _ipc_mkAuthorField(*Name, *Zone) = mkUserObject('author', *Name, *Zone)
 
 
-mkEntityField(*UUID) = ipc_jsonString('entity', *UUID)
+mkEntityField(*UUID) = ipcJson_string('entity', *UUID)
 
 
-mkPathField(*Path) = ipc_jsonString('path', *Path)
+mkPathField(*Path) = ipcJson_string('path', *Path)
 
 
-mkAvuObject(*Field, *Name, *Value, *Unit) =
-  ipc_jsonObject(*Field, list(ipc_jsonString('attribute', *Name),
-                              ipc_jsonString('value', *Value),
-                              ipc_jsonString('unit', *Unit)))
+mkAvuObject(*Field, *Name, *Value, *Unit) = ipcJson_object(
+  *Field, 
+  list(
+    ipcJson_string('attribute', *Name), 
+    ipcJson_string('value', *Value), 
+    ipcJson_string('unit', *Unit) ) )
 
 
 _getAmqpEntityType(*ItemType) =
@@ -157,32 +158,36 @@ _getAmqpEntityType(*ItemType) =
 
 
 sendCollectionAdd(*Collection, *Path) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   mkEntityField(*Collection),
-                                   mkPathField(*Path)))
+  let *msg = ipcJson_document(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      mkEntityField(*Collection),
+      mkPathField(*Path) ) )
   in sendMsg(COLLECTION_TYPE ++ '.add', *msg)
 
 
 sendDataObjectOpen(*Data) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   mkEntityField(*Data),
-                                   mkPathField($objPath),
-                                   ipc_jsonNumber('size', $dataSize),
-                                   ipc_jsonString('timestamp', getTimestamp())))
+  let *msg = ipcJson_document(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      mkEntityField(*Data),
+      mkPathField($objPath),
+      ipcJson_number('size', $dataSize),
+      ipcJson_string('timestamp', getTimestamp()) ) )
   in sendMsg(DATA_OBJECT_TYPE ++ '.open', *msg)
 
 
 _ipc_sendDataObjectAdd(
   *AuthorName, *AuthorZone, *Data, *Path, *OwnerName, *OwnerZone, *Size, *Type
 ) {
-  *msg = ipc_jsonDocument(
+  *msg = ipcJson_document(
     list(
       _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       mkEntityField(*Data),
       mkPathField(*Path),
       mkUserObject('creator', *OwnerName, *OwnerZone),
-      ipc_jsonNumber('size', *Size),
-      ipc_jsonString('type', *Type)));
+      ipcJson_number('size', *Size),
+      ipcJson_string('type', *Type) ) );
 
   sendMsg(DATA_OBJECT_TYPE ++ '.add', *msg);
 }
@@ -192,32 +197,36 @@ _ipc_sendDataObjectAdd(
 _ipc_sendDataObjectMod(
   *AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
 ) {
-  *msg = ipc_jsonDocument(
+  *msg = ipcJson_document(
     list(
       _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       mkEntityField(*Object),
       mkUserObject('creator', *OwnerName, *OwnerZone),
-      ipc_jsonNumber('size', *Size),
-      ipc_jsonString('type', *Type) ) );
+      ipcJson_number('size', *Size),
+      ipcJson_string('type', *Type) ) );
 
   sendMsg(DATA_OBJECT_TYPE ++ '.mod', *msg);
 }
 
 
 sendCollectionInheritModified(*Recursive, *Inherit, *Collection) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   mkEntityField(*Collection),
-                                   ipc_jsonBoolean('recursive', *Recursive),
-                                   ipc_jsonBoolean('inherit', *Inherit)))
+  let *msg = ipcJson_document(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      mkEntityField(*Collection),
+      ipcJson_boolean('recursive', *Recursive),
+      ipcJson_boolean('inherit', *Inherit) ) )
   in sendMsg(COLLECTION_TYPE ++ '.acl.mod', *msg)
 
 
 sendCollectionAclModified(*Recursive, *AccessLevel, *Username, *Zone, *Collection) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   mkEntityField(*Collection),
-                                   ipc_jsonBoolean('recursive', *Recursive),
-                                   ipc_jsonString('permission', *AccessLevel),
-                                   mkUserObject('user', *Username, *Zone)))
+  let *msg = ipcJson_document(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      mkEntityField(*Collection),
+      ipcJson_boolean('recursive', *Recursive),
+      ipcJson_string('permission', *AccessLevel),
+      mkUserObject('user', *Username, *Zone) ) )
   in sendMsg(COLLECTION_TYPE ++ '.acl.mod', *msg)
 
 
@@ -235,74 +244,88 @@ sendCollectionAccessModified(*Recursive, *AccessLevel, *Username, *Zone, *Collec
 
 
 sendDataObjectAclModified(*AccessLevel, *Username, *Zone, *Data) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   mkEntityField(*Data),
-                                   ipc_jsonString('permission', *AccessLevel),
-                                   mkUserObject('user', *Username, *Zone)))
+  let *msg = ipcJson_document(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      mkEntityField(*Data),
+      ipcJson_string('permission', *AccessLevel),
+      mkUserObject('user', *Username, *Zone) ) )
   in sendMsg(DATA_OBJECT_TYPE ++ '.acl.mod', *msg)
 
 
 # Publish a data-object.sys-metadata.mod message to AMQP exchange
 _ipc_sendDataObjectMetadataModified(*AuthorName, *AuthorZone, *Data) {
-  *msg = ipc_jsonDocument(list(_ipc_mkAuthorField(*AuthorName, *AuthorZone), mkEntityField(*Data)));
+  *msg = ipcJson_document(list(_ipc_mkAuthorField(*AuthorName, *AuthorZone), mkEntityField(*Data)));
   sendMsg(DATA_OBJECT_TYPE ++ '.sys-metadata.mod', *msg);
 }
 
 
 sendEntityMove(*EntityType, *Entity, *OldPath, *NewPath) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   mkEntityField(*Entity),
-                                   ipc_jsonString('old-path', *OldPath),
-                                   ipc_jsonString('new-path', *NewPath)))
+  let *msg = ipcJson_document(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      mkEntityField(*Entity),
+      ipcJson_string('old-path', *OldPath),
+      ipcJson_string('new-path', *NewPath) ) )
   in sendMsg(*EntityType ++ '.mv', *msg)
 
 
 sendEntityRemove(*EntityType, *Entity, *Path) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   mkEntityField(*Entity),
-                                   ipc_jsonString('path', *Path)))
+  let *msg = ipcJson_document(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      mkEntityField(*Entity),
+      ipcJson_string('path', *Path) ) )
   in sendMsg(*EntityType ++ '.rm', *msg)
 
 
 sendAvuMod(*ItemType, *Item, *OldName, *OldValue, *OldUnit, *NewName, *NewValue, *NewUnit) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   mkEntityField(*Item),
-                                   mkAvuObject('old-metadatum', *OldName, *OldValue, *OldUnit),
-                                   mkAvuObject('new-metadatum', *NewName, *NewValue, *NewUnit)))
+  let *msg = ipcJson_document(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      mkEntityField(*Item),
+      mkAvuObject('old-metadatum', *OldName, *OldValue, *OldUnit),
+      mkAvuObject('new-metadatum', *NewName, *NewValue, *NewUnit) ) )
   in sendMsg(_getAmqpEntityType(*ItemType) ++ '.metadata.mod', *msg)
 
 
 sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   mkEntityField(*Item),
-                                   mkAvuObject('metadatum', *AName, *AValue, *AUnit)))
+  let *msg = ipcJson_document(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      mkEntityField(*Item),
+      mkAvuObject('metadatum', *AName, *AValue, *AUnit) ) )
   in sendMsg(_getAmqpEntityType(*ItemType) ++ '.metadata.' ++ *Option, *msg)
 
 
 sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   ipc_jsonString('pattern', *ItemName),
-                                   mkAvuObject('metadatum', *AName, *AValue, *AUnit)))
+  let *msg = ipcJson_document(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      ipcJson_string('pattern', *ItemName),
+      mkAvuObject('metadatum', *AName, *AValue, *AUnit) ) )
   in sendMsg(DATA_OBJECT_TYPE ++ '.metadata.addw', *msg)
 
 
 sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit) =
-  let *msg = ipc_jsonDocument(list(_ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-                                   mkEntityField(*Item),
-                                   ipc_jsonString('attribute-pattern', *AName),
-                                   ipc_jsonString('value-pattern', *AValue),
-                                   ipc_jsonString('unit-pattern', *AUnit)))
+  let *msg = ipcJson_document(
+    list(
+      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      mkEntityField(*Item),
+      ipcJson_string('attribute-pattern', *AName),
+      ipcJson_string('value-pattern', *AValue),
+      ipcJson_string('unit-pattern', *AUnit) ) )
   in sendMsg(_getAmqpEntityType(*ItemType) ++ '.metadata.rmw', *msg)
 
 
 sendAvuCopy(*SourceItemType, *TargetItemType, *Source, *Target) =
   let *srcType = _getAmqpEntityType(*SourceItemType) in
-  let *msg = ipc_jsonDocument(
+  let *msg = ipcJson_document(
     list(
       _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-      ipc_jsonString('source', *Source),
-      ipc_jsonString('source-type', *srcType),
-      ipc_jsonString('destination', *Target) ) )
+      ipcJson_string('source', *Source),
+      ipcJson_string('source-type', *srcType),
+      ipcJson_string('destination', *Target) ) )
   in sendMsg(_getAmqpEntityType(*TargetItemType) ++ '.metadata.cp', *msg)
 
 

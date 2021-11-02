@@ -1,4 +1,13 @@
 ---
+- name: configure | ensure vm.swappiness is 5
+  ansible.posix.sysctl:
+    name: vm.swappiness
+    value: '5'
+    state: present
+    sysctl_set: yes
+  tags:
+    - no_testing
+
 - name: configure | ensure postgres user owns home dir
   file:
     path: /var/lib/postgresql

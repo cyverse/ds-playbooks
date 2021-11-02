@@ -5,7 +5,12 @@
   vars_files:
     - ../roles/postgres12/defaults/main.yml
   vars:
-    - cyverse_conf: "{{ lookup('template', '../roles/postgres12/templates/cyverse.conf.j2') }}"
+    # These variables have no defined defaults
+    pg_replication_user: ''
+    pg_replication_pass: ''
+
+    cyverse_conf: "{{ lookup('template', '../roles/postgres12/templates/cyverse.conf.j2') }}"
+    pgpass: "{{ lookup('template', '../roles/postgres12/templates/pgpass.j2') }}"
   tasks:
     - name: verify config values expand correctly in cyverse.conf
       assert:
@@ -27,12 +32,12 @@
           - cyverse_conf is search('random_page_cost = 4.0' | regex_escape)
           - cyverse_conf is search('shared_buffers = 128MB')
           - cyverse_conf is search('standard_conforming_strings = on')
-          - cyverse_conf is not search('^wal_keep_segments = ')
+          - cyverse_conf is not search('^wal_keep_segments =')
           - cyverse_conf is search('work_mem = 4MB')
 
-    - name: test default .pgpass expansion
-      debug:
-        msg: TODO implement
+    - name: test .pgpass expansion
+      assert:
+        that: pgpass is search('\n' ~ ('*:5432:*:'|regex_escape) ~ '[^:]*:[^:]*$')
 
 
 - name: test postgresql12 role custom var template expansion
@@ -41,7 +46,10 @@
   run_once: true
   tasks:
     - debug:
-        msg: TODO implement
+        msg: TODO test cyverse.conf expansion
+
+    - debug:
+        msg: TODO test pgpass expansion
 
 
 - name: test postgresql12 role
@@ -64,19 +72,19 @@
       changed_when: false
 
     - debug:
-        msg: TODO test cyverse.conf template expansion
-
-    - debug:
-        msg: TODO test cyverse.conf deposition
-
-    - debug:
-        msg: TODO test configure | ensure block in pg_hba.conf exists
+        msg: TODO test configure | ensure postgres user owns home dir
 
     - debug:
         msg: TODO test configure | ensure archive dir exists
 
     - debug:
-        msg: TODO test configure | template pgpass file
+        msg: TODO test configure | cyverse.conf deposition
+
+    - debug:
+        msg: TODO test configure | ensure block in pg_hba.conf exists
+
+    - debug:
+        msg: TODO test configure | pgpass deposition
 
     - debug:
         msg: TODO test replication.yml

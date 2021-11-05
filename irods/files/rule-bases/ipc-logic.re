@@ -172,7 +172,7 @@ sendDataObjectOpen(*Data) =
       _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
       mkEntityField(*Data),
       mkPathField($objPath),
-      ipcJson_number('size', $dataSize),
+      ipcJson_number('size', double($dataSize)),
       ipcJson_string('timestamp', getTimestamp()) ) )
   in sendMsg(DATA_OBJECT_TYPE ++ '.open', *msg)
 
@@ -186,7 +186,7 @@ _ipc_sendDataObjectAdd(
       mkEntityField(*Data),
       mkPathField(*Path),
       mkUserObject('creator', *OwnerName, *OwnerZone),
-      ipcJson_number('size', *Size),
+      ipcJson_number('size', double(*Size)),
       ipcJson_string('type', *Type) ) );
 
   sendMsg(DATA_OBJECT_TYPE ++ '.add', *msg);
@@ -202,7 +202,7 @@ _ipc_sendDataObjectMod(
       _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       mkEntityField(*Object),
       mkUserObject('creator', *OwnerName, *OwnerZone),
-      ipcJson_number('size', *Size),
+      ipcJson_number('size', double(*Size)),
       ipcJson_string('type', *Type) ) );
 
   sendMsg(DATA_OBJECT_TYPE ++ '.mod', *msg);

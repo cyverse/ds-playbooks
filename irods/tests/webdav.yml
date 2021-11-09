@@ -39,6 +39,8 @@
           - >-
             purgeman_conf 
             is search('PURGEMAN_AMQP_HOST=dstesting_amqp_1.dstesting_default' | regex_escape)
+          - purgeman_conf is search('PURGEMAN_AMQP_PORT=5672')
+          - purgeman_conf is search('PURGEMAN_AMQP_VHOST=/')
 
     - debug:
         msg: TODO verify remainder fo purgeman.conf expands correctly

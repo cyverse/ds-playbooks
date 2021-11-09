@@ -9,6 +9,7 @@
   vars:
     head: "{{ lookup('template', '../templates/webdav/etc/httpd/head.html.j2') }}"
     default_vcl: "{{ lookup('template', '../templates/webdav/etc/varnish/default.vcl.j2') }}"
+    purgeman_conf: "{{ lookup('template', '../templates/webdav/etc/purgeman/purgeman.conf.j2') }}"
     varnish_service: >-
       {{ lookup('template', '../templates/webdav/usr/lib/systemd/system/varnish.service.j2') }}
   tasks:
@@ -31,6 +32,16 @@
           - >-
             default_vcl
             is search('if (std.integer(beresp.http.Content-Length, 0) > 10485760)' | regex_escape)
+
+    - name: verify purgeman.conf expands correctly
+      assert:
+        that:
+          - >-
+            purgeman_conf 
+            is search('PURGEMAN_AMQP_HOST=dstesting_amqp_1.dstesting_default' | regex_escape)
+
+    - debug:
+        msg: TODO verify remainder fo purgeman.conf expands correctly
 
     - name: verify varnish.service expands correctly
       assert:

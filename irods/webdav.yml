@@ -484,8 +484,8 @@
             state: absent
     
     - name: configure purgeman
-      copy:
-        src: files/webdav/etc/purgeman/purgeman.conf
+      template:
+        src: templates/webdav/etc/purgeman/purgeman.conf.j2
         dest: /etc/purgeman/purgeman.conf
         owner: purgeman
         mode: 0660

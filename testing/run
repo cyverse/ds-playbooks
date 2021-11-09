@@ -58,6 +58,8 @@ EOF
 }
 
 
+set -e
+
 if [[ "$OSTYPE" == "darwin"* ]]
 then
   readonly ExecName=$(greadlink -f "$0")
@@ -141,7 +143,7 @@ do_run()
 
   if "$BaseDir"/env/controller "$Cfg" start
   then
-    "$BaseDir"/ansible-tester/run "$doInspect" "$pretty" "$playbooks" "$hosts" "$playbook"
+    "$BaseDir"/ansible-tester/run "$doInspect" "$pretty" '' "$playbooks" "$hosts" "$playbook"
   fi
 
   "$BaseDir"/env/controller "$Cfg" stop
@@ -219,8 +221,6 @@ resolve_playbook_dir()
   printf '%s' "$playbooks"
 }
 
-
-set -e
 
 # shellcheck disable=SC1090
 . "$Cfg"

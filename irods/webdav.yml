@@ -484,8 +484,8 @@
             state: absent
     
     - name: configure purgeman
-      copy:
-        src: files/webdav/etc/purgeman/purgeman.conf
+      template:
+        src: templates/webdav/etc/purgeman/purgeman.conf.j2
         dest: /etc/purgeman/purgeman.conf
         owner: purgeman
         mode: 0660
@@ -493,9 +493,9 @@
         - restart purgeman
 
     - name: setup purgeman service
-      template:
-        src: "templates/webdav/usr/lib/systemd/system/{{ item }}.j2"
-        dest: "/usr/lib/systemd/system/{{ item }}"
+      copy:
+        src: files/webdav/usr/lib/systemd/system/purgeman.service
+        dest: /usr/lib/systemd/system
       with_items:
         - purgeman.service
       notify:

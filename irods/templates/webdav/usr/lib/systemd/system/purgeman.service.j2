@@ -1,0 +1,16 @@
+[Unit]
+Description=Purgeman, a iRODS web-cache invalidator
+After=network-online.target nss-lookup.target
+
+[Service]
+Type=forking
+KillMode=process
+
+ExecStart=/usr/bin/purgeman
+ExecReload=
+
+EnvironmentFile=/etc/purgeman/purgeman.conf
+User=purgeman
+
+[Install]
+WantedBy=multi-user.target

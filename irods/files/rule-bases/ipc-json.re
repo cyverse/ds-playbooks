@@ -50,6 +50,7 @@ ipcJson_number(*Label, *Val) = _ipcJson_mkField(*Label, '*Val')
 #   *Label - the name of the field
 #   *Val - the value of the field
 #
+ipcJson_string: string * string -> string
 ipcJson_string(*Label, *Val) = _ipcJson_mkField(*Label, _ipcJson_encodeString(*Val))
 
 # construct a serialized JSON array field from its serialized elements

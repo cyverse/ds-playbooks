@@ -1,9 +1,4 @@
 ---
-- include_tasks: test_pkg_installed.yml
-  vars:
-    pkg: irods-runtime
-    version: 4.1.10
-
 - name: retrieve installed package info
   package_facts:
 
@@ -25,6 +20,15 @@
     - irods-icommands-netcdf
     - irods-microservice-plugin-netcdf
     - irods-api-plugin-netcdf
+
+- include_tasks: test_pkg_installed.yml
+  vars:
+    pkg: irods-runtime
+    version: 4.2.8
+  with_items:
+    - irods-netcdf-client_modules
+    - irods-netcdf-icommands
+    - irods-netcdf-server_modules
 
 - name: test ensure msiSetAVU microservice is absent
   stat:

@@ -2,14 +2,45 @@
 - name: provision for iRODS
   hosts: irods:!unmanaged_systems
   become: true
+  collections:
+    - community.general
   vars:
     # NB: The rpm and yum bindings for the package module require Python 2 in
     #     Ansible 2.9.6
     ansible_python_interpreter: /usr/bin/python
   tasks:
+    - name: install iRODS package repository signing key
+      rpm_key:
+        key: https://packages.irods.org/irods-signing-key.asc
+
+    - name: install iRODS repository
+      get_url:
+        url: https://packages.irods.org/renci-irods.yum.repo
+        dest: /etc/yum.repos.d/renci-irods.yum.repo
+
+    - name: force import of GPG key
+      shell: |
+        if ! resp="$(yum --assumeyes updateinfo)"; then
+          exit 1
+        fi
+        if [[ "$resp" =~ irods-signing-key ]]; then
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: lock irods packages to required version
+      yum_versionlock:
+        name:
+          - irods-icommands-{{ _irods_version }}
+          - irods-runtime-{{ _irods_version }}
+          - irods-server-{{ _irods_version }}
+        state: present
+
     - name: install required packages
       package:
         name:
+          - irods-server
           - uuidd
           - which
         state: present

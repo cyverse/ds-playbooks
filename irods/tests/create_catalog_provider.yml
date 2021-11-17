@@ -53,14 +53,46 @@
       changed_when: false
       failed_when: resp.stdout is version('1.2', '>=')
 
-    - import_tasks: tasks/test_install_ies_pkgs.yml
+    - name: test lock irods-database-plugin-postgres to required version
+      shell: |
+        if ! yum versionlock status | grep --quiet irods-database-plugin-postgres; then
+          printf 'irods-database-plugin-postgres not locked\n' >&2
+          exit 1
+        elif info="$(yum --quiet list installed irods-database-plugin-postgres | tail --lines=+2)"
+        then
+          readarray -t versions <<< "$info"
+          for version in "${versions[@]}"; do
+            read _ verNum _ <<< "$version"
+            if ! [[ "$verNum" =~ 4\.2\.8 ]]; then
+              printf 'found version %s\n' "$verNum" >&2
+              exit 1
+            fi
+          done
+        fi
+      changed_when: false
+
+    - include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: unixODBC
+
+    - include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: irods-database-plugin-postgres
+        version: 4.2.8
 
     - import_tasks: tasks/test_install_plugins.yml
 
+    - include_tasks: tasks/test_irods_ownership.yml
+      vars:
+        dir: /etc/irods
+
+    - include_tasks: tasks/test_irods_ownership.yml
+      vars:
+        dir: /var/lib/irods
+
     - name: test correct psql version
       assert:
-        that:
-          - ansible_env.PATH is search('/usr/pgsql-12/bin' | regex_escape)
+        that: ansible_env.PATH is search('/usr/pgsql-12/bin' | regex_escape)
 
 
 - import_playbook: cfg_irods.yml
@@ -82,6 +114,3 @@
 
 
 - import_playbook: irods_runtime_init.yml
-
-
-- import_playbook: bisque_usage.yml

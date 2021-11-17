@@ -13,12 +13,12 @@ set -o errexit -o nounset -o pipefail
 
 
 main() {
-	if [[ "$#" -lt 1 ]]; then
+	if (( $# < 1 )); then
 		printf 'The OS name is required as the first argument\n' >&2
 		return 1
 	fi
 
-	if [[ "$#" -lt 2 ]]; then
+	if (( $# < 2 )); then
 		printf 'The OS version number is required as the second argument\n' >&2
 		return 1
 	fi
@@ -70,7 +70,7 @@ install_centos_packages() {
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
 
 	yum --assumeyes install \
-		ca-certificates iproute iptables-services libselinux-python openssh-server python2-pip sudo
+		ca-certificates iproute iptables-services jq libselinux-python openssh-server python2-pip sudo
 }
 
 
@@ -101,7 +101,7 @@ install_ubuntu_packages() {
 	apt-get install --yes --quiet=2 apt-utils 2> /dev/null
 
 	apt-get install --yes --quiet=2 \
-		ca-certificates iproute2 openssh-server python3-apt python3-pip sudo
+		ca-certificates iproute2 jq openssh-server python3-apt python3-pip sudo
 }
 
 

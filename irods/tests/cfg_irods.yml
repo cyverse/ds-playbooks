@@ -75,12 +75,6 @@
         - rm-trash
         - set-uuid
 
-    - name: Verify .odbc.ini only on catalog service providers
-      stat:
-        path: /var/lib/irods/.odbc.ini
-      register: response
-      failed_when: response.stat.exists != ((inventory_hostname in groups['irods_catalog']) | bool)
-
     - name: Verify database_config.json does not exist
       stat:
         path: /etc/irods/database_config.json
@@ -182,24 +176,6 @@
               - server_config.zone_name == 'testing'
               - server_config.zone_port == 1247
               - server_config.zone_user == 'rods'
-
-        - name: retrieve encoded .odbc.ini
-          slurp:
-            src: /var/lib/irods/.odbc.ini
-          register: oEncoded
-
-        - name: decode .odbc.ini
-          set_fact:
-            odbc: "{{ oEncoded.content | b64decode }}"
-
-        - name: verify .odbc.ini contents
-          assert:
-            that:
-              - odbc is search('Port = 5432')
-              - >-
-                odbc
-                is search(
-                  'Servername = dstesting_dbms_configured_1.dstesting_default' | regex_escape )
 
     - when: inventory_hostname in groups['irods_resource']
       block:

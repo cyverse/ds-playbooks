@@ -41,9 +41,9 @@ main()
 {
   trap finish_up EXIT
 
-  if [ "$#" -lt 5 ]
+  if [ "$#" -lt 9 ]
   then
-    printf 'requires five input parameters\n' >&2
+    printf 'requires nine input parameters\n' >&2
     return 1
   fi
 

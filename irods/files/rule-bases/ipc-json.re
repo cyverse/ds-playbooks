@@ -35,40 +35,6 @@ _ipcJson_encodeString(*Str) =
 _ipcJson_mkField: string * string -> string
 _ipcJson_mkField(*Label, *SerialVal) = '"' ++ *Label ++ '":' ++ *SerialVal
 
-# construct a serialized JSON number field. This version performs no error checking.
-#
-# Parameters:
-#   *Label - the name of the field
-#   *Val - the value of the field
-#
-ipcJson_number: string * double -> string
-ipcJson_number(*Label, *Val) = _ipcJson_mkField(*Label, '*Val')
-
-# construct a serialized JSON string field
-#
-# Parameters:
-#   *Label - the name of the field
-#   *Val - the value of the field
-#
-ipcJson_string: string * string -> string
-ipcJson_string(*Label, *Val) = _ipcJson_mkField(*Label, _ipcJson_encodeString(*Val))
-
-# construct a serialized JSON object field from its serialized fields
-#
-# Parameters:
-#   *Label - the name of the object field
-#   *SerialFields - the list of pre-serialized fields ot include in the object
-#
-ipcJson_object(*Label, *SerialFields) = _ipcJson_mkField(
-  *Label, _ipcJson_encodeObject(*SerialFields) )
-
-# construct a serialized JSON document from its serialized fields
-#
-# Parameters:
-#   *SerialFields - A list of pre-serialized fields to include in the document
-#
-ipcJson_document(*SerialFields) = _ipcJson_encodeObject(*SerialFields)
-
 # construct a serialized JSON object field from a Boolean value
 #
 # Parameters:
@@ -82,3 +48,37 @@ ipcJson_boolean(*Label, *flag) {
     _ipcJson_mkField(*Label, "false");
   }
 }
+
+# construct a serialized JSON document from its serialized fields
+#
+# Parameters:
+#   *SerialFields - A list of pre-serialized fields to include in the document
+#
+ipcJson_document(*SerialFields) = _ipcJson_encodeObject(*SerialFields)
+
+# construct a serialized JSON number field. This version performs no error checking.
+#
+# Parameters:
+#   *Label - the name of the field
+#   *Val - the value of the field
+#
+ipcJson_number: string * double -> string
+ipcJson_number(*Label, *Val) = _ipcJson_mkField(*Label, '*Val')
+
+# construct a serialized JSON object field from its serialized fields
+#
+# Parameters:
+#   *Label - the name of the object field
+#   *SerialFields - the list of pre-serialized fields ot include in the object
+#
+ipcJson_object(*Label, *SerialFields) = _ipcJson_mkField(
+  *Label, _ipcJson_encodeObject(*SerialFields) )
+
+# construct a serialized JSON string field
+#
+# Parameters:
+#   *Label - the name of the field
+#   *Val - the value of the field
+#
+ipcJson_string: string * string -> string
+ipcJson_string(*Label, *Val) = _ipcJson_mkField(*Label, _ipcJson_encodeString(*Val))

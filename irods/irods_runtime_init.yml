@@ -18,7 +18,7 @@
     - name: ensure public group's trash is correct
       irods_move:
         source: /{{ _irods_zone_name }}/trash/home/public
-        destination: //{{ _irods_zone_name }}/trash/home/shared
+        destination: /{{ _irods_zone_name }}/trash/home/shared
 
     - name: ensure CyVerse curated collection base collection exists
       become: false

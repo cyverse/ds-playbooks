@@ -35,11 +35,12 @@ finish_up()
   rm --force "$Changes"
   exit "$exitCode"
 }
-trap finish_up EXIT
 
 
 main()
 {
+  trap finish_up EXIT
+
   if [ "$#" -lt 5 ]
   then
     printf 'requires five input parameters\n' >&2
@@ -135,7 +136,7 @@ set_permissions()
     permLabel=own
   fi
 
-  grep --null-data --regexp "^$permLabel" \
+  grep --null-data --regexp "^$permLabel" || true \
     | extract_path \
     | ssh -q -p "$sshIrodsPort" "$sshIrodsUser"@"$irodsHost" \
       "sudo --login --user '$irodsSvcUser' \\

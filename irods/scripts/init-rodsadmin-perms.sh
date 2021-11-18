@@ -25,16 +25,7 @@
 shopt -s lastpipe
 set -o errexit -o nounset -o pipefail
 
-readonly Changes=$(mktemp)
-
-
-finish_up()
-{
-  local exitCode="$?"
-
-  rm --force "$Changes"
-  exit "$exitCode"
-}
+readonly CHANGES=$(mktemp)
 
 
 main()
@@ -57,16 +48,25 @@ main()
   local sshIrodsUser="$8"
   local zone="$9"
 
-  gather_changes "$dbmsHost" "$sshDbmsPort" "$sshDbmsUser" "$dbmsSvcUser" "$zone" > "$Changes"
+  gather_changes "$dbmsHost" "$sshDbmsPort" "$sshDbmsUser" "$dbmsSvcUser" "$zone" > "$CHANGES"
 
-  if [ -s "$Changes" ]
+  if [ -s "$CHANGES" ]
   then
-    set_permissions "$irodsHost" "$sshIrodsPort" "$sshIrodsUser" "$irodsSvcUser" write < "$Changes"
-    set_permissions "$irodsHost" "$sshIrodsPort" "$sshIrodsUser" "$irodsSvcUser" own < "$Changes"
+    set_permissions "$irodsHost" "$sshIrodsPort" "$sshIrodsUser" "$irodsSvcUser" write < "$CHANGES"
+    set_permissions "$irodsHost" "$sshIrodsPort" "$sshIrodsUser" "$irodsSvcUser" own < "$CHANGES"
     printf true
   else
     printf false
   fi
+}
+
+
+finish_up()
+{
+  local exitCode="$?"
+
+  rm --force "$CHANGES"
+  exit "$exitCode"
 }
 
 
@@ -111,7 +111,7 @@ CREATE INDEX all_entities_idx ON all_entities(id);
 CREATE TEMPORARY TABLE all_with_perms (path, actual_perm, expected_perm) AS
 SELECT a.path, r.perm, CASE WHEN a.path ~ '^/$zone/[^/]*/.*' THEN 'own' ELSE 'modify object' END
 FROM all_entities AS a LEFT JOIN rodsadmin_perms AS r ON r.object_id = a.id
-WHERE a.path ~ '^/($zone(/.*)?)?\$';
+WHERE a.path ~ E'^/($zone(/.*)?)?\$';
 
 SELECT expected_perm, path FROM all_with_perms WHERE actual_perm IS DISTINCT FROM expected_perm;
 
@@ -136,7 +136,7 @@ set_permissions()
     permLabel=own
   fi
 
-  grep --null-data --regexp "^$permLabel" || true \
+  sed --null-data --quiet '/^'"$permLabel"'/p' \
     | extract_path \
     | ssh -q -p "$sshIrodsPort" "$sshIrodsUser"@"$irodsHost" \
       "sudo --login --user '$irodsSvcUser' \\

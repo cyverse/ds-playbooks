@@ -11,8 +11,7 @@
 
 set -o errexit -o nounset -o pipefail
 
-if [[ "$OSTYPE" == "darwin"* ]]
-then
+if [[ "$OSTYPE" == "darwin"* ]]; then
   readonly ExecName=$(greadlink -f "$0")
 else
   readonly ExecName=$(readlink --canonicalize "$0")
@@ -24,23 +23,21 @@ main()
   local baseDir=$(dirname "$ExecName")
   local cfg="$@"
 
-  if [ -z "$cfg" ]
-  then
+  if [ -z "$cfg" ]; then
     printf 'An environment variable include file is needed.\n' >&2
     return 1
   fi
 
-  if ! [[ "$cfg" =~ ^/ ]]
-  then
+  if ! [[ "$cfg" =~ ^/ ]]; then
     cfg="$(pwd)"/"$cfg"
   fi
 
   . "$cfg"
 
-  docker build --file "$baseDir"/base/Dockerfile.centos7 --tag test-env-base:centos7 "$baseDir"
-
-  docker build --file "$baseDir"/base/Dockerfile.ubuntu2004 --tag test-env-base:ubuntu2004 \
-    "$baseDir"
+  local os
+  for os in centos7 ubuntu1804 ubuntu2004; do
+    docker build --file "$baseDir"/base/Dockerfile."$os" --tag test-env-base:"$os" "$baseDir"
+  done
 
   docker-compose --file "$baseDir"/docker-compose.yml --project-name "$ENV_NAME" build
 }

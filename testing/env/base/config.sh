@@ -101,7 +101,18 @@ install_ubuntu_packages() {
 	apt-get install --yes --quiet=2 apt-utils 2> /dev/null
 
 	apt-get install --yes --quiet=2 \
-		ca-certificates iproute2 jq openssh-server python3-apt python3-pip sudo
+		ca-certificates \
+		dmidecode \
+		iproute2 \
+		jq \
+		openssh-server \
+		python3-apt \
+		python3-dns \
+		python3-pip \
+		python3-requests \
+		python3-selinux \
+		python3-virtualenv \
+		sudo
 }
 
 

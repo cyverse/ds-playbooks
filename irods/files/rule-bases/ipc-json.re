@@ -39,10 +39,10 @@ _ipcJson_mkField(*Label, *SerialVal) = '"' ++ *Label ++ '":' ++ *SerialVal
 #
 # Parameters:
 #   *Label - the name of the object field
-#   *flag - the Boolean value of the field.
+#   *Flag - the Boolean value of the field.
 #
-ipcJson_boolean(*Label, *flag) {
-  if (*flag) {
+ipcJson_boolean(*Label, *Flag) {
+  if (*Flag) {
     _ipcJson_mkField(*Label, "true");
   } else {
     _ipcJson_mkField(*Label, "false");

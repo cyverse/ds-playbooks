@@ -5,7 +5,7 @@
   tasks:
     - name: check if svc acnt exists
       shell: |
-        if id --user irods &> /dev/null; then
+        if id --user irods > /dev/null 2>&1; then
           printf exists
         else
           printf missing
@@ -19,7 +19,7 @@
         if ! status="$(/var/lib/irods/irodsctl status)"; then
           exit 1
         fi
-        if ! grep --quiet 'No iRODS servers running' <<<"$status"; then
+        if ! echo "$status" | grep --quiet 'No iRODS servers running'; then
           exit 1
         fi
       changed_when: false

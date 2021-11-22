@@ -2,7 +2,7 @@
 # Stops iRODS. The variable stop_irods_result holds the change value
 - name: check if svc acnt exists
   shell: |
-    if id --user {{ _irods_service_account_name }} &> /dev/null; then
+    if id --user {{ _irods_service_account_name }} > /dev/null 2>&1; then
       printf exists
     else
       printf missing

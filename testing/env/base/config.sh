@@ -27,7 +27,7 @@ main() {
 	local version="$2"
 
 	# Install required packages
-	if [[ "$os" = centos ]]; then
+	if [[ "$os" == centos ]]; then
 		install_centos_packages "$version"
 	elif [[ "$os" == debian ]]; then
 		install_debian_packages "$version"
@@ -47,6 +47,11 @@ main() {
 
 	if ! [[ -e /etc/ssh/ssh_host_rsa_key ]]; then
 		ssh-keygen -q -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
+	fi
+
+	if [[ "$os" == centos ]]; then
+		ssh-keygen -q -f /etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa
+		ssh-keygen -q -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519
 	fi
 
 	update_pam_sshd_config
@@ -71,7 +76,17 @@ install_centos_packages() {
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
 
 	yum --assumeyes install \
-		ca-certificates iproute iptables-services jq libselinux-python openssh-server python2-pip sudo
+		ca-certificates \
+		dmidecode \
+		iproute \
+		iptables-services \
+		jq \
+		libselinux-python \
+		openssh-server \
+		python-pip \
+		python-requests \
+		python-virtualenv \
+		sudo
 }
 
 

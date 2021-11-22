@@ -1,7 +1,0 @@
----
-- name: test ensure correct timezone
-  hosts: all:!unmanaged_systems:!localhost
-  tasks:
-    - name: check timezone is MST
-      shell: '[ $(date +"%Z") = MST ]'
-      changed_when: false

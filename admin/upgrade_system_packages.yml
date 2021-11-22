@@ -3,12 +3,6 @@
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - name: ensure e2fsprogs is never updated by yum
-      when: not _update_e2fsprogs
-      lineinfile:
-        name: /etc/yum.conf
-        line: exclude=e2fsprogs* libcom_err-* libss-*
-
     - name: update apt cache on Ubuntu machines
       when: ansible_distribution == 'Ubuntu'
       apt:

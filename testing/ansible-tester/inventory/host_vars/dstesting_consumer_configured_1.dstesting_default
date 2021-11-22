@@ -26,5 +26,3 @@ irods_storage_resources:
   - name: terraref
     vault: /var/lib/irods/terraref_vault
     context: minimum_free_space_for_create_in_bytes=1048576
-
-update_e2fsprogs: false

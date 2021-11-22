@@ -31,9 +31,6 @@ main() {
 		install_centos_packages "$version"
 	elif [[ "$os" == debian ]]; then
 		install_debian_packages "$version"
-
-		# Allow root to login without a password
- 		sed --in-place 's/nullok_secure/nullok/' /etc/pam.d/common-auth
 	else
 		install_ubuntu_packages "$version"
 	fi
@@ -52,13 +49,17 @@ main() {
 		ssh-keygen -q -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
 	fi
 
-	sed --in-place '/session    required     pam_loginuid.so/d' /etc/pam.d/sshd
+	update_pam_sshd_config
 	update_sshd_config
 	mkdir --parents /var/run/sshd
 	mkdir --mode 0700 /root/.ssh
 }
 
 
+# Install the required CentOS packages.
+#
+# Parameters:
+#  version  the CentOS major distribution version number
 install_centos_packages() {
 	local version="$1"
 
@@ -113,6 +114,18 @@ install_ubuntu_packages() {
 		python3-selinux \
 		python3-virtualenv \
 		sudo
+}
+
+
+update_pam_sshd_config() {
+	cat <<'EOF' | sed --in-place --file - /etc/pam.d/sshd
+/@include common-auth/{
+	i auth	sufficient	pam_permit.so
+	:a
+	n
+	ba
+}
+EOF
 }
 
 

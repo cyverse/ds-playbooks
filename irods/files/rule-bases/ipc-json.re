@@ -1,5 +1,5 @@
 # This is a collection of functions and rules for constructing serialized JSON 
-# documents.
+# documents. It does not support arrays yet.
 #
 # © 2021 The Arizona Board of Regents on behalf of The University of Arizona. 
 # For license information, see https://cyverse.org/license.
@@ -39,15 +39,9 @@ _ipcJson_mkField(*Label, *SerialVal) = '"' ++ *Label ++ '":' ++ *SerialVal
 #
 # Parameters:
 #   *Label - the name of the object field
-#   *Flag - the Boolean value of the field.
+#   *Val - the Boolean value of the field.
 #
-ipcJson_boolean(*Label, *Flag) {
-  if (*Flag) {
-    _ipcJson_mkField(*Label, "true");
-  } else {
-    _ipcJson_mkField(*Label, "false");
-  }
-}
+ipcJson_boolean(*Label, *Val) = _ipcJson_mkField(*Label, if *Val then 'true' else 'false')
 
 # construct a serialized JSON document from its serialized fields
 #

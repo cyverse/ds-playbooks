@@ -3,8 +3,9 @@
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - name: install iptables-services package
-      when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int >= 7
+    - import_tasks: tasks/set_python.yml  
+        
+    - name: install iptables package
       package:
-        name: iptables-services
+        name: "{{ 'iptables-services' if ansible_distribution == 'CentOS' else 'iptables' }}"
         state: present

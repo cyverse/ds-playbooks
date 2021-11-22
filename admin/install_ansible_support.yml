@@ -4,12 +4,7 @@
   become: true
   gather_facts: false
   tasks:
-    # NB: The rpm and yum bindings for the package module require Python 2 in
-    #     Ansible 2.9.6
-    - name: ensure correct python for yum and rpm
-      when: package_manager|default(None) == 'yum'
-      set_fact:
-        ansible_python_interpreter: /usr/bin/python
+    - import_tasks: tasks/set_python.yml
 
     - name: install dmidecode support
       package:
@@ -52,9 +47,8 @@
               'python3-selinux' if ansible_distribution == 'Ubuntu' else
               'python-selinux' }}"
         - "{{ 'python3-dns' if ansible_distribution == 'Ubuntu' else 'python-dns' }}"
-        - "{{ 'python2-pip' if ansible_distribution == 'CentOS'
-                            and ansible_distribution_version is version ('7', '>=') else
-              'python3-pip' if ansible_distribution == 'Ubuntu' else
+        - "{{ 'python3-pip' 
+                if ansible_distribution == 'CentOS' or ansible_distribution == 'Ubuntu' else
               'python-pip' }}"
         - "{{ 'python3-requests' if ansible_distribution == 'Ubuntu' else 'python-requests' }}"
         - "{{ 'python3-virtualenv' if ansible_distribution == 'Ubuntu' else 'python-virtualenv' }}"

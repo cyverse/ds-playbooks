@@ -13,6 +13,8 @@
         - jq
         - libselinux-python
         - python-dns
+        - python-requests
+        - python3-pip
         - yum-plugin-versionlock
       loop_control:
         loop_var: pkg
@@ -25,6 +27,8 @@
         - iproute2
         - jq
         - python3-dns
+        - python3-pip
+        - python3-requests
         - python3-selinux
       loop_control:
         loop_var: pkg
@@ -38,16 +42,10 @@
         - jq
         - python-selinux
         - python-dns
+        - python-pip
+        - python-requests
       loop_control:
         loop_var: pkg
-
-    - name: test Python PIP package installed
-      debug:
-        msg: TODO implement
-
-    - name: test python-requests installed
-      debug:
-        msg: TODO implement
 
     - name: test python-virtualenv installed
       debug:

@@ -1,0 +1,7 @@
+---
+# NB: The rpm and yum bindings for the package module require Python 2 in
+#     Ansible 2.10.15 or earlier
+- name: ensure correct python for yum and rpm
+  when: ansible_distribution|default(None) == 'CentOS' or package_manager|default(None) == 'yum'
+  set_fact:
+    ansible_python_interpreter: /usr/bin/python

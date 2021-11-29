@@ -41,6 +41,7 @@ _ipcJson_mkField(*Label, *SerialVal) = '"' ++ *Label ++ '":' ++ *SerialVal
 #   *Label - the name of the object field
 #   *Val - the Boolean value of the field.
 #
+ipcJson_boolean: string * boolean -> string
 ipcJson_boolean(*Label, *Val) = _ipcJson_mkField(*Label, if *Val then 'true' else 'false')
 
 # construct a serialized JSON document from its serialized fields

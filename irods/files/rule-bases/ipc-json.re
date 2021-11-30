@@ -1,5 +1,5 @@
 # This is a collection of functions and rules for constructing serialized JSON 
-# documents.
+# documents. It does not support arrays yet.
 #
 # © 2021 The Arizona Board of Regents on behalf of The University of Arizona. 
 # For license information, see https://cyverse.org/license.
@@ -35,6 +35,22 @@ _ipcJson_encodeString(*Str) =
 _ipcJson_mkField: string * string -> string
 _ipcJson_mkField(*Label, *SerialVal) = '"' ++ *Label ++ '":' ++ *SerialVal
 
+# construct a serialized JSON object field from a Boolean value
+#
+# Parameters:
+#   *Label - the name of the object field
+#   *Val - the Boolean value of the field.
+#
+ipcJson_boolean: string * boolean -> string
+ipcJson_boolean(*Label, *Val) = _ipcJson_mkField(*Label, if *Val then 'true' else 'false')
+
+# construct a serialized JSON document from its serialized fields
+#
+# Parameters:
+#   *SerialFields - A list of pre-serialized fields to include in the document
+#
+ipcJson_document(*SerialFields) = _ipcJson_encodeObject(*SerialFields)
+
 # construct a serialized JSON number field. This version performs no error checking.
 #
 # Parameters:
@@ -43,32 +59,6 @@ _ipcJson_mkField(*Label, *SerialVal) = '"' ++ *Label ++ '":' ++ *SerialVal
 #
 ipcJson_number: string * double -> string
 ipcJson_number(*Label, *Val) = _ipcJson_mkField(*Label, '*Val')
-
-# construct a serialized JSON string field
-#
-# Parameters:
-#   *Label - the name of the field
-#   *Val - the value of the field
-#
-ipcJson_string(*Label, *Val) = _ipcJson_mkField(*Label, _ipcJson_encodeString(*Val))
-
-# construct a serialized JSON array field from its serialized elements
-#
-# Parameters:
-#   *Label - the name of the field
-#   *Val - the serialized array values
-#
-ipcJson_stringArray(*Label, *Values) {
-  *serialArray = '[';
-  if (size(*Values) > 0) {
-    *serialArray = *serialArray ++ _ipcJson_encodeString(hd(*Values));
-    foreach (*val in tl(*Values)) {
-      *serialArray = *serialArray ++ ',' ++ _ipcJson_encodeString(*val);
-    }
-  }
-  *serialArray = *serialArray ++ ']';
-  _ipcJson_mkField(*Label, *serialArray);
-}
 
 # construct a serialized JSON object field from its serialized fields
 #
@@ -79,23 +69,11 @@ ipcJson_stringArray(*Label, *Values) {
 ipcJson_object(*Label, *SerialFields) = _ipcJson_mkField(
   *Label, _ipcJson_encodeObject(*SerialFields) )
 
-# construct a serialized JSON document from its serialized fields
+# construct a serialized JSON string field
 #
 # Parameters:
-#   *SerialFields - A list of pre-serialized fields to include in the document
+#   *Label - the name of the field
+#   *Val - the value of the field
 #
-ipcJson_document(*SerialFields) = _ipcJson_encodeObject(*SerialFields)
-
-# construct a serialized JSON object field from a Boolean value
-#
-# Parameters:
-#   *Label - the name of the object field
-#   *flag - the Boolean value of the field.
-#
-ipcJson_boolean(*Label, *flag) {
-  if (*flag) {
-    _ipcJson_mkField(*Label, "true");
-  } else {
-    _ipcJson_mkField(*Label, "false");
-  }
-}
+ipcJson_string: string * string -> string
+ipcJson_string(*Label, *Val) = _ipcJson_mkField(*Label, _ipcJson_encodeString(*Val))

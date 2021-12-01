@@ -29,8 +29,6 @@ main() {
 	# Install required packages
 	if [[ "$os" == centos ]]; then
 		install_centos_packages "$version"
-	elif [[ "$os" == debian ]]; then
-		install_debian_packages "$version"
 	else
 		install_ubuntu_packages "$version"
 	fi
@@ -83,30 +81,12 @@ install_centos_packages() {
 		jq \
 		libselinux-python \
 		openssh-server \
+		python-dns \
 		python-pip \
 		python-requests \
 		python-virtualenv \
+		python3 \
 		sudo
-}
-
-
-install_debian_packages() {
-	local version="$1"
-
-	apt-get update -qq
-	apt-get install -qq -y apt-utils 2> /dev/null
-
-	apt-get install -qq -y \
-			ca-certificates \
-			iproute \
-			iptables \
-			jq \
-			openssh-server \
-			python-pip \
-			python-selinux \
-			python-virtualenv \
-			sudo \
-		2> /dev/null
 }
 
 
@@ -122,6 +102,7 @@ install_ubuntu_packages() {
 		iproute2 \
 		jq \
 		openssh-server \
+		python3 \
 		python3-apt \
 		python3-dns \
 		python3-pip \

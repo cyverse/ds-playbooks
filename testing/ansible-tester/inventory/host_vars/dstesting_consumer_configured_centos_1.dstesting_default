@@ -1,0 +1,9 @@
+---
+ansible_python_interpreter: /usr/bin/python3
+
+package_manager: yum
+
+irods_storage_resources:
+  - name: terraref
+    vault: "{{ irods_default_vault }}"
+    context: minimum_free_space_for_create_in_bytes=1048576

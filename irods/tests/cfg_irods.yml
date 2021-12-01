@@ -229,14 +229,14 @@
               - server_config.zone_port == 1247
               - server_config.zone_user == 'rods'
 
-        - name: verify consumer_configured specific server_config.json
-          when: inventory_hostname == 'dstesting_consumer_configured_1.dstesting_default'
+        - name: verify consumer_configured_ubuntu_1 specific server_config.json
+          when: inventory_hostname == 'dstesting_consumer_configured_ubuntu_1.dstesting_default'
           assert:
             that:
               - server_config.default_dir_mode == '0770'
               - server_config.default_file_mode == '0660'
 
-    - when: inventory_hostname == 'dstesting_consumer_configured_1.dstesting_default'
+    - when: inventory_hostname == 'dstesting_consumer_configured_ubuntu_1.dstesting_default'
       block:
         - name: retrieve encoded hosts_config.json
           slurp:
@@ -253,6 +253,6 @@
               - hosts_config.host_entries[0].address_type == 'local'
               - >-
                 hosts_config.host_entries[0].addresses[0].address
-                == 'dstesting_consumer_configured_1.dstesting_default'
+                == 'dstesting_consumer_configured_ubuntu_1.dstesting_default'
               - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
               - hosts_config.host_entries[0].addresses[2].address == 'alias-2'

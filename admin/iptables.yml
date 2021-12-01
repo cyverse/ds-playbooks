@@ -7,5 +7,5 @@
         
     - name: install iptables package
       package:
-        name: "{{ 'iptables-services' if ansible_distribution == 'CentOS' else 'iptables' }}"
+        name: "{{ 'iptables' if ansible_distribution == 'Ubuntu' else 'iptables-services' }}"
         state: present

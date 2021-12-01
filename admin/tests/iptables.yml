@@ -5,4 +5,4 @@
   tasks:
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
-        pkg: "{{ 'iptables-services' if ansible_distribution == 'CentOS' else 'iptables' }}"
+        pkg: "{{ 'iptables' if ansible_distribution == 'Ubuntu' else 'iptables-services' }}"

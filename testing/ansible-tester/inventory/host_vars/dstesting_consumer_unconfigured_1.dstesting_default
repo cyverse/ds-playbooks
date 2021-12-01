@@ -1,6 +1,4 @@
 ---
-ansible_python_interpreter: /usr/bin/python
-
 irods_clerver_password: rs7_password
 irods_clerver_user: rs7_admin
 

@@ -1,4 +1,4 @@
-FROM test-env-base:centos7
+FROM test-env-base:ubuntu1804
 
 ARG IRODS_CATALOG_PROVIDER=csp
 ARG IRODS_SYSTEM_GROUP=irods

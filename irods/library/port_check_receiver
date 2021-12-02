@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # An ansible module for listening on a set of ports. It's meant to work in
 # tandem with port_check_sender to verify network routes are open.
@@ -148,7 +148,7 @@ class UDPSocket(socket.socket):
 
   def transition_messenger(self, states):
     data, sender = self.recvfrom(128)
-    self.sendto("pong", sender)
+    self.sendto(b'pong', sender)
     states.add_input(self)
     return data
  

@@ -101,7 +101,12 @@
         that:
           - irods_environment.irods_host == inventory_hostname
           - irods_environment.irods_port == 1247
-          - irods_environment.irods_user_name == 'rods'
+          - >-
+            irods_environment.irods_user_name 
+            == (
+              'rs7_admin' if 
+                inventory_hostname == 'dstesting_consumer_unconfigured_1.dstesting_default' else 
+              'rods' )
           - irods_environment.irods_zone_name == 'testing'
           - irods_environment.irods_client_server_policy == 'CS_NEG_REFUSE'
           - irods_environment.irods_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'

@@ -1,15 +1,15 @@
 #!/bin/bash
 #
 # Usage:
-#  test-playbook INSPECT PRETTY VERBOSE HOSTS SETUP [PLAYBOOK] 
+#  test-playbook INSPECT PRETTY VERBOSE HOSTS SETUP PLAYBOOK
 #
 # Parameters:
 #  HOSTS     the inventory hosts to test against
-#  INSPECT   if this is `true`, a shell will be opened that allows access to the
-#            volumes in the env containers.
+#  INSPECT   if this is set to any value, a shell will be opened that allows 
+#            access to the volumes in the env containers.
 #  PLAYBOOK  the name of the playbook being tested.
-#  PRETTY    if this is `true`, more info is dumped and newlines in ouput are
-#            expanded.
+#  PRETTY    if this is set to any value, more info is dumped and newlines in 
+#            ouput are expanded.
 #  SETUP     the name of a playbook that prepares the environment for testing
 #            PLAYBOOK 
 #  VERBOSE   if this is set to any value, ansible will be passed the verbose
@@ -19,6 +19,10 @@
 
 set -o errexit -o nounset -o pipefail
 
+readonly PLAYBOOK_DIR=/playbooks-under-test
+readonly LIBRARY_DIR="$PLAYBOOK_DIR"/library
+readonly TEST_DIR="$PLAYBOOK_DIR"/tests
+
 
 main() {
 	local inspect="$1"
@@ -26,116 +30,149 @@ main() {
 	local verbose="$3"
 	local hosts="$4"
 	local setup="$5"
+	local playbook="$6"
 
-	local playbook 
-	if (( $# >= 6 ))
-	then
-		playbook="$6"
-	fi
+	local inventory=/inventory/"$hosts"
 
-	if [[ "$pretty" == true ]]
+	if [[ -n "$pretty" ]]
 	then
 		export ANSIBLE_STDOUT_CALLBACK=minimal
 	fi
 
-	if [[ -n "$setup" || -n "${playbook-}" ]]
+	# add the option for module-path only if a library directory exists
+	local modPath=
+	if [[ -d "$LIBRARY_DIR" ]]
 	then
-		do_test "$verbose" "$hosts" "$setup" "${playbook-}"
-	fi || true
+		modPath="$LIBRARY_DIR"
+	fi
 
-	if [ "$inspect" = true ]
+	wait_for_env "$inventory"
+
+	local rc=0
+
+	if (( rc == 0 )) && [[ -n "$setup" ]]
 	then
-		printf 'Opening shell for inspection of volumes\n'
+		if ! setup_env "$verbose" "$inventory" "$modPath" "$PLAYBOOK_DIR"/"$setup"
+		then
+			rc=1
+		fi
+	fi
+
+	if (( rc == 0 )) && [[ -n "$playbook" ]]
+	then
+		local playbookPath="$PLAYBOOK_DIR"/"$playbook"
+      local testPath="$TEST_DIR"/"$playbook"
+
+		if ! do_test "$verbose" "$inventory" "$modPath" "$playbookPath" "$testPath" 
+		then
+			rc=1
+		fi
+	fi
+
+	if [[ -n "$inspect" ]]
+	then
+		printf 'opening shell for inspection of volumes\n'
 		bash
 	fi || true
 
-	return 0
+	return $rc
 }
 
 
 do_test() {
 	local verbose="$1"
-	local hosts="$2"
-	local setup="$3"
+	local inventory="$2"
+	local modPath="$3"
 	local playbook="$4"
+	local test="$5"
 
-	local inventory=/inventory/"$hosts"
+	local verboseOpt
+	verboseOpt="$(verbosity "$verbose")"
 
-	local verbosity
-	if [ -n "$verbose" ]
-	then
-		verbosity=-vvv
-	fi
-
-	printf 'Waiting for environment to be ready\n'
-	if ! ansible-playbook --inventory-file "$inventory" /wait-for-ready.yml > /dev/null
+	printf 'checking playbook syntax\n'
+	if ! \
+		ansible-playbook --syntax-check --inventory-file "$inventory" --module-path="$modPath" \
+			"$playbook"
 	then
 		return 1
 	fi
 
-	if [[ -n "$setup" ]]
+	printf 'running playbook\n'
+	if ! \
+		ansible-playbook $verboseOpt \
+			--inventory-file="$inventory" --module-path="$modPath" --skip-tags=no_testing \
+			"$playbook"
 	then
-		local setupPath=/playbooks-under-test/"$setup"
+		return 1
+	fi
 
-		printf 'Preparing environment for testing playbook\n'
+	if [[ -e "$test" ]]
+	then
+		printf 'testing configuration\n'
 		if ! \
-			ansible-playbook ${verbosity=} --inventory-file "$inventory" --skip-tags no_testing \
-				"$setupPath" 
+			ansible-playbook $verboseOpt --module-path="$modPath" --inventory-file="$inventory" "$test"
 		then
 			return 1
 		fi
 	fi
 
-	if [[ -n "$playbook" ]]
+	printf 'checking idempotency\n'
+
+	local idempotencyRes
+	idempotencyRes="$(run_idempotency "$inventory" "$modPath" "$playbook")"
+
+	if grep --quiet --regexp '^\(changed\|failed\):' <<< "$idempotencyRes"
 	then
-		local playbookPath=/playbooks-under-test/"$playbook"
-		local testPath=/playbooks-under-test/tests/"$playbook"
+		echo "$idempotencyRes"
+		return 1
+	fi
+}
 
-		printf 'Checking playbook syntax\n'
-		if ! ansible-playbook --syntax-check --inventory-file "$inventory" "$playbookPath"
-		then
-			return 1
-		fi
 
-		printf 'Running playbook\n'
-		if ! \
-			ansible-playbook ${verbosity=} --inventory-file "$inventory" --skip-tags no_testing \
-				"$playbookPath"
-		then
-			return 1
-		fi
+run_idempotency() {
+	local inventory="$1"
+	local modPath="$2"
+	local playbook="$3"
 
-		local libPathOption
-		# add the option for module-path only if a library directory exists
-		if [ -d /playbooks-under-test/library ]
-		then
-			libPathOption="--module-path /playbooks-under-test/library"
-		fi
+   ansible-playbook \
+			--inventory-file="$inventory" \
+			--module-path="$modPath" \
+			--skip-tags='no_testing, non_idempotent' \
+			"$playbook" \
+		2>&1
+}
 
-		if [ -e "$testPath" ]
-		then
-			printf 'Checking configuration\n'
-			if ! \
-				ansible-playbook ${verbsosity=} --inventory-file "$inventory" ${libPathOption=} \
-					"$testPath"
-			then
-				return 1
-			fi
-		fi
 
-		printf 'Checking idempotency\n'
+setup_env() {
+	local verbose="$1"
+	local inventory="$2"
+	local modPath="$3"
+	local setup="$4"
 
-		local idempotencyRes
-		idempotencyRes="$( \
-      	ansible-playbook --inventory-file "$inventory" --skip-tags 'no_testing, non_idempotent' \
-					"$playbookPath" \
-				2>&1 )"
+	local verboseOpt
+	verboseOpt="$(verbosity "$verbose")"
 
-		if grep --quiet --regexp '^\(changed\|failed\):' <<< "$idempotencyRes"
-		then
-			printf '%s\n' "$idempotencyRes"
-			return 1
-		fi
+	printf 'preparing environment for testing playbook\n'
+	ansible-playbook $verboseOpt \
+		--inventory-file="$inventory" --module-path="$modPath" --skip-tags=no_testing \
+		"$setup" 
+}
+
+
+wait_for_env() {
+	local inventory="$1"
+
+	printf 'waiting for environment to be ready\n'
+	ansible-playbook --inventory-file="$inventory" /wait-for-ready.yml > /dev/null
+}
+
+
+verbosity() {
+	local verbose="$1"
+
+	if [[ -n "$verbose" ]]
+	then
+		printf -- '-vvv'
 	fi
 }
 

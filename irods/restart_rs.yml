@@ -1,12 +1,11 @@
 ---
 - name: restart resource servers
-  hosts: irods_resource:!ies
+  hosts: irods_resource:!irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
-  become_flags: '-i'
+  tags:
+    - non_idempotent
   tasks:
     - name: restart server
       irods_ctl:
         state: restarted
-  tags:
-    - non_idempotent

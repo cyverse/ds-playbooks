@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Usage:
-#  test-playbook INSPECT HOSTS [PLAYBOOK PRETTY [VERBOSE]] 
+#  test-playbook INSPECT PRETTY VERBOSE HOSTS SETUP [PLAYBOOK] 
 #
 # Parameters:
 #  HOSTS     the inventory hosts to test against
@@ -10,6 +10,8 @@
 #  PLAYBOOK  the name of the playbook being tested.
 #  PRETTY    if this is `true`, more info is dumped and newlines in ouput are
 #            expanded.
+#  SETUP     the name of a playbook that prepares the environment for testing
+#            PLAYBOOK 
 #  VERBOSE   if this is set to any value, ansible will be passed the verbose
 #            flag -vvv
 #
@@ -20,29 +22,25 @@ set -o errexit -o nounset -o pipefail
 
 main() {
   local inspect="$1"
-  local hosts="$2"
+  local pretty="$2"
+  local verbose="$3"
+  local hosts="$4"
+  local setup="$5"
 
-  local playbook pretty
-  if (( $# >= 3 ))
+  local playbook 
+  if (( $# >= 6 ))
   then
-    playbook="$3"
-    pretty="$4"
+    playbook="$6"
   fi
 
-  local verbose
-  if (( $# >= 5 ))
+  if [[ "$pretty" == true ]]
   then
-    verbose="$5"
+    export ANSIBLE_STDOUT_CALLBACK=minimal
   fi
-  
-  if [[ "${playbook-}" ]]
-  then
-    if [ "$pretty" = true ]
-    then
-      export ANSIBLE_STDOUT_CALLBACK=minimal
-    fi
 
-    do_test "$playbook" "$hosts" "${verbose-}"
+  if [[ -n "$setup" || -n "${playbook-}" ]]
+  then
+    do_test "$verbose" "$hosts" "$setup" "${playbook-}"
   fi || true
 
   if [ "$inspect" = true ]
@@ -56,13 +54,12 @@ main() {
 
 
 do_test() {
-  local playbook="$1"
+  local verbose="$1"
   local hosts="$2"
-  local verbose="$3"
+  local setup="$3"
+  local playbook="$4"
 
   local inventory=/inventory/"$hosts"
-  local playbookPath=/playbooks-under-test/"$playbook"
-  local testPath=/playbooks-under-test/tests/"$playbook"
 
   local verbosity
   if [ -n "$verbose" ]
@@ -76,48 +73,69 @@ do_test() {
     return 1
   fi
 
-  printf 'Checking playbook syntax\n'
-  if ! ansible-playbook --syntax-check --inventory-file "$inventory" "$playbookPath"
+  if [[ -n "$setup" ]]
   then
-    return 1
-  fi
+    local setupPath=/playbooks-under-test/"$setup"
 
-  printf 'Running playbook\n'
-  if ! ansible-playbook ${verbosity=} --inventory-file "$inventory" --skip-tags no_testing \
-    "$playbookPath"
-  then
-    return 1
-  fi
-
-  local libPathOption
-  # add the option for module-path only if a library directory exists
-  if [ -d /playbooks-under-test/library ]
-  then
-    libPathOption="--module-path /playbooks-under-test/library"
-  fi
-
-  if [ -e "$testPath" ]
-  then
-    printf 'Checking configuration\n'
-    if ! ansible-playbook ${verbsosity=} --inventory-file "$inventory" ${libPathOption=} \
-      "$testPath"
+    printf 'Preparing environment for testing playbook\n'
+    if ! \
+      ansible-playbook ${verbosity=} --inventory-file "$inventory" --skip-tags no_testing \
+        "$setupPath" 
     then
       return 1
     fi
   fi
 
-  printf 'Checking idempotency\n'
-
-  local idempotencyRes
-  idempotencyRes=$(ansible-playbook --inventory-file "$inventory" \
-                                    --skip-tags 'no_testing, non_idempotent' \
-                                    "$playbookPath" \
-                     2>&1)
-
-  if grep --quiet --regexp '^\(changed\|failed\):' <<< "$idempotencyRes"
+  if [[ -n "$playbook" ]]
   then
-    printf '%s\n' "$idempotencyRes"
-    return 1
+    local playbookPath=/playbooks-under-test/"$playbook"
+    local testPath=/playbooks-under-test/tests/"$playbook"
+
+    printf 'Checking playbook syntax\n'
+    if ! ansible-playbook --syntax-check --inventory-file "$inventory" "$playbookPath"
+    then
+      return 1
+    fi
+
+    printf 'Running playbook\n'
+    if ! \
+      ansible-playbook ${verbosity=} --inventory-file "$inventory" --skip-tags no_testing \
+        "$playbookPath"
+    then
+      return 1
+    fi
+
+    local libPathOption
+    # add the option for module-path only if a library directory exists
+    if [ -d /playbooks-under-test/library ]
+    then
+      libPathOption="--module-path /playbooks-under-test/library"
+    fi
+
+    if [ -e "$testPath" ]
+    then
+      printf 'Checking configuration\n'
+      if ! \
+        ansible-playbook ${verbsosity=} --inventory-file "$inventory" ${libPathOption=} \
+          "$testPath"
+      then
+        return 1
+      fi
+    fi
+
+    printf 'Checking idempotency\n'
+
+    local idempotencyRes
+    idempotencyRes="$(\
+      ansible-playbook --inventory-file "$inventory" --skip-tags 'no_testing, non_idempotent' \
+          "$playbookPath" \
+        2>&1 )"
+
+    if grep --quiet --regexp '^\(changed\|failed\):' <<< "$idempotencyRes"
+    then
+      printf '%s\n' "$idempotencyRes"
+      return 1
+    fi
   fi
 }
 

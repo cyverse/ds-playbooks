@@ -71,6 +71,9 @@ readonly BaseDir=$(dirname "$ExecName")
 readonly Cfg="$BaseDir"/config.inc
 readonly DefaultHosts=hosts-all
 
+# shellcheck disable=SC1090
+source "$Cfg"
+
 
 main()
 {
@@ -221,8 +224,5 @@ resolve_playbook_dir()
   printf '%s' "$playbooks"
 }
 
-
-# shellcheck disable=SC1090
-. "$Cfg"
 
 main "$@"

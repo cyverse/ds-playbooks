@@ -192,13 +192,18 @@ do_run()
   local setup="$5"
   local playbook="$6"
 
-  if "$BaseDir"/env/controller "$Cfg" start
-  then
+  "$BaseDir"/env/controller "$Cfg" start
+
+  local rc  
+  if ! \
     "$BaseDir"/ansible-tester/run \
       "$doInspect" "$pretty" '' "$hosts" "$playbooks" "$setup" "$playbook"
+  then
+    rc=1
   fi
 
   "$BaseDir"/env/controller "$Cfg" stop
+  return ${rc-0}
 }
 
 

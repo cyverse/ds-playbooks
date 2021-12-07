@@ -19,14 +19,14 @@
 
 
 - name: test bootstrap iRODS start
-  hosts: dstesting_rs_unconfigured.dstesting_default
+  hosts: dstesting_consumer_unconfigured_1.dstesting_default
   become: true
   become_user: irods
   tasks:
     - name: test create clerver user
       delegate_to: "{{ groups['irods_catalog'][0] }}"
       shell: |
-        userType=$(iquest '%s' "select USER_TYPE where USER_NAME = 'rods'")
+        userType=$(iquest '%s' "select USER_TYPE where USER_NAME = 'rs7_admin'")
         if (( $? != 0 )); then
           printf \
               'Catalog service provider appears to be down on {{ groups['irods_catalog'][0] }}\n' \
@@ -34,11 +34,11 @@
           exit 1
         fi
         if [[ "$userType" =~ ^CAT_NO_ROWS_FOUND ]]; then
-          printf 'rods does not exist\n' >&2
+          printf 'rs7_admin does not exist\n' >&2
           exit 1
         fi
         if [[ "$userType" != rodsadmin ]]; then
-          printf 'rods is not a rodsadmin user\n' >&2
+          printf 'rs7_admin is not a rodsadmin user\n' >&2
           exit 1
         fi
         IRODS_HOST='{{ groups['irods_catalog'][0] }}' \
@@ -46,7 +46,7 @@
         IRODS_AUTHENTICATION_FILE="$(mktemp)" \
         iinit rods
         if (( $? != 0 )); then
-          printf 'rods has incorrect password\n' >&2
+          printf 'rs7_admin has incorrect password\n' >&2
           exit 1
         fi
       changed_when: false

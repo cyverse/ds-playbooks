@@ -232,7 +232,13 @@
               - server_config.zone_key == 'TEMPORARY_zone_key'
               - server_config.zone_name == 'testing'
               - server_config.zone_port == 1247
-              - server_config.zone_user == 'rods'
+              - >-
+                server_config.zone_user
+                == (
+                  'rs7_admin' if 
+                    inventory_hostname == 'dstesting_consumer_unconfigured_1.dstesting_default' else 
+                  'rods' )
+
 
         - name: verify consumer_configured_ubuntu_1 specific server_config.json
           when: inventory_hostname == 'dstesting_consumer_configured_ubuntu_1.dstesting_default'

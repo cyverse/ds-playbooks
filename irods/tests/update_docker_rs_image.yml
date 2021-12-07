@@ -35,7 +35,75 @@
           register: response
           failed_when: not response.stat.exists
 
-        - name: verify contents of server_config.json
+        - name: verify server_config.advanced_settings.default_number_of_transfer_threads
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes
+          debug:
+            msg: TODO implement
+        
+        - name: verfify server_config.catalog_provider_hosts
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.catalog_service_role
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.default_dir_mode
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.default_file_mode
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.default_hash_scheme
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.default_resource_directory
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.default_resource_name
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.negotiation_key
+          debug:
+            msg: TODO implement
+
+        - name: verfiy server_config.plugin_configuration
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.schema_validation_base_uri
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.server_control_plane_key
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.server_port_range_end
+          debug:
+            msg: TODO implement
+
+        - name: verfiy server_config.server_port_range_start
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.zone_key
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.zone_name
+          debug:
+            msg: TODO implement
+
+        - name: verify server_config.zone_user
           debug:
             msg: TODO implement
 

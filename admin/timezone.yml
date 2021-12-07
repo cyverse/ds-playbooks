@@ -16,5 +16,5 @@
   handlers:
     - name: restart crond
       service:
-        name: crond
+        name: "{{ 'cron' if 'ansible_distribution == 'Ubuntu' else 'crond' }}"
         state: restarted

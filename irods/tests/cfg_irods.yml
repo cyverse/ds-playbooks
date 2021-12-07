@@ -75,12 +75,6 @@
         - rm-trash
         - set-uuid
 
-    - name: Verify .odbc.ini only on catalog service providers
-      stat:
-        path: /var/lib/irods/.odbc.ini
-      register: response
-      failed_when: response.stat.exists != ((inventory_hostname in groups['irods_catalog']) | bool)
-
     - name: Verify database_config.json does not exist
       stat:
         path: /etc/irods/database_config.json
@@ -107,7 +101,12 @@
         that:
           - irods_environment.irods_host == inventory_hostname
           - irods_environment.irods_port == 1247
-          - irods_environment.irods_user_name == 'rods'
+          - >-
+            irods_environment.irods_user_name 
+            == (
+              'rs7_admin' if 
+                inventory_hostname == 'dstesting_consumer_unconfigured_1.dstesting_default' else 
+              'rods' )
           - irods_environment.irods_zone_name == 'testing'
           - irods_environment.irods_client_server_policy == 'CS_NEG_REFUSE'
           - irods_environment.irods_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
@@ -183,24 +182,6 @@
               - server_config.zone_port == 1247
               - server_config.zone_user == 'rods'
 
-        - name: retrieve encoded .odbc.ini
-          slurp:
-            src: /var/lib/irods/.odbc.ini
-          register: oEncoded
-
-        - name: decode .odbc.ini
-          set_fact:
-            odbc: "{{ oEncoded.content | b64decode }}"
-
-        - name: verify .odbc.ini contents
-          assert:
-            that:
-              - odbc is search('Port = 5432')
-              - >-
-                odbc
-                is search(
-                  'Servername = dstesting_dbms_configured_1.dstesting_default' | regex_escape )
-
     - when: inventory_hostname in groups['irods_resource']
       block:
         - name: retrieve encoded server_config.json
@@ -253,14 +234,14 @@
               - server_config.zone_port == 1247
               - server_config.zone_user == 'rods'
 
-        - name: verify consumer_configured specific server_config.json
-          when: inventory_hostname == 'dstesting_consumer_configured_1.dstesting_default'
+        - name: verify consumer_configured_ubuntu_1 specific server_config.json
+          when: inventory_hostname == 'dstesting_consumer_configured_ubuntu_1.dstesting_default'
           assert:
             that:
               - server_config.default_dir_mode == '0770'
               - server_config.default_file_mode == '0660'
 
-    - when: inventory_hostname == 'dstesting_consumer_configured_1.dstesting_default'
+    - when: inventory_hostname == 'dstesting_consumer_configured_ubuntu_1.dstesting_default'
       block:
         - name: retrieve encoded hosts_config.json
           slurp:
@@ -277,6 +258,6 @@
               - hosts_config.host_entries[0].address_type == 'local'
               - >-
                 hosts_config.host_entries[0].addresses[0].address
-                == 'dstesting_consumer_configured_1.dstesting_default'
+                == 'dstesting_consumer_configured_ubuntu_1.dstesting_default'
               - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
               - hosts_config.host_entries[0].addresses[2].address == 'alias-2'

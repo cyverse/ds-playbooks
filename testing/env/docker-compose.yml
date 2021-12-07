@@ -15,7 +15,7 @@ services:
       context: .
       dockerfile: postgresql/Dockerfile.configured
       args:
-        IRODS_RESOURCES: "$IRODS_RES_CONF_NAME:$IRODS_CONSUMER_CONF_HOST:$IRODS_VAULT $IRODS_RES_UNCONF_NAME:$IRODS_CONSUMER_UNCONF_HOST:$IRODS_VAULT"
+        IRODS_RESOURCES: "$IRODS_RES_CONF_CENTOS_NAME:$IRODS_CONSUMER_CONF_CENTOS_HOST:$IRODS_VAULT $IRODS_RES_CONF_UBUNTU_NAME:$IRODS_CONSUMER_CONF_UBUNTU_HOST:$IRODS_VAULT"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     tty: true
 
@@ -56,21 +56,40 @@ services:
       - amqp
       - dbms_configured
 
-  consumer_configured:
+  consumer_configured_centos:
     build:
       context: .
-      dockerfile: irods-consumer/Dockerfile.configured
+      dockerfile: irods-consumer/Dockerfile.configured-centos
       args:
         IRODS_CATALOG_PROVIDER: "$IRODS_PROVIDER_CONF_HOST"
-        IRODS_DEFAULT_RESOURCE: "$IRODS_DEFAULT_RESOURCE"
+        IRODS_DEFAULT_RESOURCE: "$IRODS_RES_CONF_CENTOS_NAME"
         IRODS_DEFAULT_VAULT: "$IRODS_VAULT"
-        IRODS_HOST: "$IRODS_CONSUMER_CONF_HOST"
+        IRODS_HOST: "$IRODS_CONSUMER_CONF_CENTOS_HOST"
         IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
     cap_add:
       - NET_ADMIN
-    hostname: "$IRODS_CONSUMER_CONF_HOST"
+    hostname: "$IRODS_CONSUMER_CONF_CENTOS_HOST"
+    tty: true
+    depends_on:
+      - provider_configured
+
+  consumer_configured_ubuntu:
+    build:
+      context: .
+      dockerfile: irods-consumer/Dockerfile.configured-ubuntu
+      args:
+        IRODS_CATALOG_PROVIDER: "$IRODS_PROVIDER_CONF_HOST"
+        IRODS_DEFAULT_RESOURCE: "$IRODS_RES_CONF_UBUNTU_NAME"
+        IRODS_DEFAULT_VAULT: "$IRODS_VAULT"
+        IRODS_HOST: "$IRODS_CONSUMER_CONF_UBUNTU_HOST"
+        IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
+        IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
+        IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
+    cap_add:
+      - NET_ADMIN
+    hostname: "$IRODS_CONSUMER_CONF_UBUNTU_HOST"
     tty: true
     depends_on:
       - provider_configured
@@ -81,7 +100,7 @@ services:
       dockerfile: irods-consumer/Dockerfile.unconfigured
       args:
         IRODS_CATALOG_PROVIDER: "$IRODS_PROVIDER_CONF_HOST"
-    hostname: "$IRODS_CONSUMER_UNCONF_HOST"
+    hostname: "${ENV_NAME}_consumer_configured_1.${DOMAIN}"
     tty: true
     depends_on:
       - provider_configured

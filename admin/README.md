@@ -18,7 +18,6 @@ Variable           | Required | Default | Choices | Comments
 `package_manager`  | no       | auto   |         | The packager manager to use
 `rebootable`       | no       | `true` |         | Whether or not the server being configured is rebootable
 `sysctl_net`       | no       | []     |         | a list of sysctl network parameters to set for the server being configured, __see_below__
-`update_e2fsprogs` | no       | `true` |         | Whether or not the e2fsprogs system package can be upgraded on the server being configured
 
 `sysctl_net` entry fields
 

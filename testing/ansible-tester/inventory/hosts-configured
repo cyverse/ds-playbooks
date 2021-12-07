@@ -20,7 +20,8 @@ irods_resource
 dstesting_provider_configured_1.dstesting_default
 
 [irods_resource]
-dstesting_consumer_configured_1.dstesting_default
+dstesting_consumer_configured_centos_1.dstesting_default
+dstesting_consumer_configured_ubuntu_1.dstesting_default
 
 [proxy]
 dstesting_proxy_1.dstesting_default

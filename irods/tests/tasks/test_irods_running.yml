@@ -4,5 +4,5 @@
     if ! status="$(/var/lib/irods/irodsctl status)"; then
       exit 1
     fi
-    grep --invert --quiet 'No servers running' <<< "$status"
+    echo "$status" | grep --invert --quiet 'No servers running'
   changed_when: false

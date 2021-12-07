@@ -3,6 +3,8 @@
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
+    - import_tasks: tasks/set_python.yml
+    
     - name: install sendmail
       package:
         name: sendmail

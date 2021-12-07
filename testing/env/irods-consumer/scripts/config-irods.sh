@@ -90,10 +90,26 @@ mk_svc_account()
 {
   groupadd --force --system "$IRODS_SYSTEM_GROUP"
 
+  local gid homeParam
+  if [[ -e /etc/centos-release ]]
+  then
+    gid="$IRODS_SYSTEM_GROUP"
+    homeParam=--home-dir
+  else
+    if ! gid="$(sed --quiet 's/^'"$IRODS_SYSTEM_GROUP"':[^:]*:\([0-9]\+\).*/\1/p' /etc/group)"
+    then
+      return 1
+    fi
+
+    homeParam=--home
+  fi
+
   local err
-  if ! err="$(
-    adduser --system --gid "$IRODS_SYSTEM_GROUP" --home-dir /var/lib/irods "$IRODS_SYSTEM_USER" \
-      2>&1 )"
+  if ! \
+    err="$(
+      adduser --system --gid="$gid" "$homeParam"=/var/lib/irods --shell=/bin/bash \
+          "$IRODS_SYSTEM_USER" \
+        2>&1 )"
   then
     local rc=$?
     if (( rc != 9 ))
@@ -198,4 +214,4 @@ validate_32_byte_key()
 }
 
 
-main
+main "$@"

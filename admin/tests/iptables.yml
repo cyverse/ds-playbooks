@@ -3,7 +3,6 @@
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int >= 7
-      include_tasks: tasks/test_pkg_installed.yml
+    - include_tasks: tasks/test_pkg_installed.yml
       vars:
-        pkg: iptables-services
+        pkg: "{{ 'iptables' if ansible_distribution == 'Ubuntu' else 'iptables-services' }}"

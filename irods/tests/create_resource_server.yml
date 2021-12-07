@@ -2,13 +2,17 @@
 - import_playbook: provision.yml
 
 
-- name: test install resource server package
-  hosts: irods_resource:!irods_catalog:!unmanaged_systems
+- name: test ensure irods owns what it is supposed to
+  hosts: irods_resource:!unmanaged_systems
   become: true
   tasks:
-    - import_tasks: tasks/test_install_resource_pkg.yml
+    - include_tasks: tasks/test_irods_ownership.yml
+      vars:
+        dir: /etc/irods
 
-    - import_tasks: tasks/test_install_plugins.yml
+    - include_tasks: tasks/test_irods_ownership.yml
+      vars:
+        dir: /var/lib/irods
 
 
 - import_playbook: cfg_irods.yml

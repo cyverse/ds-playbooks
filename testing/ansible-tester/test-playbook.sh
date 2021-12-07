@@ -1,15 +1,17 @@
 #!/bin/bash
 #
 # Usage:
-#  test-playbook INSPECT HOSTS [PLAYBOOK PRETTY [VERBOSE]] 
+#  test-playbook INSPECT PRETTY VERBOSE HOSTS SETUP PLAYBOOK
 #
 # Parameters:
 #  HOSTS     the inventory hosts to test against
-#  INSPECT   if this is `true`, a shell will be opened that allows access to the
-#            volumes in the env containers.
+#  INSPECT   if this is set to any value, a shell will be opened that allows 
+#            access to the volumes in the env containers.
 #  PLAYBOOK  the name of the playbook being tested.
-#  PRETTY    if this is `true`, more info is dumped and newlines in ouput are
-#            expanded.
+#  PRETTY    if this is set to any value, more info is dumped and newlines in 
+#            ouput are expanded.
+#  SETUP     the name of a playbook that prepares the environment for testing
+#            PLAYBOOK 
 #  VERBOSE   if this is set to any value, ansible will be passed the verbose
 #            flag -vvv
 #
@@ -17,108 +19,161 @@
 
 set -o errexit -o nounset -o pipefail
 
+readonly PLAYBOOK_DIR=/playbooks-under-test
+readonly LIBRARY_DIR="$PLAYBOOK_DIR"/library
+readonly TEST_DIR="$PLAYBOOK_DIR"/tests
+
 
 main() {
-  local inspect="$1"
-  local hosts="$2"
+	local inspect="$1"
+	local pretty="$2"
+	local verbose="$3"
+	local hosts="$4"
+	local setup="$5"
+	local playbook="$6"
 
-  local playbook pretty
-  if (( $# >= 3 ))
-  then
-    playbook="$3"
-    pretty="$4"
-  fi
+	local inventory=/inventory/"$hosts"
 
-  local verbose
-  if (( $# >= 5 ))
-  then
-    verbose="$5"
-  fi
-  
-  if [[ "${playbook-}" ]]
-  then
-    if [ "$pretty" = true ]
-    then
-      export ANSIBLE_STDOUT_CALLBACK=minimal
-    fi
+	if [[ -n "$pretty" ]]
+	then
+		export ANSIBLE_STDOUT_CALLBACK=minimal
+	fi
 
-    do_test "$playbook" "$hosts" "${verbose-}"
-  fi || true
+	# add the option for module-path only if a library directory exists
+	local modPath=
+	if [[ -d "$LIBRARY_DIR" ]]
+	then
+		modPath="$LIBRARY_DIR"
+	fi
 
-  if [ "$inspect" = true ]
-  then
-    printf 'Opening shell for inspection of volumes\n'
-    bash
-  fi || true
+	wait_for_env "$inventory"
 
-  return 0
+	local rc=0
+
+	if (( rc == 0 )) && [[ -n "$setup" ]]
+	then
+		if ! setup_env "$verbose" "$inventory" "$modPath" "$PLAYBOOK_DIR"/"$setup"
+		then
+			rc=1
+		fi
+	fi
+
+	if (( rc == 0 )) && [[ -n "$playbook" ]]
+	then
+		local playbookPath="$PLAYBOOK_DIR"/"$playbook"
+      local testPath="$TEST_DIR"/"$playbook"
+
+		if ! do_test "$verbose" "$inventory" "$modPath" "$playbookPath" "$testPath" 
+		then
+			rc=1
+		fi
+	fi
+
+	if [[ -n "$inspect" ]]
+	then
+		printf 'opening shell for inspection of volumes\n'
+		bash
+	fi || true
+
+	return $rc
 }
 
 
 do_test() {
-  local playbook="$1"
-  local hosts="$2"
-  local verbose="$3"
+	local verbose="$1"
+	local inventory="$2"
+	local modPath="$3"
+	local playbook="$4"
+	local test="$5"
 
-  local inventory=/inventory/"$hosts"
-  local playbookPath=/playbooks-under-test/"$playbook"
-  local testPath=/playbooks-under-test/tests/"$playbook"
+	local verboseOpt
+	verboseOpt="$(verbosity "$verbose")"
 
-  local verbosity
-  if [ -n "$verbose" ]
-  then
-    verbosity=-vvv
-  fi
+	printf 'checking playbook syntax\n'
+	if ! \
+		ansible-playbook --syntax-check --inventory-file "$inventory" --module-path="$modPath" \
+			"$playbook"
+	then
+		return 1
+	fi
 
-  printf 'Waiting for environment to be ready\n'
-  if ! ansible-playbook --inventory-file "$inventory" /wait-for-ready.yml > /dev/null
-  then
-    return 1
-  fi
+	printf 'running playbook\n'
+	if ! \
+		ansible-playbook $verboseOpt \
+			--inventory-file="$inventory" --module-path="$modPath" --skip-tags=no_testing \
+			"$playbook"
+	then
+		return 1
+	fi
 
-  printf 'Checking playbook syntax\n'
-  if ! ansible-playbook --syntax-check --inventory-file "$inventory" "$playbookPath"
-  then
-    return 1
-  fi
+	if [[ -e "$test" ]]
+	then
+		printf 'testing configuration\n'
+		if ! \
+			ansible-playbook $verboseOpt --module-path="$modPath" --inventory-file="$inventory" "$test"
+		then
+			return 1
+		fi
+	fi
 
-  printf 'Running playbook\n'
-  if ! ansible-playbook ${verbosity=} --inventory-file "$inventory" --skip-tags no_testing \
-    "$playbookPath"
-  then
-    return 1
-  fi
+	printf 'checking idempotency\n'
 
-  local libPathOption
-  # add the option for module-path only if a library directory exists
-  if [ -d /playbooks-under-test/library ]
-  then
-    libPathOption="--module-path /playbooks-under-test/library"
-  fi
+	local idempotencyRes
+	idempotencyRes="$(run_idempotency "$inventory" "$modPath" "$playbook")"
 
-  if [ -e "$testPath" ]
-  then
-    printf 'Checking configuration\n'
-    if ! ansible-playbook ${verbsosity=} --inventory-file "$inventory" ${libPathOption=} \
-      "$testPath"
-    then
-      return 1
-    fi
-  fi
+	if grep --quiet --regexp '^\(changed\|failed\):' <<< "$idempotencyRes"
+	then
+		echo "$idempotencyRes"
+		return 1
+	fi
+}
 
-  printf 'Checking idempotency\n'
 
-  local idempotencyRes
-  idempotencyRes=$(ansible-playbook --inventory-file "$inventory" \
-                                    --skip-tags 'no_testing, non_idempotent' \
-                                    "$playbookPath" \
-                     2>&1)
+run_idempotency() {
+	local inventory="$1"
+	local modPath="$2"
+	local playbook="$3"
 
-  if grep --quiet --regexp '^\(changed\|failed\):' <<< "$idempotencyRes"
-  then
-    printf '%s\n' "$idempotencyRes"
-    return 1
-  fi
+   ansible-playbook \
+			--inventory-file="$inventory" \
+			--module-path="$modPath" \
+			--skip-tags='no_testing, non_idempotent' \
+			"$playbook" \
+		2>&1
+}
+
+
+setup_env() {
+	local verbose="$1"
+	local inventory="$2"
+	local modPath="$3"
+	local setup="$4"
+
+	local verboseOpt
+	verboseOpt="$(verbosity "$verbose")"
+
+	printf 'preparing environment for testing playbook\n'
+	ansible-playbook $verboseOpt \
+		--inventory-file="$inventory" --module-path="$modPath" --skip-tags=no_testing \
+		"$setup" 
+}
+
+
+wait_for_env() {
+	local inventory="$1"
+
+	printf 'waiting for environment to be ready\n'
+	ansible-playbook --inventory-file="$inventory" /wait-for-ready.yml > /dev/null
+}
+
+
+verbosity() {
+	local verbose="$1"
+
+	if [[ -n "$verbose" ]]
+	then
+		printf -- '-vvv'
+	fi
 }
 
 

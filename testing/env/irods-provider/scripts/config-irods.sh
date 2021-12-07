@@ -39,46 +39,44 @@
 
 set -o errexit -o nounset -o pipefail
 
-readonly CfgDir=/etc/irods
-readonly HostAccessControlCfg="$CfgDir"/host_access_control_config.json
-readonly HostsCfg="$CfgDir"/hosts_config.json
-readonly ServerCfg="$CfgDir"/server_config.json
-readonly SvcAccount="$CfgDir"/service_account.config
+readonly CFG_DIR=/etc/irods
+readonly HOST_ACCESS_CTRL_CFG="$CFG_DIR"/host_access_control_config.json
+readonly HOSTS_CFG="$CFG_DIR"/hosts_config.json
+readonly SERVER_CFG="$CFG_DIR"/server_config.json
+readonly SVC_ACNT="$CFG_DIR"/service_account.config
 
-readonly HomeDir=/var/lib/irods
-readonly Odbc="$HomeDir"/.odbc.ini
-readonly Version="$HomeDir"/VERSION.json
+readonly HOME_DIR=/var/lib/irods
+readonly VERSION="$HOME_DIR"/VERSION.json
 
-readonly EnvDir="$HomeDir"/.irods
-readonly EnvCfg="$EnvDir"/irods_environment.json
+readonly ENV_DIR="$HOME_DIR"/.irods
+readonly ENV_CFG="$ENV_DIR"/irods_environment.json
 
 
-main()
+main() 
 {
   validate_32_byte_key "$IRODS_NEGOTIATION_KEY" "iRODS server's negotiation key"
   validate_32_byte_key "$IRODS_CONTROL_PLANE_KEY" 'Control Plane key'
 
   mk_svc_account
-  mk_svc_account_cfg > "$SvcAccount"
+  mk_svc_account_cfg > "$SVC_ACNT"
 
-  mk_server_cfg > "$ServerCfg"
-  mk_host_access_control_cfg > "$HostAccessControlCfg"
-  mk_hosts_cfg > "$HostsCfg"
+  mk_server_cfg > "$SERVER_CFG"
+  mk_host_access_control_cfg > "$HOST_ACCESS_CTRL_CFG"
+  mk_hosts_cfg > "$HOSTS_CFG"
 
   update_odbc_def 
-  mk_odbc > "$Odbc"
 
-  mk_version "$(date +%FT%T.000000)" > "$Version"
+  mk_version "$(date +%FT%T.000000)" > "$VERSION"
 
-  mkdir --parents "$EnvDir"
-  mk_irods_env > "$EnvCfg"
+  mkdir --parents "$ENV_DIR"
+  mk_irods_env > "$ENV_CFG"
 
-  ensure_ownership "$HomeDir"
-  ensure_ownership "$CfgDir"
+  ensure_ownership "$HOME_DIR"
+  ensure_ownership "$CFG_DIR"
 }
 
 
-ensure_ownership()
+ensure_ownership() 
 {
   local fsEntity="$1"
 
@@ -88,7 +86,7 @@ ensure_ownership()
 
 
 # define service account for this installation
-mk_svc_account()
+mk_svc_account() 
 {
   groupadd --force --system "$IRODS_SYSTEM_GROUP"
 
@@ -107,19 +105,19 @@ mk_svc_account()
 }
 
 
-mk_host_access_control_cfg()
+mk_host_access_control_cfg() 
 {
   cat /var/lib/irods/packaging/host_access_control_config.json.template
 }
 
 
-mk_hosts_cfg()
+mk_hosts_cfg() 
 {
   cat /var/lib/irods/packaging/hosts_config.json.template
 }
 
 
-mk_irods_env()
+mk_irods_env() 
 {
   jq --sort-keys --from-file /dev/stdin <(echo '{}') <<JQ
 .irods_host = "$IRODS_HOST" |
@@ -145,31 +143,7 @@ JQ
 }
 
 
-mk_odbc()
-{
-  cat <<EOINI
-[iRODS Catalog]
-Driver=PostgreSQL
-Description=iRODS Catalog
-Trace=0
-Database=$DB_NAME
-TraceFile=
-Servername=$DBMS_HOST
-FakeOidIndex=No
-ShowOidColumn=No
-RowVersioning=No
-CommLog=0
-ReadOnly=no
-Debug=0
-ConnSettings=
-Port=$DBMS_PORT
-Ksqo=0
-ShowSystemTables=No
-EOINI
-}
-
-
-mk_server_cfg()
+mk_server_cfg() 
 {
   jq --sort-keys --from-file /dev/stdin /var/lib/irods/packaging/server_config.json.template <<JQ
 .catalog_provider_hosts |= [ "localhost" ] |
@@ -205,7 +179,7 @@ JQ
 }
 
 
-mk_svc_account_cfg()
+mk_svc_account_cfg() 
 {
   cat <<EOF
 IRODS_SERVICE_ACCOUNT_NAME=$IRODS_SYSTEM_USER
@@ -214,7 +188,7 @@ EOF
 }
 
 
-mk_version()
+mk_version() 
 {
   local installTime="$1"
 
@@ -223,7 +197,7 @@ mk_version()
 JQ
 }
 
-update_odbc_def()
+update_odbc_def() 
 {
   odbcinst -i -d -r -v <<EOF
 [PostgreSQL]
@@ -234,7 +208,7 @@ EOF
 }
 
 
-validate_32_byte_key()
+validate_32_byte_key() 
 {
   local keyVal="$1"
   local keyName="$2"
@@ -248,4 +222,4 @@ validate_32_byte_key()
 }
 
 
-main
+main "$@"

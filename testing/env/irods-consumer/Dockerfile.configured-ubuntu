@@ -1,0 +1,42 @@
+FROM test-env-base:ubuntu1804
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+### Install iRODS
+RUN wget --quiet --output-document=- https://packages.irods.org/irods-signing-key.asc \
+    | apt-key add - 2> /dev/null
+RUN echo "deb [arch=amd64] https://packages.irods.org/apt/ $(lsb_release -sc) main" \
+  > /etc/apt/sources.list.d/renci-irods.list
+RUN printf 'Package: irods-*\nPin: version 4.2.8\nPin-Priority: 1001\n' \
+  > /etc/apt/preferences.d/irods
+RUN apt-get --quiet=2 update
+RUN apt-get --yes --quiet=2 install irods-server
+
+### Configure iRODS
+ARG IRODS_CATALOG_PROVIDER=csp
+ARG IRODS_CONTROL_PLANE_KEY=TEMPORARY__32byte_ctrl_plane_key
+ARG IRODS_CONTROL_PLANE_PORT=1248
+ARG IRODS_DEFAULT_RESOURCE=demoResc
+ARG IRODS_DEFAULT_VAULT=/var/lib/irods/Vault
+ARG IRODS_FIRST_EPHEMERAL_PORT=20000
+ARG IRODS_HOST=rs
+ARG IRODS_LAST_EPHEMERAL_PORT=20199
+ARG IRODS_NEGOTIATION_KEY=TEMPORARY_32byte_negotiation_key
+ARG IRODS_SCHEMA_VALIDATION=https://schemas.irods.org/configuration
+ARG IRODS_SYSTEM_GROUP=irods
+ARG IRODS_SYSTEM_USER=irods
+ARG IRODS_ZONE_KEY=TEMPORARY_zone_key
+ARG IRODS_ZONE_NAME=tempZone
+ARG IRODS_ZONE_PASSWORD=rods
+ARG IRODS_ZONE_PORT=1247
+ARG IRODS_ZONE_USER=rods
+
+COPY irods-consumer/scripts/config-irods.sh /tmp/config-irods
+RUN /tmp/config-irods
+
+### Create service script
+COPY irods-consumer/scripts/service.sh.template /tmp/
+COPY irods-consumer/scripts/prep-svc-script.sh /tmp/prep-svc-script
+RUN /tmp/prep-svc-script
+
+CMD [ "/service.sh" ]

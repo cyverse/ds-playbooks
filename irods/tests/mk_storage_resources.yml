@@ -6,10 +6,10 @@
   vars:
     expected_resources:
       - avra
-      - bundleResc
       - cereus
-      - ingestRes
       - pire
+      - bundleResc
+      - ingestRes
       - replRes
       - terraref
   tasks:

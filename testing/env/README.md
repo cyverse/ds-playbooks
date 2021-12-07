@@ -47,9 +47,6 @@ export IRODS_PROVIDER_SYSTEM_GROUP=irods_provider
 # server
 export IRODS_RES_CONF_UBUNTU_NAME=ingestRes
 
-# The name of the storage resource hosted on the unconfigured resource server
-export IRODS_RES_UNCONF_NAME=replRes
-
 # The URI for the schema used to validate the configuration files or 'off'
 export IRODS_SCHEMA_VALIDATION=off
 
@@ -64,9 +61,6 @@ export IRODS_CONSUMER_CONF_UBUNTU_HOST="$ENV_NAME"_consumer_configured_centos_1.
 
 # The host name of the configured Ubuntu catalog service consumer
 export IRODS_CONSUMER_CONF_UBUNTU_HOST="$ENV_NAME"_consumer_configured_ubuntu_1."$DOMAIN"
-
-# The host name of the unconfigured service consumer
-export IRODS_CONSUMER_UNCONF_HOST="$ENV_NAME"_consumer_unconfigured_1."$DOMAIN"
 
 # The name of the default resource to use
 export IRODS_DEFAULT_RESOURCE="$IRODS_RES_CONF_UBUNTU_NAME"

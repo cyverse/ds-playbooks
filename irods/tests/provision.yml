@@ -49,6 +49,7 @@
             
         - include_tasks: tasks/test_pkg_installed.yml
           with_items:
+            - unixODBC
             - uuidd
             - which
           loop_control:

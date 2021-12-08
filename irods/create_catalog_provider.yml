@@ -131,12 +131,6 @@
           - irods-database-plugin-postgres-{{ _irods_version }}
         state: present
 
-    # TODO: When upgrading to iRODS 4.2.9, remove this task.
-    - name: ensure unixODBC is installed (irods issue 5389)
-      package:
-        name: unixODBC
-        state: present
-
     - name: install irods server packages
       package:
         name:

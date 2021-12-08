@@ -73,10 +73,6 @@
 
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
-        pkg: unixODBC
-
-    - include_tasks: tasks/test_pkg_installed.yml
-      vars:
         pkg: irods-database-plugin-postgres
         version: 4.2.8
 

@@ -48,6 +48,12 @@
               - which
             state: present
 
+          # TODO: When upgrading to iRODS 4.2.9, remove this task.
+        - name: ensure unixODBC is installed (irods issue 5389)
+          package:
+            name: unixODBC
+            state: present
+
     - when: ansible_distribution == 'Ubuntu'
       block:
         - name: Ubuntu | install iRODS package repository signing key

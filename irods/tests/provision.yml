@@ -101,8 +101,9 @@
     - name: verify that the system user has correct comment
       command:
         cmd: >
-          grep --quiet --regexp '^irods:x:[0-9]*:{{ gid_resp.stdout }}:iRODS Administrator:'
-          /etc/passwd
+          grep --quiet --regexp 
+            '^irods:x:[0-9]*:{{ gid_resp.stdout }}:iRODS Administrator:/var/lib/irods:/bin/bash'
+            /etc/passwd
       changed_when: false
 
     - name: verify that system user belongs to tty group

@@ -99,6 +99,7 @@
         createhome: true
         group: "{{ _irods_service_group_name }}"
         groups: tty
+        shell: /bin/bash
         comment: iRODS Administrator
 
 

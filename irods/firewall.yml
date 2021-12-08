@@ -4,11 +4,16 @@
   become: true
   vars:
     ports: "{{ _irods_server_port_range_start }}:{{ _irods_server_port_range_end }}"
+  tags:
+    - firewall
+    - no_testing
   tasks:
     - name: add firewall rules
       blockinfile:
-        path: /etc/sysconfig/iptables
-        insertbefore: -A {{ _firewall_chain }} -j REJECT
+        path: "{{ 
+          '/etc/iptables/rules.v4' if ansible_distribution == 'Ubuntu' else 
+          '/etc/sysconfig/iptables' }}"
+        insertbefore: (-A {{ _firewall_chain }} -j REJECT|COMMIT)
         marker: "# {mark} DS MANAGED BLOCK (irods)"
         block: |
           {% for i in groups['irods'] %}
@@ -41,9 +46,5 @@
   handlers:
     - name: restart firewall
       service:
-        name: iptables
+        name: "{{ 'netfilter-persistent' if ansible_distribution == 'Ubuntu' else 'iptables' }}"
         state: restarted
-
-  tags:
-    - firewall
-    - no_testing

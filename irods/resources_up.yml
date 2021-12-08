@@ -7,5 +7,4 @@
     - name: bring up storage storage resource and parents
       irods_resource_up:
         resource: "{{ item.name }}"
-        status: up
       with_items: "{{ _irods_storage_resources }}"

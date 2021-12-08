@@ -9,12 +9,15 @@
 # Required Variables:
 #  resource  the resource to modify
 
+set -e
+
 
 main()
 {
   local varFile="$1"
 
   local resource
+  # shellcheck disable=SC1090
   . "$varFile"
 
   require resource
@@ -42,7 +45,15 @@ main()
       changed=true
     fi
 
-    resource=$(quest "select RESC_PARENT where RESC_NAME = '$resource'")
+    local parentId
+    parentId="$(quest "select RESC_PARENT where RESC_NAME = '$resource'")"
+
+    if [[ -z "$parentId" ]]
+    then
+      break
+    fi
+
+    resource="$(quest "select RESC_NAME where RESC_ID = '$parentId'")"
   done
 
   succeed "$changed"
@@ -103,5 +114,4 @@ succeed()
 }
 
 
-set -e
 main "$@" 2>&1

@@ -34,6 +34,7 @@
             subject: "{{ _avra_manager }}"
             permission: own
             object: "{{ _avra_base_collection }}"
+            recursive: true
             host: "{{ groups['irods_catalog'][0] }}"
             port: "{{ _irods_zone_port }}"
             admin_user: "{{ _irods_clerver_user }}"

@@ -49,6 +49,7 @@ ipcJson_boolean(*Label, *Val) = _ipcJson_mkField(*Label, if *Val then 'true' els
 # Parameters:
 #   *SerialFields - A list of pre-serialized fields to include in the document
 #
+ipcJson_document: list string -> string
 ipcJson_document(*SerialFields) = _ipcJson_encodeObject(*SerialFields)
 
 # construct a serialized JSON number field. This version performs no error checking.

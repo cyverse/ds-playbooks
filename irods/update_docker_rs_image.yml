@@ -19,13 +19,13 @@
 
         - name: create command scripts staging directory
           file:
-            path: "{{ _build_dir }}/cmd"
+            path: "{{ _build_dir }}/var/lib/irods/msiExecCmd_bin"
             state: directory
 
         - name: add common command scripts
           copy:
             src: "{{ item }}"
-            dest: "{{ _build_dir }}/cmd"
+            dest: "{{ _build_dir }}/var/lib/irods/msiExecCmd_bin"
           with_fileglob:
             - "files/cmd-common/*"
 
@@ -95,7 +95,6 @@
             - on-build-instantiate.sh
             - periphery.sh
             - Dockerfile
-            - upgrade_config_files.py
 
         - when: _irods_publish_rs_image | bool
           block:

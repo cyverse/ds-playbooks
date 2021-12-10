@@ -1,132 +1,141 @@
 ---
 - name: test build image
-  hosts: irods_resource
+  hosts: localhost
   run_once: true
   gather_facts: false
   tasks:
-    - delegate_to: localhost
-      delegate_facts: true
-      block:
-        - name: test create command scripts staging directory
-          stat:
-            path: /tmp/cmd
-          register: response
-          failed_when: not (response.stat.exists and response.stat.isdir)
+    - name: test create command scripts staging directory
+      stat:
+        path: /tmp/var/lib/irods/msiExecCmd_bin
+      register: response
+      failed_when: not (response.stat.exists and response.stat.isdir)
 
-        - name: test add command scripts
-          stat:
-            path: /tmp/cmd/{{ item }}
-          register: response
-          failed_when: not response.stat.exists
-          with_items:
-            - amqptopicsend.py
-            - calliope-ingest
-            - de-archive-data
-            - de-create-collection
-            - delete-scheduled-rule
-            - generateuuid
-            - rm-trash
-            - set-uuid
-            - sparcd-ingest
+    - name: test add command scripts
+      stat:
+        path: /tmp/var/lib/irods/msiExecCmd_bin/{{ item }}
+      register: response
+      failed_when: not response.stat.exists
+      with_items:
+        - amqptopicsend.py
+        - calliope-ingest
+        - de-archive-data
+        - de-create-collection
+        - delete-scheduled-rule
+        - generateuuid
+        - rm-trash
+        - set-uuid
+        - sparcd-ingest
 
-        - name: verify deposition of server_config.json
-          stat:
-            path: /tmp/etc/irods/server_config.json
-          register: response
-          failed_when: not response.stat.exists
+    - name: verify deposition of server_config.json
+      stat:
+        path: /tmp/etc/irods/server_config.json
+      register: response
+      failed_when: not response.stat.exists
 
-        - name: verify server_config.advanced_settings.default_number_of_transfer_threads
-          debug:
-            msg: TODO implement
+    - name: retrieve encoded server_config.json
+      slurp:
+        src: /tmp/etc/irods/server_config.json
+      register: scEncoded
+    
+    - name: decode server_config.json
+      set_fact:
+        server_config: "{{ scEncoded.content | b64decode }}"
 
-        - name: verify server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes
-          debug:
-            msg: TODO implement
-        
-        - name: verfify server_config.catalog_provider_hosts
-          debug:
-            msg: TODO implement
+    - name: verify server_config.advanced_settings.default_number_of_transfer_threads
+      assert:
+        that:
+          - server_config.advanced_settings.default_number_of_transfer_threads == 4
 
-        - name: verify server_config.catalog_service_role
-          debug:
-            msg: TODO implement
+    - name: >-
+        verify 
+        server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes
+      debug:
+        msg: TODO implement
+    
+    - name: verfify server_config.catalog_provider_hosts
+      debug:
+        msg: TODO implement
 
-        - name: verify server_config.default_dir_mode
-          debug:
-            msg: TODO implement
+    - name: verify server_config.catalog_service_role
+      debug:
+        msg: TODO implement
 
-        - name: verify server_config.default_file_mode
-          debug:
-            msg: TODO implement
+    - name: verify server_config.default_dir_mode
+      debug:
+        msg: TODO implement
 
-        - name: verify server_config.default_hash_scheme
-          debug:
-            msg: TODO implement
+    - name: verify server_config.default_file_mode
+      debug:
+        msg: TODO implement
 
-        - name: verify server_config.default_resource_directory
-          debug:
-            msg: TODO implement
+    - name: verify server_config.default_hash_scheme
+      debug:
+        msg: TODO implement
 
-        - name: verify server_config.default_resource_name
-          debug:
-            msg: TODO implement
+    - name: verify server_config.default_resource_directory
+      debug:
+        msg: TODO implement
 
-        - name: verify server_config.negotiation_key
-          debug:
-            msg: TODO implement
+    - name: verify server_config.default_resource_name
+      debug:
+        msg: TODO implement
 
-        - name: verfiy server_config.plugin_configuration
-          debug:
-            msg: TODO implement
+    - name: verify server_config.negotiation_key
+      debug:
+        msg: TODO implement
 
-        - name: verify server_config.schema_validation_base_uri
-          debug:
-            msg: TODO implement
+    - name: verfiy server_config.plugin_configuration
+      debug:
+        msg: TODO implement
 
-        - name: verify server_config.server_control_plane_key
-          debug:
-            msg: TODO implement
+    - name: verify server_config.schema_validation_base_uri
+      debug:
+        msg: TODO implement
 
-        - name: verify server_config.server_port_range_end
-          debug:
-            msg: TODO implement
+    - name: verify server_config.server_control_plane_key
+      debug:
+        msg: TODO implement
 
-        - name: verfiy server_config.server_port_range_start
-          debug:
-            msg: TODO implement
+    - name: verify server_config.server_port_range_end
+      debug:
+        msg: TODO implement
 
-        - name: verify server_config.zone_key
-          debug:
-            msg: TODO implement
+    - name: verfiy server_config.server_port_range_start
+      debug:
+        msg: TODO implement
 
-        - name: verify server_config.zone_name
-          debug:
-            msg: TODO implement
+    - name: verify server_config.zone_key
+      debug:
+        msg: TODO implement
 
-        - name: verify server_config.zone_user
-          debug:
-            msg: TODO implement
+    - name: verify server_config.zone_name
+      debug:
+        msg: TODO implement
 
-        - name: verfiy hosts_config.json
-          debug:
-            msg: TODO implement
+    - name: verify server_config.zone_user
+      debug:
+        msg: TODO implement
 
-        - name: verify irods_environment.json
-          debug:
-            msg: TODO implement
+    - name: verfiy hosts_config.json
+      debug:
+        msg: TODO implement
 
-        - name: test stage dynamic rule bases
-          debug:
-            msg: TODO implement
+    - name: verify irods_environment.json
+      debug:
+        msg: TODO implement
 
-        - name: test stage static rule bases
-          debug:
-            msg: TODO implement
+    - name: test stage dynamic rule bases
+      debug:
+        msg: TODO implement
 
-        - name: test copy .dockerignore
-          debug:
-            msg: TODO implement
+    - name: test stage static rule bases
+      debug:
+        msg: TODO implement
 
-        - name: test copy resource server docker scripts
-          debug:
-            msg: TODO implement
+    - name: test copy .dockerignore
+      debug:
+        msg: TODO implement
+
+    - name: test copy resource server docker scripts
+      debug:
+        msg: TODO implement

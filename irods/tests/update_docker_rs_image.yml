@@ -41,21 +41,22 @@
       set_fact:
         server_config: "{{ scEncoded.content | b64decode }}"
 
-    - name: verify server_config.advanced_settings.default_number_of_transfer_threads
+    - name: verify server_config.json
       assert:
         that:
           - server_config.advanced_settings.default_number_of_transfer_threads == 4
-
-    - name: >-
-        verify 
-        server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes
-      debug:
-        msg: TODO implement
+          - >-
+            server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes 
+            == 4
+          - >-
+            server_config.catalog_provider_hosts 
+              | symmetric_difference(
+                [
+                  'dstesting_provider_configured_1.dstesting_default', 
+                  'dstesting_provider_unconfigured_1.dstesting_default' ] ) 
+              | length 
+            == 0
     
-    - name: verfify server_config.catalog_provider_hosts
-      debug:
-        msg: TODO implement
-
     - name: verify server_config.catalog_service_role
       debug:
         msg: TODO implement

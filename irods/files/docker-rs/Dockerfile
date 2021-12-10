@@ -19,8 +19,8 @@ RUN yum --assumeyes install \
     mkdir /irods_vault
 
 ### Install cmd scripts and config files
-COPY var/lib/irods/* /var/lib/irods/
-COPY etc/irods/* /etc/irods/
+COPY var/lib/irods/ /var/lib/irods/
+COPY etc/irods/ /etc/irods/
 RUN chown --recursive irods:irods /etc/irods /var/lib/irods && \
     chmod --recursive ug+rw /etc/irods /var/lib/irods && \
     chmod ug+x /var/lib/irods/irodsctl /var/lib/irods/msiExecCmd_bin/*

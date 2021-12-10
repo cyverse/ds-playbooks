@@ -83,4 +83,4 @@ jq_in_place()
 }
 
 
-main
+main "$@"

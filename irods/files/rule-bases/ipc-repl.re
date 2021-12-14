@@ -470,17 +470,18 @@ _repl_syncReplicas_workaround(*Object) {
 
 
 # DEPRECATED
-_createOrOverwrite(*DataPath, *IngestResc, *ReplResc, *IsNew) {
+_ipcRepl_createOrOverwrite_old(*DataPath, *DestResc, *New, *IngestResc, *ReplResc) {
   msiSplitPath(*DataPath, *collName, *dataName);
 
   foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collName' AND DATA_NAME = '*dataName') {
     *dataId = *rec.DATA_ID;
 
-    if (*IsNew) {
-      (*ingestName, *optional) = *IngestResc;
-      (*replName, *optional) = *ReplResc;
+    if (*New) {
 # XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
-#       _repl_scheduleRepl(*dataId, if $rescName == *replName then *ingestName else *replName);
+#      (*ingestName, *optional) = *IngestResc;
+#      (*replName, *optional) = *ReplResc;
+#      _repl_scheduleRepl(*dataId, if *DestResc == *replName then *ingestName else *replName);
+# XXX - ^^^
     } else {
       _repl_scheduleSyncReplicas(*dataId);
     }
@@ -488,15 +489,16 @@ _createOrOverwrite(*DataPath, *IngestResc, *ReplResc, *IsNew) {
 }
 
 
-_repl_createOrOverwrite(*DataPath, *IngestResc, *ReplResc, *IsNew) {
+_ipcRepl_createOrOverwrite(*DataPath, *DestResc, *New, *IngestResc, *ReplResc) {
   msiSplitPath(*DataPath, *collName, *dataName);
 
   foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collName' AND DATA_NAME = '*dataName') {
     *dataId = *rec.DATA_ID;
 
-    if (*IsNew) {
+    if (*New) {
 # XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
-#       _repl_scheduleRepl(*dataId, if $rescName == *ReplResc then *IngestResc else *ReplResc);
+#      _repl_scheduleRepl(*dataId, if *DestResc == *ReplResc then *IngestResc else *ReplResc);
+# XXX - ^^^
     } else {
       _repl_scheduleSyncReplicas(*dataId);
     }
@@ -625,7 +627,7 @@ replEntityRename(*SourceObject, *DestObject) {
 # newly created data object.
 
 # DEPRECATED
-_old_replSetRescSchemeForCreate {
+_ipcRepl_acSetRescSchemeForCreate {
   on (avra_replBelongsTo(/$objPath)) {
     _setDefaultResc(avra_replIngestResc);
   }
@@ -639,17 +641,17 @@ _old_replSetRescSchemeForCreate {
     _setDefaultResc(terraref_replIngestResc);
   }
 }
-_old_replSetRescSchemeForCreate {
+_ipcRepl_acSetRescSchemeForCreate {
   _setDefaultResc(_defaultIngestResc);
 }
 
-replSetRescSchemeForCreate {
+ipcRepl_acSetRescSchemeForCreate {
   (*resc, *residency) = _repl_findResc($objPath);
 
   if (*resc != ipc_DEFAULT_RESC) {
     msiSetDefaultResc(*resc, *residency);
   } else {
-    _old_replSetRescSchemeForCreate;
+    _ipcRepl_acSetRescSchemeForCreate;
   }
 }
 
@@ -658,7 +660,7 @@ replSetRescSchemeForCreate {
 # subsequent replicas of a data object.
 
 # DEPRECATED
-_old_replSetRescSchemeForRepl {
+_ipcRepl_acSetRescSchemeForRepl {
   on (avra_replBelongsTo(/$objPath)) {
     _setDefaultResc(avra_replReplResc);
   }
@@ -672,11 +674,11 @@ _old_replSetRescSchemeForRepl {
     _setDefaultResc(terraref_replReplResc);
   }
 }
-_old_replSetRescSchemeForRepl {
+_ipcRepl_acSetRescSchemeForRepl {
   _setDefaultResc(_defaultReplResc);
 }
 
-replSetRescSchemeForRepl {
+ipcRepl_acSetRescSchemeForRepl {
   if (
     if errorcode(temporaryStorage.repl_replicate) < 0 then true
     else temporaryStorage.repl_replicate != 'REPL_FORCED_REPL_RESC'
@@ -687,7 +689,7 @@ replSetRescSchemeForRepl {
       (*repl, *residency) = _repl_findReplResc(*resc);
       msiSetDefaultResc(*repl, *residency);
     } else {
-      _old_replSetRescSchemeForRepl;
+      _ipcRepl_acSetRescSchemeForRepl;
     }
   }
 }
@@ -696,39 +698,37 @@ replSetRescSchemeForRepl {
 # This rule ensures that uploaded files are replicated.
 
 # DEPRECATED
-_old_replPut(*ObjPath, *IsNew) {
+_ipcRepl_put_old(*ObjPath, *DestResc, *New) {
   on (avra_replBelongsTo(/*ObjPath)) {}
   on (de_replBelongsTo(/*ObjPath)) {
-    _createOrOverwrite(*ObjPath, de_replIngestResc, de_replReplResc, *IsNew);
+    _ipcRepl_createOrOverwrite_old(*ObjPath, *DestResc, *New, de_replIngestResc, de_replReplResc);
   }
   on (pire_replBelongsTo(/*ObjPath)) {}
   on (terraref_replBelongsTo(/*ObjPath)) {}
 }
-_old_replPut(*ObjPath, *IsNew) {
-  _createOrOverwrite(*ObjPath, _defaultIngestResc, _defaultReplResc, *IsNew);
+_ipcRepl_put_old(*ObjPath, *DestResc, *New) {
+  _ipcRepl_createOrOverwrite_old(*ObjPath, *DestResc, *New, _defaultIngestResc, _defaultReplResc);
 }
 
-_replPut(*ObjPath, *IsNew) {
-  # TODO once _old_replPut is removed, the dynamic equivalent of $rescName
-  # should be used
-  (*resc, *_) = _repl_findResc(*ObjPath);
+_ipcRepl_put(*ObjPath, *DestResc, *New) {
+  (*ingestResc, *_) = _repl_findResc(*ObjPath);
 
-  if (*resc != ipc_DEFAULT_RESC) {
-    (*repl, *_) = _repl_findReplResc(*resc);
-    _repl_createOrOverwrite(*ObjPath, *resc, *repl, *IsNew);
+  if (*ingestResc != ipc_DEFAULT_RESC) {
+    (*replResc, *_) = _repl_findReplResc(*ingestResc);
+    _ipcRepl_createOrOverwrite(*ObjPath, *DestResc, *New, *ingestResc, *replResc);
   } else {
-    _old_replPut(*ObjPath, *IsNew);
+    _ipcRepl_put_old(*ObjPath, *DestResc, *New);
   }
 }
 
 
-repl_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
-  _replPut(*DATA_OBJ_INFO.logical_path, true);
+ipcRepl_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
+  _ipcRepl_put(*DATA_OBJ_INFO.logical_path, hd(split(*DATA_OBJ_INFO.resc_hier, ';')), true);
 }
 
 
-repl_dataObjModified(*_, *_, *DATA_OBJ_INFO) {
-  _replPut(*DATA_OBJ_INFO.logical_path, false);
+ipcRepl_dataObjModified(*_, *_, *DATA_OBJ_INFO) {
+  _ipcRepl_put(*DATA_OBJ_INFO.logical_path, *DATA_OBJ_INFO.destRescName, false);
 }
 
 

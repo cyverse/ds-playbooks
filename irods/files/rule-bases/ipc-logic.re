@@ -35,7 +35,7 @@ assignUUID(*ItemType, *ItemName) {
   *uuid = ipc_uuidGenerate;
   writeLine('serverLog', 'UUID *uuid created');
 # XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
-#       4.2.2.
+#       4.2.10.
 #  msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, '');
   *status = errormsg(msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, ''), *msg);
 

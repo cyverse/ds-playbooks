@@ -644,15 +644,12 @@ _old_replSetRescSchemeForCreate {
 }
 
 replSetRescSchemeForCreate {
-  # XXX iRODS 4.1.10 bug workaround. This prevents irepl from failing
-  if (errorcode(temporaryStorage.'repl_$objPath') < 0) {
-    (*resc, *residency) = _repl_findResc($objPath);
+  (*resc, *residency) = _repl_findResc($objPath);
 
-    if (*resc != ipc_DEFAULT_RESC) {
-      msiSetDefaultResc(*resc, *residency);
-    } else {
-      _old_replSetRescSchemeForCreate;
-    }
+  if (*resc != ipc_DEFAULT_RESC) {
+    msiSetDefaultResc(*resc, *residency);
+  } else {
+    _old_replSetRescSchemeForCreate;
   }
 }
 
@@ -693,9 +690,6 @@ replSetRescSchemeForRepl {
       _old_replSetRescSchemeForRepl;
     }
   }
-
-  # XXX iRODS 4.1.10 bug workaround. This prevents irepl from failing
-  temporaryStorage.'repl_$objPath' = 'REPL_RESC_SET';
 }
 
 

@@ -2,6 +2,8 @@
 - name: provision for iRODS
   hosts: irods:!unmanaged_systems
   become: true
+  collections:
+    - community.general
   vars:
     # NB: The rpm and yum bindings for the package module require Python 2 in
     #     Ansible 2.9.6
@@ -13,6 +15,22 @@
           - uuidd
           - which
         state: present
+
+      # XXX: After DS-47 is deployed, this should be removed
+    - when: ansible_distribution == 'CentOS'
+      block:
+        - name: install yum versionlock plugin
+          package:
+            name: yum-plugin-versionlock
+            state: present
+
+        - name: lock NetCDF plugin version to 4.2.8.0
+          yum_versionlock:
+            name:
+              - irods-netcdf-client_modules-4.2.8.0
+              - irods-netcdf-icommands-4.2.8.0
+              - irods-netcdf-server_modules-4.2.8.0
+            state: present
 
     - name: create service group
       group:

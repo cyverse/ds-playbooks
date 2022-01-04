@@ -67,6 +67,7 @@ ipcJson_number(*Label, *Val) = _ipcJson_mkField(*Label, '*Val')
 #   *Label - the name of the object field
 #   *SerialFields - the list of pre-serialized fields ot include in the object
 #
+ipcJson_object: string * list string -> string
 ipcJson_object(*Label, *SerialFields) = _ipcJson_mkField(
   *Label, _ipcJson_encodeObject(*SerialFields) )
 

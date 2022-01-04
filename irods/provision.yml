@@ -17,7 +17,9 @@
         state: present
 
       # XXX: After DS-47 is deployed, this should be removed
-    - when: ansible_distribution == 'CentOS'
+    - tags:
+        - netcdf
+      when: ansible_distribution == 'CentOS'
       block:
         - name: install yum versionlock plugin
           package:

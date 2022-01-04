@@ -63,6 +63,7 @@
         - name: Ubuntu | install iRODS repository
           copy:
             dest: /etc/apt/sources.list.d/renci-irods.list
+            mode: u+rw
             content: |
               deb [arch=amd64] https://packages.irods.org/apt/ {{ ansible_lsb.codename }} main
 
@@ -75,6 +76,7 @@
         - name: Ubuntu | lock iRODS packages to required version
           copy:
             dest: /etc/apt/preferences.d/irods
+            mode: u+rw
             content: |
               Package: irods-*
               Pin: version {{ _irods_version }}
@@ -82,7 +84,7 @@
 
         - name: Ubuntu | install OS specific required packages
           package:
-            name: 
+            name:
               - debianutils
               - uuid-runtime
             state: present
@@ -107,6 +109,8 @@
         groups: tty
         shell: /bin/bash
         comment: iRODS Administrator
+
+    - import_tasks: tasks/ensure_irods_ownership.yml
 
 
 - import_playbook: update_hosts.yml

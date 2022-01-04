@@ -24,6 +24,14 @@
       - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm
     state: present
 
+- name: lock NetCDF plugins to 4.2.8.0
+  yum_versionlock:
+    name:
+      - irods-netcdf-client_modules-4.2.8.0
+      - irods-netcdf-icommands-4.2.8.0
+      - irods-netcdf-server_modules-4.2.8.0
+    state: present
+
 - name: ensure msiSetAVU microservice is absent
   file:
     path: /var/lib/irods/plugins/microservices/libmsiSetAVU.so

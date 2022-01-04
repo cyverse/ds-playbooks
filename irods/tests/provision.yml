@@ -14,9 +14,9 @@
           set_fact:
             ansible_python_interpreter: /usr/bin/python
 
-
         - name: CentOS | test install iRODS package repository signing key
           shell: |
+            set -o pipefail
             rpm --query --queryformat='%{SUMMARY}\n' gpg-pubkey | grep --quiet 'iRODS Consortium'
           changed_when: false
 
@@ -46,7 +46,7 @@
             - irods-icommands
             - irods-runtime
             - irods-server
-            
+
         - include_tasks: tasks/test_pkg_installed.yml
           with_items:
             - unixODBC
@@ -90,7 +90,7 @@
       vars:
         pkg: irods-server
         version: 4.2.8
-        
+
     - name: test create service group
       command:
         cmd: sed --quiet 's/^{{ group_name }}:x:\([0-9]\+\):.*/\1/p' /etc/group
@@ -102,7 +102,7 @@
     - name: verify that the system user has correct comment
       command:
         cmd: >
-          grep --quiet --regexp 
+          grep --quiet --regexp
             '^irods:x:[0-9]*:{{ gid_resp.stdout }}:iRODS Administrator:/var/lib/irods:/bin/bash'
             /etc/passwd
       changed_when: false
@@ -111,3 +111,11 @@
       command:
         cmd: grep --quiet --regexp '^tty:x:[0-9]*:\(.\+,\)\?irods\(,.\+\)\?$' /etc/group
       changed_when: false
+
+    - include_tasks: tasks/test_irods_ownership.yml
+      vars:
+        dir: /etc/irods
+
+    - include_tasks: tasks/test_irods_ownership.yml
+      vars:
+        dir: /var/lib/irods

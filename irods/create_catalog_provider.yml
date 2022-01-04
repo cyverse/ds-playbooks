@@ -16,7 +16,7 @@
         block: |
           {% for i in groups['irods_catalog'] %}
           {%   set addr = i if i|ipaddr else lookup('dig', i) %}
-          {{ '%-7s %-15s %-15s %-23s %s' 
+          {{ '%-7s %-15s %-15s %-23s %s'
             | format('host', 'ICAT', hostvars[i]._irods_db_user, addr ~ '/32', 'md5') }}
           {% endfor %}
       notify:
@@ -87,6 +87,7 @@
           copy:
             src: "{{ item }}"
             dest: /etc/profile.d
+            mode: a+r
           with_fileglob:
             - "files/profile.d/*"
 
@@ -135,7 +136,7 @@
       package:
         name:
           - irods-database-plugin-postgres
-        state: latest
+        state: present
 
     - import_tasks: tasks/install_plugins.yml
 
@@ -151,10 +152,10 @@
   become_user: "{{ _irods_service_account_name }}"
   become_flags: '-i'
   gather_facts: false
-  tasks:    
+  tasks:
     - name: start iRODS
       irods_ctl:
-    
+
     - name: authenticate clerver
       irods_clerver_auth:
         provider: "{{ inventory_hostname }}"

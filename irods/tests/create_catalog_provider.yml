@@ -43,11 +43,12 @@
         loop_var: pkg
 
     - name: test install PostgreSQL 12 ODBC Driver
-      shell: odbcinst -q -d -n PostgreSQL
+      command: odbcinst -q -d -n PostgreSQL
       changed_when: false
 
     - name: test ensure pika installed
       shell: |
+        set -o pipefail
         pip --disable-pip-version-check show pika | sed --quiet 's/^Version: //p' 2> /dev/null
       register: resp
       changed_when: false
@@ -55,6 +56,7 @@
 
     - name: test lock irods-database-plugin-postgres to required version
       shell: |
+        set -o pipefail
         if ! yum versionlock status | grep --quiet irods-database-plugin-postgres; then
           printf 'irods-database-plugin-postgres not locked\n' >&2
           exit 1

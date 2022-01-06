@@ -40,7 +40,12 @@
       file:
         path: /etc/irods/ipc-amqp.re
         state: absent
-        
+
+    - name: ensure ipc-uuid.re is gone
+      file:
+        path: /etc/irods/ipc-uuid.re
+        state: absent
+
   roles:
     - role: cyverse.irods_cfg
       vars:
@@ -74,7 +79,7 @@
               }
             ] }}
         irods_cfg_icat: >-
-          {{ 
+          {{
             None if not provider|bool else
             {
               'db_host': groups['dbms'][0],
@@ -110,4 +115,5 @@
     - name: reload rules
       file:
         path: /etc/irods/core.re
+        mode: u+r
         state: touch

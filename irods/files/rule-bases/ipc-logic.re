@@ -5,7 +5,6 @@
 # For license information, see https://cyverse.org/license.
 
 @include 'ipc-json'
-@include 'ipc-uuid'
 
 COLLECTION_TYPE = 'collection'
 DATA_OBJECT_TYPE = 'data-object'
@@ -30,9 +29,21 @@ contains(*item, *list) {
 }
 
 
+_ipc_generateUUID {
+  *status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
+  if (*status == 0) {
+    msiGetStdoutInExecCmdOut(*out, *uuid);
+    trimr(*uuid, "\n");
+  } else {
+    writeLine("serverLog", "failed to generate UUID");
+    fail;
+  }
+}
+
+
 # Assign a UUID to a given collection or data object.
 assignUUID(*ItemType, *ItemName) {
-  *uuid = ipc_uuidGenerate;
+  *uuid = _ipc_generateUUID;
   writeLine('serverLog', 'UUID *uuid created');
 # XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
 #       4.2.2.

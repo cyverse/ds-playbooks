@@ -6,7 +6,7 @@
 
 @include 'ipc-json'
 
-COLLECTION_TYPE = 'collection'
+_ipc_COLLECTION_TYPE = 'collection'
 DATA_OBJECT_TYPE = 'data-object'
 RESOURCE_TYPE = 'resource'
 USER_TYPE = 'user'
@@ -162,7 +162,7 @@ mkAvuObject(*Field, *Name, *Value, *Unit) = ipcJson_object(
 
 _getAmqpEntityType(*ItemType) =
   match *ItemType with
-    | '-C' => COLLECTION_TYPE
+    | '-C' => _ipc_COLLECTION_TYPE
     | '-d' => DATA_OBJECT_TYPE
     | '-R' => RESOURCE_TYPE
     | '-u' => USER_TYPE
@@ -174,7 +174,7 @@ sendCollectionAdd(*Collection, *Path) =
       _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
       mkEntityField(*Collection),
       mkPathField(*Path) ) )
-  in sendMsg(COLLECTION_TYPE ++ '.add', *msg)
+  in sendMsg(_ipc_COLLECTION_TYPE ++ '.add', *msg)
 
 
 sendDataObjectOpen(*Data) =
@@ -227,7 +227,7 @@ sendCollectionInheritModified(*Recursive, *Inherit, *Collection) =
       mkEntityField(*Collection),
       ipcJson_boolean('recursive', *Recursive),
       ipcJson_boolean('inherit', *Inherit) ) )
-  in sendMsg(COLLECTION_TYPE ++ '.acl.mod', *msg)
+  in sendMsg(_ipc_COLLECTION_TYPE ++ '.acl.mod', *msg)
 
 
 sendCollectionAclModified(*Recursive, *AccessLevel, *Username, *Zone, *Collection) =
@@ -238,7 +238,7 @@ sendCollectionAclModified(*Recursive, *AccessLevel, *Username, *Zone, *Collectio
       ipcJson_boolean('recursive', *Recursive),
       ipcJson_string('permission', *AccessLevel),
       mkUserObject('user', *Username, *Zone) ) )
-  in sendMsg(COLLECTION_TYPE ++ '.acl.mod', *msg)
+  in sendMsg(_ipc_COLLECTION_TYPE ++ '.acl.mod', *msg)
 
 
 sendCollectionAccessModified(*Recursive, *AccessLevel, *Username, *Zone, *Collection) {
@@ -536,7 +536,7 @@ ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
   *path = '*ParColl/*ChildColl';
   *uuid = retrieveCollectionUUID(*path);
   if (*uuid != '') {
-    sendEntityRemove(COLLECTION_TYPE, *uuid, *path);
+    sendEntityRemove(_ipc_COLLECTION_TYPE, *uuid, *path);
   }
 }
 
@@ -581,7 +581,7 @@ ipc_acPreprocForRmColl { temporaryStorage.'$collName' = retrieveCollectionUUID($
 
 ipc_acPostProcForRmColl {
   *uuid = temporaryStorage.'$collName';
-  if (*uuid != '') { sendEntityRemove(COLLECTION_TYPE, *uuid, $collName); }
+  if (*uuid != '') { sendEntityRemove(_ipc_COLLECTION_TYPE, *uuid, $collName); }
 }
 
 
@@ -620,7 +620,7 @@ ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 
   if (*uuid != '') {
     if (*type == '-C') {
-      sendEntityMove(COLLECTION_TYPE, *uuid, *SrcEntity, *DestEntity);
+      sendEntityMove(_ipc_COLLECTION_TYPE, *uuid, *SrcEntity, *DestEntity);
     } else if (*type == '-d') {
       sendEntityMove(DATA_OBJECT_TYPE, *uuid, *SrcEntity, *DestEntity);
     }

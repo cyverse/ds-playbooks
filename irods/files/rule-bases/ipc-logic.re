@@ -7,7 +7,7 @@
 @include 'ipc-json'
 
 _ipc_COLLECTION_TYPE = 'collection'
-DATA_OBJECT_TYPE = 'data-object'
+_ipc_DATA_OBJECT_TYPE = 'data-object'
 RESOURCE_TYPE = 'resource'
 USER_TYPE = 'user'
 
@@ -163,7 +163,7 @@ mkAvuObject(*Field, *Name, *Value, *Unit) = ipcJson_object(
 _getAmqpEntityType(*ItemType) =
   match *ItemType with
     | '-C' => _ipc_COLLECTION_TYPE
-    | '-d' => DATA_OBJECT_TYPE
+    | '-d' => _ipc_DATA_OBJECT_TYPE
     | '-R' => RESOURCE_TYPE
     | '-u' => USER_TYPE
 
@@ -185,7 +185,7 @@ sendDataObjectOpen(*Data) =
       mkPathField($objPath),
       ipcJson_number('size', double($dataSize)),
       ipcJson_string('timestamp', getTimestamp()) ) )
-  in sendMsg(DATA_OBJECT_TYPE ++ '.open', *msg)
+  in sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.open', *msg)
 
 
 _ipc_sendDataObjectAdd(
@@ -200,7 +200,7 @@ _ipc_sendDataObjectAdd(
       ipcJson_number('size', double(*Size)),
       ipcJson_string('type', *Type) ) );
 
-  sendMsg(DATA_OBJECT_TYPE ++ '.add', *msg);
+  sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.add', *msg);
 }
 
 
@@ -216,7 +216,7 @@ _ipc_sendDataObjectMod(
       ipcJson_number('size', double(*Size)),
       ipcJson_string('type', *Type) ) );
 
-  sendMsg(DATA_OBJECT_TYPE ++ '.mod', *msg);
+  sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.mod', *msg);
 }
 
 
@@ -261,13 +261,13 @@ sendDataObjectAclModified(*AccessLevel, *Username, *Zone, *Data) =
       mkEntityField(*Data),
       ipcJson_string('permission', *AccessLevel),
       mkUserObject('user', *Username, *Zone) ) )
-  in sendMsg(DATA_OBJECT_TYPE ++ '.acl.mod', *msg)
+  in sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.acl.mod', *msg)
 
 
 # Publish a data-object.sys-metadata.mod message to AMQP exchange
 _ipc_sendDataObjectMetadataModified(*AuthorName, *AuthorZone, *Data) {
   *msg = ipcJson_document(list(_ipc_mkAuthorField(*AuthorName, *AuthorZone), mkEntityField(*Data)));
-  sendMsg(DATA_OBJECT_TYPE ++ '.sys-metadata.mod', *msg);
+  sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.sys-metadata.mod', *msg);
 }
 
 
@@ -315,7 +315,7 @@ sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit) =
       _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
       ipcJson_string('pattern', *ItemName),
       mkAvuObject('metadatum', *AName, *AValue, *AUnit) ) )
-  in sendMsg(DATA_OBJECT_TYPE ++ '.metadata.addw', *msg)
+  in sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.metadata.addw', *msg)
 
 
 sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit) =
@@ -590,7 +590,7 @@ ipc_acDataDeletePolicy { temporaryStorage.'$objPath' = retrieveDataUUID($objPath
 
 ipc_acPostProcForDelete {
   *uuid = temporaryStorage.'$objPath';
-  if (*uuid != '') { sendEntityRemove(DATA_OBJECT_TYPE, *uuid, $objPath); }
+  if (*uuid != '') { sendEntityRemove(_ipc_DATA_OBJECT_TYPE, *uuid, $objPath); }
 }
 
 
@@ -622,7 +622,7 @@ ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
     if (*type == '-C') {
       sendEntityMove(_ipc_COLLECTION_TYPE, *uuid, *SrcEntity, *DestEntity);
     } else if (*type == '-d') {
-      sendEntityMove(DATA_OBJECT_TYPE, *uuid, *SrcEntity, *DestEntity);
+      sendEntityMove(_ipc_DATA_OBJECT_TYPE, *uuid, *SrcEntity, *DestEntity);
     }
   } else {
     if (*type == '-C') {

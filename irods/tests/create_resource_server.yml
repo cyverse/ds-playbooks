@@ -6,6 +6,18 @@
   hosts: irods_resource:!unmanaged_systems
   become: true
   tasks:
+    - name: retrieve installed package info
+      package_facts:
+
+    - name: test ensure NetCDF plugs not installed
+      assert:
+        that:
+          - not "{{ item }}" in ansible_facts.packages
+      with_items:
+        - irods-netcdf-client_modules
+        - irods-netcdf-icommands
+        - irods-netcdf-server_modules
+
     - include_tasks: tasks/test_irods_ownership.yml
       vars:
         dir: /etc/irods

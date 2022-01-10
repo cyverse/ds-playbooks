@@ -159,11 +159,13 @@ acSetNumThreads { ipc_acSetNumThreads; }
 
 
 acSetRescSchemeForCreate {
-  replSetRescSchemeForCreate;
+  ipcRepl_acSetRescSchemeForCreate;
 }
 
 
-acSetRescSchemeForRepl { replSetRescSchemeForRepl; }
+acSetRescSchemeForRepl { 
+  ipcRepl_acSetRescSchemeForRepl; 
+}
 
 
 acSetReServerNumProc { ipc_acSetReServerNumProc; }
@@ -352,7 +354,7 @@ _ipc_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 #     *err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
 #     if (*err < 0) { writeLine('serverLog', *msg); }
 #
-#     *err = errormsg(repl_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+#     *err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
 #     if (*err < 0) { writeLine('serverLog', *msg); }
 #   }
 # }
@@ -389,7 +391,7 @@ _ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO, *Step) {
       *err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
       if (*err < 0) { writeLine('serverLog', *msg); }
 
-      *err = errormsg(repl_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+      *err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
       if (*err < 0) { writeLine('serverLog', *msg); }
     }
   }
@@ -404,7 +406,7 @@ _ipc_dataObjModified(*User, *Zone, *DATA_OBJ_INFO) {
     *err = errormsg(ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO), *msg);
     if (*err < 0) { writeLine('serverLog', *msg); }
 
-    *err = errormsg(repl_dataObjModified(*User, *Zone, *DATA_OBJ_INFO), *msg);
+    *err = errormsg(ipcRepl_dataObjModified(*User, *Zone, *DATA_OBJ_INFO), *msg);
     if (*err < 0) { writeLine('serverLog', *msg); }
   }
 }

@@ -1,11 +1,18 @@
 ---
 - import_playbook: provision.yml
 
-
-- name: ensure irods owns what it is supposed to
+- name: resource server specific provisioning
   hosts: irods_resource:!unmanaged_systems
   become: true
   tasks:
+    - name: ensure NetCDF plugins not installed
+      package:
+        name:
+          - irods-netcdf-client_modules
+          - irods-netcdf-icommands
+          - irods-netcdf-server_modules
+        state: absent
+
     - import_tasks: tasks/ensure_irods_ownership.yml
 
 
@@ -28,7 +35,7 @@
   become_flags: '-i'
   vars:
     admin_user: "{{ hostvars[groups['irods_catalog'][0]]['_irods_clerver_user'] }}"
-    admin_password: "{{ hostvars[groups['irods_catalog'][0]]['_irods_clerver_password'] }}"  
+    admin_password: "{{ hostvars[groups['irods_catalog'][0]]['_irods_clerver_password'] }}"
   tasks:
     - name: create clerver user
       delegate_to: localhost

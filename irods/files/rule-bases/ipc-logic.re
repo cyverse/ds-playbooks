@@ -340,7 +340,7 @@ _ipc_sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName,
 _ipc_sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
   *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField(*AuthorName, *AuthorZone)),
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       ipcJson_string('pattern', *ItemName),
       mkAvuObject('metadatum', *AName, *AValue, *AUnit) ) );
 
@@ -645,19 +645,20 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
   *level = removePrefix(*AccessLevel, list('admin:'));
   *type = ipc_getEntityType(*Path);
   *uuid = retrieveUUID(*type, *Path);
+  *userZone = if *UserZone == '' then ipc_ZONE else *UserZone; 
   if (*uuid != '') {
     if (*type == _ipc_COLLECTION) {
       _ipc_sendCollectionAccessModified(
         *uuid, 
         *level, 
         *UserName, 
-        *UserZone, 
+        *authorZone, 
         bool(*RecursiveFlag), 
         $userNameClient, 
         $rodsZoneClient );
     } else if (*type == _ipc_DATA_OBJECT) {
       _ipc_sendDataObjectAclModified(
-        *uuid, *level, *UserName, *UserZone, $userClientName, $rodsZoneClient );
+        *uuid, *level, *UserName, *userZone, $userClientName, $rodsZoneClient );
     }
   }
 }
@@ -705,7 +706,7 @@ ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
               *DestEntity, 
               *res.DATA_OWNER_NAME, 
               *res.DATA_OWNER_ZONE, 
-              *res.DATA_SIZE, 
+              int(*res.DATA_SIZE), 
               *res.DATA_TYPE_NAME),
             *msg);
 
@@ -902,7 +903,7 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 #       *DATA_OBJ_INFO.logical_path,
 #       *DATA_OBJ_INFO.data_owner_name,
 #       *DATA_OBJ_INFO.data_owner_zone,
-#       *DATA_OBJ_INFO.data_size,
+#       int(*DATA_OBJ_INFO.data_size),
 #       *DATA_OBJ_INFO.data_type),
 #     *msg);
 #   if (*err < 0) { writeLine('serverLog', *msg); }
@@ -930,7 +931,7 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
           *DATA_OBJ_INFO.logical_path,
           *DATA_OBJ_INFO.data_owner_name,
           *DATA_OBJ_INFO.data_owner_zone,
-          *DATA_OBJ_INFO.data_size,
+          int(*DATA_OBJ_INFO.data_size),
           *DATA_OBJ_INFO.data_type),
         *msg);
       if (*err < 0) { writeLine('serverLog', *msg); }
@@ -973,7 +974,7 @@ ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO) {
       *DATA_OBJ_INFO.logical_path,
       *DATA_OBJ_INFO.data_owner_name,
       *DATA_OBJ_INFO.data_owner_zone,
-      *DATA_OBJ_INFO.data_size,
+      int(*DATA_OBJ_INFO.data_size),
       *DATA_OBJ_INFO.data_type);
   }
 }

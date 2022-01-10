@@ -41,7 +41,7 @@ _ipcJson_mkField(*Label, *SerialVal) = '"' ++ *Label ++ '":' ++ *SerialVal
 #   *Label - the name of the field
 #   *Val - the value of the field
 #
-ipcJson_number: string * double -> string
+ipcJson_number: string * f double -> string
 ipcJson_number(*Label, *Val) = _ipcJson_mkField(*Label, '*Val')
 
 # construct a serialized JSON string field

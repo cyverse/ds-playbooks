@@ -658,7 +658,7 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
         $rodsZoneClient );
     } else if (*type == _ipc_DATA_OBJECT) {
       _ipc_sendDataObjectAclModified(
-        *uuid, *level, *UserName, *userZone, $userClientName, $rodsZoneClient );
+        *uuid, *level, *UserName, *userZone, $userNameClient, $rodsZoneClient );
     }
   }
 }
@@ -824,7 +824,7 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValu
       *newName, 
       *newValue, 
       *newUnit, 
-      $userClientName, 
+      $userNameClient, 
       $rodsZoneClient );
   }
 }
@@ -872,7 +872,7 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *S
 
   if (*source != '' && *target != '') {
     _ipc_sendAvuCopy(
-      *SourceItemType, *source, *TargetItemType, *target, $userClientName, $rodsZoneClient );
+      *SourceItemType, *source, *TargetItemType, *target, $userNameClient, $rodsZoneClient );
   }
 }
 

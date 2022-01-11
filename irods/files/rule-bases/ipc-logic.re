@@ -966,17 +966,19 @@ ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO) {
   *uuid = retrieveUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path);
     
-  if (*uuid != '') {
-    _ipc_sendDataObjectMod(
-      *User,
-      *Zone,
-      *uuid,
-      *DATA_OBJ_INFO.logical_path,
-      *DATA_OBJ_INFO.data_owner_name,
-      *DATA_OBJ_INFO.data_owner_zone,
-      int(*DATA_OBJ_INFO.data_size),
-      *DATA_OBJ_INFO.data_type);
+  if (*uuid == '') {
+    *uuid = assignUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path);
   }
+
+  _ipc_sendDataObjectMod(
+    *User,
+    *Zone,
+    *uuid,
+    *DATA_OBJ_INFO.logical_path,
+    *DATA_OBJ_INFO.data_owner_name,
+    *DATA_OBJ_INFO.data_owner_zone,
+    *DATA_OBJ_INFO.data_size,
+    *DATA_OBJ_INFO.data_type );
 }
 
 

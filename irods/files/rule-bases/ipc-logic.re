@@ -8,7 +8,7 @@
 
 _ipc_COLLECTION_TYPE = 'collection'
 _ipc_DATA_OBJECT_TYPE = 'data-object'
-RESOURCE_TYPE = 'resource'
+_ipc_RESOURCE_TYPE = 'resource'
 USER_TYPE = 'user'
 
 
@@ -164,7 +164,7 @@ _getAmqpEntityType(*ItemType) =
   match *ItemType with
     | '-C' => _ipc_COLLECTION_TYPE
     | '-d' => _ipc_DATA_OBJECT_TYPE
-    | '-R' => RESOURCE_TYPE
+    | '-R' => _ipc_RESOURCE_TYPE
     | '-u' => USER_TYPE
 
 

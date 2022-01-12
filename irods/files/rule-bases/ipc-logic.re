@@ -9,7 +9,7 @@
 _ipc_COLLECTION_TYPE = 'collection'
 _ipc_DATA_OBJECT_TYPE = 'data-object'
 _ipc_RESOURCE_TYPE = 'resource'
-USER_TYPE = 'user'
+_ipc_USER_TYPE = 'user'
 
 
 getTimestamp() {
@@ -165,7 +165,7 @@ _getAmqpEntityType(*ItemType) =
     | '-C' => _ipc_COLLECTION_TYPE
     | '-d' => _ipc_DATA_OBJECT_TYPE
     | '-R' => _ipc_RESOURCE_TYPE
-    | '-u' => USER_TYPE
+    | '-u' => _ipc_USER_TYPE
 
 
 sendCollectionAdd(*Collection, *Path) =

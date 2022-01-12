@@ -152,8 +152,8 @@ sendMsg(*Topic, *Msg) {
 }
 
 
-_ipc_mkUserObject(*Field, *Name, *Zone) =
-  ipcJson_object(*Field, list(ipcJson_string('name', *Name), ipcJson_string('zone', *Zone)))
+_ipc_mkUserObject(*Field, *Name, *Zone) = ipcJson_object(
+  *Field, list(ipcJson_string('name', *Name), ipcJson_string('zone', *Zone)) )
 
 
 _ipc_mkAuthorField(*Name, *Zone) = _ipc_mkUserObject('author', *Name, *Zone)
@@ -257,7 +257,7 @@ _ipc_sendCollectionAclModified(
 
 
 _ipc_sendCollectionAccessModified(
-  *Collection, *AccessLevel, *UserName, *UserZone, *Recursive, *AuthorName, *AuthorZone) 
+  *Collection, *AccessLevel, *UserName, *UserZone, *Recursive, *AuthorName, *AuthorZone ) 
 {
   if (*AccessLevel == 'inherit') {
     _ipc_sendCollectionInheritModified(*Collection, true, *Recursive, *AuthorName, *AuthorZone);
@@ -669,7 +669,7 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
       *uuid, 
       *level, 
       *UserName, 
-      *authorZone, 
+      *userZone, 
       bool(*RecursiveFlag), 
       $userNameClient, 
       $rodsZoneClient );

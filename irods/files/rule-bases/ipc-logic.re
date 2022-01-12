@@ -42,36 +42,6 @@ contains(*item, *list) {
 }
 
 
-# Assign a UUID to a given collection or data object.
-assignUUID(*ItemType, *ItemName) {
-  *uuid = ipc_uuidGenerate;
-  writeLine('serverLog', 'UUID *uuid created');
-# XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
-#       4.2.10.
-#  msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, '');
-  *status = errormsg(msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, ''), *msg);
-
-  if (*status == -818000) {
-    # assume it was uploaded by a ticket
-    *typeArg = execCmdArg(*ItemType);
-    *nameArg = execCmdArg(*ItemName);
-    *valArg = execCmdArg(*uuid);
-    *argStr = "*typeArg *nameArg *valArg";
-    *status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
-    if (*status != 0) {
-      writeLine('serverLog', "Failed to assign UUID: *msg");
-      fail;
-    }
-  } else if (*status != 0) {
-    writeLine('serverLog', "Failed to assign UUID: *msg");
-    fail;
-  }
-# XXX - ^^^
-
-  *uuid;
-}
-
-
 # Looks up the UUID of a collection from its path.
 retrieveCollectionUUID(*Coll) {
   *uuid = '';
@@ -107,6 +77,41 @@ retrieveUUID(*EntityType, *EntityPath) {
   } else {
     ''
   }
+}
+
+
+# Assign a UUID to a given collection or data object.
+assignUUID(*ItemType, *ItemName) {
+  *uuid = retrieveUUID(*ItemType, *ItemName);
+
+  if (*uuid == '') {
+    *uuid = ipc_uuidGenerate;
+    writeLine('serverLog', 'UUID *uuid created');
+# XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
+#       4.2.10.
+#    msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, '');
+    *status = errormsg(msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, ''), *msg);
+
+    if (*status == -818000) {
+      # assume it was uploaded by a ticket
+      *typeArg = execCmdArg(*ItemType);
+      *nameArg = execCmdArg(*ItemName);
+      *valArg = execCmdArg(*uuid);
+      *argStr = "*typeArg *nameArg *valArg";
+      *status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
+    
+      if (*status != 0) {
+        writeLine('serverLog', "Failed to assign UUID: *msg");
+        fail;
+      }
+    } else if (*status != 0) {
+      writeLine('serverLog', "Failed to assign UUID: *msg");
+      fail;
+    }
+# XXX - ^^^
+  }
+
+  *uuid;
 }
 
 

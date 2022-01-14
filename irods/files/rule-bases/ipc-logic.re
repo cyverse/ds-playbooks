@@ -12,17 +12,27 @@ _ipc_DATA_OBJECT = '-d'
 _ipc_RESOURCE = '-R'
 _ipc_USER = '-u'
 
+_ipc_isCollection(*Type) = *Type == _ipc_COLLECTION
+
+_ipc_isDataObject(*Type) = *Type == _ipc_DATA_OBJECT
+
+# NB: Sometimes iRODS passes `-r` to indicated a resource
+_ipc_isResource(*Type) = *Type == _ipc_RESOURCE || *Type == '-r'
+
+_ipc_isUser(*Type) = *Type == _ipc_USER
+
+
 _ipc_COLL_MSG_TYPE = 'collection'
 _ipc_DATA_MSG_TYPE = 'data-object'
 _ipc_RESC_MSG_TYPE = 'resource'
 _ipc_USER_MSG_TYPE = 'user'
 
-
-_ipc_getAmqpType(*ItemType) = match *ItemType with
-  | _ipc_COLLECTION => _ipc_COLL_MSG_TYPE
-  | _ipc_DATA_OBJECT => _ipc_DATA_MSG_TYPE
-  | _ipc_RESOURCE => _ipc_RESC_MSG_TYPE
-  | _ipc_USER => _ipc_USER_MSG_TYPE
+_ipc_getAmqpType(*ItemType) = 
+  if _ipc_isCollection(*ItemType) then _ipc_COLL_MSG_TYPE
+  else if _ipc_isDataObject(*ItemType) then _ipc_DATA_MSG_TYPE
+  else if _ipc_isResource(*ItemType) then _ipc_RESC_MSG_TYPE
+  else if _ipc_isUser(*ItemType) then _ipc_USER_MSG_TYPE
+  else ''
 
 
 getTimestamp() {
@@ -70,9 +80,9 @@ retrieveDataUUID(*Data) {
 
 # Looks up the UUID for a given type of entity (collection or data object)
 retrieveUUID(*EntityType, *EntityPath) {
-  if (*EntityType == _ipc_COLLECTION) {
+  if (_ipc_isCollection(*EntityType)) {
     retrieveCollectionUUID(*EntityPath);
-  } else if (*EntityType == _ipc_DATA_OBJECT) {
+  } else if (_ipc_isDataObject(*EntityType)) {
     retrieveDataUUID(*EntityPath);
   } else {
     ''
@@ -664,7 +674,7 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
   *uuid = '';
   _ipc_ensureUUID(*type, *Path, *uuid);
 
-  if (*type == _ipc_COLLECTION) {
+  if (_ipc_isCollection(*type)) {
     _ipc_sendCollectionAccessModified(
       *uuid, 
       *level, 
@@ -673,7 +683,7 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
       bool(*RecursiveFlag), 
       $userNameClient, 
       $rodsZoneClient );
-  } else if (*type == _ipc_DATA_OBJECT) {
+  } else if (_ipc_isDataObject(*type)) {
     _ipc_sendDataObjectAclModified(
       *uuid, *level, *UserName, *userZone, $userNameClient, $rodsZoneClient );
   }
@@ -688,12 +698,8 @@ ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   *uuid = '';
   _ipc_ensureUUID(*type, *DestEntity, *uuid);
 
-  if (*type == _ipc_COLLECTION) {
-    _ipc_sendEntityMove(
-      _ipc_COLLECTION, *uuid, *SrcEntity, *DestEntity, $userNameClient, $rodsZoneClient );
-  } else if (*type == _ipc_DATA_OBJECT) {
-    _ipc_sendEntityMove( 
-      _ipc_DATA_OBJECT, *uuid, *SrcEntity, *DestEntity, $userNameClient, $rodsZoneClient );
+  if (*uuid != '') {
+    _ipc_sendEntityMove(*type, *uuid, *SrcEntity, *DestEntity, $userNameClient, $rodsZoneClient);
   }
 }
 
@@ -720,19 +726,19 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
   if (*Option == 'add' || *Option == 'addw') {
     ensureAVUEditable($userNameProxy, *ItemType, *ItemName, *AName, *AValue, *AUnit);
   } else if (*Option == 'set') {
-    if (*ItemType == _ipc_COLLECTION) {
+    if (_ipc_isCollection(*ItemType)) {
       *query =
         SELECT META_COLL_ATTR_ID WHERE COLL_NAME == *ItemName AND META_COLL_ATTR_NAME == *AName;
-    } else if (*ItemType == _ipc_DATA_OBJECT) {
+    } else if (_ipc_isDataObject(*ItemType)) {
       msiSplitPath(*ItemName, *collPath, *dataName);
 
       *query =
         SELECT META_DATA_ATTR_ID
         WHERE COLL_NAME == *collPath AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *AName;
-    } else if (*ItemType == _ipc_RESOURCE) {
+    } else if (_ipc_isResource(*ItemType)) {
       *query =
         SELECT META_RESC_ATTR_ID WHERE RESC_NAME == *ItemName AND META_RESC_ATTR_NAME == *AName;
-    } else if (*ItemType == _ipc_USER) {
+    } else if (_ipc_isUser(*ItemType)) {
       *query =
         SELECT META_USER_ATTR_ID WHERE USER_NAME == *ItemName AND META_USER_ATTR_NAME == *AName;
     } else {
@@ -762,13 +768,13 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
 ipc_acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *SourceItemName,
                                   *TargetItemName) {
   if (!canModProtectedAVU($userNameClient)) {
-    if (*SourceItemType == _ipc_COLLECTION) {
+    if (_ipc_isCollection(*SourceItemType)) {
       cpUnprotectedCollAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
-    } else if (*SourceItemType == _ipc_DATA_OBJECT) {
+    } else if (_ipc_isDataObject(*SourceItemType)) {
       cpUnprotectedDataObjAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
-    } else if (*SourceItemType == _ipc_RESOURCE) {
+    } else if (_ipc_isResource(*SourceItemType)) {
       cpUnprotectedRescAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
-    } else if (*SourceItemType == _ipc_USER) {
+    } else if (_ipc_isUser(*SourceItemType)) {
       cpUnprotectedUserAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
     }
 
@@ -835,24 +841,27 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValu
 
 # This rules sends an AVU metadata copy message.
 #
-ipc_acPostProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *SourceItemName,
-                                   *TargetItemName) {
-  *source = match *SourceItemType with
-    | _ipc_COLLECTION => retrieveCollectionUUID(*SourceItemName)
-    | _ipc_DATA_OBJECT => retrieveDataUUID(*SourceItemName)
-    | _ipc_RESOURCE => *SourceItemName
-    | _ipc_USER => *SourceItemName;
+ipc_acPostProcForModifyAVUMetadata(
+  *Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
+) {
+  *source = '';
 
-  *target = match *TargetItemType with
-              | _ipc_COLLECTION => retrieveCollectionUUID(*TargetItemName)
-              | _ipc_DATA_OBJECT => retrieveDataUUID(*TargetItemName)
-              | _ipc_RESOURCE => *TargetItemName
-              | _ipc_USER => *TargetItemName;
+  if (_ipc_isResource(*SourceItemType) || _ipc_isUser(*SourtceItemType)) {
+    *source =  *SourceItemName;
+  } else {
+    _ipc_ensureUUID(*SourceItemType. *SourceItemName, *source);
+  }
 
-  if (*source != '' && *target != '') {
+  *target = '';
+
+  if (_ipc_isResource(*TargetItemType) || _ipc_isUser(*TargetItemType)) {
+    *target = *TargetItemName;
+  } else {
+    _ipc_ensureUUID(*TargetItemType, *TargetItemName, *target);
+  }
+
     _ipc_sendAvuCopy(
       *SourceItemType, *source, *TargetItemType, *target, $userNameClient, $rodsZoneClient );
-  }
 }
 
 

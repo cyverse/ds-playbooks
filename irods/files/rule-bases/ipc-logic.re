@@ -52,6 +52,37 @@ contains(*item, *list) {
 }
 
 
+# Assign a UUID to a given collection or data object.
+assignUUID(*ItemType, *ItemName) {
+  *uuid = ipc_uuidGenerate;
+  writeLine('serverLog', 'UUID *uuid created');
+# XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
+#       4.2.10.
+#  msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, '');
+  *status = errormsg(msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, ''), *msg);
+
+  if (*status == -818000) {
+    # assume it was uploaded by a ticket
+    *typeArg = execCmdArg(*ItemType);
+    *nameArg = execCmdArg(*ItemName);
+    *valArg = execCmdArg(*uuid);
+    *argStr = "*typeArg *nameArg *valArg";
+    *status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
+  
+    if (*status != 0) {
+      writeLine('serverLog', "Failed to assign UUID: *msg");
+      fail;
+    }
+  } else if (*status != 0) {
+    writeLine('serverLog', "Failed to assign UUID: *msg");
+    fail;
+  }
+# XXX - ^^^
+
+  *uuid;
+}
+
+
 # Looks up the UUID of a collection from its path.
 retrieveCollectionUUID(*Coll) {
   *uuid = '';
@@ -87,41 +118,6 @@ retrieveUUID(*EntityType, *EntityPath) {
   } else {
     ''
   }
-}
-
-
-# Assign a UUID to a given collection or data object.
-assignUUID(*ItemType, *ItemName) {
-  *uuid = retrieveUUID(*ItemType, *ItemName);
-
-  if (*uuid == '') {
-    *uuid = ipc_uuidGenerate;
-    writeLine('serverLog', 'UUID *uuid created');
-# XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
-#       4.2.10.
-#    msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, '');
-    *status = errormsg(msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, ''), *msg);
-
-    if (*status == -818000) {
-      # assume it was uploaded by a ticket
-      *typeArg = execCmdArg(*ItemType);
-      *nameArg = execCmdArg(*ItemName);
-      *valArg = execCmdArg(*uuid);
-      *argStr = "*typeArg *nameArg *valArg";
-      *status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
-    
-      if (*status != 0) {
-        writeLine('serverLog', "Failed to assign UUID: *msg");
-        fail;
-      }
-    } else if (*status != 0) {
-      writeLine('serverLog', "Failed to assign UUID: *msg");
-      fail;
-    }
-# XXX - ^^^
-  }
-
-  *uuid;
 }
 
 
@@ -585,7 +581,8 @@ ipc_acCreateCollByAdmin(*ParColl, *ChildColl) {
 
 ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl) {
   *path = *ParColl ++ '/' ++ *ChildColl;
-  *id = assignUUID(_ipc_COLLECTION, *path);
+  *id = '';
+  _ipc_ensureUUID(_ipc_COLLECTION, *path, *id);
   _ipc_sendCollectionAdd(*id, *path, $userNameClient, $rodsZoneClient);
 }
 
@@ -626,7 +623,8 @@ ipc_acPostProcForCollCreate {
 # message is published indicating the collection is created.
 #
 ipc_archive_acPostProcForCollCreate {
-  *id = assignUUID(_ipc_COLLECTION, $collName);
+  *id = '';
+  _ipc_ensureUUID(_ipc_COLLECTION, $collName, *id);
   _ipc_sendCollectionAdd(*id, $collName, $userNameClient, $rodsZoneClient);
 }
 
@@ -860,8 +858,8 @@ ipc_acPostProcForModifyAVUMetadata(
     _ipc_ensureUUID(*TargetItemType, *TargetItemName, *target);
   }
 
-    _ipc_sendAvuCopy(
-      *SourceItemType, *source, *TargetItemType, *target, $userNameClient, $rodsZoneClient );
+  _ipc_sendAvuCopy(
+    *SourceItemType, *source, *TargetItemType, *target, $userNameClient, $rodsZoneClient );
 }
 
 
@@ -881,7 +879,8 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 #   *err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 #   if (*err < 0) { writeLine('serverLog', *msg); }
 #
-#   *uuid = assignUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path);
+#   *uuid = ''
+#   _ipc_ensureUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
 #        
 #   *err = errormsg(
 #     _ipc_sendDataObjectAdd(
@@ -897,19 +896,22 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 #   if (*err < 0) { writeLine('serverLog', *msg); }
 # }
 ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
+  *uuid = '';
+
   if (*Step != 'FINISH') {
     *err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
     if (*err < 0) { writeLine('serverLog', *msg); }
 
-    assignUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path);
+    _ipc_ensureUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
   }
 
   if (*Step != 'START') {
     *err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
     if (*err < 0) { writeLine('serverLog', *msg); }
    
-    *uuid = '';
-    _ipc_ensureUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
+    if (*uuid != '') {
+      _ipc_ensureUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
+    }
 
     *err = errormsg(
       _ipc_sendDataObjectAdd(

@@ -15,6 +15,7 @@
     - name: assign collection to Cereus resource
       delegate_to: localhost
       become: false
+      no_log: true
       irods_avu:
         entity_type: resource
         entity_name: "{{ _cereus_resource_hierarchy.name }}"

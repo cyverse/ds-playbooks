@@ -568,13 +568,7 @@ _repl_findReplResc(*Resc) {
 
 # DEPRECATED
 _old_replEntityRename(*SourceObject, *DestObject) {
-  on (avra_replBelongsTo(/*DestObject)) {
-    if (!avra_replBelongsTo(/*SourceObject)) {
-      _scheduleMoves(*DestObject, avra_replIngestResc, avra_replReplResc);
-    }
-  }
-  on (de_replBelongsTo(/*DestObject)) {
-  }
+  on (de_replBelongsTo(/*DestObject)) {}
   on (pire_replBelongsTo(/*DestObject)) {
     if (!pire_replBelongsTo(/*SourceObject)) {
       _scheduleMoves(*DestObject, pire_replIngestResc, pire_replReplResc);
@@ -587,9 +581,6 @@ _old_replEntityRename(*SourceObject, *DestObject) {
   }
 }
 _old_replEntityRename(*SourceObject, *DestObject) {
-  on (avra_replBelongsTo(/*SourceObject)) {
-    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
-  }
   on (pire_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
@@ -628,9 +619,6 @@ replEntityRename(*SourceObject, *DestObject) {
 
 # DEPRECATED
 _ipcRepl_acSetRescSchemeForCreate {
-  on (avra_replBelongsTo(/$objPath)) {
-    _setDefaultResc(avra_replIngestResc);
-  }
   on (de_replBelongsTo(/$objPath)) {
     _setDefaultResc(de_replIngestResc);
   }
@@ -661,9 +649,6 @@ ipcRepl_acSetRescSchemeForCreate {
 
 # DEPRECATED
 _ipcRepl_acSetRescSchemeForRepl {
-  on (avra_replBelongsTo(/$objPath)) {
-    _setDefaultResc(avra_replReplResc);
-  }
   on (de_replBelongsTo(/$objPath)) {
     _setDefaultResc(de_replReplResc);
   }
@@ -699,7 +684,6 @@ ipcRepl_acSetRescSchemeForRepl {
 
 # DEPRECATED
 _ipcRepl_put_old(*ObjPath, *DestResc, *New) {
-  on (avra_replBelongsTo(/*ObjPath)) {}
   on (de_replBelongsTo(/*ObjPath)) {
     _ipcRepl_createOrOverwrite_old(*ObjPath, *DestResc, *New, de_replIngestResc, de_replReplResc);
   }

@@ -11,11 +11,7 @@ _ipc_DATA_OBJECT_TYPE = 'data-object'
 _ipc_RESOURCE_TYPE = 'resource'
 _ipc_USER_TYPE = 'user'
 
-
-getTimestamp() {
-  msiGetSystemTime(*timestamp, 'human')
-  *timestamp
-}
+_ipc_getTimestamp() = let *_ = msiGetSystemTime(*timestamp, 'human') in *timestamp
 
 
 contains(*item, *list) {
@@ -184,7 +180,7 @@ sendDataObjectOpen(*Data) =
       mkEntityField(*Data),
       mkPathField($objPath),
       ipcJson_number('size', double($dataSize)),
-      ipcJson_string('timestamp', getTimestamp()) ) )
+      ipcJson_string('timestamp', _ipc_getTimestamp) ) )
   in sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.open', *msg)
 
 

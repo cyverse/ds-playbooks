@@ -5,7 +5,6 @@
 # For license information, see https://cyverse.org/license.
 
 @include 'ipc-json'
-@include 'ipc-uuid'
 
 _ipc_COLLECTION = '-C'
 _ipc_DATA_OBJECT = '-d'
@@ -34,27 +33,29 @@ _ipc_getAmqpType(*ItemType) =
   else if _ipc_isUser(*ItemType) then _ipc_USER_MSG_TYPE
   else ''
 
+_ipc_contains(*Item, *List) =
+  if size(*List) == 0 then false
+  else if *Item == hd(*List) then true
+  else _ipc_contains(*Item, tl(*List))
 
-getTimestamp() {
-  msiGetSystemTime(*timestamp, 'human')
-  *timestamp
-}
+_ipc_getTimestamp() = let *_ = msiGetSystemTime(*timestamp, 'human') in *timestamp
 
 
-contains(*item, *list) {
-  *result = false;
-  foreach (*currItem in *list) {
-    if (*item == *currItem) {
-      *result = true;
-    }
+_ipc_generateUUID {
+  *status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
+  if (*status == 0) {
+    msiGetStdoutInExecCmdOut(*out, *uuid);
+    trimr(*uuid, "\n");
+  } else {
+    writeLine("serverLog", "failed to generate UUID");
+    fail;
   }
-  *result;
 }
 
 
 # Assign a UUID to a given collection or data object.
 assignUUID(*ItemType, *ItemName) {
-  *uuid = ipc_uuidGenerate;
+  *uuid = _ipc_generateUUID;
   writeLine('serverLog', 'UUID *uuid created');
 # XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
 #       4.2.10.
@@ -818,7 +819,7 @@ ipc_acPostProcForModifyAVUMetadata(
 #
 ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
   if (*AName != 'ipc_UUID') {
-    if (contains(*Option, list('add', 'adda', 'rm', 'set'))) {
+    if (_ipc_contains(*Option, list('add', 'adda', 'rm', 'set'))) {
       *uuid = '';
       _ipc_ensureUUID(*ItemType, *ItemName, *uuid);
 

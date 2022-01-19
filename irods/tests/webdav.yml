@@ -37,20 +37,21 @@
       assert:
         that:
           - >-
-            purgeman_conf 
+            purgeman_conf
             is search('PURGEMAN_AMQP_HOST=dstesting_amqp_1.dstesting_default' | regex_escape)
           - purgeman_conf is search('PURGEMAN_AMQP_PORT=5672')
           - purgeman_conf is search('PURGEMAN_AMQP_VHOST=/')
 
-    - debug:
-        msg: TODO verify remainder fo purgeman.conf expands correctly
+    - name: verify remainder fo purgeman.conf expands correctly
+      debug:
+        msg: TODO implement
 
     - name: verify varnish.service expands correctly
       assert:
         that:
           - varnish_service is search('-a :6081,HTTP')
           - >-
-            varnish_service 
+            varnish_service
             is search('-s file,/var/cache/varnish/varnish_cache.bin,1000M' | regex_escape)
 
 
@@ -75,7 +76,7 @@
           - >-
             index
             is search(
-              '<a href="testing/commons/community_released/">testing/commons/community_released/</a>' 
+              '<a href="testing/commons/community_released/">testing/commons/community_released/</a>'
             )
           - index
             is search(
@@ -172,6 +173,7 @@
 
     - name: test install iRODS package repository signing key
       shell: |
+        set -o pipefail
         rpm --query --queryformat='%{SUMMARY}\n' gpg-pubkey | grep --quiet 'iRODS Consortium'
       changed_when: false
 
@@ -183,6 +185,7 @@
 
     - name: test lock irods-runtime to version 4.2.8
       shell: |
+        set -o pipefail
         if ! yum versionlock status | grep --quiet irods-runtime; then
           printf 'irods-runtime not locked\n' >&2
           exit 1
@@ -190,7 +193,7 @@
           readarray -t versions <<< "$info"
           for version in "${versions[@]}"; do
             read _ verNum _ <<< "$version"
-            if ! [[ "$verNum" =~ 4.2.8 ]]; then
+            if ! [[ "$verNum" =~ 4\.2\.8 ]]; then
               printf 'found version %s\n' "$verNum" >&2
               exit 1
             fi
@@ -317,7 +320,7 @@
         path: /etc/systemd/system/httpd.service.requires
       register: response
       failed_when: not response.stat.exists or not response.stat.isdir
-        
+
     - name: test ensure varnish runs when apache run
       stat:
         path: /etc/systemd/system/httpd.service.requires/varnish.service
@@ -341,7 +344,7 @@
         not response.stat.exists or
         not response.stat.islnk or
         response.stat.lnk_source != '/usr/lib/systemd/system/varnishncsa.service'
-        
+
     - name: test purgeman installed
       stat:
         path: /usr/bin/purgeman

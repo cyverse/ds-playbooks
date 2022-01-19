@@ -13,6 +13,11 @@
         - jq
         - libselinux-python
         - python-dns
+        - python-requests
+        - python-virtualenv
+        - python3
+        - python3-pip
+        - yum-plugin-versionlock
       loop_control:
         loop_var: pkg
 
@@ -23,34 +28,11 @@
         - dmidecode
         - iproute2
         - jq
+        - python3
+        - python3-dns
+        - python3-pip
+        - python3-requests
         - python3-selinux
+        - python3-virtualenv
       loop_control:
         loop_var: pkg
-
-    - name: test install packages elsewhere
-      when: ansible_distribution != 'CentOS' and ansible_distribution != 'Ubuntu'
-      include_tasks: tasks/test_pkg_installed.yml
-      with_items:
-        - dmidecode
-        - iproute
-        - jq
-        - python-selinux
-        - python-dns
-      loop_control:
-        loop_var: pkg
-
-    - name: test python-dns installed on Ubuntu
-      debug:
-        msg: TODO implement
-
-    - name: test Python PIP package installed
-      debug:
-        msg: TODO implement
-
-    - name: test python-requests installed
-      debug:
-        msg: TODO implement
-
-    - name: test python-virtualenv installed
-      debug:
-        msg: TODO implement

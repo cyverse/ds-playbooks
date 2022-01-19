@@ -5,7 +5,6 @@ domain_name: testing_default
 
 irods_icat_password: testpassword
 
-irods_version: 4.1.10
 irods_zone_name: testing
 
 maintainer_keys:

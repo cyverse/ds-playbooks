@@ -4,20 +4,18 @@
   become: true
   become_user: irods
   vars:
-    expected_resources:
-      - avra
-      - bundleResc
-      - cereus
-      - ingestRes
-      - pire
-      - replRes
-      - terraref
+    expected_resources: "{{ 
+      groups['irods_resource'] 
+        | map('extract', hostvars, 'irods_storage_resources') 
+        | flatten 
+        | map(attribute='name') 
+        | union(['bundleResc']) }}"
   tasks:
     - name: test create vault directory
       stat:
         path: "{{ item.vault }}"
       register: response
-      failed_when: |
+      failed_when: >-
         not response.stat.exists
         or not response.stat.isdir
         or response.stat.pw_name != 'irods'
@@ -31,38 +29,33 @@
       command: iquest '%s' "select RESC_NAME where RESC_TYPE_NAME = 'unixfilesystem'"
       register: response
       changed_when: false
-      failed_when: |
-        response.stdout_lines | symmetric_difference(expected_resources) | list | length > 0
+      failed_when: response.stdout_lines|symmetric_difference(expected_resources)|list|length > 0
 
     - name: verify context is correct
       shell: |
-        if ! context=$(iquest '%s' "select RESC_CONTEXT where RESC_NAME = '{{ item.name }}'")
+        if ! context="$(iquest '%s' "select RESC_CONTEXT where RESC_NAME = '{{ item.name }}'")" 
         then
           exit 1
         fi
-
-        [ "$context" = '{{ item.context }}' ]
+        test "$context" = '{{ item.context }}'
       changed_when: false
       with_items: "{{ irods_storage_resources }}"
 
     - name: verify status has been initialized
       shell: |
-        if ! status=$(iquest '%s' "select RESC_STATUS where RESC_NAME = '{{ item.name }}'")
-        then
+        if ! status="$(iquest '%s' "select RESC_STATUS where RESC_NAME = '{{ item.name }}'")"; then
           exit 1
         fi
-
-        [ -n "$status" ]
+        test -n "$status"
       changed_when: false
       with_items: "{{ irods_storage_resources }}"
 
     - name: verify free space is initialized
       shell: |
-        if ! freeSpace=$(iquest '%s' "select RESC_FREE_SPACE where RESC_NAME = '{{ item.name }}'")
+        if ! freeSpace="$(iquest '%s' "select RESC_FREE_SPACE where RESC_NAME = '{{ item.name }}'")"
         then
           exit 1
         fi
-
-        [ -n "$freeSpace" ]
+        test -n "$freeSpace"
       changed_when: false
       with_items: "{{ irods_storage_resources }}"

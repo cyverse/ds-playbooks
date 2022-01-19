@@ -1,14 +1,19 @@
 ---
 - import_playbook: provision.yml
 
-
-- name: install resource server package
-  hosts: irods_resource:!irods_catalog:!unmanaged_systems
+- name: resource server specific provisioning
+  hosts: irods_resource:!unmanaged_systems
   become: true
   tasks:
-    - import_tasks: tasks/install_resource_pkg.yml
+    - name: ensure NetCDF plugins not installed
+      package:
+        name:
+          - irods-netcdf-client_modules
+          - irods-netcdf-icommands
+          - irods-netcdf-server_modules
+        state: absent
 
-    - import_tasks: tasks/install_plugins.yml
+    - import_tasks: tasks/ensure_irods_ownership.yml
 
 
 - import_playbook: cfg_irods.yml
@@ -28,6 +33,9 @@
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   become_flags: '-i'
+  vars:
+    admin_user: "{{ hostvars[groups['irods_catalog'][0]]['_irods_clerver_user'] }}"
+    admin_password: "{{ hostvars[groups['irods_catalog'][0]]['_irods_clerver_password'] }}"
   tasks:
     - name: create clerver user
       delegate_to: localhost
@@ -39,8 +47,8 @@
         password: "{{ _irods_clerver_password }}"
         host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"
-        admin_user: "{{ _irods_clerver_user }}"
-        admin_password: "{{ _irods_clerver_password }}"
+        admin_user: "{{ admin_user }}"
+        admin_password: "{{ admin_password }}"
         zone: "{{ _irods_zone_name }}"
 
     - name: ensure clerver user is in group rodsadmin
@@ -53,8 +61,8 @@
         state: present
         host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"
-        admin_user: "{{ _irods_clerver_user }}"
-        admin_password: "{{ _irods_clerver_password }}"
+        admin_user: "{{ admin_user }}"
+        admin_password: "{{ admin_password }}"
         zone: "{{ _irods_zone_name }}"
 
     - name: initialize resource server connection to catalog service providers

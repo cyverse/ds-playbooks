@@ -19,13 +19,13 @@
 
         - name: create command scripts staging directory
           file:
-            path: "{{ _build_dir }}/cmd"
+            path: "{{ _build_dir }}/var/lib/irods/msiExecCmd_bin"
             state: directory
 
         - name: add common command scripts
           copy:
             src: "{{ item }}"
-            dest: "{{ _build_dir }}/cmd"
+            dest: "{{ _build_dir }}/var/lib/irods/msiExecCmd_bin"
           with_fileglob:
             - "files/cmd-common/*"
 
@@ -55,7 +55,7 @@
               - ipc-custom
               - ipc-housekeeping
             irods_cfg_root_dir: "{{ _build_dir }}"
-            irods_cfg_schema_validation_base_uri: file:///var/lib/irods/configuration_schemas
+            irods_cfg_schema_validation_base_uri: 'off'
             irods_cfg_server_control_plane_key: __IRODS_SERVER_CONTROL_PLANE_KEY__
             irods_cfg_server_port_range_end: 20009
             irods_cfg_server_port_range_start: 20000
@@ -95,7 +95,6 @@
             - on-build-instantiate.sh
             - periphery.sh
             - Dockerfile
-            - upgrade_config_files.py
 
         - when: _irods_publish_rs_image | bool
           block:

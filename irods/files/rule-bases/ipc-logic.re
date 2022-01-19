@@ -6,10 +6,32 @@
 
 @include 'ipc-json'
 
-_ipc_COLLECTION_TYPE = 'collection'
-_ipc_DATA_OBJECT_TYPE = 'data-object'
-_ipc_RESOURCE_TYPE = 'resource'
-_ipc_USER_TYPE = 'user'
+_ipc_COLLECTION = '-C'
+_ipc_DATA_OBJECT = '-d'
+_ipc_RESOURCE = '-R'
+_ipc_USER = '-u'
+
+_ipc_isCollection(*Type) = *Type == _ipc_COLLECTION
+
+_ipc_isDataObject(*Type) = *Type == _ipc_DATA_OBJECT
+
+# NB: Sometimes iRODS passes `-r` to indicated a resource
+_ipc_isResource(*Type) = *Type == _ipc_RESOURCE || *Type == '-r'
+
+_ipc_isUser(*Type) = *Type == _ipc_USER
+
+
+_ipc_COLL_MSG_TYPE = 'collection'
+_ipc_DATA_MSG_TYPE = 'data-object'
+_ipc_RESC_MSG_TYPE = 'resource'
+_ipc_USER_MSG_TYPE = 'user'
+
+_ipc_getAmqpType(*ItemType) = 
+  if _ipc_isCollection(*ItemType) then _ipc_COLL_MSG_TYPE
+  else if _ipc_isDataObject(*ItemType) then _ipc_DATA_MSG_TYPE
+  else if _ipc_isResource(*ItemType) then _ipc_RESC_MSG_TYPE
+  else if _ipc_isUser(*ItemType) then _ipc_USER_MSG_TYPE
+  else ''
 
 _ipc_contains(*Item, *List) =
   if size(*List) == 0 then false
@@ -36,7 +58,7 @@ assignUUID(*ItemType, *ItemName) {
   *uuid = _ipc_generateUUID;
   writeLine('serverLog', 'UUID *uuid created');
 # XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
-#       4.2.2.
+#       4.2.10.
 #  msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, '');
   *status = errormsg(msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, ''), *msg);
 
@@ -47,6 +69,7 @@ assignUUID(*ItemType, *ItemName) {
     *valArg = execCmdArg(*uuid);
     *argStr = "*typeArg *nameArg *valArg";
     *status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
+  
     if (*status != 0) {
       writeLine('serverLog', "Failed to assign UUID: *msg");
       fail;
@@ -89,12 +112,23 @@ retrieveDataUUID(*Data) {
 
 # Looks up the UUID for a given type of entity (collection or data object)
 retrieveUUID(*EntityType, *EntityPath) {
-  if (*EntityType == '-C') {
+  if (_ipc_isCollection(*EntityType)) {
     retrieveCollectionUUID(*EntityPath);
-  } else if (*EntityType == '-d') {
+  } else if (_ipc_isDataObject(*EntityType)) {
     retrieveDataUUID(*EntityPath);
   } else {
     ''
+  }
+}
+
+
+_ipc_ensureUUID(*EntityType, *EntityPath, *UUID) {
+  *uuid = retrieveUUID(*EntityType, *EntityPath);
+
+  if (*uuid != '') {
+    *UUID = *uuid;
+  } else {
+    *UUID = assignUUID(*EntityType, *EntityPath);
   }
 }
 
@@ -125,15 +159,11 @@ sendMsg(*Topic, *Msg) {
 }
 
 
-mkUserObject(*Field, *Name, *Zone) =
-  if (*Zone == '') then
-    ipcJson_object(
-      *Field, list(ipcJson_string('name', *Name), ipcJson_string('zone', $rodsZoneClient)) )
-  else
-    ipcJson_object(*Field, list(ipcJson_string('name', *Name), ipcJson_string('zone', *Zone)))
+_ipc_mkUserObject(*Field, *Name, *Zone) = ipcJson_object(
+  *Field, list(ipcJson_string('name', *Name), ipcJson_string('zone', *Zone)) )
 
 
-_ipc_mkAuthorField(*Name, *Zone) = mkUserObject('author', *Name, *Zone)
+_ipc_mkAuthorField(*Name, *Zone) = _ipc_mkUserObject('author', *Name, *Zone)
 
 
 mkEntityField(*UUID) = ipcJson_string('entity', *UUID)
@@ -150,32 +180,28 @@ mkAvuObject(*Field, *Name, *Value, *Unit) = ipcJson_object(
     ipcJson_string('unit', *Unit) ) )
 
 
-_getAmqpEntityType(*ItemType) =
-  match *ItemType with
-    | '-C' => _ipc_COLLECTION_TYPE
-    | '-d' => _ipc_DATA_OBJECT_TYPE
-    | '-R' => _ipc_RESOURCE_TYPE
-    | '-u' => _ipc_USER_TYPE
-
-
-sendCollectionAdd(*Collection, *Path) =
-  let *msg = ipcJson_document(
+_ipc_sendCollectionAdd(*Id, *Path, *CreatorName, *CreatorZone) {
+  *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-      mkEntityField(*Collection),
-      mkPathField(*Path) ) )
-  in sendMsg(_ipc_COLLECTION_TYPE ++ '.add', *msg)
+      _ipc_mkAuthorField(*CreatorName, *CreatorZone),
+      mkEntityField(*Id),
+      mkPathField(*Path) ) );
+
+  sendMsg(_ipc_COLL_MSG_TYPE ++ '.add', *msg);
+}
 
 
-sendDataObjectOpen(*Data) =
-  let *msg = ipcJson_document(
+_ipc_sendDataObjectOpen(*Id, *Path, *CreatorName, *CreatorZone, *Size) {
+  *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-      mkEntityField(*Data),
-      mkPathField($objPath),
-      ipcJson_number('size', double($dataSize)),
-      ipcJson_string('timestamp', _ipc_getTimestamp) ) )
-  in sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.open', *msg)
+      _ipc_mkAuthorField(*CreatorName, *CreatorZone),
+      mkEntityField(*Id),
+      mkPathField(*Path),
+      ipcJson_number('size', *Size),
+      ipcJson_string('timestamp', getTimestamp()) ) );
+
+  sendMsg(_ipc_DATA_MSG_TYPE ++ '.open', *msg);
+}
 
 
 _ipc_sendDataObjectAdd(
@@ -186,11 +212,11 @@ _ipc_sendDataObjectAdd(
       _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       mkEntityField(*Data),
       mkPathField(*Path),
-      mkUserObject('creator', *OwnerName, *OwnerZone),
-      ipcJson_number('size', double(*Size)),
+      _ipc_mkUserObject('creator', *OwnerName, *OwnerZone),
+      ipcJson_number('size', *Size),
       ipcJson_string('type', *Type) ) );
 
-  sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.add', *msg);
+  sendMsg(_ipc_DATA_MSG_TYPE ++ '.add', *msg);
 }
 
 
@@ -202,132 +228,172 @@ _ipc_sendDataObjectMod(
     list(
       _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       mkEntityField(*Object),
-      mkUserObject('creator', *OwnerName, *OwnerZone),
-      ipcJson_number('size', double(*Size)),
+      _ipc_mkUserObject('creator', *OwnerName, *OwnerZone),
+      ipcJson_number('size', *Size),
       ipcJson_string('type', *Type) ) );
 
-  sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.mod', *msg);
+  sendMsg(_ipc_DATA_MSG_TYPE ++ '.mod', *msg);
 }
 
 
-sendCollectionInheritModified(*Recursive, *Inherit, *Collection) =
-  let *msg = ipcJson_document(
+_ipc_sendCollectionInheritModified(*Collection, *Inherit, *Recursive, *AuthorName, *AuthorZone) {
+  *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       mkEntityField(*Collection),
       ipcJson_boolean('recursive', *Recursive),
-      ipcJson_boolean('inherit', *Inherit) ) )
-  in sendMsg(_ipc_COLLECTION_TYPE ++ '.acl.mod', *msg)
+      ipcJson_boolean('inherit', *Inherit) ) );
+
+  sendMsg(_ipc_COLL_MSG_TYPE ++ '.acl.mod', *msg);
+}
 
 
-sendCollectionAclModified(*Recursive, *AccessLevel, *Username, *Zone, *Collection) =
-  let *msg = ipcJson_document(
+_ipc_sendCollectionAclModified(
+  *Collection, *AccessLevel, *UserName, *UserZone, *Recursive, *AuthorName, *AuthorZone ) 
+{
+  *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       mkEntityField(*Collection),
       ipcJson_boolean('recursive', *Recursive),
       ipcJson_string('permission', *AccessLevel),
-      mkUserObject('user', *Username, *Zone) ) )
-  in sendMsg(_ipc_COLLECTION_TYPE ++ '.acl.mod', *msg)
+      _ipc_mkUserObject('user', *UserName, *UserZone) ) );
+
+  sendMsg(_ipc_COLL_MSG_TYPE ++ '.acl.mod', *msg);
+}
 
 
-sendCollectionAccessModified(*Recursive, *AccessLevel, *Username, *Zone, *Collection) {
+_ipc_sendCollectionAccessModified(
+  *Collection, *AccessLevel, *UserName, *UserZone, *Recursive, *AuthorName, *AuthorZone ) 
+{
   if (*AccessLevel == 'inherit') {
-    sendCollectionInheritModified(*Recursive, true, *Collection);
-  }
+    _ipc_sendCollectionInheritModified(*Collection, true, *Recursive, *AuthorName, *AuthorZone);
+  } 
   else if (*AccessLevel == 'noinherit') {
-    sendCollectionInheritModified(*Recursive, false, *Collection);
-  }
+    _ipc_sendCollectionInheritModified(*Collection, false, *Recursive, *AuthorName, *AuthorZone);
+  } 
   else {
-    sendCollectionAclModified(*Recursive, *AccessLevel, *Username, *Zone, *Collection);
+    _ipc_sendCollectionAclModified(
+      *Collection, *AccessLevel, *UserName, *UserZone, *Recursive, *AuthorName, *AuthorZone );
   }
 }
 
 
-sendDataObjectAclModified(*AccessLevel, *Username, *Zone, *Data) =
-  let *msg = ipcJson_document(
+_ipc_sendDataObjectAclModified(*Data, *AccessLevel, *UserName, *UserZone, *AuthorName, *AuthorZone) 
+{
+  *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       mkEntityField(*Data),
       ipcJson_string('permission', *AccessLevel),
-      mkUserObject('user', *Username, *Zone) ) )
-  in sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.acl.mod', *msg)
+      _ipc_mkUserObject('user', *UserName, *UserZone) ) );
+
+  sendMsg(_ipc_DATA_MSG_TYPE ++ '.acl.mod', *msg);
+}
 
 
 # Publish a data-object.sys-metadata.mod message to AMQP exchange
-_ipc_sendDataObjectMetadataModified(*AuthorName, *AuthorZone, *Data) {
-  *msg = ipcJson_document(list(_ipc_mkAuthorField(*AuthorName, *AuthorZone), mkEntityField(*Data)));
-  sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.sys-metadata.mod', *msg);
+_ipc_sendDataObjectMetadataModified(*Data, *AuthorName, *AuthorZone) {
+  *msg = ipcJson_document(
+    list(
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone), 
+      mkEntityField(*Data) ) );
+
+  sendMsg(_ipc_DATA_MSG_TYPE ++ '.sys-metadata.mod', *msg);
 }
 
 
-sendEntityMove(*EntityType, *Entity, *OldPath, *NewPath) =
-  let *msg = ipcJson_document(
+_ipc_sendEntityMove(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {
+  *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-      mkEntityField(*Entity),
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
+      mkEntityField(*Id),
       ipcJson_string('old-path', *OldPath),
-      ipcJson_string('new-path', *NewPath) ) )
-  in sendMsg(*EntityType ++ '.mv', *msg)
+      ipcJson_string('new-path', *NewPath) ) );
+
+  sendMsg(_ipc_getAmqpType(*Type) ++ '.mv', *msg);
+}
 
 
-sendEntityRemove(*EntityType, *Entity, *Path) =
-  let *msg = ipcJson_document(
+_ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
+  *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
-      mkEntityField(*Entity),
-      ipcJson_string('path', *Path) ) )
-  in sendMsg(*EntityType ++ '.rm', *msg)
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
+      mkEntityField(*Id),
+      ipcJson_string('path', *Path) ) );
+
+  sendMsg(_ipc_getAmqpType(*Type) ++ '.rm', *msg);
+}
 
 
-sendAvuMod(*ItemType, *Item, *OldName, *OldValue, *OldUnit, *NewName, *NewValue, *NewUnit) =
-  let *msg = ipcJson_document(
+_ipc_sendAvuMod(
+  *ItemType, 
+  *Item, 
+  *OldName, 
+  *OldValue, 
+  *OldUnit, 
+  *NewName, 
+  *NewValue, 
+  *NewUnit, 
+  *AuthorName, 
+  *AuthorZone ) 
+{
+  *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       mkEntityField(*Item),
       mkAvuObject('old-metadatum', *OldName, *OldValue, *OldUnit),
-      mkAvuObject('new-metadatum', *NewName, *NewValue, *NewUnit) ) )
-  in sendMsg(_getAmqpEntityType(*ItemType) ++ '.metadata.mod', *msg)
+      mkAvuObject('new-metadatum', *NewName, *NewValue, *NewUnit) ) );
+
+  sendMsg(_ipc_getAmqpType(*ItemType) ++ '.metadata.mod', *msg);
+}
 
 
-sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit) =
-  let *msg = ipcJson_document(
+_ipc_sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
+  *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       mkEntityField(*Item),
-      mkAvuObject('metadatum', *AName, *AValue, *AUnit) ) )
-  in sendMsg(_getAmqpEntityType(*ItemType) ++ '.metadata.' ++ *Option, *msg)
+      mkAvuObject('metadatum', *AName, *AValue, *AUnit) ) );
+
+  sendMsg(_ipc_getAmqpType(*ItemType) ++ '.metadata.' ++ *Option, *msg);
+}
 
 
-sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit) =
-  let *msg = ipcJson_document(
+_ipc_sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
+  *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       ipcJson_string('pattern', *ItemName),
-      mkAvuObject('metadatum', *AName, *AValue, *AUnit) ) )
-  in sendMsg(_ipc_DATA_OBJECT_TYPE ++ '.metadata.addw', *msg)
+      mkAvuObject('metadatum', *AName, *AValue, *AUnit) ) );
+
+  sendMsg(_ipc_DATA_MSG_TYPE ++ '.metadata.addw', *msg);
+}
 
 
-sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit) =
-  let *msg = ipcJson_document(
+_ipc_sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
+  *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       mkEntityField(*Item),
       ipcJson_string('attribute-pattern', *AName),
       ipcJson_string('value-pattern', *AValue),
-      ipcJson_string('unit-pattern', *AUnit) ) )
-  in sendMsg(_getAmqpEntityType(*ItemType) ++ '.metadata.rmw', *msg)
+      ipcJson_string('unit-pattern', *AUnit) ) );
+
+  sendMsg(_ipc_getAmqpType(*ItemType) ++ '.metadata.rmw', *msg);
+}
 
 
-sendAvuCopy(*SourceItemType, *TargetItemType, *Source, *Target) =
-  let *srcType = _getAmqpEntityType(*SourceItemType) in
-  let *msg = ipcJson_document(
+_ipc_sendAvuCopy(*SourceItemType, *Source, *TargetItemType, *Target, *AuthorName, *AuthorZone) {
+  *msg = ipcJson_document(
     list(
-      _ipc_mkAuthorField($userNameClient, $rodsZoneClient),
+      _ipc_mkAuthorField(*AuthorName, *AuthorZone),
       ipcJson_string('source', *Source),
-      ipcJson_string('source-type', *srcType),
-      ipcJson_string('destination', *Target) ) )
-  in sendMsg(_getAmqpEntityType(*TargetItemType) ++ '.metadata.cp', *msg)
+      ipcJson_string('source-type', _ipc_getAmqpType(*SourceItemType)),
+      ipcJson_string('destination', *Target) ) );
+
+  sendMsg(_ipc_getAmqpType(*TargetItemType) ++ '.metadata.cp', *msg);
+}
 
 
 resolveAdminPerm(*Item) = if *Item like regex '^/[^/]*(/[^/]*)?$' then 'write' else 'own'
@@ -515,8 +581,10 @@ ipc_acCreateCollByAdmin(*ParColl, *ChildColl) {
 
 
 ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl) {
-  *coll = '*ParColl/*ChildColl';
-  sendCollectionAdd(assignUUID('-C', *coll), *coll);
+  *path = *ParColl ++ '/' ++ *ChildColl;
+  *id = '';
+  _ipc_ensureUUID(_ipc_COLLECTION, *path, *id);
+  _ipc_sendCollectionAdd(*id, *path, $userNameClient, $rodsZoneClient);
 }
 
 
@@ -526,7 +594,7 @@ ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
   *path = '*ParColl/*ChildColl';
   *uuid = retrieveCollectionUUID(*path);
   if (*uuid != '') {
-    sendEntityRemove(_ipc_COLLECTION_TYPE, *uuid, *path);
+    _ipc_sendEntityRemove(_ipc_COLLECTION, *uuid, *path, $userNameClient, $rodsZoneClient);
   }
 }
 
@@ -556,13 +624,18 @@ ipc_acPostProcForCollCreate {
 # message is published indicating the collection is created.
 #
 ipc_archive_acPostProcForCollCreate {
-  sendCollectionAdd(assignUUID('-C', $collName), $collName);
+  *id = '';
+  _ipc_ensureUUID(_ipc_COLLECTION, $collName, *id);
+  _ipc_sendCollectionAdd(*id, $collName, $userNameClient, $rodsZoneClient);
 }
 
 
 ipc_acPostProcForOpen {
   *uuid = retrieveDataUUID($objPath);
-  if (*uuid != '') { sendDataObjectOpen(*uuid); }
+
+  if (*uuid != '') { 
+    _ipc_sendDataObjectOpen(*uuid, $objPath, $userNameClient, $rodsZoneClient, $dataSize); 
+  }
 }
 
 
@@ -571,7 +644,10 @@ ipc_acPreprocForRmColl { temporaryStorage.'$collName' = retrieveCollectionUUID($
 
 ipc_acPostProcForRmColl {
   *uuid = temporaryStorage.'$collName';
-  if (*uuid != '') { sendEntityRemove(_ipc_COLLECTION_TYPE, *uuid, $collName); }
+
+  if (*uuid != '') { 
+    _ipc_sendEntityRemove(_ipc_COLLECTION, *uuid, $collName, $userNameClient, $rodsZoneClient); 
+  }
 }
 
 
@@ -580,23 +656,35 @@ ipc_acDataDeletePolicy { temporaryStorage.'$objPath' = retrieveDataUUID($objPath
 
 ipc_acPostProcForDelete {
   *uuid = temporaryStorage.'$objPath';
-  if (*uuid != '') { sendEntityRemove(_ipc_DATA_OBJECT_TYPE, *uuid, $objPath); }
+
+  if (*uuid != '') { 
+    _ipc_sendEntityRemove(_ipc_DATA_OBJECT, *uuid, $objPath, $userNameClient, $rodsZoneClient); 
+  }
 }
 
 
 # This sends a collection or data-object ACL modification message for the 
 # updated object.
 #
-ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
+ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *UserZone, *Path) {
   *level = removePrefix(*AccessLevel, list('admin:'));
   *type = ipc_getEntityType(*Path);
-  *uuid = retrieveUUID(*type, *Path);
-  if (*uuid != '') {
-    if (*type == '-C') {
-      sendCollectionAccessModified(bool(*RecursiveFlag), *level, *UserName, *Zone, *uuid);
-    } else if (*type == '-d') {
-      sendDataObjectAclModified(*level, *UserName, *Zone, *uuid);
-    }
+  *userZone = if *UserZone == '' then ipc_ZONE else *UserZone; 
+  *uuid = '';
+  _ipc_ensureUUID(*type, *Path, *uuid);
+
+  if (_ipc_isCollection(*type)) {
+    _ipc_sendCollectionAccessModified(
+      *uuid, 
+      *level, 
+      *UserName, 
+      *userZone, 
+      bool(*RecursiveFlag), 
+      $userNameClient, 
+      $rodsZoneClient );
+  } else if (_ipc_isDataObject(*type)) {
+    _ipc_sendDataObjectAclModified(
+      *uuid, *level, *UserName, *userZone, $userNameClient, $rodsZoneClient );
   }
 }
 
@@ -606,46 +694,11 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Z
 #
 ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   *type = ipc_getEntityType(*DestEntity);
-  *uuid = retrieveUUID(*type, *DestEntity);
+  *uuid = '';
+  _ipc_ensureUUID(*type, *DestEntity, *uuid);
 
   if (*uuid != '') {
-    if (*type == '-C') {
-      sendEntityMove(_ipc_COLLECTION_TYPE, *uuid, *SrcEntity, *DestEntity);
-    } else if (*type == '-d') {
-      sendEntityMove(_ipc_DATA_OBJECT_TYPE, *uuid, *SrcEntity, *DestEntity);
-    }
-  } else {
-    if (*type == '-C') {
-      *err = errormsg(sendCollectionAdd(assignUUID('-C', *DestEntity), *DestEntity), *msg);
-      if (*err < 0) { writeLine('serverLog', *msg); }
-    } else if (*type == '-d') {
-      *uuid = assignUUID('-d', *DestEntity);
-      msiSplitPath(*DestEntity, *collPath, *dataName);
-
-      *sent = false;
-
-      foreach (*res in 
-        select order_asc(DATA_SIZE), DATA_TYPE_NAME, DATA_OWNER_NAME, DATA_OWNER_ZONE
-        where COLL_NAME = '*collPath' and DATA_NAME = '*dataName'
-      ) {
-        if (!*sent) {
-          *err = errormsg(
-            _ipc_sendDataObjectAdd(
-              $userNameClient, 
-              $rodsZoneClient, 
-              *uuid, 
-              *DestEntity, 
-              *res.DATA_OWNER_NAME, 
-              *res.DATA_OWNER_ZONE, 
-              *res.DATA_SIZE, 
-              *res.DATA_TYPE_NAME),
-            *msg);
-
-          if (*err < 0) { writeLine('serverLog', *msg); }
-          *sent = true;
-        }
-      }
-    }
+    _ipc_sendEntityMove(*type, *uuid, *SrcEntity, *DestEntity, $userNameClient, $rodsZoneClient);
   }
 }
 
@@ -672,19 +725,19 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
   if (*Option == 'add' || *Option == 'addw') {
     ensureAVUEditable($userNameProxy, *ItemType, *ItemName, *AName, *AValue, *AUnit);
   } else if (*Option == 'set') {
-    if (*ItemType == '-C') {
+    if (_ipc_isCollection(*ItemType)) {
       *query =
         SELECT META_COLL_ATTR_ID WHERE COLL_NAME == *ItemName AND META_COLL_ATTR_NAME == *AName;
-    } else if (*ItemType == '-d') {
+    } else if (_ipc_isDataObject(*ItemType)) {
       msiSplitPath(*ItemName, *collPath, *dataName);
 
       *query =
         SELECT META_DATA_ATTR_ID
         WHERE COLL_NAME == *collPath AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *AName;
-    } else if (*ItemType == '-R') {
+    } else if (_ipc_isResource(*ItemType)) {
       *query =
         SELECT META_RESC_ATTR_ID WHERE RESC_NAME == *ItemName AND META_RESC_ATTR_NAME == *AName;
-    } else if (*ItemType == '-u') {
+    } else if (_ipc_isUser(*ItemType)) {
       *query =
         SELECT META_USER_ATTR_ID WHERE USER_NAME == *ItemName AND META_USER_ATTR_NAME == *AName;
     } else {
@@ -714,13 +767,13 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
 ipc_acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *SourceItemName,
                                   *TargetItemName) {
   if (!canModProtectedAVU($userNameClient)) {
-    if (*SourceItemType == '-C') {
+    if (_ipc_isCollection(*SourceItemType)) {
       cpUnprotectedCollAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
-    } else if (*SourceItemType == '-d') {
+    } else if (_ipc_isDataObject(*SourceItemType)) {
       cpUnprotectedDataObjAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
-    } else if (*SourceItemType == '-R') {
+    } else if (_ipc_isResource(*SourceItemType)) {
       cpUnprotectedRescAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
-    } else if (*SourceItemType == '-u') {
+    } else if (_ipc_isUser(*SourceItemType)) {
       cpUnprotectedUserAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
     }
 
@@ -733,21 +786,31 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *So
 
 # This rule sends a message indicating that an AVU was modified.
 #
-ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *new1,
-                                   *new2, *new3, *new4) {
-  *uuid = retrieveUUID(*ItemType, *ItemName);
-  if (*uuid != '') {
-    *newArgs = list(*new1, *new2, *new3, *new4);
+ipc_acPostProcForModifyAVUMetadata(
+  *Option, *ItemType, *ItemName, *AName, *AValue, *new1, *new2, *new3, *new4 ) 
+{
+  *newArgs = list(*new1, *new2, *new3, *new4);
+  *uuid = '';
+  _ipc_ensureUUID(*ItemType, *ItemName, *uuid);
 
-    # Determine the original unit and the new AVU settings.
-    *origUnit = getOrigUnit(*new1);
-    *newName = getNewAVUSetting(*AName, 'n:', *newArgs);
-    *newValue = getNewAVUSetting(*AValue, 'v:', *newArgs);
-    *newUnit = getNewAVUSetting(*origUnit, 'u:', *newArgs);
+  # Determine the original unit and the new AVU settings.
+  *origUnit = getOrigUnit(*new1);
+  *newName = getNewAVUSetting(*AName, 'n:', *newArgs);
+  *newValue = getNewAVUSetting(*AValue, 'v:', *newArgs);
+  *newUnit = getNewAVUSetting(*origUnit, 'u:', *newArgs);
 
-    # Send AVU modified message.
-    sendAvuMod(*ItemType, *uuid, *AName, *AValue, *origUnit, *newName, *newValue, *newUnit);
-  }
+  # Send AVU modified message.
+  _ipc_sendAvuMod(
+    *ItemType, 
+    *uuid, 
+    *AName, 
+    *AValue, 
+    *origUnit, 
+    *newName, 
+    *newValue, 
+    *newUnit, 
+    $userNameClient, 
+    $rodsZoneClient );
 }
 
 
@@ -757,17 +820,19 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValu
 ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
   if (*AName != 'ipc_UUID') {
     if (_ipc_contains(*Option, list('add', 'adda', 'rm', 'set'))) {
-      *uuid = retrieveUUID(*ItemType, *ItemName);
-      if (*uuid != '') {
-        sendAvuSet(*Option, *ItemType, *uuid, *AName, *AValue, *AUnit);
-      }
+      *uuid = '';
+      _ipc_ensureUUID(*ItemType, *ItemName, *uuid);
+
+      _ipc_sendAvuSet(
+        *Option, *ItemType, *uuid, *AName, *AValue, *AUnit, $userNameClient, $rodsZoneClient );
     } else if (*Option == 'addw') {
-      sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit);
+      _ipc_sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit, $userNameClient, $rodsZoneClient);
     } else if (*Option == 'rmw') {
-      *uuid = retrieveUUID(*ItemType, *ItemName);
-      if (*uuid != '') {
-        sendAvuMultiremove(*ItemType, *uuid, *AName, *AValue, *AUnit)
-      }
+      *uuid = '';
+      _ipc_ensureUUID(*ItemType, *ItemName, *uuid);
+      
+      _ipc_sendAvuMultiremove(
+        *ItemType, *uuid, *AName, *AValue, *AUnit, $userNameClient, $rodsZoneClient );
     }
   }
 }
@@ -775,23 +840,27 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValu
 
 # This rules sends an AVU metadata copy message.
 #
-ipc_acPostProcForModifyAVUMetadata(*Option, *SourceItemType, *TargetItemType, *SourceItemName,
-                                   *TargetItemName) {
-  *source = match *SourceItemType with
-              | '-C' => retrieveCollectionUUID(*SourceItemName)
-              | '-d' => retrieveDataUUID(*SourceItemName)
-              | '-R' => *SourceItemName
-              | '-u' => *SourceItemName;
+ipc_acPostProcForModifyAVUMetadata(
+  *Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
+) {
+  *source = '';
 
-  *target = match *TargetItemType with
-              | '-C' => retrieveCollectionUUID(*TargetItemName)
-              | '-d' => retrieveDataUUID(*TargetItemName)
-              | '-R' => *TargetItemName
-              | '-u' => *TargetItemName;
-
-  if (*source != '' && *target != '') {
-    sendAvuCopy(*SourceItemType, *TargetItemType, *source, *target);
+  if (_ipc_isResource(*SourceItemType) || _ipc_isUser(*SourtceItemType)) {
+    *source =  *SourceItemName;
+  } else {
+    _ipc_ensureUUID(*SourceItemType. *SourceItemName, *source);
   }
+
+  *target = '';
+
+  if (_ipc_isResource(*TargetItemType) || _ipc_isUser(*TargetItemType)) {
+    *target = *TargetItemName;
+  } else {
+    _ipc_ensureUUID(*TargetItemType, *TargetItemName, *target);
+  }
+
+  _ipc_sendAvuCopy(
+    *SourceItemType, *source, *TargetItemType, *target, $userNameClient, $rodsZoneClient );
 }
 
 
@@ -811,7 +880,8 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 #   *err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 #   if (*err < 0) { writeLine('serverLog', *msg); }
 #
-#   *uuid = assignUUID('-d', *DATA_OBJ_INFO.logical_path);
+#   *uuid = ''
+#   _ipc_ensureUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
 #        
 #   *err = errormsg(
 #     _ipc_sendDataObjectAdd(
@@ -821,39 +891,41 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 #       *DATA_OBJ_INFO.logical_path,
 #       *DATA_OBJ_INFO.data_owner_name,
 #       *DATA_OBJ_INFO.data_owner_zone,
-#       *DATA_OBJ_INFO.data_size,
+#       int(*DATA_OBJ_INFO.data_size),
 #       *DATA_OBJ_INFO.data_type),
 #     *msg);
 #   if (*err < 0) { writeLine('serverLog', *msg); }
 # }
 ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
+  *uuid = '';
+
   if (*Step != 'FINISH') {
     *err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
     if (*err < 0) { writeLine('serverLog', *msg); }
 
-    assignUUID('-d', *DATA_OBJ_INFO.logical_path);
+    _ipc_ensureUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
   }
 
   if (*Step != 'START') {
     *err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
     if (*err < 0) { writeLine('serverLog', *msg); }
    
-    *uuid = retrieveUUID('-d', *DATA_OBJ_INFO.logical_path);
-
-    if (*uuid != '') {     
-      *err = errormsg(
-        _ipc_sendDataObjectAdd(
-          *User,
-          *Zone,
-          *uuid,
-          *DATA_OBJ_INFO.logical_path,
-          *DATA_OBJ_INFO.data_owner_name,
-          *DATA_OBJ_INFO.data_owner_zone,
-          *DATA_OBJ_INFO.data_size,
-          *DATA_OBJ_INFO.data_type),
-        *msg);
-      if (*err < 0) { writeLine('serverLog', *msg); }
+    if (*uuid != '') {
+      _ipc_ensureUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
     }
+
+    *err = errormsg(
+      _ipc_sendDataObjectAdd(
+        *User,
+        *Zone,
+        *uuid,
+        *DATA_OBJ_INFO.logical_path,
+        *DATA_OBJ_INFO.data_owner_name,
+        *DATA_OBJ_INFO.data_owner_zone,
+        int(*DATA_OBJ_INFO.data_size),
+        *DATA_OBJ_INFO.data_type),
+      *msg);
+    if (*err < 0) { writeLine('serverLog', *msg); }
   }
 }
 # XXX - ^^^
@@ -882,27 +954,25 @@ ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 
 
 ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO) {
-  *uuid = retrieveUUID('-d', *DATA_OBJ_INFO.logical_path);
-    
-  if (*uuid != '') {
-    _ipc_sendDataObjectMod(
-      *User,
-      *Zone,
-      *uuid,
-      *DATA_OBJ_INFO.logical_path,
-      *DATA_OBJ_INFO.data_owner_name,
-      *DATA_OBJ_INFO.data_owner_zone,
-      *DATA_OBJ_INFO.data_size,
-      *DATA_OBJ_INFO.data_type);
-  }
+  *uuid = '';
+  _ipc_ensureUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
+
+  _ipc_sendDataObjectMod(
+    *User,
+    *Zone,
+    *uuid,
+    *DATA_OBJ_INFO.logical_path,
+    *DATA_OBJ_INFO.data_owner_name,
+    *DATA_OBJ_INFO.data_owner_zone,
+    *DATA_OBJ_INFO.data_size,
+    *DATA_OBJ_INFO.data_type );
 }
 
 
 # This rule sends a system metadata modified status message.
 #
 ipc_dataObjMetadataModified(*User, *Zone, *Object) {
-  *uuid = retrieveDataUUID(*Object);
-  if (*uuid != '') {
-    _ipc_sendDataObjectMetadataModified(*User, *Zone, *uuid);
-  }
+  *uuid = '';
+  _ipc_ensureUUID(_ipc_DATA_OBJECT, *Object, *uuid);
+  _ipc_sendDataObjectMetadataModified(*uuid, *User, *Zone);
 }

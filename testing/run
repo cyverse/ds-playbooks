@@ -12,7 +12,7 @@ Usage:
 test Data Store playbooks
 
 Parameters:
-  <playbook_folder>  the path to the root directory for a collection of
+  <playbook_folder>  the path to the root directory for a collection of 
                      playbooks
 
 Options:
@@ -31,34 +31,40 @@ printHelpText(){
   if [[ "$OSTYPE" == "darwin"* ]]
   then
     cat <<EOF
-  -I <hosts>      the name of the inventory hosts file to use
-  -P <playbook>   the path to the playbook to test relative to <playbook_folder>.
+  -I <hosts>     the name of the inventory hosts file to use
+  -P <playbook>  the path to the playbook to test relative to <playbook_folder>.
+  -S <setup>     the path relative to <playbook_folder> to a playbook that
+                 prepares the environment for testing <playbook> 
 
-  -h              show help and exit
-  -i              after running the playbook, open shell that allows manual
-                  inspection of the configuration files, vaults, and logs
-  -p              more information will be output and newlines will be expanded
-                  in that output.
+  -h             show help and exit
+  -i             after running the playbook, open a shell that allows manual
+                 inspection of the configuration files, vaults, and logs
+  -p             more information will be output and newlines will be expanded
+                in that output.
 EOF
   else
     cat <<EOF
   -I, --inventory-hosts <hosts>  the name of the inventory hosts file to use
-  -P, --playbook  <playbook>     the path to the playbook to test relative to
-                                       <playbook_folder>.
+  -P, --playbook <playbook>      the path to the root directory for a collection 
+                                 of playbooks, default is current working 
+                                 directory
+  -S, --setup <setup>            the path relative to <playbook_folder> to a 
+                                 playbook that prepares the environment for 
+                                 testing <playbook> 
 
   -h, --help                     show help and exit
-  -i, --inspect                  after running the playbook, open shell that
-                                 allows manual inspection of the configuration
+  -i, --inspect                  after running the playbook, open a shell that 
+                                 allows manual inspection of the configuration 
                                  files, vaults, and logs
-  -p, --pretty                   more information will be output and newlines
-                                 will be expanded in that output.
+  -p, --pretty                   more information will be output and newlines 
+                                will be expanded in that output.
 EOF
   fi
 
 }
 
 
-set -e
+set -o errexit
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -71,65 +77,109 @@ readonly BaseDir=$(dirname "$ExecName")
 readonly Cfg="$BaseDir"/config.inc
 readonly DefaultHosts=hosts-all
 
+# shellcheck disable=SC1090
+source "$Cfg"
+
 
 main()
 {
-  local doInspect=false
-  local hosts="$DefaultHosts"
-  local pretty=false
+  declare -A opts=(
+    [help]=''
+    [inspect]=''
+    [inventory-hosts]="$DefaultHosts" 
+    [playbook]=''
+    [playbook-folder]=''
+    [pretty]=''
+    [setup]='' )
 
-  local opts
-  opts=$(parse_cmd_line "$@")
-  eval set -- "$opts"
+  if ! resolve_opts opts "$@"
+  then
+    exit_with_help
+  fi
 
-  while true
-  do
-    case "$1" in
-      -h|--help)
-        show_help
-        exit 0
-        ;;
-      -I|--inventory-hosts)
-        hosts="$2"
-        shift 2
-        ;;
-      -i|--inspect)
-        doInspect=true
-        shift
-        ;;
-      -P|--playbook)
-        local playbookInput="$2"
-        shift 2
-        ;;
-      -p|--pretty)
-        pretty=true
-        shift
-        ;;
-      --)
-        shift
-        break
-        ;;
-      *)
-        exit_with_help
-        ;;
-    esac
-  done
+  if [[ -n "${opts[help]}" ]]
+  then
+    show_help
+    return
+  fi
 
-  if [ "$#" -lt 1 ]
+  if [ -z "${opts[playbook-folder]}" ]
   then
     exit_with_help
   fi
 
   local playbooks
-  playbooks=$(resolve_playbook_dir "$1")
+  playbooks="$(resolve_playbook_dir "${opts[playbook-folder]}")"
 
   local playbook
-  if [[ -n "${playbookInput-}" ]]
+  if [[ -n "${opts[playbook]}" ]]
   then
-    playbook="$(resolve_playbook "$playbooks" "$playbookInput")"
+    playbook="$(resolve_playbook "$playbooks" "${opts[playbook]}")"
   fi
 
-  do_run "$doInspect" "$pretty" "$playbooks" "$hosts" "${playbook-}"
+  local setup
+  if [[ -n "${opts[setup]}" ]]
+  then
+    setup="$(resolve_playbook "$playbooks" "${opts[setup]}")"
+  fi
+
+  do_run \
+    "${opts[inspect]}" \
+    "${opts[pretty]}" \
+    "${opts[inventory-hosts]}" \
+    "$playbooks" \
+    "${setup-}" \
+    "${playbook-}"
+}
+
+
+resolve_opts() 
+{
+  local optsVar="$1"
+  shift
+
+  local args
+  args="$(parse_cmd_line "$@")"
+  eval set -- "$args"
+
+  while true
+  do
+    case "$1" in
+      -h|--help)
+        eval "$optsVar"[help]=help
+        shift 1
+        ;;
+      -I|--inventory-hosts)
+        eval "$optsVar""[inventory-hosts]='$2'"
+        shift 2
+        ;;
+      -i|--inspect)
+        eval "$optsVar"[inspect]=inspect
+        shift 1
+        ;;
+      -P|--playbook)
+        eval "$optsVar""[playbook]='$2'"
+        shift 2
+        ;;
+      -p|--pretty)
+        eval "$optsVar"[pretty]=pretty
+        shift 2
+        ;;
+      -S|--setup)
+        eval "$optsVar""[setup]='$2'"
+        shift 2
+        ;;
+      --)
+        shift 1
+        break
+        ;;
+    esac
+  done
+
+  if (( $# >= 1 ))
+  then
+    eval "$optsVar""[playbook-folder]='$1'"
+  fi
 }
 
 
@@ -137,16 +187,23 @@ do_run()
 {
   local doInspect="$1"
   local pretty="$2"
-  local playbooks="$3"
-  local hosts="$4"
-  local playbook="$5"
+  local hosts="$3"
+  local playbooks="$4"
+  local setup="$5"
+  local playbook="$6"
 
-  if "$BaseDir"/env/controller "$Cfg" start
+  "$BaseDir"/env/controller "$Cfg" start
+
+  local rc  
+  if ! \
+    "$BaseDir"/ansible-tester/run \
+      "$doInspect" "$pretty" '' "$hosts" "$playbooks" "$setup" "$playbook"
   then
-    "$BaseDir"/ansible-tester/run "$doInspect" "$pretty" '' "$playbooks" "$hosts" "$playbook"
+    rc=1
   fi
 
   "$BaseDir"/env/controller "$Cfg" stop
+  return ${rc-0}
 }
 
 
@@ -163,13 +220,15 @@ parse_cmd_line()
   if [[ "$OSTYPE" == "darwin"* ]]
   then
     #shellcheck disable=SC2048,SC2086
-    opts=$(getopt hiI:P:p $*)
+    opts="$(getopt hiI:P:pS: $*)"
   else
-    opts=$(getopt --longoptions help,inspect,inventory-hosts:,playbook:,pretty \
-                  --options hiI:P:p \
-                  --name "$ExecName" \
-                  -- \
-                  "$@")
+    opts="$(\
+      getopt \
+        --longoptions help,inspect,inventory-hosts:,playbook:,pretty,setup: \
+        --options hiI:P:pS: \
+        --name "$ExecName" \
+        -- \
+        "$@" )"
   fi
 
   local ret="$?"
@@ -221,8 +280,5 @@ resolve_playbook_dir()
   printf '%s' "$playbooks"
 }
 
-
-# shellcheck disable=SC1090
-. "$Cfg"
 
 main "$@"

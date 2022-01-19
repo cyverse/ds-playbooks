@@ -3,9 +3,9 @@
 #   dir  the directory to verify irods ownership
 
 - name: test account owns /var/lib/irods
-  shell: '[[ -z "$(find {{ dir }} -not -user irods -print -quit)" ]]'
+  shell: 'test -z "$(find {{ dir }} -not -user irods -print -quit)"'
   changed_when: false
 
 - name: test correct account group for /var/libs/irods
-  shell: '[[ -z "$(find {{ dir }} -not -group irods -print -quit)" ]]'
+  shell: 'test -z "$(find {{ dir }} -not -group irods -print -quit)"'
   changed_when: false

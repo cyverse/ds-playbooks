@@ -1,9 +1,12 @@
-FROM centos:7
+FROM ubuntu:18.04
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 COPY base/config.sh /tmp/config
 
-RUN /tmp/config centos 7
+RUN /tmp/config ubuntu 18.04
 
 COPY base/entrypoint.sh /entrypoint
 
 ENTRYPOINT [ "/entrypoint" ]
+

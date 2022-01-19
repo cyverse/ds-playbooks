@@ -1,8 +1,0 @@
----
-- include_tasks: install_irods_pkg.yml
-  vars:
-    os: centos{{ ansible_distribution_major_version }}
-    pkg: irods-resource
-    pkg_ver: "{{ _irods_version }}"
-
-- import_tasks: ensure_irods_ownership.yml

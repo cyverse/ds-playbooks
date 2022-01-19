@@ -1,24 +1,24 @@
 FROM williamyeh/ansible:centos7
 
-# The latest version of pip (21.2.1) is breaking on centos7 without following encoding setup.
-ENV LANG en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
+# The latest version of pip (21.3.1) is breaking on CentOS 7 without following 
+# encoding setup.
+ENV LANG=en_US.UTF-8
 
 ### Install additional ansible support
-RUN yum --assumeyes install dmidecode python3 rpm-build wget && \
-    # NB: pip 21.1 has a bug in it that generates a noisy warning
-    python3 -m pip --quiet install --upgrade pip && \
-    python3 -m pip --disable-pip-version-check --quiet install \
-      ansible==3.3 dnspython netaddr python-irodsclient requests urllib3 wheel
+RUN yum --assumeyes --quiet install dmidecode python3 rpm-build wget
+RUN python3 -m pip --quiet install --upgrade pip
+RUN python3 -m pip --disable-pip-version-check --quiet install \
+  ansible==3.3 dnspython netaddr python-irodsclient requests urllib3 wheel
 
 ### Install inspection support
-RUN yum --assumeyes install ca-certificates epel-release && \
-    python -m pip uninstall --quiet --yes urllib3
+RUN yum --assumeyes install ca-certificates epel-release
+RUN python -m pip --quiet uninstall --yes urllib3
 
 ADD https://packages.irods.org/renci-irods.yum.repo /etc/yum.repos.d/renci-irods.yum.repo
 
-RUN yum --assumeyes install irods-icommands-4.2.8 postgresql && \
-    mkdir /root/.ssh
+RUN rpm --import https://packages.irods.org/irods-signing-key.asc
+RUN yum --assumeyes --quiet install irods-icommands-4.2.8 postgresql
+RUN mkdir /root/.ssh
 
 COPY ssh-config /root/.ssh/config
 RUN chmod --recursive go-rwx /root/.ssh
@@ -33,12 +33,13 @@ ENV PGHOST=localhost
 ENV PGPASSWORD=testpassword
 ENV PGUSER=irods
 
-# NB: Due to a bug in iCommands 4.2.8, irods_environment.json needs to exist prior to `iinit` 
-#     execution.
-RUN mkdir /root/.irods && \
-    echo '{}' > /root/.irods/irods_environment.json && \
+# NB: Due to a bug in iCommands 4.2.8, irods_environment.json needs to exist 
+# prior to `iinit` execution.
+RUN mkdir /root/.irods
+RUN echo '{}' > /root/.irods/irods_environment.json
+
 ### Configure testing infrastructure
-    mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test
+RUN mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test
 
 COPY ansible.cfg /root/.ansible.cfg
 

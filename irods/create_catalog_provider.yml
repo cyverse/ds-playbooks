@@ -16,8 +16,8 @@
         block: |
           {% for i in groups['irods_catalog'] %}
           {%   set addr = i if i|ipaddr else lookup('dig', i) %}
-          {{   '%-7s %-15s %-15s %-23s %s'
-                 | format('host', 'ICAT', hostvars[i]._irods_db_user, addr ~ '/32', 'md5') }}
+          {{ '%-7s %-15s %-15s %-23s %s'
+            | format('host', 'ICAT', hostvars[i]._irods_db_user, addr ~ '/32', 'md5') }}
           {% endfor %}
       notify:
         - reload postgresql
@@ -36,16 +36,18 @@
 - name: provision additional for catalog service providers
   hosts: irods_catalog
   become: true
+  collections:
+    - community.general
   vars:
     # NB: The rpm and yum bindings for the package module require Python 2 in
     #     Ansible 2.9.6
     ansible_python_interpreter: /usr/bin/python
-    odbc_description: "{{
-      lookup('ini', 'Description file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}"
-    odbc_driver: "{{
-      lookup('ini', 'Driver file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}"
-    odbc_setup: "{{
-      lookup('ini', 'Setup file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}"
+    odbc_description: >-
+      {{ lookup('ini', 'Description file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}
+    odbc_driver: >-
+      {{ lookup('ini', 'Driver file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}
+    odbc_setup: >-
+      {{ lookup('ini', 'Setup file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}
   tasks:
     - name: configure linux kernel
       sysctl:
@@ -85,6 +87,7 @@
           copy:
             src: "{{ item }}"
             dest: /etc/profile.d
+            mode: a+r
           with_fileglob:
             - "files/profile.d/*"
 
@@ -123,9 +126,21 @@
         name: pika<1.2
         state: present
 
-    - import_tasks: tasks/install_ies_pkgs.yml
+    - name: lock irods-database-plugin-postgres to required version
+      yum_versionlock:
+        name:
+          - irods-database-plugin-postgres-{{ _irods_version }}
+        state: present
+
+    - name: install irods server packages
+      package:
+        name:
+          - irods-database-plugin-postgres
+        state: present
 
     - import_tasks: tasks/install_plugins.yml
+
+    - import_tasks: tasks/ensure_irods_ownership.yml
 
 
 - import_playbook: cfg_irods.yml
@@ -148,6 +163,3 @@
 
 
 - import_playbook: irods_runtime_init.yml
-
-
-- import_playbook: bisque_usage.yml

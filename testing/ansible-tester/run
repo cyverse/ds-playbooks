@@ -1,17 +1,19 @@
 #!/bin/bash
 #
 # Usage:
-#  run INSPECT PRETTY VERBOSE PLAYBOOKS INVENTORY [PLAYBOOK]
+#  run INSPECT PRETTY VERBOSE INVENTORY PLAYBOOKS SETUP [PLAYBOOK]
 #
 # Parameters:
 #  HOSTS      the inventory hosts to test against
-#  INSPECT    if this is `true`, a shell will be opened that allows access to
-#             the volumes in the env containers.
-#  PLAYBOOK   the name of the playbook being tested.
+#  INSPECT    if this is set to any value, a shell will be opened that allows 
+#             access to the volumes in the env containers.
+#  PLAYBOOK   (OPTIONAL) the name of the playbook being tested.
 #  PLAYBOOKS  the base directory for the set of playbooks containing PLAYBOOK.
-#  PRETTY     if this is `true`, more info is dumped and newlines in ouput are
-#             expanded.
-#  VERBOSE    if this is `true`, -vvv verbose output is generated
+#  PRETTY     if this is set to any value, more info is dumped and newlines in 
+#             ouput are expanded.
+#  SETUP      the name of a playbook that prepares the environment for testing
+#             PLAYBOOK 
+#  VERBOSE    if this is set to any value, ansible will generate verbose output
 #
 # Envinroment Variables:
 #  DBMS_HOST                 The hostname of the PostgreSQL server to connect to
@@ -25,16 +27,17 @@ set -o errexit -o nounset -o pipefail
 
 
 main() {
-	local doInspect="$1"
+	local inspect="$1"
 	local pretty="$2"
-  local verbose="$3"
-	local playbooks="$4"
-	local hosts="$5"
+	local verbose="$3"
+   local hosts="$4"
+	local playbooks="$5"
+	local setup="$6"
 
 	local playbook
-	if (( $# >= 6 ))
+	if (( $# >= 7 ))
 	then
-		playbook="$6"
+		playbook="$7"
 	fi
 
 	docker run --interactive --rm --tty \
@@ -43,7 +46,7 @@ main() {
 		--env PGHOST="$DBMS_HOST" \
 		--network "$DOMAIN" \
 		--volume "$playbooks":/playbooks-under-test:ro \
-		ansible-tester "$doInspect" "$hosts" "${playbook-}" "$pretty" "$verbose"
+		ansible-tester "$inspect" "$pretty" "$verbose" "$hosts" "$setup" "$playbook" 
 }
 
 

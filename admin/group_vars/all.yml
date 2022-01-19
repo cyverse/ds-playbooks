@@ -11,5 +11,3 @@ _package_manager: "{{ package_manager | default('auto') }}"
 _rebootable: "{{ rebootable | default(true) }}"
 
 _sysctl_net: "{{ sysctl_net | default([]) }}"
-
-_update_e2fsprogs: "{{ update_e2fsprogs | default (true) }}"

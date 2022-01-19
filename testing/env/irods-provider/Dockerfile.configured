@@ -1,27 +1,26 @@
 FROM test-env-base:centos7
 
-### Install ansible support
+### Install PostgreSQL ODBC connector
 RUN yum --assumeyes install \
-      jq python-pip python-requests python-virtualenv \
-      ### Install software needed build image
-      python3 \
-      ### Install PostgreSQL ODBC connector
-      https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
-      rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG && \
-      yum --assumeyes install postgresql12-odbc
+  https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+RUN yum --assumeyes install postgresql12-odbc
 
 ### Install iRODS 
 ADD https://packages.irods.org/renci-irods.yum.repo /etc/yum.repos.d/renci-irods.yum.repo
 
-RUN rpm --import https://packages.irods.org/irods-signing-key.asc && \
-      yum --assumeyes install \
-      irods-server-4.2.8 irods-database-plugin-postgres-4.2.8 \
-      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-client_modules-4.2.8.0-centos-7-x86_64.rpm \
-      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-icommands-4.2.8.0-centos-7-x86_64.rpm \
-      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm
+RUN rpm --import https://packages.irods.org/irods-signing-key.asc
+RUN yum --assumeyes versionlock add irods-*-4.2.8
+RUN yum --assumeyes install \
+  irods-server irods-database-plugin-postgres \
+  http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-client_modules-4.2.8.0-centos-7-x86_64.rpm \
+  http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-icommands-4.2.8.0-centos-7-x86_64.rpm \
+  http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm
+RUN yum --assumeyes versionlock add \
+  irods-netcdf-client_modules-4.2.8.0 irods-netcdf-icommands-4.2.8.0 irods-netcdf-server_modules
 
 ### Install libraries required by command scripts
-RUN pip --disable-pip-version-check install pika
+RUN pip --disable-pip-version-check install 'pika<1.2'
 
 ARG DB_NAME=ICAT
 ARG DB_PASSWORD=testpassword

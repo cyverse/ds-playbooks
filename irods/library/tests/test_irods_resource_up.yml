@@ -1,7 +1,13 @@
 ---
 - name: test irods_resource_up module
-  hosts: localhost
-  gather_facts: false
+  hosts: dstesting_provider_configured_1.dstesting_default
+  become: true
+  become_user: irods
   tasks:
-    - debug:
-        msg: TODO implement
+    - name: bring up resource
+      irods_resource_up:
+        resource: ingestRes
+
+    - name: verify resource up
+      shell: test up = "$(iquest '%s' "select RESC_STATUS where RESC_NAME = 'ingestRes'")"
+      changed_when: false

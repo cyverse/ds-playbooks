@@ -13,14 +13,12 @@ set -o errexit -o nounset -o pipefail
 
 
 main() {
-	if [[ "$#" -lt 1 ]]
-	then
+	if (( $# < 1 )); then
 		printf 'The OS name is required as the first argument\n' >&2
 		return 1
 	fi
 
-	if [[ "$#" -lt 2 ]]
-	then
+	if (( $# < 2 )); then
 		printf 'The OS version number is required as the second argument\n' >&2
 		return 1
 	fi
@@ -29,14 +27,8 @@ main() {
 	local version="$2"
 
 	# Install required packages
-	if [[ "$os" = centos ]]
-	then
+	if [[ "$os" == centos ]]; then
 		install_centos_packages "$version"
-	elif [[ "$os" == debian ]]; then
-		install_debian_packages "$version"
-
-		# Allow root to login without a password
- 		sed --in-place 's/nullok_secure/nullok/' /etc/pam.d/common-auth
 	else
 		install_ubuntu_packages "$version"
 	fi
@@ -47,53 +39,54 @@ main() {
 	# Configure passwordless root ssh access
 	ssh-keygen -q -f /etc/ssh/ssh_host_key -N '' -t rsa
 
-	if ! [[ -e /etc/ssh/ssh_host_dsa_key ]]
-	then
+	if ! [[ -e /etc/ssh/ssh_host_dsa_key ]]; then
 		ssh-keygen -q -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
 	fi
 
-	if ! [[ -e /etc/ssh/ssh_host_rsa_key ]]
-	then
+	if ! [[ -e /etc/ssh/ssh_host_rsa_key ]]; then
 		ssh-keygen -q -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
 	fi
 
-	sed --in-place '/session    required     pam_loginuid.so/d' /etc/pam.d/sshd
+	if [[ "$os" == centos ]]; then
+		ssh-keygen -q -f /etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa
+		ssh-keygen -q -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519
+	fi
+
+	update_pam_sshd_config
 	update_sshd_config
 	mkdir --parents /var/run/sshd
 	mkdir --mode 0700 /root/.ssh
 }
 
 
+# Install the required CentOS packages.
+#
+# Parameters:
+#  version  the CentOS major distribution version number
 install_centos_packages() {
 	local version="$1"
 
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
 
+	yum --assumeyes install yum-plugin-versionlock
+
 	yum --assumeyes install epel-release
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
 
-	yum --assumeyes \
-		install ca-certificates iproute iptables-services libselinux-python openssh-server sudo
-}
-
-
-install_debian_packages() {
-	local version="$1"
-
-	apt-get update -qq
-	apt-get install -qq -y apt-utils 2> /dev/null
-
-	apt-get install -qq -y \
-			ca-certificates \
-			iproute \
-			iptables \
-			jq \
-			openssh-server \
-			python-pip \
-			python-selinux \
-			python-virtualenv \
-			sudo \
-		2> /dev/null
+	yum --assumeyes install \
+		ca-certificates \
+		dmidecode \
+		iproute \
+		iptables-services \
+		jq \
+		libselinux-python \
+		openssh-server \
+		python-dns \
+		python-pip \
+		python-requests \
+		python-virtualenv \
+		python3 \
+		sudo
 }
 
 
@@ -103,12 +96,37 @@ install_ubuntu_packages() {
 	apt-get update --quiet=2
 	apt-get install --yes --quiet=2 apt-utils 2> /dev/null
 
-	apt-get install --yes --quiet=2 ca-certificates iproute2 openssh-server python3-apt sudo
+	apt-get install --yes --quiet=2 \
+		ca-certificates \
+		dmidecode \
+		iproute2 \
+		jq \
+		openssh-server \
+		python3 \
+		python3-apt \
+		python3-dns \
+		python3-pip \
+		python3-requests \
+		python3-selinux \
+		python3-virtualenv \
+		sudo
+}
+
+
+update_pam_sshd_config() {
+	cat <<'EOF' | sed --in-place --file - /etc/pam.d/sshd
+/@include common-auth/{
+	i auth	sufficient	pam_permit.so
+	:a
+	n
+	ba
+}
+EOF
 }
 
 
 update_sshd_config() {
-	cat <<EOF | sed --in-place  --regexp-extended --file - /etc/ssh/sshd_config
+	cat <<'EOF' | sed --in-place  --regexp-extended --file - /etc/ssh/sshd_config
 s/#?PermitRootLogin .*/PermitRootLogin yes/
 s/#?PermitEmptyPasswords no/PermitEmptyPasswords yes/
 EOF

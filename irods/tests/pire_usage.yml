@@ -10,9 +10,9 @@
   tasks:
     - name: test make PIRE resource hierarchy
       shell: |
-        printf -v expHier 'pireRes:passthru\n└── pire'
-        actHier=$(ilsresc pireRes)
-        [ "$actHier" = "$expHier" ]
+        printf -v expHier 'pireRes:passthru\n└── pire:unixfilesystem'
+        actHier="$(ilsresc pireRes)"
+        [[ "$actHier" == "$expHier" ]]
       changed_when: false
 
     - name: test create project collection

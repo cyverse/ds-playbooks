@@ -1,5 +1,5 @@
 ---
-- name: test de-usage
+- name: test customize for DE
   hosts: irods_catalog
   become: true
   become_user: irods
@@ -21,7 +21,9 @@
       environment:
         IRODS_USER_NAME: de_job
         IRODS_AUTHENTICATION_FILE: /dev/null
-      shell: iinit -e <<< ''
+      shell: |
+        ils /cyverse.dev <<< '' &> /dev/null
+        (( $? == 4 ))
       changed_when: false
 
     - name: verify user has no home or trash collections

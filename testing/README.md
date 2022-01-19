@@ -14,8 +14,10 @@ publishes messages to. The `dbms_configured` container hosts the PostgreSQL
 server that in turn hosts the ICAT DB. The `proxy` container hosts HAProxy,
 The `provider_configured` container hosts a configured iRODS catalog service 
 provider. The `provider_unconfigured` container hosts an unconfigured service
-provider. The `consumer_configured` container hosts a configured catalog service
-consumer acting as a resource server. Finally, the `consumer_unconfigured`
+provider. The `consumer_configured_centos` container hosts a configured CentOS
+catalog service consumer acting as a resource server. The 
+`consumer_configured_ubuntu` container hosts a configured Ubuntu catalog service 
+consumer acting as a resource server. Finally, the `consumer_unconfigured` 
 container hosts an unconfigured service consumer.
 
 ## Building the Harness

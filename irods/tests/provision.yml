@@ -3,37 +3,39 @@
   hosts: irods:!unmanaged_systems
   become: true
   vars:
-    #     Python 2 in Ansible 2.9.6
-    # NB: The rpm and yum bindings for the test_pkg_installed.yml tasks require
-    ansible_python_interpreter: /usr/bin/python
     group_name: >-
       {{ 'irods_provider' if inventory_hostname in groups['irods_catalog'] else 'irods' }}
   tasks:
-    - include_tasks: tasks/test_pkg_installed.yml
-      with_items:
-        - uuidd
-        - which
-      loop_control:
-        loop_var: pkg
-
-      # XXX: After DS-47 is deployed, this should be removed
     - when: ansible_distribution == 'CentOS'
       block:
-        - include_tasks: tasks/test_pkg_installed.yml
-          vars:
-            pkg: yum-plugin-versionlock
+        # NB: The rpm and yum bindings for the package module require Python 2
+        #     in Ansible 2.10.15
+        - name: CentOS | set correct python for ansible
+          set_fact:
+            ansible_python_interpreter: /usr/bin/python
 
-        - name: test lock NetCDF plugins to version 4.2.8.0
+        - name: CentOS | test install iRODS package repository signing key
           shell: |
             set -o pipefail
-            if ! yum versionlock status | grep --quiet '{{ item  }}'; then
-              printf '{{ item  }} not locked\n' >&2
+            rpm --query --queryformat='%{SUMMARY}\n' gpg-pubkey | grep --quiet 'iRODS Consortium'
+          changed_when: false
+
+        - name: CentOS | test install iRODS repository
+          stat:
+            path: /etc/yum.repos.d/renci-irods.yum.repo
+          register: resp
+          failed_when: not resp.stat.exists
+
+        - name: CentOS | test lock irods package to required version
+          shell: |
+            if ! yum versionlock status | grep --quiet '{{ item }}'; then
+              printf '{{ item }} not locked\n' >&2
               exit 1
-            elif info="$(yum --quiet list installed '{{ item  }}' | tail --lines=+2)"; then
+            elif info="$(yum --quiet list installed '{{ item }}' | tail --lines=+2)"; then
               readarray -t versions <<< "$info"
               for version in "${versions[@]}"; do
                 read _ verNum _ <<< "$version"
-                if ! [[ "$verNum" =~ 4\.2\.8.\0 ]]; then
+                if ! [[ "$verNum" =~ 4\.2\.8 ]]; then
                   printf 'found version %s\n' "$verNum" >&2
                   exit 1
                 fi
@@ -41,9 +43,53 @@
             fi
           changed_when: false
           with_items:
-            - irods-netcdf-client_modules
-            - irods-netcdf-icommands
-            - irods-netcdf-server_modules
+            - irods-icommands
+            - irods-runtime
+            - irods-server
+
+        - include_tasks: tasks/test_pkg_installed.yml
+          with_items:
+            - unixODBC
+            - uuidd
+            - which
+          loop_control:
+            loop_var: pkg
+
+    - when: ansible_distribution == 'Ubuntu'
+      block:
+        - name: Ubuntu | test install iRODS package repository signing key
+          shell: apt-key list | grep --quiet 'iRODS Consortium'
+          changed_when: false
+
+        - name: Ubuntu | test install iRODS repository
+          stat:
+            path: /etc/apt/sources.list.d/renci-irods.list
+          register: resp
+          failed_when: not resp.stat.exists
+
+        - name: Ubuntu | test update apt cache
+          shell: apt-cache policy | grep --quiet packages.irods.org
+          changed_when: false
+
+        - name: Ubuntu | test lock iRODS packages to required version
+          shell: apt-cache policy | grep --quiet '{{ item }} -> 4.2.8 with priority 1001'
+          changed_when: false
+          with_items:
+            - irods-icommands
+            - irods-runtime
+            - irods-server
+
+        - include_tasks: tasks/test_pkg_installed.yml
+          with_items:
+            - debianutils
+            - uuid-runtime
+          loop_control:
+            loop_var: pkg
+
+    - include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: irods-server
+        version: 4.2.8
 
     - name: test create service group
       command:
@@ -56,11 +102,20 @@
     - name: verify that the system user has correct comment
       command:
         cmd: >
-          grep --quiet --regexp '^irods:x:[0-9]*:{{ gid_resp.stdout }}:iRODS Administrator:'
-          /etc/passwd
+          grep --quiet --regexp
+            '^irods:x:[0-9]*:{{ gid_resp.stdout }}:iRODS Administrator:/var/lib/irods:/bin/bash'
+            /etc/passwd
       changed_when: false
 
     - name: verify that system user belongs to tty group
       command:
         cmd: grep --quiet --regexp '^tty:x:[0-9]*:\(.\+,\)\?irods\(,.\+\)\?$' /etc/group
       changed_when: false
+
+    - include_tasks: tasks/test_irods_ownership.yml
+      vars:
+        dir: /etc/irods
+
+    - include_tasks: tasks/test_irods_ownership.yml
+      vars:
+        dir: /var/lib/irods

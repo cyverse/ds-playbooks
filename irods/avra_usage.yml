@@ -34,8 +34,24 @@
             subject: "{{ _avra_manager }}"
             permission: own
             object: "{{ _avra_base_collection }}"
+            recursive: true
             host: "{{ groups['irods_catalog'][0] }}"
             port: "{{ _irods_zone_port }}"
             admin_user: "{{ _irods_clerver_user }}"
             admin_password: "{{ _irods_clerver_password }}"
             zone: "{{ _irods_zone_name }}"
+
+        - name: assign project collection to Avra resource
+          delegate_to: localhost
+          become: false
+          irods_avu:
+            entity_type: resource
+            entity_name: "{{ _avra_resource_hierarchy.name }}"
+            attribute: ipc::hosted-collection
+            value: "{{ _avra_base_collection }}"
+            units: required
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            zone: "{{ _irods_zone_name }}"
+            username: "{{ _irods_clerver_user }}"
+            password: "{{ _irods_clerver_password }}"

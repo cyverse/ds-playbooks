@@ -18,6 +18,8 @@
 # IRODS_SYSTEM_GROUP   The default group of the service account
 # IRODS_ZONE_PASSWORD  The password used to authenticate the clerver user
 
+set -e
+
 
 main()
 {
@@ -84,7 +86,5 @@ stop()
   fi
 }
 
-
-set -e
 
 main "$@"

@@ -1,10 +1,20 @@
 ---
-ansible_python_interpreter: /usr/bin/python
-
 irods_clerver_password: rs7_password
 irods_clerver_user: rs7_admin
 
 irods_storage_resources:
-  - name: replRes
+  - name: avra
+    vault: /var/lib/irods/avra_vault
+    context: minimum_free_space_for_create_in_bytes=1048576
+
+  - name: cereus
+    vault: /var/lib/irods/cereus_vault
+    context: minimum_free_space_for_create_in_bytes=1048576
+
+  - name: pire
+    vault: /var/lib/irods/pire_vault
+    context: minimum_free_space_for_create_in_bytes=1048576
+
+  - name: terraref
     vault: "{{ irods_default_vault }}"
     context: minimum_free_space_for_create_in_bytes=1048576

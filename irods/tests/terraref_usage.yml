@@ -10,9 +10,9 @@
   tasks:
     - name: test make TerraREF resource hierarchy
       shell: |
-        printf -v expHier 'terrarefRes:passthru\n└── terraref'
-        actHier=$(ilsresc terrarefRes)
-        test "$actHier" = "$expHier"
+        printf -v expHier 'terrarefRes:passthru\n└── terraref:unixfilesystem'
+        actHier="$(ilsresc terrarefRes)"
+        [[ "$actHier" == "$expHier" ]]
       changed_when: false
 
     - name: test create project collection

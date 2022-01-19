@@ -4,35 +4,95 @@
   become: true
   collections:
     - community.general
-  vars:
-    # NB: The rpm and yum bindings for the package module require Python 2 in
-    #     Ansible 2.9.6
-    ansible_python_interpreter: /usr/bin/python
   tasks:
-    - name: install required packages
-      package:
-        name:
-          - uuidd
-          - which
-        state: present
-
-      # XXX: After DS-47 is deployed, this should be removed
-    - tags:
-        - netcdf
-      when: ansible_distribution == 'CentOS'
+    - when: ansible_distribution == 'CentOS'
       block:
-        - name: install yum versionlock plugin
-          package:
-            name: yum-plugin-versionlock
-            state: present
+        # NB: The rpm and yum bindings for the package module require Python 2
+        #     in Ansible 2.10.15
+        - name: CentOS | set correct python for ansible
+          set_fact:
+            ansible_python_interpreter: /usr/bin/python
 
-        - name: lock NetCDF plugin version to 4.2.8.0
+        - name: CentOS | install iRODS package repository signing key
+          rpm_key:
+            key: https://packages.irods.org/irods-signing-key.asc
+
+        - name: CentOS | install iRODS repository
+          get_url:
+            url: https://packages.irods.org/renci-irods.yum.repo
+            dest: /etc/yum.repos.d/renci-irods.yum.repo
+
+        - name: CentOS | force import of GPG key
+          shell: |
+            if ! resp="$(yum --assumeyes updateinfo)"; then
+              exit 1
+            fi
+            if [[ "$resp" =~ irods-signing-key ]]; then
+              echo changed
+            fi
+          register: response
+          changed_when: response.stdout == 'changed'
+
+        - name: CentOS | lock irods packages to required version
           yum_versionlock:
             name:
-              - irods-netcdf-client_modules-4.2.8.0
-              - irods-netcdf-icommands-4.2.8.0
-              - irods-netcdf-server_modules-4.2.8.0
+              - irods-icommands-{{ _irods_version }}
+              - irods-runtime-{{ _irods_version }}
+              - irods-server-{{ _irods_version }}
             state: present
+
+        - name: CentOS | install OS specific required packages
+          package:
+            name:
+              - uuidd
+              - which
+            state: present
+
+          # TODO: When upgrading to iRODS 4.2.9, remove this task.
+        - name: ensure unixODBC is installed (irods issue 5389)
+          package:
+            name: unixODBC
+            state: present
+
+    - when: ansible_distribution == 'Ubuntu'
+      block:
+        - name: Ubuntu | install iRODS package repository signing key
+          apt_key:
+            url: https://packages.irods.org/irods-signing-key.asc
+
+        - name: Ubuntu | install iRODS repository
+          copy:
+            dest: /etc/apt/sources.list.d/renci-irods.list
+            mode: u+rw
+            content: |
+              deb [arch=amd64] https://packages.irods.org/apt/ {{ ansible_lsb.codename }} main
+
+        - name: Ubuntu | update apt cache
+          apt:
+            update_cache: true
+          tags:
+            - non_idempotent
+
+        - name: Ubuntu | lock iRODS packages to required version
+          copy:
+            dest: /etc/apt/preferences.d/irods
+            mode: u+rw
+            content: |
+              Package: irods-*
+              Pin: version {{ _irods_version }}
+              Pin-Priority: 1001
+
+        - name: Ubuntu | install OS specific required packages
+          package:
+            name:
+              - debianutils
+              - uuid-runtime
+            state: present
+
+    - name: install iRODS server
+      package:
+        name: irods-server
+        state: present
 
     - name: create service group
       group:
@@ -47,7 +107,10 @@
         createhome: true
         group: "{{ _irods_service_group_name }}"
         groups: tty
+        shell: /bin/bash
         comment: iRODS Administrator
+
+    - import_tasks: tasks/ensure_irods_ownership.yml
 
 
 - import_playbook: update_hosts.yml

@@ -10,8 +10,10 @@ publishes messages to. The `dbms_configured` container hosts the PostgreSQL
 server that in turn hosts the ICAT DB. The `proxy` container hosts HAProxy.
 The `provider_configured` container hosts a configured iRODS catalog service 
 provider. The `provider_unconfigured` container hosts an unconfigured service
-provider. The `consumer_configured` container hosts a configured catalog service
-consumer acting as a resource server. Finally, the `consumer_unconfigured`
+provider. The `consumer_configured_centos` container hosts a configured CentOS 
+catalog service consumer acting as a resource server.  The 
+`consumer_configured_ubuntu` container hosts a configured Ubuntu catalog service
+consumer acting as a resource server. Finally, the  `consumer_unconfigured` 
 container hosts an unconfigured service consumer.
 
 The environment is controlled by docker-compose, but there are three programs
@@ -41,11 +43,9 @@ export IRODS_LAST_EPHEMERAL_PORT=20009
 # catalog service provider.
 export IRODS_PROVIDER_SYSTEM_GROUP=irods_provider
 
-# The name of the storage resource hosted on the configured resource server
-export IRODS_RES_CONF_NAME=ingestRes
-
-# The name of the storage resource hosted on the unconfigured resource server
-export IRODS_RES_UNCONF_NAME=replRes
+# The name of the storage resource hosted on the configured ubuntu resource 
+# server
+export IRODS_RES_CONF_UBUNTU_NAME=ingestRes
 
 # The URI for the schema used to validate the configuration files or 'off'
 export IRODS_SCHEMA_VALIDATION=off
@@ -56,14 +56,14 @@ export IRODS_VAULT=/var/lib/irods/Vault
 # The name of the iRODS zone
 export IRODS_ZONE_NAME=testing
 
-# The host name of the configured catalog service consumer
-export IRODS_CONSUMER_CONF_HOST="$ENV_NAME"_consumer_configured_1."$DOMAIN"
+# The host name of the configured Centos catalog service consumer
+export IRODS_CONSUMER_CONF_UBUNTU_HOST="$ENV_NAME"_consumer_configured_centos_1."$DOMAIN"
 
-# The host name of the unconfigured service consumer
-export IRODS_CONSUMER_UNCONF_HOST="$ENV_NAME"_consumer_unconfigured_1."$DOMAIN"
+# The host name of the configured Ubuntu catalog service consumer
+export IRODS_CONSUMER_CONF_UBUNTU_HOST="$ENV_NAME"_consumer_configured_ubuntu_1."$DOMAIN"
 
 # The name of the default resource to use
-export IRODS_DEFAULT_RESOURCE="$IRODS_RES_CONF_NAME"
+export IRODS_DEFAULT_RESOURCE="$IRODS_RES_CONF_UBUNTU_NAME"
 
 # The host name of the configured catalog service provider
 export IRODS_PROVIDER_CONF_HOST="$ENV_NAME"_provider_configured_1."$DOMAIN"

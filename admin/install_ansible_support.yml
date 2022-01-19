@@ -4,6 +4,8 @@
   become: true
   gather_facts: false
   tasks:
+    - import_tasks: tasks/set_python.yml
+
     - name: install dmidecode support
       package:
         name: dmidecode
@@ -28,20 +30,22 @@
         name: epel-release
         state: present
 
+    - name: install yum-plugin-versionlock on CentOS machines
+      when: ansible_distribution == 'CentOS'
+      package:
+        name: yum-plugin-versionlock
+        state: present
+
     - name: install packages
       package:
-        name: "{{ item }}"
+        name:
+          - "{{ 'iproute2' if ansible_distribution == 'Ubuntu' else 'iproute' }}"
+          - jq
+          - python3
+          - "{{ 'python3-dns' if ansible_distribution == 'Ubuntu' else 'python-dns' }}"
+          - python3-pip
+          - "{{ 'python3-requests' if ansible_distribution == 'Ubuntu' else 'python-requests' }}"
+          - "{{ 'python3-selinux' if ansible_distribution == 'Ubuntu' else 'libselinux-python' }}"
+          - "{{ 
+            'python3-virtualenv' if ansible_distribution == 'Ubuntu' else 'python-virtualenv' }}"
         state: present
-      with_items:
-        - "{{ 'iproute2' if ansible_distribution == 'Ubuntu' else 'iproute' }}"
-        - jq
-        - "{{ 'libselinux-python' if ansible_distribution == 'CentOS' else
-              'python3-selinux' if ansible_distribution == 'Ubuntu' else
-              'python-selinux' }}"
-        - "{{ 'python3-dns' if ansible_distribution == 'Ubuntu' else 'python-dns' }}"
-        - "{{ 'python2-pip' if ansible_distribution == 'CentOS'
-                            and ansible_distribution_version is version ('7', '>=') else
-              'python3-pip' if ansible_distribution == 'Ubuntu' else
-              'python-pip' }}"
-        - "{{ 'python3-requests' if ansible_distribution == 'Ubuntu' else 'python-requests' }}"
-        - "{{ 'python3-virtualenv' if ansible_distribution == 'Ubuntu' else 'python-virtualenv' }}"

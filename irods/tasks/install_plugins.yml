@@ -1,10 +1,4 @@
 ---
-- include_tasks: install_irods_pkg.yml
-  vars:
-    os: centos{{ ansible_distribution_major_version }}
-    pkg: irods-runtime
-    pkg_ver: "{{ _irods_version }}"
-
 - name: ensure netcdf plugins not installed
   package:
     name:
@@ -21,6 +15,22 @@
     - irods-icommands-netcdf
     - irods-microservice-plugin-netcdf
     - irods-api-plugin-netcdf
+
+- name: install NetCDF plugins
+  yum:
+    name:
+      - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-client_modules-4.2.8.0-centos-7-x86_64.rpm
+      - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-icommands-4.2.8.0-centos-7-x86_64.rpm
+      - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm
+    state: present
+
+- name: lock NetCDF plugins to 4.2.8.0
+  yum_versionlock:
+    name:
+      - irods-netcdf-client_modules-4.2.8.0
+      - irods-netcdf-icommands-4.2.8.0
+      - irods-netcdf-server_modules-4.2.8.0
+    state: present
 
 - name: ensure msiSetAVU microservice is absent
   file:

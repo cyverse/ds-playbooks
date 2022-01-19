@@ -18,6 +18,8 @@
 # IRODS_STORAGE_RES        the storage resource being managed
 # IRODS_ZONE_KEY           the iRODS zone key
 
+set -o errexit -o nounset -o pipefail
+
 
 main()
 {

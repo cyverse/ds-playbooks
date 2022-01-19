@@ -11,18 +11,12 @@ _ipc_DATA_OBJECT_TYPE = 'data-object'
 _ipc_RESOURCE_TYPE = 'resource'
 _ipc_USER_TYPE = 'user'
 
+_ipc_contains(*Item, *List) =
+  if size(*List) == 0 then false
+  else if *Item == hd(*List) then true
+  else _ipc_contains(*Item, tl(*List))
+
 _ipc_getTimestamp() = let *_ = msiGetSystemTime(*timestamp, 'human') in *timestamp
-
-
-contains(*item, *list) {
-  *result = false;
-  foreach (*currItem in *list) {
-    if (*item == *currItem) {
-      *result = true;
-    }
-  }
-  *result;
-}
 
 
 _ipc_generateUUID {
@@ -762,7 +756,7 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValu
 #
 ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
   if (*AName != 'ipc_UUID') {
-    if (contains(*Option, list('add', 'adda', 'rm', 'set'))) {
+    if (_ipc_contains(*Option, list('add', 'adda', 'rm', 'set'))) {
       *uuid = retrieveUUID(*ItemType, *ItemName);
       if (*uuid != '') {
         sendAvuSet(*Option, *ItemType, *uuid, *AName, *AValue, *AUnit);

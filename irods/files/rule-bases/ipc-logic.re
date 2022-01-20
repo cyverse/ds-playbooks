@@ -16,6 +16,7 @@ _ipc_isCollection(*Type) = *Type == _ipc_COLLECTION
 _ipc_isDataObject(*Type) = *Type == _ipc_DATA_OBJECT
 
 # NB: Sometimes iRODS passes `-r` to indicated a resource
+_ipc_isResource: string -> boolean
 _ipc_isResource(*Type) = *Type == _ipc_RESOURCE || *Type == '-r'
 
 _ipc_isUser(*Type) = *Type == _ipc_USER

@@ -39,8 +39,6 @@ _ipc_contains(*Item, *List) =
   else if *Item == hd(*List) then true
   else _ipc_contains(*Item, tl(*List))
 
-_ipc_getTimestamp() = let *_ = msiGetSystemTime(*timestamp, 'human') in *timestamp
-
 
 _ipc_generateUUID(*UUID) {
   *status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
@@ -193,13 +191,15 @@ _ipc_sendCollectionAdd(*Id, *Path, *CreatorName, *CreatorZone) {
 
 
 _ipc_sendDataObjectOpen(*Id, *Path, *CreatorName, *CreatorZone, *Size) {
+  msiGetSystemTime(*timestamp, 'human');
+
   *msg = ipcJson_document(
     list(
       _ipc_mkAuthorField(*CreatorName, *CreatorZone),
       mkEntityField(*Id),
       mkPathField(*Path),
       ipcJson_number('size', *Size),
-      ipcJson_string('timestamp', getTimestamp()) ) );
+      ipcJson_string('timestamp', *timestamp) ) );
 
   sendMsg(_ipc_DATA_MSG_TYPE ++ '.open', *msg);
 }

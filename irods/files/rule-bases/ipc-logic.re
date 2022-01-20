@@ -846,8 +846,8 @@ ipc_acPostProcForModifyAVUMetadata(
 ) {
   *source = '';
 
-  if (_ipc_isResource(*SourceItemType) || _ipc_isUser(*SourtceItemType)) {
-    *source =  *SourceItemName;
+  if (_ipc_isResource(*SourceItemType) || _ipc_isUser(*SourceItemType)) {
+    *source = *SourceItemName;
   } else {
     _ipc_ensureUUID(*SourceItemType. *SourceItemName, *source);
   }

@@ -33,19 +33,18 @@ _ipc_getAmqpType(*ItemType) =
   else if _ipc_isUser(*ItemType) then _ipc_USER_MSG_TYPE
   else ''
 
+
 _ipc_contains(*Item, *List) =
   if size(*List) == 0 then false
   else if *Item == hd(*List) then true
   else _ipc_contains(*Item, tl(*List))
 
-_ipc_getTimestamp() = let *_ = msiGetSystemTime(*timestamp, 'human') in *timestamp
 
-
-_ipc_generateUUID {
+_ipc_generateUUID(*UUID) {
   *status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
   if (*status == 0) {
     msiGetStdoutInExecCmdOut(*out, *uuid);
-    trimr(*uuid, "\n");
+    *UUID = trimr(*uuid, "\n");
   } else {
     writeLine("serverLog", "failed to generate UUID");
     fail;
@@ -55,7 +54,7 @@ _ipc_generateUUID {
 
 # Assign a UUID to a given collection or data object.
 assignUUID(*ItemType, *ItemName) {
-  *uuid = _ipc_generateUUID;
+  _ipc_generateUUID(*uuid);
   writeLine('serverLog', 'UUID *uuid created');
 # XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
 #       4.2.10.
@@ -192,13 +191,15 @@ _ipc_sendCollectionAdd(*Id, *Path, *CreatorName, *CreatorZone) {
 
 
 _ipc_sendDataObjectOpen(*Id, *Path, *CreatorName, *CreatorZone, *Size) {
+  msiGetSystemTime(*timestamp, 'human');
+
   *msg = ipcJson_document(
     list(
       _ipc_mkAuthorField(*CreatorName, *CreatorZone),
       mkEntityField(*Id),
       mkPathField(*Path),
       ipcJson_number('size', *Size),
-      ipcJson_string('timestamp', getTimestamp()) ) );
+      ipcJson_string('timestamp', *timestamp) ) );
 
   sendMsg(_ipc_DATA_MSG_TYPE ++ '.open', *msg);
 }

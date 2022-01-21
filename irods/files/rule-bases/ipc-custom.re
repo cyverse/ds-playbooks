@@ -518,19 +518,28 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
       if errorcode(temporaryStorage.'*pathVar') != 0 then true
       else ! (temporaryStorage.'*pathVar' like 'CREATE *')
     ) {
+      # If REG_PARAM.allReplStatus is TRUE, then this is a modification and not
+      # a replica update.
+      if (
+        if errorcode(*REG_PARAM.allReplStatus) != 0 then false 
+        else *REG_PARAM.allReplStatus == 'TRUE'
+      ) { 
 # XXX - Because of https://github.com/irods/irods/issues/5540, 
 # _ipc_dataObjModified needs to be called here
 # # XXX - Because of https://github.com/irods/irods/issues/5538, the CONTEXT 
 # # variables need to passed through temporaryStorage
-# #       temporaryStorage.'*pathVar' = 'MODIFY *DATA_OBJ_INFO';
-#       temporaryStorage.'*pathVar' 
-#         = 'MODIFY ' 
-#         ++ *CONTEXT.user_user_name 
-#         ++ ' ' 
-#         ++ *CONTEXT.user_rods_zone 
-#         ++ ' *DATA_OBJ_INFO';
+# #         temporaryStorage.'*pathVar' = 'MODIFY *DATA_OBJ_INFO';
+#         temporaryStorage.'*pathVar' 
+#           = 'MODIFY ' 
+#           ++ *CONTEXT.user_user_name 
+#           ++ ' ' 
+#           ++ *CONTEXT.user_rods_zone 
+#           ++ ' *DATA_OBJ_INFO';
 # # XXX - ^^^        
-      _ipc_dataObjModified(*CONTEXT.user_user_name, *CONTEXT.user_rods_zone, *DATA_OBJ_INFO);
+        _ipc_dataObjModified(*CONTEXT.user_user_name, *CONTEXT.user_rods_zone, *DATA_OBJ_INFO);
+# XXX - ^^^
+      }
+
       *handled = true;
     }
   }

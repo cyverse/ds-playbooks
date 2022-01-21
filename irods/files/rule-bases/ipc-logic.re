@@ -46,6 +46,7 @@ _ipc_generateUUID(*UUID) {
   if (*status == 0) {
     msiGetStdoutInExecCmdOut(*out, *uuid);
     *UUID = trimr(*uuid, "\n");
+    writeLine('serverLog', 'UUID *UUID created');
   } else {
     writeLine("serverLog", "failed to generate UUID");
     fail;
@@ -54,19 +55,17 @@ _ipc_generateUUID(*UUID) {
 
 
 # Assign a UUID to a given collection or data object.
-assignUUID(*ItemType, *ItemName) {
-  _ipc_generateUUID(*uuid);
-  writeLine('serverLog', 'UUID *uuid created');
+_ipc_assignUUID(*ItemType, *ItemName, *Uuid) {
 # XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
 #       4.2.10.
-#  msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, '');
-  *status = errormsg(msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *uuid, ''), *msg);
+#  msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *Uuid, '');
+  *status = errormsg(msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *Uuid, ''), *msg);
 
   if (*status == -818000) {
     # assume it was uploaded by a ticket
     *typeArg = execCmdArg(*ItemType);
     *nameArg = execCmdArg(*ItemName);
-    *valArg = execCmdArg(*uuid);
+    *valArg = execCmdArg(*Uuid);
     *argStr = "*typeArg *nameArg *valArg";
     *status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
   
@@ -79,8 +78,6 @@ assignUUID(*ItemType, *ItemName) {
     fail;
   }
 # XXX - ^^^
-
-  *uuid;
 }
 
 
@@ -125,11 +122,12 @@ retrieveUUID(*EntityType, *EntityPath) {
 _ipc_ensureUUID(*EntityType, *EntityPath, *UUID) {
   *uuid = retrieveUUID(*EntityType, *EntityPath);
 
-  if (*uuid != '') {
-    *UUID = *uuid;
-  } else {
-    *UUID = assignUUID(*EntityType, *EntityPath);
+  if (*uuid == '') {
+    _ipc_generateUUID(*uuid);
+    _ipc_assignUUID(*EntityType, *EntityPath, *uuid);
   }
+
+  *UUID = *uuid;
 }
 
 

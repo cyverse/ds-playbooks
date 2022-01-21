@@ -5,29 +5,29 @@
 # For license information, see https://cyverse.org/license.
 
 _ipcJson_accumEncodedList(*Base, *SerialElmts) =
-  if size(*SerialElmts) == 0 then *Base
-  else 
-	  let *prefix = if *Base == '' then '' else *Base ++ ',' in
-    _ipcJson_accumEncodedList(*prefix ++ hd(*SerialElmts), tl(*SerialElmts))
+	if size(*SerialElmts) == 0 then *Base
+	else 
+		let *prefix = if *Base == '' then '' else *Base ++ ',' in
+		_ipcJson_accumEncodedList(*prefix ++ hd(*SerialElmts), tl(*SerialElmts))
 
 _ipcJson_encodeObject(*SerialFields) = '{' ++ _ipcJson_accumEncodedList('', *SerialFields) ++ '}'
 
 _ipcJson_encodeString(*Str) =
-  let *escStr = '' in
-  let *len = strlen(*Str) in
-  let *pos = 0 in
-  let *_ = while (*len > *pos) {
-    let *c = substr(*Str, *pos, *pos + 1) in
-    let *escC = 
-      if *c == '"' then '\\"' else
-      if *c == '\t' then '\\t' else
-      if *c == '\n' then '\\n' else
-      if *c == '\r' then '\\r' else
-      if *c == '\\' then '\\\\' else
-      *c
-    in *escStr = *escStr ++ *escC;
-    *pos = *pos + 1; }
-  in '"' ++ *escStr ++ '"'
+	let *escStr = '' in
+	let *len = strlen(*Str) in
+	let *pos = 0 in
+	let *_ = while (*len > *pos) {
+		let *c = substr(*Str, *pos, *pos + 1) in
+		let *escC = 
+			if *c == '"' then '\\"' 
+			else if *c == '\t' then '\\t' 
+			else if *c == '\n' then '\\n' 
+			else if *c == '\r' then '\\r' 
+			else if *c == '\\' then '\\\\' 
+			else *c in 
+		*escStr = *escStr ++ *escC;
+		*pos = *pos + 1; }
+	in '"' ++ *escStr ++ '"'
 
 _ipcJson_mkField(*Label, *SerialVal) = '"' ++ *Label ++ '":' ++ *SerialVal
 
@@ -64,8 +64,8 @@ ipcJson_number(*Label, *Val) = _ipcJson_mkField(*Label, '*Val')
 #   *SerialFields - the list of pre-serialized fields ot include in the object
 #
 ipcJson_object: string * list string -> string
-ipcJson_object(*Label, *SerialFields) = _ipcJson_mkField(
-  *Label, _ipcJson_encodeObject(*SerialFields) )
+ipcJson_object(*Label, *SerialFields) = 
+	_ipcJson_mkField(*Label, _ipcJson_encodeObject(*SerialFields))
 
 # construct a serialized JSON string field
 #

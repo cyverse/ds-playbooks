@@ -578,9 +578,9 @@ cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) =
 		setAVUIfUnprotected(
 			*TargetType, 
 			*TargetName, 
-			*avu.META_RESC_ATTR_NAME,
-			*avu.META_RESC_ATTR_VALUE, 
-			*avu.META_RESC_ATTR_UNITS );
+			*avu.META_USER_ATTR_NAME,
+			*avu.META_USER_ATTR_VALUE, 
+			*avu.META_USER_ATTR_UNITS );
 	}
 
 

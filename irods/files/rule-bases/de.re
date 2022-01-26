@@ -173,7 +173,7 @@ exclusive_acPostProcForCopy {
 
 de_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
   if (_de_inStagedJob(*DATA_OBJ_INFO.logical_path)) {
-    _de_archiveData(*DATA_OBJ_INP.logical_path);
+    _de_archiveData(*DATA_OBJ_INFO.logical_path);
   }
 }
 

@@ -713,10 +713,15 @@ ipc_archive_acPostProcForCollCreate {
 
 
 ipc_acPostProcForOpen {
-	*uuid = retrieveDataUUID($objPath);
+	*me = 'ipc_acPostProcForOpen';
+	*id = _ipc_getDataId($objPath);
+	_ipc_registerAction(*id, *me);
 
-	if (*uuid != '') {
+	if (_ipc_isCurrentAction(*id, *me)) {
+		*uuid = '';
+		_ipc_ensureUUID(ipc_DATA_OBJECT, $objPath, *uuid);
 		_ipc_sendDataObjectOpen(*uuid, $objPath, $userNameClient, $rodsZoneClient, $dataSize);
+		_ipc_unregisterAction(*id, *me);
 	}
 }
 
@@ -1078,18 +1083,26 @@ ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 
 
 ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO) {
-	*uuid = '';
-	_ipc_ensureUUID(ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
+	*me = 'ipc_dataObjModified_default';
+	*id = int(*DATA_OBJ_INFO.data_id);
+	_ipc_registerAction(*id, *me);
 
-	_ipc_sendDataObjectMod(
-		*User,
-		*Zone,
-		*uuid,
-		*DATA_OBJ_INFO.logical_path,
-		*DATA_OBJ_INFO.data_owner_name,
-		*DATA_OBJ_INFO.data_owner_zone,
-		*DATA_OBJ_INFO.data_size,
-		*DATA_OBJ_INFO.data_type );
+	if (_ipc_isCurrentAction(*id, *me)) {
+		*uuid = '';
+		_ipc_ensureUUID(ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
+
+		_ipc_sendDataObjectMod(
+			*User,
+			*Zone,
+			*uuid,
+			*DATA_OBJ_INFO.logical_path,
+			*DATA_OBJ_INFO.data_owner_name,
+			*DATA_OBJ_INFO.data_owner_zone,
+			int(*DATA_OBJ_INFO.data_size),
+			*DATA_OBJ_INFO.data_type );
+
+		_ipc_unregisterAction(*id, *me);
+	}
 }
 
 

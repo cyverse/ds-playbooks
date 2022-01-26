@@ -5,6 +5,26 @@
 
 _ipc_HOME = '/' ++ ipc_ZONE ++ '/home'
 
+#
+# These are the constants used by iRODS to identity the type of an entity.
+#
+
+# Identifies a collection
+ipc_COLLECTION: string
+ipc_COLLECTION = '-C'
+
+# Identifies a data object
+ipc_DATA_OBJECT: string
+ipc_DATA_OBJECT = '-d'
+
+# Identifies a resource
+ipc_RESOURCE: string
+ipc_RESOURCE = '-R'
+
+# Identifies a user
+ipc_USER: string
+ipc_USER = '-u'
+
 # Looks up the type of an entity
 #
 # PARAMETERS:
@@ -14,14 +34,10 @@ _ipc_HOME = '/' ++ ipc_ZONE ++ '/home'
 # RETURNS:
 #  It returns the type
 #
-#  '-d' for data object
-#  '-C' for collection
-#  '-R' for resource
-#  '-u' for user
 ipc_getEntityType: string -> string
 ipc_getEntityType(*Entity) = 
   let *_ = msiGetObjType(*Entity, *type) in 
-  if *type == '-c' then '-C' else if *type == '-r' then '-R' else *type
+  if *type == '-c' then ipc_COLLECTION else if *type == '-r' then ipc_RESOURCE else *type
 
 # The base collection for staging
 ipc_STAGING_BASE: path
@@ -143,9 +159,9 @@ ipc_ensureAccessOnMv(*SvcUser, *SvcColl, *Permission, *OldPath, *NewPath) {
   ) {
     *type = ipc_getEntityType(*NewPath);
 
-    if (*type == '-C') {
+    if (*type == ipc_COLLECTION) {
       ipc_giveAccessColl(*SvcUser, *Permission, *NewPath);
-    } else if (*type == '-d') {
+    } else if (*type == ipc_DATA_OBJECT) {
       ipc_giveAccessObj(*SvcUser, *Permission, *NewPath);
     }
   }

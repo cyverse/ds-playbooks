@@ -6,20 +6,15 @@
 
 @include 'ipc-json'
 
-_ipc_COLLECTION = '-C'
-_ipc_DATA_OBJECT = '-d'
-_ipc_RESOURCE = '-R'
-_ipc_USER = '-u'
+_ipc_isCollection(*Type) = *Type == ipc_COLLECTION
 
-_ipc_isCollection(*Type) = *Type == _ipc_COLLECTION
-
-_ipc_isDataObject(*Type) = *Type == _ipc_DATA_OBJECT
+_ipc_isDataObject(*Type) = *Type == ipc_DATA_OBJECT
 
 # NB: Sometimes iRODS passes `-r` to indicated a resource
 _ipc_isResource: string -> boolean
-_ipc_isResource(*Type) = *Type == _ipc_RESOURCE || *Type == '-r'
+_ipc_isResource(*Type) = *Type == ipc_RESOURCE || *Type == '-r'
 
-_ipc_isUser(*Type) = *Type == _ipc_USER
+_ipc_isUser(*Type) = *Type == ipc_USER
 
 
 _ipc_COLL_MSG_TYPE = 'collection'
@@ -39,6 +34,30 @@ _ipc_contains(*Item, *List) =
 	if size(*List) == 0 then false
 	else if *Item == hd(*List) then true
 	else _ipc_contains(*Item, tl(*List))
+
+
+_ipc_getCollectionId(*Path) =
+	let *id = -1 in
+	let *_ = foreach (*rec in SELECT COLL_ID WHERE COLL_NAME = *Path) {
+		*id = int(*rec.COLL_ID);
+	}
+	in *id
+
+_ipc_getDataId(*Path) =
+	let *collPath = '' in
+	let *dataName = '' in
+	let *_ = msiSplitPath(*Path, *collPath, *dataName) in
+	let *id = -1 in
+	let *_ = foreach (
+		*rec in SELECT DATA_ID WHERE COLL_NAME = *collPath AND DATA_NAME = *dataName
+	) {
+		*id = int(*rec.DATA_ID);
+	}
+	in *id
+
+_ipc_getEntityId(*Path) =
+	if _ipc_isCollection(ipc_getEntityType(*Path)) then _ipc_getCollectionId(*Path)
+	else _ipc_getDataId(*Path)
 
 
 _ipc_generateUUID(*UUID) {
@@ -83,7 +102,7 @@ _ipc_assignUUID(*ItemType, *ItemName, *Uuid) {
 
 
 # Looks up the UUID of a collection from its path.
-retrieveCollectionUUID(*Coll) {
+_ipc_retrieveCollectionUUID(*Coll, *UUID) {
 	*uuid = '';
 
 	*res = 
@@ -93,7 +112,7 @@ retrieveCollectionUUID(*Coll) {
 		*uuid = *record.META_COLL_ATTR_VALUE;
 	}
 
-	*uuid;
+	*UUID = *uuid;
 }
 
 
@@ -118,13 +137,15 @@ retrieveDataUUID(*Data) {
 
 # Looks up the UUID for a given type of entity (collection or data object)
 retrieveUUID(*EntityType, *EntityPath) {
+	*uuid = '';
+
 	if (_ipc_isCollection(*EntityType)) {
-		retrieveCollectionUUID(*EntityPath);
+		_ipc_retrieveCollectionUUID(*EntityPath, *uuid);
 	} else if (_ipc_isDataObject(*EntityType)) {
-		retrieveDataUUID(*EntityPath);
-	} else {
-		''
-	}
+		*uuid = retrieveDataUUID(*EntityPath);
+	} 
+
+	*uuid;
 }
 
 
@@ -137,6 +158,30 @@ _ipc_ensureUUID(*EntityType, *EntityPath, *UUID) {
 	}
 
 	*UUID = *uuid;
+}
+
+
+_ipc_mkActionKey(*EntityId) = str(*EntityId) ++ '-ROOT_ACTION'
+
+_ipc_isCurrentAction(*EntityId, *Action) =
+	let *key = _ipc_mkActionKey(*EntityId) in temporaryStorage."*key" == *Action
+
+
+_ipc_registerAction(*EntityId, *Action) {
+	*key = _ipc_mkActionKey(*EntityId);
+
+   if (if errorcode(temporaryStorage."*key") != 0 then true else temporaryStorage."*key" == '') {
+		temporaryStorage."*key" = *Action;
+	}
+}
+
+
+_ipc_unregisterAction(*EntityId, *Action) {
+	*key = _ipc_mkActionKey(*EntityId);
+
+	if (temporaryStorage."*key" == *Action) {
+		temporaryStorage."*key" = '';
+	}
 }
 
 
@@ -578,9 +623,9 @@ cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) =
 		setAVUIfUnprotected(
 			*TargetType, 
 			*TargetName, 
-			*avu.META_RESC_ATTR_NAME,
-			*avu.META_RESC_ATTR_VALUE, 
-			*avu.META_RESC_ATTR_UNITS );
+			*avu.META_USER_ATTR_NAME,
+			*avu.META_USER_ATTR_VALUE, 
+			*avu.META_USER_ATTR_UNITS );
 	}
 
 
@@ -620,7 +665,7 @@ ipc_acCreateCollByAdmin(*ParColl, *ChildColl) {
 ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl) {
 	*path = *ParColl ++ '/' ++ *ChildColl;
 	*id = '';
-	_ipc_ensureUUID(_ipc_COLLECTION, *path, *id);
+	_ipc_ensureUUID(ipc_COLLECTION, *path, *id);
 	_ipc_sendCollectionAdd(*id, *path, $userNameClient, $rodsZoneClient);
 }
 
@@ -629,10 +674,11 @@ ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl) {
 #
 ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
 	*path = '*ParColl/*ChildColl';
-	*uuid = retrieveCollectionUUID(*path);
+	*uuid = '';
+	_ipc_retrieveCollectionUUID(*path, *uuid);
 
 	if (*uuid != '') {
-		_ipc_sendEntityRemove(_ipc_COLLECTION, *uuid, *path, $userNameClient, $rodsZoneClient);
+		_ipc_sendEntityRemove(ipc_COLLECTION, *uuid, *path, $userNameClient, $rodsZoneClient);
 	}
 }
 
@@ -661,7 +707,7 @@ ipc_acPostProcForCollCreate { setAdminGroupPerm($collName); }
 #
 ipc_archive_acPostProcForCollCreate {
 	*id = '';
-	_ipc_ensureUUID(_ipc_COLLECTION, $collName, *id);
+	_ipc_ensureUUID(ipc_COLLECTION, $collName, *id);
 	_ipc_sendCollectionAdd(*id, $collName, $userNameClient, $rodsZoneClient);
 }
 
@@ -675,14 +721,18 @@ ipc_acPostProcForOpen {
 }
 
 
-ipc_acPreprocForRmColl { temporaryStorage.'$collName' = retrieveCollectionUUID($collName); }
+ipc_acPreprocForRmColl { 
+	*uuid = '';
+	_ipc_retrieveCollectionUUID($collName, *uuid);
+	temporaryStorage.'$collName' = *uuid; 
+}
 
 
 ipc_acPostProcForRmColl {
 	*uuid = temporaryStorage.'$collName';
 
 	if (*uuid != '') {
-		_ipc_sendEntityRemove(_ipc_COLLECTION, *uuid, $collName, $userNameClient, $rodsZoneClient);
+		_ipc_sendEntityRemove(ipc_COLLECTION, *uuid, $collName, $userNameClient, $rodsZoneClient);
 	}
 }
 
@@ -694,7 +744,7 @@ ipc_acPostProcForDelete {
 	*uuid = temporaryStorage.'$objPath';
 
 	if (*uuid != '') {
-		_ipc_sendEntityRemove(_ipc_DATA_OBJECT, *uuid, $objPath, $userNameClient, $rodsZoneClient);
+		_ipc_sendEntityRemove(ipc_DATA_OBJECT, *uuid, $objPath, $userNameClient, $rodsZoneClient);
 	}
 }
 
@@ -703,24 +753,32 @@ ipc_acPostProcForDelete {
 # updated object.
 #
 ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *UserZone, *Path) {
-	*level = removePrefix(*AccessLevel, list('admin:'));
-	*type = ipc_getEntityType(*Path);
-	*userZone = if *UserZone == '' then ipc_ZONE else *UserZone;
-	*uuid = '';
-	_ipc_ensureUUID(*type, *Path, *uuid);
+	*me = 'ipc_acPostProcForModifyAccessControl';
+	*entityId = _ipc_getEntityId(*Path);
+	_ipc_registerAction(*entityId, *me);
 
-	if (_ipc_isCollection(*type)) {
-		_ipc_sendCollectionAccessModified(
-			*uuid,
-			*level,
-			*UserName,
-			*userZone,
-			bool(*RecursiveFlag),
-			$userNameClient,
-			$rodsZoneClient );
-	} else if (_ipc_isDataObject(*type)) {
-		_ipc_sendDataObjectAclModified(
-			*uuid, *level, *UserName, *userZone, $userNameClient, $rodsZoneClient );
+   if (_ipc_isCurrentAction(*entityId, *me)) {
+		*level = removePrefix(*AccessLevel, list('admin:'));
+		*type = ipc_getEntityType(*Path);
+		*userZone = if *UserZone == '' then ipc_ZONE else *UserZone;
+		*uuid = '';
+		_ipc_ensureUUID(*type, *Path, *uuid);
+
+		if (_ipc_isCollection(*type)) {
+			_ipc_sendCollectionAccessModified(
+				*uuid,
+				*level,
+				*UserName,
+				*userZone,
+				bool(*RecursiveFlag),
+				$userNameClient,
+				$rodsZoneClient );
+		} else if (_ipc_isDataObject(*type)) {
+			_ipc_sendDataObjectAclModified(
+				*uuid, *level, *UserName, *userZone, $userNameClient, $rodsZoneClient );
+		}
+
+		_ipc_unregisterAction(*entityId, *me);
 	}
 }
 
@@ -914,6 +972,9 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 
 # XXX - Because of https://github.com/irods/irods/issues/5540
 # ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO) {
+# 	*me = 'ipc_dataObjCreated_default';
+# 	*id = int(*DATA_OBJ_INFO.data_id);
+# 	_ipc_registerAction(*id, *me);
 # 	*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
 # 	if (*err < 0) { writeLine('serverLog', *msg); }
 #
@@ -921,29 +982,36 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 # 	if (*err < 0) { writeLine('serverLog', *msg); }
 #
 # 	*uuid = ''
-# 	_ipc_ensureUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
+# 	_ipc_ensureUUID(ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
 #
-# 	*err = errormsg(
-# 		_ipc_sendDataObjectAdd(
-# 			*User,
-# 			*Zone,
-# 			*uuid,
-# 			*DATA_OBJ_INFO.logical_path,
-# 			*DATA_OBJ_INFO.data_owner_name,
-# 			*DATA_OBJ_INFO.data_owner_zone,
-# 			int(*DATA_OBJ_INFO.data_size),
-# 			*DATA_OBJ_INFO.data_type ),
-# 		*msg );
+# 	if (_ipc_isCurrentAction(*id, *me)) {
+# 		*err = errormsg(
+# 			_ipc_sendDataObjectAdd(
+# 				*User,
+# 				*Zone,
+# 				*uuid,
+# 				*DATA_OBJ_INFO.logical_path,
+# 				*DATA_OBJ_INFO.data_owner_name,
+# 				*DATA_OBJ_INFO.data_owner_zone,
+# 				int(*DATA_OBJ_INFO.data_size),
+# 				*DATA_OBJ_INFO.data_type ),
+# 			*msg );
+# 		if (*err < 0) { writeLine('serverLog', *msg); }
+# 	}
 #
-# 	if (*err < 0) { writeLine('serverLog', *msg); }
+# 	_ipc_unregisterAction(*id, *me);
 # }
 ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
+	*me = 'ipc_dataObjCreated_default';
+	*id = int(*DATA_OBJ_INFO.data_id);
+	_ipc_registerAction(*id, *me);
+
 	*uuid = '';
 
 	if (*Step != 'FINISH') {
 		*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
-		_ipc_ensureUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
+		_ipc_ensureUUID(ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
 	}
 
 	if (*Step != 'START') {
@@ -951,21 +1019,25 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 		if (*err < 0) { writeLine('serverLog', *msg); }
 
 		if (*uuid != '') {
-			_ipc_ensureUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
+			_ipc_ensureUUID(ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
 		}
 
-		*err = errormsg(
-			_ipc_sendDataObjectAdd(
-				*User,
-				*Zone,
-				*uuid,
-				*DATA_OBJ_INFO.logical_path,
-				*DATA_OBJ_INFO.data_owner_name,
-				*DATA_OBJ_INFO.data_owner_zone,
-				int(*DATA_OBJ_INFO.data_size),
-				*DATA_OBJ_INFO.data_type ),
-			*msg );
-		if (*err < 0) { writeLine('serverLog', *msg); }
+		if (_ipc_isCurrentAction(*id, *me)) {
+			*err = errormsg(
+				_ipc_sendDataObjectAdd(
+					*User,
+					*Zone,
+					*uuid,
+					*DATA_OBJ_INFO.logical_path,
+					*DATA_OBJ_INFO.data_owner_name,
+					*DATA_OBJ_INFO.data_owner_zone,
+					int(*DATA_OBJ_INFO.data_size),
+					*DATA_OBJ_INFO.data_type ),
+				*msg );
+			if (*err < 0) { writeLine('serverLog', *msg); }
+
+			_ipc_unregisterAction(*id, *me);
+		}
 	}
 }
 # XXX - ^^^
@@ -973,13 +1045,23 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 
 # XXX - Because of https://github.com/irods/irods/issues/5540
 # ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO) {
+# 	*me = 'ipc_dataObjCreated_staging';
+# 	*id = int(*DATA_OBJ_INFO.data_id);
+# 	_ipc_registerAction(*id, *me);
+#
 # 	*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
 # 	if (*err < 0) { writeLine('serverLog', *msg); }
 #
 # 	*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 # 	if (*err < 0) { writeLine('serverLog', *msg); }
+#
+#	_ipc_unregisterAction(*id, *me);
 # }
 ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO, *Step) {
+	*me = 'ipc_dataObjCreated_staging';
+	*id = int(*DATA_OBJ_INFO.data_id);
+	_ipc_registerAction(*id, *me);
+
 	if (*Step != 'FINISH') {
 		*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
@@ -989,13 +1071,15 @@ ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 		*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 	}
+
+	_ipc_unregisterAction(*id, *me);
 }
 # XXX - ^^^
 
 
 ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO) {
 	*uuid = '';
-	_ipc_ensureUUID(_ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
+	_ipc_ensureUUID(ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
 
 	_ipc_sendDataObjectMod(
 		*User,
@@ -1012,7 +1096,14 @@ ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO) {
 # This rule sends a system metadata modified status message.
 #
 ipc_dataObjMetadataModified(*User, *Zone, *Object) {
-	*uuid = '';
-	_ipc_ensureUUID(_ipc_DATA_OBJECT, *Object, *uuid);
-	_ipc_sendDataObjectMetadataModified(*uuid, *User, *Zone);
+	*me = 'ipc_dataObjMetadataModified';
+	*id = _ipc_getDataId(*Object);
+	_ipc_registerAction(*id, *me);
+
+	if (_ipc_isCurrentAction(*id, *me)) {
+		*uuid = '';
+		_ipc_ensureUUID(ipc_DATA_OBJECT, *Object, *uuid);
+		_ipc_sendDataObjectMetadataModified(*uuid, *User, *Zone);
+		_ipc_unregisterAction(*id, *me);
+	}
 }

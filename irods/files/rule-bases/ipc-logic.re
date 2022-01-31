@@ -105,17 +105,14 @@ _ipc_assignUUID(*ItemType, *ItemName, *Uuid) {
 
 
 # Looks up the UUID of a collection from its path.
-_ipc_retrieveCollectionUUID(*Coll, *UUID) {
-	*uuid = '';
-	*attr = _ipc_UUID_ATTR;
-	*res = SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr;
-
-	foreach (*record in *res) {
-		*uuid = *record.META_COLL_ATTR_VALUE;
-	}
-
-	*UUID = *uuid;
-}
+_ipc_retrieveCollectionUUID(*Coll) =
+	let *uuid = '' in
+	let *attr = _ipc_UUID_ATTR in
+	let *res = 
+		SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr in
+	let *_ = foreach (*record in *res) {
+		*uuid = *record.META_COLL_ATTR_VALUE; }
+	in *uuid
 
 
 # Looks up the UUID of a data object from its path.
@@ -139,15 +136,13 @@ retrieveDataUUID(*Data) {
 
 # Looks up the UUID for a given type of entity (collection or data object)
 retrieveUUID(*EntityType, *EntityPath) {
-	*uuid = '';
-
 	if (_ipc_isCollection(*EntityType)) {
-		_ipc_retrieveCollectionUUID(*EntityPath, *uuid);
+		_ipc_retrieveCollectionUUID(*EntityPath);
 	} else if (_ipc_isDataObject(*EntityType)) {
-		*uuid = retrieveDataUUID(*EntityPath);
-	} 
-
-	*uuid;
+		retrieveDataUUID(*EntityPath);
+	} else {
+		'';
+	}
 }
 
 
@@ -676,8 +671,7 @@ ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl) {
 #
 ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
 	*path = '*ParColl/*ChildColl';
-	*uuid = '';
-	_ipc_retrieveCollectionUUID(*path, *uuid);
+	*uuid = _ipc_retrieveCollectionUUID(*path);
 
 	if (*uuid != '') {
 		_ipc_sendEntityRemove(ipc_COLLECTION, *uuid, *path, $userNameClient, $rodsZoneClient);
@@ -728,11 +722,7 @@ ipc_acPostProcForOpen {
 }
 
 
-ipc_acPreprocForRmColl { 
-	*uuid = '';
-	_ipc_retrieveCollectionUUID($collName, *uuid);
-	temporaryStorage.'$collName' = *uuid; 
-}
+ipc_acPreprocForRmColl { temporaryStorage.'$collName' = 	_ipc_retrieveCollectionUUID($collName); }
 
 
 ipc_acPostProcForRmColl {

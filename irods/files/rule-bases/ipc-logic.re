@@ -6,6 +6,8 @@
 
 @include 'ipc-json'
 
+_ipc_UUID_ATTR = 'ipc_UUID'
+
 _ipc_isCollection(*Type) = *Type == ipc_COLLECTION
 
 _ipc_isDataObject(*Type) = *Type == ipc_DATA_OBJECT
@@ -78,8 +80,9 @@ _ipc_generateUUID(*UUID) {
 _ipc_assignUUID(*ItemType, *ItemName, *Uuid) {
 # XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
 # 4.2.10.
-# 	msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *Uuid, '');
-	*status = errormsg(msiModAVUMetadata(*ItemType, *ItemName, 'set', 'ipc_UUID', *Uuid, ''), *msg);
+# 	msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, '');
+	*status = errormsg(
+		msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, ''), *msg );
 
 	if (*status == -818000) {
 		# assume it was uploaded by a ticket
@@ -102,30 +105,26 @@ _ipc_assignUUID(*ItemType, *ItemName, *Uuid) {
 
 
 # Looks up the UUID of a collection from its path.
-_ipc_retrieveCollectionUUID(*Coll, *UUID) {
-	*uuid = '';
-
-	*res = 
-		SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == 'ipc_UUID';
-
-	foreach (*record in *res) {
-		*uuid = *record.META_COLL_ATTR_VALUE;
-	}
-
-	*UUID = *uuid;
-}
+_ipc_retrieveCollectionUUID(*Coll) =
+	let *uuid = '' in
+	let *attr = _ipc_UUID_ATTR in
+	let *res = 
+		SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr in
+	let *_ = foreach (*record in *res) {
+		*uuid = *record.META_COLL_ATTR_VALUE; }
+	in *uuid
 
 
 # Looks up the UUID of a data object from its path.
 retrieveDataUUID(*Data) {
-	*uuid = '';
 	msiSplitPath(*Data, *parentColl, *dataName);
+	*attr = _ipc_UUID_ATTR;
 
 	*res = 
 		SELECT META_DATA_ATTR_VALUE
-		WHERE COLL_NAME == *parentColl 
-			AND DATA_NAME == *dataName 
-			AND META_DATA_ATTR_NAME == 'ipc_UUID';
+		WHERE COLL_NAME == *parentColl AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *attr;
+
+	*uuid = '';
 
 	foreach (*record in *res) {
 		*uuid = *record.META_DATA_ATTR_VALUE;
@@ -137,15 +136,13 @@ retrieveDataUUID(*Data) {
 
 # Looks up the UUID for a given type of entity (collection or data object)
 retrieveUUID(*EntityType, *EntityPath) {
-	*uuid = '';
-
 	if (_ipc_isCollection(*EntityType)) {
-		_ipc_retrieveCollectionUUID(*EntityPath, *uuid);
+		_ipc_retrieveCollectionUUID(*EntityPath);
 	} else if (_ipc_isDataObject(*EntityType)) {
-		*uuid = retrieveDataUUID(*EntityPath);
-	} 
-
-	*uuid;
+		retrieveDataUUID(*EntityPath);
+	} else {
+		'';
+	}
 }
 
 
@@ -542,7 +539,7 @@ _ipc_chksumRepl(*Object, *ReplNum) {
 # Indicates whether or not an AVU is protected
 avuProtected(*ItemType, *ItemName, *Attribute) {
 	if (startsWith(*Attribute, 'ipc')) {
-		*Attribute != 'ipc_UUID' || retrieveUUID(*ItemType, *ItemName) != '';
+		*Attribute != _ipc_UUID_ATTR || retrieveUUID(*ItemType, *ItemName) != '';
 	} else {
 		false;
 	}
@@ -674,8 +671,7 @@ ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl) {
 #
 ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
 	*path = '*ParColl/*ChildColl';
-	*uuid = '';
-	_ipc_retrieveCollectionUUID(*path, *uuid);
+	*uuid = _ipc_retrieveCollectionUUID(*path);
 
 	if (*uuid != '') {
 		_ipc_sendEntityRemove(ipc_COLLECTION, *uuid, *path, $userNameClient, $rodsZoneClient);
@@ -726,11 +722,7 @@ ipc_acPostProcForOpen {
 }
 
 
-ipc_acPreprocForRmColl { 
-	*uuid = '';
-	_ipc_retrieveCollectionUUID($collName, *uuid);
-	temporaryStorage.'$collName' = *uuid; 
-}
+ipc_acPreprocForRmColl { temporaryStorage.'$collName' = 	_ipc_retrieveCollectionUUID($collName); }
 
 
 ipc_acPostProcForRmColl {
@@ -921,7 +913,7 @@ ipc_acPostProcForModifyAVUMetadata(
 # subcommand was used.
 #
 ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
-	if (*AName != 'ipc_UUID') {
+	if (*AName != _ipc_UUID_ATTR) {
 		if (_ipc_contains(*Option, list('add', 'adda', 'rm', 'set'))) {
 			*uuid = '';
 			_ipc_ensureUUID(*ItemType, *ItemName, *uuid);

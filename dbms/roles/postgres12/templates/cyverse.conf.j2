@@ -17,6 +17,13 @@ huge_pages = {{ pg_huge_pages }}
 work_mem = {{ pg_work_mem }}
 maintenance_work_mem = {{ pg_maintenance_work_mem }}
 
+# - Asynchronous Behavior -
+effective_io_concurrency = {{ pg_effective_io_concurrency }}
+max_worker_processes = {{ pg_max_worker_processes }}
+max_parallel_maintenance_workers = {{ pg_max_parallel_maintenance_workers }}
+max_parallel_workers_per_gather = {{ pg_max_parallel_workers_per_gather }}
+max_parallel_workers = {{ pg_max_parallel_workers }}
+
 #------------------------------------------------------------------------------
 # WRITE-AHEAD LOG
 #------------------------------------------------------------------------------
@@ -29,13 +36,6 @@ checkpoint_timeout = {{ pg_checkpoint_timeout }}
 max_wal_size = {{ pg_max_wal_size }}
 min_wal_size = {{ pg_min_wal_size }}
 checkpoint_completion_target = {{ pg_checkpoint_completion_target }}
-
-# - Asynchronous Behavior -
-effective_io_concurrency = {{ pg_effective_io_concurrency }}
-max_worker_processes = {{ pg_max_worker_processes }}
-max_parallel_maintenance_workers = {{ pg_max_parallel_maintenance_workers }}
-max_parallel_workers_per_gather = {{ pg_max_parallel_workers_per_gather }}
-max_parallel_workers = {{ pg_max_parallel_workers }}
 
 #------------------------------------------------------------------------------
 # REPLICATION

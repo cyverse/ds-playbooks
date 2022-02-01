@@ -22,16 +22,16 @@
           - cyverse_conf is search('huge_pages = try')
           - cyverse_conf is search('work_mem = 4MB')
           - cyverse_conf is search('maintenance_work_mem = 64MB')
-          - cyverse_conf is search('wal_buffers = -1')
-          - cyverse_conf is search('checkpoint_timeout = 5min')
-          - cyverse_conf is search('max_wal_size = 1GB')
-          - cyverse_conf is search('min_wal_size = 80MB')
-          - cyverse_conf is search('checkpoint_completion_target = 0.5' | regex_escape)
           - cyverse_conf is search('effective_io_concurrency = 1')
           - cyverse_conf is search('max_worker_processes = 8')
           - cyverse_conf is search('max_parallel_maintenance_workers = 2')
           - cyverse_conf is search('max_parallel_workers_per_gather = 2')
           - cyverse_conf is search('max_parallel_workers = 8')
+          - cyverse_conf is search('wal_buffers = -1')
+          - cyverse_conf is search('checkpoint_timeout = 5min')
+          - cyverse_conf is search('max_wal_size = 1GB')
+          - cyverse_conf is search('min_wal_size = 80MB')
+          - cyverse_conf is search('checkpoint_completion_target = 0.5' | regex_escape)
           - cyverse_conf is not search('^max_wal_senders =')
           - cyverse_conf is not search('^wal_keep_segments =')
           - cyverse_conf is not search('^hot_standby = ')
@@ -64,16 +64,16 @@
         - huge_pages
         - work_mem
         - maintenance_work_mem
-        - wal_buffers
-        - checkpoint_timeout
-        - max_wal_size
-        - min_wal_size
-        - checkpoint_completion_target
         - effective_io_concurrency
         - max_worker_processes
         - max_parallel_maintenance_workers
         - max_parallel_workers_per_gather
         - max_parallel_workers
+        - wal_buffers
+        - checkpoint_timeout
+        - max_wal_size
+        - min_wal_size
+        - checkpoint_completion_target
         - random_page_cost
         - effective_cache_size
         - default_statistics_target

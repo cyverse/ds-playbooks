@@ -2,12 +2,14 @@
 _dbms_checkpoint_completion_target: "{{ dbms_checkpoint_completion_target | default(0.9) }}"
 _dbms_checkpoint_timeout: "{{ dbms_checkpoint_timeout | default(15) }}"
 
+_dbms_effective_io_concurrency: "{{ dbms_effective_io_concurrency | default(200) }}"
+
 _dbms_log_line_prefix: "{{ dbms_log_line_prefix | default('< %m %r >') }}"
 _dbms_log_min_duration: "{{ dbms_log_min_duration | default(1000) }}"
 
 _dbms_maintenance_work_mem: "{{ dbms_maintenance_work_mem | default(1) }}"
 
-_dbms_max_connections: "{{ dbms_max_connections | default(1500) }}"
+_dbms_max_connections: "{{ dbms_max_connections | default(500) }}"
 
 _dbms_port: "{{ dbms_port | default(5432) }}"
 
@@ -23,3 +25,5 @@ _dbms_max_wal_size: "{{ dbms_max_wal_size | default(100) }}"
 _dbms_min_wal_size: "{{ dbms_min_wal_size | default(2) }}"
 
 _dbms_work_mem: "{{ dbms_work_mem | default(32) }}MB"
+
+_dbms_mem_num_huge_pages: "{{ dbms_mem_num_huge_pages | default(60000) }}"

@@ -1,2 +1,4 @@
 ---
 package_manager: apt
+
+dbms_mem_num_huge_pages: 0

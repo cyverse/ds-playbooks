@@ -64,7 +64,7 @@ EOF
 }
 
 
-set -o errexit
+set -o errexit -o nounset -o pipefail
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -163,7 +163,7 @@ resolve_opts()
         ;;
       -p|--pretty)
         eval "$optsVar"[pretty]=pretty
-        shift 2
+        shift 1
         ;;
       -S|--setup)
         eval "$optsVar""[setup]='$2'"

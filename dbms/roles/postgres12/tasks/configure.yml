@@ -4,7 +4,7 @@
     name: vm.nr_hugepages
     value: "{{ pg_num_huge_pages }}"
     state: present
-    sysctl_set: yes
+    sysctl_set: true
   notify:
     - reboot
   tags:
@@ -15,7 +15,7 @@
     name: vm.swappiness
     value: '5'
     state: present
-    sysctl_set: yes
+    sysctl_set: true
   tags:
     - no_testing
 

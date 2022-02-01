@@ -55,13 +55,13 @@
   run_once: true
   tasks:
     - debug:
-        msg: TODO test cyverse.conf expansion no downstream or upstream nodes
+        msg: TODO test cyverse.conf expansion on downstream or upstream nodes
 
     - debug:
-        msg: TODO test cyverse.conf expansion downstream nodes only
+        msg: TODO test cyverse.conf expansion on downstream nodes only
 
     - debug:
-        msg: TODO test cyverse.conf expansion upstream nodes only
+        msg: TODO test cyverse.conf expansion on upstream nodes only
         
     - debug:
         msg: TODO test pgpass expansion

@@ -1,4 +1,15 @@
 ---
+- name: configure | ensure enough vm huge pages
+  ansible.posix.sysctl:
+    name: vm.nr_hugepages
+    value: "{{ pg_num_huge_pages }}"
+    state: present
+    sysctl_set: yes
+  notify:
+    - reboot
+  tags:
+    - no_testing
+
 - name: configure | ensure vm.swappiness is 5
   ansible.posix.sysctl:
     name: vm.swappiness

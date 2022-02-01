@@ -21,6 +21,8 @@ pg_effective_cache_size: 4GB
 
 pg_hot_standby_feedback: 'off'
 
+pg_effective_io_concurrency: 1
+
 pg_extra_listen_addresses: []
 pg_listen_port: 5432
 
@@ -33,8 +35,10 @@ pg_wal_keep_segments: 0
 pg_max_wal_senders: 10
 pg_min_wal_size: 80MB
 pg_max_wal_size: 1GB
+pg_wal_buffers: '-1'
 
 pg_random_page_cost: 4.0
+pg_default_statistics_target: 100
 
 pg_shared_buffers: 128MB
 
@@ -42,3 +46,11 @@ pg_standard_conforming_strings: 'on'
 
 pg_work_mem: 4MB
 pg_maintenance_work_mem: 64MB
+
+pg_max_worker_processes: 8
+pg_max_parallel_workers: 8
+pg_max_parallel_maintenance_workers: 2
+pg_max_parallel_workers_per_gather: 2
+
+pg_huge_pages: try
+pg_num_huge_pages: 0

@@ -13,13 +13,16 @@ max_connections = {{ pg_max_connections }}
 
 # - Memory -
 shared_buffers = {{ pg_shared_buffers }}
+huge_pages = {{ pg_huge_pages }}
 work_mem = {{ pg_work_mem }}
 maintenance_work_mem = {{ pg_maintenance_work_mem }}
-
 
 #------------------------------------------------------------------------------
 # WRITE-AHEAD LOG
 #------------------------------------------------------------------------------
+
+# - Settings -
+wal_buffers = {{ pg_wal_buffers }}
 
 # - Checkpoints -
 checkpoint_timeout = {{ pg_checkpoint_timeout }}
@@ -27,6 +30,12 @@ max_wal_size = {{ pg_max_wal_size }}
 min_wal_size = {{ pg_min_wal_size }}
 checkpoint_completion_target = {{ pg_checkpoint_completion_target }}
 
+# - Asynchronous Behavior -
+effective_io_concurrency = {{ pg_effective_io_concurrency }}
+max_worker_processes = {{ pg_max_worker_processes }}
+max_parallel_maintenance_workers = {{ pg_max_parallel_maintenance_workers }}
+max_parallel_workers_per_gather = {{ pg_max_parallel_workers_per_gather }}
+max_parallel_workers = {{ pg_max_parallel_workers }}
 
 #------------------------------------------------------------------------------
 # REPLICATION
@@ -44,7 +53,6 @@ hot_standby = on
 hot_standby_feedback = {{ pg_hot_standby_feedback }}
 {% endif %}
 
-
 #------------------------------------------------------------------------------
 # QUERY TUNING
 #------------------------------------------------------------------------------
@@ -53,6 +61,8 @@ hot_standby_feedback = {{ pg_hot_standby_feedback }}
 random_page_cost = {{ pg_random_page_cost }}
 effective_cache_size = {{ pg_effective_cache_size }}
 
+#- Other Planner Options -
+default_statistics_target = {{ pg_default_statistics_target }}
 
 #------------------------------------------------------------------------------
 # REPORTING AND LOGGING
@@ -63,7 +73,6 @@ log_min_duration_statement = {{ pg_log_min_duration_statement }}
 
 # - What to Log -
 log_line_prefix = '{{ pg_log_line_prefix }}'
-
 
 #------------------------------------------------------------------------------
 # VERSION AND PLATFORM COMPATIBILITY

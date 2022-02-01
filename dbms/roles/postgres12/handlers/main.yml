@@ -1,5 +1,8 @@
 ---
-
+- name: reboot
+  debug:
+    msg: REBOOT REQUIRED FOR SETTINGS TO TAKE
+    
 - name: restart postgres
   service:
     name: postgresql

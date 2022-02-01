@@ -40,7 +40,7 @@
         pg_replication_user: "{{ _dbms_replication_user }}"
         pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
         pg_standard_conforming_strings: 'off'
-        pg_work_mem: "{{ _dbms_work_mem }}"
+        pg_work_mem: "{{ _dbms_work_mem }}MB"
         pg_effective_io_concurrency: "{{ _dbms_effective_io_concurrency }}"
         pg_max_worker_processes: "{{ max_worker_processes }}"
         pg_max_parallel_workers: "{{ max_worker_processes }}"
@@ -79,7 +79,7 @@
         pg_replication_user: "{{ _dbms_replication_user }}"
         pg_shared_buffers: "{{ ansible_facts['memtotal_mb']|int // 4 }}MB"
         pg_standard_conforming_strings: 'off'
-        pg_work_mem: "{{ _dbms_work_mem }}"
+        pg_work_mem: "{{ _dbms_work_mem }}MB"
         pg_effective_io_concurrency: "{{ _dbms_effective_io_concurrency }}"
         pg_max_worker_processes: "{{ max_worker_processes }}"
         pg_max_parallel_workers: "{{ max_worker_processes }}"

@@ -62,6 +62,35 @@ _ipc_getEntityId(*Path) =
 	else _ipc_getDataId(*Path)
 
 
+# Looks up the UUID of a collection from its path.
+_ipc_retrieveCollectionUUID(*Coll) =
+	let *uuid = '' in
+	let *attr = _ipc_UUID_ATTR in
+	let *_ = foreach (*record in 
+			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr
+		) { *uuid = *record.META_COLL_ATTR_VALUE; } in
+	*uuid
+
+# Looks up the UUID of a data object from its path.
+_ipc_retrieveDataUUID(*Data) =
+	let *parentColl = '' in
+	let *dataName = '' in
+	let *_ = msiSplitPath(*Data, *parentColl, *dataName) in
+	let *uuid = '' in
+	let *attr = _ipc_UUID_ATTR in
+	let *_ = foreach (*record in 
+			SELECT META_DATA_ATTR_VALUE
+			WHERE COLL_NAME == *parentColl AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *attr
+		) { *uuid = *record.META_DATA_ATTR_VALUE; } in 
+	*uuid
+
+# Looks up the UUID for a given type of entity (collection or data object)
+_ipc_retrieveUUID(*EntityType, *EntityPath) =
+	if _ipc_isCollection(*EntityType)) then _ipc_retrieveCollectionUUID(*EntityPath)
+	else if (_ipc_isDataObject(*EntityType)) _ipc_retrieveDataUUID(*EntityPath)
+	else ''
+
+
 _ipc_generateUUID(*UUID) {
 	*status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
 
@@ -104,43 +133,8 @@ _ipc_assignUUID(*ItemType, *ItemName, *Uuid) {
 }
 
 
-# Looks up the UUID of a collection from its path.
-_ipc_retrieveCollectionUUID(*Coll) =
-	let *uuid = '' in
-	let *attr = _ipc_UUID_ATTR in
-	let *_ = foreach (*record in 
-			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr
-		) { *uuid = *record.META_COLL_ATTR_VALUE; } in
-	*uuid
-
-# Looks up the UUID of a data object from its path.
-_ipc_retrieveDataUUID(*Data) =
-	let *parentColl = '' in
-	let *dataName = '' in
-	let *_ = msiSplitPath(*Data, *parentColl, *dataName) in
-	let *uuid = '' in
-	let *attr = _ipc_UUID_ATTR in
-	let *_ = foreach (*record in 
-			SELECT META_DATA_ATTR_VALUE
-			WHERE COLL_NAME == *parentColl AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *attr
-		) { *uuid = *record.META_DATA_ATTR_VALUE; } in 
-	*uuid
-
-
-# Looks up the UUID for a given type of entity (collection or data object)
-retrieveUUID(*EntityType, *EntityPath) {
-	if (_ipc_isCollection(*EntityType)) {
-		_ipc_retrieveCollectionUUID(*EntityPath);
-	} else if (_ipc_isDataObject(*EntityType)) {
-		_ipc_retrieveDataUUID(*EntityPath);
-	} else {
-		'';
-	}
-}
-
-
 _ipc_ensureUUID(*EntityType, *EntityPath, *UUID) {
-	*uuid = retrieveUUID(*EntityType, *EntityPath);
+	*uuid = _ipc_retrieveUUID(*EntityType, *EntityPath);
 
 	if (*uuid == '') {
 		_ipc_generateUUID(*uuid);
@@ -532,7 +526,7 @@ _ipc_chksumRepl(*Object, *ReplNum) {
 # Indicates whether or not an AVU is protected
 avuProtected(*ItemType, *ItemName, *Attribute) {
 	if (startsWith(*Attribute, 'ipc')) {
-		*Attribute != _ipc_UUID_ATTR || retrieveUUID(*ItemType, *ItemName) != '';
+		*Attribute != _ipc_UUID_ATTR || _ipc_retrieveUUID(*ItemType, *ItemName) != '';
 	} else {
 		false;
 	}

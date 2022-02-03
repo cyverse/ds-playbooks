@@ -86,8 +86,8 @@ _ipc_retrieveDataUUID(*Data) =
 
 # Looks up the UUID for a given type of entity (collection or data object)
 _ipc_retrieveUUID(*EntityType, *EntityPath) =
-	if _ipc_isCollection(*EntityType)) then _ipc_retrieveCollectionUUID(*EntityPath)
-	else if (_ipc_isDataObject(*EntityType)) _ipc_retrieveDataUUID(*EntityPath)
+	if _ipc_isCollection(*EntityType) then _ipc_retrieveCollectionUUID(*EntityPath)
+	else if _ipc_isDataObject(*EntityType) then _ipc_retrieveDataUUID(*EntityPath)
 	else ''
 
 

@@ -6,7 +6,47 @@
 
 @include 'ipc-json'
 
-_ipc_UUID_ATTR = 'ipc_UUID'
+#
+# LISTS
+#
+
+_ipc_contains(*Item, *List) =
+	if size(*List) == 0 then false
+	else if *Item == hd(*List) then true
+	else _ipc_contains(*Item, tl(*List))
+
+
+#
+# STRINGS
+#
+
+# Determines whether or not the string in the first argument starts with the
+# string in the second argument.
+#
+startsWith(*str, *prefix) =
+	if strlen(*str) < strlen(*prefix) then false
+	else if substr(*str, 0, strlen(*prefix)) != *prefix then false
+	else true;
+
+# Removes a prefix from a string.
+#
+removePrefix(*orig, *prefixes) {
+	*result = *orig
+
+	foreach (*prefix in *prefixes) {
+		if (startsWith(*orig, *prefix)) {
+			*result = substr(*orig, strlen(*prefix), strlen(*orig));
+			break;
+		}
+	}
+
+	*result;
+}
+
+
+#
+# ENTITY TYPES
+#
 
 _ipc_isCollection(*Type) = *Type == ipc_COLLECTION
 
@@ -19,6 +59,106 @@ _ipc_isResource(*Type) = *Type == ipc_RESOURCE || *Type == '-r'
 _ipc_isUser(*Type) = *Type == ipc_USER
 
 
+#
+# ICAT IDS
+#
+
+_ipc_getCollectionId(*Path) =
+	let *id = -1 in
+	let *_ = foreach (*rec in SELECT COLL_ID WHERE COLL_NAME = *Path) { *id = int(*rec.COLL_ID) } in 
+	*id
+
+_ipc_getDataId(*Path) =
+	let *collPath = '' in
+	let *dataName = '' in
+	let *_ = msiSplitPath(*Path, *collPath, *dataName) in
+	let *id = -1 in
+	let *_ = foreach ( *rec in 
+			SELECT DATA_ID WHERE COLL_NAME = *collPath AND DATA_NAME = *dataName
+		) { *id = int(*rec.DATA_ID) } in 
+	*id
+
+_ipc_getEntityId(*Path) =
+	if _ipc_isCollection(ipc_getEntityType(*Path)) then _ipc_getCollectionId(*Path)
+	else _ipc_getDataId(*Path)
+
+
+#
+# AVUS
+#
+
+# Gets the original unit for an AVU modification. The argument that is used for
+# the original unit in the AVU modification may contain the original unit or, if
+# the unit was empty in the original AVU then this argument may contain the
+# first of the new AVU settings instead. We can distinguish this case from the
+# others by the presence of a prefix in the value. The prefix is always a single
+# character followed by a colon.
+#
+getOrigUnit(*candidate) =
+	if strlen(*candidate) < 2 then *candidate
+	else if substr(*candidate, 1, 1) != ':' then *candidate
+	else '';
+
+# Gets the new AVU setting from a list of candidates. New AVU settings are
+# passed in an arbitrary order and the type of AVU setting is identified by a
+# prefix. This function looks for values matching the given prefix. If multiple
+# matching values are found then the last one wins.
+#
+getNewAVUSetting(*orig, *prefix, *candidates) {
+	*setting = *orig;
+
+	foreach (*candidate in *candidates) {
+		if (strlen(*candidate) >= strlen(*prefix)) {
+			if (substr(*candidate, 0, strlen(*prefix)) == *prefix) {
+				*setting = substr(*candidate, 2, strlen(*candidate));
+			}
+		}
+	}
+
+	*setting;
+}
+
+
+#
+# CHECKSUMS
+#
+
+# Compute the checksum of of a given replica of a given data object
+_ipc_chksumRepl(*Object, *ReplNum) {
+	msiAddKeyValToMspStr('forceChksum', '', *opts);
+	msiAddKeyValToMspStr('replNum', str(*ReplNum), *opts);
+	msiDataObjChksum(*Object, *opts, *_);
+}
+
+
+#
+# ACTION TRACKING
+#
+
+_ipc_mkActionKey(*EntityId) = str(*EntityId) ++ '-ROOT_ACTION'
+
+_ipc_isCurrentAction(*EntityId, *Action) =
+	let *key = _ipc_mkActionKey(*EntityId) in temporaryStorage."*key" == *Action
+
+_ipc_registerAction(*EntityId, *Action) {
+	*key = _ipc_mkActionKey(*EntityId);
+   if (if errorcode(temporaryStorage."*key") != 0 then true else temporaryStorage."*key" == '') {
+		temporaryStorage."*key" = *Action;
+	}
+}
+
+_ipc_unregisterAction(*EntityId, *Action) {
+	*key = _ipc_mkActionKey(*EntityId);
+	if (temporaryStorage."*key" == *Action) {
+		temporaryStorage."*key" = '';
+	}
+}
+
+
+#
+# MESSAGE PUBLISHING
+#
+
 _ipc_COLL_MSG_TYPE = 'collection'
 _ipc_DATA_MSG_TYPE = 'data-object'
 _ipc_RESC_MSG_TYPE = 'resource'
@@ -30,144 +170,6 @@ _ipc_getAmqpType(*ItemType) =
 	else if _ipc_isResource(*ItemType) then _ipc_RESC_MSG_TYPE
 	else if _ipc_isUser(*ItemType) then _ipc_USER_MSG_TYPE
 	else ''
-
-
-_ipc_contains(*Item, *List) =
-	if size(*List) == 0 then false
-	else if *Item == hd(*List) then true
-	else _ipc_contains(*Item, tl(*List))
-
-
-_ipc_getCollectionId(*Path) =
-	let *id = -1 in
-	let *_ = foreach (*rec in SELECT COLL_ID WHERE COLL_NAME = *Path) {
-		*id = int(*rec.COLL_ID);
-	}
-	in *id
-
-_ipc_getDataId(*Path) =
-	let *collPath = '' in
-	let *dataName = '' in
-	let *_ = msiSplitPath(*Path, *collPath, *dataName) in
-	let *id = -1 in
-	let *_ = foreach (
-		*rec in SELECT DATA_ID WHERE COLL_NAME = *collPath AND DATA_NAME = *dataName
-	) {
-		*id = int(*rec.DATA_ID);
-	}
-	in *id
-
-_ipc_getEntityId(*Path) =
-	if _ipc_isCollection(ipc_getEntityType(*Path)) then _ipc_getCollectionId(*Path)
-	else _ipc_getDataId(*Path)
-
-
-# Looks up the UUID of a collection from its path.
-_ipc_retrieveCollectionUUID(*Coll) =
-	let *uuid = '' in
-	let *attr = _ipc_UUID_ATTR in
-	let *_ = foreach (*record in 
-			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr
-		) { *uuid = *record.META_COLL_ATTR_VALUE; } in
-	*uuid
-
-# Looks up the UUID of a data object from its path.
-_ipc_retrieveDataUUID(*Data) =
-	let *parentColl = '' in
-	let *dataName = '' in
-	let *_ = msiSplitPath(*Data, *parentColl, *dataName) in
-	let *uuid = '' in
-	let *attr = _ipc_UUID_ATTR in
-	let *_ = foreach (*record in 
-			SELECT META_DATA_ATTR_VALUE
-			WHERE COLL_NAME == *parentColl AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *attr
-		) { *uuid = *record.META_DATA_ATTR_VALUE; } in 
-	*uuid
-
-# Looks up the UUID for a given type of entity (collection or data object)
-_ipc_retrieveUUID(*EntityType, *EntityPath) =
-	if _ipc_isCollection(*EntityType) then _ipc_retrieveCollectionUUID(*EntityPath)
-	else if _ipc_isDataObject(*EntityType) then _ipc_retrieveDataUUID(*EntityPath)
-	else ''
-
-
-_ipc_generateUUID(*UUID) {
-	*status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
-
-	if (*status == 0) {
-		msiGetStdoutInExecCmdOut(*out, *uuid);
-		*UUID = trimr(*uuid, "\n");
-		writeLine('serverLog', 'UUID *UUID created');
-	} else {
-		writeLine("serverLog", "failed to generate UUID");
-		fail;
-	}
-}
-
-
-# Assign a UUID to a given collection or data object.
-_ipc_assignUUID(*ItemType, *ItemName, *Uuid) {
-# XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
-# 4.2.10.
-# 	msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, '');
-	*status = errormsg(
-		msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, ''), *msg );
-
-	if (*status == -818000) {
-		# assume it was uploaded by a ticket
-		*typeArg = execCmdArg(*ItemType);
-		*nameArg = execCmdArg(*ItemName);
-		*valArg = execCmdArg(*Uuid);
-		*argStr = "*typeArg *nameArg *valArg";
-		*status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
-
-		if (*status != 0) {
-			writeLine('serverLog', "Failed to assign UUID: *msg");
-			fail;
-		}
-	} else if (*status != 0) {
-		writeLine('serverLog', "Failed to assign UUID: *msg");
-		fail;
-	}
-# XXX - ^^^
-}
-
-
-_ipc_ensureUUID(*EntityType, *EntityPath, *UUID) {
-	*uuid = _ipc_retrieveUUID(*EntityType, *EntityPath);
-
-	if (*uuid == '') {
-		_ipc_generateUUID(*uuid);
-		_ipc_assignUUID(*EntityType, *EntityPath, *uuid);
-	}
-
-	*UUID = *uuid;
-}
-
-
-_ipc_mkActionKey(*EntityId) = str(*EntityId) ++ '-ROOT_ACTION'
-
-_ipc_isCurrentAction(*EntityId, *Action) =
-	let *key = _ipc_mkActionKey(*EntityId) in temporaryStorage."*key" == *Action
-
-
-_ipc_registerAction(*EntityId, *Action) {
-	*key = _ipc_mkActionKey(*EntityId);
-
-   if (if errorcode(temporaryStorage."*key") != 0 then true else temporaryStorage."*key" == '') {
-		temporaryStorage."*key" = *Action;
-	}
-}
-
-
-_ipc_unregisterAction(*EntityId, *Action) {
-	*key = _ipc_mkActionKey(*EntityId);
-
-	if (temporaryStorage."*key" == *Action) {
-		temporaryStorage."*key" = '';
-	}
-}
-
 
 # sends a message to a given AMQP topic exchange
 #
@@ -194,7 +196,6 @@ sendMsg(*Topic, *Msg) {
 	0;
 }
 
-
 _ipc_mkUserObject(*Field, *Name, *Zone) = 
 	ipcJson_object(*Field, list(ipcJson_string('name', *Name), ipcJson_string('zone', *Zone)))
 
@@ -212,7 +213,6 @@ mkAvuObject(*Field, *Name, *Value, *Unit) =
 			ipcJson_string('value', *Value),
 			ipcJson_string('unit', *Unit) ) )
 
-
 _ipc_sendCollectionAdd(*Id, *Path, *CreatorName, *CreatorZone) {
 	*msg = ipcJson_document(
 		list(
@@ -222,7 +222,6 @@ _ipc_sendCollectionAdd(*Id, *Path, *CreatorName, *CreatorZone) {
 
 	sendMsg(_ipc_COLL_MSG_TYPE ++ '.add', *msg);
 }
-
 
 _ipc_sendDataObjectOpen(*Id, *Path, *CreatorName, *CreatorZone, *Size) {
 	msiGetSystemTime(*timestamp, 'human');
@@ -237,7 +236,6 @@ _ipc_sendDataObjectOpen(*Id, *Path, *CreatorName, *CreatorZone, *Size) {
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.open', *msg);
 }
-
 
 _ipc_sendDataObjectAdd(
 	*AuthorName, *AuthorZone, *Data, *Path, *OwnerName, *OwnerZone, *Size, *Type
@@ -254,7 +252,6 @@ _ipc_sendDataObjectAdd(
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.add', *msg);
 }
 
-
 # Publish a data-object.mod message to AMQP exchange
 _ipc_sendDataObjectMod(
 	*AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
@@ -270,7 +267,6 @@ _ipc_sendDataObjectMod(
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.mod', *msg);
 }
 
-
 _ipc_sendCollectionInheritModified(*Collection, *Inherit, *Recursive, *AuthorName, *AuthorZone) {
 	*msg = ipcJson_document(
 		list(
@@ -281,7 +277,6 @@ _ipc_sendCollectionInheritModified(*Collection, *Inherit, *Recursive, *AuthorNam
 
 	sendMsg(_ipc_COLL_MSG_TYPE ++ '.acl.mod', *msg);
 }
-
 
 _ipc_sendCollectionAclModified(
 	*Collection, *AccessLevel, *UserName, *UserZone, *Recursive, *AuthorName, *AuthorZone )
@@ -296,7 +291,6 @@ _ipc_sendCollectionAclModified(
 
 	sendMsg(_ipc_COLL_MSG_TYPE ++ '.acl.mod', *msg);
 }
-
 
 _ipc_sendCollectionAccessModified(
 	*Collection, *AccessLevel, *UserName, *UserZone, *Recursive, *AuthorName, *AuthorZone )
@@ -313,7 +307,6 @@ _ipc_sendCollectionAccessModified(
 	}
 }
 
-
 _ipc_sendDataObjectAclModified(*Data, *AccessLevel, *UserName, *UserZone, *AuthorName, *AuthorZone)
 {
 	*msg = ipcJson_document(
@@ -326,7 +319,6 @@ _ipc_sendDataObjectAclModified(*Data, *AccessLevel, *UserName, *UserZone, *Autho
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.acl.mod', *msg);
 }
 
-
 # Publish a data-object.sys-metadata.mod message to AMQP exchange
 _ipc_sendDataObjectMetadataModified(*Data, *AuthorName, *AuthorZone) {
 	*msg = ipcJson_document(
@@ -336,7 +328,6 @@ _ipc_sendDataObjectMetadataModified(*Data, *AuthorName, *AuthorZone) {
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.sys-metadata.mod', *msg);
 }
-
 
 _ipc_sendEntityMove(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {
 	*msg = ipcJson_document(
@@ -349,7 +340,6 @@ _ipc_sendEntityMove(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {
 	sendMsg(_ipc_getAmqpType(*Type) ++ '.mv', *msg);
 }
 
-
 _ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 	*msg = ipcJson_document(
 		list(
@@ -359,7 +349,6 @@ _ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 
 	sendMsg(_ipc_getAmqpType(*Type) ++ '.rm', *msg);
 }
-
 
 _ipc_sendAvuMod(
 	*ItemType,
@@ -383,7 +372,6 @@ _ipc_sendAvuMod(
 	sendMsg(_ipc_getAmqpType(*ItemType) ++ '.metadata.mod', *msg);
 }
 
-
 _ipc_sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
 	*msg = ipcJson_document(
 		list(
@@ -394,7 +382,6 @@ _ipc_sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName,
 	sendMsg(_ipc_getAmqpType(*ItemType) ++ '.metadata.' ++ *Option, *msg);
 }
 
-
 _ipc_sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
 	*msg = ipcJson_document(
 		list(
@@ -404,7 +391,6 @@ _ipc_sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit, *AuthorName, *AuthorZon
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.metadata.addw', *msg);
 }
-
 
 _ipc_sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
 	*msg = ipcJson_document(
@@ -418,7 +404,6 @@ _ipc_sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, 
 	sendMsg(_ipc_getAmqpType(*ItemType) ++ '.metadata.rmw', *msg);
 }
 
-
 _ipc_sendAvuCopy(*SourceItemType, *Source, *TargetItemType, *Target, *AuthorName, *AuthorZone) {
 	*msg = ipcJson_document(
 		list(
@@ -431,13 +416,9 @@ _ipc_sendAvuCopy(*SourceItemType, *Source, *TargetItemType, *Target, *AuthorName
 }
 
 
-resolveAdminPerm(*Item) = if *Item like regex '^/[^/]*(/[^/]*)?$' then 'write' else 'own'
-
-
-setAdminGroupPerm(*Item) {
-	msiSetACL('default', resolveAdminPerm(*Item), 'rodsadmin', *Item);
-}
-
+#
+# PROTECTED AVUS
+#
 
 canModProtectedAVU(*User) {
 	*canMod = false;
@@ -456,83 +437,6 @@ canModProtectedAVU(*User) {
 	*canMod;
 }
 
-
-# Gets the original unit for an AVU modification. The argument that is used for
-# the original unit in the AVU modification may contain the original unit or, if
-# the unit was empty in the original AVU then this argument may contain the
-# first of the new AVU settings instead. We can distinguish this case from the
-# others by the presence of a prefix in the value. The prefix is always a single
-# character followed by a colon.
-#
-getOrigUnit(*candidate) =
-	if strlen(*candidate) < 2 then *candidate
-	else if substr(*candidate, 1, 1) != ':' then *candidate
-	else '';
-
-
-# Gets the new AVU setting from a list of candidates. New AVU settings are
-# passed in an arbitrary order and the type of AVU setting is identified by a
-# prefix. This function looks for values matching the given prefix. If multiple
-# matching values are found then the last one wins.
-#
-getNewAVUSetting(*orig, *prefix, *candidates) {
-	*setting = *orig;
-
-	foreach (*candidate in *candidates) {
-		if (strlen(*candidate) >= strlen(*prefix)) {
-			if (substr(*candidate, 0, strlen(*prefix)) == *prefix) {
-				*setting = substr(*candidate, 2, strlen(*candidate));
-			}
-		}
-	}
-
-	*setting;
-}
-
-
-# Determines whether or not the string in the first argument starts with the
-# string in the second argument.
-#
-startsWith(*str, *prefix) =
-	if strlen(*str) < strlen(*prefix) then false
-	else if substr(*str, 0, strlen(*prefix)) != *prefix then false
-	else true;
-
-
-# Removes a prefix from a string.
-#
-removePrefix(*orig, *prefixes) {
-	*result = *orig
-
-	foreach (*prefix in *prefixes) {
-		if (startsWith(*orig, *prefix)) {
-			*result = substr(*orig, strlen(*prefix), strlen(*orig));
-			break;
-		}
-	}
-
-	*result;
-}
-
-
-# Compute the checksum of of a given replica of a given data object
-_ipc_chksumRepl(*Object, *ReplNum) {
-	msiAddKeyValToMspStr('forceChksum', '', *opts);
-	msiAddKeyValToMspStr('replNum', str(*ReplNum), *opts);
-	msiDataObjChksum(*Object, *opts, *_);
-}
-
-
-# Indicates whether or not an AVU is protected
-avuProtected(*ItemType, *ItemName, *Attribute) {
-	if (startsWith(*Attribute, 'ipc')) {
-		*Attribute != _ipc_UUID_ATTR || _ipc_retrieveUUID(*ItemType, *ItemName) != '';
-	} else {
-		false;
-	}
-}
-
-
 # Verifies that an attribute can be modified. If it can't it fails and sends an
 # error message to the caller.
 ensureAVUEditable(*Editor, *ItemType, *ItemName, *A, *V, *U) {
@@ -542,14 +446,12 @@ ensureAVUEditable(*Editor, *ItemType, *ItemName, *A, *V, *U) {
 	}
 }
 
-
 # If an AVU is not protected, it sets the AVU to the given item
 setAVUIfUnprotected(*ItemType, *ItemName, *A, *V, *U) {
 	if (!avuProtected(*ItemType, *ItemName, *A)) {
 		msiModAVUMetadata(*ItemType, *ItemName, 'set', *A, *V, *U);
 	}
 }
-
 
 # Copies the unprotected AVUs from a given collection to the given item.
 cpUnprotectedCollAVUs(*Coll, *TargetType, *TargetName) =
@@ -564,7 +466,6 @@ cpUnprotectedCollAVUs(*Coll, *TargetType, *TargetName) =
 			*avu.META_COLL_ATTR_VALUE, 
 			*avu.META_COLL_ATTR_UNITS );
 	}
-
 
 # Copies the unprotected AVUs from a given data object to the given item.
 cpUnprotectedDataObjAVUs(*ObjPath, *TargetType, *TargetName) {
@@ -582,7 +483,6 @@ cpUnprotectedDataObjAVUs(*ObjPath, *TargetType, *TargetName) {
 			*avu.META_DATA_ATTR_UNITS );
 	}
 }
-
 
 # Copies the unprotected AVUs from a given resource to the given item.
 cpUnprotectedRescAVUs(*Resc, *TargetType, *TargetName) =
@@ -613,38 +513,134 @@ cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) =
 	}
 
 
+#
+# RODSADMIN GROUP PERMISSIONS
+#
+
+resolveAdminPerm(*Item) = if *Item like regex '^/[^/]*(/[^/]*)?$' then 'write' else 'own'
+
+setAdminGroupPerm(*Item) {
+	msiSetACL('default', resolveAdminPerm(*Item), 'rodsadmin', *Item);
+}
+
+
+#
+# UUIDS
+# 
+
+_ipc_UUID_ATTR = 'ipc_UUID'
+
+# Looks up the UUID of a collection from its path.
+_ipc_retrieveCollectionUUID(*Coll) =
+	let *uuid = '' in
+	let *attr = _ipc_UUID_ATTR in
+	let *_ = foreach ( *record in 
+			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr
+		) { *uuid = *record.META_COLL_ATTR_VALUE; } in
+	*uuid
+
+# Looks up the UUID of a data object from its path.
+_ipc_retrieveDataUUID(*Data) =
+	let *parentColl = '' in
+	let *dataName = '' in
+	let *_ = msiSplitPath(*Data, *parentColl, *dataName) in
+	let *uuid = '' in
+	let *attr = _ipc_UUID_ATTR in
+	let *_ = foreach ( *record in 
+			SELECT META_DATA_ATTR_VALUE
+			WHERE COLL_NAME == *parentColl AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *attr
+		) { *uuid = *record.META_DATA_ATTR_VALUE; } in 
+	*uuid
+
+# Looks up the UUID for a given type of entity (collection or data object)
+_ipc_retrieveUUID(*EntityType, *EntityPath) =
+	if _ipc_isCollection(*EntityType) then _ipc_retrieveCollectionUUID(*EntityPath)
+	else if _ipc_isDataObject(*EntityType) then _ipc_retrieveDataUUID(*EntityPath)
+	else ''
+
+_ipc_generateUUID(*UUID) {
+	*status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
+	if (*status == 0) {
+		msiGetStdoutInExecCmdOut(*out, *uuid);
+		*UUID = trimr(*uuid, "\n");
+		writeLine('serverLog', 'UUID *UUID created');
+	} else {
+		writeLine("serverLog", "failed to generate UUID");
+		fail;
+	}
+}
+
+# Assign a UUID to a given collection or data object.
+_ipc_assignUUID(*ItemType, *ItemName, *Uuid) {
+# XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
+# 4.2.10.
+# 	msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, '');
+	*status = errormsg(
+		msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, ''), *msg );
+	if (*status == -818000) {
+		# assume it was uploaded by a ticket
+		*typeArg = execCmdArg(*ItemType);
+		*nameArg = execCmdArg(*ItemName);
+		*valArg = execCmdArg(*Uuid);
+		*argStr = "*typeArg *nameArg *valArg";
+		*status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
+		if (*status != 0) {
+			writeLine('serverLog', "Failed to assign UUID: *msg");
+			fail;
+		}
+	} else if (*status != 0) {
+		writeLine('serverLog', "Failed to assign UUID: *msg");
+		fail;
+	}
+# XXX - ^^^
+}
+
+_ipc_ensureUUID(*EntityType, *EntityPath, *UUID) {
+	*uuid = _ipc_retrieveUUID(*EntityType, *EntityPath);
+	if (*uuid == '') {
+		_ipc_generateUUID(*uuid);
+		_ipc_assignUUID(*EntityType, *EntityPath, *uuid);
+	}
+	*UUID = *uuid;
+}
+
+# Indicates whether or not an AVU is protected
+avuProtected(*ItemType, *ItemName, *Attribute) {
+	if (startsWith(*Attribute, 'ipc')) {
+		*Attribute != _ipc_UUID_ATTR || _ipc_retrieveUUID(*ItemType, *ItemName) != '';
+	} else {
+		false;
+	}
+}
+
+
+#
+# STATIC PEPS
+#
+
 # Create a user for a Data Store service
 ipc_acCreateUser {
 	msiCreateUser ::: msiRollback;
 	msiCommit;
 }
 
-
 # Refuse SSL connections
-#
 ipc_acPreConnect(*OUT) { *OUT = 'CS_NEG_REFUSE'; }
 
-
 # Use default threading setting
-#
 ipc_acSetNumThreads { msiSetNumThreads('default', 'default', 'default'); }
 
-
 # Set maximum number of rule engine processes
-#
 ipc_acSetReServerNumProc { msiSetReServerNumProc(str(ipc_MAX_NUM_RE_PROCS)); }
-
 
 # This rule sets the rodsadin group permission of a collection when a collection
 # is created by an administrative means, i.e. iadmin mkuser. It also pushes a
 # collection.add message into the irods exchange.
-#
 ipc_acCreateCollByAdmin(*ParColl, *ChildColl) {
 	*coll = '*ParColl/*ChildColl';
 	*perm = resolveAdminPerm(*coll);
 	msiSetACL('default', 'admin:*perm', 'rodsadmin', *coll);
 }
-
 
 ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl) {
 	*path = *ParColl ++ '/' ++ *ChildColl;
@@ -653,9 +649,7 @@ ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl) {
 	_ipc_sendCollectionAdd(*id, *path, $userNameClient, $rodsZoneClient);
 }
 
-
 # This rule pushes a collection.rm message into the irods exchange.
-#
 ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
 	*path = '*ParColl/*ChildColl';
 	*uuid = _ipc_retrieveCollectionUUID(*path);
@@ -665,10 +659,8 @@ ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
 	}
 }
 
-
 # This rule prevents the user from removing rodsadmin's ownership from an ACL
 # unless the user is of type rodsadmin.
-#
 ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
 	if (*UserName == 'rodsadmin') {
 		if (!(*AccessLevel like 'admin:*') && *AccessLevel != resolveAdminPerm(*Path)) {
@@ -678,22 +670,17 @@ ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zo
 	}
 }
 
-
 # This rule makes the admin owner of any created collection. This rule is not
 # applied to collections created when a TAR file is expanded. (i.e. ibun -x)
-#
 ipc_acPostProcForCollCreate { setAdminGroupPerm($collName); }
-
 
 # This rule ensures that archival collections are given a UUID and an AMQP
 # message is published indicating the collection is created.
-#
 ipc_archive_acPostProcForCollCreate {
 	*id = '';
 	_ipc_ensureUUID(ipc_COLLECTION, $collName, *id);
 	_ipc_sendCollectionAdd(*id, $collName, $userNameClient, $rodsZoneClient);
 }
-
 
 ipc_acPostProcForOpen {
 	*me = 'ipc_acPostProcForOpen';
@@ -708,9 +695,7 @@ ipc_acPostProcForOpen {
 	}
 }
 
-
 ipc_acPreprocForRmColl { temporaryStorage.'$collName' = 	_ipc_retrieveCollectionUUID($collName); }
-
 
 ipc_acPostProcForRmColl {
 	*uuid = temporaryStorage.'$collName';
@@ -720,9 +705,7 @@ ipc_acPostProcForRmColl {
 	}
 }
 
-
 ipc_acDataDeletePolicy { temporaryStorage.'$objPath' = _ipc_retrieveDataUUID($objPath); }
-
 
 ipc_acPostProcForDelete {
 	*uuid = temporaryStorage.'$objPath';
@@ -732,10 +715,8 @@ ipc_acPostProcForDelete {
 	}
 }
 
-
 # This sends a collection or data-object ACL modification message for the
 # updated object.
-#
 ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *UserZone, *Path) {
 	*me = 'ipc_acPostProcForModifyAccessControl';
 	*entityId = _ipc_getEntityId(*Path);
@@ -766,10 +747,8 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
 	}
 }
 
-
 # This rule schedules a rename entry job for the data object or collection being
 # renamed.
-#
 ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 	*type = ipc_getEntityType(*DestEntity);
 	*uuid = '';
@@ -779,7 +758,6 @@ ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 		_ipc_sendEntityMove(*type, *uuid, *SrcEntity, *DestEntity, $userNameClient, $rodsZoneClient);
 	}
 }
-
 
 # This rule checks that AVU being modified isn't a protected one.
 ipc_acPreProcForModifyAVUMetadata(
@@ -796,7 +774,6 @@ ipc_acPreProcForModifyAVUMetadata(
 	ensureAVUEditable($userNameClient, *ItemType, *ItemName, *AName, *AValue, *origUnit);
 	ensureAVUEditable($userNameClient, *ItemType, *ItemName, *newName, *newValue, *newUnit);
 }
-
 
 # This rule checks that AVU being added, set or removed isn't a protected one.
 # Only rodsadmin users are allowed to add, remove or update protected AVUs.
@@ -842,7 +819,6 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
 	}
 }
 
-
 # This rule ensures that only the non-protected AVUs are copied from one item to
 # another.
 ipc_acPreProcForModifyAVUMetadata(
@@ -865,9 +841,7 @@ ipc_acPreProcForModifyAVUMetadata(
 	}
 }
 
-
 # This rule sends a message indicating that an AVU was modified.
-#
 ipc_acPostProcForModifyAVUMetadata(
 	*Option, *ItemType, *ItemName, *AName, *AValue, *new1, *new2, *new3, *new4 
 ) {
@@ -895,10 +869,8 @@ ipc_acPostProcForModifyAVUMetadata(
 		$rodsZoneClient );
 }
 
-
 # This rule sends one of the AVU metadata set messages, depending on which
 # subcommand was used.
-#
 ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
 	if (*AName != _ipc_UUID_ATTR) {
 		if (_ipc_contains(*Option, list('add', 'adda', 'rm', 'set'))) {
@@ -919,9 +891,7 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValu
 	}
 }
 
-
 # This rules sends an AVU metadata copy message.
-#
 ipc_acPostProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
 ) {
@@ -945,14 +915,16 @@ ipc_acPostProcForModifyAVUMetadata(
 		*SourceItemType, *source, *TargetItemType, *target, $userNameClient, $rodsZoneClient );
 }
 
-
 # Whenever a large file is uploaded, recheck the free space on the storage
 # resource server where the file was written.
-#
 ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 	msi_update_unixfilesystem_resource_free_space(*LeafResource);
 }
 
+
+#
+# DYNAMIC PEPS
+#
 
 # XXX - Because of https://github.com/irods/irods/issues/5540
 # ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO) {
@@ -1026,7 +998,6 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 }
 # XXX - ^^^
 
-
 # XXX - Because of https://github.com/irods/irods/issues/5540
 # ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO) {
 # 	*me = 'ipc_dataObjCreated_staging';
@@ -1060,7 +1031,6 @@ ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 }
 # XXX - ^^^
 
-
 ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO) {
 	*me = 'ipc_dataObjModified_default';
 	*id = int(*DATA_OBJ_INFO.data_id);
@@ -1084,9 +1054,7 @@ ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO) {
 	}
 }
 
-
 # This rule sends a system metadata modified status message.
-#
 ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 	*me = 'ipc_dataObjMetadataModified';
 	*id = _ipc_getDataId(*Object);

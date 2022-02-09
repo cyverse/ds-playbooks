@@ -22,11 +22,10 @@ _ipc_contains(*Item, *List) =
 
 # Determines whether or not the string in the first argument starts with the
 # string in the second argument.
-#
-startsWith(*str, *prefix) =
-	if strlen(*str) < strlen(*prefix) then false
-	else if substr(*str, 0, strlen(*prefix)) != *prefix then false
-	else true;
+_ipc_startsWith(*Str, *Prefix) =
+	if strlen(*Str) < strlen(*Prefix) then false
+	else if substr(*Str, 0, strlen(*Prefix)) != *Prefix then false
+	else true
 
 # Removes a prefix from a string.
 #
@@ -34,7 +33,7 @@ removePrefix(*orig, *prefixes) {
 	*result = *orig
 
 	foreach (*prefix in *prefixes) {
-		if (startsWith(*orig, *prefix)) {
+		if (_ipc_startsWith(*orig, *prefix)) {
 			*result = substr(*orig, strlen(*prefix), strlen(*orig));
 			break;
 		}
@@ -606,7 +605,7 @@ _ipc_ensureUUID(*EntityType, *EntityPath, *UUID) {
 
 # Indicates whether or not an AVU is protected
 avuProtected(*ItemType, *ItemName, *Attribute) {
-	if (startsWith(*Attribute, 'ipc')) {
+	if (_ipc_startsWith(*Attribute, 'ipc')) {
 		*Attribute != _ipc_UUID_ATTR || _ipc_retrieveUUID(*ItemType, *ItemName) != '';
 	} else {
 		false;

@@ -57,6 +57,9 @@ _ipc_isResource(*Type) = *Type == ipc_RESOURCE || *Type == '-r'
 
 _ipc_isUser(*Type) = *Type == ipc_USER
 
+_ipc_isFileSystemType(*EntityType) =
+	_ipc_isCollection(*EntityType) || _ipc_isDataObject(*EntityType) 
+
 
 #
 # ICAT IDS
@@ -131,6 +134,87 @@ _ipc_chksumRepl(*Object, *ReplNum) {
 
 
 #
+# UUIDS
+# 
+
+_ipc_UUID_ATTR = 'ipc_UUID'
+
+# Looks up the UUID of a collection from its path.
+_ipc_retrieveCollectionUUID(*Coll) =
+	let *uuid = '' in
+	let *attr = _ipc_UUID_ATTR in
+	let *_ = foreach ( *record in 
+			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr
+		) { *uuid = *record.META_COLL_ATTR_VALUE; } in
+	*uuid
+
+# Looks up the UUID of a data object from its path.
+_ipc_retrieveDataUUID(*Data) =
+	let *parentColl = '' in
+	let *dataName = '' in
+	let *_ = msiSplitPath(*Data, *parentColl, *dataName) in
+	let *uuid = '' in
+	let *attr = _ipc_UUID_ATTR in
+	let *_ = foreach ( *record in 
+			SELECT META_DATA_ATTR_VALUE
+			WHERE COLL_NAME == *parentColl AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *attr
+		) { *uuid = *record.META_DATA_ATTR_VALUE; } in 
+	*uuid
+
+# Looks up the UUID for a given type of entity (collection or data object)
+_ipc_retrieveUUID(*EntityType, *EntityPath) =
+	if _ipc_isCollection(*EntityType) then _ipc_retrieveCollectionUUID(*EntityPath)
+	else if _ipc_isDataObject(*EntityType) then _ipc_retrieveDataUUID(*EntityPath)
+	else ''
+
+_ipc_generateUUID(*UUID) {
+	*status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
+	if (*status == 0) {
+		msiGetStdoutInExecCmdOut(*out, *uuid);
+		*UUID = trimr(*uuid, "\n");
+		writeLine('serverLog', 'UUID *UUID created');
+	} else {
+		writeLine("serverLog", "failed to generate UUID");
+		fail;
+	}
+}
+
+# Assign a UUID to a given collection or data object.
+_ipc_assignUUID(*ItemType, *ItemName, *Uuid) {
+# XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
+# 4.2.10.
+# 	msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, '');
+	*status = errormsg(
+		msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, ''), *msg );
+	if (*status == -818000) {
+		# assume it was uploaded by a ticket
+		*typeArg = execCmdArg(*ItemType);
+		*nameArg = execCmdArg(*ItemName);
+		*valArg = execCmdArg(*Uuid);
+		*argStr = "*typeArg *nameArg *valArg";
+		*status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
+		if (*status != 0) {
+			writeLine('serverLog', "Failed to assign UUID: *msg");
+			fail;
+		}
+	} else if (*status != 0) {
+		writeLine('serverLog', "Failed to assign UUID: *msg");
+		fail;
+	}
+# XXX - ^^^
+}
+
+_ipc_ensureUUID(*EntityType, *EntityPath, *UUID) {
+	*uuid = _ipc_retrieveUUID(*EntityType, *EntityPath);
+	if (*uuid == '') {
+		_ipc_generateUUID(*uuid);
+		_ipc_assignUUID(*EntityType, *EntityPath, *uuid);
+	}
+	*UUID = *uuid;
+}
+
+
+#
 # ACTION TRACKING
 #
 
@@ -169,6 +253,14 @@ _ipc_getAmqpType(*ItemType) =
 	else if _ipc_isResource(*ItemType) then _ipc_RESC_MSG_TYPE
 	else if _ipc_isUser(*ItemType) then _ipc_USER_MSG_TYPE
 	else ''
+
+_ipc_resolve_msg_entity_id(*EntityType, *EntityName) =
+	let *id = '' in
+	let *_ = 
+		if _ipc_isFileSystemType(*EntityType) 
+		then _ipc_ensureUUID(*EntityType, *EntityName, *id)
+		else *id = *EntityName in
+	*id
 
 # sends a message to a given AMQP topic exchange
 #
@@ -412,87 +504,6 @@ _ipc_sendAvuCopy(*SourceItemType, *Source, *TargetItemType, *Target, *AuthorName
 			ipcJson_string('destination', *Target) ) );
 
 	sendMsg(_ipc_getAmqpType(*TargetItemType) ++ '.metadata.cp', *msg);
-}
-
-
-#
-# UUIDS
-# 
-
-_ipc_UUID_ATTR = 'ipc_UUID'
-
-# Looks up the UUID of a collection from its path.
-_ipc_retrieveCollectionUUID(*Coll) =
-	let *uuid = '' in
-	let *attr = _ipc_UUID_ATTR in
-	let *_ = foreach ( *record in 
-			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr
-		) { *uuid = *record.META_COLL_ATTR_VALUE; } in
-	*uuid
-
-# Looks up the UUID of a data object from its path.
-_ipc_retrieveDataUUID(*Data) =
-	let *parentColl = '' in
-	let *dataName = '' in
-	let *_ = msiSplitPath(*Data, *parentColl, *dataName) in
-	let *uuid = '' in
-	let *attr = _ipc_UUID_ATTR in
-	let *_ = foreach ( *record in 
-			SELECT META_DATA_ATTR_VALUE
-			WHERE COLL_NAME == *parentColl AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *attr
-		) { *uuid = *record.META_DATA_ATTR_VALUE; } in 
-	*uuid
-
-# Looks up the UUID for a given type of entity (collection or data object)
-_ipc_retrieveUUID(*EntityType, *EntityPath) =
-	if _ipc_isCollection(*EntityType) then _ipc_retrieveCollectionUUID(*EntityPath)
-	else if _ipc_isDataObject(*EntityType) then _ipc_retrieveDataUUID(*EntityPath)
-	else ''
-
-_ipc_generateUUID(*UUID) {
-	*status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
-	if (*status == 0) {
-		msiGetStdoutInExecCmdOut(*out, *uuid);
-		*UUID = trimr(*uuid, "\n");
-		writeLine('serverLog', 'UUID *UUID created');
-	} else {
-		writeLine("serverLog", "failed to generate UUID");
-		fail;
-	}
-}
-
-# Assign a UUID to a given collection or data object.
-_ipc_assignUUID(*ItemType, *ItemName, *Uuid) {
-# XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
-# 4.2.10.
-# 	msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, '');
-	*status = errormsg(
-		msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, ''), *msg );
-	if (*status == -818000) {
-		# assume it was uploaded by a ticket
-		*typeArg = execCmdArg(*ItemType);
-		*nameArg = execCmdArg(*ItemName);
-		*valArg = execCmdArg(*Uuid);
-		*argStr = "*typeArg *nameArg *valArg";
-		*status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
-		if (*status != 0) {
-			writeLine('serverLog', "Failed to assign UUID: *msg");
-			fail;
-		}
-	} else if (*status != 0) {
-		writeLine('serverLog', "Failed to assign UUID: *msg");
-		fail;
-	}
-# XXX - ^^^
-}
-
-_ipc_ensureUUID(*EntityType, *EntityPath, *UUID) {
-	*uuid = _ipc_retrieveUUID(*EntityType, *EntityPath);
-	if (*uuid == '') {
-		_ipc_generateUUID(*uuid);
-		_ipc_assignUUID(*EntityType, *EntityPath, *uuid);
-	}
-	*UUID = *uuid;
 }
 
 
@@ -894,24 +905,55 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValu
 ipc_acPostProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
 ) {
-	*source = '';
+	if (!(_ipc_isFileSystemType(*TargetItemType) && ipc_inStaging(/*TargetItemName))) {
+		*target = _ipc_resolve_msg_entity_id(*TargetItemType, *TargetItemName);
 
-	if (_ipc_isResource(*SourceItemType) || _ipc_isUser(*SourceItemType)) {
-		*source = *SourceItemName;
-	} else {
-		_ipc_ensureUUID(*SourceItemType, *SourceItemName, *source);
+		if (!(_ipc_isFileSystemType(*SourceItemType) && ipc_inStaging(/*SourceItemName))) {
+`			*source = _ipc_resolve_msg_entity_id(*SourceItemType, *SourceItemName);
+
+			_ipc_sendAvuCopy(
+				*SourceItemType, *source, *TargetItemType, *target, $userNameClient, $rodsZoneClient );
+		} else {
+			*uuidAttr = _ipc_UUID_ATTR;
+
+			if (_ipc_isCollection(*TargetItemType)) {
+
+				foreach( *rec in
+					SELECT META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE, META_COLL_ATTR_UNITS  
+					WHERE COLL_NAME == *SourceItemName AND META_COLL_ATTR_NAME != *uuidAttr
+				) {
+					_ipc_sendAvuSet(
+						'add', 
+						*TargetItemType, 
+						*target, 
+						*rec.META_COLL_ATTR_NAME, 
+						*rec.META_COLL_ATTR_VALUE, 
+						*rec.META_COLL_ATTR_UNITS, 
+						$userNameClient, 
+						$rodsZoneClient );
+				}
+			} else {
+				msiSplitPath(*SourceItemName, *srcCollPath, *srcDataName);
+
+				foreach( *rec in
+					SELECT META_DATA_ATTR_NAME, META_DATA_ATTR_VALUE, META_DATA_ATTR_UNITS  
+					WHERE COLL_NAME == *SsrcCollPath 
+						AND DATA_NAME == *srcDataName 
+						AND META_DATA_ATTR_NAME != *uuidAttr
+				) {
+					_ipc_sendAvuSet(
+						'add', 
+						*TargetItemType, 
+						*target, 
+						*rec.META_DATA_ATTR_NAME, 
+						*rec.META_DATA_ATTR_VALUE, 
+						*rec.META_DATA_ATTR_UNITS, 
+						$userNameClient, 
+						$rodsZoneClient );
+				}
+			}
+		}
 	}
-
-	*target = '';
-
-	if (_ipc_isResource(*TargetItemType) || _ipc_isUser(*TargetItemType)) {
-		*target = *TargetItemName;
-	} else {
-		_ipc_ensureUUID(*TargetItemType, *TargetItemName, *target);
-	}
-
-	_ipc_sendAvuCopy(
-		*SourceItemType, *source, *TargetItemType, *target, $userNameClient, $rodsZoneClient );
 }
 
 # Whenever a large file is uploaded, recheck the free space on the storage
@@ -1059,7 +1101,7 @@ ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 	*id = _ipc_getDataId(*Object);
 	_ipc_registerAction(*id, *me);
 
-	if (_ipc_isCurrentAction(*id, *me)) {
+	if (_ipc_isCurrentAction(*id, *me) && ! ipc_inStaging(/*Object)) {
 		*uuid = '';
 		_ipc_ensureUUID(ipc_DATA_OBJECT, *Object, *uuid);
 		_ipc_sendDataObjectMetadataModified(*uuid, *User, *Zone);

@@ -416,8 +416,98 @@ _ipc_sendAvuCopy(*SourceItemType, *Source, *TargetItemType, *Target, *AuthorName
 
 
 #
+# UUIDS
+# 
+
+_ipc_UUID_ATTR = 'ipc_UUID'
+
+# Looks up the UUID of a collection from its path.
+_ipc_retrieveCollectionUUID(*Coll) =
+	let *uuid = '' in
+	let *attr = _ipc_UUID_ATTR in
+	let *_ = foreach ( *record in 
+			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr
+		) { *uuid = *record.META_COLL_ATTR_VALUE; } in
+	*uuid
+
+# Looks up the UUID of a data object from its path.
+_ipc_retrieveDataUUID(*Data) =
+	let *parentColl = '' in
+	let *dataName = '' in
+	let *_ = msiSplitPath(*Data, *parentColl, *dataName) in
+	let *uuid = '' in
+	let *attr = _ipc_UUID_ATTR in
+	let *_ = foreach ( *record in 
+			SELECT META_DATA_ATTR_VALUE
+			WHERE COLL_NAME == *parentColl AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *attr
+		) { *uuid = *record.META_DATA_ATTR_VALUE; } in 
+	*uuid
+
+# Looks up the UUID for a given type of entity (collection or data object)
+_ipc_retrieveUUID(*EntityType, *EntityPath) =
+	if _ipc_isCollection(*EntityType) then _ipc_retrieveCollectionUUID(*EntityPath)
+	else if _ipc_isDataObject(*EntityType) then _ipc_retrieveDataUUID(*EntityPath)
+	else ''
+
+_ipc_generateUUID(*UUID) {
+	*status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
+	if (*status == 0) {
+		msiGetStdoutInExecCmdOut(*out, *uuid);
+		*UUID = trimr(*uuid, "\n");
+		writeLine('serverLog', 'UUID *UUID created');
+	} else {
+		writeLine("serverLog", "failed to generate UUID");
+		fail;
+	}
+}
+
+# Assign a UUID to a given collection or data object.
+_ipc_assignUUID(*ItemType, *ItemName, *Uuid) {
+# XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
+# 4.2.10.
+# 	msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, '');
+	*status = errormsg(
+		msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, ''), *msg );
+	if (*status == -818000) {
+		# assume it was uploaded by a ticket
+		*typeArg = execCmdArg(*ItemType);
+		*nameArg = execCmdArg(*ItemName);
+		*valArg = execCmdArg(*Uuid);
+		*argStr = "*typeArg *nameArg *valArg";
+		*status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
+		if (*status != 0) {
+			writeLine('serverLog', "Failed to assign UUID: *msg");
+			fail;
+		}
+	} else if (*status != 0) {
+		writeLine('serverLog', "Failed to assign UUID: *msg");
+		fail;
+	}
+# XXX - ^^^
+}
+
+_ipc_ensureUUID(*EntityType, *EntityPath, *UUID) {
+	*uuid = _ipc_retrieveUUID(*EntityType, *EntityPath);
+	if (*uuid == '') {
+		_ipc_generateUUID(*uuid);
+		_ipc_assignUUID(*EntityType, *EntityPath, *uuid);
+	}
+	*UUID = *uuid;
+}
+
+
+#
 # PROTECTED AVUS
 #
+
+# Indicates whether or not an AVU is protected
+avuProtected(*ItemType, *ItemName, *Attribute) {
+	if (_ipc_startsWith(*Attribute, 'ipc')) {
+		*Attribute != _ipc_UUID_ATTR || _ipc_retrieveUUID(*ItemType, *ItemName) != '';
+	} else {
+		false;
+	}
+}
 
 canModProtectedAVU(*User) {
 	*canMod = false;
@@ -520,96 +610,6 @@ resolveAdminPerm(*Item) = if *Item like regex '^/[^/]*(/[^/]*)?$' then 'write' e
 
 setAdminGroupPerm(*Item) {
 	msiSetACL('default', resolveAdminPerm(*Item), 'rodsadmin', *Item);
-}
-
-
-#
-# UUIDS
-# 
-
-_ipc_UUID_ATTR = 'ipc_UUID'
-
-# Looks up the UUID of a collection from its path.
-_ipc_retrieveCollectionUUID(*Coll) =
-	let *uuid = '' in
-	let *attr = _ipc_UUID_ATTR in
-	let *_ = foreach ( *record in 
-			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr
-		) { *uuid = *record.META_COLL_ATTR_VALUE; } in
-	*uuid
-
-# Looks up the UUID of a data object from its path.
-_ipc_retrieveDataUUID(*Data) =
-	let *parentColl = '' in
-	let *dataName = '' in
-	let *_ = msiSplitPath(*Data, *parentColl, *dataName) in
-	let *uuid = '' in
-	let *attr = _ipc_UUID_ATTR in
-	let *_ = foreach ( *record in 
-			SELECT META_DATA_ATTR_VALUE
-			WHERE COLL_NAME == *parentColl AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *attr
-		) { *uuid = *record.META_DATA_ATTR_VALUE; } in 
-	*uuid
-
-# Looks up the UUID for a given type of entity (collection or data object)
-_ipc_retrieveUUID(*EntityType, *EntityPath) =
-	if _ipc_isCollection(*EntityType) then _ipc_retrieveCollectionUUID(*EntityPath)
-	else if _ipc_isDataObject(*EntityType) then _ipc_retrieveDataUUID(*EntityPath)
-	else ''
-
-_ipc_generateUUID(*UUID) {
-	*status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
-	if (*status == 0) {
-		msiGetStdoutInExecCmdOut(*out, *uuid);
-		*UUID = trimr(*uuid, "\n");
-		writeLine('serverLog', 'UUID *UUID created');
-	} else {
-		writeLine("serverLog", "failed to generate UUID");
-		fail;
-	}
-}
-
-# Assign a UUID to a given collection or data object.
-_ipc_assignUUID(*ItemType, *ItemName, *Uuid) {
-# XXX - This is a workaround for https://github.com/irods/irods/issues/3437. It is still present in
-# 4.2.10.
-# 	msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, '');
-	*status = errormsg(
-		msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, ''), *msg );
-	if (*status == -818000) {
-		# assume it was uploaded by a ticket
-		*typeArg = execCmdArg(*ItemType);
-		*nameArg = execCmdArg(*ItemName);
-		*valArg = execCmdArg(*Uuid);
-		*argStr = "*typeArg *nameArg *valArg";
-		*status = errormsg(msiExecCmd('set-uuid', *argStr, "null", "null", "null", *out), *msg);
-		if (*status != 0) {
-			writeLine('serverLog', "Failed to assign UUID: *msg");
-			fail;
-		}
-	} else if (*status != 0) {
-		writeLine('serverLog', "Failed to assign UUID: *msg");
-		fail;
-	}
-# XXX - ^^^
-}
-
-_ipc_ensureUUID(*EntityType, *EntityPath, *UUID) {
-	*uuid = _ipc_retrieveUUID(*EntityType, *EntityPath);
-	if (*uuid == '') {
-		_ipc_generateUUID(*uuid);
-		_ipc_assignUUID(*EntityType, *EntityPath, *uuid);
-	}
-	*UUID = *uuid;
-}
-
-# Indicates whether or not an AVU is protected
-avuProtected(*ItemType, *ItemName, *Attribute) {
-	if (_ipc_startsWith(*Attribute, 'ipc')) {
-		*Attribute != _ipc_UUID_ATTR || _ipc_retrieveUUID(*ItemType, *ItemName) != '';
-	} else {
-		false;
-	}
 }
 
 

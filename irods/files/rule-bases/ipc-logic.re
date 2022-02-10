@@ -29,13 +29,11 @@ _ipc_startsWith(*Str, *Prefix) =
 
 # Removes a prefix from a string.
 _ipc_removePrefix(*Orig, *Prefixes) =
-	let *result = *Orig in
-	let *_ = foreach (*prefix in *Prefixes) {
-		if (_ipc_startsWith(*Orig, *prefix)) {
-			*result = substr(*Orig, strlen(*prefix), strlen(*Orig));
-			break;
-		} } in
-	*result
+	if size(*Prefixes) == 0 then *Orig
+	else 
+		if _ipc_startsWith(*Orig, hd(*Prefixes)) 
+		then substr(*Orig, strlen(hd(*Prefixes)), strlen(*Orig))
+		else _ipc_removePrefix(*Orig, tl(*Prefixes))
 
 
 #

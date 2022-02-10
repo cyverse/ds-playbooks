@@ -902,7 +902,7 @@ ipc_acPostProcForModifyAVUMetadata(
 		*target = _ipc_resolve_msg_entity_id(*TargetItemType, *TargetItemName);
 
 		if (!(_ipc_isFileSystemType(*SourceItemType) && ipc_inStaging(/*SourceItemName))) {
-`			*source = _ipc_resolve_msg_entity_id(*SourceItemType, *SourceItemName);
+			*source = _ipc_resolve_msg_entity_id(*SourceItemType, *SourceItemName);
 
 			_ipc_sendAvuCopy(
 				*SourceItemType, *source, *TargetItemType, *target, $userNameClient, $rodsZoneClient );
@@ -930,7 +930,7 @@ ipc_acPostProcForModifyAVUMetadata(
 
 				foreach( *rec in
 					SELECT META_DATA_ATTR_NAME, META_DATA_ATTR_VALUE, META_DATA_ATTR_UNITS  
-					WHERE COLL_NAME == *SsrcCollPath 
+					WHERE COLL_NAME == *srcCollPath 
 						AND DATA_NAME == *srcDataName 
 						AND META_DATA_ATTR_NAME != *uuidAttr
 				) {

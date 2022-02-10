@@ -28,19 +28,14 @@ _ipc_startsWith(*Str, *Prefix) =
 	else true
 
 # Removes a prefix from a string.
-#
-removePrefix(*orig, *prefixes) {
-	*result = *orig
-
-	foreach (*prefix in *prefixes) {
-		if (_ipc_startsWith(*orig, *prefix)) {
-			*result = substr(*orig, strlen(*prefix), strlen(*orig));
+_ipc_removePrefix(*Orig, *Prefixes) =
+	let *result = *Orig in
+	let *_ = foreach (*prefix in *Prefixes) {
+		if (_ipc_startsWith(*Orig, *prefix)) {
+			*result = substr(*Orig, strlen(*prefix), strlen(*Orig));
 			break;
-		}
-	}
-
-	*result;
-}
+		} } in
+	*result
 
 
 #
@@ -733,7 +728,7 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
 	_ipc_registerAction(*entityId, *me);
 
    if (_ipc_isCurrentAction(*entityId, *me)) {
-		*level = removePrefix(*AccessLevel, list('admin:'));
+		*level = _ipc_removePrefix(*AccessLevel, list('admin:'));
 		*type = ipc_getEntityType(*Path);
 		*userZone = if *UserZone == '' then ipc_ZONE else *UserZone;
 		*uuid = '';

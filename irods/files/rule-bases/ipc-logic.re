@@ -89,10 +89,10 @@ _ipc_getEntityId(*Path) =
 # others by the presence of a prefix in the value. The prefix is always a single
 # character followed by a colon.
 #
-getOrigUnit(*candidate) =
-	if strlen(*candidate) < 2 then *candidate
-	else if substr(*candidate, 1, 1) != ':' then *candidate
-	else '';
+_ipc_getOrigUnit(*Candidate) =
+	if strlen(*Candidate) < 2 then *Candidate
+	else if substr(*Candidate, 1, 1) != ':' then *Candidate
+	else ''
 
 # Gets the new AVU setting from a list of candidates. New AVU settings are
 # passed in an arbitrary order and the type of AVU setting is identified by a
@@ -769,7 +769,7 @@ ipc_acPreProcForModifyAVUMetadata(
 	*newArgs = list(*New1, *New2, *New3, *New4);
 
 	# Determine the original unit and the new AVU settings.
-	*origUnit = getOrigUnit(*New1);
+	*origUnit = _ipc_getOrigUnit(*New1);
 	*newName = getNewAVUSetting(*AName, 'n:', *newArgs);
 	*newValue = getNewAVUSetting(*AValue, 'v:', *newArgs);
 	*newUnit = getNewAVUSetting(*origUnit, 'u:', *newArgs);
@@ -853,7 +853,7 @@ ipc_acPostProcForModifyAVUMetadata(
 	_ipc_ensureUUID(*ItemType, *ItemName, *uuid);
 
 	# Determine the original unit and the new AVU settings.
-	*origUnit = getOrigUnit(*new1);
+	*origUnit = _ipc_getOrigUnit(*new1);
 	*newName = getNewAVUSetting(*AName, 'n:', *newArgs);
 	*newValue = getNewAVUSetting(*AValue, 'v:', *newArgs);
 	*newUnit = getNewAVUSetting(*origUnit, 'u:', *newArgs);

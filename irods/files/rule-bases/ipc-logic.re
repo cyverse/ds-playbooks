@@ -37,24 +37,6 @@ _ipc_removePrefix(*Orig, *Prefixes) =
 
 
 #
-# ENTITY TYPES
-#
-
-_ipc_isCollection(*Type) = *Type == ipc_COLLECTION
-
-_ipc_isDataObject(*Type) = *Type == ipc_DATA_OBJECT
-
-# NB: Sometimes iRODS passes `-r` to indicated a resource
-_ipc_isResource: string -> boolean
-_ipc_isResource(*Type) = *Type == ipc_RESOURCE || *Type == '-r'
-
-_ipc_isUser(*Type) = *Type == ipc_USER
-
-_ipc_isFileSystemType(*EntityType) =
-	_ipc_isCollection(*EntityType) || _ipc_isDataObject(*EntityType) 
-
-
-#
 # ICAT IDS
 #
 
@@ -74,7 +56,7 @@ _ipc_getDataId(*Path) =
 	*id
 
 _ipc_getEntityId(*Path) =
-	if _ipc_isCollection(ipc_getEntityType(*Path)) then _ipc_getCollectionId(*Path)
+	if ipc_isCollection(ipc_getEntityType(*Path)) then _ipc_getCollectionId(*Path)
 	else _ipc_getDataId(*Path)
 
 
@@ -149,8 +131,8 @@ _ipc_retrieveDataUUID(*Data) =
 
 # Looks up the UUID for a given type of entity (collection or data object)
 _ipc_retrieveUUID(*EntityType, *EntityPath) =
-	if _ipc_isCollection(*EntityType) then _ipc_retrieveCollectionUUID(*EntityPath)
-	else if _ipc_isDataObject(*EntityType) then _ipc_retrieveDataUUID(*EntityPath)
+	if ipc_isCollection(*EntityType) then _ipc_retrieveCollectionUUID(*EntityPath)
+	else if ipc_isDataObject(*EntityType) then _ipc_retrieveDataUUID(*EntityPath)
 	else ''
 
 _ipc_generateUUID(*UUID) {
@@ -234,16 +216,16 @@ _ipc_RESC_MSG_TYPE = 'resource'
 _ipc_USER_MSG_TYPE = 'user'
 
 _ipc_getAmqpType(*ItemType) =
-	if _ipc_isCollection(*ItemType) then _ipc_COLL_MSG_TYPE
-	else if _ipc_isDataObject(*ItemType) then _ipc_DATA_MSG_TYPE
-	else if _ipc_isResource(*ItemType) then _ipc_RESC_MSG_TYPE
-	else if _ipc_isUser(*ItemType) then _ipc_USER_MSG_TYPE
+	if ipc_isCollection(*ItemType) then _ipc_COLL_MSG_TYPE
+	else if ipc_isDataObject(*ItemType) then _ipc_DATA_MSG_TYPE
+	else if ipc_isResource(*ItemType) then _ipc_RESC_MSG_TYPE
+	else if ipc_isUser(*ItemType) then _ipc_USER_MSG_TYPE
 	else ''
 
 _ipc_resolve_msg_entity_id(*EntityType, *EntityName) =
 	let *id = '' in
 	let *_ = 
-		if _ipc_isFileSystemType(*EntityType) 
+		if ipc_isFileSystemType(*EntityType) 
 		then _ipc_ensureUUID(*EntityType, *EntityName, *id)
 		else *id = *EntityName in
 	*id
@@ -725,7 +707,7 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
 		*uuid = '';
 		_ipc_ensureUUID(*type, *Path, *uuid);
 
-		if (_ipc_isCollection(*type)) {
+		if (ipc_isCollection(*type)) {
 			_ipc_sendCollectionAccessModified(
 				*uuid,
 				*level,
@@ -734,7 +716,7 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
 				bool(*RecursiveFlag),
 				$userNameClient,
 				$rodsZoneClient );
-		} else if (_ipc_isDataObject(*type)) {
+		} else if (ipc_isDataObject(*type)) {
 			_ipc_sendDataObjectAclModified(
 				*uuid, *level, *UserName, *userZone, $userNameClient, $rodsZoneClient );
 		}
@@ -777,10 +759,10 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
 	if (*Option == 'add' || *Option == 'addw') {
 		ensureAVUEditable($userNameProxy, *ItemType, *ItemName, *AName, *AValue, *AUnit);
 	} else if (*Option == 'set') {
-		if (_ipc_isCollection(*ItemType)) {
+		if (ipc_isCollection(*ItemType)) {
 			*query =
 				SELECT META_COLL_ATTR_ID WHERE COLL_NAME == *ItemName AND META_COLL_ATTR_NAME == *AName;
-		} else if (_ipc_isDataObject(*ItemType)) {
+		} else if (ipc_isDataObject(*ItemType)) {
 			msiSplitPath(*ItemName, *collPath, *dataName);
 
 			*query =
@@ -788,10 +770,10 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
 				WHERE COLL_NAME == *collPath 
 					AND DATA_NAME == *dataName 
 					AND META_DATA_ATTR_NAME == *AName;
-		} else if (_ipc_isResource(*ItemType)) {
+		} else if (ipc_isResource(*ItemType)) {
 			*query =
 				SELECT META_RESC_ATTR_ID WHERE RESC_NAME == *ItemName AND META_RESC_ATTR_NAME == *AName;
-		} else if (_ipc_isUser(*ItemType)) {
+		} else if (ipc_isUser(*ItemType)) {
 			*query =
 				SELECT META_USER_ATTR_ID WHERE USER_NAME == *ItemName AND META_USER_ATTR_NAME == *AName;
 		} else {
@@ -821,13 +803,13 @@ ipc_acPreProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
 ) {
 	if (!canModProtectedAVU($userNameClient)) {
-		if (_ipc_isCollection(*SourceItemType)) {
+		if (ipc_isCollection(*SourceItemType)) {
 			cpUnprotectedCollAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
-		} else if (_ipc_isDataObject(*SourceItemType)) {
+		} else if (ipc_isDataObject(*SourceItemType)) {
 			cpUnprotectedDataObjAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
-		} else if (_ipc_isResource(*SourceItemType)) {
+		} else if (ipc_isResource(*SourceItemType)) {
 			cpUnprotectedRescAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
-		} else if (_ipc_isUser(*SourceItemType)) {
+		} else if (ipc_isUser(*SourceItemType)) {
 			cpUnprotectedUserAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
 		}
 
@@ -891,10 +873,10 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValu
 ipc_acPostProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
 ) {
-	if (!(_ipc_isFileSystemType(*TargetItemType) && ipc_inStaging(/*TargetItemName))) {
+	if (!(ipc_isFileSystemType(*TargetItemType) && ipc_inStaging(/*TargetItemName))) {
 		*target = _ipc_resolve_msg_entity_id(*TargetItemType, *TargetItemName);
 
-		if (!(_ipc_isFileSystemType(*SourceItemType) && ipc_inStaging(/*SourceItemName))) {
+		if (!(ipc_isFileSystemType(*SourceItemType) && ipc_inStaging(/*SourceItemName))) {
 			*source = _ipc_resolve_msg_entity_id(*SourceItemType, *SourceItemName);
 
 			_ipc_sendAvuCopy(
@@ -902,7 +884,7 @@ ipc_acPostProcForModifyAVUMetadata(
 		} else {
 			*uuidAttr = _ipc_UUID_ATTR;
 
-			if (_ipc_isCollection(*TargetItemType)) {
+			if (ipc_isCollection(*TargetItemType)) {
 
 				foreach( *rec in
 					SELECT META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE, META_COLL_ATTR_UNITS  

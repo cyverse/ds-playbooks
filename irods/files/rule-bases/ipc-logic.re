@@ -83,10 +83,11 @@ _ipc_getOrigUnit(*Candidate) =
 #
 _ipc_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 	if size(*Candidates) == 0 then *Orig
-	else 
-		if _ipc_startsWith(hd(*Candidates), *Prefix) 
-		then substr(*candidate, 2, strlen(hd(*Candidates)))
-		else _ipc_getNewSetting(*Orig, *Prefix, tl(*Candidattes))
+	else
+		let *candidate = hd(*Candidates) in
+		if _ipc_startsWith(*candidate, *Prefix) 
+		then substr(*candidate, 2, strlen(*candidate))
+		else _ipc_getNewAVUSetting(*Orig, *Prefix, tl(*Candidates))
 
 
 #

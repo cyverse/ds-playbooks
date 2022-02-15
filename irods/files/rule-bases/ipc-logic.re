@@ -99,19 +99,12 @@ _ipc_getOrigUnit(*Candidate) =
 # prefix. This function looks for values matching the given prefix. If multiple
 # matching values are found then the last one wins.
 #
-getNewAVUSetting(*orig, *prefix, *candidates) {
-	*setting = *orig;
-
-	foreach (*candidate in *candidates) {
-		if (strlen(*candidate) >= strlen(*prefix)) {
-			if (substr(*candidate, 0, strlen(*prefix)) == *prefix) {
-				*setting = substr(*candidate, 2, strlen(*candidate));
-			}
-		}
-	}
-
-	*setting;
-}
+_ipc_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
+	if size(*Candidates) == 0 then *Orig
+	else 
+		if _ipc_startsWith(hd(*Candidates), *Prefix) 
+		then substr(*candidate, 2, strlen(hd(*Candidates)))
+		else _ipc_getNewSetting(*Orig, *Prefix, tl(*Candidattes))
 
 
 #
@@ -770,9 +763,9 @@ ipc_acPreProcForModifyAVUMetadata(
 
 	# Determine the original unit and the new AVU settings.
 	*origUnit = _ipc_getOrigUnit(*New1);
-	*newName = getNewAVUSetting(*AName, 'n:', *newArgs);
-	*newValue = getNewAVUSetting(*AValue, 'v:', *newArgs);
-	*newUnit = getNewAVUSetting(*origUnit, 'u:', *newArgs);
+	*newName = _ipc_getNewAVUSetting(*AName, 'n:', *newArgs);
+	*newValue = _ipc_getNewAVUSetting(*AValue, 'v:', *newArgs);
+	*newUnit = _ipc_getNewAVUSetting(*origUnit, 'u:', *newArgs);
 
 	ensureAVUEditable($userNameClient, *ItemType, *ItemName, *AName, *AValue, *origUnit);
 	ensureAVUEditable($userNameClient, *ItemType, *ItemName, *newName, *newValue, *newUnit);
@@ -854,9 +847,9 @@ ipc_acPostProcForModifyAVUMetadata(
 
 	# Determine the original unit and the new AVU settings.
 	*origUnit = _ipc_getOrigUnit(*new1);
-	*newName = getNewAVUSetting(*AName, 'n:', *newArgs);
-	*newValue = getNewAVUSetting(*AValue, 'v:', *newArgs);
-	*newUnit = getNewAVUSetting(*origUnit, 'u:', *newArgs);
+	*newName = _ipc_getNewAVUSetting(*AName, 'n:', *newArgs);
+	*newValue = _ipc_getNewAVUSetting(*AValue, 'v:', *newArgs);
+	*newUnit = _ipc_getNewAVUSetting(*origUnit, 'u:', *newArgs);
 
 	# Send AVU modified message.
 	_ipc_sendAvuMod(

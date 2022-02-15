@@ -81,12 +81,12 @@ ipc_isUser(*Type) = *Type == ipc_USER
 #
 ipc_getEntityType: string -> string
 ipc_getEntityType(*Entity) =
-  let *ty[e = '' in]
+  let *type = '' in
   let *_ = msiGetObjType(*Entity, *type) in 
   if ipc_isCollection(*type) then ipc_COLLECTION
   else if ipc_isDataObject(*type) then ipc_DATA_OBJECT
   else if ipc_isResource(*type) then ipc_RESOURCE
-  else if ipc_isUser(*type) the ipc_USER
+  else if ipc_isUser(*type) then ipc_USER
   else *type
 
 # The base collection for staging

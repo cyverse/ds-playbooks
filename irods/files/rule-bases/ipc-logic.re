@@ -96,6 +96,7 @@ _ipc_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 
 # Compute the checksum of of a given replica of a given data object
 _ipc_chksumRepl(*Object, *ReplNum) {
+	*opt = '';
 	msiAddKeyValToMspStr('forceChksum', '', *opts);
 	msiAddKeyValToMspStr('replNum', str(*ReplNum), *opts);
 	msiDataObjChksum(*Object, *opts, *_);

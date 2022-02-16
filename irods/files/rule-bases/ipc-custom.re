@@ -236,8 +236,10 @@ acPostProcForCollCreate {
 
 
 acPostProcForOpen {
-  *err = errormsg(ipc_acPostProcForOpen, *msg);
-  if (*err < 0) { writeLine('serverLog', *msg); }
+  if (!ipc_inStaging(/$objPath)) {
+    *err = errormsg(ipc_acPostProcForOpen, *msg);
+    if (*err < 0) { writeLine('serverLog', *msg); }
+  }
 }
 
 
@@ -278,7 +280,9 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
 
 
 acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
-  ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
+  if (!ipc_inStaging(/*Path)) {
+    ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
+  }
 }
 
 

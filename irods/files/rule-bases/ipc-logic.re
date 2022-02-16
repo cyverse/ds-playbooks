@@ -985,7 +985,7 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 		*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 
-		if (*uuid != '') {
+		if (*uuid == '') {
 			_ipc_ensureUUID(ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
 		}
 

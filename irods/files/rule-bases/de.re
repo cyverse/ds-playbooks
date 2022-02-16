@@ -4,6 +4,24 @@
 
 _de_inStagedJob(*Path) = str(*Path) like regex '^' ++ str(ipc_STAGING_BASE) ++ '/[^/]+/.+'
 
+_de_rmStagedDataCopy(*StagingPath) {
+   *opts='';
+   msiAddKeyValToMspStr('objPath', *StagingPath, *opts);
+   msiAddKeyValToMspStr('forceFlag', '', *opts);
+   if (0 != errormsg(msiDataObjUnlink(*opts, *out), *msg)) {
+     msiGetStderrInExecCmdOut(*out, *details);
+     writeLine(
+       'serverLog', 'DE: Failed to remove staged data object copy *StagingPath (*msg: *details)' );
+   }
+}
+
+_de_scheduleRmStagedDataCopy(*StagingPath) {
+  delay(
+    '<INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>' ++
+    '<PLUSET>0s</PLUSET>' ++
+    '<EF>0s REPEAT 0 TIMES</EF>'
+  ) {_de_rmStagedDataCopy(*StagingPath)}
+}
 
 _de_getJobInfo(*StagingRelPath) =
   let *info.id = elem(split(*StagingRelPath, '/'), 0) in
@@ -72,6 +90,8 @@ _de_archiveData(*StagingPath) {
       writeLine('serverLog', 'DE: *errMsg');
       cut;
       failmsg(*status, *errMsg);
+    } else {
+      _de_scheduleRmStagedDataCopy(*StagingPath);
     }
   } else {
     writeLine('serverLog', 'DE: Missing required metadata - skipping archive of *StagingPath');

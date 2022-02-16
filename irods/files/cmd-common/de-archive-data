@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Moves a data object from the DE staging area to a given place as a given user
+# Copies a data object from the DE staging area to a given place as a given user
 # for a given DE app execution.
 #
 # USAGE:
@@ -13,6 +13,8 @@
 #  execId       The Id of the DE app execution that is generating the data
 #               object
 #  appId        The Id of the DE app that was executed
+
+set -o errexit -o pipefail -o nounset
 
 
 main()
@@ -47,11 +49,6 @@ main()
   if ! imeta adda -d "$archivePath" ipc-analysis-id "$appId" UUID 2>&1
   then
     printf 'WARN: Unable to assign app Id %s to object %s\n' "$appId" "$archivePath"
-  fi
-
-  if ! irm -f "$stagePath" 2>&1
-  then
-    printf 'WARN: Unable to remove staged object %s\n' "$stagePath"
   fi
 }
 

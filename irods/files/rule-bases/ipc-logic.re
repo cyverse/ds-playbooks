@@ -217,7 +217,7 @@ _ipc_DATA_MSG_TYPE = 'data-object'
 _ipc_RESC_MSG_TYPE = 'resource'
 _ipc_USER_MSG_TYPE = 'user'
 
-_ipc_getAmqpType(*ItemType) =
+_ipc_getMsgType(*ItemType) =
 	if ipc_isCollection(*ItemType) then _ipc_COLL_MSG_TYPE
 	else if ipc_isDataObject(*ItemType) then _ipc_DATA_MSG_TYPE
 	else if ipc_isResource(*ItemType) then _ipc_RESC_MSG_TYPE
@@ -405,10 +405,10 @@ _ipc_sendAvuCopy(*SourceItemType, *Source, *TargetItemType, *Target, *AuthorName
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			ipcJson_string('source', *Source),
-			ipcJson_string('source-type', _ipc_getAmqpType(*SourceItemType)),
+			ipcJson_string('source-type', _ipc_getMsgType(*SourceItemType)),
 			ipcJson_string('destination', *Target) ) );
 
-	sendMsg(_ipc_getAmqpType(*TargetItemType) ++ '.metadata.cp', *msg);
+	sendMsg(_ipc_getMsgType(*TargetItemType) ++ '.metadata.cp', *msg);
 }
 
 _ipc_sendAvuMod(
@@ -430,7 +430,7 @@ _ipc_sendAvuMod(
 			mkAvuObject('old-metadatum', *OldName, *OldValue, *OldUnit),
 			mkAvuObject('new-metadatum', *NewName, *NewValue, *NewUnit) ) );
 
-	sendMsg(_ipc_getAmqpType(*ItemType) ++ '.metadata.mod', *msg);
+	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.mod', *msg);
 }
 
 _ipc_sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
@@ -442,7 +442,7 @@ _ipc_sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, 
 			ipcJson_string('value-pattern', *AValue),
 			ipcJson_string('unit-pattern', *AUnit) ) );
 
-	sendMsg(_ipc_getAmqpType(*ItemType) ++ '.metadata.rmw', *msg);
+	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.rmw', *msg);
 }
 
 _ipc_sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
@@ -452,7 +452,7 @@ _ipc_sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName,
 			mkEntityField(*Item),
 			mkAvuObject('metadatum', *AName, *AValue, *AUnit) ) );
 
-	sendMsg(_ipc_getAmqpType(*ItemType) ++ '.metadata.' ++ *Option, *msg);
+	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.' ++ *Option, *msg);
 }
 
 _ipc_sendEntityMove(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {
@@ -463,7 +463,7 @@ _ipc_sendEntityMove(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {
 			ipcJson_string('old-path', *OldPath),
 			ipcJson_string('new-path', *NewPath) ) );
 
-	sendMsg(_ipc_getAmqpType(*Type) ++ '.mv', *msg);
+	sendMsg(_ipc_getMsgType(*Type) ++ '.mv', *msg);
 }
 
 _ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
@@ -473,7 +473,7 @@ _ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 			mkEntityField(*Id),
 			ipcJson_string('path', *Path) ) );
 
-	sendMsg(_ipc_getAmqpType(*Type) ++ '.rm', *msg);
+	sendMsg(_ipc_getMsgType(*Type) ++ '.rm', *msg);
 }
 
 

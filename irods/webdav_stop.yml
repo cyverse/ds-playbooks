@@ -28,4 +28,3 @@
         name: varnish
         state: stopped
         enabled: false
-        

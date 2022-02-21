@@ -224,7 +224,7 @@ _ipc_getMsgType(*ItemType) =
 	else if ipc_isUser(*ItemType) then _ipc_USER_MSG_TYPE
 	else ''
 
-mkAvuObject(*Field, *Name, *Value, *Unit) = 
+_ipc_mkAVUObject(*Field, *Name, *Value, *Unit) = 
 	ipcJson_object(
 		*Field,
 		list(
@@ -395,7 +395,7 @@ _ipc_sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit, *AuthorName, *AuthorZon
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			ipcJson_string('pattern', *ItemName),
-			mkAvuObject('metadatum', *AName, *AValue, *AUnit) ) );
+			_ipc_mkAVUObject('metadatum', *AName, *AValue, *AUnit) ) );
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.metadata.addw', *msg);
 }
@@ -427,8 +427,8 @@ _ipc_sendAvuMod(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			mkEntityField(*Item),
-			mkAvuObject('old-metadatum', *OldName, *OldValue, *OldUnit),
-			mkAvuObject('new-metadatum', *NewName, *NewValue, *NewUnit) ) );
+			_ipc_mkAVUObject('old-metadatum', *OldName, *OldValue, *OldUnit),
+			_ipc_mkAVUObject('new-metadatum', *NewName, *NewValue, *NewUnit) ) );
 
 	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.mod', *msg);
 }
@@ -450,7 +450,7 @@ _ipc_sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName,
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			mkEntityField(*Item),
-			mkAvuObject('metadatum', *AName, *AValue, *AUnit) ) );
+			_ipc_mkAVUObject('metadatum', *AName, *AValue, *AUnit) ) );
 
 	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.' ++ *Option, *msg);
 }

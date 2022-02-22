@@ -232,7 +232,7 @@ _ipc_mkAVUObject(*Field, *Name, *Value, *Unit) =
 			ipcJson_string('value', *Value),
 			ipcJson_string('unit', *Unit) ) )
 
-mkEntityField(*UUID) = ipcJson_string('entity', *UUID)
+_ipc_mkEntityField(*UUID) = ipcJson_string('entity', *UUID)
 
 mkPathField(*Path) = ipcJson_string('path', *Path)
 
@@ -280,7 +280,7 @@ _ipc_sendCollectionAclModified(
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			mkEntityField(*Collection),
+			_ipc_mkEntityField(*Collection),
 			ipcJson_boolean('recursive', *Recursive),
 			ipcJson_string('permission', *AccessLevel),
 			_ipc_mkUserObject('user', *UserName, *UserZone) ) );
@@ -292,7 +292,7 @@ _ipc_sendCollectionInheritModified(*Collection, *Inherit, *Recursive, *AuthorNam
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			mkEntityField(*Collection),
+			_ipc_mkEntityField(*Collection),
 			ipcJson_boolean('recursive', *Recursive),
 			ipcJson_boolean('inherit', *Inherit) ) );
 
@@ -318,7 +318,7 @@ _ipc_sendCollectionAdd(*Id, *Path, *CreatorName, *CreatorZone) {
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*CreatorName, *CreatorZone),
-			mkEntityField(*Id),
+			_ipc_mkEntityField(*Id),
 			mkPathField(*Path) ) );
 
 	sendMsg(_ipc_COLL_MSG_TYPE ++ '.add', *msg);
@@ -329,7 +329,7 @@ _ipc_sendDataObjectAclModified(*Data, *AccessLevel, *UserName, *UserZone, *Autho
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			mkEntityField(*Data),
+			_ipc_mkEntityField(*Data),
 			ipcJson_string('permission', *AccessLevel),
 			_ipc_mkUserObject('user', *UserName, *UserZone) ) );
 
@@ -342,7 +342,7 @@ _ipc_sendDataObjectAdd(
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			mkEntityField(*Data),
+			_ipc_mkEntityField(*Data),
 			mkPathField(*Path),
 			_ipc_mkUserObject('creator', *OwnerName, *OwnerZone),
 			ipcJson_number('size', *Size),
@@ -358,7 +358,7 @@ _ipc_sendDataObjectMod(
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			mkEntityField(*Object),
+			_ipc_mkEntityField(*Object),
 			_ipc_mkUserObject('creator', *OwnerName, *OwnerZone),
 			ipcJson_number('size', *Size),
 			ipcJson_string('type', *Type) ) );
@@ -372,7 +372,7 @@ _ipc_sendDataObjectOpen(*Id, *Path, *CreatorName, *CreatorZone, *Size) {
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*CreatorName, *CreatorZone),
-			mkEntityField(*Id),
+			_ipc_mkEntityField(*Id),
 			mkPathField(*Path),
 			ipcJson_number('size', *Size),
 			ipcJson_string('timestamp', *timestamp) ) );
@@ -385,7 +385,7 @@ _ipc_sendDataObjectMetadataModified(*Data, *AuthorName, *AuthorZone) {
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			mkEntityField(*Data) ) );
+			_ipc_mkEntityField(*Data) ) );
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.sys-metadata.mod', *msg);
 }
@@ -426,7 +426,7 @@ _ipc_sendAvuMod(
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			mkEntityField(*Item),
+			_ipc_mkEntityField(*Item),
 			_ipc_mkAVUObject('old-metadatum', *OldName, *OldValue, *OldUnit),
 			_ipc_mkAVUObject('new-metadatum', *NewName, *NewValue, *NewUnit) ) );
 
@@ -437,7 +437,7 @@ _ipc_sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, 
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			mkEntityField(*Item),
+			_ipc_mkEntityField(*Item),
 			ipcJson_string('attribute-pattern', *AName),
 			ipcJson_string('value-pattern', *AValue),
 			ipcJson_string('unit-pattern', *AUnit) ) );
@@ -449,7 +449,7 @@ _ipc_sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName,
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			mkEntityField(*Item),
+			_ipc_mkEntityField(*Item),
 			_ipc_mkAVUObject('metadatum', *AName, *AValue, *AUnit) ) );
 
 	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.' ++ *Option, *msg);
@@ -459,7 +459,7 @@ _ipc_sendEntityMove(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			mkEntityField(*Id),
+			_ipc_mkEntityField(*Id),
 			ipcJson_string('old-path', *OldPath),
 			ipcJson_string('new-path', *NewPath) ) );
 
@@ -470,7 +470,7 @@ _ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 	*msg = ipcJson_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			mkEntityField(*Id),
+			_ipc_mkEntityField(*Id),
 			ipcJson_string('path', *Path) ) );
 
 	sendMsg(_ipc_getMsgType(*Type) ++ '.rm', *msg);

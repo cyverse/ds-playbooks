@@ -232,7 +232,7 @@ _ipc_mkAVUObject(*Field, *Name, *Value, *Unit) =
 			ipcJson_string('value', *Value),
 			ipcJson_string('unit', *Unit) ) )
 
-_ipc_mkEntityField(*UUID) = ipcJson_string('entity', *UUID)
+_ipc_mkEntityField(*Uuid) = ipcJson_string('entity', *Uuid)
 
 mkPathField(*Path) = ipcJson_string('path', *Path)
 

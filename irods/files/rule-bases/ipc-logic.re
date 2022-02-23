@@ -234,7 +234,7 @@ _ipc_mkAVUObject(*Field, *Name, *Value, *Unit) =
 
 _ipc_mkEntityField(*Uuid) = ipcJson_string('entity', *Uuid)
 
-mkPathField(*Path) = ipcJson_string('path', *Path)
+_ipc_mkPathField(*Path) = ipcJson_string('path', *Path)
 
 _ipc_mkUserObject(*Field, *Name, *Zone) = 
 	ipcJson_object(*Field, list(ipcJson_string('name', *Name), ipcJson_string('zone', *Zone)))
@@ -319,7 +319,7 @@ _ipc_sendCollectionAdd(*Id, *Path, *CreatorName, *CreatorZone) {
 		list(
 			_ipc_mkAuthorField(*CreatorName, *CreatorZone),
 			_ipc_mkEntityField(*Id),
-			mkPathField(*Path) ) );
+			_ipc_mkPathField(*Path) ) );
 
 	sendMsg(_ipc_COLL_MSG_TYPE ++ '.add', *msg);
 }
@@ -343,7 +343,7 @@ _ipc_sendDataObjectAdd(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Data),
-			mkPathField(*Path),
+			_ipc_mkPathField(*Path),
 			_ipc_mkUserObject('creator', *OwnerName, *OwnerZone),
 			ipcJson_number('size', *Size),
 			ipcJson_string('type', *Type) ) );
@@ -373,7 +373,7 @@ _ipc_sendDataObjectOpen(*Id, *Path, *CreatorName, *CreatorZone, *Size) {
 		list(
 			_ipc_mkAuthorField(*CreatorName, *CreatorZone),
 			_ipc_mkEntityField(*Id),
-			mkPathField(*Path),
+			_ipc_mkPathField(*Path),
 			ipcJson_number('size', *Size),
 			ipcJson_string('timestamp', *timestamp) ) );
 

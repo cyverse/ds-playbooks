@@ -15,9 +15,11 @@
 # ipc-custom.re. The rule names should be prefixed with 'ipc' and suffixed with
 # the name of the rule hook that will call the custom rule.
 
+# The shared logic usable by all CyVerse and third parties
+@include 'ipc-services'
+
 @include 'ipc-logic'
 @include 'ipc-repl'
-@include 'ipc-services'
 
 
 # THIRD PARTY RULES

@@ -15,14 +15,13 @@
         insertbefore: '-A INPUT -m state --state .*ESTABLISHED.* -j ACCEPT'
         marker: "# {mark} DS MANAGED BLOCK (haproxy reject)"
         block: |
-          {% for w in groups['webdav'] %}
-          {%   set addr = w if w|ipaddr else lookup('dig', w) %}
+          {% for h in groups['irods_catalog'] | union(groups['webdav']) %}
+          {%   set addr = h if h|ipaddr else lookup('dig', h) %}
           -A INPUT -m state --state UNTRACKED -s {{ addr }} -j ACCEPT
+          -A OUTPUT -m state --state UNTRACKED -d {{ addr }} -j ACCEPT
           {% endfor %}
-          -A INPUT -p tcp --dport 80 -j REJECT
-          -A INPUT -p tcp --dport 443 -j REJECT
-          -A INPUT -p tcp --dport 1247 -j REJECT
-          -A INPUT -p tcp --dport {{ proxy_irods_reconn_ports | regex_replace('-', ':') }} -j REJECT
+          -A INPUT -m state --state UNTRACKED -j REJECT --reject-with icmp-port-unreachable
+          -A OUTPUT -m state --state UNTRACKED -j REJECT --reject-with tcp-reset
         state: present
       notify:
         - reload firewall rules

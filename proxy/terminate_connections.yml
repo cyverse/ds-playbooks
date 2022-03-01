@@ -20,8 +20,9 @@
           -A INPUT -m state --state UNTRACKED -s {{ addr }} -j ACCEPT
           -A OUTPUT -m state --state UNTRACKED -d {{ addr }} -j ACCEPT
           {% endfor %}
-          -A INPUT -m state --state UNTRACKED -j REJECT --reject-with icmp-port-unreachable
-          -A OUTPUT -m state --state UNTRACKED -j REJECT --reject-with tcp-reset
+          -A INPUT -m state --state UNTRACKED -j REJECT
+          -A OUTPUT -m state --state UNTRACKED -p tcp -j REJECT --reject-with tcp-reset
+          -A OUTPUT -m state --state UNTRACKED -j REJECT
         state: present
       notify:
         - reload firewall rules

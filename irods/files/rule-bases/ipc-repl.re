@@ -250,7 +250,7 @@ _repl_syncReplicas(*Object) {
       _repl_logMsg(*msg);
       *err;
     } else {
-      if (*dataSize >= 104857600) {  # 100 MiB
+      if (*dataSize > 1048576) {  # 1 MiB
         *idArg = execCmdArg(*Object);
         *replNumArg = execCmdArg(str(*replNum));
         *sizeArg = execCmdArg(str(*dataSize));

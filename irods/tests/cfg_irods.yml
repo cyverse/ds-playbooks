@@ -108,10 +108,10 @@
           - irods_environment.irods_host == inventory_hostname
           - irods_environment.irods_port == 1247
           - >-
-            irods_environment.irods_user_name 
+            irods_environment.irods_user_name
             == (
-              'rs7_admin' if 
-                inventory_hostname == 'dstesting_consumer_unconfigured_1.dstesting_default' else 
+              'rs7_admin' if
+                inventory_hostname == 'dstesting_consumer_unconfigured_1.dstesting_default' else
               'rods' )
           - irods_environment.irods_zone_name == 'testing'
           - irods_environment.irods_client_server_policy == 'CS_NEG_REFUSE'
@@ -241,10 +241,9 @@
               - >-
                 server_config.zone_user
                 == (
-                  'rs7_admin' if 
-                    inventory_hostname == 'dstesting_consumer_unconfigured_1.dstesting_default' else 
+                  'rs7_admin' if
+                    inventory_hostname == 'dstesting_consumer_unconfigured_1.dstesting_default' else
                   'rods' )
-
 
         - name: verify consumer_configured_ubuntu_1 specific server_config.json
           when: inventory_hostname == 'dstesting_consumer_configured_ubuntu_1.dstesting_default'

@@ -45,7 +45,7 @@
         - terraref.re
         - terraref-env.re
 
-    - name: test ensure ipc-amqp.re is gone 
+    - name: test ensure ipc-amqp.re is gone
       stat:
         path: /etc/irods/ipc-amqp.re
       register: response
@@ -68,6 +68,7 @@
       with_items:
         - amqptopicsend.py
         - calliope-ingest
+        - correct-size
         - de-archive-data
         - de-create-collection
         - delete-scheduled-rule
@@ -92,7 +93,7 @@
         path: /var/lib/irods/.pgpass
       register: response
       failed_when: response.stat.exists
-      
+
     - name: retrieve encoded irods_environment.json
       slurp:
         src: /var/lib/irods/.irods/irods_environment.json
@@ -114,7 +115,7 @@
           - irods_environment.irods_control_plane_port == 1248
           - irods_environment.irods_default_hash_scheme == 'MD5'
           - irods_environment.irods_default_resource == 'ingestRes'
-          
+
     - when: inventory_hostname in groups['irods_catalog']
       block:
         - name: retrieve encoded server_config.json
@@ -156,23 +157,23 @@
               - server_config.federation[0].zone_name == 'cyverse.dev'
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
               - >-
-                server_config.plugin_configuration.database.postgres.db_host 
+                server_config.plugin_configuration.database.postgres.db_host
                 == 'dstesting_dbms_configured_1.dstesting_default'
               - server_config.plugin_configuration.database.postgres.db_password == 'testpassword'
               - server_config.plugin_configuration.database.postgres.db_port == 5432
               - server_config.plugin_configuration.database.postgres.db_username == 'irods'
               - >-
-                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set 
-                  | length 
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set
+                  | length
                 == 3
               - >-
-                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[0] 
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[0]
                 == 'ipc-custom'
               - >-
-                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1] 
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1]
                 == 'ipc-housekeeping'
               - >-
-                server_config.schema_validation_base_uri 
+                server_config.schema_validation_base_uri
                 == 'file:///var/lib/irods/configuration_schemas'
               - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
               - server_config.server_control_plane_port == 1248
@@ -230,19 +231,19 @@
               - server_config.environment_variables == {}
               - server_config.federation | length == 2
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
-              - server_config.plugin_configuration.database is not defined 
+              - server_config.plugin_configuration.database is not defined
               - >-
-                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set 
-                  | length 
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set
+                  | length
                 == 3
               - >-
-                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[0] 
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[0]
                 == 'ipc-custom'
               - >-
-                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1] 
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1]
                 == 'ipc-housekeeping'
               - >-
-                server_config.schema_validation_base_uri 
+                server_config.schema_validation_base_uri
                 == 'file:///var/lib/irods/configuration_schemas'
               - server_config.server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
               - server_config.server_control_plane_port == 1248

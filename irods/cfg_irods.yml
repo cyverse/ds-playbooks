@@ -40,7 +40,7 @@
       file:
         path: /etc/irods/ipc-amqp.re
         state: absent
-        
+
   roles:
     - role: cyverse.irods_cfg
       vars:
@@ -74,7 +74,7 @@
               }
             ] }}
         irods_cfg_icat: >-
-          {{ 
+          {{
             None if not provider|bool else
             {
               'db_host': groups['dbms'][0],
@@ -111,3 +111,4 @@
       file:
         path: /etc/irods/core.re
         state: touch
+        mode: u+r

@@ -209,24 +209,66 @@ _repl_syncReplicas(*Object) {
   _repl_logMsg('syncing replicas of data object *Object');
 
   *dataPath = '';
-  foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
+# XXX - Replica updating is broken for large files in 4.2.8. See 
+#       https://github.com/irods/irods/issues/5160. This is fixed in 4.2.9.
+#   foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
+#     *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
+#   }
+# 
+#   if (*dataPath == '') {
+#     _repl_logMsg('data object *Object no longer exists');
+#   } else {
+#     *err = errormsg(
+#       msiDataObjRepl(*dataPath, 'all=++++updateRepl=++++verifyChksum=', *status), *msg);
+# 
+#     if (*err < 0 && *err != -808000) {
+#       _repl_logMsg('failed to sync replicas of data object *Object trying again in 8 hours');
+#       _repl_logMsg(*msg);
+#       *err;
+#     } else {
+#       _repl_logMsg('synced replicas of data object *Object');
+#     }
+#   }
+  foreach (*rec in 
+    SELECT COLL_NAME, DATA_NAME, DATA_SIZE, order_asc(DATA_REPL_NUM) 
+    WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '1'
+  ) {
     *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
+    *dataSize = int(*rec.DATA_SIZE);
+    *replNum = int(*rec.DATA_REPL_NUM);
+    break;
   }
 
   if (*dataPath == '') {
     _repl_logMsg('data object *Object no longer exists');
   } else {
     *err = errormsg(
-      msiDataObjRepl(*dataPath, 'all=++++updateRepl=++++verifyChksum=', *status), *msg);
+      msiDataObjRepl(*dataPath, 'all=++++updateRepl=++++verifyChksum=', *status), *msg );
 
     if (*err < 0 && *err != -808000) {
       _repl_logMsg('failed to sync replicas of data object *Object trying again in 8 hours');
       _repl_logMsg(*msg);
       *err;
     } else {
+      if (*dataSize >= 104857600) {  # 100 MiB
+        *idArg = execCmdArg(*Object);
+        *replNumArg = execCmdArg(str(*replNum));
+        *sizeArg = execCmdArg(str(*dataSize));
+        *argv = "*idArg *replNumArg *sizeArg";
+        *err = errormsg(msiExecCmd('correct-size', *argv, "", "", "", *out), *msg);
+
+        if (*err < 0) {
+          misGetStderrInExecCmdOut(*out, *details);
+          _repl_logMsg('Failed to correct size of *dataPath replica *replNum');
+          _repl_logMsg(*msg);
+          _repl_logMsg(*details);
+        }
+      }
+
       _repl_logMsg('synced replicas of data object *Object');
     }
   }
+# XXX - ^^^
 }
 
 

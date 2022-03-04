@@ -73,6 +73,7 @@
       with_items:
         - amqptopicsend.py
         - calliope-ingest
+        - correct-size
         - de-archive-data
         - de-create-collection
         - delete-scheduled-rule

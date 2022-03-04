@@ -230,12 +230,13 @@ _repl_syncReplicas(*Object) {
 #     }
 #   }
   foreach (*rec in 
-    SELECT COLL_NAME, DATA_NAME, DATA_SIZE, MIN(DATA_REPL_NUM) 
+    SELECT COLL_NAME, DATA_NAME, DATA_SIZE, order_asc(DATA_REPL_NUM) 
     WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '1'
   ) {
     *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
     *dataSize = int(*rec.DATA_SIZE);
     *replNum = int(*rec.DATA_REPL_NUM);
+    break;
   }
 
   if (*dataPath == '') {
@@ -251,14 +252,14 @@ _repl_syncReplicas(*Object) {
     } else {
       if (*dataSize >= 104857600) {  # 100 MiB
         *idArg = execCmdArg(*Object);
-        *replNumArg = execCmdArg(*replNum);
-        *sizeArg = execCmdArg(*sizeArg);
+        *replNumArg = execCmdArg(str(*replNum));
+        *sizeArg = execCmdArg(str(*dataSize));
         *argv = "*idArg *replNumArg *sizeArg";
         *err = errormsg(msiExecCmd('correct-size', *argv, "", "", "", *out), *msg);
 
         if (*err < 0) {
           misGetStderrInExecCmdOut(*out, *details);
-          _repl_logMsg('serverLog', 'Failed to correct size of *dataPath replica *replNum);
+          _repl_logMsg('Failed to correct size of *dataPath replica *replNum');
           _repl_logMsg(*msg);
           _repl_logMsg(*details);
         }

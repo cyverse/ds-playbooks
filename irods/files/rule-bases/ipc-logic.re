@@ -195,7 +195,7 @@ _ipc_isCurrentAction(*EntityId, *Action) =
 
 _ipc_registerAction(*EntityId, *Action) {
 	*key = _ipc_mkActionKey(*EntityId);
-   if (if errorcode(temporaryStorage."*key") != 0 then true else temporaryStorage."*key" == '') {
+	if (if errorcode(temporaryStorage."*key") != 0 then true else temporaryStorage."*key" == '') {
 		temporaryStorage."*key" = *Action;
 	}
 }

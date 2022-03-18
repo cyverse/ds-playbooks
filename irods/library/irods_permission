@@ -16,15 +16,15 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = """
 ---
-module: irods_collection
+module: irods_permission
 
-short_description: Create/Remove iRODS collection
+short_description: Set/Remove iRODS ACL
 
 version_added: "2.9"
 
 description:
-    - Create iRODS collection.
-    - Remove iRODS collection.
+    - Set iRODS ACL
+    - Remove iRODS ACL
 
 options:
     subject:

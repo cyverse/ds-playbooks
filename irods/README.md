@@ -110,8 +110,6 @@ Variable                                   | Required | Default                 
 `webdav_tls_key_file`                      | no       | /etc/ssl/certs/dummy.key             |         | The TLS key file used for encrypted communication
 `webdav_varnish_service_port`              | no       | 6081                                 |         | The service port number for varnish-cache
 
-The `restart_irods` flag is ignored in the `main.yml` playbook.
-
 `irods_federatation` entry fields
 
 All of them are required.

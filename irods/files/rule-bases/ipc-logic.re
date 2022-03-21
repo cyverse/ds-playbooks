@@ -629,6 +629,14 @@ ipc_archive_acPostProcForCollCreate {
 }
 
 
+# This rule ensures that the storage resource free space is updated when a
+# data object is replicated to it.
+#
+ipc_acPostProcForDataCopyReceived(*leaf_resource) {
+   msi_update_unixfilesystem_resource_free_space(*leaf_resource);
+}
+
+
 ipc_acPostProcForOpen {
   *uuid = retrieveDataUUID($objPath);
 

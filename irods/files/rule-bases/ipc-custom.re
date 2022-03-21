@@ -235,6 +235,9 @@ acPostProcForCollCreate {
 }
 
 
+acPostProcForDataCopyReceived(*leaf_resource) { ipc_acPostProcForDataCopyReceived(*leaf_resource); }
+
+
 acPostProcForOpen {
   *err = errormsg(ipc_acPostProcForOpen, *msg);
   if (*err < 0) { writeLine('serverLog', *msg); }

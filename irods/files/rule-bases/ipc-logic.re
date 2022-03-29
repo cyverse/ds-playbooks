@@ -662,6 +662,15 @@ ipc_archive_acPostProcForCollCreate {
 	_ipc_sendCollectionAdd(*id, $collName, $userNameClient, $rodsZoneClient);
 }
 
+
+# This rule ensures that the storage resource free space is updated when a
+# data object is replicated to it.
+#
+ipc_acPostProcForDataCopyReceived(*leaf_resource) {
+   msi_update_unixfilesystem_resource_free_space(*leaf_resource);
+}
+
+
 ipc_acPostProcForOpen {
 	*me = 'ipc_acPostProcForOpen';
 	*id = _ipc_getDataId($objPath);

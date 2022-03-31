@@ -112,6 +112,19 @@
 
     - import_tasks: tasks/ensure_irods_ownership.yml
 
+    - name: ensure default policy files are up-to-date
+      copy:
+        dest: /etc/irods/{{ item }}
+        src: /var/lib/irods/packaging/{{ item }}.template
+        remote_src: true
+        owner: "{{ _irods_service_account_name }}"
+        group: "{{ _irods_service_group_name }}"
+        mode: u+r
+      with_items:
+        - core.dvm
+        - core.fnm
+        - core.re
+
 
 - import_playbook: update_hosts.yml
 

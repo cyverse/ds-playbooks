@@ -64,7 +64,7 @@ _irods_parallel_transfer_buffer_size: "{{ irods_parallel_transfer_buffer_size | 
 _irods_publish_rs_image: "{{ irods_publish_rs_image | default(false) }}"
 _irods_re_host: "{{ irods_re_host | default(groups['irods_catalog'][0]) }}"
 _irods_resource_hierarchies: >-
-  {{ 
+  {{
     irods_resource_hierarchies
       if irods_resource_hierarchies is defined and irods_resource_hierarchies|length > 0 else
     [ { "name": "demoResc" } ] }}
@@ -93,10 +93,10 @@ _sernec_writers: "{{ sernec_writers if sernec_writers is defined else [] }}"
 
 _sparcd_admin: "{{ sparcd_admin | default(None) }}"
 _sparcd_base_collection: >-
-  {{ sparcd_base_collection 
+  {{ sparcd_base_collection
     | default(
-      '/' + _irods_zone_name + '/home/' + _sparcd_admin + '/Sparcd/Collections' 
-        if _sparcd_admin else 
+      '/' + _irods_zone_name + '/home/' + _sparcd_admin + '/Sparcd/Collections'
+        if _sparcd_admin else
       None ) }}
 _sparcd_report_email_addr: >-
   {{ sparcd_report_email_addr | default(_report_email_addr if _sparcd_admin else None) }}

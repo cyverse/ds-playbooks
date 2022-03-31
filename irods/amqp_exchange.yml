@@ -5,7 +5,8 @@
   run_once: true
   gather_facts: false
   tasks:
-    - import_role:
+    - name: create
+      import_role:
         name: cyverse.rabbitmq_vhost
       vars:
         rabbitmq_mgmt_port: "{{ _amqp_mgmt_port }}"

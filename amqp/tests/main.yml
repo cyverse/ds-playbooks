@@ -16,7 +16,8 @@
   hosts: localhost
   gather_facts: false
   tasks:
-    - debug:
+    - name: break into tasks
+      debug:
         msg: TODO implement
 
 
@@ -31,6 +32,7 @@
       assert:
         that:
           - "'epel-release' in ansible_facts.packages"
+          - "'erlang-erts' not in ansible_facts.packages"
           - "'erlang' in ansible_facts.packages"
           - ansible_facts.packages['erlang'] | length == 1
           - ansible_facts.packages['erlang'][0].version is version_compare('23.2.7', '>=')
@@ -38,9 +40,22 @@
           - ansible_facts.packages['rabbitmq-server'] | length == 1
           - ansible_facts.packages['rabbitmq-server'][0].version is version_compare('3.8.14', '>=')
 
-    - debug:
-        msg: TODO verify erlang-erts isn't installed
-
     - name: test place rabbitmq config file
+      debug:
+        msg: TODO implement
+
+    - name: test start broker
+      debug:
+        msg: TODO implement
+
+    - name: test enable management plugin
+      debug:
+        msg: TODO implement
+
+    - name: test create admin user
+      debug:
+        msg: TODO implement
+
+    - name: test remove guest user
       debug:
         msg: TODO implement

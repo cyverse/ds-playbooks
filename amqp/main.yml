@@ -25,6 +25,9 @@
       template:
         src: templates/rabbitmq.conf.j2
         dest: "/etc/rabbitmq/rabbitmq.conf"
+        owner: rabbitmq
+        group: rabbitmq
+        mode: u+r
 
     - name: start broker
       service:

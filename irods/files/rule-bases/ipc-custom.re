@@ -237,6 +237,9 @@ acPostProcForCollCreate {
 }
 
 
+acPostProcForDataCopyReceived(*leaf_resource) { ipc_acPostProcForDataCopyReceived(*leaf_resource); }
+
+
 acPostProcForOpen {
   if (!ipc_inStaging(/$objPath)) {
     *err = errormsg(ipc_acPostProcForOpen, *msg);

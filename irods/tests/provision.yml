@@ -119,3 +119,22 @@
     - include_tasks: tasks/test_irods_ownership.yml
       vars:
         dir: /var/lib/irods
+
+    - name: verify default policy files are up-to-date
+      command: cmp --quiet /var/lib/irods/packaging/{{ item }}.template /etc/irods/{{ item }}
+      changed_when: false
+      with_items:
+        - core.dvm
+        - core.fnm
+        - core.re
+
+    - name: verify default policy files ownership and permission
+      stat:
+        path: /etc/irods/{{ item }}
+      register: resp
+      failed_when: >-
+        resp.stat.pw_name != 'irods' or resp.stat.gr_name != group_name or not resp.stat.rusr
+      with_items:
+        - core.dvm
+        - core.fnm
+        - core.re

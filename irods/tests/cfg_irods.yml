@@ -115,8 +115,8 @@
               'rods' )
           - irods_environment.irods_zone_name == 'testing'
           - irods_environment.irods_client_server_policy == 'CS_NEG_REFUSE'
-          - irods_environment.irods_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
-          - irods_environment.irods_control_plane_port == 1248
+          - irods_environment.irods_server_control_plane_key == 'TEMPORARY__32byte_ctrl_plane_key'
+          - irods_environment.irods_server_control_plane_port == 1248
           - irods_environment.irods_default_hash_scheme == 'MD5'
           - irods_environment.irods_default_resource == 'ingestRes'
 

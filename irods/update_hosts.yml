@@ -7,6 +7,7 @@
       blockinfile:
         create: true
         path: /etc/hosts
+        mode: u+r
         marker: '# {mark} DS MANAGED BLOCK'
         block: |
           {% if inventory_hostname in groups['irods_catalog'] %}

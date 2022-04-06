@@ -10,8 +10,8 @@
   tasks:
     - name: add firewall rules
       blockinfile:
-        path: "{{ 
-          '/etc/iptables/rules.v4' if ansible_distribution == 'Ubuntu' else 
+        path: "{{
+          '/etc/iptables/rules.v4' if ansible_distribution == 'Ubuntu' else
           '/etc/sysconfig/iptables' }}"
         insertbefore: (-A {{ _firewall_chain }} -j REJECT|COMMIT)
         marker: "# {mark} DS MANAGED BLOCK (irods)"

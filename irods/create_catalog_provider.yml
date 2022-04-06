@@ -15,7 +15,7 @@
         marker: "# {mark} DS IRODS MANAGED BLOCK"
         block: |
           {% for i in groups['irods_catalog'] %}
-          {%   set addr = i if i|ipaddr else lookup('dig', i) %}
+          {%   set addr = i if i|ansible.utils.ipaddr else lookup('dig', i) %}
           {{ '%-7s %-15s %-15s %-23s %s'
             | format('host', 'ICAT', hostvars[i]._irods_db_user, addr ~ '/32', 'md5') }}
           {% endfor %}

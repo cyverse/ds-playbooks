@@ -2,46 +2,47 @@
 - name: Update /etc/hosts
   hosts: irods:!unmanaged_systems
   become: true
+  tags:
+    - no_testing
   tasks:
     - name: update /etc/hosts
       blockinfile:
         create: true
         path: /etc/hosts
+        mode: u+r
         marker: '# {mark} DS MANAGED BLOCK'
         block: |
           {% if inventory_hostname in groups['irods_catalog'] %}
           {%   for d in groups['dbms'] %}
-          {%     if inventory_hostname != d and not d|ipaddr %}
+          {%     if inventory_hostname != d and not d|ansible.utils.ipaddr %}
           {{ lookup('dig', d) }} {{ d }}
           {%     endif %}
           {%   endfor %}
           {% endif %}
           {% for i in groups['irods_catalog'] %}
-          {%   if inventory_hostname != i and not i|ipaddr %}
+          {%   if inventory_hostname != i and not i|ansible.utils.ipaddr %}
           {{ lookup('dig', i) }} {{ i }}
           {%   endif %}
           {% endfor %}
           {% for r in groups['irods_resource'] | difference(groups['irods_catalog']) %}
-          {%   if inventory_hostname != r and not r|ipaddr %}
+          {%   if inventory_hostname != r and not r|ansible.utils.ipaddr %}
           {{ lookup('dig', r) }} {{ r }}
           {%   endif %}
           {% endfor %}
           {% for f in _irods_federation %}
           {%   for cp in f.catalog_provider_hosts %}
-          {%     if not cp|ipaddr %}
+          {%     if not cp|ansible.utils.ipaddr %}
           {{ lookup('dig', cp) }} {{ cp }}
           {%     endif %}
           {%   endfor %}
           {% endfor %}
           {% if inventory_hostname in groups['irods_catalog']
                and inventory_hostname != _amqp_host
-               and not _amqp_host|ipaddr %}
+               and not _amqp_host|ansible.utils.ipaddr %}
           {{ lookup('dig', _amqp_host) }} {{ _amqp_host }}
           {% endif %}
           {% for e in _irods_other_host_entries %}
-          {%   if not e|ipaddr %}
+          {%   if not e|ansible.utils.ipaddr %}
           {{ lookup('dig', e) }} {{ e }}
           {%   endif %}
           {% endfor %}
-      tags:
-        - no_testing

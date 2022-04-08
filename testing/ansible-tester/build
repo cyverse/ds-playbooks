@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #
 # This script builds the ansible-tester image.
 
@@ -10,14 +10,19 @@ else
   readonly ExecName=$(readlink --canonicalize "$0")
 fi
 
+declare BaseDir
+
+
 main()
 {
-  local baseDir=$(dirname "$ExecName")
+  BaseDir="$(dirname "$ExecName")"
 
-  docker build --tag ansible-tester "$baseDir"
+  cp --no-clobber "$BaseDir"/../../requirements.yml "$BaseDir"/requirements.yml
+  trap 'rm --force "$BaseDir"/requirements.yml' EXIT
+  docker build --tag ansible-tester "$BaseDir"
 }
 
 
 set -e
 
-main
+main "$@"

@@ -2,6 +2,8 @@
 - name: Update /etc/hosts
   hosts: irods:!unmanaged_systems
   become: true
+  tags:
+    - no_testing
   tasks:
     - name: update /etc/hosts
       blockinfile:
@@ -44,5 +46,3 @@
           {{ lookup('dig', e) }} {{ e }}
           {%   endif %}
           {% endfor %}
-      tags:
-        - no_testing

@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This program installs the published ansible roles required by the playbooks.
 #
 # Usage:
-#  init-roles
+#  init-ansible
 
 set -e
 
@@ -19,6 +19,8 @@ readonly PlaybooksDir=$(dirname "$ExecName")
 
 main()
 {
+  ansible-galaxy install -r "$PlaybooksDir"/requirements.yml
+
   local roleDir
 
   while read -r roleDir

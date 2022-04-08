@@ -1,0 +1,10 @@
+---
+collections:
+  - name: ansible.utils
+    
+  - name: community.general
+    # XXX - Due to 
+    # https://github.com/ansible-collections/community.general/issues/4470, the 
+    # version must be less than 3.3.
+    version: '<3.3'
+    # XXX - ^^^

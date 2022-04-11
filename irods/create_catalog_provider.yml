@@ -37,6 +37,7 @@
   hosts: irods_catalog
   become: true
   collections:
+    - ansible.posix
     - community.general
   vars:
     # NB: The rpm and yum bindings for the package module require Python 2 in

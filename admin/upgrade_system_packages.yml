@@ -3,8 +3,6 @@
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - import_tasks: tasks/set_python.yml
-
     - name: update apt cache on Ubuntu machines
       when: ansible_distribution == 'Ubuntu'
       apt:
@@ -16,6 +14,6 @@
       when: _rebootable | bool
       package:
         name: '*'
-        state: latest
+        state: latest  # noqa package-latest
       tags:
         - non_idempotent

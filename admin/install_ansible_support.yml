@@ -4,8 +4,6 @@
   become: true
   gather_facts: false
   tasks:
-    - import_tasks: tasks/set_python.yml
-
     - name: install dmidecode support
       package:
         name: dmidecode
@@ -46,6 +44,6 @@
           - python3-pip
           - "{{ 'python3-requests' if ansible_distribution == 'Ubuntu' else 'python-requests' }}"
           - "{{ 'python3-selinux' if ansible_distribution == 'Ubuntu' else 'libselinux-python' }}"
-          - "{{ 
-            'python3-virtualenv' if ansible_distribution == 'Ubuntu' else 'python-virtualenv' }}"
+          - >-
+            {{ 'python3-virtualenv' if ansible_distribution == 'Ubuntu' else 'python-virtualenv' }}
         state: present

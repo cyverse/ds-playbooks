@@ -16,7 +16,7 @@
         marker: "# {mark} DS MANAGED BLOCK (haproxy reject)"
         block: |
           {% for w in groups['webdav'] %}
-          {%   set addr = w if w|ipaddr else lookup('dig', w) %}
+          {%   set addr = w if w|ansible.utils.ipaddr else lookup('dig', w) %}
           -A INPUT -m state --state UNTRACKED -s {{ addr }} -j ACCEPT
           {% endfor %}
           -A INPUT -p tcp --dport 80 -j REJECT

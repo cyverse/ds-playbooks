@@ -5,7 +5,10 @@
   vars_files:
     - ../roles/postgres12/defaults/main.yml
   vars:
+    - pg_replication_user: postgres
+    - pg_replication_pass: password
     - cyverse_conf: "{{ lookup('template', '../roles/postgres12/templates/cyverse.conf.j2') }}"
+    - pgpass: "{{ lookup('template', '../roles/postgres12/templates/pgpass.j2') }}"
   tasks:
     - name: verify config values expand correctly in cyverse.conf
       assert:
@@ -30,9 +33,9 @@
           - cyverse_conf is not search('^wal_keep_segments = ')
           - cyverse_conf is search('work_mem = 4MB')
 
-    - name: test default .pgpass expansion
-      debug:
-        msg: TODO implement
+    - name: verify .pgpass expansion
+      assert:
+        that: pgpass is search('*:5432:*:postgres:password' | regex_escape)
 
 
 - name: test postgresql12 role custom var template expansion
@@ -40,7 +43,12 @@
   gather_facts: false
   run_once: true
   tasks:
-    - debug:
+    - name: verify config values expand correctly in cyverse.conf
+      debug:
+        msg: TODO implement
+
+    - name: verify .pgpass expansion
+      debug:
         msg: TODO implement
 
 
@@ -60,26 +68,38 @@
           - "'python3-psycopg2' in ansible_facts.packages"
 
     - name: verify locale en_US.UTF-8 exists
-      shell: locale --all-locales | grep --quiet en_US.utf8
+      shell: |
+        for l in $(locale --all-locales); do
+          if [ "$l" = en_US.utf8 ]; then
+            exit 0
+          fi
+        done
+        exit 1
       changed_when: false
 
-    - debug:
-        msg: TODO test cyverse.conf template expansion
+    - name: test cyverse.conf template expansion
+      debug:
+        msg: TODO implement
 
-    - debug:
-        msg: TODO test cyverse.conf deposition
+    - name: test cyverse.conf deposition
+      debug:
+        msg: TODO implement
 
-    - debug:
-        msg: TODO test configure | ensure block in pg_hba.conf exists
+    - name: test configure | ensure block in pg_hba.conf exists
+      debug:
+        msg: TODO implement
 
-    - debug:
-        msg: TODO test configure | ensure archive dir exists
+    - name: test configure | ensure archive dir exists
+      debug:
+        msg: TODO implement
 
-    - debug:
-        msg: TODO test configure | template pgpass file
+    - name: test configure | template pgpass file
+      debug:
+        msg: TODO implement
 
-    - debug:
-        msg: TODO test replication.yml
+    - name: test replication.yml
+      debug:
+        msg: TODO implement
 
 
 - name: Test Set up primary DBMS
@@ -87,7 +107,8 @@
   gather_facts: false
   run_once: true
   tasks:
-    - debug:
+    - name: test
+      debug:
         msg: TODO implement
 
 
@@ -96,7 +117,8 @@
   gather_facts: false
   run_once: true
   tasks:
-    - debug:
+    - name: test
+      debug:
         msg: TODO implement
 
 
@@ -105,5 +127,6 @@
   gather_facts: false
   run_once: true
   tasks:
-    - debug:
+    - name: test
+      debug:
         msg: TODO implement

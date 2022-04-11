@@ -1,8 +1,14 @@
 ---
 - name: test create ICAT DB
-  hosts: localhost
-  gather_facts: false
+  hosts: dbms_primary
   run_once: true
+  become: true
+  become_user: postgres
   tasks:
-    - debug:
+    - name: test ensure ICAT database exists
+      command: psql --command='\quit' ICAT
+      changed_when: false
+
+    - name: test ensure ICAT database admin user exists
+      debug:
         msg: TODO implement

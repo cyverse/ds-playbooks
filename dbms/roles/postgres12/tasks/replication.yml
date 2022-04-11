@@ -1,6 +1,6 @@
 ---
 - name: replication | create replication user
-  postgresql_user:
+  community.postgresql.postgresql_user:
     db: "{{ pg_db }}"
     port: "{{ pg_listen_port }}"  # this is required because the module uses it to build the string for the socket
     name: "{{ pg_replication_user }}"

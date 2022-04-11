@@ -3,10 +3,15 @@
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - import_tasks: tasks/set_python.yml  
-        
+    - name: update apt cache on Ubuntu machines
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        update_cache: true
+      tags:
+        - non_idempotent
+
     - name: install iptables package
       package:
-        name: "{{ 
-          'iptables-persistent' if ansible_distribution == 'Ubuntu' else 'iptables-services' }}"
+        name: >-
+          {{ 'iptables-persistent' if ansible_distribution == 'Ubuntu' else 'iptables-services' }}
         state: present

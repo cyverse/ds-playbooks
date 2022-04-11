@@ -3,14 +3,12 @@
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - import_tasks: tasks/set_python.yml
-    
     - name: install sendmail
       package:
         name: sendmail
         state: present
 
-    - when: inventory_hostname | ipaddr
+    - when: inventory_hostname | ansible.utils.ipaddr
       block:
         - name: install m4
           package:
@@ -36,26 +34,18 @@
             mc=/etc/mail/sendmail.mc
             cf=/etc/mail/sendmail.cf
             newCf="$cf".new
-
-            if [[ "$cf" -ot "$mc" ]]
-            then
-              if ! m4 "$mc" > "$newCf"
-              then
+            if [[ "$cf" -ot "$mc" ]]; then
+              if ! m4 "$mc" > "$newCf"; then
                 rm --force "$newCf"
                 exit 1
               fi
-
-              if diff --brief "$newCf" "$cf" > /dev/null
-              then
+              if diff --brief "$newCf" "$cf" > /dev/null; then
                 rm --force "$newCf"
                 exit 0
               fi
-
-              if ! mv --force "$newCf" "$cf"
-              then
+              if ! mv --force "$newCf" "$cf"; then
                 exit 1
               fi
-
               echo changed
             fi
           register: response

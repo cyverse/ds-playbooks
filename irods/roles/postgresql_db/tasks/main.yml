@@ -5,12 +5,12 @@
       - postgresql_db_admin_password is defined
 
 - name: ensure {{ postgresql_db_name }} database exists
-  postgresql_db:
+  community.postgresql.postgresql_db:
     name: "{{ postgresql_db_name }}"
     port: "{{ postgresql_db_dbms_port }}"
 
 - name: ensure {{ postgresql_db_name }} database admin user exists
-  postgresql_user:
+  community.postgresql.postgresql_user:
     name: "{{ postgresql_db_admin_user }}"
     password: "{{ postgresql_db_admin_password }}"
     db: "{{ postgresql_db_name }}"

@@ -24,29 +24,25 @@
     vip: "{{ lookup('template', '../roles/haproxy/templates/vip.lst.j2') }}"
     dirk_ip: "{{ lookup('dig', 'dirk.cyverse.org') }}"
   tasks:
-    - debug:
-        var: vip
-
     - name: verify the ip address passes through
       assert:
-        that:
-          - vip is search('\n' ~ ('1.2.3.4'|regex_escape) ~ '\n')
-          - vip is search('\n' ~ (dirk_ip|regex_escape) ~ '\n')
+        that: vip is search('\n' ~ ('1.2.3.4'|regex_escape) ~ '\n')
 
     - name: verify the host name converted to address
-      debug:
-        msg: TODO implement
+      assert:
+        that: vip is search('\n' ~ (dirk_ip|regex_escape) ~ '\n')
 
     - name: verify CIDR block passes through
-      debug:
-        msg: TODO implement
+      assert:
+        that: vip is search('\n' ~ ('5.6.7.0/24'|regex_escape) ~ '\n')
 
 
 - name: test set up HAProxy
   hosts: proxy
   become: true
   tasks:
-    - package_facts:
+    - name: retrieve installed packages
+      package_facts:
         strategy: all
 
     - name: verify HAProxy is installed

@@ -111,13 +111,12 @@
 
     - name: verify locale en_US.UTF-8 exists
       shell: |
-        set -e
-        if ! locales="$(mktemp)"; then
-          exit 1
-        fi
-        trap "rm --force '$locales'" EXIT
-        locale --all-locales > "$locales"
-        grep --quiet en_US.utf8 "$locales"
+        for l in $(locale --all-locales); do
+          if [ "$l" = en_US.utf8 ]; then
+            exit 0
+          fi
+        done
+        exit 1
       changed_when: false
 
     - name: test configure | ensure postgres user owns home dir

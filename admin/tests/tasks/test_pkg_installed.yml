@@ -4,19 +4,12 @@
 # pkg      The name of the package
 # version  (optional) The package version that should be installed
 
-# NB: The rpm and yum bindings for the package module require Python 2 in
-#     Ansible 2.9.6
-- name: ensure correct python for yum and rpm
-  when: package_manager|default(None) == 'yum'
-  set_fact:
-    ansible_python_interpreter: /usr/bin/python
-
 - name: retrieve info on installed packages
   package_facts:
     strategy: all
 
 - name: check correct {{ pkg }} package installed
-  when: |
+  when: >
     pkg not in ansible_facts.packages or
     ansible_facts.packages[pkg] | length != 1 or
     version is defined and ansible_facts.packages[pkg][0].version is version_compare(version, '!=')

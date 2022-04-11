@@ -1,0 +1,8 @@
+---
+- name: test terminate client connections
+  hosts: proxy
+  become: true
+  tasks:
+    - name: test reject all incoming packets
+      debug:
+        msg: TODO implement

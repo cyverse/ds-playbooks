@@ -8,3 +8,4 @@ collections:
     # version must be less than 3.3.
     version: '<3.3'
     # XXX - ^^^
+  - name: community.postgresql

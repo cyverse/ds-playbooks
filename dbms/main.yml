@@ -23,7 +23,9 @@
     effective_cache_size: >-
       {{ _dbms_effective_cache_size if _dbms_effective_cache_size else
         (ansible_facts['memtotal_mb']|int // (2 * 1024)) }}GB
-    max_worker_processes: "{{ ansible_facts['processor_nproc'] }}"
+    max_worker_processes: >-
+      {{ _dbms_max_worker_processes if _dbms_max_worker_processes else
+        ansible_facts['processor_nproc'] }}
   roles:
     - role: postgres12
       vars:
@@ -47,8 +49,8 @@
         pg_effective_io_concurrency: "{{ _dbms_effective_io_concurrency }}"
         pg_max_worker_processes: "{{ max_worker_processes }}"
         pg_max_parallel_workers: "{{ max_worker_processes }}"
-        pg_max_parallel_workers_per_gather: "{{ max_worker_processes|int // 10 }}"
-        pg_max_parallel_maintenance_workers: "{{ max_worker_processes|int // 10 }}"
+        pg_max_parallel_workers_per_gather: "{{ _dbms_max_parallel_workers_per_gather }}"
+        pg_max_parallel_maintenance_workers: "{{ _dbms_max_parallel_maintenance_workers }}"
         pg_wal_buffers: 16MB
         pg_num_huge_pages: "{{ _dbms_mem_num_huge_pages }}"
         pg_huge_pages: "{{ 'on' if _dbms_mem_num_huge_pages|int > 0 else 'off' }}"
@@ -64,7 +66,9 @@
     effective_cache_size: >-
       {{ _dbms_effective_cache_size if _dbms_effective_cache_size else
         (ansible_facts['memtotal_mb']|int // (2 * 1024)) }}GB
-    max_worker_processes: "{{ ansible_facts['processor_nproc'] }}"
+    max_worker_processes: >-
+      {{ _dbms_max_worker_processes if _dbms_max_worker_processes else
+        ansible_facts['processor_nproc'] }}
   roles:
     - role: postgres12
       vars:
@@ -89,8 +93,8 @@
         pg_effective_io_concurrency: "{{ _dbms_effective_io_concurrency }}"
         pg_max_worker_processes: "{{ max_worker_processes }}"
         pg_max_parallel_workers: "{{ max_worker_processes }}"
-        pg_max_parallel_workers_per_gather: "{{ max_worker_processes|int // 10 }}"
-        pg_max_parallel_maintenance_workers: "{{ max_worker_processes|int // 10 }}"
+        pg_max_parallel_workers_per_gather: "{{ _dbms_max_parallel_workers_per_gather }}"
+        pg_max_parallel_maintenance_workers: "{{ _dbms_max_parallel_maintenance_workers }}"
         pg_wal_buffers: 16MB
         pg_num_huge_pages: "{{ _dbms_mem_num_huge_pages }}"
         pg_huge_pages: "{{ 'on' if _dbms_mem_num_huge_pages|int > 0 else 'off' }}"

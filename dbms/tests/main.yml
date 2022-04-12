@@ -64,13 +64,13 @@
           - cyverse_conf
             is search("listen_addresses = 'localhost,one.localdomain,two.localdomain'"|regex_escape)
           - cyverse_conf is search('port = 1')
+          - cyverse_conf is search('max_connections = 2')
+          - cyverse_conf is search('shared_buffers = 1GB')
 
     - name: test cyverse.conf expansion, no downstream or upstream nodes
       debug:
         msg: TODO implement for {{ item }}
       with_items:
-        - max_commections
-        - shared_buffers
         - huge_pages
         - work_mem
         - maintenance_work_mem

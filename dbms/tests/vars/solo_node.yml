@@ -1,0 +1,6 @@
+---
+pg_extra_listen_addresses:
+  - one.localdomain
+  - two.localdomain
+
+pg_listen_port: 1

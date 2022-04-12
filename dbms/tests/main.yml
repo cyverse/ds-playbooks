@@ -52,13 +52,23 @@
   hosts: localhost
   gather_facts: false
   run_once: true
+  vars_files:
+    - ../roles/postgres12/defaults/main.yml
+    - vars/solo_node.yml
+  vars:
+    cyverse_conf: "{{ lookup('template', '../roles/postgres12/templates/cyverse.conf.j2') }}"
   tasks:
+    - name: verify config values expand correctly in cyverse.conf
+      assert:
+        that:
+          - cyverse_conf
+            is search("listen_addresses = 'localhost,one.localdomain,two.localdomain'"|regex_escape)
+          - cyverse_conf is search('port = 1')
+
     - name: test cyverse.conf expansion, no downstream or upstream nodes
       debug:
         msg: TODO implement for {{ item }}
       with_items:
-        - listen_addresses
-        - port
         - max_commections
         - shared_buffers
         - huge_pages

@@ -20,13 +20,16 @@
   become: true
   gather_facts: false
   vars:
-    - max_worker_processes: "{{ ansible_facts['processor_nproc'] }}"
+    effective_cache_size: >-
+      {{ _dbms_effective_cache_size if _dbms_effective_cache_size else
+        (ansible_facts['memtotal_mb']|int // (2 * 1024)) }}GB
+    max_worker_processes: "{{ ansible_facts['processor_nproc'] }}"
   roles:
     - role: postgres12
       vars:
         pg_checkpoint_completion_target: "{{ _dbms_checkpoint_completion_target }}"
         pg_checkpoint_timeout: "{{ _dbms_checkpoint_timeout }}min"
-        pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int // 2 }}MB"
+        pg_effective_cache_size: "{{ effective_cache_size }}"
         pg_extra_listen_addresses: "{{ ansible_facts['all_ipv4_addresses'] }}"
         pg_listen_port: "{{ _dbms_port }}"
         pg_log_line_prefix: "{{ _dbms_log_line_prefix }}"
@@ -58,14 +61,17 @@
   become: true
   gather_facts: false
   vars:
-    - max_worker_processes: "{{ ansible_facts['processor_nproc'] }}"
+    effective_cache_size: >-
+      {{ _dbms_effective_cache_size if _dbms_effective_cache_size else
+        (ansible_facts['memtotal_mb']|int // (2 * 1024)) }}GB
+    max_worker_processes: "{{ ansible_facts['processor_nproc'] }}"
   roles:
     - role: postgres12
       vars:
         pg_checkpoint_completion_target: "{{ _dbms_checkpoint_completion_target }}"
         pg_checkpoint_timeout: "{{ _dbms_checkpoint_timeout }}min"
         pg_destroy_default_db_on_init: "{{ _dbms_replication_start }}"
-        pg_effective_cache_size: "{{ ansible_facts['memtotal_mb']|int // 2 }}MB"
+        pg_effective_cache_size: "{{ effective_cache_size }}"
         pg_extra_listen_addresses: "{{ ansible_facts['all_ipv4_addresses'] }}"
         pg_listen_port: "{{ _dbms_port }}"
         pg_log_line_prefix: "{{ _dbms_log_line_prefix }}"

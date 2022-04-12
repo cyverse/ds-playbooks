@@ -321,6 +321,14 @@ acPostProcForParallelTransferReceived(*LeafResource) {
 
 ## SUPPORTING FUNCTIONS AND RULES ##
 
+_ipc_getObjPath(*DATA_OBJ_INFO) = 
+  let *path = *DATA_OBJ_INFO.logical_path in
+  let *_ = if (*path == '') {
+     *id = *DATA_OBJ_INFO.data_id;
+     foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = *id) {
+       *path = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
+      } } in
+  /*path
 
 # generates a unique session variable name for a data object 
 #
@@ -478,17 +486,13 @@ pep_database_close_finally(*INSTANCE, *CONTEXT, *OUT) {
 
 pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *REG_PARAM) {
   *handled = false;
+  *logicalPath = _ipc_getObjPath(*DATA_OBJ_INFO);
 
 # XXX - Because of https://github.com/irods/irods/issues/5540, 
 # _ipc_dataObjCreated needs to be called here when not created through file 
 # registration
   if (! *handled && errorcode(*REG_PARAM.dataSize) == 0) {
-  # XXX - Because of https://github.com/irods/irods/issues/5870, 
-  # *DATA_OBJ_INFO.logical_path cannot directly be converted to a path.
-  #     *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
-    *logicalPath = *DATA_OBJ_INFO.logical_path;
-    *pathVar = _ipc_mkDataObjSessVar(/*logicalPath);
-  # XXX - ^^^
+    *pathVar = _ipc_mkDataObjSessVar(*logicalPath);
 
     if (
       (
@@ -516,12 +520,7 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
   # If modification timestamp is being modified, the data object has been 
   # modified, so publish a data-object.mod message.
   if (! *handled && errorcode(*REG_PARAM.dataModify) == 0) {
-# XXX - Because of https://github.com/irods/irods/issues/5870, 
-# *DATA_OBJ_INFO.logical_path cannot directly be converted to a path.
-#     *pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
-    *logicalPath = *DATA_OBJ_INFO.logical_path;
-    *pathVar = _ipc_mkDataObjSessVar(/*logicalPath);
-# XXX - ^^^
+    *pathVar = _ipc_mkDataObjSessVar(*logicalPath);
 
     if (
       if errorcode(temporaryStorage.'*pathVar') != 0 then true
@@ -562,8 +561,7 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
 # PEP that happen during a data object modification that don't set dataSize or 
 # dataModify.
   if (! *handled && '*REG_PARAM' != '0') {
-    _ipc_dataObjMetadataModified(
-      *CONTEXT.user_user_name, *CONTEXT.user_rods_zone, *DATA_OBJ_INFO.logical_path);
+    _ipc_dataObjMetadataModified(*CONTEXT.user_user_name, *CONTEXT.user_rods_zone, *logicalPath);
   }
 # XXX - ^^^
 }

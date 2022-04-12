@@ -13,6 +13,7 @@ _dbms_max_connections: "{{ dbms_max_connections | default(500) }}"
 
 _dbms_port: "{{ dbms_port | default(5432) }}"
 
+_dbms_effective_cache_size: "{{ dbms_effective_cache_size | default(None) }}"
 _dbms_random_page_cost: "{{ dmbs_random_page_cost | default(1.1) }}"
 
 _dbms_replication_password: "{{ dbms_replication_password | default(None) }}"

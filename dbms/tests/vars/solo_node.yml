@@ -4,3 +4,7 @@ pg_extra_listen_addresses:
   - two.localdomain
 
 pg_listen_port: 1
+
+pg_max_connections: 2
+
+pg_shared_buffers: 1GB

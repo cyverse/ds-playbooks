@@ -21,6 +21,8 @@
           {% endfor %}
       notify:
         - reload postgresql
+      tags:
+        - postgres
 
   handlers:
     - name: reload postgresql

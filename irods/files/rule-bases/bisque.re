@@ -249,7 +249,7 @@ _bisque_handleNewObject(*Client, *Path) {
 
 
 _bisque_handleObjCreate(*CreatorName, *CreatorZone, *Path) {
-  if (_bisque_isForBisque(*Creator, *Path)) {
+  if (_bisque_isForBisque(*CreatorName, *Path)) {
     _bisque_handleNewObject(_bisque_getClient(*CreatorName, *CreatorZone, *Path), *Path);
   }
 }
@@ -315,5 +315,5 @@ bisque_acPostProcForDelete {
 
 
 bisque_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO) {
-  _bisque_handleObjCreate(*Name, *Zone, *DATA_OBJ_INFO.logical_path);
+  _bisque_handleObjCreate(*User, *Zone, *DATA_OBJ_INFO.logical_path);
 }

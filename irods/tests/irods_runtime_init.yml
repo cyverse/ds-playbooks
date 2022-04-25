@@ -8,7 +8,7 @@
     - name: test ensure service user type exists
       shell: |
         resp = "$(iquest \
-          "select TOKEN_ID 
+          "select TOKEN_ID
             where TOKEN_NAMESPACE = 'user_type'
               and TOKEN_NAME = 'ds-service'
               and TOKEN_VALUE2 = 'a Data Store service'" )"
@@ -40,11 +40,15 @@
       changed_when: false
 
     - name: verify that rodsadmin has write permission on /
-      shell: ils -A / | grep --quiet 'g:rodsadmin#testing:modify object'
+      shell: |
+        set -o pipefail
+        ils -A / | grep --quiet 'g:rodsadmin#testing:modify object'
       changed_when: false
 
     - name: verify that rodsadmin has write permission on the zone collection
-      shell: ils -A /testing | grep --quiet 'g:rodsadmin#testing:modify object'
+      shell: |
+        set -o pipefail
+        ils -A /testing | grep --quiet 'g:rodsadmin#testing:modify object'
       changed_when: false
 
     - name: verify that rodsadmin has write permission on zone coll members
@@ -86,25 +90,34 @@
       changed_when: false
 
     - name: verify anonymous user has read access to zone collection
-      shell: ils -A /testing | grep --quiet 'anonymous#testing:read object'
+      shell: |
+        set -o pipefail
+        ils -A /testing | grep --quiet 'anonymous#testing:read object'
       changed_when: false
 
     - name: verify anonymous user has read access to home collection
-      shell: ils -A /testing/home | grep --quiet 'anonymous#testing:read object'
+      shell: |
+        set -o pipefail
+        ils -A /testing/home | grep --quiet 'anonymous#testing:read object'
       changed_when: false
 
     - name: verify anonymous user has read access to public collection
-      shell: ils -A /testing/home/shared | grep --quiet 'anonymous#testing:read object'
+      shell: |
+        set -o pipefail
+        ils -A /testing/home/shared | grep --quiet 'anonymous#testing:read object'
       changed_when: false
 
     - name: verify anonymous user has read access to CyVerse curated collection
       shell: |
+        set -o pipefail
         ils -A /testing/home/shared/commons_repo/curated \
           | grep --quiet 'anonymous#testing:read object'
       changed_when: false
 
     - name: test start quota usage computation
-      shell: iqstat -a | grep --quiet {{ item }}
+      shell: |
+        set -o pipefail
+        iqstat -a | grep --quiet {{ item }}
       with_items:
         - _ipc_updateQuotaUsage
         - _ipc_determineAllStorageFreeSpace

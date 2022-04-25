@@ -75,6 +75,7 @@
     - name: ensure anonymous user has read access to required collections
       delegate_to: localhost
       become: false
+      no_log: true
       irods_permission:
         subject: anonymous
         permission: read
@@ -92,21 +93,21 @@
 
     - name: start quota usage computation
       command: >
-        irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance 
+        irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
           ipc_rescheduleQuotaUsageUpdate null ruleExecOut
       register: results
       changed_when: results.stdout == 'scheduled quota usage updates'
 
     - name: start storage free space determination
       command: >
-        irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance 
+        irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
           ipc_rescheduleStorageFreeSpaceDetermination null ruleExecOut
       register: results
       changed_when: results.stdout == 'scheduled storage determination'
 
     - name: start trash removal
       command: >
-        irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance 
+        irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
           ipc_rescheduleTrashRemoval null ruleExecOut
       register: results
       changed_when: results.stdout == 'scheduled trash removal'

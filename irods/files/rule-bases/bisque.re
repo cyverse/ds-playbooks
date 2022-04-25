@@ -24,8 +24,11 @@ _bisque_getHomeUser(*Path) =
   else if *Path like regex '^/' ++ ipc_ZONE ++ '/trash/home/[^/]+/.+' then elem(split(*Path, '/'), 3)
   else ''
 
-_bisque_getClient(*Author, *Path) =
-  let *homeUser = _bisque_getHomeUser(*Path) in if *homeUser == '' then *Author else *homeUser
+_bisque_getClient(*AuthorName, *AuthorZone, *Path) =
+  let *homeUser = _bisque_getHomeUser(*Path) in 
+  if *homeUser != '' then *homeUser
+  else if *AuthorZone == ipc_ZONE then *AuthorName 
+  else ''
 
 _bisque_isInBisque(*CollName, *DataName) =
   let *idAttr = _bisque_ID_ATTR in
@@ -52,6 +55,16 @@ _bisque_isForBisque(*Author, *Path) =
   && (ipc_isForService(_bisque_USER, _bisque_COLL, /*Path)
       || _bisque_isInProjects(bisque_PROJECTS, *Path))
 
+_bisque_isUser(*Client) =
+  if *Client == '' then false
+  else
+    let *zone = ipc_ZONE in
+    let *ans = false in
+    let *_ = foreach (*_ in 
+        SELECT USER_TYPE WHERE USER_NAME = *Client AND USER_ZONE = *zone AND USER_TYPE = 'rodsuser'
+      ) { *ans = true } in
+    *ans
+
 _bisque_mkIrodsUrl(*Path) = bisque_IRODS_URL_BASE ++ *Path
 
 _bisque_logMsg(*Msg) {
@@ -61,21 +74,29 @@ _bisque_logMsg(*Msg) {
 
 # Tells BisQue to create a link for a given user to a data object.
 #
-# bisque_paths.py --alias user ln -P permission /path/to/data.object
+# bisque_paths.py (--alias user) ln -P permission /path/to/data.object
 #
 _bisque_Ln(*Permission, *Client, *Path) {
-  _bisque_logMsg("linking *Path for *Client with permission *Permission");
+  if (*Client != '') {
+    _bisque_logMsg("linking *Path for *Client with permission *Permission");
+  } else {
+    _bisque_logMsg("linking *Path with permission *Permission");
+  }
 
+  *aliasOpt = if _bisque_isUser(*Client) then '--alias ' ++ execCmdArg(*Client) else '';
   *pArg = execCmdArg(*Permission);
-  *aliasArg = execCmdArg(*Client);
   *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
-  *argStr = '--alias *aliasArg ln -P *pArg *pathArg';
+  *argStr = '*aliasOpt ln -P *pArg *pathArg';
   *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
     _bisque_logMsg('FAILURE - *resp');
-    _bisque_logMsg('failed to link *Path for *Client with permission *Permission');
+    if (*Client != '') {
+      _bisque_logMsg('failed to link *Path for *Client with permission *Permission');
+	 } else {
+      _bisque_logMsg('failed to link *Path with permission *Permission');
+    }
     fail;
   } else {
     msiGetStdoutInExecCmdOut(*out, *resp);
@@ -92,60 +113,92 @@ _bisque_Ln(*Permission, *Client, *Path) {
 
     msiSetKeyValuePairsToObj(*kv, *Path, '-d');
 
-    _bisque_logMsg('linked *Path for *Client with permission *Permission');
+    if (*Client != '') {
+      _bisque_logMsg('linked *Path for *Client with permission *Permission');
+	 } else {
+      _bisque_logMsg('linked *Path with permission *Permission');
+    }
   }
 }
 
 
 # Tells BisQue to change the path of a linked data object.
 #
-# bisque_paths.py --alias user mv /old/path/to/data.object /new/path/to/data.object
+# bisque_paths.py (--alias user) mv /old/path/to/data.object /new/path/to/data.object
 #
 _bisque_Mv(*Client, *OldPath, *NewPath) {
-  _bisque_logMsg('moving link from *OldPath to *NewPath for *Client');
+  if (*Client != '') {
+    _bisque_logMsg('moving link from *OldPath to *NewPath for *Client');
+  } else {
+    _bisque_logMsg('moving link from *OldPath to *NewPath');
+  }
 
-  *aliasArg = execCmdArg(*Client);
+  *aliasOpt = if _bisque_isUser(*Client) then '--alias ' ++ execCmdArg(*Client) else '';
   *oldPathArg = execCmdArg(_bisque_mkIrodsUrl(*OldPath));
   *newPathArg = execCmdArg(_bisque_mkIrodsUrl(*NewPath));
-  *argStr = '--alias *aliasArg mv *oldPathArg *newPathArg';
+  *argStr = '*aliasOpt mv *oldPathArg *newPathArg';
   *status = errorcode(msiExecCmd('bisque_paths.py', *argStr, ipc_RE_HOST, 'null', 'null', *out));
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
     _bisque_logMsg('FAILURE - *resp');
-    _bisque_logMsg('failed to move link from *OldPath to *NewPath for *Client');
+    if (*Client != '') {
+      _bisque_logMsg('failed to move link from *OldPath to *NewPath for *Client');
+	 } else {
+      _bisque_logMsg('failed to move link from *OldPath to *NewPath');
+    }
     fail;
   } else {
-    _bisque_logMsg('moved link from *OldPath to *NewPath for *Client');
+    if (*Client != '') {
+      _bisque_logMsg('moved link from *OldPath to *NewPath for *Client');
+	 } else {
+      _bisque_logMsg('moved link from *OldPath to *NewPath');
+    }
   }
 }
 
 
 # Tells BisQue to remove a link to data object.
 #
-# bisque_paths.py --alias user rm /path/to/data.object
+# bisque_paths.py (--alias user) rm /path/to/data.object
 #
 _bisque_Rm(*Client, *Path) {
-  _bisque_logMsg("Removing link from *Path for *Client");
+  if (*Client != '') {
+    _bisque_logMsg("Removing link from *Path for *Client");
+  } else {
+    _bisque_logMsg("Removing link from *Path");
+  }
 
-  *aliasArg = execCmdArg(*Client);
+  *aliasOpt = if _bisque_isUser(*Client) then '--alias ' ++ execCmdArg(*Client) else '';
   *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
-  *argStr = '--alias *aliasArg rm *pathArg';
+  *argStr = '*aliasOpt rm *pathArg';
   *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
     _bisque_logMsg('FAILURE - *resp');
-    _bisque_logMsg('failed to remove link to *Path for *Client');
+    if (*Client != '') {
+      _bisque_logMsg('failed to remove link to *Path for *Client');
+	 } else {
+      _bisque_logMsg('failed to remove link to *Path');
+    }
     fail;
   } else {
-    _bisque_logMsg('removed link to *Path for *Client');
+    if (*Client != '') {
+      _bisque_logMsg('removed link to *Path for *Client');
+	 } else {
+      _bisque_logMsg('removed link to *Path');
+    }
   }
 }
 
 
 _bisque_scheduleLn(*Permission, *Client, *Path) {
-  _bisque_logMsg("scheduling linking of *Path for *Client with permission *Permission");
+  if (*Client != '') {
+    _bisque_logMsg("scheduling linking of *Path for *Client with permission *Permission");
+  } else {
+    _bisque_logMsg("scheduling linking of *Path with permission *Permission");
+  }
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
 #       https://github.com/irods/irods/issues/5413.
   #delay("<PLUSET>1s</PLUSET>") {_bisque_Ln(*Permission, *Client, *Path)};
@@ -157,7 +210,11 @@ _bisque_scheduleLn(*Permission, *Client, *Path) {
 
 
 _bisque_scheduleMv(*Client, *OldPath, *NewPath) {
-  _bisque_logMsg('scheduling link move from *OldPath to *NewPath for *Client');
+  if (*Client != '') {
+    _bisque_logMsg('scheduling link move from *OldPath to *NewPath for *Client');
+  } else {
+    _bisque_logMsg('scheduling link move from *OldPath to *NewPath');
+  }
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
 #       https://github.com/irods/irods/issues/5413.
   #delay("<PLUSET>1s</PLUSET>") {_bisque_Mv(*Client, *OldPath, *NewPath);}
@@ -169,7 +226,11 @@ _bisque_scheduleMv(*Client, *OldPath, *NewPath) {
 
 
 _bisque_scheduleRm(*Client, *Path) {
-  _bisque_logMsg("scheduling removal of linking to *Path for *Client");
+  if (*Client != '') {
+    _bisque_logMsg("scheduling removal of linking to *Path for *Client");
+  } else {
+    _bisque_logMsg("scheduling removal of linking to *Path");
+  }
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
 #       https://github.com/irods/irods/issues/5413.
   #delay("<PLUSET>1s</PLUSET>") {_bisque_Rm(*Client, *Path);}
@@ -187,9 +248,9 @@ _bisque_handleNewObject(*Client, *Path) {
 }
 
 
-_bisque_handleObjCreate(*Creator, *Path) {
+_bisque_handleObjCreate(*CreatorName, *CreatorZone, *Path) {
   if (_bisque_isForBisque(*Creator, *Path)) {
-    _bisque_handleNewObject(_bisque_getClient(*Creator, *Path), *Path);
+    _bisque_handleNewObject(_bisque_getClient(*CreatorName, *CreatorZone, *Path), *Path);
   }
 }
 
@@ -204,7 +265,7 @@ bisque_acPostProcForCollCreate {
 
 # Add a call to this rule from inside the acPostProcForObjRename PEP.
 bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
-  *client = _bisque_getClient($userNameClient, *SrcEntity);
+  *client = _bisque_getClient($userNameClient, $rodsZoneClient, *SrcEntity);
   *forBisque = _bisque_isForBisque($userNameClient, *DestEntity);
   *type = ipc_getEntityType(*DestEntity);
 
@@ -248,11 +309,11 @@ bisque_acDataDeletePolicy {
 # Add a call to this rule from inside the acPostProcForDelete PEP.
 bisque_acPostProcForDelete {
   if (temporaryStorage.'bisque_$objPath' == 'rm') {
-    _bisque_scheduleRm(_bisque_getClient($userNameClient, $objPath), $objPath);
+    _bisque_scheduleRm(_bisque_getClient($userNameClient, $rodsZoneClient, $objPath), $objPath);
   }
 }
 
 
-bisque_dataObjCreated(*User, *_, *DATA_OBJ_INFO) {
-  _bisque_handleObjCreate(*User, *DATA_OBJ_INFO.logical_path);
+bisque_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO) {
+  _bisque_handleObjCreate(*Name, *Zone, *DATA_OBJ_INFO.logical_path);
 }

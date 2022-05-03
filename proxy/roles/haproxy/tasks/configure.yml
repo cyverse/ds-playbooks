@@ -28,7 +28,7 @@
 - name: configure | configure rsyslog to listen on UDP socket
   blockinfile:
     path: /etc/rsyslog.conf
-    insertafter: '# Provides UDP syslog reception'
+    insertafter: "# Provides UDP syslog reception"
     marker: "# {mark} DS MANAGED BLOCK (haproxy)"
     block: |
       $ModLoad imudp
@@ -52,8 +52,13 @@
     mode: u+r
 
 - name: configure | add TLS certificates
-  debug:
-    msg: TODO implement
+  copy:
+    dest: "{{ haproxy_stats_tls_crt }}"
+    content: "{{ haproxy_stats_tls_crt_content }}"
+    mode: a+r
+  when:
+    - haproxy_stats_tls_crt|length > 0
+    - haproxy_stats_tls_crt_content|length > 0
 
 - name: configure | place VIP list
   template:

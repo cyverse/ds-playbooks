@@ -13,7 +13,6 @@
           - vip is search('^#')
           - vip is not search('\n[^#\n]')
 
-
 - name: test VIP list template custom expansion
   hosts: localhost
   gather_facts: false
@@ -35,7 +34,6 @@
     - name: verify CIDR block passes through
       assert:
         that: vip is search('\n' ~ ('5.6.7.0/24'|regex_escape) ~ '\n')
-
 
 - name: test set up HAProxy
   hosts: proxy
@@ -93,9 +91,24 @@
       register: result
       failed_when: not result.stat.exists
 
-    - name: test add TLS certificates
-      debug:
-        msg: TODO implement
+    - name: test place TLS certificates file
+      stat:
+        path: /etc/pki/tls/private/testing.pem
+      register: result
+      failed_when: not result.stat.exists or not result.stat.roth
+
+    - name: retrieve TLS certificates file
+      slurp:
+        src: /etc/pki/tls/private/testing.pem
+      register: pem_encoded
+
+    - name: decode TLS certificates file
+      set_fact:
+        pem: "{{ pem_encoded['content'] | b64decode }}"
+
+    - name: verify TLS certificates file contents
+      assert:
+        that: pem == 'PEM CONTENTS'
 
     - name: test VIP list placement
       debug:

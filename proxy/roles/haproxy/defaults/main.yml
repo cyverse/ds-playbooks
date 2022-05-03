@@ -8,6 +8,7 @@ haproxy_default_max_conn: 500
 
 haproxy_stats_port: 81
 haproxy_stats_tls_crt: null
+haproxy_stats_tls_crt_content: null
 haproxy_stats_auth: null
 haproxy_stats_client_hosts: "{{ haproxy_default_client_hosts }}"
 

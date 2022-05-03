@@ -56,6 +56,7 @@
     dest: "{{ haproxy_stats_tls_crt }}"
     content: "{{ haproxy_stats_tls_crt_content }}"
     mode: a+r
+  no_log: true
   when:
     - haproxy_stats_tls_crt|length > 0
     - haproxy_stats_tls_crt_content|length > 0

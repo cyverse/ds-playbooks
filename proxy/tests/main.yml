@@ -13,6 +13,7 @@
           - vip is search('^#')
           - vip is not search('\n[^#\n]')
 
+
 - name: test VIP list template custom expansion
   hosts: localhost
   gather_facts: false
@@ -35,6 +36,16 @@
       assert:
         that: vip is search('\n' ~ ('5.6.7.0/24'|regex_escape) ~ '\n')
 
+
+- name: test haproxy config file expansion
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: test
+      debug:
+        msg: TODO implement
+
+ 
 - name: test set up HAProxy
   hosts: proxy
   become: true
@@ -111,10 +122,12 @@
         that: pem == 'PEM CONTENTS'
 
     - name: test VIP list placement
-      debug:
-        msg: TODO implement
+      stat:
+        path: /etc/haproxy/vip.lst
+      register: response
+      failed_when: not response.stat.exists or not result.stat.roth
 
-    - name: test haproxy config placement and template expansion
+    - name: test haproxy config placement
       debug:
         msg: TODO implement
 

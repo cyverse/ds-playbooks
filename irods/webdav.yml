@@ -184,7 +184,7 @@
                 SSLOptions +StdEnvVars
               </Directory>
             comment: >-
-              This proxy handles TLS, corrects requests, enables caching, and anonymous access for 
+              This proxy handles TLS, corrects requests, enables caching, and anonymous access for
               XMLHttpRequests
         apache_vhosts_template: ../../templates/webdav/etc/httpd/conf.d/vhosts.conf.j2
       tags:
@@ -204,7 +204,7 @@
       package:
         name: yum-plugin-versionlock
         state: present
-    
+
     - name: install iRODS package repository signing key
       rpm_key:
         key: https://packages.irods.org/irods-signing-key.asc
@@ -230,14 +230,14 @@
       yum_versionlock:
         name: irods-runtime-4.2.8
         state: present
-          
+
     - name: build & install mod_ssl-rm_ssl_conf RPM package to remove ssl.conf
       include_tasks: tasks/install_rm_sslconf_rpm.yml
       when: "'mod_ssl-rm_ssl_conf' not in ansible_facts.packages"
-      
+
     - name: install apache modules
       package:
-        name: 
+        name:
           - mod_proxy_html
           - mod_qos
           - mod_ssl
@@ -255,7 +255,7 @@
       yum:
         name: https://github.com/UtrechtUniversity/davrods/releases/download/4.2.8_1.5.0/davrods-4.2.8_1.5.0-1.rpm
         state: present
-    
+
     - include_role:
         name: cyverse.irods_cfg
         tasks_from: client.yml
@@ -427,7 +427,7 @@
         state: absent
 
     - name: check if purgeman is already installed
-      stat: 
+      stat:
         path: /usr/bin/purgeman
       register: purgemanResp
 
@@ -446,7 +446,7 @@
     - when: (not purgemanResp.stat.exists) or (purgemanAccount.rc != 0) or (purgemanVersion.stdout != 'v0.3.0')
       block:
         - name: check if purgeman service exists
-          stat: 
+          stat:
             path: /usr/lib/systemd/system/purgeman.service
           register: serviceResp
           tags:
@@ -460,7 +460,7 @@
           tags:
             - no_testing
 
-        - name: create build dir for purgeman package 
+        - name: create build dir for purgeman package
           file:
             path: /tmp/purgeman_setup
             state: directory
@@ -474,7 +474,7 @@
 
         - name: install purgeman service
           when: unarchiveResp is changed
-          make: 
+          make:
             chdir: /tmp/purgeman_setup
             target: install_centos
 
@@ -482,7 +482,7 @@
           file:
             path: /tmp/purgeman_setup
             state: absent
-    
+
     - name: configure purgeman
       template:
         src: templates/webdav/etc/purgeman/purgeman.conf.j2
@@ -518,6 +518,8 @@
           -A INPUT -m state --state NEW -p tcp -s {{ i }} --dport 80 -j ACCEPT
           -A INPUT -m state --state NEW -p tcp -s {{ i }} --dport 443 -j ACCEPT
           {% endfor %}
+      tags:
+        - firewall
       notify: restart firewall
 
   handlers:

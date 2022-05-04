@@ -203,6 +203,8 @@
         content: "{{ _webdav_tls_chain }}"
         mode: a+r
       when: _webdav_tls_chain|length > 0
+      notify:
+        - restart httpd
 
     - name: place TLS certificate file
       copy:
@@ -210,6 +212,8 @@
         content: "{{ _webdav_tls_cert }}"
         mode: a+r
       when: _webdav_tls_cert|length > 0
+      notify:
+        - restart httpd
 
     - name: place TLS key file
       copy:
@@ -218,6 +222,8 @@
         mode: a+r
       no_log: true
       when: _webdav_tls_key|length > 0
+      notify:
+        - restart httpd
 
     - name: package_facts uses auto, setup for next task
       package_facts:
@@ -561,6 +567,12 @@
       service:
         name: httpd
         state: restarted
+
+    - name: reload httpd
+      when: notifications_enabled | default(false)
+      service:
+        name: httpd
+        state: reloaded
 
     - name: restart varnish
       when: notifications_enabled | default(false)

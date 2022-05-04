@@ -45,7 +45,7 @@
       debug:
         msg: TODO implement
 
- 
+
 - name: test set up HAProxy
   hosts: proxy
   become: true

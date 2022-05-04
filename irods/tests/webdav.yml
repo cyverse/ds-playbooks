@@ -42,13 +42,13 @@
           - purgeman_conf is search('PURGEMAN_AMQP_PORT=5672')
           - purgeman_conf is search('PURGEMAN_AMQP_VHOST=/')
           - purgeman_conf is search('PURGEMAN_AMQP_EXCHANGE=irods')
+          - purgeman_conf is search('PURGEMAN_AMQP_USERNAME=guest')
+          - purgeman_conf is search('PURGEMAN_AMQP_PASSWORD=guest')
 
     - name: verify remainder fo purgeman.conf expands correctly
       debug:
         msg: TODO check {{ item }}
       with_items:
-        - PURGEMAN_AMQP_USERNAME
-        - PURGEMAN_AMQP_PASSWORD
         - PURGEMAN_IRODS_HOST
         - PURGEMAN_IRODS_PORT
         - PURGEMAN_IRODS_USERNAME

@@ -19,4 +19,4 @@
         host: "{{ inventory_hostname }}"
         backend: irods_direct
         state: disabled
-        shutdown_sessions:: true
+        shutdown_sessions: true

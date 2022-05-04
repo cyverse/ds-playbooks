@@ -14,12 +14,21 @@
           - vip is search('^#')
           - vip is not search('\n[^#\n]')
 
-    - name: verify haproxy config template default expansion
+    - name: verify haproxy config is ansible managed
+      assert:
+        that: haproxy is search('^#\n# Ansible managed')
+
+    - name: verify haproxy config defaults section
       debug:
         msg: TODO verify {{ item }}
       with_items:
-        - ansible managed
-        - defaults
+        - maxconn
+        - timeout queue
+
+    - name: verify haproxy config template expansion
+      debug:
+        msg: TODO verify {{ item }}
+      with_items:
         - stats listener
         - irods frontend
         - irods_reconn frontend

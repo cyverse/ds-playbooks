@@ -2,34 +2,21 @@
 - name: terminate client connections
   hosts: proxy
   become: true
+  collections:
+    - community.general
+  tags:
+    - no_testing
   tasks:
-    - name: disable testing
-      set_fact:
-        _full_os: true
-      tags:
-        - no_testing
+    - name: terminate WebDAV connections
+      haproxy:
+        host: "{{ inventory_hostname }}"
+        backend: webdav
+        state: disabled
+        shutdown_sessions: true
 
-    - name: reject all incoming packets
-      blockinfile:
-        path: /etc/sysconfig/iptables
-        insertbefore: '-A INPUT -m state --state .*ESTABLISHED.* -j ACCEPT'
-        marker: "# {mark} DS MANAGED BLOCK (haproxy reject)"
-        block: |
-          {% for h in groups['irods_catalog'] | union(groups['webdav']) %}
-          {%   set addr = h if h|ansible.utils.ipaddr else lookup('dig', h) %}
-          -A INPUT -m state --state UNTRACKED -s {{ addr }} -j ACCEPT
-          -A OUTPUT -m state --state UNTRACKED -d {{ addr }} -j ACCEPT
-          {% endfor %}
-          -A INPUT -m state --state UNTRACKED -j REJECT
-          -A OUTPUT -m state --state UNTRACKED -p tcp -j REJECT --reject-with tcp-reset
-          -A OUTPUT -m state --state UNTRACKED -j REJECT
-        state: present
-      notify:
-        - reload firewall rules
-
-  handlers:
-    - name: reload firewall rules
-      when: _full_os | default(false)
-      service:
-        name: iptables
-        state: restarted
+    - name: terminate iRODS connections
+      haproxy:
+        host: "{{ inventory_hostname }}"
+        backend: irods_direct
+        state: disabled
+        shutdown_sessions:: true

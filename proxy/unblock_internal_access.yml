@@ -16,7 +16,6 @@
         backend: irods_direct
         host: irods
         state: enabled
-        wait: true
         fail_on_not_found: true
       tags:
         - no_testing
@@ -26,12 +25,12 @@
         backend: webdav
         host: dav
         state: enabled
-        wait: true
         fail_on_not_found: true
       tags:
         - no_testing
 
-    - import_role:
+    - name: allow internal CyVerse clients through firewall
+      import_role:
         name: haproxy
         tasks_from: firewall
       vars:

@@ -1,0 +1,8 @@
+---
+- name: test restore all client access
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: "test haproxy : firewall"
+      debug:
+        msg: TODO implement

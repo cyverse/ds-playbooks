@@ -13,19 +13,21 @@
 
     - name: enable iRODS access
       haproxy:
-        host: "{{ inventory_hostname }}"
         backend: irods_direct
+        host: irods
         state: enabled
         wait: true
+        fail_on_not_found: true
       tags:
         - no_testing
 
     - name: enable WebDAV access
       haproxy:
-        host: "{{ inventory_hostname }}"
         backend: webdav
+        host: dav
         state: enabled
         wait: true
+        fail_on_not_found: true
       tags:
         - no_testing
 

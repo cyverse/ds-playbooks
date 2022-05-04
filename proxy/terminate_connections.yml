@@ -9,14 +9,16 @@
   tasks:
     - name: terminate WebDAV connections
       haproxy:
-        host: "{{ inventory_hostname }}"
         backend: webdav
+        host: dav
         state: disabled
         shutdown_sessions: true
+        fail_on_not_found: true
 
     - name: terminate iRODS connections
       haproxy:
-        host: "{{ inventory_hostname }}"
         backend: irods_direct
+        host: irods
         state: disabled
         shutdown_sessions: true
+        fail_on_not_found: true

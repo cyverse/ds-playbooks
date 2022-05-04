@@ -58,8 +58,8 @@
     mode: a+r
   no_log: true
   when:
-    - haproxy_stats_tls_crt|length > 0
-    - haproxy_stats_tls_crt_content|length > 0
+    - haproxy_stats_tls_crt | d(False)
+    - haproxy_stats_tls_crt_content | d(False)
   notify:
     - reload haproxy
 

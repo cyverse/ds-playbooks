@@ -1,17 +1,31 @@
 ---
-- name: test VIP list template default expansion
+- name: test template default expansion
   hosts: localhost
   gather_facts: false
   vars_files:
     - ../roles/haproxy/defaults/main.yml
   vars:
     vip: "{{ lookup('template', '../roles/haproxy/templates/vip.lst.j2') }}"
+    haproxy: "{{ lookup('template', '../roles/haproxy/templates/haproxy.cfg.j2') }}"
   tasks:
-    - name: verify the file has nothing below the header comment
+    - name: verify the VIP list has nothing below the header comment
       assert:
         that:
           - vip is search('^#')
           - vip is not search('\n[^#\n]')
+
+    - name: verify haproxy config template default expansion
+      debug:
+        msg: TODO verify {{ item }}
+      with_items:
+        - ansible managed
+        - defaults
+        - stats listener
+        - irods frontend
+        - irods_reconn frontend
+        - irods_throttled backend
+        - irods_direct backend
+        - webdav listener
 
 
 - name: test VIP list template custom expansion
@@ -37,7 +51,7 @@
         that: vip is search('\n' ~ ('5.6.7.0/24'|regex_escape) ~ '\n')
 
 
-- name: test haproxy config file expansion
+- name: test haproxy config template custom expansion
   hosts: localhost
   gather_facts: false
   tasks:

@@ -164,9 +164,9 @@ _bisque_Mv(*Client, *OldPath, *NewPath) {
 #
 _bisque_Rm(*Client, *Path) {
   if (*Client != '') {
-    _bisque_logMsg("Removing link from *Path for *Client");
+    _bisque_logMsg("removing link from *Path for *Client");
   } else {
-    _bisque_logMsg("Removing link from *Path");
+    _bisque_logMsg("removing link from *Path");
   }
 
   *aliasOpt = if _bisque_isUser(*Client) then '--alias ' ++ execCmdArg(*Client) else '';
@@ -227,9 +227,9 @@ _bisque_scheduleMv(*Client, *OldPath, *NewPath) {
 
 _bisque_scheduleRm(*Client, *Path) {
   if (*Client != '') {
-    _bisque_logMsg("scheduling removal of linking to *Path for *Client");
+    _bisque_logMsg("scheduling removal of link to *Path for *Client");
   } else {
-    _bisque_logMsg("scheduling removal of linking to *Path");
+    _bisque_logMsg("scheduling removal of link to *Path");
   }
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
 #       https://github.com/irods/irods/issues/5413.

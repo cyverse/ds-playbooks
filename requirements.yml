@@ -9,3 +9,4 @@ collections:
     version: '<3.3'
     # XXX - ^^^
   - name: community.postgresql
+  - name: community.rabbitmq    # Needed for testing

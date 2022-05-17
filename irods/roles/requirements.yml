@@ -5,7 +5,7 @@
 
 - name: cyverse.rabbitmq_vhost
   src: https://github.com/CyVerse-Ansible/ansible-rabbitmq-vhost
-  version: b05523bb75312435b4428850322bfbd62077ff94
+  version: 725e5b59a397acf7572f6081a1d575600c5d7f2e
 
 - name: geerlingguy.apache
   src: geerlingguy.apache

@@ -42,7 +42,7 @@
 - name: install | ensure nonlocal binding allowed
   sysctl:
     name: net.ipv4.ip_nonlocal_bind
-    value: '1'
+    value: "1"
     sysctl_set: true
     sysctl_file: /etc/sysctl.d/haproxy.conf
     reload: true
@@ -55,10 +55,14 @@
 - name: install | ensure IP forwarding allowed
   sysctl:
     name: net.ipv4.ip_forward
-    value: '1'
+    value: "1"
     sysctl_set: true
     sysctl_file: /etc/sysctl.d/haproxy.conf
     reload: true
     state: present
   tags:
     - no_testing
+
+- name: install | ensure socat is installed
+  package:
+    name: socat

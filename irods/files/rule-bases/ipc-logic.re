@@ -674,13 +674,16 @@ ipc_acPostProcForDataCopyReceived(*leaf_resource) {
 ipc_acPostProcForOpen {
 	*me = 'ipc_acPostProcForOpen';
 	*id = _ipc_getDataId($objPath);
-	_ipc_registerAction(*id, *me);
 
-	if (_ipc_isCurrentAction(*id, *me)) {
-		*uuid = '';
-		_ipc_ensureUUID(ipc_DATA_OBJECT, $objPath, *uuid);
-		_ipc_sendDataObjectOpen(*uuid, $objPath, $userNameClient, $rodsZoneClient, $dataSize);
-		_ipc_unregisterAction(*id, *me);
+	if (*id >= 0) {
+		_ipc_registerAction(*id, *me);
+
+		if (_ipc_isCurrentAction(*id, *me)) {
+			*uuid = '';
+			_ipc_ensureUUID(ipc_DATA_OBJECT, $objPath, *uuid);
+			_ipc_sendDataObjectOpen(*uuid, $objPath, $userNameClient, $rodsZoneClient, $dataSize);
+			_ipc_unregisterAction(*id, *me);
+		}
 	}
 }
 
@@ -709,30 +712,33 @@ ipc_acPostProcForDelete {
 ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *UserZone, *Path) {
 	*me = 'ipc_acPostProcForModifyAccessControl';
 	*entityId = _ipc_getEntityId(*Path);
-	_ipc_registerAction(*entityId, *me);
 
-   if (_ipc_isCurrentAction(*entityId, *me)) {
-		*level = _ipc_removePrefix(*AccessLevel, list('admin:'));
-		*type = ipc_getEntityType(*Path);
-		*userZone = if *UserZone == '' then ipc_ZONE else *UserZone;
-		*uuid = '';
-		_ipc_ensureUUID(*type, *Path, *uuid);
+	if (*entityId >= 0) {}
+		_ipc_registerAction(*entityId, *me);
 
-		if (ipc_isCollection(*type)) {
-			_ipc_sendCollectionAccessModified(
-				*uuid,
-				*level,
-				*UserName,
-				*userZone,
-				bool(*RecursiveFlag),
-				$userNameClient,
-				$rodsZoneClient );
-		} else if (ipc_isDataObject(*type)) {
-			_ipc_sendDataObjectAclModified(
-				*uuid, *level, *UserName, *userZone, $userNameClient, $rodsZoneClient );
+		if (_ipc_isCurrentAction(*entityId, *me)) {
+			*level = _ipc_removePrefix(*AccessLevel, list('admin:'));
+			*type = ipc_getEntityType(*Path);
+			*userZone = if *UserZone == '' then ipc_ZONE else *UserZone;
+			*uuid = '';
+			_ipc_ensureUUID(*type, *Path, *uuid);
+
+			if (ipc_isCollection(*type)) {
+				_ipc_sendCollectionAccessModified(
+					*uuid,
+					*level,
+					*UserName,
+					*userZone,
+					bool(*RecursiveFlag),
+					$userNameClient,
+					$rodsZoneClient );
+			} else if (ipc_isDataObject(*type)) {
+				_ipc_sendDataObjectAclModified(
+					*uuid, *level, *UserName, *userZone, $userNameClient, $rodsZoneClient );
+			}
+
+			_ipc_unregisterAction(*entityId, *me);
 		}
-
-		_ipc_unregisterAction(*entityId, *me);
 	}
 }
 
@@ -1078,12 +1084,15 @@ ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO) {
 ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 	*me = 'ipc_dataObjMetadataModified';
 	*id = _ipc_getDataId(*Object);
-	_ipc_registerAction(*id, *me);
 
-	if (_ipc_isCurrentAction(*id, *me) && ! ipc_inStaging(/*Object)) {
-		*uuid = '';
-		_ipc_ensureUUID(ipc_DATA_OBJECT, *Object, *uuid);
-		_ipc_sendDataObjectMetadataModified(*uuid, *User, *Zone);
-		_ipc_unregisterAction(*id, *me);
+	if (*id >= 0) {
+		_ipc_registerAction(*id, *me);
+
+		if (_ipc_isCurrentAction(*id, *me) && ! ipc_inStaging(/*Object)) {
+			*uuid = '';
+			_ipc_ensureUUID(ipc_DATA_OBJECT, *Object, *uuid);
+			_ipc_sendDataObjectMetadataModified(*uuid, *User, *Zone);
+			_ipc_unregisterAction(*id, *me);
+		}
 	}
 }

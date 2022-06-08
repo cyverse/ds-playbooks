@@ -434,6 +434,392 @@ _ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 }
 
 
+## API ##
+
+# Common input types
+#
+# *COMM : KEYVALPAIR_MS_T
+#   auth_scheme
+#   client_addr
+#   proxy_auth_info_auth_flag
+#   proxy_auth_info_auth_scheme
+#   proxy_auth_info_auth_str
+#   proxy_auth_info_flag
+#   proxy_auth_info_host
+#   proxy_auth_info_ppid
+#   proxy_rods_zone
+#   proxy_sys_uid
+#   proxy_user_name
+#   proxy_user_other_info_user_comments
+#   proxy_user_other_info_user_create
+#   proxy_user_other_info_user_info
+#   proxy_user_other_info_user_modify
+#   proxy_user_type
+#   user_auth_info_auth_flag
+#   user_auth_info_auth_scheme
+#   user_auth_info_auth_str
+#   user_auth_info_flag
+#   user_auth_info_host
+#   user_auth_info_ppid
+#   user_rods_zone
+#   user_sys_uid
+#   user_user_name
+#   user_user_other_info_user_comments
+#   user_user_other_info_user_create
+#   user_user_other_info_user_info
+#   user_user_other_info_user_modify
+#   user_user_type
+#
+# *DATAOBJINP : KEYVALPAIR_MS_T
+#   create_mode
+#   dataIncluded
+#   dataSize
+#   dataType
+#   data_size
+#   defRescName
+#   num_threads
+#   obj_path
+#   offset
+#   openType
+#   open_flags
+#   opr_type
+#   resc_hier
+#   selObjType
+#   selected_hierarchy
+#   translatedPath
+#
+# *INSTANCE : string
+#
+# *JSON_INPUT : KEYVALPAIR_MS_T
+#   buf
+#   len
+
+
+
+# TODO implement
+_ipc_deserializeJsonObject : string -> `KEYVALPAIR_MS_T` * string
+_ipc_deserializeJsonObject(*Serial) =
+  let *trimmed = 
+
+_ipc_deserializeJsonValue(*Serial) =
+  let *trimmed = triml(triml(triml(triml(*Serial, ' '), '\t'), '\n'), '\t') in
+  if *trimmed like '[*' then _ipc_deserializeJsonArray(*trimmed) 
+  else if *trimmed like regex '^(true|false)' then ipc_deserializeJsonBoolean(*trimmed)
+  else if *trimmed like 'null*' then ipc_deserializedNull(*trimmed)
+  else if *trimmed like regex '^[-0-9.]' then ipc_deserializeJsonNumber(*trimmed)
+  else if *trimmed like '{*' then ipc_deserializeJsonObject(*trimmed)
+  else if *trimmed like '"*' then ipc_deserializeJsonString(*trimmed)
+  else 
+
+_ipc_deserializeJson(*Serial) = let (*Result, *_) = ipc_deserializeJsonValue(*Serial) in *Result
+
+
+# Tests to see if the given map contains the given key
+#
+#_ipc_hasKey : `KEYVALPAIR_MS_T` * string -> bool
+_ipc_hasKey(*KVMap, *Key) = errorcode(*KVMap.'*Key') == 0
+
+
+# Retrieves the value of the given key from the given map. If the key isn't 
+# found, it returns the empty string.
+#
+#_ipc_getValue : `KEYVALPAIR_MS_T` * string -> string
+_ipc_getValue(*KVMap, *Key) = if _ipc_hasKey(*KVMap, *Key) then *KVMap.'*Key' else ''
+
+
+# Using an API PEP's data object operation input map, it determines if 
+# data object(s) will need a checksum.
+#
+#_ipc_needsChecksum : `KEYVALPAIR_MS_T` -> bool
+_ipc_needsChecksum(*DataObjOpInp) = 
+  !_ipc_hasKey(*DataObjOpInp, 'regChksum') && !_ipc_hasKey(*DataObjOpInp, 'verifyChksum')
+
+
+# Ensures that all of the replcias of the given data object have a checksum
+# 
+_ipc_ensureReplicasChecksum(*DataPath) {
+  *opts = '';
+  msiAddKeyValToMspStr('ChksumAll', '', *opts);
+
+  if (errormsg(msiDataObjChksum(*DataPath, *opts, *_), *err) < 0) {
+    writeLine('serverLog', 'Failed to generate checksums for the replicas of *DataPath (*err)');
+  }
+}
+
+
+# Ensures that all of the replicas of the given data object on the given storage 
+# resource have a checksum
+#
+_ipc_ensureReplicasChecksum(*DataPath, *RescHier) {
+  if (*RescHier == '') {
+    ipc_ensureReplicasChecksum(*DataPath);
+  } else {
+    msiSplitPath(*DataPath, *collPath, *dataName);
+
+    foreach ( *rec in
+      SELECT DATA_REPL_NUM
+      WHERE COLL_NAME == *collPath AND DATA_NAME == *dataName AND DATA_RESC_HIER == *RescHier
+    ) {
+      *opts = '';
+      msiAddKeyValToMspStr('replNum', *rec.DATA_REPL_NUM, *opts);
+    
+      if (errormsg(msiDataObjChksum(*DataPath, *opts, *_), *err) < 0) {
+        writeLine(
+          'serverLog', 
+          'Failed to generate checksums for the replicas of *DataPath on *RescHier (*err)' );
+      }
+    }
+  }
+}
+
+
+# replica_open and replica_close work together.
+# 
+# N.B. These can be triggered by istream.
+# N.B. Only `istream write` needs to be considered.
+# N.B. This can create new, overwrite existing, modify existing, and append to existing data 
+#      objects.
+# N.B. This can target a specific resource, e.g., `istream write -R`, or existing replica, e.g., 
+#      `istream write -n`.
+# N.B. This can create a checksum, e.g., `istream write -k`. 
+# N.B. When a data object with a checksum is overwritten, modified or appened to, the checksum is
+#      cleared.
+#
+# ALGORITHM:
+#
+# When replica_open_post is called, if *DATAOBJINP.destRescName is defined, then store it and 
+# *DATAOBJINP.obj_path in temporaryStorage. When replica_close_post is called, if destRescName and
+# obj_path are in temporaryStorage, and *JSON_INPUT.buf.compute_checksum != true, compute the 
+# checksum of obj_path.
+#
+# TODO: implement and test
+
+# *JSON_OUTPUT : *NOT SUPPORTED*
+# 
+pep_api_replica_open_post(*Instance, *Comm, *DataObjInp, *JSON_OUTPUT) {
+  *path = _ipc_getValue(*DataObjInp', 'obj_path');
+
+  if (*path != '') {
+    temporaryStorage.replica-dataObjPath = *path;
+    temporaryStorage.replica-rescHier = _ipc_getValue(*DataObjInp, 'destRescName');
+  }
+}
+
+# *SEE COMMON*
+#
+pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
+  *path = _ipc_getValue(temporaryStorage, 'replica-dataObjPath');
+
+  if (*path != '') {
+    *input = _ipc_deserializeJson(*JsonInput);
+    *chksumComputed = _ipc_getValue(*input, 'compute_checksum');
+
+    if (*chksumComputed != 'true') {
+      _ipc_ensureReplicasChecksum(*path, _ipc_getValue(temporaryStorage, 'replica-rescHier'));
+    }
+
+    temporaryStorage.replica-dataObjPath = '';
+    temporaryStorage.replica-rescHier = '';
+  }
+}
+
+
+# N.B. This can be triggered by itouch.
+#
+# N.B. Only need to checksum something if it is a data object and it was created by itouch.
+# N.B. itouch cannot be used to create a replica of an existing data object.
+# If options.no_create = true, a data object wasn't created. 
+# If options.replica_number or options.leaf_resource_name is set, a data object wasn't created.
+#
+# ALGORITHM:
+#
+# Check to see if JSON_INFUT.buf.options.no_create is false. If it is, check to see if neither 
+# options.replica_number nor options.leaf_resource_name is set. If that's the case, check to see if
+# the data object's 0 replica has a checksum. If it doesn't compute its checksum.
+#
+# TODO: implement and test
+# 
+pep_api_touch_post(*INSTANCE, *COMM, *JSON_INPUT) {
+  # *SEE COMMON*
+}
+
+
+# N.B. These aren't used by iCommands, but they are by the Java and Python APIs, 
+# so let's not fully implement these.
+#
+# TODO: Implement stubs for these that log that they were called.
+#
+pep_api_data_obj_close_post(*INSTANCE, *COMM, *DATAOBJCLOSEINP) {}
+pep_api_data_obj_create_post(*INSTANCE, *COMM, *DATAOBJINP) {}
+pep_api_data_obj_open_post(*INSTANCE, *COMM, *DATAOBJINP) {}
+
+
+# N.B. This can be triggered by `iput -b -r`.
+# N.B. `-k` adds `regChksum` to BULKOPRINP.
+# N.B. `-K` adds `verifyChksum` to BUKOPRINP.
+# N.B. Overwriting a replica that has a checksum clears the checksum.
+# N.B. `-X` handled transparently
+# N.B. large files are not passed through rcBulkDataObjPut
+#
+# ALGORITHM:
+#
+# If neither *BULKOPRINP.regChksum nor *BULKOPRINP.verifyChksum exist, calculate the checksum of 
+# replica on *BULKOPRINP.resc_hier for each entry of *BULKOPRINP.logical_path.
+#
+# TODO: test
+#
+# *BULKOPRINP:
+#   data_size []
+#   logical_path []
+#   resc_hier
+#   regChksum
+#   translatedPath
+#   verifyChksum
+#
+# *BULKOPRINPBUF:
+#   buf
+#   len
+#
+pep_api_bulk_data_obj_put_post(*Instance, *Comm, *BulkOprInp, *BulkOprInpBBuf) {
+  if (_ipc_needsChecksum(*BulkOprInp)) {
+    foreach (*key in *BulkOprInp) {
+      if (*key like 'logical_path_*') {
+        _ipc_ensureReplicasChecksum(
+          _ipc_getValue(*BulkOprInp, *key), _ipc_getValue(*BulkOprInp, 'resc_hier') );
+      }
+    }
+  }
+}
+
+
+# N.B. This can be triggered by icp.
+#
+# ALGORITHM:
+#
+# If neither *DATAOBJCOPYINP.regChksum nor *DATAOBJCOPYINP.verifyChksum exist, calculate the
+# checksum of *DATAOBJCOPYINP.dst_obj_path on *DATAOBJCOPYINP.dst_resc_hier.
+#
+# TODO: test
+#
+# *DATAOBJCOPYINP : KEYVALPAIR_MS_T
+#   dst_create_mode
+#   dst_data_size
+#   dst_destRescName
+#   dst_num_threads
+#   dst_obj_path
+#   dst_offset
+#   dst_openType
+#   dst_open_flags
+#   dst_opr_type
+#   dst_regChksum  (present when checksum calculation is requested, e.g., `icp -k`)
+#   dst_resc_hier
+#   dst_selObjType
+#   dst_selected_hierarchy
+#   dst_translatedPath
+#   dst_verifyChksum  (present when checksum calculation and verification is requests, e.g., 
+#                      `icp -K`)
+#   src_create_mode
+#   src_data_size
+#   src_num_threads
+#   src_obj_path
+#   src_offset
+#   src_open_flags
+#   src_opr_type
+#   src_resc_hier
+#   src_selected_hierarchy
+#   src_translatedPath
+#
+# *TRANSSTAT : *NOT SUPPORTED*
+#
+pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
+  if (_ipc_needsChecksum(*DataObjCopyInp)) {
+    *path = _ipc_getValue(*DataObjCopyInp, 'dst_obj_path');
+
+    if (*path == '') {
+      writeLine(
+        'serverLog', 
+        'Could not determine path to created data object, (DATAOBJCOPYINP = *DataObjCopyInp)' );
+    } else {
+      _ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjCopyInp, 'dst_resc_hier'));
+    }
+  }
+}
+
+
+# N.B. This can be triggered by iput
+#
+# ALGORITHM:
+#
+# If neither *DATAOBJINP.regChksum nor *DATAOBJINP.verifyChksum exist, calculate the checksum of 
+# *DATAOBJINP.obj_path on *DATAOBJINP.resc_hier.
+#
+# TODO: test
+#
+# *DATAOBJINPBBUF : KEYVALPAIR_MS_T
+#   buf
+#   len
+#
+# *PORTALOPROUT : NOT SUPPORTED
+#
+pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTALOPROUT) {
+  if (_ipc_needsChecksum(*DataObjInp)) {
+    *path = _ipc_getValue(*DataObjInp, 'obj_path');
+
+    if (*path == '') {
+      writeLine(
+        'serverLog', 
+        'Could not determine path to created data object, (DATAOBJINP = *DataObjInp)' );
+    } else {
+      _ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjInp, 'resc_hier'));
+    }
+  }
+}
+
+
+# N.B. This can be triggered by ireg.
+#
+# ALGORITHM:
+#
+# If none of PHYPATHREGINP.regRepl, PHYPATHREGINP.regChksum, or PHYPATHREGINP.verifyChksum are set,
+# calculate the checksum of replica of PHYPATHREGINP.obj_path on PHYPATHREGINP.resc_hier.
+#
+# TODO: test
+#
+# *PHYPATHREGINP : KEYVALPAIR_MS_T
+#   create_mode
+#   dataType
+#   data_size
+#   destRescName
+#   filePath
+#   num_threads
+#   obj_path
+#   offset
+#   open_flags
+#   opr_type
+#   resc_hier
+#
+pep_api_phy_path_reg_post(*Instance, *Comm, *PhyPathRegInp) {
+  if (!_ipc_hasKey(*PhyPathRegInp, 'regRepl') && _ipc_needsChecksum(*PhyPathRegInp)) {
+    *path = _ipc_getValue(*PhyPathRegInp, 'obj_path');
+
+    if (*path == '') {
+      writeLine(
+        'serverLog', 
+        'Could not determine path to created data object, (PHYPATHREGINP = *PhyPathRegInp)' );
+    } else {
+      _ipc_ensureReplicasChecksum(*path, _ipc_getValue(*PhyPathRegInp, 'resc_hier'));
+    }
+  }
+}
+
+
+# N.B. These aren't used by iCommands or any official API, so let's not
+# implement these.
+#
+pep_api_bulk_data_obj_reg_post(*INSTANCE, *COMM, *BULKDATAOBJREGINP, *BULKDATAOBJREGOUT) {}
+pep_api_data_obj_create_and_stat_post(*INSTANCE, *COMM, *DATAOBJINP, *OPENSTAT) {}
+
+
 ## DATABASE ##
 
 # CLOSE

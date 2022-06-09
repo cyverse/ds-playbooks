@@ -39,7 +39,7 @@ main()
     docker build --file "$baseDir"/base/Dockerfile."$os" --tag test-env-base:"$os" "$baseDir"
   done
 
-  docker-compose --file "$baseDir"/docker-compose.yml --project-name "$ENV_NAME" build
+  docker compose --file "$baseDir"/docker-compose.yml --project-name "$ENV_NAME" build
 }
 
 

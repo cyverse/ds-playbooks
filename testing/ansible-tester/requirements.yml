@@ -2,7 +2,6 @@
 collections:
   - name: ansible.posix
   - name: ansible.utils
-  - name: ansible.netcommon
   - name: community.docker
   - name: community.general
     # XXX - Due to
@@ -11,4 +10,3 @@ collections:
     version: "<3.3"
     # XXX - ^^^
   - name: community.postgresql
-  - name: community.rabbitmq    # Needed for testing

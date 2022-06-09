@@ -52,8 +52,8 @@
             server_config.catalog_provider_hosts 
               | symmetric_difference(
                 [
-                  'dstesting_provider_configured_1.dstesting_default', 
-                  'dstesting_provider_unconfigured_1.dstesting_default' ] ) 
+                  'dstesting-provider_configured-1.dstesting_default', 
+                  'dstesting-provider_unconfigured-1.dstesting_default' ] ) 
               | length 
             == 0
     

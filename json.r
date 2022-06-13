@@ -1,5 +1,5 @@
 json {
-  *t = deserialize('"bob"');
+  *t = deserialize(*Serial);
   writeLine('stdout', serialize(*t));
 }
 
@@ -18,7 +18,8 @@ strTl : string -> string
 strTl(*String) = substrRem(*String, 1)
 
 trimLeadingSpace : string -> string
-TODO implement
+trimLeadingSpace(*String) = 
+  if !(*String like regex '^[[:space:]].*') then *String else trimLeadingSpace(strTl(*String))
 
 append : string * string * list string -> string
 append(*Base, *Separator, *Elements) =
@@ -109,20 +110,38 @@ serializeScalarsAccum(*RevSerialized, *Unserialized) =
 
 deserialize : string -> json_val
 deserialize(*Serial) =
-  let *trimmed = trimLeadingSpace(*Serial) in
+  let (*doc, *remains) = deserializeVal(*Serial) in
+  let trimLeadingSpace(*remains) == '' then *doc 
+  else let (*err, *_) = mkDeserializeErrRes('unexpected content after document', *Serial) in *err
+
+deserializeVal : string -> json_val * string
+deserializeVal(*Serial) =
+  let *Serial = trimLeadingSpace(*Serial) in
   let *h = strHd(*Serial) in
-  let (*val, *remnants) =
-    if *h == '[' then deserializeArray(*trimmed)
-    else if *h == 'f' || *h == 't' then deserializeBoolean(*trimmed)
-    else if *h == 'n' then deserializeNull(*trimmed)
-    else if *h like regex '[-0-9]' then deserializeNumber(*trimmed)
-    else if *h == '"' then deserializeString(*trimmed)
-    else if *h == '{' then deserializeObject(*trimmed) 
-    else mkDeserializeErrRes('there is no legal next value', *trimmed) in
-  *val
+    if *h == '[' then deserializeArray(*Serial)
+    else if *h == 'f' || *h == 't' then deserializeBoolean(*Serial)
+    else if *h == 'n' then deserializeNull(*Serial)
+    else if *h like regex '[-0-9]' then deserializeNumber(*Serial)
+    else if *h == '"' then deserializeString(*Serial)
+    else if *h == '{' then deserializeObject(*Serial) 
+    else mkDeserializeErrRes('there is no legal next value', *Serial) in
 
 deserializeArray : string -> json_val * string
-# TODO implement
+deserializeArray(*Serial) =
+  let *initSerial = *Serial in
+  let *Serial = tlStr(*Serial) in
+  let (*elmts, *Serial) = deserializeArrayAccum(list(), *Serial) in
+  let *Serial = trimLeadingSpace(*Serial) in
+  if *Serial like ']*' then (json_array(*elmts), tlStr(*Serial)) 
+  else mkDeserializeErrRes('expected next value to be an array', *initSerial)
+
+deserializeArrayAccum : list json_val * string -> list json_val * string 
+deserializeArrayAccum(*revCurElmts, *Serial) =
+  let (*newElmt, *Serial) = deserializeVal(*Serial) in
+  let *revCurElmts = cons(*newElmt, *revCurElmts) in
+  let *Serial = trimLeadingSpace(*Serial) in
+  if !(*Serial like ',*') then (rev(*revCurElmts), *Serial) 
+  else deserializeArrayAccum(*revCurElmts, strTl(*Serial))
 
 deserializeBoolean : string -> json_val * string
 deserializeBoolean(*Serial) =
@@ -154,6 +173,15 @@ extractDigits(*Buf, *Serial) =
   else extractDigits(*Buf ++ strHd(*Serial), strTl(*Serial)) 
 
 deserializeObject : string -> json_val * string
+deserializeObject(*Serial) =
+  let *initSerial = *Serial in
+  let *Serial = tlStr(*Serial) in
+  let *fields = deserialObjectAccum(list(), *Serial) in
+  let *Serial = trimLeadingSpace(*Serial) in
+  if *Serial like '}*' then (json_obj(*fields), tlStr(*Serial))
+  else mkDeserializeErrRes('expected next object to be an object', *initSerial)
+
+deserializeObjectAccum : list (string * json_val) * string -> list (string * json_val) * string
 # TODO implement
 
 deserializeString(*Serial) =

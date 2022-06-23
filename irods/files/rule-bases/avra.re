@@ -4,8 +4,13 @@
 @include 'avra-env'
 
 _avra_isForAvra(*Path) =
-  let *strName = str(avra_BASE_COLL) in
-  *strName != '' && str(*Path) like *strName ++ '/*'
+  let *answer = false in
+  let *avraRes = avra_RESC in
+  foreach( *rec in 
+      SELECT META_RESC_ATTR_VALUE 
+      WHERE RESC_NAME = *avraRes AND META_RESC_ATTR_NAME = 'ipc::hosted-collection' 
+    ) { *answer = *answer || (*Path like *rec.META_RESC_ATTR_VALUE ++ '/*'); } in
+  *answer
 
 # Restrict the Avra resource to files in the Avra collection
 pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST, *PARSER, *VOTE) {
@@ -14,9 +19,8 @@ pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST,
     && *CONTEXT.resc_hier == avra_RESC
     && ! _avra_isForAvra(*CONTEXT.logical_path)
   ) {
-    *msg = 'CYVERSE ERROR:  ' ++ avra_RESC ++ ' usage is limited to the Avra collection, '
-      ++ str(avra_BASE_COLL);
     cut;
-    failmsg(-32000, *msg);
+    failmsg(
+      -32000, 'CYVERSE ERROR: ' ++ *CONTEXT.logical_path ++ 'not allowed on ' ++ avra_RESC ++ '.' );
   }
 }

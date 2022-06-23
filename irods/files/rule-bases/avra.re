@@ -6,7 +6,7 @@
 _avra_isForAvra(*Path) =
   let *answer = false in
   let *avraRes = avra_RESC in
-  foreach( *rec in 
+  let *_ = foreach( *rec in 
       SELECT META_RESC_ATTR_VALUE 
       WHERE RESC_NAME = *avraRes AND META_RESC_ATTR_NAME = 'ipc::hosted-collection' 
     ) { *answer = *answer || (*Path like *rec.META_RESC_ATTR_VALUE ++ '/*'); } in
@@ -20,7 +20,8 @@ pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST,
     && ! _avra_isForAvra(*CONTEXT.logical_path)
   ) {
     cut;
-    failmsg(
-      -32000, 'CYVERSE ERROR: ' ++ *CONTEXT.logical_path ++ 'not allowed on ' ++ avra_RESC ++ '.' );
+    msiExit(
+      '-32000', 
+      'CYVERSE ERROR: ' ++ *CONTEXT.logical_path ++ ' not allowed on ' ++ avra_RESC ++ '.' );
   }
 }

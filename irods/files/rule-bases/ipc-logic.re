@@ -713,7 +713,7 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
 	*me = 'ipc_acPostProcForModifyAccessControl';
 	*entityId = _ipc_getEntityId(*Path);
 
-	if (*entityId >= 0) {}
+	if (*entityId >= 0) {
 		_ipc_registerAction(*entityId, *me);
 
 		if (_ipc_isCurrentAction(*entityId, *me)) {

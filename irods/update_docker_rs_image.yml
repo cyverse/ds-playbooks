@@ -1,6 +1,8 @@
 ---
 - name: Build image
   hosts: irods_resource
+  collections:
+    - community.docker
   run_once: true
   gather_facts: false
   vars:
@@ -12,7 +14,8 @@
           setup:
           delegate_facts: true
 
-        - set_fact:
+        - name: provide default resource placeholders
+          set_fact:
             irods_default_resource: _IRODS_DEFAULT_RESOURCE_
             irods_default_repl_resource: _IRODS_DEFAULT_RESOURCE_
           delegate_facts: true
@@ -21,15 +24,18 @@
           file:
             path: "{{ _build_dir }}/var/lib/irods/msiExecCmd_bin"
             state: directory
+            mode: u+rwx
 
         - name: add common command scripts
           copy:
             src: "{{ item }}"
             dest: "{{ _build_dir }}/var/lib/irods/msiExecCmd_bin"
+            mode: u+rw
           with_fileglob:
             - "files/cmd-common/*"
 
-        - import_role:
+        - name: generate iRODS config files
+          import_role:
             name: cyverse.irods_cfg
           vars:
             irods_cfg_authentication_file: /var/lib/irods/.irods/.irodsA
@@ -72,6 +78,7 @@
           template:
             src: "{{ item }}"
             dest: "{{ _build_dir }}/etc/irods/{{ item | basename | regex_replace('.j2$') }}"
+            mode: u+rw
           with_fileglob:
             - "templates/rule-bases/*"
 
@@ -79,6 +86,7 @@
           copy:
             src: "{{ item }}"
             dest: "{{ _build_dir }}/etc/irods"
+            mode: u+rw
           with_fileglob:
             - "files/rule-bases/*"
 
@@ -86,11 +94,13 @@
           copy:
             src: files/docker-rs/dockerignore
             dest: "{{ _build_dir }}/.dockerignore"
+            mode: u+rw
 
         - name: copy resource server docker scripts
           copy:
             src: files/docker-rs/{{ item }}
             dest: "{{ _build_dir }}"
+            mode: u+rw
           with_items:
             - on-build-instantiate.sh
             - periphery.sh

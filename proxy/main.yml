@@ -7,6 +7,7 @@
       vars:
         haproxy_queue_timeout: 10m
         haproxy_stats_tls_crt: "{{ proxy_stats_tls_crt }}"
+        haproxy_stats_tls_crt_content: "{{ proxy_stats_tls_crt_content }}"
         haproxy_stats_auth: "{{ proxy_stats_auth }}"
         haproxy_stats_client_hosts: "{{ proxy_stats_client_hosts }}"
         haproxy_irods_reconn_ports: "{{ proxy_irods_reconn_ports }}"

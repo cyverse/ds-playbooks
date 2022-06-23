@@ -2,10 +2,12 @@
 collections:
   - name: ansible.posix
   - name: ansible.utils
+  - name: community.docker
   - name: community.general
-    # XXX - Due to 
-    # https://github.com/ansible-collections/community.general/issues/4470, the 
+    # XXX - Due to
+    # https://github.com/ansible-collections/community.general/issues/4470, the
     # version must be less than 3.3.
-    version: '<3.3'
+    version: "<3.3"
     # XXX - ^^^
   - name: community.postgresql
+  - name: community.rabbitmq    # Needed for testing

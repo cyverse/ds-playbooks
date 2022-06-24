@@ -3,6 +3,11 @@
   hosts: irods_catalog
   become: true
   tasks:
+    - name: install urlencode
+      package:
+        name: gridsite-clients
+        state: present
+
     - name: ensure /var/log/bisque exists
       file:
         path: /var/log/bisque
@@ -25,8 +30,28 @@
         mode: u+rx
 
     - name: place .bisque
-      when: _bisque_url is defined
+      when: _bisque_url|length > 0
       template:
         src: templates/bisque.j2
         dest: "{{ ansible_env.HOME }}/.bisque"
         mode: u=r
+
+    - name: install url-encode-path-segments command script
+      copy:
+        src: files/bisque/var/lib/irods/msiExecCmd_bin/url-encode-path-segments.sh
+        dest: /var/lib/irods/msiExecCmd_bin
+        mode: u+rx
+
+    - name: place BisQue rule logic
+      copy:
+        src: files/rule-bases/bisque.re
+        dest: /etc/irods/bisque.re
+        mode: u+r
+      notify: reload rules
+
+  handlers:
+    - name: reload rules
+      file:
+        path: /etc/irods/core.re
+        state: touch
+        mode: u+r

@@ -77,24 +77,6 @@
       package_facts:
         strategy: all
 
-    - name: verify HAProxy is installed
-      assert:
-        that:
-          - "'haproxy' not in ansible_facts.packages"
-          - "'centos-release-scl' in ansible_facts.packages"
-          - "'rh-haproxy18-haproxy' in ansible_facts.packages"
-          - "'rh-haproxy18-haproxy-syspaths' in ansible_facts.packages"
-
-    - name: verify /usr/sbin/haproxy points to the haproxy exec
-      stat:
-        path: /usr/sbin/haproxy
-      register: exec
-      failed_when: >
-        not exec.stat.exists or
-        not exec.stat.islnk or
-        exec.stat.lnk_source != '/opt/rh/rh-haproxy18/root/usr/sbin/haproxy' or
-        not exec.stat.executable
-
     - name: verify /etc/haproxy exists
       stat:
         path: /etc/haproxy
@@ -112,6 +94,8 @@
           '/^# BEGIN DS MANAGED BLOCK (haproxy)/{N;N;N;s/^[^\n]*\n//;p}' /etc/rsyslog.conf)
         [[ "$actSettings" = "$expSettings" ]]
       changed_when: false
+      args:
+        executable: /bin/bash
 
     - name: test place rsyslog config for HAProxy
       stat:
@@ -127,13 +111,13 @@
 
     - name: test place TLS certificates file
       stat:
-        path: /etc/pki/tls/private/testing.pem
+        path: /etc/ssl/private/testing.pem
       register: result
       failed_when: not result.stat.exists or not result.stat.roth
 
     - name: retrieve TLS certificates file
       slurp:
-        src: /etc/pki/tls/private/testing.pem
+        src: /etc/ssl/private/testing.pem
       register: pem_encoded
 
     - name: decode TLS certificates file
@@ -150,21 +134,8 @@
       register: response
       failed_when: not response.stat.exists or not result.stat.roth
 
-    - name: test haproxy config placement
-      debug:
-        msg: TODO implement
-
-    - name: verify /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg points to cfg
-      stat:
-        path: /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg
-      register: cfg
-      failed_when: >
-        not cfg.stat.exists or
-        not cfg.stat.islnk or
-        cfg.stat.lnk_source != '/etc/haproxy/haproxy.cfg'
-
     - name: test change iptables load_balancer Ids to proxy Ids
-      command: "grep --invert --quiet 'DS MANAGED BLOCK (load_balancer' /etc/sysconfig/iptables"
+      command: "grep --invert --quiet 'DS MANAGED BLOCK (load_balancer' /etc/iptables/rules.v4"
       changed_when: false
 
     - name: test disable conntrack for proxied connections

@@ -104,9 +104,8 @@ frontend irods_indirect
   default_backend  irods_direct
 
 backend irods_direct
-{# XXX: Until we are load balancing iRODS servers, I'm disabling checks to 
-        prevent false positives #}
-  server                 irods {{ haproxy_irods_host if haproxy_irods_host|ansible.utils.ipaddr else lookup('dig', haproxy_irods_host) }}{# check inter {{ haproxy_irods_check_period }}#} maxconn {{ haproxy_irods_direct_max_conn }}
+{# XXX: Until we are load balancing iRODS servers, I'm disabling checks to prevent false positives #}
+  server                 ies {{ haproxy_irods_host if haproxy_irods_host|ipaddr else lookup('dig', haproxy_irods_host) }}{# check inter {{ haproxy_irods_check_period }}#} maxconn {{ haproxy_irods_direct_max_conn }}
 {#  option tcp-check
  #  tcp-check connect
  #  tcp-check send-binary  0000006e
@@ -124,9 +123,9 @@ backend irods_direct
 listen webdav
   bind            :{{ haproxy_webdav_port }},:{{ haproxy_webdav_tls_port }}
 {# XXX: Our caching is too dumb right now to support multiple webdav servers #}
-  server          dav {{ haproxy_webdav_hosts[0] if haproxy_webdav_hosts[0]|ansible.utils.ipaddr else lookup('dig', haproxy_webdav_hosts[0]) }}
+  server          dav {{ haproxy_webdav_hosts[0] if haproxy_webdav_hosts[0]|ipaddr else lookup('dig', haproxy_webdav_hosts[0]) }}
 {#{% for w in haproxy_webdav_hosts %}
- #  server          dav-{{ loop.index }} {{ w if w|ansible.utils.ipaddr else lookup('dig', w) }} check port {{ haproxy_webdav_port }} fall 2 inter {{ haproxy_webdav_check_period }} downinter 3s fastinter 1s
+ #  server          dav-{{ loop.index }} {{ w if w|ipaddr else lookup('dig', w) }} check port {{ haproxy_webdav_port }} fall 2 inter {{ haproxy_webdav_check_period }} downinter 3s fastinter 1s
  #{% endfor %}
  #  option httpchk  OPTIONS /
  #}

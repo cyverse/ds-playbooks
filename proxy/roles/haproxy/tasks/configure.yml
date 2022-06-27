@@ -15,20 +15,10 @@
     state: true
     persistent: true
 
-- name: configure | change rsyslog.conf block Id to proxy
-  shell: |
-    if grep --quiet 'DS MANAGED BLOCK (load_balancer)' /etc/rsyslog.conf; then
-      sed --in-place \
-        's/^\(# [^ ]\+ DS MANAGED BLOCK\) (load_balancer)/\1 (haproxy)/' /etc/rsyslog.conf
-      echo changed
-    fi
-  register: result
-  changed_when: result.stdout == 'changed'
-
 - name: configure | configure rsyslog to listen on UDP socket
   blockinfile:
     path: /etc/rsyslog.conf
-    insertafter: "# Provides UDP syslog reception"
+    insertafter: '# Provides UDP syslog reception'
     marker: "# {mark} DS MANAGED BLOCK (haproxy)"
     block: |
       $ModLoad imudp
@@ -78,15 +68,5 @@
     dest: /etc/haproxy/haproxy.cfg
     owner: haproxy
     mode: u=r
-  notify:
-    - reload haproxy
-
-- name: configure | ensure /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg points to cfg
-  file:
-    src: /etc/haproxy/haproxy.cfg
-    dest: /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg
-    state: link
-    follow: false
-    force: true
   notify:
     - reload haproxy

@@ -312,8 +312,9 @@ json_getValue(*Doc, *FieldName) =
 		| json_array(*l) => json_empty
 		| json_obj(*fields) =>
 			let *ans = json_empty in
-			let *_ = foreach (*name, *val) in *fields {
+			let *_ = foreach (*field in *fields) {
+            (*name, *val) = *field;
 				if (*FieldName == *name) {
-					*ans = *val;
-				}} in
+					*ans = *val; 
+				} } in
 			*ans

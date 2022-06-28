@@ -227,7 +227,7 @@ _ipc_getMsgType(*ItemType) =
 
 _ipc_mkAVUObject(*Name, *Value, *Unit) = 
 	json_obj(
-		list(('attribute', json_str(*Name), ('value', json_str(*Value), ('unit', json_str(*Unit))) )
+		list(('attribute', json_str(*Name)), ('value', json_str(*Value)), ('unit', json_str(*Unit))) )
 
 _ipc_mkUserObject(*Name, *Zone) = 
 	json_obj(
@@ -366,7 +366,7 @@ _ipc_sendDataObjectOpen(*Id, *Path, *CreatorName, *CreatorZone, *Size) {
  			('author', _ipc_mkUserObject(*CreatorName, *CreatorZone)),
 			('entity', json_str(*Id)),
 			('path', json_str(*Path)),
-			('size', json_num*Size)),
+			('size', json_num(*Size)),
 			('timestamp', json_str(*timestamp)) ));
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.open', *msg);
@@ -419,7 +419,7 @@ _ipc_sendAvuMod(
 		list(
  			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
 			('entity', json_str(*Item)),
-			('old-metadatum', _ioc_mkAVUObject(*OldName, *OldValue, *OldUnit)),
+			('old-metadatum', _ipc_mkAVUObject(*OldName, *OldValue, *OldUnit)),
 			('new-metadatum', _ipc_mkAVUObject(*NewName, *NewValue, *NewUnit)) ));
 
 	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.mod', *msg);
@@ -705,7 +705,7 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
 	*me = 'ipc_acPostProcForModifyAccessControl';
 	*entityId = _ipc_getEntityId(*Path);
 
-	if (*entityId >= 0) {}
+	if (*entityId >= 0) {
 		_ipc_registerAction(*entityId, *me);
 
 		if (_ipc_isCurrentAction(*entityId, *me)) {

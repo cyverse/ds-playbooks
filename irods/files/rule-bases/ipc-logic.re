@@ -4,8 +4,6 @@
 # © 2022 The Arizona Board of Regents on behalf of The University of Arizona.
 # For license information, see https://cyverse.org/license.
 
-@include 'json'
-
 
 #
 # LISTS
@@ -89,19 +87,6 @@ _ipc_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 		if _ipc_startsWith(*candidate, *Prefix) 
 		then substr(*candidate, 2, strlen(*candidate))
 		else _ipc_getNewAVUSetting(*Orig, *Prefix, tl(*Candidates))
-
-
-#
-# CHECKSUMS
-#
-
-# Compute the checksum of of a given replica of a given data object
-_ipc_chksumRepl(*Object, *ReplNum) {
-	*opt = '';
-	msiAddKeyValToMspStr('forceChksum', '', *opts);
-	msiAddKeyValToMspStr('replNum', str(*ReplNum), *opts);
-	msiDataObjChksum(*Object, *opts, *_);
-}
 
 
 #
@@ -949,9 +934,6 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 # 	*me = 'ipc_dataObjCreated_default';
 # 	*id = int(*DATA_OBJ_INFO.data_id);
 # 	_ipc_registerAction(*id, *me);
-# 	*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
-# 	if (*err < 0) { writeLine('serverLog', *msg); }
-#
 # 	*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 # 	if (*err < 0) { writeLine('serverLog', *msg); }
 #
@@ -989,9 +971,6 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 	}
 
 	if (*Step != 'START') {
-		*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
-		if (*err < 0) { writeLine('serverLog', *msg); }
-
 		if (*uuid == '') {
 			_ipc_ensureUUID(ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
 		}
@@ -1021,10 +1000,6 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 # 	*me = 'ipc_dataObjCreated_staging';
 # 	*id = int(*DATA_OBJ_INFO.data_id);
 # 	_ipc_registerAction(*id, *me);
-#
-# 	*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
-# 	if (*err < 0) { writeLine('serverLog', *msg); }
-#
 # 	*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 # 	if (*err < 0) { writeLine('serverLog', *msg); }
 #
@@ -1037,11 +1012,6 @@ ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 
 	if (*Step != 'FINISH') {
 		*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
-		if (*err < 0) { writeLine('serverLog', *msg); }
-	}
-
-	if (*Step != 'START') {
-		*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 	}
 

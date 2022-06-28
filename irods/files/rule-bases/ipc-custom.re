@@ -2,7 +2,7 @@
 # core CyVerse Data Store policies. All policy logic is in this file or 
 # included by this file.
 #
-# © 2021 The Arizona Board of Regents on behalf of The University of Arizona. 
+# © 2022 The Arizona Board of Regents on behalf of The University of Arizona. 
 # For license information, see https://cyverse.org/license.
 
 # The environment-specific configuration constants belong in the file 
@@ -16,6 +16,7 @@
 # the name of the rule hook that will call the custom rule.
 
 # The shared logic usable by all CyVerse and third parties
+@include 'json'
 @include 'ipc-services'
 
 @include 'ipc-logic'
@@ -495,25 +496,6 @@ _ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 #   len
 
 
-
-# TODO implement
-_ipc_deserializeJsonObject : string -> `KEYVALPAIR_MS_T` * string
-_ipc_deserializeJsonObject(*Serial) =
-  let *trimmed = 
-
-_ipc_deserializeJsonValue(*Serial) =
-  let *trimmed = triml(triml(triml(triml(*Serial, ' '), '\t'), '\n'), '\t') in
-  if *trimmed like '[*' then _ipc_deserializeJsonArray(*trimmed) 
-  else if *trimmed like regex '^(true|false)' then ipc_deserializeJsonBoolean(*trimmed)
-  else if *trimmed like 'null*' then ipc_deserializedNull(*trimmed)
-  else if *trimmed like regex '^[-0-9.]' then ipc_deserializeJsonNumber(*trimmed)
-  else if *trimmed like '{*' then ipc_deserializeJsonObject(*trimmed)
-  else if *trimmed like '"*' then ipc_deserializeJsonString(*trimmed)
-  else 
-
-_ipc_deserializeJson(*Serial) = let (*Result, *_) = ipc_deserializeJsonValue(*Serial) in *Result
-
-
 # Tests to see if the given map contains the given key
 #
 #_ipc_hasKey : `KEYVALPAIR_MS_T` * string -> bool
@@ -570,77 +552,6 @@ _ipc_ensureReplicasChecksum(*DataPath, *RescHier) {
       }
     }
   }
-}
-
-
-# replica_open and replica_close work together.
-# 
-# N.B. These can be triggered by istream.
-# N.B. Only `istream write` needs to be considered.
-# N.B. This can create new, overwrite existing, modify existing, and append to existing data 
-#      objects.
-# N.B. This can target a specific resource, e.g., `istream write -R`, or existing replica, e.g., 
-#      `istream write -n`.
-# N.B. This can create a checksum, e.g., `istream write -k`. 
-# N.B. When a data object with a checksum is overwritten, modified or appened to, the checksum is
-#      cleared.
-#
-# ALGORITHM:
-#
-# When replica_open_post is called, if *DATAOBJINP.destRescName is defined, then store it and 
-# *DATAOBJINP.obj_path in temporaryStorage. When replica_close_post is called, if destRescName and
-# obj_path are in temporaryStorage, and *JSON_INPUT.buf.compute_checksum != true, compute the 
-# checksum of obj_path.
-#
-# TODO: implement and test
-
-# *JSON_OUTPUT : *NOT SUPPORTED*
-# 
-pep_api_replica_open_post(*Instance, *Comm, *DataObjInp, *JSON_OUTPUT) {
-  *path = _ipc_getValue(*DataObjInp', 'obj_path');
-
-  if (*path != '') {
-    temporaryStorage.replica-dataObjPath = *path;
-    temporaryStorage.replica-rescHier = _ipc_getValue(*DataObjInp, 'destRescName');
-  }
-}
-
-# *SEE COMMON*
-#
-pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
-  *path = _ipc_getValue(temporaryStorage, 'replica-dataObjPath');
-
-  if (*path != '') {
-    *input = _ipc_deserializeJson(*JsonInput);
-    *chksumComputed = _ipc_getValue(*input, 'compute_checksum');
-
-    if (*chksumComputed != 'true') {
-      _ipc_ensureReplicasChecksum(*path, _ipc_getValue(temporaryStorage, 'replica-rescHier'));
-    }
-
-    temporaryStorage.replica-dataObjPath = '';
-    temporaryStorage.replica-rescHier = '';
-  }
-}
-
-
-# N.B. This can be triggered by itouch.
-#
-# N.B. Only need to checksum something if it is a data object and it was created by itouch.
-# N.B. itouch cannot be used to create a replica of an existing data object.
-# If options.no_create = true, a data object wasn't created. 
-# If options.replica_number or options.leaf_resource_name is set, a data object wasn't created.
-#
-# ALGORITHM:
-#
-# Check to see if JSON_INFUT.buf.options.no_create is false. If it is, check to see if neither 
-# options.replica_number nor options.leaf_resource_name is set. If that's the case, check to see if
-# the data object's 0 replica has a checksum. If it doesn't compute its checksum.
-#
-# TODO: implement and test
-# 
-pep_api_touch_post(*INSTANCE, *COMM, *JSON_INPUT) {
-  # *SEE COMMON*
 }
 
 
@@ -808,6 +719,116 @@ pep_api_phy_path_reg_post(*Instance, *Comm, *PhyPathRegInp) {
         'Could not determine path to created data object, (PHYPATHREGINP = *PhyPathRegInp)' );
     } else {
       _ipc_ensureReplicasChecksum(*path, _ipc_getValue(*PhyPathRegInp, 'resc_hier'));
+    }
+  }
+}
+
+
+# replica_open and replica_close work together.
+# 
+# N.B. These can be triggered by istream.
+# N.B. Only `istream write` needs to be considered.
+# N.B. This can create new, overwrite existing, modify existing, and append to existing data 
+#      objects.
+# N.B. This can target a specific resource, e.g., `istream write -R`, or existing replica, e.g., 
+#      `istream write -n`.
+# N.B. This can create a checksum, e.g., `istream write -k`. 
+# N.B. When a data object with a checksum is overwritten, modified or appened to, the checksum is
+#      cleared.
+#
+# ALGORITHM:
+#
+# When replica_open_post is called, if *DATAOBJINP.destRescName is defined, then store it and 
+# *DATAOBJINP.obj_path in temporaryStorage. When replica_close_post is called, if destRescName and
+# obj_path are in temporaryStorage, and *JSON_INPUT.buf.compute_checksum != true, compute the 
+# checksum of obj_path.
+#
+# TODO: test
+
+# *JSON_OUTPUT : *NOT SUPPORTED*
+# 
+pep_api_replica_open_post(*Instance, *Comm, *DataObjInp, *JSON_OUTPUT) {
+  *path = _ipc_getValue(*DataObjInp', 'obj_path');
+
+  if (*path != '') {
+    temporaryStorage.replica-dataObjPath = *path;
+    temporaryStorage.replica-rescHier = _ipc_getValue(*DataObjInp, 'destRescName');
+  }
+}
+
+# *SEE COMMON*
+#
+pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
+  *path = _ipc_getValue(temporaryStorage, 'replica-dataObjPath');
+
+  if (*path != '') {
+    *chksumComputed = match json_deserialize(*JsonInput.buf) with
+      | json_deserialize_val(*input, *_) => 
+        match json_getValue(*input, 'compute_checksum') with
+          | json_empty => false
+          | json_bool(*v) => *v; 
+
+    if (!*chksumComputed) {
+      _ipc_ensureReplicasChecksum(*path, _ipc_getValue(temporaryStorage, 'replica-rescHier'));
+    }
+
+    temporaryStorage.replica-dataObjPath = '';
+    temporaryStorage.replica-rescHier = '';
+  }
+}
+
+
+# N.B. This can be triggered by itouch.
+#
+# N.B. Only need to checksum something if it is a data object and it was created by itouch.
+# N.B. itouch cannot be used to create a replica of an existing data object.
+# If options.no_create = true, a data object wasn't created. 
+# If options.replica_number or options.leaf_resource_name is set, a data object wasn't created.
+#
+# ALGORITHM:
+#
+# Check to see if JSON_INFUT.buf.options.no_create is false. If it is, check to see if neither 
+# options.replica_number nor options.leaf_resource_name is set. If that's the case, check to see if
+# the data object's 0 replica has a checksum. If it doesn't compute its checksum.
+#
+# TODO: test
+#
+# *SEE COMMON*
+#
+pep_api_touch_post(*Instance, *Comm, *JsonInput) {
+  *input = match json_deserialize(*JsonInput.buf) with 
+    | json_deserialze_val(*v, *_) => *v;
+
+  *dataPath = match json_getValue(*input, 'logical_path') with
+    | json_empty => ''
+    | json_str(*s) => *s;
+
+  if (*dataPath != '') {
+    *options = json_getValue(*input, 'options');
+
+    *noCreate = match json_getValue(*options, 'no_create') with
+      | json_empty => false
+      | json_bool(*v) => *v;
+
+    *replNumSet = match json_getValue(*options, 'replica_number') with
+      | json_empty => false
+      | json_num(*_) => true;
+
+    *rescNameSet = match json_getValue(*options, 'leaf_resource_name') with
+      | json_empty => false
+      | json_str(*_) => true;
+
+    if (!*noCreate && !*replNumSet && !*rescNameSet) {
+      msiSplitPath(*dataPath, *collPath, *dataName);
+
+      foreach ( *rec in 
+        SELECT DATA_CHECKSUM, DATA_RESC_HIER
+        WHERE COLL_NAME = *collPath AND DATA_NAME = *dataName AND DATA_REPL_NUM = 0 
+      ) {
+        if (*rec.DATA_CHECKSUM == '') {
+          _ipc_ensureReplicasChecksum(*dataPath, *rec.DATA_RESC_HIER);
+        }
+      }
     }
   }
 }

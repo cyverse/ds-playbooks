@@ -33,8 +33,8 @@
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re
-        - ipc-json.re
         - ipc-logic.re
+        - json.re
         - pire.re
         - pire-env.re
         - sernec.re
@@ -44,15 +44,9 @@
         - terraref.re
         - terraref-env.re
 
-    - name: test ensure ipc-amqp.re is gone
+    - name: test ensure ipc-json.re is gone
       stat:
-        path: /etc/irods/ipc-amqp.re
-      register: response
-      failed_when: response.stat.exists
-
-    - name: test ensure ipc-uuid.re is gone
-      stat:
-        path: /etc/irods/ipc-uuid.re
+        path: /etc/irods/ipc-json.re
       register: response
       failed_when: response.stat.exists
 

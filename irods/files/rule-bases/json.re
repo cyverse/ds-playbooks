@@ -1,15 +1,12 @@
-main {
-	*msg = match json_deserialize(*Serial) with
-		| json_deserialize_val(*v, *_) => json_serialize(*v)
-		| json_deserialize_err(*e, *v, *r) => 
-			*e ++ ' (remaining="' ++ *r ++ '", deserialized=' ++ json_serialize(*v) ++ ')';
-	writeLine('stdout', *msg);
-}
-
+# iRODS rule language logic for working with JSON documents
+#
 # 1. Only the control characters for horizontal tab, carriage return, and line 
 #    feed are supported in strings.
 # 2. exponential notation is not supported.
 # 3. Numbers may not begin with a . or a +.
+#
+# © 2022 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
 
 _json_substrRem : string * int -> string
 _json_substrRem(*String, *NewHdPos) = substr(*String, *NewHdPos, strlen(*String))
@@ -304,5 +301,19 @@ _json_extractStringAccum(*Buf, *Serial) =
 			else (*Buf ++ _json_strHd(*Serial), _json_strTl(*Serial)) in
 		_json_extractStringAccum(*Buf, *Serial)
 
-INPUT *Serial=''
-OUTPUT ruleExecOut
+json_getValue : json_val * string -> json_val
+json_getValue(*Doc, *FieldName) =
+	match *Doc with
+		| json_empty => json_empty
+		| json_null => json_empty
+		| json_bool(*b) => json_empty
+		| json_num(*n) => json_empty
+		| json_str(*s) => json_empty
+		| json_array(*l) => json_empty
+		| json_obj(*fields) =>
+			let *ans = json_empty in
+			let *_ = foreach (*name, *val) in *fields {
+				if (*FieldName == *name) {
+					*ans = *val;
+				}} in
+			*ans

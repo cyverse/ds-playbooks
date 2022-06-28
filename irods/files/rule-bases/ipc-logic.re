@@ -1,10 +1,11 @@
 # The general Data Store rule independent of environment specific rule
 # customizations.
 #
-# © 2021 The Arizona Board of Regents on behalf of The University of Arizona.
+# © 2022 The Arizona Board of Regents on behalf of The University of Arizona.
 # For license information, see https://cyverse.org/license.
 
-@include 'ipc-json'
+@include 'json'
+
 
 #
 # LISTS
@@ -224,22 +225,13 @@ _ipc_getMsgType(*ItemType) =
 	else if ipc_isUser(*ItemType) then _ipc_USER_MSG_TYPE
 	else ''
 
-_ipc_mkAVUObject(*Field, *Name, *Value, *Unit) = 
-	ipcJson_object(
-		*Field,
-		list(
-			ipcJson_string('attribute', *Name),
-			ipcJson_string('value', *Value),
-			ipcJson_string('unit', *Unit) ) )
+_ipc_mkAVUObject(*Name, *Value, *Unit) = 
+	json_obj(
+		list(('attribute', json_str(*Name), ('value', json_str(*Value), ('unit', json_str(*Unit))) )
 
-_ipc_mkEntityField(*Uuid) = ipcJson_string('entity', *Uuid)
-
-_ipc_mkPathField(*Path) = ipcJson_string('path', *Path)
-
-_ipc_mkUserObject(*Field, *Name, *Zone) = 
-	ipcJson_object(*Field, list(ipcJson_string('name', *Name), ipcJson_string('zone', *Zone)))
-
-_ipc_mkAuthorField(*Name, *Zone) = _ipc_mkUserObject('author', *Name, *Zone)
+_ipc_mkUserObject(*Name, *Zone) = 
+	json_obj(
+		list(('name', json_str(*Name)), ('zone', json_str(*Zone))) )
 
 _ipc_resolve_msg_entity_id(*EntityType, *EntityName) =
 	let *id = '' in
@@ -261,7 +253,7 @@ _ipc_resolve_msg_entity_id(*EntityType, *EntityName) =
 sendMsg(*Topic, *Msg) {
 	*exchangeArg = execCmdArg(ipc_AMQP_EXCHANGE);
 	*topicArg = execCmdArg(*Topic);
-	*msgArg = execCmdArg(*Msg);
+	*msgArg = execCmdArg(json_serialize(*Msg));
 	*argStr = '*exchangeArg *topicArg *msgArg';
 
 	*status = errormsg(
@@ -277,24 +269,24 @@ sendMsg(*Topic, *Msg) {
 _ipc_sendCollectionAclModified(
 	*Collection, *AccessLevel, *UserName, *UserZone, *Recursive, *AuthorName, *AuthorZone )
 {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Collection),
-			ipcJson_boolean('recursive', *Recursive),
-			ipcJson_string('permission', *AccessLevel),
-			_ipc_mkUserObject('user', *UserName, *UserZone) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('entity', json_str(*Collection)),
+			('recursive', json_bool(*Recursive)),
+			('permission', json_str(*AccessLevel)),
+			('user', _ipc_mkUserObject(*UserName, *UserZone)) ));
 
 	sendMsg(_ipc_COLL_MSG_TYPE ++ '.acl.mod', *msg);
 }
 
 _ipc_sendCollectionInheritModified(*Collection, *Inherit, *Recursive, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Collection),
-			ipcJson_boolean('recursive', *Recursive),
-			ipcJson_boolean('inherit', *Inherit) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('entity', json_str(*Collection)),
+			('recursive', json_bool(*Recursive)),
+			('inherit', json_bool(*Inherit)) ));
 
 	sendMsg(_ipc_COLL_MSG_TYPE ++ '.acl.mod', *msg);
 }
@@ -315,23 +307,23 @@ _ipc_sendCollectionAccessModified(
 }
 
 _ipc_sendCollectionAdd(*Id, *Path, *CreatorName, *CreatorZone) {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*CreatorName, *CreatorZone),
-			_ipc_mkEntityField(*Id),
-			_ipc_mkPathField(*Path) ) );
+ 			('author', _ipc_mkUserObject(*CreatorName, *CreatorZone)),
+			('entity', json_str(*Id)),
+			('path', json_str(*Path)) ));
 
 	sendMsg(_ipc_COLL_MSG_TYPE ++ '.add', *msg);
 }
 
 _ipc_sendDataObjectAclModified(*Data, *AccessLevel, *UserName, *UserZone, *AuthorName, *AuthorZone)
 {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Data),
-			ipcJson_string('permission', *AccessLevel),
-			_ipc_mkUserObject('user', *UserName, *UserZone) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('entity', json_str(*Data)),
+			('permission', json_str(*AccessLevel)),
+			('user', _ipc_mkUserObject(*UserName, *UserZone)) ));
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.acl.mod', *msg);
 }
@@ -339,14 +331,14 @@ _ipc_sendDataObjectAclModified(*Data, *AccessLevel, *UserName, *UserZone, *Autho
 _ipc_sendDataObjectAdd(
 	*AuthorName, *AuthorZone, *Data, *Path, *OwnerName, *OwnerZone, *Size, *Type
 ) {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Data),
-			_ipc_mkPathField(*Path),
-			_ipc_mkUserObject('creator', *OwnerName, *OwnerZone),
-			ipcJson_number('size', *Size),
-			ipcJson_string('type', *Type) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('entity', json_str(*Data)),
+			('path', json_str(*Path)),
+			('creator', _ipc_mkUserObject(*OwnerName, *OwnerZone)),
+			('size', json_num(*Size)),
+			('type', json_str(*Type)) ));
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.add', *msg);
 }
@@ -355,13 +347,13 @@ _ipc_sendDataObjectAdd(
 _ipc_sendDataObjectMod(
 	*AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
 ) {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Object),
-			_ipc_mkUserObject('creator', *OwnerName, *OwnerZone),
-			ipcJson_number('size', *Size),
-			ipcJson_string('type', *Type) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('entity', json_str(*Object)),
+			('creator', _ipc_mkUserObject(*OwnerName, *OwnerZone)),
+			('size', json_num(*Size)),
+			('type', json_str(*Type)) ));
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.mod', *msg);
 }
@@ -369,44 +361,44 @@ _ipc_sendDataObjectMod(
 _ipc_sendDataObjectOpen(*Id, *Path, *CreatorName, *CreatorZone, *Size) {
 	msiGetSystemTime(*timestamp, 'human');
 
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*CreatorName, *CreatorZone),
-			_ipc_mkEntityField(*Id),
-			_ipc_mkPathField(*Path),
-			ipcJson_number('size', *Size),
-			ipcJson_string('timestamp', *timestamp) ) );
+ 			('author', _ipc_mkUserObject(*CreatorName, *CreatorZone)),
+			('entity', json_str(*Id)),
+			('path', json_str(*Path)),
+			('size', json_num*Size)),
+			('timestamp', json_str(*timestamp)) ));
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.open', *msg);
 }
 
 # Publish a data-object.sys-metadata.mod message to AMQP exchange
 _ipc_sendDataObjectMetadataModified(*Data, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Data) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('entity', json_str(*Data)) ));
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.sys-metadata.mod', *msg);
 }
 
 _ipc_sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			ipcJson_string('pattern', *ItemName),
-			_ipc_mkAVUObject('metadatum', *AName, *AValue, *AUnit) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('pattern', json_str(*ItemName)),
+			('metadatum', _ipc_mkAVUObject(*AName, *AValue, *AUnit)) ));
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.metadata.addw', *msg);
 }
 
 _ipc_sendAvuCopy(*SourceItemType, *Source, *TargetItemType, *Target, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			ipcJson_string('source', *Source),
-			ipcJson_string('source-type', _ipc_getMsgType(*SourceItemType)),
-			ipcJson_string('destination', *Target) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('source', json_str(*Source)),
+			('source-type', json_str(_ipc_getMsgType(*SourceItemType))),
+			('destination', json_str(*Target)) ));
 
 	sendMsg(_ipc_getMsgType(*TargetItemType) ++ '.metadata.cp', *msg);
 }
@@ -423,55 +415,55 @@ _ipc_sendAvuMod(
 	*AuthorName,
 	*AuthorZone )
 {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Item),
-			_ipc_mkAVUObject('old-metadatum', *OldName, *OldValue, *OldUnit),
-			_ipc_mkAVUObject('new-metadatum', *NewName, *NewValue, *NewUnit) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('entity', json_str(*Item)),
+			('old-metadatum', _ioc_mkAVUObject(*OldName, *OldValue, *OldUnit)),
+			('new-metadatum', _ipc_mkAVUObject(*NewName, *NewValue, *NewUnit)) ));
 
 	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.mod', *msg);
 }
 
 _ipc_sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Item),
-			ipcJson_string('attribute-pattern', *AName),
-			ipcJson_string('value-pattern', *AValue),
-			ipcJson_string('unit-pattern', *AUnit) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('entity', json_str(*Item)),
+			('attribute-pattern', json_str(*AName)),
+			('value-pattern', json_str(*AValue)),
+			('unit-pattern', json_str(*AUnit)) ));
 
 	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.rmw', *msg);
 }
 
 _ipc_sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Item),
-			_ipc_mkAVUObject('metadatum', *AName, *AValue, *AUnit) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('entity', json_str(*Item)),
+			('metadatum', _ipc_mkAVUObject(*AName, *AValue, *AUnit)) ));
 
 	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.' ++ *Option, *msg);
 }
 
 _ipc_sendEntityMove(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Id),
-			ipcJson_string('old-path', *OldPath),
-			ipcJson_string('new-path', *NewPath) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('entity', json_str(*Id)),
+			('old-path', json_str(*OldPath)),
+			('new-path', json_str(*NewPath)) ));
 
 	sendMsg(_ipc_getMsgType(*Type) ++ '.mv', *msg);
 }
 
 _ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = json_obj(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Id),
-			ipcJson_string('path', *Path) ) );
+ 			('author', _ipc_mkUserObject(*AuthorName, *AuthorZone)),
+			('entity', json_str(*Id)),
+			('path', json_str(*Path)) ));
 
 	sendMsg(_ipc_getMsgType(*Type) ++ '.rm', *msg);
 }

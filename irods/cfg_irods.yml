@@ -36,14 +36,9 @@
       notify:
         - reload rules
 
-    - name: ensure ipc-amqp.re is gone
+    - name: ensure old ipc-json.re is gone
       file:
-        path: /etc/irods/ipc-amqp.re
-        state: absent
-
-    - name: ensure ipc-uuid.re is gone
-      file:
-        path: /etc/irods/ipc-uuid.re
+        path: /etc/irods/ipc-json.re
         state: absent
 
   roles:

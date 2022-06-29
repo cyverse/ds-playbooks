@@ -517,44 +517,6 @@ _ipc_needsChecksum(*DataObjOpInp) =
   !_ipc_hasKey(*DataObjOpInp, 'regChksum') && !_ipc_hasKey(*DataObjOpInp, 'verifyChksum')
 
 
-# Ensures that all of the replcias of the given data object have a checksum
-# 
-_ipc_ensureReplicasChecksum(*DataPath) {
-  *opts = '';
-  msiAddKeyValToMspStr('ChksumAll', '', *opts);
-
-  if (errormsg(msiDataObjChksum(*DataPath, *opts, *_), *err) < 0) {
-    writeLine('serverLog', 'Failed to generate checksums for the replicas of *DataPath (*err)');
-  }
-}
-
-
-# Ensures that all of the replicas of the given data object on the given storage 
-# resource have a checksum
-#
-_ipc_ensureReplicasChecksum(*DataPath, *RescHier) {
-  if (*RescHier == '') {
-    ipc_ensureReplicasChecksum(*DataPath);
-  } else {
-    msiSplitPath(*DataPath, *collPath, *dataName);
-
-    foreach ( *rec in
-      SELECT DATA_REPL_NUM
-      WHERE COLL_NAME == *collPath AND DATA_NAME == *dataName AND DATA_RESC_HIER == *RescHier
-    ) {
-      *opts = '';
-      msiAddKeyValToMspStr('replNum', *rec.DATA_REPL_NUM, *opts);
-    
-      if (errormsg(msiDataObjChksum(*DataPath, *opts, *_), *err) < 0) {
-        writeLine(
-          'serverLog', 
-          'Failed to generate checksums for the replicas of *DataPath on *RescHier (*err)' );
-      }
-    }
-  }
-}
-
-
 # N.B. This can be triggered by `iput -b -r`.
 # N.B. `-k` adds `regChksum` to BULKOPRINP.
 # N.B. `-K` adds `verifyChksum` to BUKOPRINP.
@@ -585,7 +547,7 @@ pep_api_bulk_data_obj_put_post(*Instance, *Comm, *BulkOprInp, *BulkOprInpBBuf) {
   if (_ipc_needsChecksum(*BulkOprInp)) {
     foreach (*key in *BulkOprInp) {
       if (*key like 'logical_path_*') {
-        _ipc_ensureReplicasChecksum(
+        ipc_ensureReplicasChecksum(
           _ipc_getValue(*BulkOprInp, *key), _ipc_getValue(*BulkOprInp, 'resc_hier') );
       }
     }
@@ -653,7 +615,7 @@ pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
         'serverLog', 
         'Could not determine path to created data object, (DATAOBJCOPYINP = *DataObjCopyInp)' );
     } else {
-      _ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjCopyInp, 'dst_resc_hier'));
+      ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjCopyInp, 'dst_resc_hier'));
     }
   }
 }
@@ -698,7 +660,7 @@ pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
 #
 # *PORTALOPROUT : NOT SUPPORTED
 #
-pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTALOPROUT) {
+pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT) {
   if (_ipc_needsChecksum(*DataObjInp)) {
     *path = _ipc_getValue(*DataObjInp, 'obj_path');
 
@@ -707,7 +669,7 @@ pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTA
         'serverLog', 
         'Could not determine path to created data object, (DATAOBJINP = *DataObjInp)' );
     } else {
-      _ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjInp, 'resc_hier'));
+      ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjInp, 'resc_hier'));
     }
   }
 }
@@ -744,7 +706,7 @@ pep_api_phy_path_reg_post(*Instance, *Comm, *PhyPathRegInp) {
         'serverLog', 
         'Could not determine path to created data object, (PHYPATHREGINP = *PhyPathRegInp)' );
     } else {
-      _ipc_ensureReplicasChecksum(*path, _ipc_getValue(*PhyPathRegInp, 'resc_hier'));
+      ipc_ensureReplicasChecksum(*path, _ipc_getValue(*PhyPathRegInp, 'resc_hier'));
     }
   }
 }
@@ -795,7 +757,7 @@ pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
           | json_bool(*v) => *v; 
 
     if (!*chksumComputed) {
-      _ipc_ensureReplicasChecksum(*path, _ipc_getValue(temporaryStorage, 'replica_rescHier'));
+      ipc_ensureReplicasChecksum(*path, _ipc_getValue(temporaryStorage, 'replica_rescHier'));
     }
 
     temporaryStorage.replica_dataObjPath = '';
@@ -852,7 +814,7 @@ pep_api_touch_post(*Instance, *Comm, *JsonInput) {
         WHERE COLL_NAME = *collPath AND DATA_NAME = *dataName AND DATA_REPL_NUM = 0 
       ) {
         if (*rec.DATA_CHECKSUM == '') {
-          _ipc_ensureReplicasChecksum(*dataPath, *rec.DATA_RESC_HIER);
+          ipc_ensureReplicasChecksum(*dataPath, *rec.DATA_RESC_HIER);
         }
       }
     }
@@ -861,10 +823,10 @@ pep_api_touch_post(*Instance, *Comm, *JsonInput) {
 
 
 # N.B. These aren't used by iCommands or any official API, so let's not
-# implement these.
+# implement them.
 #
-pep_api_bulk_data_obj_reg_post(*INSTANCE, *COMM, *BULKDATAOBJREGINP, *BULKDATAOBJREGOUT) {}
-pep_api_data_obj_create_and_stat_post(*INSTANCE, *COMM, *DATAOBJINP, *OPENSTAT) {}
+pep_api_bulk_data_obj_reg_post(*Instance, *Comm, *BulkDataObjRegInp, *BULK_DATA_OBJ_REG_OUT) {}
+pep_api_data_obj_create_and_stat_post(*Instance, *Comm, *DataObjInp, *OpenStat) {}
 
 
 ## DATABASE ##

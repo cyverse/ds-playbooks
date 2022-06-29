@@ -572,6 +572,56 @@ setAdminGroupPerm(*Item) {
 
 
 #
+# CHECKSUMS
+#
+
+# Ensures that all of the replcias of the given data object have a checksum
+#
+# Parameters:
+#  *DataPath  (string) the absolute path to the data object
+# 
+ipc_ensureReplicasChecksum(*DataPath) {
+  *opts = '';
+  msiAddKeyValToMspStr('ChksumAll', '', *opts);
+
+  if (errormsg(msiDataObjChksum(*DataPath, *opts, *_), *err) < 0) {
+    writeLine('serverLog', 'Failed to generate checksums for the replicas of *DataPath (*err)');
+  }
+}
+
+
+# Ensures that all of the replicas of the given data object on the given storage 
+# resource have a checksum
+#
+# Parameters:
+#  *DataPath  (string) the absolute path to the data object
+#  *RescHier  (string) the resource hierarchy of the storage resource, if empty 
+#             all replicas will be checksummed.
+#
+ipc_ensureReplicasChecksum(*DataPath, *RescHier) {
+  if (*RescHier == '') {
+    ipc_ensureReplicasChecksum(*DataPath);
+  } else {
+    msiSplitPath(*DataPath, *collPath, *dataName);
+
+    foreach ( *rec in
+      SELECT DATA_REPL_NUM
+      WHERE COLL_NAME == *collPath AND DATA_NAME == *dataName AND DATA_RESC_HIER == *RescHier
+    ) {
+      *opts = '';
+      msiAddKeyValToMspStr('replNum', *rec.DATA_REPL_NUM, *opts);
+    
+      if (errormsg(msiDataObjChksum(*DataPath, *opts, *_), *err) < 0) {
+        writeLine(
+          'serverLog', 
+          'Failed to generate checksums for the replicas of *DataPath on *RescHier (*err)' );
+      }
+    }
+  }
+}
+
+
+#
 # STATIC PEPS
 #
 

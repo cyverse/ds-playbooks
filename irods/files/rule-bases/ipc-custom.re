@@ -555,16 +555,6 @@ _ipc_ensureReplicasChecksum(*DataPath, *RescHier) {
 }
 
 
-# N.B. These aren't used by iCommands, but they are by the Java and Python APIs, 
-# so let's not fully implement these.
-#
-# TODO: Implement stubs for these that log that they were called.
-#
-pep_api_data_obj_close_post(*INSTANCE, *COMM, *DATAOBJCLOSEINP) {}
-pep_api_data_obj_create_post(*INSTANCE, *COMM, *DATAOBJINP) {}
-pep_api_data_obj_open_post(*INSTANCE, *COMM, *DATAOBJINP) {}
-
-
 # N.B. This can be triggered by `iput -b -r`.
 # N.B. `-k` adds `regChksum` to BULKOPRINP.
 # N.B. `-K` adds `verifyChksum` to BUKOPRINP.
@@ -600,6 +590,18 @@ pep_api_bulk_data_obj_put_post(*Instance, *Comm, *BulkOprInp, *BulkOprInpBBuf) {
       }
     }
   }
+}
+
+
+# N.B. This isn't used by iCommands, but it is by the Java and Python APIs.
+#
+pep_api_data_obj_close_post(*Instance, *Comm, *DataObjCloseInp) {
+  *msg = 'pep_api_data_obj_close_post(\*Instance, \*Comm, \*DataObjCloseInp) called\n'
+    ++ '\t\*Instance = *Instance\n'
+    ++ '\t\*Comm = *Comm\n'
+    ++ '\t\*DataObjCloseInp = *DataObjCloseInp';
+
+  writeLine('serverLog', *msg);
 }
 
 
@@ -654,6 +656,30 @@ pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
       _ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjCopyInp, 'dst_resc_hier'));
     }
   }
+}
+
+
+# N.B. This isn't used by iCommands, but it is by the Java and Python APIs.
+#
+pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
+  *msg = 'pep_api_data_obj_create_post(\*Instance, \*Comm, \*DataObjInp) called\n'
+    ++ '\t\*Instance = *Instance\n'
+    ++ '\t\*Comm = *Comm\n'
+    ++ '\t\*DataObjInp = *DataObjInp';
+
+  writeLine('serverLog', *msg);
+}
+
+
+# N.B. This isn't used by iCommands, but it is by the Java and Python APIs.
+#
+pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
+  *msg = 'pep_api_data_obj_open_post(\*Instance, \*Comm, \*DataObjInp) called\n'
+    ++ '\t\*Instance = *Instance\n'
+    ++ '\t\*Comm = *Comm\n'
+    ++ '\t\*DataObjInp = *DataObjInp';
+
+  writeLine('serverLog', *msg);
 }
 
 

@@ -748,18 +748,18 @@ pep_api_phy_path_reg_post(*Instance, *Comm, *PhyPathRegInp) {
 # *JSON_OUTPUT : *NOT SUPPORTED*
 # 
 pep_api_replica_open_post(*Instance, *Comm, *DataObjInp, *JSON_OUTPUT) {
-  *path = _ipc_getValue(*DataObjInp', 'obj_path');
+  *path = _ipc_getValue(*DataObjInp, 'obj_path');
 
   if (*path != '') {
-    temporaryStorage.replica-dataObjPath = *path;
-    temporaryStorage.replica-rescHier = _ipc_getValue(*DataObjInp, 'destRescName');
+    temporaryStorage.replica_dataObjPath = *path;
+    temporaryStorage.replica_rescHier = _ipc_getValue(*DataObjInp, 'destRescName');
   }
 }
 
 # *SEE COMMON*
 #
 pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
-  *path = _ipc_getValue(temporaryStorage, 'replica-dataObjPath');
+  *path = _ipc_getValue(temporaryStorage, 'replica_dataObjPath');
 
   if (*path != '') {
     *chksumComputed = match json_deserialize(*JsonInput.buf) with
@@ -769,11 +769,11 @@ pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
           | json_bool(*v) => *v; 
 
     if (!*chksumComputed) {
-      _ipc_ensureReplicasChecksum(*path, _ipc_getValue(temporaryStorage, 'replica-rescHier'));
+      _ipc_ensureReplicasChecksum(*path, _ipc_getValue(temporaryStorage, 'replica_rescHier'));
     }
 
-    temporaryStorage.replica-dataObjPath = '';
-    temporaryStorage.replica-rescHier = '';
+    temporaryStorage.replica_dataObjPath = '';
+    temporaryStorage.replica_rescHier = '';
   }
 }
 
@@ -808,11 +808,11 @@ pep_api_touch_post(*Instance, *Comm, *JsonInput) {
 
     *noCreate = match json_getValue(*options, 'no_create') with
       | json_empty => false
-      | json_bool(*v) => *v;
+      | json_bool(*b) => *b;
 
     *replNumSet = match json_getValue(*options, 'replica_number') with
       | json_empty => false
-      | json_num(*_) => true;
+      | json_num(*n) => true;
 
     *rescNameSet = match json_getValue(*options, 'leaf_resource_name') with
       | json_empty => false

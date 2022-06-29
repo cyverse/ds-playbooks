@@ -581,7 +581,6 @@ setAdminGroupPerm(*Item) {
 #  *DataPath  (string) the absolute path to the data object
 # 
 ipc_ensureReplicasChecksum(*DataPath) {
-  *opts = '';
   msiAddKeyValToMspStr('ChksumAll', '', *opts);
 
   if (errormsg(msiDataObjChksum(*DataPath, *opts, *_), *err) < 0) {
@@ -608,7 +607,6 @@ ipc_ensureReplicasChecksum(*DataPath, *RescHier) {
       SELECT DATA_REPL_NUM
       WHERE COLL_NAME == *collPath AND DATA_NAME == *dataName AND DATA_RESC_HIER == *RescHier
     ) {
-      *opts = '';
       msiAddKeyValToMspStr('replNum', *rec.DATA_REPL_NUM, *opts);
     
       if (errormsg(msiDataObjChksum(*DataPath, *opts, *_), *err) < 0) {

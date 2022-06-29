@@ -439,7 +439,7 @@ _ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 
 # Common input types
 #
-# *COMM : KEYVALPAIR_MS_T
+# *Comm:
 #   auth_scheme
 #   client_addr
 #   proxy_auth_info_auth_flag
@@ -471,27 +471,9 @@ _ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 #   user_user_other_info_user_modify
 #   user_user_type
 #
-# *DATAOBJINP : KEYVALPAIR_MS_T
-#   create_mode
-#   dataIncluded
-#   dataSize
-#   dataType
-#   data_size
-#   defRescName
-#   num_threads
-#   obj_path
-#   offset
-#   openType
-#   open_flags
-#   opr_type
-#   resc_hier
-#   selObjType
-#   selected_hierarchy
-#   translatedPath
+# *Instance: string
 #
-# *INSTANCE : string
-#
-# *JSON_INPUT : KEYVALPAIR_MS_T
+# *JSON_INPUT:
 #   buf
 #   len
 
@@ -518,7 +500,7 @@ _ipc_needsChecksum(*DataObjOpInp) =
 
 
 # N.B. This can be triggered by `iput -b -r`.
-# N.B. `-k` adds `regChksum` to BULKOPRINP.
+# N.B. `-k` adds `regChksum` to BulkOprInp.
 # N.B. `-K` adds `verifyChksum` to BUKOPRINP.
 # N.B. Overwriting a replica that has a checksum clears the checksum.
 # N.B. `-X` handled transparently
@@ -526,20 +508,13 @@ _ipc_needsChecksum(*DataObjOpInp) =
 #
 # ALGORITHM:
 #
-# If neither *BULKOPRINP.regChksum nor *BULKOPRINP.verifyChksum exist, calculate the checksum of 
-# replica on *BULKOPRINP.resc_hier for each entry of *BULKOPRINP.logical_path.
+# If neither *BulkOprInp.regChksum nor *BulkOprInp.verifyChksum exist, calculate the checksum of 
+# replica on *BulkOprInp.resc_hier for each entry of *BulkOprInp.logical_path.
 #
-# TODO: test
+# *BulkOprInp: 
+#   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gafeecbd87f6ba164e8c1d189c42a8c93e
 #
-# *BULKOPRINP:
-#   data_size []
-#   logical_path []
-#   resc_hier
-#   regChksum
-#   translatedPath
-#   verifyChksum
-#
-# *BULKOPRINPBUF:
+# *BulkOprInpBBuf:
 #   buf
 #   len
 #
@@ -571,49 +546,21 @@ pep_api_data_obj_close_post(*Instance, *Comm, *DataObjCloseInp) {
 #
 # ALGORITHM:
 #
-# If neither *DATAOBJCOPYINP.regChksum nor *DATAOBJCOPYINP.verifyChksum exist, calculate the
-# checksum of *DATAOBJCOPYINP.dst_obj_path on *DATAOBJCOPYINP.dst_resc_hier.
+# If neither *DataObjCopyInp.regChksum nor *DataObjCopyInp.verifyChksum exist, calculate the
+# checksum of *DataObjCopyInp.dst_obj_path on *DataObjCopyInp.dst_resc_hier.
 #
-# TODO: test
+# *DataObjCopyInp:
+#   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gaad62fbc609d67726e15e7330bbbdf98d
 #
-# *DATAOBJCOPYINP : KEYVALPAIR_MS_T
-#   dst_create_mode
-#   dst_data_size
-#   dst_destRescName
-#   dst_num_threads
-#   dst_obj_path
-#   dst_offset
-#   dst_openType
-#   dst_open_flags
-#   dst_opr_type
-#   dst_regChksum  (present when checksum calculation is requested, e.g., `icp -k`)
-#   dst_resc_hier
-#   dst_selObjType
-#   dst_selected_hierarchy
-#   dst_translatedPath
-#   dst_verifyChksum  (present when checksum calculation and verification is requests, e.g., 
-#                      `icp -K`)
-#   src_create_mode
-#   src_data_size
-#   src_num_threads
-#   src_obj_path
-#   src_offset
-#   src_open_flags
-#   src_opr_type
-#   src_resc_hier
-#   src_selected_hierarchy
-#   src_translatedPath
-#
-# *TRANSSTAT : *NOT SUPPORTED*
+# *TransStat: *NOT SUPPORTED*
 #
 pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
   if (_ipc_needsChecksum(*DataObjCopyInp)) {
     *path = _ipc_getValue(*DataObjCopyInp, 'dst_obj_path');
 
     if (*path == '') {
-      writeLine(
-        'serverLog', 
-        'Could not determine path to created data object, (DATAOBJCOPYINP = *DataObjCopyInp)' );
+      failmsg(
+        -1, 'Could not determine path to created data object, (DataObjCopyInp = *DataObjCopyInp)' );
     } else {
       ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjCopyInp, 'dst_resc_hier'));
     }
@@ -649,16 +596,17 @@ pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
 #
 # ALGORITHM:
 #
-# If neither *DATAOBJINP.regChksum nor *DATAOBJINP.verifyChksum exist, calculate the checksum of 
-# *DATAOBJINP.obj_path on *DATAOBJINP.resc_hier.
+# If neither *DataObjInp.regChksum nor *DataObjInp.verifyChksum exist, calculate the checksum of 
+# *DataObjInp.obj_path on *DataObjInp.resc_hier.
 #
-# TODO: test
+# *DataObjInp:
+#   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#ga1b1d0d95bd1cbc6f07860d6f8174371f
 #
-# *DATAOBJINPBBUF : KEYVALPAIR_MS_T
+# *DataObjInpBBuf:
 #   buf
 #   len
 #
-# *PORTALOPROUT : NOT SUPPORTED
+# *PORTAL_OPR_OUT: *NOT SUPPORTED*
 #
 pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT) {
   if (_ipc_needsChecksum(*DataObjInp)) {
@@ -667,7 +615,7 @@ pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTA
     if (*path == '') {
       writeLine(
         'serverLog', 
-        'Could not determine path to created data object, (DATAOBJINP = *DataObjInp)' );
+        'Could not determine path to created data object, (DataObjInp = *DataObjInp)' );
     } else {
       ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjInp, 'resc_hier'));
     }
@@ -679,23 +627,11 @@ pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTA
 #
 # ALGORITHM:
 #
-# If none of PHYPATHREGINP.regRepl, PHYPATHREGINP.regChksum, or PHYPATHREGINP.verifyChksum are set,
-# calculate the checksum of replica of PHYPATHREGINP.obj_path on PHYPATHREGINP.resc_hier.
+# If none of PhyPathRegInp.regRepl, PhyPathRegInp.regChksum, or PhyPathRegInp.verifyChksum are set,
+# calculate the checksum of replica of PhyPathRegInp.obj_path on PhyPathRegInp.resc_hier.
 #
-# TODO: test
-#
-# *PHYPATHREGINP : KEYVALPAIR_MS_T
-#   create_mode
-#   dataType
-#   data_size
-#   destRescName
-#   filePath
-#   num_threads
-#   obj_path
-#   offset
-#   open_flags
-#   opr_type
-#   resc_hier
+# *PhyPathRegInp:
+#   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gad63565afa69981320220cea5d1d1f6c3
 #
 pep_api_phy_path_reg_post(*Instance, *Comm, *PhyPathRegInp) {
   if (!_ipc_hasKey(*PhyPathRegInp, 'regRepl') && _ipc_needsChecksum(*PhyPathRegInp)) {
@@ -704,7 +640,7 @@ pep_api_phy_path_reg_post(*Instance, *Comm, *PhyPathRegInp) {
     if (*path == '') {
       writeLine(
         'serverLog', 
-        'Could not determine path to created data object, (PHYPATHREGINP = *PhyPathRegInp)' );
+        'Could not determine path to created data object, (PhyPathRegInp = *PhyPathRegInp)' );
     } else {
       ipc_ensureReplicasChecksum(*path, _ipc_getValue(*PhyPathRegInp, 'resc_hier'));
     }
@@ -726,13 +662,13 @@ pep_api_phy_path_reg_post(*Instance, *Comm, *PhyPathRegInp) {
 #
 # ALGORITHM:
 #
-# When replica_open_post is called, if *DATAOBJINP.destRescName is defined, then store it and 
-# *DATAOBJINP.obj_path in temporaryStorage. When replica_close_post is called, if destRescName and
+# When replica_open_post is called, if *DataObjInp.destRescName is defined, then store it and 
+# *DataObjInp.obj_path in temporaryStorage. When replica_close_post is called, if destRescName and
 # obj_path are in temporaryStorage, and *JSON_INPUT.buf.compute_checksum != true, compute the 
 # checksum of obj_path.
-#
-# TODO: test
 
+# *DataObjInp: https://docs.irods.org/4.2.10/doxygen/structDataObjInp.html
+#
 # *JSON_OUTPUT : *NOT SUPPORTED*
 # 
 pep_api_replica_open_post(*Instance, *Comm, *DataObjInp, *JSON_OUTPUT) {
@@ -785,7 +721,7 @@ pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
 #
 pep_api_touch_post(*Instance, *Comm, *JsonInput) {
   *input = match json_deserialize(*JsonInput.buf) with 
-    | json_deserialze_val(*v, *_) => *v;
+    | json_deserialize_val(*v, *_) => *v;
 
   *dataPath = match json_getValue(*input, 'logical_path') with
     | json_empty => ''
@@ -810,8 +746,7 @@ pep_api_touch_post(*Instance, *Comm, *JsonInput) {
       msiSplitPath(*dataPath, *collPath, *dataName);
 
       foreach ( *rec in 
-        SELECT DATA_CHECKSUM, DATA_RESC_HIER
-        WHERE COLL_NAME = *collPath AND DATA_NAME = *dataName AND DATA_REPL_NUM = 0 
+        SELECT DATA_CHECKSUM, DATA_RESC_HIER WHERE COLL_NAME = *collPath AND DATA_NAME = *dataName 
       ) {
         if (*rec.DATA_CHECKSUM == '') {
           ipc_ensureReplicasChecksum(*dataPath, *rec.DATA_RESC_HIER);

@@ -19,9 +19,13 @@ pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST,
     && *CONTEXT.resc_hier == avra_RESC
     && ! _avra_isForAvra(*CONTEXT.logical_path)
   ) {
-    cut;
-    msiExit(
-      '-32000', 
-      'CYVERSE ERROR: ' ++ *CONTEXT.logical_path ++ ' not allowed on ' ++ avra_RESC ++ '.' );
+    *msg = 'CYVERSE ERROR: ' ++ *CONTEXT.logical_path ++ ' not allowed on ' ++ avra_RESC ++ '.';
+# XXX - Because of https://github.com/irods/irods/issues/6463, an error 
+# happening in an `ON` condition needs to be captured and sent in the catch-all.
+#     cut;
+#     failmsg(-32000, *msg);
+    temporaryStorage.resource_resolve_hierarchy_err = *msg;
+    fail;
+# XXX - ^^^
   }
 }

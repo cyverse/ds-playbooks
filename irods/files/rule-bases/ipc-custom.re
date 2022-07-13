@@ -506,7 +506,7 @@ _ipc_needsChecksum(*DataObjOpInp) =
 # N.B. `-X` handled transparently
 # N.B. large files are not passed through rcBulkDataObjPut
 #
-# ALGORITHM:
+# CHKSUM ALGORITHM:
 #
 # If neither *BulkOprInp.regChksum nor *BulkOprInp.verifyChksum exist, calculate the checksum of 
 # replica on *BulkOprInp.resc_hier for each entry of *BulkOprInp.logical_path.
@@ -528,6 +528,13 @@ pep_api_bulk_data_obj_put_post(*Instance, *Comm, *BulkOprInp, *BulkOprInpBBuf) {
     }
   }
 }
+# DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM
+#
+# There is no difference in the contents of *BulkOprInp between when a data object is created and
+# when it is modified. For each data object, if the create time is less than the modification time 
+# time, publish a data object modification message, otherwise publish a data object create message.
+#
+# TODO implement
 
 
 # N.B. This isn't used by iCommands, but it is by the Java and Python APIs.
@@ -566,6 +573,12 @@ pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
     }
   }
 }
+# DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM
+#
+# If *DataObjCopyInp.dst_openType == 1 (CREATE) then publish a data object create message, otherwise 
+# publish a data object mod message.  openType of 3 (OPEN FOR WRITE)
+#
+# TODO implement
 
 
 # N.B. This isn't used by iCommands, but it is by the Java and Python APIs.
@@ -714,8 +727,6 @@ pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
 # Check to see if JSON_INFUT.buf.options.no_create is false. If it is, check to see if neither 
 # options.replica_number nor options.leaf_resource_name is set. If that's the case, check to see if
 # the data object's 0 replica has a checksum. If it doesn't compute its checksum.
-#
-# TODO: test
 #
 # *SEE COMMON*
 #

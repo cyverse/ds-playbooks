@@ -6,6 +6,11 @@
     name: haproxy
     state: present
 
+- name: install | install haproxy
+  apt:
+    name: socat
+    state: present
+
 - name: install | ensure haproxy starts on reboot
   service:
     name: haproxy

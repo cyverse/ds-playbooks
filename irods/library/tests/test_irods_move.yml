@@ -2,6 +2,99 @@
 - name: test irods_move module
   hosts: localhost
   gather_facts: false
-  tasks:
-    - debug:
-        msg: TODO implement
+  vars:
+    TEST_SRC: /testing/home/rods/test_src
+    TEST_DST: /testing/home/rods/test_dst
+    TEST_DST1: /testing/home/rods/test_dst1
+  pre_tasks:
+    - name: create source
+      shell: |
+          iinit <<< ${IRODS_PASSWORD}
+          imkdir {{ TEST_SRC }}
+      environment:
+        IRODS_PORT: 1247
+        IRODS_USER_NAME: rods
+        IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
+        IRODS_PASSWORD: rods
+        IRODS_ZONE_NAME: testing
+      tags: 
+        - non_idempotent
+
+  tasks: 
+    - name: neither source nor destination exist
+      failed_when: response is succeeded
+      irods_move: 
+        source: /testing/home/rods/null
+        destination: /testing/home/rods/null
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: create test collection
+      shell: |
+          imkdir test_dst1
+      environment:
+        IRODS_PORT: 1247
+        IRODS_USER_NAME: rods
+        IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
+        IRODS_PASSWORD: rods
+        IRODS_ZONE_NAME: testing
+
+    - name: source and destination already exist
+      failed_when: response is succeeded
+      irods_move: 
+        source: /testing/home/rods/test_src
+        destination: /testing/home/rods/test_dst1
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: move data object
+      irods_move: 
+        source: /testing/home/rods/test_src
+        destination: /testing/home/rods/test_dst
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: test if source and destination are identical
+      failed_when: response is changed or response is failed 
+      irods_move: 
+        source: /testing/home/rods/test_dst
+        destination: /testing/home/rods/test_dst
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+  post_tasks: 
+    - name: verify move 
+      shell: |
+          if ! ils /testing/home/rods/test_src && ils /testing/home/rods/test_dst; then
+            exit 0
+          else
+            exit 1
+          fi
+      environment:
+        IRODS_PORT: 1247
+        IRODS_USER_NAME: rods
+        IRODS_HOST: "{{ groups['irods_catalog'][0] }}"
+        IRODS_PASSWORD: rods
+        IRODS_ZONE_NAME: testing
+
+
+
+
+
+

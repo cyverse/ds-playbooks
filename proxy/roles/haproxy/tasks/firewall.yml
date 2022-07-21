@@ -1,60 +1,69 @@
 ---
-- import_tasks: _testing.yml
 
-- name: firewall | install iptables-persistent
-  apt:
-    name: iptables-persistent
-    state: present
-  become: true
-
-- name: firewall | disable conntrack for proxied connections
-  blockinfile:
-    path: /etc/iptables/rules.v4
-    marker: "# {mark} DS MANAGED BLOCK (haproxy raw)"
-    block: |
-      {% set irods_reconn_port_range = haproxy_irods_reconn_ports | regex_replace('-', ':') %}
-      *raw
-      {% for c in haproxy_webdav_client_hosts %}
-      {%   set addr = c if c|ipaddr else lookup('dig', c) %}
-      -A PREROUTING -s {{ addr }} -p tcp --dport {{ haproxy_webdav_port }} -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --sport {{ haproxy_webdav_port }} -j NOTRACK
-      -A PREROUTING -s {{ addr }} -p tcp --dport {{ haproxy_webdav_tls_port }} -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --sport {{ haproxy_webdav_tls_port }} -j NOTRACK
-      {% endfor %}
-      {% for w in haproxy_webdav_hosts %}
-      {%   set addr = w if w|ipaddr else lookup('dig', w) %}
-      -A PREROUTING -s {{ addr }} -p tcp --sport {{ haproxy_webdav_port }} -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --dport {{ haproxy_webdav_port }} -j NOTRACK
-      -A PREROUTING -s {{ addr }} -p tcp --sport {{ haproxy_webdav_tls_port }} -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --dport {{ haproxy_webdav_tls_port }} -j NOTRACK
-      {% endfor %}
-      {% for c in haproxy_irods_client_hosts | union(haproxy_webdav_hosts) %}
-      {%   set addr = c if c|ipaddr else lookup('dig', c) %}
-      -A PREROUTING -s {{ addr }} -p tcp --dport {{ haproxy_irods_port }} -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --sport {{ haproxy_irods_port }} -j NOTRACK
-      -A PREROUTING -s {{ addr }} -p tcp --dport {{ irods_reconn_port_range }} -j NOTRACK
-      -A OUTPUT -d {{ addr }} -p tcp --sport {{ irods_reconn_port_range }} -j NOTRACK
-      {% endfor %}
-      {% set irods_addr =
-           haproxy_irods_host if haproxy_irods_host|ipaddr else lookup('dig', haproxy_irods_host) %}
-      -A PREROUTING -s {{ irods_addr  }} -p tcp --sport {{ haproxy_irods_port }} -j NOTRACK
-      -A OUTPUT -d {{ irods_addr }} -p tcp --dport {{ haproxy_irods_port }} -j NOTRACK
-      -A PREROUTING -s {{ irods_addr }} -p tcp --sport {{ irods_reconn_port_range }} -j NOTRACK
-      -A OUTPUT -d {{ irods_addr }} -p tcp --dport {{ irods_reconn_port_range }} -j NOTRACK
-      COMMIT
+- name: firewall | place nf_conntrack.conf
+  copy:
+    src: nf_conntrack.conf
+    dest: /etc/modprobe.d/nf_conntrack.conf
+    mode: u+r
   notify:
-    - restart firewall
+    - reboot
 
-- name: firewall | open for relevant connections
-  blockinfile:
-    path: /etc/iptables/rules.v4
-    insertbefore: -A INPUT -j REJECT
-    marker: "# {mark} DS MANAGED BLOCK (haproxy filter)"
-    block: |
-      -A INPUT -m state --state UNTRACKED -j ACCEPT
-      {% for c in haproxy_stats_client_hosts %}
-      {%   set addr = c if c|ipaddr else lookup('dig', c) %}
-      -A INPUT -m state --state NEW -s {{ addr }} -p tcp --dport {{ haproxy_stats_port }} -j ACCEPT
-      {% endfor %}
-  notify:
-    - restart firewall
+- name: firewall | allow access from stats client hosts to haproxy stats port 
+  ufw:
+    rule: allow
+    src: "{{ item if item|ipaddr else lookup('dig', item) }}"
+    port: "{{ haproxy_stats_port }}"
+  with_items:
+    - "{{ haproxy_stats_client_hosts }}"
+
+- name: firewall | allow access from webdav client hosts to webdav port
+  ufw:
+    rule: allow
+    src: "{{ item if item|ipaddr else lookup('dig', item) }}"
+    port: "{{ haproxy_webdav_port }}"
+  with_items:
+    - "{{ haproxy_webdav_client_hosts }}"
+
+- name: firewall | allow access from webdav client hosts to webdav tls port
+  ufw:
+    rule: allow
+    src: "{{ item if item|ipaddr else lookup('dig', item) }}"
+    port: "{{ haproxy_webdav_tls_port }}"
+  with_items:
+    - "{{ haproxy_webdav_client_hosts }}"
+
+- name: firewall | allow access from irods client hosts to irods port
+  ufw:
+    rule: allow
+    src: "{{ item if item|ipaddr else lookup('dig', item) }}"
+    port: "{{ haproxy_irods_port }}"
+  with_items:
+    - "{{ haproxy_irods_client_hosts }}"
+
+- name: firewall | allow access from irods client hosts to irods recon port
+  ufw:
+    rule: allow
+    src: "{{ item if item|ipaddr else lookup('dig', item) }}"
+    port: "{{ haproxy_irods_reconn_ports | regex_replace('-', ':') }}"
+    protocol: tcp
+  with_items:
+    - "{{ haproxy_irods_client_hosts }}"
+
+- name: firewall | allow access from webdav hosts to irods port
+  ufw:
+    rule: allow
+    src: "{{ item if item|ipaddr else lookup('dig', item) }}"
+    port: "{{ haproxy_irods_port }}"
+  with_items:
+    - "{{ haproxy_webdav_hosts }}"
+
+- name: firewall | allow access from webdav hosts to irods recon port
+  ufw:
+    rule: allow
+    src: "{{ item if item|ipaddr else lookup('dig', item) }}"
+    port: "{{ haproxy_irods_reconn_ports | regex_replace('-', ':') }}"
+    protocol: tcp
+  with_items:
+    - "{{ haproxy_webdav_hosts }}"
+
+

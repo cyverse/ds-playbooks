@@ -6,7 +6,7 @@
     name: haproxy
     state: present
 
-- name: install | install haproxy
+- name: install | install socat
   apt:
     name: socat
     state: present

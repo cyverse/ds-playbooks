@@ -13,13 +13,11 @@ module: irods_move
 
 short_description: Rename data collection/object
 
-# If this is part of a collection, you need to use semantic versioning,
-# i.e. the version is of the form "2.5.0" and not "2.4".
-version_added: "1.0.0"
+version_added: "2.11.11"
 
-description: An ansible module for renaming a data object or collection. To ensure
-idempotency, if the source doesn't exist, but the destination does, it is
-assumed that the move already happened and the module succeeds.
+description: An ansible module for renaming a data object or collection. To
+ensure idempotency, if the source doesn't exist, but the destination does, it
+is assumed that the move already happened and the module succeeds.
 
 options:
     source:
@@ -29,8 +27,6 @@ options:
         description: the new absolute path to the collection or data object
         type: str
 
-# Specify this value according to your collection
-# in format of namespace.collection.doc_fragment_name
 extends_documentation_fragment:
     - my_namespace.my_collection.my_doc_fragment_name
 
@@ -65,20 +61,6 @@ exc_msg:
     type: str
     returned: always
 '''
-
-try:
-    USE_IRODS_CLIENT = True
-except ImportError:
-    USE_IRODS_CLIENT = False
-
-try:
-    env_file = os.environ['IRODS_ENVIRONMENT_FILE']
-except KeyError:
-    env_file = os.path.expanduser('~/.irods/irods_environment.json')
-
-ssl_context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
-                                         cafile=None, capath=None, cadata=None)
-ssl_settings = {'ssl_context': ssl_context}
 
 
 class IRODSMoveModule:

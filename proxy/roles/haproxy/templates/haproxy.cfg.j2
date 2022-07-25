@@ -14,7 +14,7 @@ global
   pidfile        /var/run/haproxy.pid
   stats socket   /var/run/haproxy.sock mode 600 level admin
   stats timeout  2m
-  unix-bind      prefix /var/lib/haproxy/ mode 770 user haproxy
+  unix-bind      prefix /var mode 770 user haproxy
 
   maxconn                    4000
   spread-checks              2

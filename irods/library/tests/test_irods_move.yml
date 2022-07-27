@@ -66,6 +66,19 @@
         zone: testing
       register: response
 
+    - name: move has already occurred
+      failed_when: response is succeeded
+      irods_move: 
+          source: "{{ TEST_SRC }}"
+          destination: "{{ TEST_DST }}"
+          host: "{{ groups['irods_catalog'][0] }}"
+          port: 1247
+          admin_user: rods
+          admin_password: rods
+          zone: testing
+      register: response
+
+
 
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
+
 import ssl
 from ansible.module_utils.basic import AnsibleModule
 from irods.session import iRODSSession
@@ -101,23 +101,33 @@ class IRODSMoveModule:
 
         self.ssl_settings = {"ssl_context": self.ssl_context}
 
-        self.session = iRODSSession(
-            source=self.module.params["source"],
-            destination=self.module.params["destination"],
-            host=self.module.params["host"],
-            port=self.module.params["port"],
-            user=self.module.params["admin_user"],
-            password=self.module.params["admin_password"],
-            zone=self.module.params["zone"],
-            **self.ssl_settings)
+        self.session = None
+
+    def init_session(self):
+        try:
+            self.session = iRODSSession(
+                source=self.module.params["source"],
+                destination=self.module.params["destination"],
+                host=self.module.params["host"],
+                port=self.module.params["port"],
+                user=self.module.params["admin_user"],
+                password=self.module.params["admin_password"],
+                zone=self.module.params["zone"],
+                **self.ssl_settings)
+
+        except Exception as exc:
+            self.result["exc"] = exc
+            self.result["exc_message"] = "Unable to connect to iRODS."
+            self._fail(self.result["exc_message"])
 
     def run_module(self):
         if self.module.check_mode:
             self.module.exit_json(**self.result)
 
+        self.init_session()
+
         try:
             self.rename()
-            self.result["changed"] = True
             self.module.exit_json(**self.result)
         except Exception as exc:
             self.result["exc"] = type(exc).__name__
@@ -129,8 +139,15 @@ class IRODSMoveModule:
         # rename collection
         path = self.module.params["source"]
         new_path = self.module.params["destination"]
-        self.session.collections.move(path, new_path)
-        self.result["changed"] = True
+        path_exists = self.session.collections.exists(path)
+        new_path_exists = self.session.collections.exists(new_path)
+
+        if path_exists is True and new_path_exists is False:
+            self.session.collections.move(path, new_path)
+            self.result["changed"] = True
+        else:
+            self._fail("Unable to move irods object/collection {}, move has already occurred".format(
+                path), self.result["exc"])
 
     def _fail(self, msg, err=None):
         """
@@ -149,8 +166,11 @@ def main():
     """
     Entrypoint of the Ansible module
     """
-    module = IRODSMoveModule()
-    module.run_module()
+    try:
+        module = IRODSMoveModule()
+        module.run_module()
+    except Exception:
+        pass
 
 
 if __name__ == '__main__':

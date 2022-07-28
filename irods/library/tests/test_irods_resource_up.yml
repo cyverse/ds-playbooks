@@ -3,10 +3,21 @@
   hosts: dstesting_provider_configured_1.dstesting_default
   become: true
   become_user: irods
+  environment:
+    TEST_PORT: 1247
+    TEST_USER_NAME: rods
+    TEST_HOST: "{{ groups['irods_catalog'][0] }}"
+    TEST_PASSWORD: rods
+    TEST_ZONE_NAME: testing
   tasks:
     - name: bring up resource
       irods_resource_up:
         resource: ingestRes
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
 
     - name: verify resource up
       shell: test up = "$(iquest '%s' "select RESC_STATUS where RESC_NAME = 'ingestRes'")"

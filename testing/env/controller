@@ -59,7 +59,7 @@ main()
       ;;
   esac
 
-  docker-compose --file "$baseDir"/docker-compose.yml --project-name "$ENV_NAME" $dcCmd
+  docker compose --file "$baseDir"/docker-compose.yml --project-name "$ENV_NAME" $dcCmd
 }
 
 

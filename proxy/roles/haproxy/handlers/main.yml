@@ -2,13 +2,13 @@
 - name: reload haproxy
   when: _full_os | bool
   service:
-    name: rh-haproxy18-haproxy
+    name: haproxy
     state: reloaded
 
 - name: restart haproxy
   when: _full_os | bool
   service:
-    name: rh-haproxy18-haproxy
+    name: haproxy
     state: restarted
 
 - name: restart firewall
@@ -22,3 +22,7 @@
   service:
     name: rsyslog
     state: restarted
+
+- name: reboot
+  debug:
+    msg: REBOOT REQUIRED FOR SETTINGS TO TAKE

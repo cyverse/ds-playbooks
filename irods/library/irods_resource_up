@@ -1,117 +1,129 @@
-#!/bin/bash
-#
-# An ansible module for changing the status of a resource and all of its parents
-# to up.
-#
-# Module Name:
-#  irods_resource_up
-#
-# Required Variables:
-#  resource  the resource to modify
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-set -e
+import os
+import ssl
+from ansible.module_utils.basic import AnsibleModule
+from irods.session import iRODSSession
+from irods.resource import iRODSResource
+from irods.models import Resource
 
+DOCUMENTATION = '''
+---
+module: irods_resource_up
 
-main()
-{
-  local varFile="$1"
+short_description: Change status of resource and parents to "up"
 
-  local resource
-  # shellcheck disable=SC1090
-  . "$varFile"
+version added: "2.11.11"
 
-  require resource
+description: An ansible module for changing the status of a resource and
+all of its parents to up.
 
-  local changed=false
-
-  while [ -n "$resource" ]
-  do
-    local currentStatus
-    currentStatus=$(quest "select RESC_STATUS where RESC_NAME = '$resource'")
-
-    if [ -z "$currentStatus" ]
-    then
-      fail "'$resource' doesn't exist"
-    fi
-
-    if [ "$currentStatus" != up ]
-    then
-      local errMsg
-      if ! errMsg=$(iadmin modresc "$resource" status up 2>&1)
-      then
-        fail "$errMsg"
-      fi
-
-      changed=true
-    fi
-
-    local parentId
-    parentId="$(quest "select RESC_PARENT where RESC_NAME = '$resource'")"
-
-    if [[ -z "$parentId" ]]
-    then
-      break
-    fi
-
-    resource="$(quest "select RESC_NAME where RESC_ID = '$parentId'")"
-  done
-
-  succeed "$changed"
-}
+options:
+    resource: the resource to modify
+'''
 
 
-quest()
-{
-  local query="$*"
+class IRODSResourceUpModule:
+    """
+    Module class
+    """
 
-  local response
-  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
-  then
-    fail "$response"
-  fi
+    def __init__(self):
+        """
+        Initialize module
+        """
 
-  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
-  then
-    printf '%s' "$response"
-  fi
-}
+        self.module_args = dict(
+            resource=dict(type="str", required=True),
+            host=dict(type="str", required=True),
+            port=dict(type="int", required=True),
+            admin_user=dict(type="str", no_log=True, required=True),
+            admin_password=dict(type="str", no_log=True, required=True),
+            zone=dict(type="str", required=True)
+        )
+
+        self.result = dict(
+            changed=False,
+            exc='',
+            exc_msg='',
+        )
+
+        self.module = AnsibleModule(
+            argument_spec=self.module_args,
+            supports_check_mode=True
+        )
+
+        self.ssl_context = ssl.create_default_context(
+            purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None,
+            cadata=None)
+
+        self.ssl_settings = {"ssl_context": self.ssl_context}
+
+        self.session = None
+
+    def init_session(self):
+        try:
+            self.session = iRODSSession(
+                resource=self.module.params["resource"],
+                host=self.module.params["host"],
+                port=self.module.params["port"],
+                user=self.module.params["admin_user"],
+                password=self.module.params["admin_password"],
+                zone=self.module.params["zone"],
+                **self.ssl_settings)
+        except Exception as exc:
+            self.result["exc"] = exc
+            self.result["exc_message"] = "Unable to connect to iRODS."
+            self._fail(self.result["exc_message"])
+
+    def run(self):
+        """
+        Entry point for module class, method to be called to run the module
+        """
+        if self.module.check_mode:
+            self.module.exit_json(**self.result)
+
+        self.init_session()
+
+        try:
+            self.resource_up()
+            self.module.exit_json(**self.result)
+        except Exception as exc:
+            self.result["exc"] = type(exc).__name__
+            self.result["exc_msg"] = str(exc)
+            self._fail("Unable to set status of resource to ""up"" {}".format(
+                self.module.params["source"]), exc)
+
+    def resource_up(self):
+        test_resc = self.module.params["resource"]
+        try:
+            self.session.resources.modify(test_resc, "status", "up")
+        except Exception as exc:
+            self.result["exc"] = exc
+            self.result["exc_message"] = "Unable to locate resource."
+            self._fail(self.result["exc_message"])
+
+    def _fail(self, msg, err=None):
+        """
+        Failure routine, called when operation fails
+        """
+        if self.session:
+            self.session.cleanup()
+
+        if err:
+            self.module.fail_json(msg=msg + "\n" + str(err), **self.result)
+        else:
+            self.module.fail_json(msg=msg, **self.result)
 
 
-require()
-{
-  local var="$1"
-
-  if [ -z "${!var}" ]
-  then
-    fail "variable '$var' must be defined"
-  fi
-}
+def main():
+    """
+    Entrypoint of Ansible module
+    """
+    module = IRODSResourceUpModule()
+    module.run()
 
 
-fail()
-{
-  local msg="$*"
-
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
-     '{failed: true, msg: $msg}' \
-    >&2
-
-  exit 1
-}
-
-
-succeed()
-{
-  local changed="$1"
-
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
-     '{changed: ($changed == "true")}' \
-    >&2
-
-  exit 0
-}
-
-
-main "$@" 2>&1
+if __name__ == '__main__':
+    main()

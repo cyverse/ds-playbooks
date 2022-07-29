@@ -142,12 +142,9 @@ class IRODSMoveModule:
         path_exists = self.session.collections.exists(path)
         new_path_exists = self.session.collections.exists(new_path)
 
-        if path_exists is True and new_path_exists is False:
+        if path_exists or not new_path_exists:
             self.session.collections.move(path, new_path)
             self.result["changed"] = True
-        else:
-            self._fail("Unable to move irods object/collection {}, move has already occurred".format(
-                path), self.result["exc"])
 
     def _fail(self, msg, err=None):
         """

@@ -1,195 +1,46 @@
-#!/bin/bash
-#
-# An ansible module for creating an iRODS Unix filesystem storage resource
-#
-# Module Name:
-#  irods_unixfilesystem_resource
-#
-# Required Variables:
-#  name   the name of the resource
-#  host   the FQDN of the resource server hosting this resource
-#  vault  the absolute path to the root directory of the vault
-#
-# Optional Variables:
-#  context          any context to attach to this resource
-#  status           starting status 'up' or 'down'
-#  init_free_space  whether or not to initialize freespace
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
+import ssl
+from ansible.module_utils.basic import AnsibleModule
+from irods.session import iRODSSession
 
-main()
-{
-  local varFile="$1"
+DOCUMENTATION = '''
+---
+module: irods_unixfilesystem_resource
 
-  local name
-  local host
-  local vault
-  local context
-  local status
-  local init_free_space
-  . "$varFile"
+short_description: Create an iRODS Unix filesystem storage resource
 
-  require name
-  require host
-  require vault
+version added: "2.11.11"
 
-  : "${status=up}"
+description: An ansible module for creating an iRODS Unix filesystem storage 
+resource
 
-  : "${init_free_space=false}"
-  init_free_space="${init_free_space,,}"
+required variables:
+    name:
+        description:
+            - the name of the resource
+        required: true
+        type: str
+    host:
+        description:
+            - the FQDN of the resource server hosting this resource
+    vault:
+        description:
+            - the absolute path to the root directory of the vault
 
-  if [ "$init_free_space" != true -a "$init_free_space" != false ]
-  then
-    fail "'init_free_space must be 'true' or 'false'"
-  fi
+optional variables:
+    context:
+        description:
+            - any context to attach to this resource
+        type: str
+    status:
+        description:
+            - starting status 'up' or 'down'
+    init_free_space:
+        description:
+            - whether or not to initialize freespace
 
-  local id
-  id=$(quest_resc "$name" RESC_ID)
-
-  if [ -z "$id" ]
-  then
-    define_resource "$name" "$host" "$vault" "$context" "$status" "$init_free_space"
-    succeed true
-  elif verify_resource "$name" "$host" "$vault" "$context"
-  then
-    succeed false
-  else
-    fail "$name already exists with a different configuration"
-  fi
-}
-
-
-define_resource()
-{
-  local name="$1"
-  local host="$2"
-  local vault="$3"
-  local context="$4"
-  local status="$5"
-  local initFreeSpace="$6"
-
-  local errMsg
-
-  if ! errMsg=$(iadmin mkresc "$name" 'unix file system' "$host":"$vault" "$context" 2>&1)
-  then
-    fail "$errMsg"
-  fi
-
-  if ! errMsg=$(iadmin modresc "$name" status "$status")
-  then
-    iadmin rmresc "$name" &> /dev/null
-    fail "$errMsg"
-  fi
-
-  if [ "$initFreeSpace" = true ]
-  then
-    local freeSpace
-    freeSpace=$(get_free_space "$vault")
-
-    if ! errMsg=$(iadmin modresc "$name" freespace "$freeSpace")
-    then
-      iadmin rmresc "$name" &> /dev/null
-      fail "$errMsg"
-    fi
-  fi
-}
-
-
-get_free_space()
-{
-  local vault="$1"
-
-  df --portability --block-size 1 "$vault" | tail -1 | awk '{ print $4 }'
-}
-
-
-quest_resc()
-{
-  local name="$1"
-  local parameter="$2"
-
-  quest "select $parameter where RESC_NAME = '$name'"
-}
-
-
-verify_resource()
-{
-  local name="$1"
-  local host="$2"
-  local vault="$3"
-  local context="$4"
-
-  local currentType
-  currentType=$(quest_resc "$name" RESC_TYPE_NAME)
-
-  local currentHost
-  currentHost=$(quest_resc "$name" RESC_LOC)
-
-  local currentVault
-  currentVault=$(quest_resc "$name" RESC_VAULT_PATH)
-
-  local currentContext
-  currentContext=$(quest_resc "$name" RESC_CONTEXT)
-
-  [ "$currentType" = 'unix file system' -o "$currentType" = unixfilesystem ] \
-    && [ "$currentHost" = "$host" ] \
-    && [ "$currentVault" = "$vault" ] \
-    && [ "$currentContext" = "$context" ]
-}
-
-
-quest()
-{
-  local query="$*"
-
-  local response
-  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
-  then
-    fail "$response"
-  fi
-
-  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
-  then
-    printf '%s' "$response"
-  fi
-}
-
-
-require()
-{
-  local var="$1"
-
-  if [ -z "${!var}" ]
-  then
-    fail "variable '$var' must be defined"
-  fi
-}
-
-
-fail()
-{
-  local msg="$*"
-
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
-     '{failed: true, msg: $msg}' \
-    >&2
-
-  exit 1
-}
-
-
-succeed()
-{
-  local changed="$1"
-
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
-     '{changed: ($changed == "true")}' \
-    >&2
-
-  exit 0
-}
-
-
-set -e
-main "$@" 2>&1
+author:
+    - Fenn Garnett
+'''

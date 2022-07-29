@@ -3,7 +3,7 @@
 - name: firewall | place nf_conntrack.conf
   copy:
     src: nf_conntrack.conf
-    dest: /etc/modprobe.d/nf_conntrack.conf
+    dest: /etc/modprobe.d/
     mode: u+r
   notify:
     - reboot

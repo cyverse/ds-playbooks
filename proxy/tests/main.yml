@@ -77,11 +77,21 @@
       package_facts:
         strategy: all
 
-    - name: verify /etc/haproxy exists
-      stat:
-        path: /etc/haproxy
-      register: cfgdir
-      failed_when: not cfgdir.stat.exists or not cfgdir.stat.isdir
+    - name: test haproxy installed
+      fail:
+      when: "'haproxy' not in ansible_facts.packages"
+
+    - name: test install | install socat
+      debug:
+        msg: TODO implement
+
+    - name: test configure | allowing proxy to listen on stats port
+      debug:
+        msg: TODO implement
+
+    - name: test configure | enabling SELinux booleans for proxy
+      debug:
+        msg: TODO implement
 
     - name: test change rsyslog.conf block Id to proxy
       command: "grep --invert --quiet 'DS MANAGED BLOCK (load_balancer)' /etc/rsyslog.conf"
@@ -134,14 +144,10 @@
       register: response
       failed_when: not response.stat.exists or not result.stat.roth
 
-    - name: test change iptables load_balancer Ids to proxy Ids
-      command: "grep --invert --quiet 'DS MANAGED BLOCK (load_balancer' /etc/iptables/rules.v4"
-      changed_when: false
-
-    - name: test disable conntrack for proxied connections
+    - name: test configure | place haproxy config file 
       debug:
         msg: TODO implement
 
-    - name: test open firewall for relevant connections
+    - name: test firewall | place nf_conntrack.conf
       debug:
         msg: TODO implement

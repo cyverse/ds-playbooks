@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 #
 # Usage:
 #  build INC_FILE
@@ -39,7 +39,13 @@ main()
     docker build --file "$baseDir"/base/Dockerfile."$os" --tag test-env-base:"$os" "$baseDir"
   done
 
-  docker compose --file "$baseDir"/docker-compose.yml --project-name "$ENV_NAME" build
+  local composeArgs=(--file="$baseDir"/docker-compose.yml --project-name="$ENV_NAME" build)
+
+  if ! command -v docker-compose > /dev/null; then
+    docker compose "${composeArgs[@]}"
+  else
+    docker-compose "${composeArgs[@]}"
+  fi
 }
 
 

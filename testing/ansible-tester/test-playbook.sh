@@ -119,7 +119,7 @@ do_test() {
 	local idempotencyRes
 	idempotencyRes="$(run_idempotency "$inventory" "$modPath" "$playbook")"
 
-	if grep --quiet --regexp '^\(changed\|failed\):' <<< "$idempotencyRes"; then
+	if grep --quiet --regexp '^\(changed\|fatal\):' <<< "$idempotencyRes"; then
 		echo "$idempotencyRes"
 		return 1
 	fi

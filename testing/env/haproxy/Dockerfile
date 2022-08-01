@@ -1,6 +1,8 @@
 FROM test-env-base:ubuntu2004
 
-RUN apt install -y openssl rsyslog python3-pip ssl-cert
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get install --yes openssl rsyslog ssl-cert
 RUN pip install pyOpenSSL
 
 RUN make-ssl-cert generate-default-snakeoil

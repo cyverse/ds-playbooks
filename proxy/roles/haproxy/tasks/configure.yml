@@ -1,22 +1,22 @@
 ---
-- import_tasks: _testing.yml
+- ansible.builtin.import_tasks: _testing.yml
 
 - name: configure | allowing proxy to listen on stats port
   when: ansible_selinux.status == 'enabled'
-  seport:
+  ansible.builtin.seport:
     ports: "{{ haproxy_stats_port }}"
     proto: tcp
     setype: tor_port_t
 
 - name: configure | enabling SELinux booleans for proxy
   when: ansible_selinux.status == 'enabled'
-  seboolean:
+  ansible.builtin.seboolean:
     name: haproxy_connect_any
     state: true
     persistent: true
 
 - name: configure | configure rsyslog to listen on UDP socket
-  blockinfile:
+  ansible.builtin.blockinfile:
     path: /etc/rsyslog.conf
     insertafter: '# Provides UDP syslog reception'
     marker: "# {mark} DS MANAGED BLOCK (haproxy)"
@@ -28,7 +28,7 @@
     - restart rsyslog
 
 - name: configure | place rsyslog config for HAProxy
-  copy:
+  ansible.builtin.copy:
     src: rsyslog-haproxy.conf
     dest: /etc/rsyslog.d/haproxy.conf
     mode: u+r
@@ -36,13 +36,13 @@
     - restart rsyslog
 
 - name: configure | place logrotate config for HAProxy
-  copy:
+  ansible.builtin.copy:
     src: logrotate-haproxy
     dest: /etc/logrotate.d/haproxy
     mode: u+r
 
 - name: configure | add TLS certificates
-  copy:
+  ansible.builtin.copy:
     dest: "{{ haproxy_stats_tls_crt }}"
     content: "{{ haproxy_stats_tls_crt_content }}"
     mode: a+r
@@ -54,7 +54,7 @@
     - reload haproxy
 
 - name: configure | place VIP list
-  template:
+  ansible.builtin.template:
     src: templates/vip.lst.j2
     dest: /etc/haproxy/vip.lst
     owner: haproxy
@@ -63,7 +63,7 @@
     - reload haproxy
 
 - name: configure | place haproxy config file
-  template:
+  ansible.builtin.template:
     src: haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
     owner: haproxy

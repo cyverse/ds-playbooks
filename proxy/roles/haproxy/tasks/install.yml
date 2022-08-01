@@ -1,25 +1,25 @@
 ---
-- import_tasks: _testing.yml
+- ansible.builtin.import_tasks: _testing.yml
 
 - name: install | install haproxy
-  apt:
+  ansible.builtin.package:
     name: haproxy
     state: present
 
 - name: install | install socat
-  apt:
+  ansible.builtin.package:
     name: socat
     state: present
 
 - name: install | ensure haproxy starts on reboot
-  service:
+  ansible.builtin.service:
     name: haproxy
     enabled: true
   tags:
     - no_testing
 
 - name: install | ensure nonlocal binding allowed
-  sysctl:
+  ansible.builtin.sysctl:
     name: net.ipv4.ip_nonlocal_bind
     value: '1'
     sysctl_set: true
@@ -32,7 +32,7 @@
     - no_testing
 
 - name: install | ensure IP forwarding allowed
-  sysctl:
+  ansible.builtin.sysctl:
     name: net.ipv4.ip_forward
     value: '1'
     sysctl_set: true

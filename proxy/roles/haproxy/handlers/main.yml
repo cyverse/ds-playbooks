@@ -22,3 +22,7 @@
   service:
     name: rsyslog
     state: restarted
+
+- name: reboot
+  debug:
+    msg: REBOOT REQUIRED FOR SETTINGS TO TAKE

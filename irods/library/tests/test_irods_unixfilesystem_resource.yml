@@ -2,6 +2,16 @@
 - name: test irods_resource_hierarchy module
   hosts: localhost
   gather_facts: false
+  vars:
+    name: rsc
+    host: tbf
+    vault: /testing/home/rods/test_vault
+  environment:
+    TEST_PORT: 1247
+    TEST_USER_NAME: rods
+    TEST_HOST: "{{ groups['irods_catalog'][0] }}"
+    TEST_PASSWORD: rods
+    TEST_ZONE_NAME: testing
   tasks:
     - debug:
         msg: TODO implement

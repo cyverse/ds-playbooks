@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 #
 # Usage:
 #  controller INC_FILE (start|stop)
@@ -46,12 +46,13 @@ main()
 
   . "$cfg"
 
+  local dcCmd
   case "$action" in
     start)
-      local dcCmd='up -d --scale dbms_unconfigured=2'
+      dcCmd=(up -d --scale dbms_unconfigured=2)
       ;;
     stop)
-      local dcCmd='down --remove-orphans --volumes'
+      dcCmd=(down --remove-orphans --volumes)
       ;;
     *)
       printf 'Unknown command "%s"\n' "$action" >&2
@@ -59,7 +60,13 @@ main()
       ;;
   esac
 
-  docker compose --file "$baseDir"/docker-compose.yml --project-name "$ENV_NAME" $dcCmd
+  local composeArgs=(--file="$baseDir"/docker-compose.yml --project-name="$ENV_NAME" "${dcCmd[@]}")
+
+  if ! command -v docker-compose > /dev/null; then
+    docker compose "${composeArgs[@]}"
+  else
+    docker-compose "${composeArgs[@]}"
+  fi 
 }
 
 

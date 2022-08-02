@@ -2,6 +2,31 @@
 - name: test irods_resource_hierarchy module
   hosts: localhost
   gather_facts: false
+  vars:
+    TEST_RSC_NAME: test_unix_rsc
+    TEST_HOST_NAME: ds-adm-dev.cyverse.rocks
+    TEST_VAULT_PATH: /testing/home/rods/test_vault
+    TEST_CONTEXT: na
+    TEST_STATUS: up
+    TEST_INIT_FREESPACE: false
+  environment: 
+    TEST_PORT: 1247
+    TEST_USER_NAME: rods
+    TEST_HOST: "{{ groups['irods_catalog'][0] }}"
+    TEST_PASSWORD: rods
+    TEST_ZONE_NAME: testing
+
+  pre-tasks:
+    - name: create test irods environment
+      shell:
+        set -o errexit
+        iinit <<< ${IRODS_PASSWORD}
   tasks:
     - debug:
         msg: TODO implement
+
+# Possible tests: 
+# - check if resource was properly instantiated
+# - ensure resource status was properly set
+# - check given server ID/IP Address
+# - add/remove collection to/from newly instantiated resource

@@ -96,9 +96,9 @@ class IRODSResourceUpModule:
                 self.module.params["source"]), exc)
 
     def resource_up(self):
-        # test_resc = self.module.params["resource"]
+        test_resc = self.module.params["resource"]
         try:
-            self.session.resources.modify(self.module.params["resource"], "status", "up")
+            self.session.resources.modify(test_resc, "status", "up")
         except Exception as exc:
             self.result["exc"] = exc
             self.result["exc_message"] = "Unable to locate resource."

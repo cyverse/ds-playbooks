@@ -127,13 +127,13 @@
               - path: /server-status
                 comment: Service status monitoring
                 extra_parameters: |
-                    SetHandler server-status
-                    Require host localhost
+                  SetHandler server-status
+                  Require host localhost
               - path: /server-qos
                 comment: Service QOS monitoring
                 extra_parameters: |
-                    SetHandler qos-viewer
-                    Require host localhost
+                  SetHandler qos-viewer
+                  Require host localhost
 
         apache_vhosts_ssl:
           - servername: "{{ _canonical_hostname }}"
@@ -197,6 +197,34 @@
       tags:
         - no_testing
 
+    - name: place TLS certificate chain file
+      copy:
+        dest: "{{ _webdav_tls_chain_file }}"
+        content: "{{ _webdav_tls_chain }}"
+        mode: a+r
+      when: _webdav_tls_chain|length > 0
+      notify:
+        - restart httpd
+
+    - name: place TLS certificate file
+      copy:
+        dest: "{{ _webdav_tls_cert_file }}"
+        content: "{{ _webdav_tls_cert }}"
+        mode: a+r
+      when: _webdav_tls_cert|length > 0
+      notify:
+        - restart httpd
+
+    - name: place TLS key file
+      copy:
+        dest: "{{ _webdav_tls_key_file }}"
+        content: "{{ _webdav_tls_key }}"
+        mode: a+r
+      no_log: true
+      when: _webdav_tls_key|length > 0
+      notify:
+        - restart httpd
+
     - name: package_facts uses auto, setup for next task
       package_facts:
 
@@ -247,7 +275,7 @@
         src: "{{ item }}"
         dest: /etc/httpd/conf.modules.d
       with_fileglob:
-        - 'files/webdav/etc/httpd/conf.modules.d/*'
+        - "files/webdav/etc/httpd/conf.modules.d/*"
       notify:
         - restart httpd
 
@@ -539,6 +567,12 @@
       service:
         name: httpd
         state: restarted
+
+    - name: reload httpd
+      when: notifications_enabled | default(false)
+      service:
+        name: httpd
+        state: reloaded
 
     - name: restart varnish
       when: notifications_enabled | default(false)

@@ -35,6 +35,10 @@
   hosts: irods_catalog
   become: true
   tasks:
+    - include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: gridsite-clients
+
     - name: test ensure /var/log/bisque exists
       stat:
         path: /var/log/bisque
@@ -56,5 +60,18 @@
       failed_when: not response.stat.exists
 
     - name: test place .bisque
+      stat:
+        path: /var/lib/irods/.bisque
+      register: response
+      failed_when: >-
+        not response.stat.exists or
+        response.stat.pw_name != 'irods' or
+        not response.stat.rusr
+
+    - name: test isntall url-encode-path-segments command script
+      debug:
+        msg: TODO implement
+
+    - name: test place BisQue rule logic
       debug:
         msg: TODO implement

@@ -1,10 +1,11 @@
-FROM test-env-base:centos7
+FROM test-env-base:ubuntu2004
 
-RUN rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-RUN yum install --assumeyes openssl python-pip rsyslog
-RUN pip install --upgrade 'pip<21'
-RUN pip --disable-pip-version-check --no-python-version-warning install pyOpenSSL
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get install --yes openssl rsyslog ssl-cert ufw
+RUN pip install pyOpenSSL
+
+RUN make-ssl-cert generate-default-snakeoil
 RUN mkdir --parents /etc/haproxy/certs
-RUN /etc/pki/tls/certs/make-dummy-cert /etc/haproxy/certs/dumb.pem
-
-COPY haproxy/config/iptables /etc/sysconfig
+RUN cp /etc/ssl/private/ssl-cert-snakeoil.key /etc/haproxy/certs/dumb.pem
+RUN cat /etc/ssl/certs/ssl-cert-snakeoil.pem >> /etc/haproxy/certs/dumb.pem

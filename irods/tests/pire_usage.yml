@@ -15,15 +15,32 @@
         [[ "$actHier" == "$expHier" ]]
       changed_when: false
 
+    - name: verify that pire group exists
+      shell: |
+        set -o pipefail
+        iadmin lg | grep --quiet --regexp='^pire$'
+      changed_when: false
+
+    - name: test create public collection
+      shell: ils /testing/home/shared/eht &> /dev/null
+      changed_when: false
+
     - name: test create project collection
+      shell: ils /testing/home/shared/bhpire &> /dev/null
+      changed_when: false
+
+    - name: verify PIRE manager is in PIRE group
+      shell: |
+        set -o pipefail
+        iadmin lg pire | grep --quiet --regexp='^pire_mgr#testing$'
+      changed_when: false
+
+    - name: verify project collection exists
       shell: ils /testing/home/shared/bhpire &> /dev/null
       changed_when: false
 
     - name: test give PIRE manager own permission on project collection
       shell: |
+        set -o pipefail
         ils -A /testing/home/shared/bhpire | sed --quiet 2p | grep --quiet pire_mgr#testing:own
-      changed_when: false
-
-    - name: test create public collection
-      shell: ils /testing/home/shared/eht &> /dev/null
       changed_when: false

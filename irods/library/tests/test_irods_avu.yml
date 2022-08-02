@@ -23,7 +23,7 @@
         - non_idempotent
 
 - name: test irods_avu
-  hosts: dstesting_provider_configured_1.dstesting_default
+  hosts: dstesting-provider_configured-1.dstesting_default
   become: true
   become_user: irods
   tasks:

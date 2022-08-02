@@ -65,10 +65,25 @@ _bisque_isUser(*Client) =
       ) { *ans = true } in
     *ans
 
-_bisque_mkIrodsUrl(*Path) = bisque_IRODS_URL_BASE ++ *Path
 
 _bisque_logMsg(*Msg) {
   writeLine('serverLog', 'BISQUE: *Msg');
+}
+
+
+_bisque_mkIrodsUrl(*Path, *URL) {
+  *pathArg = execCmdArg(*Path);
+  *status = errorcode(
+    msiExecCmd('url-encode-path-segments.sh', *pathArg, ipc_RE_HOST, "", "", *out) );
+
+  if (*status != 0) {
+    msiGetStderrInExecCmdOut(*out, *resp);
+    _bisque_logMsg('FAILURE - failed to encode path (*resp)');
+    fail;  
+  } else {
+    msiGetStdoutInExecCmdOut(*out, *encodedPath);
+    *URL = bisque_IRODS_URL_BASE ++ *encodedPath;
+  }
 }
 
 
@@ -83,9 +98,10 @@ _bisque_Ln(*Permission, *Client, *Path) {
     _bisque_logMsg("linking *Path with permission *Permission");
   }
 
+  _bisque_mkIrodsUrl(*Path, *irodsUrl);
   *aliasOpt = if _bisque_isUser(*Client) then '--alias ' ++ execCmdArg(*Client) else '';
   *pArg = execCmdArg(*Permission);
-  *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
+  *pathArg = execCmdArg(*irodsUrl);
   *argStr = '*aliasOpt ln -P *pArg *pathArg';
   *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
 
@@ -133,9 +149,11 @@ _bisque_Mv(*Client, *OldPath, *NewPath) {
     _bisque_logMsg('moving link from *OldPath to *NewPath');
   }
 
+  _bisque_mkIrodsUrl(*OldPath, *oldUrl);
+  _bisque_mkIrodsUrl(*NewPath, *newUrl);
   *aliasOpt = if _bisque_isUser(*Client) then '--alias ' ++ execCmdArg(*Client) else '';
-  *oldPathArg = execCmdArg(_bisque_mkIrodsUrl(*OldPath));
-  *newPathArg = execCmdArg(_bisque_mkIrodsUrl(*NewPath));
+  *oldPathArg = execCmdArg(*oldUrl);
+  *newPathArg = execCmdArg(*newUrl);
   *argStr = '*aliasOpt mv *oldPathArg *newPathArg';
   *status = errorcode(msiExecCmd('bisque_paths.py', *argStr, ipc_RE_HOST, 'null', 'null', *out));
 
@@ -164,13 +182,14 @@ _bisque_Mv(*Client, *OldPath, *NewPath) {
 #
 _bisque_Rm(*Client, *Path) {
   if (*Client != '') {
-    _bisque_logMsg("Removing link from *Path for *Client");
+    _bisque_logMsg("removing link from *Path for *Client");
   } else {
-    _bisque_logMsg("Removing link from *Path");
+    _bisque_logMsg("removing link from *Path");
   }
 
+  _bisque_mkIrodsUrl(*Path, *irodsUrl);
   *aliasOpt = if _bisque_isUser(*Client) then '--alias ' ++ execCmdArg(*Client) else '';
-  *pathArg = execCmdArg(_bisque_mkIrodsUrl(*Path));
+  *pathArg = execCmdArg(*irodsUrl);
   *argStr = '*aliasOpt rm *pathArg';
   *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
 
@@ -227,9 +246,9 @@ _bisque_scheduleMv(*Client, *OldPath, *NewPath) {
 
 _bisque_scheduleRm(*Client, *Path) {
   if (*Client != '') {
-    _bisque_logMsg("scheduling removal of linking to *Path for *Client");
+    _bisque_logMsg("scheduling removal of link to *Path for *Client");
   } else {
-    _bisque_logMsg("scheduling removal of linking to *Path");
+    _bisque_logMsg("scheduling removal of link to *Path");
   }
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
 #       https://github.com/irods/irods/issues/5413.

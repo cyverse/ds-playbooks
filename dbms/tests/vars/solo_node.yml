@@ -3,8 +3,11 @@ pg_extra_listen_addresses:
   - one.localdomain
   - two.localdomain
 
+pg_huge_pages: 'on'
+
 pg_listen_port: 1
 
 pg_max_connections: 2
 
 pg_shared_buffers: 1GB
+pg_work_mem: 8MB

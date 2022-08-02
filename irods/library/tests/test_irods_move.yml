@@ -2,6 +2,67 @@
 - name: test irods_move module
   hosts: localhost
   gather_facts: false
-  tasks:
-    - debug:
-        msg: TODO implement
+  vars:
+    TEST_SRC: /testing/home/rods/test_src
+    TEST_DST: /testing/home/rods/test_dst
+    TEST_DST1: /testing/home/rods/test_dst1
+  environment:
+    TEST_PORT: 1247
+    TEST_USER_NAME: rods
+    TEST_HOST: "{{ groups['irods_catalog'][0] }}"
+    TEST_PASSWORD: rods
+    TEST_ZONE_NAME: testing
+
+  pre_tasks:
+    - name: create test objects
+      shell: |
+          set -o errexit
+          iinit <<< ${IRODS_PASSWORD}
+          imkdir {{ TEST_SRC }}
+      tags: 
+        - non_idempotent
+
+  tasks: 
+    - name: neither source nor destination exist
+      failed_when: response is succeeded
+      irods_move: 
+        source: /testing/home/rods/null
+        destination: /testing/home/rods/null
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: move collection
+      irods_move: 
+        source: "{{ TEST_SRC }}"
+        destination: "{{ TEST_DST }}"
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response
+
+    - name: verify move 
+      changed_when: false
+      shell: |
+          if ! ils {{ TEST_SRC }} && ils {{ TEST_DST }}; then
+            exit 0
+          else
+            exit 1
+          fi
+
+    - name: test if source and destination are identical
+      failed_when: response is changed or response is succeeded
+      irods_move: 
+        source: "{{ TEST_DST }}"
+        destination: "{{ TEST_DST }}"
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response

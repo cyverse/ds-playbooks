@@ -34,15 +34,13 @@ main() {
 
 	local inventory=/inventory/"$hosts"
 
-	if [[ -n "$pretty" ]]
-	then
+	if [[ -n "$pretty" ]]; then
 		export ANSIBLE_STDOUT_CALLBACK=minimal
 	fi
 
 	# add the option for module-path only if a library directory exists
 	local modPath=
-	if [[ -d "$LIBRARY_DIR" ]]
-	then
+	if [[ -d "$LIBRARY_DIR" ]]; then
 		modPath="$LIBRARY_DIR"
 	fi
 
@@ -50,27 +48,22 @@ main() {
 
 	local rc=0
 
-	if (( rc == 0 )) && [[ -n "$setup" ]]
-	then
-		if ! setup_env "$verbose" "$inventory" "$modPath" "$PLAYBOOK_DIR"/"$setup"
-		then
+	if (( rc == 0 )) && [[ -n "$setup" ]]; then
+		if ! setup_env "$verbose" "$inventory" "$modPath" "$PLAYBOOK_DIR"/"$setup"; then
 			rc=1
 		fi
 	fi
 
-	if (( rc == 0 )) && [[ -n "$playbook" ]]
-	then
+	if (( rc == 0 )) && [[ -n "$playbook" ]]; then
 		local playbookPath="$PLAYBOOK_DIR"/"$playbook"
       local testPath="$TEST_DIR"/"$playbook"
 
-		if ! do_test "$verbose" "$inventory" "$modPath" "$playbookPath" "$testPath" 
-		then
+		if ! do_test "$verbose" "$inventory" "$modPath" "$playbookPath" "$testPath" ; then
 			rc=1
 		fi
 	fi
 
-	if [[ -n "$inspect" ]]
-	then
+	if [[ -n "$inspect" ]]; then
 		printf 'opening shell for inspection of volumes\n'
 		bash
 	fi || true
@@ -90,27 +83,32 @@ do_test() {
 	verboseOpt="$(verbosity "$verbose")"
 
 	printf 'checking playbook syntax\n'
-	if ! \
-		ansible-playbook --syntax-check --inventory-file "$inventory" --module-path="$modPath" \
-			"$playbook"
+	if \
+		! \
+			ansible-playbook --syntax-check --inventory-file "$inventory" --module-path="$modPath" \
+				"$playbook"
 	then
 		return 1
 	fi
 
 	printf 'running playbook\n'
-	if ! \
-		ansible-playbook $verboseOpt \
-			--inventory-file="$inventory" --module-path="$modPath" --skip-tags=no_testing \
-			"$playbook"
+	# shellcheck disable=SC2086
+	if \
+		! \
+			ansible-playbook $verboseOpt \
+				--inventory-file="$inventory" --module-path="$modPath" --skip-tags=no_testing \
+				"$playbook"
 	then
 		return 1
 	fi
 
-	if [[ -e "$test" ]]
-	then
+	if [[ -e "$test" ]]; then
 		printf 'testing configuration\n'
-		if ! \
-			ansible-playbook $verboseOpt --module-path="$modPath" --inventory-file="$inventory" "$test"
+		# shellcheck disable=SC2086
+		if \
+			! \
+				ansible-playbook $verboseOpt --module-path="$modPath" --inventory-file="$inventory" \
+					"$test"
 		then
 			return 1
 		fi
@@ -121,8 +119,7 @@ do_test() {
 	local idempotencyRes
 	idempotencyRes="$(run_idempotency "$inventory" "$modPath" "$playbook")"
 
-	if grep --quiet --regexp '^\(changed\|failed\):' <<< "$idempotencyRes"
-	then
+	if grep --quiet --regexp '^\(changed\|fatal\):' <<< "$idempotencyRes"; then
 		echo "$idempotencyRes"
 		return 1
 	fi
@@ -153,6 +150,7 @@ setup_env() {
 	verboseOpt="$(verbosity "$verbose")"
 
 	printf 'preparing environment for testing playbook\n'
+	# shellcheck disable=SC2086
 	ansible-playbook $verboseOpt \
 		--inventory-file="$inventory" --module-path="$modPath" --skip-tags=no_testing \
 		"$setup" 
@@ -170,8 +168,7 @@ wait_for_env() {
 verbosity() {
 	local verbose="$1"
 
-	if [[ -n "$verbose" ]]
-	then
+	if [[ -n "$verbose" ]]; then
 		printf -- '-vvv'
 	fi
 }

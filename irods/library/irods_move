@@ -1,142 +1,174 @@
-#!/bin/bash
-#
-# An ansible module for renaming a data object or collection. To ensure
-# idempotency, if the source doesn't exist, but the destination does, it is
-# assumed that the move already happened and the module succeeds.
-#
-# Module Name
-#  irods_move
-#
-# Required Variables
-#  source       the current absolute path to the collection or data object
-#  destination  the new absolute path to the collection or data object
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 
-main()
-{
-  local varFile="$1"
-
-  local source
-  local destination
-  . "$varFile"
-
-  local var
-  for var in source destination
-  do
-    require "$var"
-  done
-
-  local sourceId
-  sourceId=$(id "$source")
-
-  if [ -n "$sourceId" -a "$destination" = "$source" ]
-  then
-    succeed false
-  fi
-
-  local destinationId
-  destinationId=$(id "$destination")
-
-  if [ -z "$sourceId" ]
-  then
-    if [ -n "$destinationId" ]
-    then
-      succeed false
-    fi
-
-    fail "'$source' doesn't exist"
-  fi
-
-  if [ -n "$destinationId" ]
-  then
-    fail "'$destination' already exists"
-  fi
-
-  local errMsg
-  if ! errMsg=$(imv "$source" "$destination" 2>&1)
-  then
-    fail "$errMsg"
-  fi
-
-  succeed true
-}
+import ssl
+from ansible.module_utils.basic import AnsibleModule
+from irods.session import iRODSSession
 
 
-id()
-{
-  local entity="$1"
+DOCUMENTATION = r'''
+---
+module: irods_move
 
-  local entityId
-  entityId=$(quest "select COLL_ID where COLL_NAME = '$entity'")
+short_description: Rename data collection/object
 
-  if [ -z "$entityId" ]
-  then
-    local parentColl
-    parentColl=$(dirname "$entity")
+version_added: "2.11.11"
 
-    local dataName
-    dataName=$(basename "$entity")
+description: An ansible module for renaming a data object or collection. To
+ensure idempotency, if the source doesn't exist, but the destination does, it
+is assumed that the move already happened and the module succeeds.
 
-    entityId=$(quest "select DATA_ID where COLL_NAME = '$parentColl' and DATA_NAME = '$dataName'")
-  fi
+options:
+    source:
+        description: the current absolute path to the collection or data object
+        type: str
+    destination:
+        description: the new absolute path to the collection or data object
+        type: str
 
-  printf '%s' "$entityId"
-}
+extends_documentation_fragment:
+    - my_namespace.my_collection.my_doc_fragment_name
 
+author:
+    - Fenn Garnett (@Fennersteel)
+'''
 
-quest()
-{
-  local query="$*"
+EXAMPLES = '''
+# Move iRODS data object/collection
+- name: move data object/collection
+    irods_move:
+        source: /testing/home/rods/test_src
+        destination: /testing/home/rods/test_dst
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+'''
 
-  local response
-  if ! response=$(iquest --no-page '%s' "$query" 2>&1)
-  then
-    fail "$response"
-  fi
-
-  if ! [[ "$response" =~ ^CAT_NO_ROWS_FOUND ]]
-  then
-    printf '%s' "$response"
-  fi
-}
-
-
-require()
-{
-  local var="$1"
-
-  if [ -z "${!var}" ]
-  then
-    fail "variable '$var' must be defined"
-  fi
-}
-
-
-fail()
-{
-  local msg="$*"
-
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg msg "$msg" \
-     '{failed: true, msg: $msg}' \
-    >&2
-
-  exit 1
-}
+RETURN = '''
+exc:
+    description:
+        - type of last iRODS exception thrown
+        - empty string when none is thrown
+    type: str
+    returned: always
+exc_msg:
+    description:
+        - message of the last iRODS exception thrown
+        - empty string when none is thrown
+    type: str
+    returned: always
+'''
 
 
-succeed()
-{
-  local changed="$1"
+class IRODSMoveModule:
+    """
+    Module class
+    """
 
-  # shellcheck disable=SC2016
-  jq --compact-output --monochrome-output --null-input --arg changed "$changed" \
-     '{changed: ($changed == "true")}' \
-    >&2
+    def __init__(self):
+        """
+        Initialize module
+        """
 
-  exit 0
-}
+        self.module_args = dict(
+            source=dict(type="str", required=True),
+            destination=dict(type="str", required=True),
+
+            host=dict(type="str", required=True),
+            port=dict(type="int", required=True),
+            admin_user=dict(type="str", no_log=True, required=True),
+            admin_password=dict(type="str", no_log=True, required=True),
+            zone=dict(type="str", required=True),
+        )
+
+        self.result = dict(
+            changed=False,
+            exc='',
+            exc_msg=''
+        )
+
+        self.module = AnsibleModule(
+            argument_spec=self.module_args,
+            supports_check_mode=True
+        )
+
+        self.ssl_context = ssl.create_default_context(
+            purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None,
+            cadata=None)
+
+        self.ssl_settings = {"ssl_context": self.ssl_context}
+
+        self.session = None
+
+    def init_session(self):
+        try:
+            self.session = iRODSSession(
+                source=self.module.params["source"],
+                destination=self.module.params["destination"],
+                host=self.module.params["host"],
+                port=self.module.params["port"],
+                user=self.module.params["admin_user"],
+                password=self.module.params["admin_password"],
+                zone=self.module.params["zone"],
+                **self.ssl_settings)
+
+        except Exception as exc:
+            self.result["exc"] = exc
+            self.result["exc_message"] = "Unable to connect to iRODS."
+            self._fail(self.result["exc_message"])
+
+    def run_module(self):
+        if self.module.check_mode:
+            self.module.exit_json(**self.result)
+
+        self.init_session()
+
+        try:
+            self.rename()
+            self.module.exit_json(**self.result)
+        except Exception as exc:
+            self.result["exc"] = type(exc).__name__
+            self.result["exc_msg"] = str(exc)
+            self._fail("Unable to move irods object/collection {}".format(
+                self.module.params["source"]), exc)
+
+    def rename(self):
+        # rename collection
+        path = self.module.params["source"]
+        new_path = self.module.params["destination"]
+        path_exists = self.session.collections.exists(path)
+        new_path_exists = self.session.collections.exists(new_path)
+
+        if path_exists or not new_path_exists:
+            self.session.collections.move(path, new_path)
+            self.result["changed"] = True
+
+    def _fail(self, msg, err=None):
+        """
+        Failure routine, called when the operation failed
+        """
+        if self.session:
+            self.session.cleanup()
+
+        if err:
+            self.module.fail_json(msg=msg + "\n" + str(err), **self.result)
+        else:
+            self.module.fail_json(msg=msg, **self.result)
 
 
-set -e
-main "$@" 2>&1
+def main():
+    """
+    Entrypoint of the Ansible module
+    """
+    try:
+        module = IRODSMoveModule()
+        module.run_module()
+    except Exception:
+        pass
+
+
+if __name__ == '__main__':
+    main()

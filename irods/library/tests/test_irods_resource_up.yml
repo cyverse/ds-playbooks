@@ -1,6 +1,6 @@
 ---
 - name: test irods_resource_up module
-  hosts: dstesting_provider_configured_1.dstesting_default
+  hosts: dstesting-provider_configured-1.dstesting_default
   become: true
   become_user: irods
   environment:

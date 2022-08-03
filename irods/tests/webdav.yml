@@ -38,7 +38,7 @@
         that:
           - >-
             purgeman_conf
-            is search('PURGEMAN_AMQP_HOST=dstesting_amqp_1.dstesting_default' | regex_escape)
+            is search('PURGEMAN_AMQP_HOST=dstesting-amqp-1.dstesting_default' | regex_escape)
           - purgeman_conf is search('PURGEMAN_AMQP_PORT=5672')
           - purgeman_conf is search('PURGEMAN_AMQP_VHOST=/')
           - purgeman_conf is search('PURGEMAN_AMQP_EXCHANGE=irods')
@@ -261,7 +261,7 @@
       assert:
         that:
           - irods_environment.irods_home == '/testing'
-          - irods_environment.irods_host == 'dstesting_provider_configured_1.dstesting_default'
+          - irods_environment.irods_host == 'dstesting-provider_configured-1.dstesting_default'
           - irods_environment.irods_user_name == 'anonymous'
           - irods_environment.irods_zone_name == 'testing'
 

@@ -1,17 +1,78 @@
 ---
-- name: test irods_resource_hierarchy module
+- name: test irods_unixfilesystem_resource module
   hosts: localhost
   gather_facts: false
   vars:
-    name: rsc
-    host: tbf
-    vault: /testing/home/rods/test_vault
-  environment:
-    TEST_PORT: 1247
-    TEST_USER_NAME: rods
-    TEST_HOST: "{{ groups['irods_catalog'][0] }}"
-    TEST_PASSWORD: rods
-    TEST_ZONE_NAME: testing
+    TEST_RSC_NAME: test_unix_rsc
+    TEST_RSC_NAME2: test_unix_rsc2
+    TEST_HOST_NAME: dstesting_consumer_configured_ubuntu_1.dstesting_default.
+    TEST_VAULT_PATH: /irods/test_vault
+    TEST_VAULT_PATH2: /irods/test_vault2
+    TEST_CONTEXT: na
+    TEST_STATUS: up
+    TEST_INIT_FREESPACE: false
+  pre_tasks:
+    - name: create test irods environment
+      shell: |
+        set -o errexit
+        iinit "$IRODS_PASSWORD"
+
   tasks:
-    - debug:
-        msg: TODO implement
+    - name: run script without optional vars
+      irods_unixfilesystem_resource:
+        name: "{{ TEST_RSC_NAME }}"
+        host: "{{ TEST_HOST_NAME }}"
+        vault: "{{ TEST_VAULT_PATH }}"
+      register: response
+
+    - name: run script with optional vars
+      irods_unixfilesystem_resource:
+        name: "{{ TEST_RSC_NAME2 }}"
+        host: "{{ TEST_HOST_NAME }}"
+        vault: "{{ TEST_VAULT_PATH2 }}"
+        context: "{{ TEST_CONTEXT }}"
+        status: "{{ TEST_STATUS }}"
+        init_freespace: " {{ TEST_INIT_FREESPACE }} "
+      register: response
+
+    - name: check resource name
+      failed_when: response is failed
+      shell:
+        iquest "SELECT RESC_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME }}'"
+        iquest "SELECT RESC_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'"
+      register: response
+
+    - name: check resource status
+      failed_when: response is failed
+      shell:
+        iquest "SELECT RESC_STATUS WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}' AND RESC_STATUS = '{{ TEST_STATUS}}'"
+      register: response
+
+    - name: check resource path
+      failed_when: response is failed
+      shell:
+        iquest "SELECT RESC_VAULT_PATH WHERE RESC_NAME = '{{ TEST_RSC_NAME }}' AND RESC_VAULT_PATH = '{{ TEST_VAULT_PATH }}'"
+        iquest "SELECT RESC_VAULT_PATH WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}' AND RESC_VAULT_PATH = '{{ TEST_VAULT_PATH2 }}'"
+      register: response
+
+    - name: check resource host
+      failed_when: response is failed
+      shell:
+        iquest "SELECT RESC_LOC WHERE RESC_NAME = '{{ TEST_RSC_NAME }}' AND RESC_LOC = '{{ TEST_HOST_NAME }}'"
+        iquest "SELECT RESC_LOC WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}' AND RESC_LOC = '{{ TEST_HOST_NAME }}'"
+      register: response
+
+    - name: check resource context
+      failed_when: response is failed
+      shell:
+        iquest "SELECT RESC_CONTEXT WHERE RESC_NAME = '{{ TEST_RSC_NAME }}' AND RESC_CONTEXT = '{{ TEST_CONTEXT }}'"
+        iquest "SELECT RESC_CONTEXT WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}' AND RESC_CONTEXT = '{{ TEST_CONTEXT }}'"
+      register: response
+
+# Possible tests: 
+#   - ensure resource status was properly set
+#   - check given server ID/IP Address
+# - error tests
+
+# ensure context is set correctly
+# one with no optional vars, one with all optional vars

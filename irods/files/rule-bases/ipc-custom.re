@@ -421,9 +421,6 @@ _ipc_dataObjModified(*User, *Zone, *DATA_OBJ_INFO) {
   *path = *DATA_OBJ_INFO.logical_path;
 
   if (! ipc_inStaging(/*path)) {
-    *err = errormsg(ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO), *msg);
-    if (*err < 0) { writeLine('serverLog', *msg); }
-
     *err = errormsg(ipcRepl_dataObjModified(*User, *Zone, *DATA_OBJ_INFO), *msg);
     if (*err < 0) { writeLine('serverLog', *msg); }
   }
@@ -499,17 +496,24 @@ _ipc_needsChecksum(*DataObjOpInp) =
   !_ipc_hasKey(*DataObjOpInp, 'regChksum') && !_ipc_hasKey(*DataObjOpInp, 'verifyChksum')
 
 
+# Indicates that a file was created
+#
+# _ipc_FILE_CREATE : string
+_ipc_FILE_CREATE = '1';
+
+
+# Indicates that a file was opened for writing
+#
+# _ipc_FILE_OPEN_WRITE : string
+_ipc_FILE_OPEN_WRITE = '3';
+
+
 # N.B. This can be triggered by `iput -b -r`.
 # N.B. `-k` adds `regChksum` to BulkOprInp.
 # N.B. `-K` adds `verifyChksum` to BUKOPRINP.
 # N.B. Overwriting a replica that has a checksum clears the checksum.
 # N.B. `-X` handled transparently
 # N.B. large files are not passed through rcBulkDataObjPut
-#
-# CHKSUM ALGORITHM:
-#
-# If neither *BulkOprInp.regChksum nor *BulkOprInp.verifyChksum exist, calculate the checksum of 
-# replica on *BulkOprInp.resc_hier for each entry of *BulkOprInp.logical_path.
 #
 # *BulkOprInp: 
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gafeecbd87f6ba164e8c1d189c42a8c93e
@@ -518,7 +522,23 @@ _ipc_needsChecksum(*DataObjOpInp) =
 #   buf
 #   len
 #
+# CHKSUM ALGORITHM:
+#
+# If neither *BulkOprInp.regChksum nor *BulkOprInp.verifyChksum exist, calculate the checksum of 
+# replica on *BulkOprInp.resc_hier for each entry of *BulkOprInp.logical_path.
+#
+# DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM:
+#
+# If *BulkOperInp.forceFlag is not set, then all data objects are new, so publish a data object add
+# message for each one of them. Otherwise, there is no difference in the contents of *BulkOprInp 
+# between when a data object is created and when it is modified. For each data object, if the create 
+# time is less than the modification time time, publish a data object modification message, 
+# otherwise publish a data object create message.
+#
+# TODO: test
+#
 pep_api_bulk_data_obj_put_post(*Instance, *Comm, *BulkOprInp, *BulkOprInpBBuf) {
+  # checksum sum policy
   if (_ipc_needsChecksum(*BulkOprInp)) {
     foreach (*key in *BulkOprInp) {
       if (*key like 'logical_path_*') {
@@ -527,14 +547,33 @@ pep_api_bulk_data_obj_put_post(*Instance, *Comm, *BulkOprInp, *BulkOprInpBBuf) {
       }
     }
   }
+
+  # data object creation and modification message publishing policy
+  *authorName = _ipc_getValue(*Comm, 'user_user_name');
+  *authorZone = _ipc_getValue(*Comm, 'user_rods_zone');
+  *mayOverwrite = _ipc_hasKey(*BulkOprInp, 'forceFlag');
+  foreach (*key in *BulkOperInp) {
+    if (*key like 'logical_path_*') {
+      *dataPath = _ipc_getValue(*BulkOperInp, *key);
+      *idx = triml(*key, 'logical_path_');
+      if (*mayOverwrite) {
+        msiSplitPath(*dataPath, *collPath, *dataName);
+        foreach ( *rec in 
+          SELECT DATA_CREATE_TIME, DATA_MODIFY_TIME 
+          WHERE COLL_NAME == *collPath AND DATA_NAME == *dataName
+        ) {
+          if (*rec.DATA_CREATE_TIME == *rec.DATA_MODIFY_TIME) {
+            ipc_notifyDataObjCreated(*dataPath, *authorName, *authorZone); 
+          } else {
+            ipc_notifyDataObjMod(*dataPath, *authorName, *authorZone); 
+          }
+        }
+      } else {
+        ipc_notifyDataObjCreated(*dataPath, *authorName, *authorZone); 
+      }
+    }
+  }
 }
-# DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM
-#
-# There is no difference in the contents of *BulkOprInp between when a data object is created and
-# when it is modified. For each data object, if the create time is less than the modification time 
-# time, publish a data object modification message, otherwise publish a data object create message.
-#
-# TODO implement
 
 
 # N.B. This isn't used by iCommands, but it is by the Java and Python APIs.
@@ -551,34 +590,46 @@ pep_api_data_obj_close_post(*Instance, *Comm, *DataObjCloseInp) {
 
 # N.B. This can be triggered by icp.
 #
-# ALGORITHM:
-#
-# If neither *DataObjCopyInp.regChksum nor *DataObjCopyInp.verifyChksum exist, calculate the
-# checksum of *DataObjCopyInp.dst_obj_path on *DataObjCopyInp.dst_resc_hier.
-#
 # *DataObjCopyInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gaad62fbc609d67726e15e7330bbbdf98d
 #
 # *TransStat: *NOT SUPPORTED*
 #
-pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
-  if (_ipc_needsChecksum(*DataObjCopyInp)) {
-    *path = _ipc_getValue(*DataObjCopyInp, 'dst_obj_path');
-
-    if (*path == '') {
-      failmsg(
-        -1, 'Could not determine path to created data object, (DataObjCopyInp = *DataObjCopyInp)' );
-    } else {
-      ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjCopyInp, 'dst_resc_hier'));
-    }
-  }
-}
-# DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM
+# CHKSUM ALGORITHM:
+#
+# If neither *DataObjCopyInp.regChksum nor *DataObjCopyInp.verifyChksum exist, calculate the
+# checksum of *DataObjCopyInp.dst_obj_path on *DataObjCopyInp.dst_resc_hier.
+#
+# DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM:
 #
 # If *DataObjCopyInp.dst_openType == 1 (CREATE) then publish a data object create message, otherwise 
 # publish a data object mod message.  openType of 3 (OPEN FOR WRITE)
 #
-# TODO implement
+# TODO test
+#
+pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
+  *destPath = _ipc_getValue(*DataObjCopyInp, 'dst_obj_path');
+
+  if (*destPath == '') {
+    failmsg(
+      -1, 'Could not determine path to created data object, (DataObjCopyInp = *DataObjCopyInp)' );
+  } else {
+
+    # checksum policy
+    if (_ipc_needsChecksum(*DataObjCopyInp)) {
+      ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjCopyInp, 'dst_resc_hier'));
+    }
+
+    # data object creation and modification message publishing policy
+    *authorName = _ipc_getValue(*Comm, 'user_user_name');
+    *authorZone = _ipc_getValue(*Comm, 'user_rods_zone');
+    if (_ipc_getValue(*DataObjCopyInp, 'dst_openType') == _ipc_FILE_CREATE) {
+      ipc_notifyDataObjCreated(*destPath, *authorName, *authorZone);
+    } else {
+      ipc_notifyDataObjMod(*destPath, *authorName, *authorZone); 
+    }
+  }
+}
 
 
 # N.B. This isn't used by iCommands, but it is by the Java and Python APIs.
@@ -607,11 +658,6 @@ pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
 
 # N.B. This can be triggered by iput
 #
-# ALGORITHM:
-#
-# If neither *DataObjInp.regChksum nor *DataObjInp.verifyChksum exist, calculate the checksum of 
-# *DataObjInp.obj_path on *DataObjInp.resc_hier.
-#
 # *DataObjInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#ga1b1d0d95bd1cbc6f07860d6f8174371f
 #
@@ -621,16 +667,38 @@ pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
 #
 # *PORTAL_OPR_OUT: *NOT SUPPORTED*
 #
+# CHKSUM ALGORITHM:
+#
+# If neither *DataObjInp.regChksum nor *DataObjInp.verifyChksum exist, calculate the checksum of 
+# *DataObjInp.obj_path on *DataObjInp.resc_hier.
+#
+# DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM:
+#
+# If *DataObjInp.openType == 1 (CREATE) then publish a data object create message, otherwise publish 
+# a data object mod message.  openType of 3 (OPEN FOR WRITE)
+#
+# TODO test
+#
 pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT) {
-  if (_ipc_needsChecksum(*DataObjInp)) {
-    *path = _ipc_getValue(*DataObjInp, 'obj_path');
+  *path = _ipc_getValue(*DataObjInp, 'obj_path');
 
-    if (*path == '') {
-      writeLine(
-        'serverLog', 
-        'Could not determine path to created data object, (DataObjInp = *DataObjInp)' );
+  if (*path == '') {
+    failmsg(-1, 'Could not determine path to created data object, (DataObjInp = *DataObjInp)');
+  } else {
+
+    # checksum policy
+    if (_ipc_needsChecksum(*DataObjInp)) {
+        ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjInp, 'resc_hier'));
+      }
+    }
+
+    # data object creation and modification message publishing policy
+    *authorName = _ipc_getValue(*Comm, 'user_user_name');
+    *authorZone = _ipc_getValue(*Comm, 'user_rods_zone');
+    if (_ipc_getValue(*DataObjInp, 'openType') == _ipc_FILE_CREATE) {
+      ipc_notifyDataObjCreated(*path, *authorName, *authorZone);
     } else {
-      ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjInp, 'resc_hier'));
+      ipc_notifyDataObjMod(*path, *authorName, *authorZone); 
     }
   }
 }
@@ -638,25 +706,33 @@ pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTA
 
 # N.B. This can be triggered by ireg.
 #
-# ALGORITHM:
+# *PhyPathRegInp:
+#   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gad63565afa69981320220cea5d1d1f6c3
+#
+# CHKSUM ALGORITHM:
 #
 # If none of PhyPathRegInp.regRepl, PhyPathRegInp.regChksum, or PhyPathRegInp.verifyChksum are set,
 # calculate the checksum of replica of PhyPathRegInp.obj_path on PhyPathRegInp.resc_hier.
 #
-# *PhyPathRegInp:
-#   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gad63565afa69981320220cea5d1d1f6c3
+# DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM:
+#
+# If PhyPathRegInp.regRepl isn't set, publish a data object create message.
+#
+# TODO test
 #
 pep_api_phy_path_reg_post(*Instance, *Comm, *PhyPathRegInp) {
+  # checksum policy
   if (!_ipc_hasKey(*PhyPathRegInp, 'regRepl') && _ipc_needsChecksum(*PhyPathRegInp)) {
-    *path = _ipc_getValue(*PhyPathRegInp, 'obj_path');
+    _ipc_ensureReplicasChecksum(
+      _ipc_getValue(*PhyPathRegInp, 'obj_path'), _ipc_getValue(*PhyPathRegInp, 'resc_hier') );
+  }
 
-    if (*path == '') {
-      writeLine(
-        'serverLog', 
-        'Could not determine path to created data object, (PhyPathRegInp = *PhyPathRegInp)' );
-    } else {
-      ipc_ensureReplicasChecksum(*path, _ipc_getValue(*PhyPathRegInp, 'resc_hier'));
-    }
+  # data object creation and message publishing policy
+  if (!_ipc_hasKey(*PhyPathRegInp, 'regRepl')) {
+    ipc_notifyDataObjCreated(
+      _ipc_getValue(*PhyPathRegInp, 'obj_path'), 
+      _ipc_getValue(*Comm, 'user_user_name'), 
+      _ipc_getValue(*Comm, 'user_rods_zone') );
   }
 }
 
@@ -673,44 +749,65 @@ pep_api_phy_path_reg_post(*Instance, *Comm, *PhyPathRegInp) {
 # N.B. When a data object with a checksum is overwritten, modified or appened to, the checksum is
 #      cleared.
 #
-# ALGORITHM:
+# *DataObjInp: https://docs.irods.org/4.2.10/doxygen/structDataObjInp.html
+#
+# *JSON_OUTPUT : *NOT SUPPORTED*
+#
+# CHKSUM ALGORITHM:
 #
 # When replica_open_post is called, if *DataObjInp.destRescName is defined, then store it and 
 # *DataObjInp.obj_path in temporaryStorage. When replica_close_post is called, if destRescName and
 # obj_path are in temporaryStorage, and *JSON_INPUT.buf.compute_checksum != true, compute the 
 # checksum of obj_path.
-
-# *DataObjInp: https://docs.irods.org/4.2.10/doxygen/structDataObjInp.html
-#
-# *JSON_OUTPUT : *NOT SUPPORTED*
 # 
+# DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM:
+#
+# When replica_open_post is called, If DataObjInp.openType is defined, then store it in 
+# temporaryStorage. Otherwise store it with the value 3 (OPEN FOR WRITE). When replica_close_post is
+# called, read DataObjInp.openType from temporaryStorage. If it is 1 (CREATE), then publish a data
+# object add message, otherwise publish a data object modified message.
+
+# TODO test
+#
 pep_api_replica_open_post(*Instance, *Comm, *DataObjInp, *JSON_OUTPUT) {
   *path = _ipc_getValue(*DataObjInp, 'obj_path');
 
   if (*path != '') {
     temporaryStorage.replica_dataObjPath = *path;
+
+    # checksum policy
     temporaryStorage.replica_rescHier = _ipc_getValue(*DataObjInp, 'destRescName');
-  }
+
+    # data object creation and modification message publishing policy
+    temporaryStorage.replica_openType = 
+      if _ipc_hasKey(*DataObjInp, 'openType') then _ipc_getValue(*DataObjInp, 'openType') 
+      else _ipc_FILE_OPEN_WRITE;
 }
 
-# *SEE COMMON*
+# TODO test
 #
 pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
   *path = _ipc_getValue(temporaryStorage, 'replica_dataObjPath');
-
   if (*path != '') {
+
+    # checksum policy
     *chksumComputed = match json_deserialize(*JsonInput.buf) with
       | json_deserialize_val(*input, *_) => 
         match json_getValue(*input, 'compute_checksum') with
           | json_empty => false
           | json_bool(*v) => *v; 
-
     if (!*chksumComputed) {
       ipc_ensureReplicasChecksum(*path, _ipc_getValue(temporaryStorage, 'replica_rescHier'));
     }
 
-    temporaryStorage.replica_dataObjPath = '';
-    temporaryStorage.replica_rescHier = '';
+    # data object creation and modification message publishing policy
+    *authorName = _ipc_getValue(*Comm, 'user_user_name');
+    *authorZone = _ipc_getValue(*Comm, 'user_rods_zone');
+    if (_ipc_getValue(temporaryStorage, 'replica_openType') == _ipc_FILE_CREATE) {
+      ipc_notifyDataObjCreated(*path, *authorName, *authorZone);
+    } else {
+      ipc_notifyDataObjMod(*path, *authorName, *authorZone);
+    }
   }
 }
 
@@ -722,13 +819,21 @@ pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
 # If options.no_create = true, a data object wasn't created. 
 # If options.replica_number or options.leaf_resource_name is set, a data object wasn't created.
 #
-# ALGORITHM:
+# CHKSUM ALGORITHM:
 #
 # Check to see if JSON_INFUT.buf.options.no_create is false. If it is, check to see if neither 
 # options.replica_number nor options.leaf_resource_name is set. If that's the case, check to see if
 # the data object's 0 replica has a checksum. If it doesn't compute its checksum.
 #
-# *SEE COMMON*
+# DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM:
+#
+# NB: Current PEPs will handle itouch on an existing collection or data object.
+#
+# Check to see if *JsonInput.buf.options.no_create is false. If it is, check to see if neither 
+# options.replica_number nor options.leaf_resource_name is set. If that's the case, publish a data
+# object create message
+#
+# TODO: test
 #
 pep_api_touch_post(*Instance, *Comm, *JsonInput) {
   *input = match json_deserialize(*JsonInput.buf) with 
@@ -754,8 +859,9 @@ pep_api_touch_post(*Instance, *Comm, *JsonInput) {
       | json_str(*_) => true;
 
     if (!*noCreate && !*replNumSet && !*rescNameSet) {
-      msiSplitPath(*dataPath, *collPath, *dataName);
 
+      # checksum policy
+      msiSplitPath(*dataPath, *collPath, *dataName);
       foreach ( *rec in 
         SELECT DATA_CHECKSUM, DATA_RESC_HIER WHERE COLL_NAME = *collPath AND DATA_NAME = *dataName 
       ) {
@@ -763,6 +869,10 @@ pep_api_touch_post(*Instance, *Comm, *JsonInput) {
           ipc_ensureReplicasChecksum(*dataPath, *rec.DATA_RESC_HIER);
         }
       }
+
+      # data object creation and modification message publishing policy
+      ipc_notifyDataObjCreated(
+        *dataPath, _ipc_getValue(*Comm, 'user_user_name'), _ipc_getValue(*Comm, 'user_rods_zone') );
     }
   }
 }

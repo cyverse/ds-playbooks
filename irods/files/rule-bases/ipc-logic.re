@@ -313,7 +313,9 @@ _ipc_sendDataObjectAclModified(*Data, *AccessLevel, *UserName, *UserZone, *Autho
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.acl.mod', *msg);
 }
 
-_ipc_sendDataObjectAdd(
+# Publish a data-obj.add message to AMQP exchange
+#
+ipc_sendDataObjectAdd(
 	*AuthorName, *AuthorZone, *Data, *Path, *OwnerName, *OwnerZone, *Size, *Type
 ) {
 	*msg = json_obj(
@@ -329,7 +331,7 @@ _ipc_sendDataObjectAdd(
 }
 
 # Publish a data-object.mod message to AMQP exchange
-_ipc_sendDataObjectMod(
+ipc_sendDataObjectMod(
 	*AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
 ) {
 	*msg = json_obj(
@@ -617,6 +619,35 @@ ipc_ensureReplicasChecksum(*DataPath, *RescHier) {
     }
   }
 }
+
+
+#
+# Data objects
+#
+
+# Determine the size and type of a data object, and owner
+#
+# TODO test
+#
+# _ipc_retrieveDataInfo : string -> `KEYVALPAIR_MS_T`
+_ipc_retrieveDataInfo(*Path) = 
+  let *info.size = '-1' in
+  let *info.type = '' in
+  let *info.ownerName = '' in
+  let *info.ownerZone = '' in
+  let *collPath = '' in
+  let *dataName = '' in
+  let *_ = msiSplitPath(*Path, *collPath, *dataName) in
+  let *_ = foreach( *rec in 
+      SELECT DATA_SIZE, DATA_TYPE_NAME, DATA_OWNER_NAME, DATA_OWNER_ZONE 
+      WHERE COLL_NAME == *collPath AND DATA_NAME == *dataName AND DATA_REPL_STATUS == '1'
+    ) { 
+      *info.size = *rec.DATA_SIZE;
+      *info.type = *rec.DATA_TYPE_NAME;
+      *info.ownerName = *rec.DATA_OWNER_NAME;
+      *info.ownerZone = *rec.DATA_OWNER_ZONE; 
+    } in
+  *info
 
 
 #
@@ -977,32 +1008,65 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 # DYNAMIC PEPS
 #
 
+
+# Publishes a message indicating that a data object was created.
+#
+# TODO test
+#
+# ipc_notifyDataObjCreated : string * string * string -> int
+ipc_notifyDataObjCreated(*Path, *AuthorName, *AuthorZone) {
+  *id = _ipc_retrieveUUID(ipc_DATA_OBJECT, *Path);
+
+  if (*id != '') {
+    *info = _ipc_retrieveDataInfo(*Path);
+
+    ipc_sendDataObjectAdd(
+      *AuthorName, 
+      *AuthorZone, 
+      *id, 
+      *Path,
+      *info.ownerName,
+      *info.ownerZone,
+      int(*info.size),
+      *info.type );
+  }
+}
+
+
+# Publishes a message indicating that a data object was created.
+#
+# TODO test
+#
+# ipc_notifyDataObjMod : string * string * string -> void
+ipc_notifyDataObjMod(*Path, *AuthorName, *AuthorZone) {
+  *id = _ipc_retrieveUUID(ipc_DATA_OBJECT, *Path);
+
+  if (*id != '') {
+    *info = _ipc_retrieveDataInfo(*Path);
+
+    ipc_sendDataObjectMod(
+      *AuthorName, 
+      *AuthorZone, 
+      *id, 
+      *Path,
+      *info.ownerName,
+      *info.ownerZone,
+      int(*info.size),
+      *info.type );
+  }
+}
+
+
 # XXX - Because of https://github.com/irods/irods/issues/5540
 # ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO) {
 # 	*me = 'ipc_dataObjCreated_default';
 # 	*id = int(*DATA_OBJ_INFO.data_id);
 # 	_ipc_registerAction(*id, *me);
+#
 # 	*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 # 	if (*err < 0) { writeLine('serverLog', *msg); }
 #
-# 	*uuid = ''
 # 	_ipc_ensureUUID(ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
-#
-# 	if (_ipc_isCurrentAction(*id, *me)) {
-# 		*err = errormsg(
-# 			_ipc_sendDataObjectAdd(
-# 				*User,
-# 				*Zone,
-# 				*uuid,
-# 				*DATA_OBJ_INFO.logical_path,
-# 				*DATA_OBJ_INFO.data_owner_name,
-# 				*DATA_OBJ_INFO.data_owner_zone,
-# 				int(*DATA_OBJ_INFO.data_size),
-# 				*DATA_OBJ_INFO.data_type ),
-# 			*msg );
-# 		if (*err < 0) { writeLine('serverLog', *msg); }
-# 	}
-#
 # 	_ipc_unregisterAction(*id, *me);
 # }
 ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
@@ -1010,33 +1074,15 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 	*id = int(*DATA_OBJ_INFO.data_id);
 	_ipc_registerAction(*id, *me);
 
-	*uuid = '';
-
 	if (*Step != 'FINISH') {
 		*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
+
 		_ipc_ensureUUID(ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
 	}
 
 	if (*Step != 'START') {
-		if (*uuid == '') {
-			_ipc_ensureUUID(ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
-		}
-
 		if (_ipc_isCurrentAction(*id, *me)) {
-			*err = errormsg(
-				_ipc_sendDataObjectAdd(
-					*User,
-					*Zone,
-					*uuid,
-					*DATA_OBJ_INFO.logical_path,
-					*DATA_OBJ_INFO.data_owner_name,
-					*DATA_OBJ_INFO.data_owner_zone,
-					int(*DATA_OBJ_INFO.data_size),
-					*DATA_OBJ_INFO.data_type ),
-				*msg );
-			if (*err < 0) { writeLine('serverLog', *msg); }
-
 			_ipc_unregisterAction(*id, *me);
 		}
 	}
@@ -1048,6 +1094,7 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 # 	*me = 'ipc_dataObjCreated_staging';
 # 	*id = int(*DATA_OBJ_INFO.data_id);
 # 	_ipc_registerAction(*id, *me);
+#
 # 	*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 # 	if (*err < 0) { writeLine('serverLog', *msg); }
 #
@@ -1067,28 +1114,6 @@ ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 }
 # XXX - ^^^
 
-ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO) {
-	*me = 'ipc_dataObjModified_default';
-	*id = int(*DATA_OBJ_INFO.data_id);
-	_ipc_registerAction(*id, *me);
-
-	if (_ipc_isCurrentAction(*id, *me)) {
-		*uuid = '';
-		_ipc_ensureUUID(ipc_DATA_OBJECT, *DATA_OBJ_INFO.logical_path, *uuid);
-
-		_ipc_sendDataObjectMod(
-			*User,
-			*Zone,
-			*uuid,
-			*DATA_OBJ_INFO.logical_path,
-			*DATA_OBJ_INFO.data_owner_name,
-			*DATA_OBJ_INFO.data_owner_zone,
-			int(*DATA_OBJ_INFO.data_size),
-			*DATA_OBJ_INFO.data_type );
-
-		_ipc_unregisterAction(*id, *me);
-	}
-}
 
 # This rule sends a system metadata modified status message.
 ipc_dataObjMetadataModified(*User, *Zone, *Object) {

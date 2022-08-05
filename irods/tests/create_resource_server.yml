@@ -31,7 +31,7 @@
 
 
 - name: test bootstrap iRODS start
-  hosts: dstesting_consumer_unconfigured_1.dstesting_default
+  hosts: dstesting-consumer_unconfigured-1.dstesting_default
   become: true
   become_user: irods
   tasks:

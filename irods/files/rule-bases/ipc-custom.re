@@ -954,4 +954,11 @@ pep_database_reg_data_obj_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO) {
 # This rule is meant for project specific implementations where an project
 # implementation is within an `on` block that restricts the resource resolution
 # to entities relevant to the project.
-pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST, *PARSER, *VOTE) {}
+pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST, *PARSER, *VOTE) {
+# XXX - Because of https://github.com/irods/irods/issues/6463, an error 
+# happening in an `ON` condition needs to be captured and sent in the catch-all.
+  if (errorcode(temporaryStorage.resource_resolve_hierarchy_err) == 0) {
+    failmsg(-32000, temporaryStorage.resource_resolve_hierarchy_err);
+  }
+# XXX - ^^^
+}

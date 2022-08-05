@@ -77,29 +77,21 @@
       package_facts:
         strategy: all
 
-    - name: verify HAProxy is installed
-      assert:
-        that:
-          - "'haproxy' not in ansible_facts.packages"
-          - "'centos-release-scl' in ansible_facts.packages"
-          - "'rh-haproxy18-haproxy' in ansible_facts.packages"
-          - "'rh-haproxy18-haproxy-syspaths' in ansible_facts.packages"
+    - name: test haproxy installed
+      fail:
+      when: "'haproxy' not in ansible_facts.packages"
 
-    - name: verify /usr/sbin/haproxy points to the haproxy exec
-      stat:
-        path: /usr/sbin/haproxy
-      register: exec
-      failed_when: >
-        not exec.stat.exists or
-        not exec.stat.islnk or
-        exec.stat.lnk_source != '/opt/rh/rh-haproxy18/root/usr/sbin/haproxy' or
-        not exec.stat.executable
+    - name: test install | install socat
+      debug:
+        msg: TODO implement
 
-    - name: verify /etc/haproxy exists
-      stat:
-        path: /etc/haproxy
-      register: cfgdir
-      failed_when: not cfgdir.stat.exists or not cfgdir.stat.isdir
+    - name: test configure | allowing proxy to listen on stats port
+      debug:
+        msg: TODO implement
+
+    - name: test configure | enabling SELinux booleans for proxy
+      debug:
+        msg: TODO implement
 
     - name: test change rsyslog.conf block Id to proxy
       command: "grep --invert --quiet 'DS MANAGED BLOCK (load_balancer)' /etc/rsyslog.conf"
@@ -112,6 +104,8 @@
           '/^# BEGIN DS MANAGED BLOCK (haproxy)/{N;N;N;s/^[^\n]*\n//;p}' /etc/rsyslog.conf)
         [[ "$actSettings" = "$expSettings" ]]
       changed_when: false
+      args:
+        executable: /bin/bash
 
     - name: test place rsyslog config for HAProxy
       stat:
@@ -127,13 +121,13 @@
 
     - name: test place TLS certificates file
       stat:
-        path: /etc/pki/tls/private/testing.pem
+        path: /etc/ssl/private/testing.pem
       register: result
       failed_when: not result.stat.exists or not result.stat.roth
 
     - name: retrieve TLS certificates file
       slurp:
-        src: /etc/pki/tls/private/testing.pem
+        src: /etc/ssl/private/testing.pem
       register: pem_encoded
 
     - name: decode TLS certificates file
@@ -150,27 +144,10 @@
       register: response
       failed_when: not response.stat.exists or not result.stat.roth
 
-    - name: test haproxy config placement
+    - name: test configure | place haproxy config file 
       debug:
         msg: TODO implement
 
-    - name: verify /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg points to cfg
-      stat:
-        path: /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg
-      register: cfg
-      failed_when: >
-        not cfg.stat.exists or
-        not cfg.stat.islnk or
-        cfg.stat.lnk_source != '/etc/haproxy/haproxy.cfg'
-
-    - name: test change iptables load_balancer Ids to proxy Ids
-      command: "grep --invert --quiet 'DS MANAGED BLOCK (load_balancer' /etc/sysconfig/iptables"
-      changed_when: false
-
-    - name: test disable conntrack for proxied connections
-      debug:
-        msg: TODO implement
-
-    - name: test open firewall for relevant connections
+    - name: test firewall | place nf_conntrack.conf
       debug:
         msg: TODO implement

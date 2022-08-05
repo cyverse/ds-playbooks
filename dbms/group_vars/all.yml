@@ -1,4 +1,6 @@
 ---
+_dbms_reboot_allowed: false
+
 _dbms_checkpoint_completion_target: "{{ dbms_checkpoint_completion_target | default(0.9) }}"
 _dbms_checkpoint_timeout: "{{ dbms_checkpoint_timeout | default(15) }}"
 
@@ -32,3 +34,4 @@ _dbms_mem_num_huge_pages: "{{ dbms_mem_num_huge_pages | default(60000) }}"
 _dbms_max_worker_processes: "{{ dbms_max_worker_processes | default(None) }}"
 _dbms_max_parallel_maintenance_workers: "{{ dbms_max_parallel_maintenance_workers | default(2) }}"
 _dbms_max_parallel_workers_per_gather: "{{ dbms_max_parallel_workers_per_gather | default(2) }}"
+

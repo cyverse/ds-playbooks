@@ -48,6 +48,7 @@ main() {
 		--volume "$playbooks":/playbooks-under-test:ro \
 		ansible-tester "$inspect" "$pretty" "$verbose" "$hosts" "$setup" "$playbook" 
 }
+		#--entrypoint bash \
 
 
 main "$@"

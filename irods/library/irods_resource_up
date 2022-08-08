@@ -20,7 +20,38 @@ description: An ansible module for changing the status of a resource and
 all of its parents to up.
 
 options:
-    resource: the resource to modify
+    resource: 
+        description: 
+            - the resource to modify
+        required: true
+        type: object
+'''
+
+EXAMPLE = '''
+# Set iRODS resource status to "up"
+- name: Set status to "up"
+    irods_resource_up:
+        resource: ingestRes
+        host: cyverse.org
+        port: 1247
+        admin_user: rods
+        admin_password: 1234
+        zone: tempZone
+'''
+
+RETURN = '''
+exc:
+    description:
+        - type of last iRODS exception thrown
+        - empty string when none is thrown
+    type: str
+    returned: always
+exc_msg:
+    description:
+        - message of the last iRODS exception thrown
+        - empty string when none is thrown
+    type: str
+    returned: always
 '''
 
 

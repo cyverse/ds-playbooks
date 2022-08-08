@@ -3,12 +3,6 @@
   hosts: dstesting-provider_configured-1.dstesting_default
   become: true
   become_user: irods
-  environment:
-    TEST_PORT: 1247
-    TEST_USER_NAME: rods
-    TEST_HOST: "{{ groups['irods_catalog'][0] }}"
-    TEST_PASSWORD: rods
-    TEST_ZONE_NAME: testing
   tasks:
     - name: bring up resource
       irods_resource_up:

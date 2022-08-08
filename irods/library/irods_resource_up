@@ -29,7 +29,7 @@ options:
 requirements:
     - python-irodsclient>=0.8.2
 
-author: 
+author:
     - Fenn Garnett (@Fennersteel)
 '''
 

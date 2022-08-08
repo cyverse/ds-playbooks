@@ -20,11 +20,17 @@ description: An ansible module for changing the status of a resource and
 all of its parents to up.
 
 options:
-    resource: 
-        description: 
+    resource:
+        description:
             - the resource to modify
         required: true
         type: object
+
+requirements:
+    - python-irodsclient>=0.8.2
+
+author: 
+    - Fenn Garnett (@Fennersteel)
 '''
 
 EXAMPLE = '''

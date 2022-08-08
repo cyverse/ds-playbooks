@@ -68,11 +68,3 @@
         iquest "SELECT RESC_CONTEXT WHERE RESC_NAME = '{{ TEST_RSC_NAME }}' AND RESC_CONTEXT = '{{ TEST_CONTEXT }}'"
         iquest "SELECT RESC_CONTEXT WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}' AND RESC_CONTEXT = '{{ TEST_CONTEXT }}'"
       register: response
-
-# Possible tests: 
-#   - ensure resource status was properly set
-#   - check given server ID/IP Address
-# - error tests
-
-# ensure context is set correctly
-# one with no optional vars, one with all optional vars

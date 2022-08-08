@@ -56,6 +56,7 @@
         pg_huge_pages: "{{ 'on' if _dbms_mem_num_huge_pages|int > 0 else 'off' }}"
         pg_downstream_nodes: "{{ groups['dbms_replicas'] }}"
         pg_wal_keep_segments: "{{ _dbms_wal_keep_segments }}"
+        pg_reboot_allowed: "{{ _dbms_reboot_allowed }}"
 
 
 - name: Set up replica DBMSs
@@ -99,3 +100,4 @@
         pg_num_huge_pages: "{{ _dbms_mem_num_huge_pages }}"
         pg_huge_pages: "{{ 'on' if _dbms_mem_num_huge_pages|int > 0 else 'off' }}"
         pg_upstream_node: "{{ groups['dbms_primary'][0] }}"
+        pg_reboot_allowed: "{{ _dbms_reboot_allowed }}"

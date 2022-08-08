@@ -16,16 +16,16 @@
   pre_tasks:
     - name: create test objects
       shell: |
-          set -o errexit
-          iinit <<< ${IRODS_PASSWORD}
-          imkdir {{ TEST_SRC }}
-      tags: 
+        set -o errexit
+        iinit <<< ${IRODS_PASSWORD}
+        imkdir {{ TEST_SRC }}
+      tags:
         - non_idempotent
 
-  tasks: 
+  tasks:
     - name: neither source nor destination exist
       failed_when: response is succeeded
-      irods_move: 
+      irods_move:
         source: /testing/home/rods/null
         destination: /testing/home/rods/null
         host: "{{ groups['irods_catalog'][0] }}"
@@ -36,7 +36,7 @@
       register: response
 
     - name: move collection
-      irods_move: 
+      irods_move:
         source: "{{ TEST_SRC }}"
         destination: "{{ TEST_DST }}"
         host: "{{ groups['irods_catalog'][0] }}"
@@ -46,17 +46,18 @@
         zone: testing
       register: response
 
-    - name: verify move 
+    - name: verify move
+      changed_when: false
       shell: |
-          if ! ils {{ TEST_SRC }} && ils {{ TEST_DST }}; then
-            exit 0
-          else
-            exit 1
-          fi
+        if ! ils {{ TEST_SRC }} && ils {{ TEST_DST }}; then
+          exit 0
+        else
+          exit 1
+        fi
 
     - name: test if source and destination are identical
       failed_when: response is changed or response is succeeded
-      irods_move: 
+      irods_move:
         source: "{{ TEST_DST }}"
         destination: "{{ TEST_DST }}"
         host: "{{ groups['irods_catalog'][0] }}"

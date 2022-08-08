@@ -1,3 +1,3 @@
 ---
-proxy_stats_tls_crt: /etc/pki/tls/private/testing.pem
+proxy_stats_tls_crt: /etc/ssl/private/testing.pem
 proxy_stats_tls_crt_content: PEM CONTENTS

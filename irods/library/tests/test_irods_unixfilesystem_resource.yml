@@ -5,12 +5,18 @@
   vars:
     TEST_RSC_NAME: test_unix_rsc
     TEST_RSC_NAME2: test_unix_rsc2
-    TEST_HOST_NAME: dstesting_consumer_configured_ubuntu_1.dstesting_default.
+    TEST_HOST_NAME: "{{ groups['irods_catalog'][0] }}"
     TEST_VAULT_PATH: /irods/test_vault
     TEST_VAULT_PATH2: /irods/test_vault2
     TEST_CONTEXT: na
     TEST_STATUS: up
     TEST_INIT_FREESPACE: false
+  environment:
+    TEST_PORT: 1247
+    TEST_USER_NAME: rods
+    TEST_HOST: "{{ groups['irods_catalog'][0] }}"
+    TEST_PASSWORD: rods
+    TEST_ZONE_NAME: testing
   pre_tasks:
     - name: create test irods environment
       shell: |
@@ -22,17 +28,24 @@
       irods_unixfilesystem_resource:
         name: "{{ TEST_RSC_NAME }}"
         host: "{{ TEST_HOST_NAME }}"
-        vault: "{{ TEST_VAULT_PATH }}"
+        vault_path: "{{ TEST_VAULT_PATH }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
       register: response
 
     - name: run script with optional vars
       irods_unixfilesystem_resource:
-        name: "{{ TEST_RSC_NAME2 }}"
         host: "{{ TEST_HOST_NAME }}"
-        vault: "{{ TEST_VAULT_PATH2 }}"
+        vault_path: "{{ TEST_VAULT_PATH2 }}"
         context: "{{ TEST_CONTEXT }}"
         status: "{{ TEST_STATUS }}"
         init_freespace: " {{ TEST_INIT_FREESPACE }} "
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
       register: response
 
     - name: check resource name

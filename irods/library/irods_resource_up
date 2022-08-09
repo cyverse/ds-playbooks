@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
 import ssl
 from ansible.module_utils.basic import AnsibleModule
 from irods.session import iRODSSession
-from irods.resource import iRODSResource
-from irods.models import Resource
 
 DOCUMENTATION = '''
 ---

@@ -111,7 +111,7 @@
             irods_environment.irods_user_name
             == (
               'rs7_admin' if
-                inventory_hostname == 'dstesting_consumer_unconfigured_1.dstesting_default' else
+                inventory_hostname == 'dstesting-consumer_unconfigured-1.dstesting_default' else
               'rods' )
           - irods_environment.irods_zone_name == 'testing'
           - irods_environment.irods_client_server_policy == 'CS_NEG_REFUSE'
@@ -152,7 +152,7 @@
               - server_config.environment_variables.IRODS_DATABASE_USER_PASSWORD_SALT == 'salt'
               - >-
                 server_config.environment_variables.IRODS_AMQP_URI
-                == "amqp://amqp_admin:password@dstesting_amqp_1.dstesting_default:5672/%2F"
+                == "amqp://amqp_admin:password@dstesting-amqp-1.dstesting_default:5672/%2F"
               - server_config.federation | length == 2
               - server_config.federation[0].catalog_provider_hosts | length == 2
               - server_config.federation[0].catalog_provider_hosts[0] == '128.196.65.155'
@@ -162,7 +162,7 @@
               - server_config.negotiation_key == 'TEMPORARY_32byte_negotiation_key'
               - >-
                 server_config.plugin_configuration.database.postgres.db_host
-                == 'dstesting_dbms_configured_1.dstesting_default'
+                == 'dstesting-dbms_configured-1.dstesting_default'
               - server_config.plugin_configuration.database.postgres.db_password == 'testpassword'
               - server_config.plugin_configuration.database.postgres.db_port == 5432
               - server_config.plugin_configuration.database.postgres.db_username == 'irods'
@@ -242,17 +242,17 @@
                 server_config.zone_user
                 == (
                   'rs7_admin' if
-                    inventory_hostname == 'dstesting_consumer_unconfigured_1.dstesting_default' else
+                    inventory_hostname == 'dstesting-consumer_unconfigured-1.dstesting_default' else
                   'rods' )
 
         - name: verify consumer_configured_ubuntu_1 specific server_config.json
-          when: inventory_hostname == 'dstesting_consumer_configured_ubuntu_1.dstesting_default'
+          when: inventory_hostname == 'dstesting-consumer_configured_ubuntu-1.dstesting_default'
           assert:
             that:
               - server_config.default_dir_mode == '0770'
               - server_config.default_file_mode == '0660'
 
-    - when: inventory_hostname == 'dstesting_consumer_configured_ubuntu_1.dstesting_default'
+    - when: inventory_hostname == 'dstesting-consumer_configured_ubuntu-1.dstesting_default'
       block:
         - name: retrieve encoded hosts_config.json
           slurp:
@@ -269,6 +269,6 @@
               - hosts_config.host_entries[0].address_type == 'local'
               - >-
                 hosts_config.host_entries[0].addresses[0].address
-                == 'dstesting_consumer_configured_ubuntu_1.dstesting_default'
+                == 'dstesting-consumer_configured_ubuntu-1.dstesting_default'
               - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
               - hosts_config.host_entries[0].addresses[2].address == 'alias-2'

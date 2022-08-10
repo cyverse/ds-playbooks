@@ -1,6 +1,8 @@
 ---
 pg_destroy_default_db_on_init: false
 
+pg_reboot_allowed: false
+
 pg_downstream_nodes: []
 
 pg_upstream_node: null

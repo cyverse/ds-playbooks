@@ -1,7 +1,32 @@
 ---
 - name: reboot
-  debug:
-    msg: REBOOT REQUIRED FOR SETTINGS TO TAKE
+  when: >-
+    pg_reboot_allowed
+    is warn_if_false(inventory_hostname + ' skipped, REBOOT REQUIRED FOR SETTINGS TO TAKE')
+  block:
+    - name: schedule reboot
+      shell: |
+        sleep 1
+        reboot
+      async: 1000000000
+      poll: 0
+      failed_when: false
+
+    - name: wait for server to stop
+      wait_for:
+        host: "{{ inventory_hostname }}"
+        port: "{{ ansible_port | default(22) }}"
+        state: stopped
+      delegate_to: localhost
+      become: false
+
+    - name: verify server up
+      wait_for:
+        host: "{{ inventory_hostname }}"
+        port: "{{ ansible_port | default(22) }}"
+        state: started
+      delegate_to: localhost
+      become: false
 
 - name: restart postgres
   service:

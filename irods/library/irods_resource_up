@@ -96,7 +96,7 @@ class IRODSResourceUpModule:
 
         self.session = None
 
-    def init_session(self):
+    def _init_session(self):
         try:
             self.session = iRODSSession(
                 resource=self.module.params["resource"],
@@ -106,7 +106,7 @@ class IRODSResourceUpModule:
                 password=self.module.params["admin_password"],
                 zone=self.module.params["zone"],
                 **self.ssl_settings)
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             self.result["exc"] = exc
             self.result["exc_message"] = "Unable to connect to iRODS."
             self._fail(self.result["exc_message"])
@@ -118,22 +118,22 @@ class IRODSResourceUpModule:
         if self.module.check_mode:
             self.module.exit_json(**self.result)
 
-        self.init_session()
+        self._init_session()
 
         try:
-            self.resource_up()
+            self._resource_up()
             self.module.exit_json(**self.result)
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             self.result["exc"] = type(exc).__name__
             self.result["exc_msg"] = str(exc)
             self._fail("Unable to set status of resource to ""up"" {}".format(
                 self.module.params["source"]), exc)
 
-    def resource_up(self):
+    def _resource_up(self):
         test_resc = self.module.params["resource"]
         try:
             self.session.resources.modify(test_resc, "status", "up")
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             self.result["exc"] = exc
             self.result["exc_message"] = "Unable to locate resource."
             self._fail(self.result["exc_message"])

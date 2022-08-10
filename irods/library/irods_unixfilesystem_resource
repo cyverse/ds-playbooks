@@ -93,7 +93,7 @@ class IRODSUnixResourceModule:
         self.ssl_settings = {"ssl_context": self.ssl_context}
         self.session = None
 
-    def init_session(self):
+    def _init_session(self):
         try:
             self.session = iRODSSession(
                 vault_path=self.module.params["vault_path"],
@@ -118,15 +118,15 @@ class IRODSUnixResourceModule:
             self.module.exit_json(**self.result)
 
         try:
-            self.init_session()
-            self.create_unix_resource()
+            self._init_session()
+            self._create_unix_resource()
             self.module.exit_json()
         except Exception as exc:  # pylint: disable=broad-except
             self.result["exc"] = type(exc).__name__
             self.result["exc_msg"] = str(exc)
             self._fail("Unable to run module.", exc)
 
-    def create_unix_resource(self):
+    def _create_unix_resource(self):
         with self.session.pool.get_connection() as conn:
             if conn.server_version < (4, 0, 0):
                 message_body = GeneralAdminRequest(

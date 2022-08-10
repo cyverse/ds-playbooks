@@ -28,6 +28,7 @@ Variable                                | Required | Default       | Comments
 `dbms_min_wal_size`                     | no       | 2             | the minimum size of a WAL file in gibibytes
 `dbms_port`                             | no       | 5432          | the TCP port used by the DBMS (change requires restart)
 `dbms_random_page_cost`                 | no       | 1.1           | the query planning cost of a random page retrieval relative to other costs
+`dbms_reboot_allowed`                   | no       | false         | whether or not the playbooks are allowed to reboot the managed node
 `dbms_replication_password`             | maybe*   |               | the password for authenticating `dbms_replication_user`, *this is required if replication is being set up
 `dbms_replication_start`                | no       | false         | whether or not the role should start replication. WARNING: THIS WILL DESTROY THE CURRENT REPLICA
 `dbms_replication_user`                 | no       | postgres      | the DBMS user authorized to replicate the master node

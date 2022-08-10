@@ -11,6 +11,8 @@ haproxy_stats_tls_crt: null
 haproxy_stats_auth: null
 haproxy_stats_client_hosts: "{{ haproxy_default_client_hosts }}"
 
+haproxy_prometheus_port: 8404
+
 haproxy_irods_port: 1247
 haproxy_irods_reconn_ports: 20000-20199
 haproxy_irods_host: localhost

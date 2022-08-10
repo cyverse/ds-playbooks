@@ -47,6 +47,7 @@
       register: response
 
     - name: verify move 
+      changed_when: false
       shell: |
           if ! ils {{ TEST_SRC }} && ils {{ TEST_DST }}; then
             exit 0

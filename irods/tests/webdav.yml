@@ -17,7 +17,7 @@
       assert:
         that:
           - head is search('/* Style for the testing/base/ davrods */' | regex_escape)
-          - "head is search('content: \"/testing/base/\";')"
+          - 'head is search(''content: "/testing/base/";'')'
 
     - name: verify default.vcl expands correctly
       assert:
@@ -38,13 +38,23 @@
         that:
           - >-
             purgeman_conf
-            is search('PURGEMAN_AMQP_HOST=dstesting_amqp_1.dstesting_default' | regex_escape)
+            is search('PURGEMAN_AMQP_HOST=dstesting-amqp-1.dstesting_default' | regex_escape)
           - purgeman_conf is search('PURGEMAN_AMQP_PORT=5672')
           - purgeman_conf is search('PURGEMAN_AMQP_VHOST=/')
+          - purgeman_conf is search('PURGEMAN_AMQP_EXCHANGE=irods')
+          - purgeman_conf is search('PURGEMAN_AMQP_USERNAME=guest')
+          - purgeman_conf is search('PURGEMAN_AMQP_PASSWORD=guest')
 
     - name: verify remainder fo purgeman.conf expands correctly
       debug:
-        msg: TODO implement
+        msg: TODO check {{ item }}
+      with_items:
+        - PURGEMAN_IRODS_HOST
+        - PURGEMAN_IRODS_PORT
+        - PURGEMAN_IRODS_USERNAME
+        - PURGEMAN_IRODS_PASSWORD
+        - PURGEMAN_IRODS_ZONE
+        - PURGEMAN_VARNISH_URLS
 
     - name: verify varnish.service expands correctly
       assert:
@@ -53,7 +63,6 @@
           - >-
             varnish_service
             is search('-s file,/var/cache/varnish/varnish_cache.bin,1000M' | regex_escape)
-
 
 - name: test WebDAV dav html template expansion
   hosts: localhost
@@ -80,7 +89,7 @@
             )
           - index
             is search(
-              '<a href="testing/commons/cyverse_curated/">testing/commons/cyverse_curated/</a>' )
+            '<a href="testing/commons/cyverse_curated/">testing/commons/cyverse_curated/</a>' )
           - index is search('<a href="testing/projects/">testing/projects/</a>')
           - index is search('<a href="testing/home/">testing/home/</a>')
           - index is search('accessible without authentication.')
@@ -108,7 +117,6 @@
           - commons_index is search('<a href="/dav/testing/">testing/</a>')
           - commons_index is search('<a href="/dav/testing/commons/">commons/</a>')
           - commons_index is search('<span class="zone-name">testing</span>')
-
 
 - name: test WebDAV dav-anon html template expansion
   hosts: localhost
@@ -156,11 +164,22 @@
           - commons_index is search('<a href="/dav-anon/testing/">testing/</a>')
           - commons_index is search('<a href="/dav-anon/testing/commons/">commons/</a>')
 
-
 - name: test WebDAV server deposition
   hosts: webdav
   become: true
   tasks:
+    - name: test place TLS certificate chain file
+      debug:
+        msg: TODO implement
+
+    - name: test place TLS certificate file
+      debug:
+        msg: TODO implement
+
+    - name: test place TLS key file
+      debug:
+        msg: TODO implement
+
     - include_tasks: tasks/test_pkg_installed.yml
       with_items:
         - davrods
@@ -232,17 +251,17 @@
     - name: retrieve encoded irods_environment.json
       slurp:
         src: /etc/httpd/irods/irods_environment.json
-      register: ieEncoded
+      register: ie_encoded
 
     - name: decode irods_environment.json
       set_fact:
-        irods_environment: "{{ ieEncoded.content | b64decode }}"
+        irods_environment: "{{ ie_encoded.content | b64decode }}"
 
     - name: test irods_environment.json contents
       assert:
         that:
           - irods_environment.irods_home == '/testing'
-          - irods_environment.irods_host == 'dstesting_provider_configured_1.dstesting_default'
+          - irods_environment.irods_host == 'dstesting-provider_configured-1.dstesting_default'
           - irods_environment.irods_user_name == 'anonymous'
           - irods_environment.irods_zone_name == 'testing'
 
@@ -270,7 +289,7 @@
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: varnish
-        version: '6.5.1'
+        version: "6.5.1"
 
     - name: test create varnish shared memory mount point
       stat:

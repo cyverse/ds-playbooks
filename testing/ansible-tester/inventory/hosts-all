@@ -1,37 +1,37 @@
 localhost ansible_connection=local
 
 [amqp]
-dstesting_amqp_1.dstesting_default
+dstesting-amqp-1.dstesting_default
 
 [dbms:children]
 dbms_primary
 dbms_replicas
 
 [dbms_primary]
-dstesting_dbms_configured_1.dstesting_default
-dstesting_dbms_unconfigured_1.dstesting_default
+dstesting-dbms_configured-1.dstesting_default
+dstesting-dbms_unconfigured-1.dstesting_default
 
 [dbms_replicas]
-dstesting_dbms_unconfigured_2.dstesting_default
+dstesting-dbms_unconfigured-2.dstesting_default
 
 [irods:children]
 irods_catalog
 irods_resource
 
 [irods_catalog]
-dstesting_provider_configured_1.dstesting_default
-dstesting_provider_unconfigured_1.dstesting_default
+dstesting-provider_configured-1.dstesting_default
+dstesting-provider_unconfigured-1.dstesting_default
 
 [irods_resource]
-dstesting_consumer_configured_centos_1.dstesting_default
-dstesting_consumer_configured_ubuntu_1.dstesting_default
-dstesting_consumer_unconfigured_1.dstesting_default
+dstesting-consumer_configured_centos-1.dstesting_default
+dstesting-consumer_configured_ubuntu-1.dstesting_default
+dstesting-consumer_unconfigured-1.dstesting_default
 
 [proxy]
-dstesting_proxy_1.dstesting_default
+dstesting-proxy-1.dstesting_default
 
 [webdav]
-dstesting_apache_1.dstesting_default
+dstesting-apache-1.dstesting_default
 
 [unmanaged_systems]
-dstesting_amqp_1.dstesting_default
+dstesting-amqp-1.dstesting_default

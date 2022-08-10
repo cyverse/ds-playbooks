@@ -1,17 +1,45 @@
 ---
-- name: test VIP list template default expansion
+- name: test template default expansion
   hosts: localhost
   gather_facts: false
   vars_files:
     - ../roles/haproxy/defaults/main.yml
   vars:
     vip: "{{ lookup('template', '../roles/haproxy/templates/vip.lst.j2') }}"
+    haproxy: "{{ lookup('template', '../roles/haproxy/templates/haproxy.cfg.j2') }}"
   tasks:
-    - name: verify the file has nothing below the header comment
+    - name: verify vip.list is ansible managed
+      assert:
+        that: vip is search('^#\n# Ansible managed')
+
+    - name: verify the VIP list has nothing below the header comment
       assert:
         that:
           - vip is search('^#')
           - vip is not search('\n[^#\n]')
+
+    - name: verify haproxy config is ansible managed
+      assert:
+        that: haproxy is search('^#\n# Ansible managed')
+
+    - name: verify haproxy config defaults section
+      assert:
+        that: haproxy is search('\ndefaults\n  [^\n]*\n  maxconn +500\n')
+
+    - name: TODO verify rest of haproxy config defaults section
+      debug:
+        msg: timeout queue
+
+    - name: verify haproxy config template expansion
+      debug:
+        msg: TODO verify {{ item }}
+      with_items:
+        - stats listener
+        - irods frontend
+        - irods_reconn frontend
+        - irods_throttled backend
+        - irods_direct backend
+        - webdav listener
 
 
 - name: test VIP list template custom expansion
@@ -37,6 +65,15 @@
         that: vip is search('\n' ~ ('5.6.7.0/24'|regex_escape) ~ '\n')
 
 
+- name: test haproxy config template custom expansion
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: test
+      debug:
+        msg: TODO implement
+
+
 - name: test set up HAProxy
   hosts: proxy
   become: true
@@ -45,29 +82,21 @@
       package_facts:
         strategy: all
 
-    - name: verify HAProxy is installed
-      assert:
-        that:
-          - "'haproxy' not in ansible_facts.packages"
-          - "'centos-release-scl' in ansible_facts.packages"
-          - "'rh-haproxy18-haproxy' in ansible_facts.packages"
-          - "'rh-haproxy18-haproxy-syspaths' in ansible_facts.packages"
+    - name: test haproxy installed
+      fail:
+      when: "'haproxy' not in ansible_facts.packages"
 
-    - name: verify /usr/sbin/haproxy points to the haproxy exec
-      stat:
-        path: /usr/sbin/haproxy
-      register: exec
-      failed_when: >
-        not exec.stat.exists or
-        not exec.stat.islnk or
-        exec.stat.lnk_source != '/opt/rh/rh-haproxy18/root/usr/sbin/haproxy' or
-        not exec.stat.executable
+    - name: test install | install socat
+      debug:
+        msg: TODO implement
 
-    - name: verify /etc/haproxy exists
-      stat:
-        path: /etc/haproxy
-      register: cfgdir
-      failed_when: not cfgdir.stat.exists or not cfgdir.stat.isdir
+    - name: test configure | allowing proxy to listen on stats port
+      debug:
+        msg: TODO implement
+
+    - name: test configure | enabling SELinux booleans for proxy
+      debug:
+        msg: TODO implement
 
     - name: test change rsyslog.conf block Id to proxy
       command: "grep --invert --quiet 'DS MANAGED BLOCK (load_balancer)' /etc/rsyslog.conf"
@@ -80,6 +109,8 @@
           '/^# BEGIN DS MANAGED BLOCK (haproxy)/{N;N;N;s/^[^\n]*\n//;p}' /etc/rsyslog.conf)
         [[ "$actSettings" = "$expSettings" ]]
       changed_when: false
+      args:
+        executable: /bin/bash
 
     - name: test place rsyslog config for HAProxy
       stat:
@@ -93,35 +124,35 @@
       register: result
       failed_when: not result.stat.exists
 
-    - name: test add TLS certificates
-      debug:
-        msg: TODO implement
+    - name: test place TLS certificates file
+      stat:
+        path: /etc/ssl/private/testing.pem
+      register: result
+      failed_when: not result.stat.exists or not result.stat.roth
+
+    - name: retrieve TLS certificates file
+      slurp:
+        src: /etc/ssl/private/testing.pem
+      register: pem_encoded
+
+    - name: decode TLS certificates file
+      set_fact:
+        pem: "{{ pem_encoded['content'] | b64decode }}"
+
+    - name: verify TLS certificates file contents
+      assert:
+        that: pem == 'PEM CONTENTS'
 
     - name: test VIP list placement
-      debug:
-        msg: TODO implement
-
-    - name: test haproxy config placement and template expansion
-      debug:
-        msg: TODO implement
-
-    - name: verify /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg points to cfg
       stat:
-        path: /etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg
-      register: cfg
-      failed_when: >
-        not cfg.stat.exists or
-        not cfg.stat.islnk or
-        cfg.stat.lnk_source != '/etc/haproxy/haproxy.cfg'
+        path: /etc/haproxy/vip.lst
+      register: response
+      failed_when: not response.stat.exists or not result.stat.roth
 
-    - name: test change iptables load_balancer Ids to proxy Ids
-      command: "grep --invert --quiet 'DS MANAGED BLOCK (load_balancer' /etc/sysconfig/iptables"
-      changed_when: false
-
-    - name: test disable conntrack for proxied connections
+    - name: test configure | place haproxy config file 
       debug:
         msg: TODO implement
 
-    - name: test open firewall for relevant connections
+    - name: test firewall | place nf_conntrack.conf
       debug:
         msg: TODO implement

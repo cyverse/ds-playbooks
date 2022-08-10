@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Provide irods_unixfilesystem_resource Ansible module"""
 
-from __future__ import absolute_import
 import ssl
 from ansible.module_utils.basic import AnsibleModule
 from irods.session import iRODSSession
-from irods.models import Resource
-from irods.manager import Manager
 from irods.message import GeneralAdminRequest, iRODSMessage
-from irods.exception import ResourceDoesNotExist, NoResultFound, OperationNotSupported
 from irods.api_number import api_number
-from irods.resource import iRODSResource
+
 
 DOCUMENTATION = '''
 ---
@@ -20,7 +17,7 @@ short_description: Create an iRODS Unix filesystem storage resource
 
 version added: "2.11.11"
 
-description: An ansible module for creating an iRODS Unix filesystem storage 
+description: An ansible module for creating an iRODS Unix filesystem storage
 resource
 
 required variables:
@@ -31,7 +28,7 @@ required variables:
         type: str
     host:
         description:
-            - the FQDN or IP address of the resource server hosting this 
+            - the FQDN or IP address of the resource server hosting this
             resource
         required: true
         type: str
@@ -72,14 +69,12 @@ class IRODSUnixResourceModule:
             context=dict(type="str", required=False),
             status=dict(type="str", required=False),
             init_freespace=dict(type="bool", required=False),
-
             host=dict(type="str", required=True),
             port=dict(type="int", required=True),
             admin_user=dict(type="str", no_log=True, required=True),
             admin_password=dict(type="str", no_log=True, required=True),
             zone=dict(type="str", required=True),
         )
-
         # result
         self.result = dict(
             changed=False,
@@ -87,27 +82,25 @@ class IRODSUnixResourceModule:
             exc="",
             exc_msg=""
         )
-
         # init module
         self.module = AnsibleModule(
             argument_spec=self.module_args,
             supports_check_mode=True
         )
-
         self.ssl_context = ssl.create_default_context(
             purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None,
             cadata=None)
-
         self.ssl_settings = {"ssl_context": self.ssl_context}
-
         self.session = None
 
     def init_session(self):
         try:
             self.session = iRODSSession(
-                path=self.module.params["path"],
-                state=self.module.params["state"],
-                parents=self.module.params["parents"],
+                vault_path=self.module.params["vault_path"],
+                context=self.module.params["context"],
+                status=self.module.params["status"],
+                name=self.module.params["name"],
+                init_freespace=self.module.params["init_freespace"],
                 host=self.module.params["host"],
                 port=self.module.params["port"],
                 user=self.module.params["admin_user"],
@@ -115,7 +108,7 @@ class IRODSUnixResourceModule:
                 zone=self.module.params["zone"],
                 **self.ssl_settings)
 
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             self.result["exc"] = exc
             self.result["exc_message"] = "Unable to connect to iRODS."
             self._fail(self.result["exc_message"])
@@ -124,56 +117,50 @@ class IRODSUnixResourceModule:
         if self.module.check_mode:
             self.module.exit_json(**self.result)
 
-        self.init_session()
-
         try:
+            self.init_session()
             self.create_unix_resource()
-            self.module.exit_json(**self.result)
-        except Exception as exc:
+            self.module.exit_json()
+        except Exception as exc:  # pylint: disable=broad-except
             self.result["exc"] = type(exc).__name__
             self.result["exc_msg"] = str(exc)
-            self._fail("Unable to move irods object/collection {}".format(
-                self.module.params["source"]), exc)
+            self._fail("Unable to run module.", exc)
 
     def create_unix_resource(self):
-        try:
-            with self.session.pool.get_connection() as conn:
-                if conn.server_version < (4, 0, 0):
-                    message_body = GeneralAdminRequest(
-                        "add",
-                        "resource",
-                        "unixfilesystemresource",
-                        "unixfilesystem",
-                        self.module.params["host"],
-                        self.module.params["path"],
-                        self.module.params["zone"]
-                    )
-                else:
-                    message_body = GeneralAdminRequest(
-                        "add",
-                        "resource",
-                        "unixfilesystemresource",
-                        "unixfilesystem",
-                        self.module.params["host"] + ":" + self.module.params["path"],
-                        self.module.params["context"],
-                        self.module.params["zone"]
-                    )
+        with self.session.pool.get_connection() as conn:
+            if conn.server_version < (4, 0, 0):
+                message_body = GeneralAdminRequest(
+                    "add",
+                    "resource",
+                    self.module.params["name"],
+                    "unixfilesystem",
+                    "class",
+                    self.module.params["host"],
+                    self.module.params["vault_path"],
+                    self.module.params["zone"]
+                )
+            else:
+                message_body = GeneralAdminRequest(
+                    "add",
+                    "resource",
+                    self.module.params["name"],
+                    "unixfilesystem",
+                    self.module.params["host"] + ":" + self.module.params["vault_path"],
+                    self.module.params["context"],
+                    self.module.params["zone"]
+                )
 
-                request = iRODSMessage("RODS_API_REQ", msg=message_body,
-                                        int_info=api_number['GENERAL_ADMIN_AN'])
+            try:
+                request = iRODSMessage("RODS_API_REQ", msg=message_body, int_info=api_number['GENERAL_ADMIN_AN'])
                 conn.send(request)
                 self.result["response"] = conn.recv()
                 self.result["changed"] = True
-
-        except Exception as exc:
-            self.result["exc"] = type(exc).__name__
-            self.result["exc_msg"] = str(exc)
-            self._fail("Unable to instantiate iRODS Unix File System.")
+            except Exception as exc:  # pylint: disable=broad-except
+                self.result["exc"] = exc
+                self.result["exc_message"] = "Unable to instantiate resource."
+                self._fail(self.result["exc_message"])
 
     def _fail(self, msg, err=None):
-        """
-        Failure routine, called when the operation failed
-        """
         if self.session:
             self.session.cleanup()
 
@@ -190,7 +177,7 @@ def main():
     try:
         module = IRODSUnixResourceModule()
         module.run_module()
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         pass
 
 

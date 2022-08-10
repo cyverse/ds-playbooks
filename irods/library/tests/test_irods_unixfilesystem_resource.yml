@@ -37,6 +37,7 @@
 
     - name: run script with optional vars
       irods_unixfilesystem_resource:
+        name: "{{ TEST_RSC_NAME2 }}"
         host: "{{ TEST_HOST_NAME }}"
         vault_path: "{{ TEST_VAULT_PATH2 }}"
         context: "{{ TEST_CONTEXT }}"

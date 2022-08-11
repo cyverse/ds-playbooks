@@ -35,12 +35,12 @@
         msg: TODO verify {{ item }}
       with_items:
         - stats listener
+        - prometheus_stats frontend
         - irods frontend
         - irods_reconn frontend
         - irods_throttled backend
         - irods_direct backend
         - webdav listener
-
 
 - name: test VIP list template custom expansion
   hosts: localhost
@@ -64,7 +64,6 @@
       assert:
         that: vip is search('\n' ~ ('5.6.7.0/24'|regex_escape) ~ '\n')
 
-
 - name: test haproxy config template custom expansion
   hosts: localhost
   gather_facts: false
@@ -72,7 +71,6 @@
     - name: test
       debug:
         msg: TODO implement
-
 
 - name: test set up HAProxy
   hosts: proxy
@@ -149,10 +147,6 @@
       register: response
       failed_when: not response.stat.exists or not result.stat.roth
 
-    - name: test configure | place haproxy config file 
-      debug:
-        msg: TODO implement
-
-    - name: test firewall | place nf_conntrack.conf
+    - name: test configure | place haproxy config file
       debug:
         msg: TODO implement

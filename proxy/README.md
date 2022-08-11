@@ -4,8 +4,12 @@ This is a collection of  playbooks for maintaining the Proxy for the Data Store.
 
 ## Playbooks
 
-* `block_client.yml` blocks all client access to iRODS and WebDAV.
 * `main.yml` completely deploys the proxies
+* `start.yml` starts HAProxy
+* `stop.yml` stops HAProxy
+* `terminate_connections.yml` terminates all client connections to HAProxy and blocks new 
+     connections
+* `unblock_access.yml` allows client connections to be made
 
 ## Tags
 
@@ -19,7 +23,6 @@ Variable                       | Default     | Comments
 `proxy_stats_auth`             | null        | an object providing the authentication credentials for the HAProxy stats web interface _see below_
 `proxy_stats_tls_crt`          | null        | the absolute path to the TLS certificate chain used for securing the HAProxy stats web interface
 `proxy_stats_tls_crt_content`  | null        | the content of the TLS certificate chain file
-`proxy_stats_client_hosts`     | []          | a list of host names, ip addresses, or CIDR blocks of clients allowed to connect to the HAProxy stats web interface
 `proxy_irods_direct_max_conn`  | 200         | the maximum number of connections to iRODS
 `proxy_irods_reconn_ports`     | 20000-20399 | the range of TCP range of ports that need to be forwarded to iRODS for reconnections
 `proxy_irods_vip_client_hosts` | []          | a list of host names, ip addresses, or CIDR blocks of clients allowed unlimited concurrent iRODS connections.

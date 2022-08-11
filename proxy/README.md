@@ -4,8 +4,12 @@ This is a collection of  playbooks for maintaining the Proxy for the Data Store.
 
 ## Playbooks
 
-* `block_client.yml` blocks all client access to iRODS and WebDAV.
 * `main.yml` completely deploys the proxies
+* `start.yml` starts HAProxy
+* `stop.yml` stops HAProxy
+* `terminate_connections.yml` terminates all client connections to HAProxy and blocks new 
+     connections
+* `unblock_access.yml` allows client connections to be made
 
 ## Tags
 

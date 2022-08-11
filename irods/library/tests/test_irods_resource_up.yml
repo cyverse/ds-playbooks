@@ -7,6 +7,11 @@
     - name: bring up resource
       irods_resource_up:
         resource: ingestRes
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
 
     - name: verify resource up
       shell: test up = "$(iquest '%s' "select RESC_STATUS where RESC_NAME = 'ingestRes'")"

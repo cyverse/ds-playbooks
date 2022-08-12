@@ -79,6 +79,7 @@ class IRODSResourceUpModule:
 
         self.result = dict(
             changed=False,
+            exit_msg='',
             exc='',
             exc_msg='',
         )
@@ -116,6 +117,7 @@ class IRODSResourceUpModule:
         Entry point for module class, method to be called to run the module
         """
         if self.module.check_mode:
+            self.result["exit_msg"] = ""
             self.module.exit_json(**self.result)
 
         self._init_session()
@@ -131,17 +133,19 @@ class IRODSResourceUpModule:
 
     def _resource_up(self):
         test_resc = self.module.params["resource"]
-        try:
-            self.session.resources.modify(test_resc, "status", "up")
-        except Exception as exc:  # pylint: disable=broad-except
-            self.result["exc"] = exc
-            self.result["exc_message"] = "Unable to locate resource."
-            self._fail(self.result["exc_message"])
+        parent_test_resc = self.session.resources.get(test_resc, "parent")
+        if self.session.resources.get(test_resc, "parent") != "up":
+            try:
+                self.session.resources.modify(test_resc, "status", "up")
+                self.session.resources.modify(parent_test_resc, "status", "up")
+            except Exception as exc:  # pylint: disable=broad-except
+                self.result["exc"] = exc
+                self.result["exc_message"] = "Unable to locate resource."
+                self._fail(self.result["exc_message"])
+        elif self.session.resources.get(test_resc, "parent") == "up":
+            self.module.exit_json(**self.result)
 
     def _fail(self, msg, err=None):
-        """
-        Failure routine, called when operation fails
-        """
         if self.session:
             self.session.cleanup()
 

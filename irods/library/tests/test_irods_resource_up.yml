@@ -14,5 +14,15 @@
         zone: testing
 
     - name: verify resource up
+      failed_when: response is failed
       shell: test up = "$(iquest '%s' "select RESC_STATUS where RESC_NAME = 'ingestRes'")"
+      changed_when: false
+
+    - name: verify resource parents up
+      failed_when: response is failed
+      shell: |
+        function verify_parent_status () {
+          local parents="$(iquest '%s' "SELECT RESC_PARENT WHERE RESC_NAME = 'ingestRes'")"
+          "$iquest '%s' "SELECT RESC_STATUS WHERE RESC_PARENT = $parents""
+        }
       changed_when: false

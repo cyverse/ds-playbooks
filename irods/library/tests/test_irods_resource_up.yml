@@ -1,12 +1,22 @@
 ---
-- name: test irods_resource_up module
-  hosts: dstesting-provider_configured-1.dstesting_default
-  become: true
-  become_user: irods
+- name: Test play for irods_resource_up module
+  hosts: localhost
+  vars: 
+    TEST_RSC: ingestRes
+  environment:
+    TEST_PORT: 1247
+    TEST_USER_NAME: rods
+    TEST_HOST: "{{ groups['irods_catalog'][0] }}"
+    TEST_PASSWORD: rods
+    TEST_ZONE_NAME: testing
+  pre_tasks:
+    - name: Initialize irods session
+      shell: |
+        iinit <<< ${IRODS_PASSWORD}
   tasks:
     - name: bring up resource
       irods_resource_up:
-        resource: ingestRes
+        resource: "{{ TEST_RSC }}"
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
@@ -14,15 +24,22 @@
         zone: testing
 
     - name: verify resource up
-      failed_when: response is failed
       shell: test up = "$(iquest '%s' "select RESC_STATUS where RESC_NAME = 'ingestRes'")"
       changed_when: false
+      register: response
 
     - name: verify resource parents up
-      failed_when: response is failed
       shell: |
         function verify_parent_status () {
-          local parents="$(iquest '%s' "SELECT RESC_PARENT WHERE RESC_NAME = 'ingestRes'")"
-          "$iquest '%s' "SELECT RESC_STATUS WHERE RESC_PARENT = $parents""
+          next_rsc="$(iquest '%s' "SELECT RESC_PARENT WHERE RESC_NAME = $1")"
+          current_status="$(iquest "SELECT RESC_STATUS WHERE RESC_NAME = $current_rsc")"
+          if [-z next_rsc]
+          then
+            current_resc=next_resc
+            verify_parent_status current_resc
+          else
+            return 0
+          fi
         }
       changed_when: false
+      register: response

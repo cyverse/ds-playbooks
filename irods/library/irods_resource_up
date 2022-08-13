@@ -145,6 +145,21 @@ class IRODSResourceUpModule:
         elif self.session.resources.get(test_resc, "parent") == "up":
             self.module.exit_json(**self.result)
 
+    def _recurse_parents(self, current_rsc):
+        next_rsc = self.session.resources.get(current_rsc, "parent")
+        current_status = self.session.resources.get(current_rsc, "status")
+
+        if current_status != "up":
+            self.session.resources.modify(current_rsc, "status", "up")
+        else:
+            pass
+
+        if not next_rsc:
+            local_current_rsc = next_rsc
+            self._recurse_parents(local_current_rsc)
+        else:
+            self.module.exit_json(**self.result)
+
     def _fail(self, msg, err=None):
         if self.session:
             self.session.cleanup()

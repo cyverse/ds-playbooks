@@ -24,7 +24,7 @@
         zone: testing
 
     - name: verify resource up
-      shell: test up = "$(iquest '%s' "select RESC_STATUS where RESC_NAME = 'ingestRes'")"
+      shell: test up = "$(iquest '%s' "select RESC_STATUS where RESC_NAME = '{{ TEST_RSC }}'")"
       changed_when: false
       register: response
 
@@ -32,14 +32,14 @@
       shell: |
         function verify_parent_status () {
           next_rsc="$(iquest '%s' "SELECT RESC_PARENT WHERE RESC_NAME = $1")"
-          current_status="$(iquest "SELECT RESC_STATUS WHERE RESC_NAME = $current_rsc")"
-          if [-z next_rsc]
+          if [-n next_rsc]
           then
-            current_resc=next_resc
-            verify_parent_status current_resc
+            status="$(iquest "SELECT RESC_STATUS WHERE RESC_NAME = '$next_rsc'")"
+            verify_parent_status next_resc
           else
             return 0
           fi
         }
+        verify_parent_status '{{ TEST_RSC }}'
       changed_when: false
       register: response

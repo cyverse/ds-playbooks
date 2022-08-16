@@ -131,10 +131,10 @@ class IRODSResourceUpModule:
             self._fail("Unable to set status of resource to ""up"" {}".format(
                 self.module.params["source"]), exc)
 
-    def _resource_up(self):
+    def _resource_up(self, current_resc):
         test_resc = self.module.params["resource"]
         parent_test_resc = self.session.resources.get(test_resc, "parent")
-        if self.session.resources.get(test_resc, "parent") != "up":
+        if self.session.resources.get(test_resc, "status") != "up":
             try:
                 self.session.resources.modify(test_resc, "status", "up")
                 self.session.resources.modify(parent_test_resc, "status", "up")
@@ -145,16 +145,16 @@ class IRODSResourceUpModule:
         elif self.session.resources.get(test_resc, "parent") == "up":
             self.module.exit_json(**self.result)
 
-    def _recurse_parents(self, current_rsc):
-        next_rsc = self.session.resources.get(current_rsc, "parent")
-        current_status = self.session.resources.get(current_rsc, "status")
+    def _recurse_parents(self, current_resc):
+        next_rsc = self.session.resources.get(current_resc, "parent")
+        current_status = self.session.resources.get(current_resc, "status")
 
         if current_status != "up":
-            self.session.resources.modify(current_rsc, "status", "up")
+            self.session.resources.modify(current_resc, "status", "up")
         else:
             pass
 
-        if not next_rsc:
+        if next_rsc:
             local_current_rsc = next_rsc
             self._recurse_parents(local_current_rsc)
         else:

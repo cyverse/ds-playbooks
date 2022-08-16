@@ -123,7 +123,7 @@ class IRODSResourceUpModule:
         self._init_session()
 
         try:
-            self._resource_up()
+            self._resource_up(self.module.params["resource"])
             self.module.exit_json(**self.result)
         except Exception as exc:  # pylint: disable=broad-except
             self.result["exc"] = type(exc).__name__
@@ -131,32 +131,25 @@ class IRODSResourceUpModule:
             self._fail("Unable to set status of resource to ""up"" {}".format(
                 self.module.params["source"]), exc)
 
-    def _resource_up(self, current_resc):
-        test_resc = self.module.params["resource"]
-        parent_test_resc = self.session.resources.get(test_resc, "parent")
-        if self.session.resources.get(test_resc, "status") != "up":
-            try:
-                self.session.resources.modify(test_resc, "status", "up")
-                self.session.resources.modify(parent_test_resc, "status", "up")
-            except Exception as exc:  # pylint: disable=broad-except
-                self.result["exc"] = exc
-                self.result["exc_message"] = "Unable to locate resource."
-                self._fail(self.result["exc_message"])
-        elif self.session.resources.get(test_resc, "parent") == "up":
-            self.module.exit_json(**self.result)
+    def _resource_up(self, resc):
+        try:
+            self.session.resources.modify(resc, "status", "up")
+        except Exception as exc:
+            self.result["exc"] = exc
+            self.result["exc_message"] = "Unable to locate resource."
+            self._fail(self.result["exc_message"])
 
-    def _recurse_parents(self, current_resc):
-        next_rsc = self.session.resources.get(current_resc, "parent")
-        current_status = self.session.resources.get(current_resc, "status")
+    def _recurse_parents(self, resc):
+        current_resc = resc
+        current_status = self.session.resources.get(resc, "status")
+        next_resc = self.session.resources.get(resc, "parent")
 
-        if current_status != "up":
-            self.session.resources.modify(current_resc, "status", "up")
-        else:
-            pass
-
-        if next_rsc:
-            local_current_rsc = next_rsc
-            self._recurse_parents(local_current_rsc)
+        if next_resc:
+            if current_status != "up":
+                self._resource_up(current_resc)
+            elif self.session.resources.get(resc, "status") == "up":
+                pass
+            self._recurse_parents(next_resc)
         else:
             self.module.exit_json(**self.result)
 

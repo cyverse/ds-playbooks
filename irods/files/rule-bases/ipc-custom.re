@@ -688,8 +688,7 @@ pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTA
 
     # checksum policy
     if (_ipc_needsChecksum(*DataObjInp)) {
-        ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjInp, 'resc_hier'));
-      }
+      ipc_ensureReplicasChecksum(*path, _ipc_getValue(*DataObjInp, 'resc_hier'));
     }
 
     # data object creation and modification message publishing policy

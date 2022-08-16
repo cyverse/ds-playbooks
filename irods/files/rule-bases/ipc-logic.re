@@ -631,8 +631,8 @@ ipc_ensureReplicasChecksum(*DataPath, *RescHier) {
 #
 # _ipc_retrieveDataInfo : string -> `KEYVALPAIR_MS_T`
 _ipc_retrieveDataInfo(*Path) = 
-  let *info.size = '-1' in
-  let *info.type = '' in
+  let *info.'size' = '-1' in
+  let *info.'type' = '' in
   let *info.ownerName = '' in
   let *info.ownerZone = '' in
   let *collPath = '' in
@@ -642,8 +642,8 @@ _ipc_retrieveDataInfo(*Path) =
       SELECT DATA_SIZE, DATA_TYPE_NAME, DATA_OWNER_NAME, DATA_OWNER_ZONE 
       WHERE COLL_NAME == *collPath AND DATA_NAME == *dataName AND DATA_REPL_STATUS == '1'
     ) { 
-      *info.size = *rec.DATA_SIZE;
-      *info.type = *rec.DATA_TYPE_NAME;
+      *info.'size' = *rec.DATA_SIZE;
+      *info.'type' = *rec.DATA_TYPE_NAME;
       *info.ownerName = *rec.DATA_OWNER_NAME;
       *info.ownerZone = *rec.DATA_OWNER_ZONE; 
     } in
@@ -1027,8 +1027,8 @@ ipc_notifyDataObjCreated(*Path, *AuthorName, *AuthorZone) {
       *Path,
       *info.ownerName,
       *info.ownerZone,
-      int(*info.size),
-      *info.type );
+      int(*info.'size'),
+      *info.'type' );
   }
 }
 
@@ -1051,8 +1051,8 @@ ipc_notifyDataObjMod(*Path, *AuthorName, *AuthorZone) {
       *Path,
       *info.ownerName,
       *info.ownerZone,
-      int(*info.size),
-      *info.type );
+      int(*info.'size'),
+      *info.'type' );
   }
 }
 

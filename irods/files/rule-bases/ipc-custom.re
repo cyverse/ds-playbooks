@@ -576,18 +576,6 @@ pep_api_bulk_data_obj_put_post(*Instance, *Comm, *BulkOpInp, *BulkOpInpBBuf) {
 }
 
 
-# N.B. This isn't used by iCommands, but it is by the Java and Python APIs.
-#
-pep_api_data_obj_close_post(*Instance, *Comm, *DataObjCloseInp) {
-  *msg = 'pep_api_data_obj_close_post(\*Instance, \*Comm, \*DataObjCloseInp) called\n'
-    ++ '\t\*Instance = *Instance\n'
-    ++ '\t\*Comm = *Comm\n'
-    ++ '\t\*DataObjCloseInp = *DataObjCloseInp';
-
-  writeLine('serverLog', *msg);
-}
-
-
 # CHKSUM ALGORITHM:
 #
 # If neither *DataObjCopyInp.regChksum nor *DataObjCopyInp.verifyChksum exist, 
@@ -630,27 +618,115 @@ pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
 }
 
 
-# N.B. This isn't used by iCommands, but it is by the Java and Python APIs.
+# data_obj_create and data_obj_close are used together
+#
+# CHKSUM ALGORITHM:
+#
+# Always compute checksum.
+
+# *DataObjInp:
+#   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gab5b8db16a4951cf048e88c8538d8aa56
 #
 pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
-  *msg = 'pep_api_data_obj_create_post(\*Instance, \*Comm, \*DataObjInp) called\n'
-    ++ '\t\*Instance = *Instance\n'
-    ++ '\t\*Comm = *Comm\n'
-    ++ '\t\*DataObjInp = *DataObjInp';
 
-  writeLine('serverLog', *msg);
+  # checksum policy
+  temporaryStorage.dataObjClose_objPath = _ipc_getValue(*DataObjInp, 'obj_path');
+  temporaryStorage.dataObjClose_selectedHierarchy = _ipc_getValue(
+    *DataObjInp, 'selected_hierarchy' );
+  temporaryStorage.dataObjClose_needsChecksum = 'checksum';
+
+#  *msg = 'pep_api_data_obj_create_post(\*Instance, \*Comm, \*DataObjInp) called\n'
+#    ++ '\t\*Instance = *Instance\n'
+#    ++ '\t\*Comm = *Comm\n'
+#    ++ '\t\*DataObjInp = *DataObjInp';
+#
+#  writeLine('serverLog', *msg);
 }
 
 
-# N.B. This isn't used by iCommands, but it is by the Java and Python APIs.
+# data_obj_open, data_obj_write, and data_obj_close are used together
+#
+# CHKSUM ALGORITHM:
+# 
+# If open_flags aren't 0, and data_obj_write is called, compute a checksum 
+#
+# *DataObjInp:
+#   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gab869f78a9d131b1e973d425cd1ebf1f2
+#
+# r:   create_mode=0++++data_size=-1++++                         num_threads=0++++obj_path=/tempZone/home/centos/python-obj1++++offset=0++++              open_flags=0++  ++opr_type=0++++resc_hier=demoResc++++selected_hierarchy=demoResc
+# r+:  create_mode=0++++data_size=-1++++                         num_threads=0++++obj_path=/tempZone/home/centos/python-obj1++++offset=0++++              open_flags=2++  ++opr_type=0++++resc_hier=demoResc++++selected_hierarchy=demoResc
+# w:   create_mode=0++++data_size=-1++++destRescName=demoResc++++num_threads=0++++obj_path=/tempZone/home/centos/python-obj1++++offset=0++++openType=3++++open_flags=578++++opr_type=0++++resc_hier=demoResc++++selected_hierarchy=demoResc
+# w+:  create_mode=0++++data_size=-1++++destRescName=demoResc++++num_threads=0++++obj_path=/tempZone/home/centos/python-obj1++++offset=0++++openType=3++++open_flags=578++++opr_type=0++++resc_hier=demoResc++++selected_hierarchy=demoResc
+# a:   create_mode=0++++data_size=-1++++destRescName=demoResc++++num_threads=0++++obj_path=/tempZone/home/centos/python-obj1++++offset=0++++openType=3++++open_flags=66++ ++opr_type=0++++resc_hier=demoResc++++selected_hierarchy=demoResc
+# a+:  create_mode=0++++data_size=-1++++destRescName=demoResc++++num_threads=0++++obj_path=/tempZone/home/centos/python-obj1++++offset=0++++openType=3++++open_flags=66++ ++opr_type=0++++resc_hier=demoResc++++selected_hierarchy=demoResc
 #
 pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
-  *msg = 'pep_api_data_obj_open_post(\*Instance, \*Comm, \*DataObjInp) called\n'
-    ++ '\t\*Instance = *Instance\n'
-    ++ '\t\*Comm = *Comm\n'
-    ++ '\t\*DataObjInp = *DataObjInp';
 
-  writeLine('serverLog', *msg);
+  # checksum policy
+  if (_getValue(*DataObjInp, 'open_flags') != '0') {
+    temporaryStorage.dataObjClose_objPath = _ipc_getValue(*DataObjInp, 'obj_path');
+    temporaryStorage.dataObjClose_selectedHierarchy = _ipc_getValue(
+      *DataObjInp, 'selected_hierarchy' );
+  }
+
+#  *msg = 'pep_api_data_obj_open_post(\*Instance, \*Comm, \*DataObjInp) called\n'
+#    ++ '\t\*Instance = *Instance\n'
+#    ++ '\t\*Comm = *Comm\n'
+#    ++ '\t\*DataObjInp = *DataObjInp';
+#
+#  writeLine('serverLog', *msg);
+}
+
+
+# data_obj_write is used with data_obj_open and data_obj_close
+#
+# *DataObjWriteInp:
+#   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gaaa88dd8ad00161d5c48115bebbe6866c
+#
+pep_api_data_obj_write_post(*Instance, *Comm, *DataObjWriteInp, *DataObjWriteInpBBuf) {
+
+  # checksum policy
+  if (_ipc_getValue(temporaryStorage, 'dataobjClose_objPath') != '') {
+    temporaryStorage.dataObjClose_needsChecksum = 'checksum';
+  }
+
+#  *msg = 
+#    'pep_api_data_obj_write_post(\*Instance, \*Comm, \*DataObjWriteInp, \*DataObjWriteInpBBuf) called\n'
+#    ++ '\t\*Instance = *Instance\n'
+#    ++ '\t\*Comm = *Comm\n'
+#    ++ '\t\*DataObjWriteInp = *DataObjWriteInp\n'
+#    ++ '\t\*DataObjWriteInpBBuf = *DataObjWriteInpBBuf';
+#
+#  writeLine('serverLog', *msg);
+}
+
+
+# data_obj_close is used with either data_obj_create or data_obj_open and 
+# data_obj_write
+#
+# *DataObjCloseInp:
+#   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#ga9dcea65009d7cc49ed0106f88540f431
+#
+pep_api_data_obj_close_post(*Instance, *Comm, *DataObjCloseInp) {
+
+  # checksum policy
+  *path =  _ipc_getValue(temporaryStorage, 'dataObjClose_objPath');
+
+  if (*path != '' && _ipc_getValue(temporaryStorage, 'dataObjClose_needsChecksum') != '') {
+    *resc = _ipc_getValue(temporaryStorage, 'dataObjClose_selectedHierarchy');
+    ipc_ensureReplicasChecksum(*path, *resc);
+  }
+
+  temporaryStorage.dataObjClose_objPath = '';
+  temporaryStorage.dataObjClose_selectedHierarchy = '';
+  temporaryStorage.dataObjClose_needsChecksum = '';
+
+#  *msg = 'pep_api_data_obj_close_post(\*Instance, \*Comm, \*DataObjCloseInp) called\n'
+#    ++ '\t\*Instance = *Instance\n'
+#    ++ '\t\*Comm = *Comm\n'
+#    ++ '\t\*DataObjCloseInp = *DataObjCloseInp';
+#
+#  writeLine('serverLog', *msg);
 }
 
 

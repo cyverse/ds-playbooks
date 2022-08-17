@@ -849,6 +849,7 @@ pep_api_replica_open_post(*Instance, *Comm, *DataObjInp, *JSON_OUTPUT) {
     temporaryStorage.replica_openType = 
       if _ipc_hasKey(*DataObjInp, 'openType') then _ipc_getValue(*DataObjInp, 'openType') 
       else _ipc_FILE_OPEN_WRITE;
+  }
 }
 
 pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
@@ -874,6 +875,10 @@ pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
       ipc_notifyDataObjMod(*path, *authorName, *authorZone);
     }
   }
+
+  temporaryStorage.replica_dataObjPath = '';
+  temporaryStorage.replica_rescHier = '';
+  temporaryStorage.replica_openType = '';
 }
 
 

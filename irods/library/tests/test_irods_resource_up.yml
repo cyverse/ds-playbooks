@@ -2,7 +2,7 @@
 - name: Test play for irods_resource_up module
   hosts: localhost
   vars: 
-    TEST_RSC: ingestRes
+    TEST_RSC: replRes
   environment:
     TEST_PORT: 1247
     TEST_USER_NAME: rods

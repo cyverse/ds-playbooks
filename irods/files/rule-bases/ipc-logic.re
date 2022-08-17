@@ -627,8 +627,6 @@ ipc_ensureReplicasChecksum(*DataPath, *RescHier) {
 
 # Determine the size and type of a data object, and owner
 #
-# TODO test
-#
 # _ipc_retrieveDataInfo : string -> `KEYVALPAIR_MS_T`
 _ipc_retrieveDataInfo(*Path) = 
   let *info.'size' = '-1' in
@@ -1011,8 +1009,6 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 
 # Publishes a message indicating that a data object was created.
 #
-# TODO test
-#
 # ipc_notifyDataObjCreated : string * string * string -> int
 ipc_notifyDataObjCreated(*Path, *AuthorName, *AuthorZone) {
   *id = _ipc_retrieveUUID(ipc_DATA_OBJECT, *Path);
@@ -1034,8 +1030,6 @@ ipc_notifyDataObjCreated(*Path, *AuthorName, *AuthorZone) {
 
 
 # Publishes a message indicating that a data object was created.
-#
-# TODO test
 #
 # ipc_notifyDataObjMod : string * string * string -> void
 ipc_notifyDataObjMod(*Path, *AuthorName, *AuthorZone) {

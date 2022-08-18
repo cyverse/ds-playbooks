@@ -10,7 +10,7 @@
     TEST_VAULT_PATH2: /irods/test_vault2
     TEST_CONTEXT: na
     TEST_STATUS: up
-    TEST_INIT_FREESPACE: false
+    TEST_INIT_FREESPACE: true
   environment:
     TEST_PORT: 1247
     TEST_USER_NAME: rods
@@ -35,6 +35,8 @@
         zone: testing
       register: response
 
+    # - name: check resource 1
+
     - name: run script with optional vars
       irods_unixfilesystem_resource:
         name: "{{ TEST_RSC_NAME2 }}"
@@ -49,11 +51,25 @@
         zone: testing
       register: response
 
+    # - name: check resource 2
+
     - name: check resource name
       failed_when: response is failed
-      shell:
-        iquest "SELECT RESC_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME }}'"
-        iquest "SELECT RESC_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'"
+      shell: |
+        if
+          [iquest "SELECT RESC_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME }}' != '{{ TEST_RSC_NAME }}']
+        then
+          exit 1
+        else
+          exit 0
+        fi
+        if
+          [iquest "SELECT RESC_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}' != '{{ TEST_RSC_NAME2 }}']
+        then
+          exit 1
+        else 
+          exit 0
+        fi
       register: response
 
     - name: check resource status

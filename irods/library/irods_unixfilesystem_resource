@@ -46,7 +46,7 @@ optional variables:
             - starting status 'up' or 'down'
     init_free_space:
         description:
-            - whether or not to initialize freespace
+            - amount of free space to allocate
 
 author:
     - Fenn Garnett
@@ -68,7 +68,7 @@ class IRODSUnixResourceModule:
             vault_path=dict(type="str", required=True),
             context=dict(type="str", required=False),
             status=dict(type="str", required=False),
-            init_freespace=dict(type="bool", required=False),
+            free_space=dict(type="int", required=False),
             host=dict(type="str", required=True),
             port=dict(type="int", required=True),
             admin_user=dict(type="str", no_log=True, required=True),
@@ -100,7 +100,7 @@ class IRODSUnixResourceModule:
                 context=self.module.params["context"],
                 status=self.module.params["status"],
                 name=self.module.params["name"],
-                init_freespace=self.module.params["init_freespace"],
+                free_space=self.module.params["free_space"],
                 host=self.module.params["host"],
                 port=self.module.params["port"],
                 user=self.module.params["admin_user"],

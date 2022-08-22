@@ -1,10 +1,7 @@
 ---
-proxy_internal_client_hosts: []
-
 proxy_stats_auth: null
 proxy_stats_tls_crt: null
 proxy_stats_tls_crt_content: null
-proxy_stats_client_hosts: []
 
 proxy_irods_direct_max_conn: 200
 proxy_irods_reconn_ports: 20000-20399

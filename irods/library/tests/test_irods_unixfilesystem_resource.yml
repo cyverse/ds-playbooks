@@ -35,8 +35,6 @@
         zone: testing
       register: response
 
-    # - name: check resource 1
-
     - name: run script with optional vars
       irods_unixfilesystem_resource:
         name: "{{ TEST_RSC_NAME2 }}"
@@ -50,8 +48,6 @@
         admin_password: rods
         zone: testing
       register: response
-
-    # - name: check resource 2
 
     - name: check resource name
       shell: |

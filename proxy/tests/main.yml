@@ -29,11 +29,15 @@
           - haproxy is not search('\ndefaults\n  [^\n]*\n  timeout queue')
 
     - name: verify haproxy config stats listener
+      assert:
+        that:
+          - haproxy is search('\nlisten stats\n  [^\n]*\n  bind +:81\n')
+          - haproxy is not search('\nlisten stats\n  [^\n]*\n  stats auth')
+          -
+    - name: verify haproxy config stats listener
       debug:
         msg: TODO verify {{ item }} parameter
       with_items:
-        - bind
-        - stats auth
         - stats realm
 
     - name: verify haproxy config template expansion

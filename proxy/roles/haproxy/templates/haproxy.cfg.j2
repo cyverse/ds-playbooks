@@ -74,6 +74,7 @@ listen stats
   timeout queue          100s
   option dontlog-normal
 
+
 ##########################
 #       PROMETHEUS       #
 ##########################
@@ -81,12 +82,13 @@ listen stats
 frontend prometheus_stats
   mode http
 {% if haproxy_stats_tls_crt %}
-  bind                   :{{ haproxy_prometheus_port }} ssl crt {{ haproxy_stats_tls_crt }}
+  bind                 :{{ haproxy_prometheus_port }} ssl crt {{ haproxy_stats_tls_crt }}
 {% else %}
-  bind                   :{{ haproxy_prometheus_port }}
+  bind                 :{{ haproxy_prometheus_port }}
 {% endif %}
   option http-use-htx
-  http-request use-service prometheus-exporter if { path /metrics }
+  http-request         use-service prometheus-exporter if { path /metrics }
+
 
 ##########################
 #         IRODS          #

@@ -24,17 +24,22 @@
 
     - name: verify haproxy config defaults section
       assert:
-        that: haproxy is search('\ndefaults\n  [^\n]*\n  maxconn +500\n')
+        that:
+          - haproxy is search('\ndefaults\n  [^\n]*\n  maxconn +500\n')
+          - haproxy is not search('\ndefaults\n  [^\n]*\n  timeout queue')
 
-    - name: TODO verify rest of haproxy config defaults section
+    - name: verify haproxy config stats listener
       debug:
-        msg: timeout queue
+        msg: TODO verify {{ item }} parameter
+      with_items:
+        - bind
+        - stats auth
+        - stats realm
 
     - name: verify haproxy config template expansion
       debug:
         msg: TODO verify {{ item }}
       with_items:
-        - stats listener
         - prometheus_stats frontend
         - irods frontend
         - irods_reconn frontend

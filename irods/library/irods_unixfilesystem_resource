@@ -127,6 +127,12 @@ class IRODSUnixResourceModule:
             self._fail("Unable to run module.", exc)
 
     def _create_unix_resource(self):
+        try:
+            if self.session.resources.get(self.module.params["name"]):
+                self.module.exit_json()
+        except Exception:
+            pass
+
         with self.session.pool.get_connection() as conn:
             if conn.server_version < (4, 0, 0):
                 message_body = GeneralAdminRequest(

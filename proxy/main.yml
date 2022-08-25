@@ -6,6 +6,7 @@
     - role: haproxy
       vars:
         haproxy_queue_timeout: 10m
+        haproxy_rsyslog_conf: "{{ proxy_rsyslog_conf }}"
         haproxy_stats_tls_crt: "{{ proxy_stats_tls_crt }}"
         haproxy_stats_tls_crt_content: "{{ proxy_stats_tls_crt_content }}"
         haproxy_stats_auth: "{{ proxy_stats_auth }}"

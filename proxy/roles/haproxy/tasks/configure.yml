@@ -18,7 +18,7 @@
 - name: configure | configure rsyslog to listen on UDP socket
   ansible.builtin.blockinfile:
     path: /etc/rsyslog.conf
-    insertafter: '# Provides UDP syslog reception'
+    insertafter: "# Provides UDP syslog reception"
     marker: "# {mark} DS MANAGED BLOCK (haproxy)"
     block: |
       $ModLoad imudp
@@ -30,7 +30,7 @@
 - name: configure | place rsyslog config for HAProxy
   ansible.builtin.copy:
     src: rsyslog-haproxy.conf
-    dest: /etc/rsyslog.d/haproxy.conf
+    dest: "{{ haproxy_rsyslog_conf }}"
     mode: u+r
   notify:
     - restart rsyslog
@@ -55,7 +55,7 @@
 
 - name: configure | place VIP list
   ansible.builtin.template:
-    src: templates/vip.lst.j2
+    src: vip.lst.j2
     dest: /etc/haproxy/vip.lst
     owner: haproxy
     mode: u+r

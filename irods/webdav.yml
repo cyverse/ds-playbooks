@@ -258,6 +258,10 @@
       yum_versionlock:
         name: irods-runtime-4.2.8
         state: present
+# XXX - Due to https://github.com/ansible-collections/community.general/issues/4470, this isn't
+# idempotent.
+      tags: non_idempotent
+# XXX - ^^^
 
     - name: build & install mod_ssl-rm_ssl_conf RPM package to remove ssl.conf
       include_tasks: tasks/install_rm_sslconf_rpm.yml

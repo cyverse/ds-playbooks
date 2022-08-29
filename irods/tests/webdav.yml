@@ -1,5 +1,5 @@
 ---
-- name: test WebDAV config template expansion
+- name: Test WebDAV config template expansion
   hosts: localhost
   run_once: true
   gather_facts: false
@@ -13,14 +13,14 @@
     varnish_service: >-
       {{ lookup('template', '../templates/webdav/usr/lib/systemd/system/varnish.service.j2') }}
   tasks:
-    - name: verify head.html expands correctly
-      assert:
+    - name: Verify head.html expands correctly
+      ansible.builtin.assert:
         that:
           - head is search('/* Style for the testing/base/ davrods */' | regex_escape)
           - 'head is search(''content: "/testing/base/";'')'
 
-    - name: verify default.vcl expands correctly
-      assert:
+    - name: Verify default.vcl expands correctly
+      ansible.builtin.assert:
         that:
           - >-
             default_vcl
@@ -33,8 +33,8 @@
             default_vcl
             is search('if (std.integer(beresp.http.Content-Length, 0) > 10485760)' | regex_escape)
 
-    - name: verify purgeman.conf expands correctly
-      assert:
+    - name: Verify purgeman.conf expands correctly
+      ansible.builtin.assert:
         that:
           - >-
             purgeman_conf
@@ -44,27 +44,32 @@
           - purgeman_conf is search('PURGEMAN_AMQP_EXCHANGE=irods')
           - purgeman_conf is search('PURGEMAN_AMQP_USERNAME=guest')
           - purgeman_conf is search('PURGEMAN_AMQP_PASSWORD=guest')
+          - >-
+            purgeman_conf
+            is search(
+              'PURGEMAN_IRODS_HOST=dstesting-provider_configured-1.dstesting_default'
+                | regex_escape )
+          - purgeman_conf is search('PURGEMAN_IRODS_PORT=1247')
 
-    - name: verify remainder fo purgeman.conf expands correctly
-      debug:
+    - name: Verify remainder fo purgeman.conf expands correctly
+      ansible.builtin.debug:
         msg: TODO check {{ item }}
       with_items:
-        - PURGEMAN_IRODS_HOST
-        - PURGEMAN_IRODS_PORT
         - PURGEMAN_IRODS_USERNAME
         - PURGEMAN_IRODS_PASSWORD
         - PURGEMAN_IRODS_ZONE
         - PURGEMAN_VARNISH_URLS
 
-    - name: verify varnish.service expands correctly
-      assert:
+    - name: Verify varnish.service expands correctly
+      ansible.builtin.assert:
         that:
           - varnish_service is search('-a :6081,HTTP')
           - >-
             varnish_service
             is search('-s file,/var/cache/varnish/varnish_cache.bin,1000M' | regex_escape)
 
-- name: test WebDAV dav html template expansion
+
+- name: Test WebDAV dav html template expansion
   hosts: localhost
   run_once: true
   gather_facts: false
@@ -76,8 +81,8 @@
     zone_index: "{{ lookup('template', '../templates/webdav/var/zone-index.html.j2') }}"
     commons_index: "{{ lookup('template', '../templates/webdav/var/commons-index.html.j2') }}"
   tasks:
-    - name: verify index.html expands correctly, part 1
-      assert:
+    - name: Verify index.html expands correctly, part 1
+      ansible.builtin.assert:
         that:
           - index is search('<title>WebDAV Service Landing Page</title>')
           - index is search('Data Store WebDAV Access')
@@ -94,12 +99,12 @@
           - index is search('<a href="testing/home/">testing/home/</a>')
           - index is search('accessible without authentication.')
 
-    - name: verify index.html expands correctly, part 2
-      assert:
+    - name: Verify index.html expands correctly, part 2
+      ansible.builtin.assert:
         that: index is not search('has four anonymous, read-only')
 
-    - name: verify zone/index.html expands correctly
-      assert:
+    - name: Verify zone/index.html expands correctly
+      ansible.builtin.assert:
         that:
           - zone_index is search('<title>Index of /testing on testing</title>')
           - zone_index is search('<base href="/dav/testing/"/>')
@@ -108,8 +113,8 @@
           - zone_index is search('<span class="zone-name">testing</span>')
           - zone_index is search('<a href="home/">home/</a>')
 
-    - name: verify zone/commons/index.html expands correctly
-      assert:
+    - name: Verify zone/commons/index.html expands correctly
+      ansible.builtin.assert:
         that:
           - commons_index is search('<title>Index of /testing/commons/ on testing</title>')
           - commons_index is search('<base href="/dav/testing/commons/"/>')
@@ -118,7 +123,8 @@
           - commons_index is search('<a href="/dav/testing/commons/">commons/</a>')
           - commons_index is search('<span class="zone-name">testing</span>')
 
-- name: test WebDAV dav-anon html template expansion
+
+- name: Test WebDAV dav-anon html template expansion
   hosts: localhost
   run_once: true
   gather_facts: false
@@ -130,8 +136,8 @@
     zone_index: "{{ lookup('template', '../templates/webdav/var/zone-index.html.j2') }}"
     commons_index: "{{ lookup('template', '../templates/webdav/var/commons-index.html.j2') }}"
   tasks:
-    - name: verify index.html expands correctly, part 1
-      assert:
+    - name: Verify index.html expands correctly, part 1
+      ansible.builtin.assert:
         that:
           - index is search('<title>Anonymous WebDAV Service Landing Page</title>')
           - index is search('Data Store Anonymous, Read-Only')
@@ -139,45 +145,46 @@
           - index is search('testing/home/')
           - index is search('be accessible.')
 
-    - name: verify index.html expands correctly, part 2
-      assert:
+    - name: Verify index.html expands correctly, part 2
+      ansible.builtin.assert:
         that:
           - index is not search('WebDAV services. If a')
           - index is not search('<a href="testing/home/">testing/home/</a>')
 
-    - name: verify zone/index.html expands correctly, part 1
-      assert:
+    - name: Verify zone/index.html expands correctly, part 1
+      ansible.builtin.assert:
         that:
           - zone_index is search('<base href="/dav-anon/testing/"/>')
           - zone_index is search('<a href="/dav-anon/">/</a>')
           - zone_index is search('<a href="/dav-anon/testing/">testing/</a>')
 
-    - name: verify zone/index.html expands correctly, part 2
-      assert:
+    - name: Verify zone/index.html expands correctly, part 2
+      ansible.builtin.assert:
         that: zone_index is not search('<a href="home/">home/</a>')
 
-    - name: verify zone/commons/index.html expands correctly
-      assert:
+    - name: Verify zone/commons/index.html expands correctly
+      ansible.builtin.assert:
         that:
           - commons_index is search('<base href="/dav-anon/testing/commons/"/>')
           - commons_index is search('<a href="/dav-anon/">/</a>')
           - commons_index is search('<a href="/dav-anon/testing/">testing/</a>')
           - commons_index is search('<a href="/dav-anon/testing/commons/">commons/</a>')
 
-- name: test WebDAV server deposition
+
+- name: Test WebDAV server deposition
   hosts: webdav
   become: true
   tasks:
-    - name: test place TLS certificate chain file
-      debug:
+    - name: Test place TLS certificate chain file
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: test place TLS certificate file
-      debug:
+    - name: Test place TLS certificate file
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: test place TLS key file
-      debug:
+    - name: Test place TLS key file
+      ansible.builtin.debug:
         msg: TODO implement
 
     - include_tasks: tasks/test_pkg_installed.yml
@@ -190,20 +197,20 @@
       loop_control:
         loop_var: pkg
 
-    - name: test install iRODS package repository signing key
-      shell: |
+    - name: Test install iRODS package repository signing key
+      ansible.builtin.shell: |
         set -o pipefail
         rpm --query --queryformat='%{SUMMARY}\n' gpg-pubkey | grep --quiet 'iRODS Consortium'
       changed_when: false
 
-    - name: test install iRODS repository
-      stat:
+    - name: Test install iRODS repository
+      ansible.builtin.stat:
         path: /etc/yum.repos.d/renci-irods.yum.repo
       register: resp
       failed_when: not resp.stat.exists
 
-    - name: test lock irods-runtime to version 4.2.8
-      shell: |
+    - name: Test lock irods-runtime to version 4.2.8
+      ansible.builtin.shell: |
         set -o pipefail
         if ! yum versionlock status | grep --quiet irods-runtime; then
           printf 'irods-runtime not locked\n' >&2
@@ -220,14 +227,14 @@
         fi
       changed_when: false
 
-    - name: test ssl.conf is gone
-      stat:
+    - name: Test ssl.conf is gone
+      ansible.builtin.stat:
         path: /etc/httpd/conf.d/ssl.conf
       register: response
       failed_when: response.stat.exists
 
-    - name: test add davrods irods directory contents
-      stat:
+    - name: Test add davrods irods directory contents
+      ansible.builtin.stat:
         path: /etc/httpd/irods/{{ item }}
       with_items:
         - home-head.html
@@ -238,8 +245,8 @@
       register: response
       failed_when: not response.stat.exists
 
-    - name: test apache modules
-      stat:
+    - name: Test apache modules
+      ansible.builtin.stat:
         path: /etc/httpd/conf.modules.d/{{ item }}
       with_items:
         - 00-mpm.conf
@@ -248,31 +255,31 @@
       register: response
       failed_when: not response.stat.exists
 
-    - name: retrieve encoded irods_environment.json
-      slurp:
+    - name: Retrieve encoded irods_environment.json
+      ansible.builtin.slurp:
         src: /etc/httpd/irods/irods_environment.json
       register: ie_encoded
 
-    - name: decode irods_environment.json
-      set_fact:
+    - name: Decode irods_environment.json
+      ansible.builtin.set_fact:
         irods_environment: "{{ ie_encoded.content | b64decode }}"
 
-    - name: test irods_environment.json contents
-      assert:
+    - name: Test irods_environment.json contents
+      ansible.builtin.assert:
         that:
           - irods_environment.irods_home == '/testing'
           - irods_environment.irods_host == 'dstesting-provider_configured-1.dstesting_default'
           - irods_environment.irods_user_name == 'anonymous'
           - irods_environment.irods_zone_name == 'testing'
 
-    - name: test create content directories
-      stat:
+    - name: Test create content directories
+      ansible.builtin.stat:
         path: /var/www/html/dav/testing/commons
       register: response
       failed_when: not (response.stat.exists and response.stat.isdir)
 
-    - name: test add web pages
-      stat:
+    - name: Test add web pages
+      ansible.builtin.stat:
         path: /var/www/html/{{ item }}
       with_items:
         - index.html
@@ -291,8 +298,8 @@
         pkg: varnish
         version: "6.5.1"
 
-    - name: test create varnish shared memory mount point
-      stat:
+    - name: Test create varnish shared memory mount point
+      ansible.builtin.stat:
         path: /var/lib/varnish
       register: response
       failed_when: >-
@@ -300,8 +307,8 @@
         not response.stat.isdir or
         response.stat.mode != '0777'
 
-    - name: test create directory for cache
-      stat:
+    - name: Test create directory for cache
+      ansible.builtin.stat:
         path: /cache_vol
       register: response
       failed_when: >-
@@ -311,8 +318,8 @@
         response.stat.gr_name != 'varnish' or
         response.stat.mode != '0755'
 
-    - name: test create directory for varnish log
-      stat:
+    - name: Test create directory for varnish log
+      ansible.builtin.stat:
         path: /var/log/varnish
       register: response
       failed_when: >-
@@ -322,26 +329,26 @@
         response.stat.gr_name != 'varnish' or
         response.stat.mode != '0755'
 
-    - name: test default.vcl deployed
-      stat:
+    - name: Test default.vcl deployed
+      ansible.builtin.stat:
         path: /etc/varnish/default.vcl
       register: response
       failed_when: not response.stat.exists
 
-    - name: test varnish.service deployed
-      stat:
+    - name: Test varnish.service deployed
+      ansible.builtin.stat:
         path: /usr/lib/systemd/system/varnish.service
       register: response
       failed_when: not response.stat.exists
 
-    - name: test create apache systemd service dependencies directory
-      stat:
+    - name: Test create apache systemd service dependencies directory
+      ansible.builtin.stat:
         path: /etc/systemd/system/httpd.service.requires
       register: response
       failed_when: not response.stat.exists or not response.stat.isdir
 
-    - name: test ensure varnish runs when apache run
-      stat:
+    - name: Test ensure varnish runs when apache run
+      ansible.builtin.stat:
         path: /etc/systemd/system/httpd.service.requires/varnish.service
       register: response
       failed_when: >-
@@ -349,14 +356,14 @@
         not response.stat.islnk or
         response.stat.lnk_source != '/usr/lib/systemd/system/varnish.service'
 
-    - name: test create varnish systemd service dependencies directory
-      stat:
+    - name: Test create varnish systemd service dependencies directory
+      ansible.builtin.stat:
         path: /etc/systemd/system/varnish.service.requires
       register: response
       failed_when: not response.stat.exists or not response.stat.isdir
 
-    - name: test ensure varnishncsa runs when varnish run
-      stat:
+    - name: Test ensure varnishncsa runs when varnish run
+      ansible.builtin.stat:
         path: /etc/systemd/system/varnish.service.requires/varnishncsa.service
       register: response
       failed_when: >
@@ -364,26 +371,26 @@
         not response.stat.islnk or
         response.stat.lnk_source != '/usr/lib/systemd/system/varnishncsa.service'
 
-    - name: test purgeman installed
-      stat:
+    - name: Test purgeman installed
+      ansible.builtin.stat:
         path: /usr/bin/purgeman
       register: response
       failed_when: not response.stat.exists
 
-    - name: test purgeman.conf deployed
-      stat:
+    - name: Test purgeman.conf deployed
+      ansible.builtin.stat:
         path: /etc/purgeman/purgeman.conf
       register: response
       failed_when: not response.stat.exists
 
-    - name: test purgeman.service deployed
-      stat:
+    - name: Test purgeman.service deployed
+      ansible.builtin.stat:
         path: /usr/lib/systemd/system/purgeman.service
       register: response
       failed_when: not response.stat.exists
 
-    - name: test ensure purgeman runs when varnish run
-      stat:
+    - name: Test ensure purgeman runs when varnish run
+      ansible.builtin.stat:
         path: /etc/systemd/system/varnish.service.requires/purgeman.service
       register: response
       failed_when: >
@@ -391,6 +398,6 @@
         not response.stat.islnk or
         response.stat.lnk_source != '/usr/lib/systemd/system/purgeman.service'
 
-    - name: test open HTTP connection in firewall
-      script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables
+    - name: Test open HTTP connection in firewall
+      ansible.builtin.script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables
       changed_when: false

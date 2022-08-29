@@ -5,6 +5,9 @@ import ssl
 import traceback
 from ansible.module_utils.basic import AnsibleModule
 from irods.session import iRODSSession
+from irods.message import GeneralAdminRequest, iRODSMessage
+from irods.api_number import api_number
+from irods.query import SpecificQuery
 
 DOCUMENTATION = '''
 ---
@@ -132,7 +135,21 @@ class IRODSResourceUpModule:
             self._fail("Unable to set status of resource to 'up'")
 
     def _resource_up(self, resc):
-        current_status = self.session.resources.get(resc)
+        with self.session.pool.get_connection() as conn:
+            # check server version
+            message_body = GeneralAdminRequest(
+                "get",
+                "resource",
+                self.module.params["resource"],
+                "status"
+            )
+
+            request = iRODSMessage("RODS_API_REQ", msg=message_body,
+                                   int_info=api_number['GENERAL_ADMIN_AN'])
+
+            conn.send(request)
+            current_status = conn.recv()
+
         if current_status != "up":
             self.session.resources.modify(resc, "status", "up")
             self.result["changed"] = True

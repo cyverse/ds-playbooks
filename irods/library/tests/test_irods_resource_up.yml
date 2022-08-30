@@ -3,6 +3,7 @@
   hosts: localhost
   vars: 
     TEST_RSC: replRes
+    MISSINGNO: missingRes
   environment:
     TEST_PORT: 1247
     TEST_USER_NAME: rods
@@ -13,6 +14,9 @@
     - name: Initialize irods session
       shell: |
         iinit <<< ${IRODS_PASSWORD}
+      tags:
+        - non_idempotent
+
   tasks:
     - name: bring up resource
       irods_resource_up:
@@ -43,3 +47,14 @@
         verify_parent_status '{{ TEST_RSC }}'
       changed_when: false
       register: response
+
+    - name: test with non-existent resource
+      failed_when: response is success or response.msg != "Resource 'missingRes' does not exist"
+      irods_resource_up:
+        resource: "{{ MISSINGNO }}"
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response 

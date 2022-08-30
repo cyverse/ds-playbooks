@@ -2,12 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import ssl
-import traceback
 from ansible.module_utils.basic import AnsibleModule
 from irods.session import iRODSSession
-from irods.message import GeneralAdminRequest, iRODSMessage
-from irods.api_number import api_number
-from irods.query import SpecificQuery
+from irods.column import Criterion
+from irods.models import Resource
 
 DOCUMENTATION = '''
 ---
@@ -83,9 +81,8 @@ class IRODSResourceUpModule:
 
         self.result = dict(
             changed=False,
-            exit_msg='',
-            exc='',
-            exc_msg='',
+            exc="",
+            exc_msg="",
         )
 
         self.module = AnsibleModule(
@@ -112,7 +109,7 @@ class IRODSResourceUpModule:
                 zone=self.module.params["zone"],
                 **self.ssl_settings)
         except Exception as exc:  # pylint: disable=broad-except
-            self.result["exc"] = exc
+            self.result["exc"] = str(exc)
             self.result["exc_message"] = "Unable to connect to iRODS."
             self._fail(self.result["exc_message"])
 
@@ -121,34 +118,23 @@ class IRODSResourceUpModule:
         Entry point for module class, method to be called to run the module
         """
         if self.module.check_mode:
-            self.result["exit_msg"] = ""
             self.module.exit_json(**self.result)
 
         self._init_session()
 
-        try:
-            self._resource_up_recurse(self.module.params["resource"])
-            self.module.exit_json(**self.result)
-        except Exception as exc:  # pylint: disable=broad-except
-            self.result["exc"] = type(exc).__name__
-            self.result["exc_msg"] = traceback.format_exc()
-            self._fail("Unable to set status of resource to 'up'")
+        if self._verify_resource() is True:
+            try:
+                self._resource_up_recurse(self.module.params["resource"])
+                self.module.exit_json(**self.result)
+            except Exception as exc:  # pylint: disable=broad-except
+                self.result["exc"] = exc
+                self.result["exc_message"] = "Unable to set status of resource to 'up'"
+                self._fail(str(self.result["exc_message"]))
+        else:
+            self._fail("Resource '{}' does not exist".format(self.module.params["resource"]))
 
     def _resource_up(self, resc):
-        with self.session.pool.get_connection() as conn:
-            # check server version
-            message_body = GeneralAdminRequest(
-                "get",
-                "resource",
-                self.module.params["resource"],
-                "status"
-            )
-
-            request = iRODSMessage("RODS_API_REQ", msg=message_body,
-                                   int_info=api_number['GENERAL_ADMIN_AN'])
-
-            conn.send(request)
-            current_status = conn.recv()
+        current_status = self.session.resources.get(resc).status
 
         if current_status != "up":
             self.session.resources.modify(resc, "status", "up")
@@ -156,19 +142,27 @@ class IRODSResourceUpModule:
 
     def _resource_up_recurse(self, resc):
         self._resource_up(resc)
-        next_resc = self.session.resources.get(resc, "parent")
+        next_resc = self.session.resources.get(resc).parent
 
         if next_resc:
             self._resource_up_recurse(next_resc)
 
-    def _fail(self, msg, err=None):
+    def _verify_resource(self):
+        results = self.session.query(Resource).filter(Criterion("=", Resource.name, self.module.params["resource"]))
+
+        for r in results:
+            return True
+
+        return False
+
+    def _fail(self, msg: str, err=None):
         if self.session:
             self.session.cleanup()
 
         if err:
             self.module.fail_json(msg=msg + "\n" + str(err), **self.result)
         else:
-            self.module.fail_json(msg=msg, **self.result)
+            self.module.fail_json(msg=msg)
 
 
 def main():

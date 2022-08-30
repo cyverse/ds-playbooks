@@ -1,4 +1,6 @@
 ---
+haproxy_num_threads: 1
+
 haproxy_queue_timeout: null
 
 haproxy_default_check_period: 10s

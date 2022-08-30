@@ -5,21 +5,23 @@
 # Usage:
 #  init-ansible
 
-set -e
+set -o errexit
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
-  readonly ExecName=$(greadlink -f "$0")
+  ExecName=$(greadlink -f "$0")
 else
-  readonly ExecName=$(readlink --canonicalize "$0")
+  ExecName=$(readlink --canonicalize "$0")
 fi
+readonly ExecName
 
-readonly PlaybooksDir=$(dirname "$ExecName")
+PlaybooksDir=$(dirname "$ExecName")
+readonly PlaybooksDir
 
 
 main()
 {
-  ansible-galaxy install -r "$PlaybooksDir"/requirements.yml
+  ansible-galaxy install --force -r "$PlaybooksDir"/requirements.yml
 
   local roleDir
 

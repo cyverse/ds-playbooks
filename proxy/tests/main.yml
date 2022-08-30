@@ -22,18 +22,24 @@
       ansible.builtin.assert:
         that: haproxy is search('^#\n# Ansible managed')
 
+    - name: Verify haproxy config global section
+      ansible.builtin.assert:
+        that:
+          - haproxy is search('\nglobal\n(  [^\n]*\n)*  cpu-map +1/1-1 0-0\n')
+          - haproxy is search('\nglobal\n(  [^\n]*\n)*  nbthread +1\n')
+
     - name: Verify haproxy config defaults section
       ansible.builtin.assert:
         that:
-          - haproxy is search('\ndefaults\n  [^\n]*\n  maxconn +500\n')
-          - haproxy is not search('\ndefaults\n  [^\n]*\n  timeout queue')
+          - haproxy is search('\ndefaults\n(  [^\n]*\n)*  maxconn +500\n')
+          - haproxy is not search('\ndefaults\n(  [^\n]*\n)*  timeout queue')
 
     - name: Verify haproxy config stats listener
       ansible.builtin.assert:
         that:
-          - haproxy is search('\nlisten stats\n  [^\n]*\n  bind +:81\n')
-          - haproxy is not search('\nlisten stats\n  [^\n]*\n  stats auth')
-          - haproxy is not search('\nlisten stats\n  [^\n]*\n  stats realm')
+          - haproxy is search('\nlisten stats\n(  [^\n]*\n)*  bind +:81\n')
+          - haproxy is not search('\nlisten stats\n(  [^\n]*\n)*  stats auth')
+          - haproxy is not search('\nlisten stats\n(  [^\n]*\n)*  stats realm')
 
     - name: Verify haproxy config prometheus_stats listener
       ansible.builtin.debug:

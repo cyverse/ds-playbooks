@@ -11,17 +11,12 @@
     name: haproxy
     state: restarted
 
-- name: restart firewall
-  when: _full_os | bool
-  service:
-    name: iptables
-    state: restarted
-
 - name: restart rsyslog
   when: _full_os | bool
   service:
     name: rsyslog
     state: restarted
+  notify: reload haproxy
 
 - name: reboot
   debug:

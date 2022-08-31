@@ -1,14 +1,14 @@
 ---
-- name: ensure netcdf plugins not installed
-  package:
+- name: Ensure netcdf plugins not installed
+  ansible.builtin.package:
     name:
       - irods-icommands-netcdf
       - irods-microservice-plugin-netcdf
       - irods-api-plugin-netcdf
     state: absent
 
-- name: ensure netcdf rpms removed
-  file:
+- name: Ensure netcdf rpms removed
+  ansible.builtin.file:
     path: /root/{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm
     state: absent
   with_items:
@@ -16,23 +16,22 @@
     - irods-microservice-plugin-netcdf
     - irods-api-plugin-netcdf
 
-- name: install NetCDF plugins
-  yum:
+- name: Install NetCDF plugins
+  ansible.builtin.yum:
     name:
       - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-client_modules-4.2.8.0-centos-7-x86_64.rpm
       - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-icommands-4.2.8.0-centos-7-x86_64.rpm
       - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm
     state: present
 
-- name: lock NetCDF plugins to 4.2.8.0
-  yum_versionlock:
+- name: Lock NetCDF plugins to 4.2.8.0
+  community.general.yum_versionlock:
     name:
       - irods-netcdf-client_modules-4.2.8.0
       - irods-netcdf-icommands-4.2.8.0
       - irods-netcdf-server_modules-4.2.8.0
     state: present
-
-- name: ensure msiSetAVU microservice is absent
-  file:
-    path: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
-    state: absent
+# XXX - Due to https://github.com/ansible-collections/community.general/issues/4470, this isn't
+# idempotent.
+  tags: non_idempotent
+# XXX - ^^^

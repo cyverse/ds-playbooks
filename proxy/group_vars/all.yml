@@ -1,4 +1,6 @@
 ---
+proxy_rsyslog_conf: /etc/rsyslog.d/haproxy.conf
+
 proxy_stats_auth: null
 proxy_stats_tls_crt: null
 proxy_stats_tls_crt_content: null

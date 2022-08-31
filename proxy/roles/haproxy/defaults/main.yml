@@ -1,4 +1,6 @@
 ---
+haproxy_num_threads: 1
+
 haproxy_queue_timeout: null
 
 haproxy_default_check_period: 10s
@@ -19,6 +21,8 @@ haproxy_irods_direct_max_conn: "{{ haproxy_default_max_conn }}"
 haproxy_irods_throttled_max_conn: "{{ haproxy_default_max_conn }}"
 haproxy_irods_check_period: "{{ haproxy_default_check_period }}"
 haproxy_irods_vip_client_hosts: []
+
+haproxy_rsyslog_conf: /etc/rsyslog.d/haproxy.conf
 
 haproxy_webdav_port: 80
 haproxy_webdav_tls_port: 443

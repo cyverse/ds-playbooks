@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Usage:
 #  test-playbook INSPECT PRETTY VERBOSE HOSTS SETUP PLAYBOOK
@@ -23,6 +23,10 @@ readonly PLAYBOOK_DIR=/playbooks-under-test
 readonly LIBRARY_DIR="$PLAYBOOK_DIR"/library
 readonly TEST_DIR="$PLAYBOOK_DIR"/tests
 
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly NORMAL='\033[0m'
+
 
 main() {
 	local inspect="$1"
@@ -44,12 +48,16 @@ main() {
 		modPath="$LIBRARY_DIR"
 	fi
 
-	wait_for_env "$inventory"
+	if ! wait_for_env "$inventory"; then
+		display_failure 'ERROR: The environment did not come up'
+		return 1
+	fi
 
 	local rc=0
 
 	if (( rc == 0 )) && [[ -n "$setup" ]]; then
 		if ! setup_env "$verbose" "$inventory" "$modPath" "$PLAYBOOK_DIR"/"$setup"; then
+			display_failure 'ERROR: The setup playbook failed'
 			rc=1
 		fi
 	fi
@@ -59,7 +67,10 @@ main() {
       local testPath="$TEST_DIR"/"$playbook"
 
 		if ! do_test "$verbose" "$inventory" "$modPath" "$playbookPath" "$testPath" ; then
+			display_failure FAILED
 			rc=1
+		else
+			display_success PASSED
 		fi
 	fi
 
@@ -69,6 +80,20 @@ main() {
 	fi || true
 
 	return $rc
+}
+
+
+display_failure() {
+	local msg="$1"
+
+	printf "$RED"'%s'"$NORMAL"'\n' "$msg"
+}
+
+
+display_success() {
+	local msg="$1"
+
+	printf "$GREEN"'%s'"$NORMAL"'\n' "$msg"
 }
 
 
@@ -121,7 +146,10 @@ do_test() {
 
 	if grep --quiet --regexp '^\(changed\|fatal\):' <<< "$idempotencyRes"; then
 		echo "$idempotencyRes"
+		printf 'failed: idempotency check\n'
 		return 1
+	else
+		printf 'ok: idempotency check\n'
 	fi
 }
 

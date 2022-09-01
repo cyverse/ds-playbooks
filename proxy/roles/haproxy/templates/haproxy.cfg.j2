@@ -3,18 +3,20 @@
 ##########################
 #         GLOBAL         #
 ##########################
+
 global
   daemon
   chroot         /var/lib/haproxy
-  cpu-map        1 0
+  cpu-map        1/1-{{ haproxy_num_threads }} 0-{{ haproxy_num_threads|int - 1 }}
   user           haproxy
   group          haproxy
   log            127.0.0.1 local0 debug
   nbproc         1
+  nbthread       {{ haproxy_num_threads }}
   pidfile        /var/run/haproxy.pid
   stats socket   /var/run/haproxy.sock mode 600 level admin
   stats timeout  2m
-  unix-bind      prefix /var mode 770 user haproxy
+  unix-bind      mode 770 user haproxy group haproxy
 
   maxconn                    4000
   spread-checks              2
@@ -74,6 +76,7 @@ listen stats
   timeout queue          100s
   option dontlog-normal
 
+
 ##########################
 #       PROMETHEUS       #
 ##########################
@@ -81,12 +84,13 @@ listen stats
 frontend prometheus_stats
   mode http
 {% if haproxy_stats_tls_crt %}
-  bind                   :{{ haproxy_prometheus_port }} ssl crt {{ haproxy_stats_tls_crt }}
+  bind                 :{{ haproxy_prometheus_port }} ssl crt {{ haproxy_stats_tls_crt }}
 {% else %}
-  bind                   :{{ haproxy_prometheus_port }}
+  bind                 :{{ haproxy_prometheus_port }}
 {% endif %}
   option http-use-htx
-  http-request use-service prometheus-exporter if { path /metrics }
+  http-request         use-service prometheus-exporter if { path /metrics }
+
 
 ##########################
 #         IRODS          #
@@ -110,10 +114,10 @@ frontend irods_reconn
   default_backend  irods_direct
 
 backend irods_throttled
-  server  indirect unix@haproxy_irods.sock send-proxy maxconn {{ haproxy_irods_throttled_max_conn }}
+  server  indirect /haproxy_irods.sock send-proxy maxconn {{ haproxy_irods_throttled_max_conn }}
 
 frontend irods_indirect
-  bind             unix@haproxy_irods.sock accept-proxy
+  bind             /var/lib/haproxy/haproxy_irods.sock accept-proxy
   default_backend  irods_direct
 
 backend irods_direct

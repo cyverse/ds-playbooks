@@ -5,19 +5,21 @@
   collections:
     - community.general
   tasks:
-    - when: ansible_distribution == 'CentOS'
+    - name: Provision CentOS
+      when: ansible_distribution == 'CentOS'
       block:
         - name: CentOS | install iRODS package repository signing key
-          rpm_key:
+          ansible.builtin.rpm_key:
             key: https://packages.irods.org/irods-signing-key.asc
 
         - name: CentOS | install iRODS repository
-          get_url:
+          ansible.builtin.get_url:
             url: https://packages.irods.org/renci-irods.yum.repo
             dest: /etc/yum.repos.d/renci-irods.yum.repo
+            mode: u+r
 
         - name: CentOS | force import of GPG key
-          shell: |
+          ansible.builtin.shell: |
             if ! resp="$(yum --assumeyes updateinfo)"; then
               exit 1
             fi
@@ -34,41 +36,46 @@
               - irods-runtime-{{ _irods_version }}
               - irods-server-{{ _irods_version }}
             state: present
+# XXX - Due to https://github.com/ansible-collections/community.general/issues/4470, this isn't
+# idempotent.
+          tags: non_idempotent
+# XXX - ^^^
 
         - name: CentOS | install OS specific required packages
-          package:
+          ansible.builtin.package:
             name:
               - uuidd
               - which
             state: present
 
           # TODO: When upgrading to iRODS 4.2.9, remove this task.
-        - name: ensure unixODBC is installed (irods issue 5389)
-          package:
+        - name: CentOS | ensure unixODBC is installed (irods issue 5389)
+          ansible.builtin.package:
             name: unixODBC
             state: present
 
-    - when: ansible_distribution == 'Ubuntu'
+    - name: Provision Ubuntu
+      when: ansible_distribution == 'Ubuntu'
       block:
         - name: Ubuntu | install iRODS package repository signing key
-          apt_key:
+          ansible.builtin.apt_key:
             url: https://packages.irods.org/irods-signing-key.asc
 
         - name: Ubuntu | install iRODS repository
-          copy:
+          ansible.builtin.copy:
             dest: /etc/apt/sources.list.d/renci-irods.list
             mode: u+rw
             content: |
               deb [arch=amd64] https://packages.irods.org/apt/ {{ ansible_lsb.codename }} main
 
         - name: Ubuntu | update apt cache
-          apt:
+          ansible.builtin.apt:
             update_cache: true
           tags:
             - non_idempotent
 
         - name: Ubuntu | lock iRODS packages to required version
-          copy:
+          ansible.builtin.copy:
             dest: /etc/apt/preferences.d/irods
             mode: u+rw
             content: |
@@ -77,24 +84,24 @@
               Pin-Priority: 1001
 
         - name: Ubuntu | install OS specific required packages
-          package:
+          ansible.builtin.package:
             name:
               - debianutils
               - uuid-runtime
             state: present
 
-    - name: install iRODS server
-      package:
+    - name: Install iRODS server
+      ansible.builtin.package:
         name: irods-server
         state: present
 
-    - name: create service group
-      group:
+    - name: Create service group
+      ansible.builtin.group:
         name: "{{ _irods_service_group_name }}"
         system: true
 
-    - name: create service account
-      user:
+    - name: Create service account
+      ansible.builtin.user:
         name: "{{ _irods_service_account_name }}"
         system: true
         home: /var/lib/irods
@@ -106,8 +113,8 @@
 
     - import_tasks: tasks/ensure_irods_ownership.yml
 
-    - name: ensure default policy files are up-to-date
-      copy:
+    - name: Ensure default policy files are up-to-date
+      ansible.builtin.copy:
         dest: /etc/irods/{{ item }}
         src: /var/lib/irods/packaging/{{ item }}.template
         remote_src: true

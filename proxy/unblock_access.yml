@@ -28,12 +28,3 @@
         fail_on_not_found: true
       tags:
         - no_testing
-
-    - name: allow all client connections firewall
-      import_role:
-        name: haproxy
-        tasks_from: firewall
-      vars:
-        haproxy_irods_host: "{{ groups['irods_catalog'][0] }}"
-        haproxy_irods_reconn_ports: "{{ proxy_irods_reconn_ports }}"
-        haproxy_webdav_hosts: "{{ groups['webdav'] }}"

@@ -1,10 +1,10 @@
 ---
-- name: bring up all resources
+- name: Bring up all resources
   hosts: irods_resource
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
-    - name: bring up storage resource and parents
+    - name: Bring up storage resource and parents
       become: false
       delegate_to: localhost
       irods_resource_up:

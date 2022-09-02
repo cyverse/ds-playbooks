@@ -40,7 +40,7 @@ Docker Compose needs to be installed on development machines.
 The following python packages need to be installed on the development machines and Ansible control
 nodes using `pip`.
 
-* ansible-core (This should be restricted to version 2.11 for Ansible control nodes.)
+* ansible-core (This should be restricted to version 2.11)
 * docker
 * dnspython
 * netaddr

@@ -4,7 +4,7 @@ This is a collection of playbooks for maintaining CyVerse's Data Store.
 
 ## Prerequisites
 
-The Docker package repository needs to be configured on development machines and Ansible control 
+The Docker package repository needs to be configured on development machines and Ansible control
 nodes.
 
 For CentOS machines, do the following.
@@ -20,10 +20,10 @@ apt update
 apt install ca-certificates curl gnupg lsb-release
 mkdir --parents /etc/apt/keyrings
 curl --fail --location --silent --show-error https://download.docker.com/linux/ubuntu/gpg \
-	| gpg --dearmor --output /etc/apt/keyrings/docker.gpg
+   | gpg --dearmor --output /etc/apt/keyrings/docker.gpg
 ```
 
-The following system packages need to be installed on development machines and Ansible control 
+The following system packages need to be installed on development machines and Ansible control
 nodes.
 
 * dmidecode
@@ -40,7 +40,8 @@ Docker Compose needs to be installed on development machines.
 The following python packages need to be installed on the development machines and Ansible control
 nodes using `pip`.
 
-* ansible-core (This should be restricted to version 2.11 for Ansible control nodes.)
+* ansible-core<2.12
+* ansible-lint<5.5   (development machines only)
 * docker
 * dnspython
 * netaddr
@@ -51,5 +52,5 @@ nodes using `pip`.
 
 The user executing ansible needs to be a member of the `docker` group.
 
-Finally, the required ansible collections and roles need to be installed. This can be done by 
+Finally, the required ansible collections and roles need to be installed. This can be done by
 running the `init-ansible` script.

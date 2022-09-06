@@ -24,12 +24,11 @@ prompt> curl --fail --location --silent --show-error https://download.docker.com
 prompt> echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
               https://download.docker.com/linux/ubuntu \
               $(lsb_release -cs) stable" \
-           | tee /etc/apt/sources.list.d/docker.list \
-           > /dev/null
+           | tee /etc/apt/sources.list.d/docker.list
 prompt> apt update
 ```
 
-As the root user, the following system packages need to be installed on development machines and 
+As the root user, the following system packages need to be installed on development machines and
 Ansible control nodes.
 
 * dmidecode

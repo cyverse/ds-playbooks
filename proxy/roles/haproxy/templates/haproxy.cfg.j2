@@ -52,44 +52,31 @@ defaults
 ##########################
 
 listen stats
-  mode                   http
+  mode                      http
 {% if haproxy_stats_tls_crt %}
-  bind                   :{{ haproxy_stats_port }} ssl crt {{ haproxy_stats_tls_crt }}
+  bind                      :{{ haproxy_stats_port }} ssl crt {{ haproxy_stats_tls_crt }}
 {% else %}
-  bind                   :{{ haproxy_stats_port }}
+  bind                      :{{ haproxy_stats_port }}
 {% endif %}
-  maxconn                10
+  http-request use-service  prometheus-exporter if { path /metrics }
   stats enable
-  stats hide-version
-  stats show-legends
+  stats uri                 /
 {% if haproxy_stats_auth %}
-  stats auth             {{ haproxy_stats_auth.username | default(_default_stats_auth_username) }}:{{ haproxy_stats_auth.password }}
+  stats auth                {{ haproxy_stats_auth.username | default(_default_stats_auth_username) }}:{{ haproxy_stats_auth.password }}
 {%   if haproxy_stats_auth.realm %}
-  stats realm            {{ haproxy_stats_auth.realm }}
+  stats realm               {{ haproxy_stats_auth.realm }}
 {%   endif %}
 {% endif %}
-  stats refresh          10s
-  stats uri              /
-  timeout client         100s
-  timeout server         100s
-  timeout connect        100s
-  timeout queue          100s
+  stats hide-version
+  stats show-legends
+  stats refresh             10s
+  maxconn                   10
+  timeout client            100s
+  timeout server            100s
+  timeout connect           100s
+  timeout queue             100s
   option dontlog-normal
-
-
-##########################
-#       PROMETHEUS       #
-##########################
-
-frontend prometheus_stats
-  mode http
-{% if haproxy_stats_tls_crt %}
-  bind                 :{{ haproxy_prometheus_port }} ssl crt {{ haproxy_stats_tls_crt }}
-{% else %}
-  bind                 :{{ haproxy_prometheus_port }}
-{% endif %}
   option http-use-htx
-  http-request         use-service prometheus-exporter if { path /metrics }
 
 
 ##########################

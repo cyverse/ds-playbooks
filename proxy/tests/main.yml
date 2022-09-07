@@ -37,13 +37,9 @@
     - name: Verify haproxy config stats listener
       ansible.builtin.assert:
         that:
-          - haproxy is search('\nlisten stats\n(  [^\n]*\n)*  bind +:81\n')
+          - haproxy is search('\nlisten stats\n(  [^\n]*\n)*  bind +:8404\n')
           - haproxy is not search('\nlisten stats\n(  [^\n]*\n)*  stats auth')
           - haproxy is not search('\nlisten stats\n(  [^\n]*\n)*  stats realm')
-
-    - name: Verify haproxy config prometheus_stats listener
-      ansible.builtin.debug:
-        msg: TODO verify bind parameter
 
     - name: Verify haproxy config template expansion
       ansible.builtin.debug:

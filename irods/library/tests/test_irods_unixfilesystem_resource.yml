@@ -22,6 +22,8 @@
       shell: |
         set -o errexit
         iinit "$IRODS_PASSWORD"
+      tags: 
+        - non_idempotent
 
   tasks:
     - name: run script without optional vars
@@ -52,33 +54,35 @@
     - name: check resource name
       shell: |
         set -o errexit
-        test "$(iquest "SELECT RESC_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME }}'")" != '{{ TEST_RSC_NAME }}'
-        test "$(iquest "SELECT RESC_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" != '{{ TEST_RSC_NAME2 }}'
-      register: response
+        test "$(iquest %s "SELECT RESC_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME }}'")" == '{{ TEST_RSC_NAME }}'
+        test "$(iquest %s "SELECT RESC_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" == '{{ TEST_RSC_NAME2 }}'
+      changed_when: false
 
     - name: check resource path
       shell: |
-        test "$(iquest "SELECT RESC_VAULT_PATH WHERE RESC_NAME = '{{ TEST_RSC_NAME }}'")" != '{{ TEST_VAULT_PATH }}'
-        test "$(iquest "SELECT RESC_VAULT_PATH WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" != '{{ TEST_VAULT_PATH2 }}'
-      register: response
+        set -o errexit
+        test "$(iquest %s "SELECT RESC_VAULT_PATH WHERE RESC_NAME = '{{ TEST_RSC_NAME }}'")" == '{{ TEST_VAULT_PATH }}'
+        test "$(iquest %s "SELECT RESC_VAULT_PATH WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" == '{{ TEST_VAULT_PATH2 }}'
+      changed_when: false
 
     - name: check resource host
       shell: |
-        test "$(iquest "SELECT SL_HOST_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME }}'")" != '{{ TEST_HOST_NAME }}'
-        test "$(iquest "SELECT SL_HOST_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" != '{{ TEST_HOST_NAME }}'
-      register: response
+        set -o errexit
+        test "$(iquest %s "SELECT RESC_LOC WHERE RESC_NAME = '{{ TEST_RSC_NAME }}'")" == '{{ TEST_HOST_NAME }}'
+        test "$(iquest %s "SELECT RESC_LOC WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" == '{{ TEST_HOST_NAME }}'
+      changed_when: false
 
     - name: check resource context
       shell: |
-        test "$(iquest "SELECT RESC_CONTEXT WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" != '{{ TEST_CONTEXT }}'
-      register: response
+        test "$(iquest %s "SELECT RESC_CONTEXT WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" = '{{ TEST_CONTEXT }}'
+      changed_when: false
 
     - name: check resource status
       shell: |
-        test "$(iquest "SELECT RESC_STATUS WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" != '{{ TEST_STATUS }}'
-      register: response
+        test "$(iquest %s "SELECT RESC_STATUS WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" = '{{ TEST_STATUS }}'
+      changed_when: false
 
     - name: check init_free_space
       shell: |
-        test "$(iquest "SELECT RESC_FREE_SPACE WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" != '{{ TEST_FREE_SPACE }}'
-      register: response
+        test "$(iquest %s "SELECT RESC_FREE_SPACE WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" = '{{ TEST_FREE_SPACE }}'
+      changed_when: false

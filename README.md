@@ -7,30 +7,40 @@ This is a collection of playbooks for maintaining CyVerse's Data Store.
 The Docker package repository needs to be configured on development machines and Ansible control
 nodes.
 
-For CentOS machines, do the following.
+For CentOS machines, do the following as the root user.
 
 ```console
-yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+prompt> yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 ```
 
-For Ubuntu machines, do the following.
+For Ubuntu machines, do the following as the root user.
 
 ```console
-apt update
-apt install ca-certificates curl gnupg lsb-release
-mkdir --parents /etc/apt/keyrings
-curl --fail --location --silent --show-error https://download.docker.com/linux/ubuntu/gpg \
-   | gpg --dearmor --output /etc/apt/keyrings/docker.gpg
+prompt> apt update
+prompt> apt install ca-certificates curl gnupg lsb-release
+prompt> mkdir --parents /etc/apt/keyrings
+prompt> curl --fail --location --silent --show-error https://download.docker.com/linux/ubuntu/gpg \
+           | gpg --dearmor --output /etc/apt/keyrings/docker.gpg
+prompt> echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+              https://download.docker.com/linux/ubuntu \
+              $(lsb_release -cs) stable" \
+           | tee /etc/apt/sources.list.d/docker.list
+prompt> apt update
 ```
 
-The following system packages need to be installed on development machines and Ansible control
-nodes.
+As the root user, the following system packages need to be installed on development machines and
+Ansible control nodes.
 
 * dmidecode
 * docker-ce
 * python3
 * python3-pip
-* rpm-build (rpm) if control machine runs Debian or Ubuntu)
+* rpm-build (CentOS) or rpm (Ubuntu)
+
+Docker Compose needs to be installed on development machines as the root user.
+
+* docker-compose (CentOS)
+* docker-compose-plugin (Ubuntu)
 
 Docker Compose needs to be installed on development machines.
 

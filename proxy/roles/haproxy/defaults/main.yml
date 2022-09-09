@@ -8,11 +8,9 @@ haproxy_default_client_hosts:
   - 0.0.0.0/0
 haproxy_default_max_conn: 500
 
-haproxy_stats_port: 81
+haproxy_stats_port: 8404
 haproxy_stats_tls_crt: null
 haproxy_stats_auth: null
-
-haproxy_prometheus_port: 8404
 
 haproxy_irods_port: 1247
 haproxy_irods_reconn_ports: 20000-20199

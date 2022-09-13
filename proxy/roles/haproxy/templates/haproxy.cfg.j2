@@ -109,7 +109,7 @@ frontend irods_indirect
 
 backend irods_direct
 {# XXX: Until we are load balancing iRODS servers, I'm disabling checks to prevent false positives #}
-  server                 ies {{ haproxy_irods_host if haproxy_irods_host|ansible.utils.ipaddr else lookup('dig', haproxy_irods_host) }}{# check inter {{ haproxy_irods_check_period }}#} maxconn {{ haproxy_irods_direct_max_conn }}
+  server                 irods {{ haproxy_irods_host if haproxy_irods_host|ansible.utils.ipaddr else lookup('dig', haproxy_irods_host) }}{# check inter {{ haproxy_irods_check_period }}#} maxconn {{ haproxy_irods_direct_max_conn }}
 {#  option tcp-check
  #  tcp-check connect
  #  tcp-check send-binary  0000006e

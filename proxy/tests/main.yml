@@ -41,15 +41,21 @@
           - haproxy is not search('\nlisten stats\n(  [^\n]*\n)*  stats auth')
           - haproxy is not search('\nlisten stats\n(  [^\n]*\n)*  stats realm')
 
-    - name: Verify haproxy config template expansion
+    - name: Verify haproxy config irods_main frontend
+      ansible.builtin.debug:
+        msg: TODO verify bind
+
+    - name: Verify haproxy config IRODS section
       ansible.builtin.debug:
         msg: TODO verify {{ item }}
       with_items:
-        - irods frontend
         - irods_reconn frontend
         - irods_throttled backend
         - irods_direct backend
-        - webdav listener
+
+    - name: Verify WEBDAV section
+      ansible.builtin.debug:
+        msg: TODO implement
 
 - name: Test VIP list template custom expansion
   hosts: localhost

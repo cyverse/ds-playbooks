@@ -16,10 +16,10 @@ short_description: Create an iRODS Unix filesystem storage resource
 
 version added: "2.11.11"
 
-description: An ansible module for creating an iRODS Unix filesystem storage
-resource
+description: 
+    - An ansible module for creating an iRODS Unix filesystem storage resource
 
-required variables:
+options:
     name:
         description:
             - the name of the resource
@@ -31,24 +31,54 @@ required variables:
             resource
         required: true
         type: str
-    vault:
+    vault_path:
         description:
             - the absolute path to the root directory of the vault
-
-optional variables:
+        required: true
+        type: str
     context:
         description:
             - any context to attach to this resource
+        required: false
         type: str
     status:
         description:
             - starting status 'up' or 'down'
-    init_free_space:
+        required: false
+        type: str
+    free_space:
         description:
             - amount of free space to allocate
+        required: false
+        type: int
+    host:
+        description:
+            - Hostname of the iRODS server
+        required: true
+        type: str
+    port:
+        description:
+            - Port of the iRODS server
+        required: true
+        type: int
+    admin_user:
+        description:
+            - Username of the admin user
+        required: true
+        type: str
+    admin_password:
+        description:
+            - Password of the admin user
+        required: true
+        type: str
+    zone:
+        description:
+            - Zone of the admin user
+        required: true
+        type: str
 
 author:
-    - Fenn Garnett
+    - Fenn Garnett (@Fennersteel)
 '''
 
 

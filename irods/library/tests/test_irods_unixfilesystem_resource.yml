@@ -11,12 +11,6 @@
     TEST_CONTEXT: context_message_here
     TEST_STATUS: up
     TEST_FREE_SPACE: 2000000
-  environment:
-    TEST_PORT: 1247
-    TEST_USER_NAME: rods
-    TEST_HOST: "{{ groups['irods_catalog'][0] }}"
-    TEST_PASSWORD: rods
-    TEST_ZONE_NAME: testing
   pre_tasks:
     - name: create test irods environment
       shell: |

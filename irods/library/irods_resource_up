@@ -99,6 +99,7 @@ class IRODSResourceUpModule:
         self.ssl_settings = {"ssl_context": self.ssl_context}
 
         self.session = None
+        self.failed = False
 
     def _init_session(self):
         try:
@@ -110,32 +111,29 @@ class IRODSResourceUpModule:
                 password=self.module.params["admin_password"],
                 zone=self.module.params["zone"],
                 **self.ssl_settings)
+            return True
         except Exception as exc:  # pylint: disable=broad-except
             self.result["exc"] = str(exc)
             self.result["exc_message"] = "Unable to connect to iRODS."
             self._fail(self.result["exc_message"])
+            return False
 
     def run(self):
         """
         Entry point for module class, method to be called to run the module
         """
         if self.module.check_mode:
-            self.module.exit_json(**self.result)
-
-        self._init_session()
-
-        if self._verify_resource() is True:
+            self._succeed()
+        elif self._init_session():
             try:
-                self._resource_up_recurse(self.module.params["resource"])
-                self.module.exit_json(**self.result)
+                if self._verify_resource():
+                    self._resource_up_recurse(self.module.params['resource'])
+                    self._succeed()
             except Exception as exc:  # pylint: disable=broad-except
                 self.result["exc"] = exc
-                self.result["exc_message"] = "Unable to set status", \
-                    " of resource to 'up'"
+                self.result["exc_message"] = \
+                    'Unable to fully bring up resource'
                 self._fail(str(self.result["exc_message"]))
-        else:
-            self._fail("Resource '{}' does not exist".format(
-                self.module.params["resource"]))
 
     def _resource_up(self, resc):
         current_status = self.session.resources.get(resc).status  # pylint: disable=no-member # noqa
@@ -145,26 +143,42 @@ class IRODSResourceUpModule:
             self.result["changed"] = True
 
     def _resource_up_recurse(self, resc):
-        self._resource_up(resc)
-        next_resc = self.session.resources.get(resc).parent  # pylint: disable=no-member # noqa
-
-        if next_resc:
-            self._resource_up_recurse(next_resc)
+        try:
+            self._resource_up(resc)
+            parent_id = self.session.resources.get(resc).parent  # pylint: disable=no-member # noqa
+            if parent_id:
+                results = self.session.query(Resource.name).filter(
+                    Criterion('=', Resource.id, parent_id))
+                for result in results:
+                    self._resource_up_recurse(result[Resource.name])
+        except Exception as exc:  # pylint: disable=broad-except
+            self.result["exc"] = str(exc)
+            self.result["exc_message"] = \
+                f"Failed to set status of resource '{resc}' to 'up'"
+            self._fail(self.result["exc_message"])
 
     def _verify_resource(self):
+        resc = self.module.params['resource']
         query = self.session.query(Resource).filter(
-            Criterion("=", Resource.name, self.module.params["resource"]))
-
-        return query.execute().length > 0
+            Criterion("=", Resource.name, resc))
+        if query.execute().length == 0:
+            self._fail(f"Resource {resc} does not exist")
+            return False
+        else:
+            return True
 
     def _fail(self, msg: str, err=None):
         if self.session:
             self.session.cleanup()
-
         if err:
             self.module.fail_json(msg=msg + "\n" + str(err), **self.result)
         else:
             self.module.fail_json(msg=msg)
+        self.failed = True
+
+    def _succeed(self):
+        if not self.failed:
+            self.module.exit_json(**self.result)
 
 
 def main():

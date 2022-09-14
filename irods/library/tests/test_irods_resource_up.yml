@@ -2,7 +2,7 @@
 - name: Test play for irods_resource_up module
   hosts: localhost
   vars:
-    test_rsc: replRes
+    test_rsc: ChildResc
     missing_rsc: missingRes
   pre_tasks:
     - name: Initialize irods session
@@ -10,6 +10,9 @@
         set -o errexit
         if ! [[ -e "$HOME/.irods/.irodsA" ]]; then
           iinit "$IRODS_PASSWORD" > /dev/null
+          iadmin mkresc ChildResc passthru
+          iadmin mkresc ParentResc passthru
+          iadmin addchildtoresc ParentResc ChildResc
           echo changed
         fi
       register: response
@@ -47,7 +50,7 @@
       register: response
 
     - name: test with non-existent resource
-      failed_when: response is success or response.msg != "Resource 'missingRes' does not exist"
+      failed_when: response is success or response.msg != "Resource missingRes does not exist"
       irods_resource_up:
         resource: "{{ missing_rsc }}"
         host: "{{ groups['irods_catalog'][0] }}"

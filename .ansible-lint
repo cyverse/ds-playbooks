@@ -1,0 +1,5 @@
+---
+offline: true
+
+kinds:
+  - playbook: "irods/library/tests/*.yml"

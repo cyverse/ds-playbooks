@@ -16,64 +16,53 @@ short_description: Create an iRODS Unix filesystem storage resource
 
 version added: "2.11.11"
 
-description: 
+description: >
     - An ansible module for creating an iRODS Unix filesystem storage resource
 
 options:
     name:
-        description:
-            - the name of the resource
+        description: the name of the resource
         required: true
         type: str
     host:
-        description:
-            - the FQDN or IP address of the resource server hosting this
+        description: the FQDN or IP address of the resource server hosting this
             resource
         required: true
         type: str
     vault_path:
-        description:
-            - the absolute path to the root directory of the vault
+        description: the absolute path to the root directory of the vault
         required: true
         type: str
     context:
-        description:
-            - any context to attach to this resource
+        description: any context to attach to this resource
         required: false
         type: str
     status:
-        description:
-            - starting status 'up' or 'down'
+        description: starting status 'up' or 'down'
         required: false
         type: str
     free_space:
-        description:
-            - amount of free space to allocate
+        description: amount of free space to allocate
         required: false
         type: int
     host:
-        description:
-            - Hostname of the iRODS server
+        description: hostname of the iRODS server
         required: true
         type: str
     port:
-        description:
-            - Port of the iRODS server
+        description: port of the iRODS server
         required: true
         type: int
     admin_user:
-        description:
-            - Username of the admin user
+        description: username of the admin user
         required: true
         type: str
     admin_password:
-        description:
-            - Password of the admin user
+        description: password of the admin user
         required: true
         type: str
     zone:
-        description:
-            - Zone of the admin user
+        description: zone of the admin user
         required: true
         type: str
 

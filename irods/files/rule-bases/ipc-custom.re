@@ -732,7 +732,7 @@ pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
 pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
 
   # checksum policy
-  *flags = _ipc_getValue(IDataObjInp, 'open_flags');
+  *flags = _ipc_getValue(*DataObjInp, 'open_flags');
   if (*flags != _ipc_OPEN_FLAG_R) {
     temporaryStorage.dataObjClose_objPath = _ipc_getValue(*DataObjInp, 'obj_path');
     temporaryStorage.dataObjClose_selectedHierarchy = _ipc_getValue(

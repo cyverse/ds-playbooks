@@ -702,7 +702,7 @@ pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
   temporaryStorage.dataObjClose_needsChecksum = 'checksum';
 
   # data object creation message publishing policy
-  tempoaryStorage.dataObjClose_created = 'created'
+  temporaryStorage.dataObjClose_created = 'created';
 }
 
 

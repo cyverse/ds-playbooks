@@ -499,13 +499,75 @@ _ipc_needsChecksum(*DataObjOpInp) =
 # Indicates that a file was created
 #
 # _ipc_FILE_CREATE : string
-_ipc_FILE_CREATE = '1';
+_ipc_FILE_CREATE = '1'
 
 
 # Indicates that a file was opened for writing
 #
 # _ipc_FILE_OPEN_WRITE : string
-_ipc_FILE_OPEN_WRITE = '3';
+_ipc_FILE_OPEN_WRITE = '3'
+
+
+# Indicates that a replica's open mode is 'r', i.e., read-only
+#
+# _ipc_OPEN_FLAG_R : string
+_ipc_OPEN_FLAG_R = '0'
+
+
+# Indicates that a replica's open mode is 'r+' or 'a+' no create, i.e., 
+# read-write, where writes append.
+#
+# _ipc_OPEN_FLAG_RP : string
+_ipc_OPEN_FLAG_RP = '2'
+
+
+# Indicates that a replicas's open mode is 'w' no create, i.e., write-only, 
+# where the replica is truncated.
+#
+# _ipc_OPEN_FLAG_W : string
+_ipc_OPEN_FLAG_W = '513'
+
+
+# Indicates that a replica's open mode is 'w' create, i.e., write-only, where
+# the replica need not exist, but if it does, it will be truncated.
+#
+# _ipc_OPEN_FLAG_W_CREATE : string
+_ipc_OPEN_FLAG_W_CREATE = '577'
+
+
+# Indicates that a replica's open mode is 'w+' no create, i.e., read-write, 
+# where the replica is truncated.
+#
+# _ipc_OPEN_FLAG_WP : string
+_ipc_OPEN_FLAG_WP = '514'
+
+
+# Indicates that a replica's open mode is 'w+' create, i.e., read-write, where 
+# the replica need not exist, but if it does, it will be truncated.
+#
+# _ipc_OPEN_FLAG_WP_CREATE : string
+_ipc_OPEN_FLAG_WP_CREATE = '578'
+
+
+# Indicates that a replica's open mode is 'a' no create, i.e., write-only, where 
+# writes append.
+#
+# _ipc_OPEN_FLAG_A : string
+_ipc_OPEN_FLAG_A = '1'
+
+
+# Indicates that a replica's open mode is 'a' create, i.e., write-only, where 
+# the replica need not exist and writes append. 
+#
+# _ipc_OPEN_FLAG_A_CREATE : string
+_ipc_OPEN_FLAG_A_CREATE = '65'
+
+
+# Indicates that a replica's open mode is 'a+' create, i.e., read-write, where 
+# the replica need not exist and writes append.
+#
+# _ipc_OPEN_FLAG_AP_CREATE : string
+_ipc_OPEN_FLAG_AP_CREATE = '66'
 
 
 # CHKSUM ALGORITHM:
@@ -648,25 +710,36 @@ pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
 #
 # CHKSUM ALGORITHM:
 # 
-# If open_flags aren't 0, and data_obj_write is called, compute a checksum 
+# CASE open_flags)
+#   'r': do nothing
+#   'r+': a write is possible, so record path and selected hierarchy
+#   'w':
+#     no create: truncation occurred, so needs checksum
+#     create:  possibly created, so needs checksum
+#   'w+':
+#     no create: truncation occurred, so needs checksum
+#     create: possibly created, so needs checksum
+#   'a':
+#     no create: a write is possibe, so record path and selected hierarchy
+#     create: possibly created, so needs checksum
+#   'a+':
+#     no create: indistinct from r+
+#     create:  possibly created, so needs checksum
 #
 # *DataObjInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gab869f78a9d131b1e973d425cd1ebf1f2
 #
-# r:   create_mode=0++++data_size=-1++++                         num_threads=0++++obj_path=/tempZone/home/centos/python-obj1++++offset=0++++              open_flags=0++  ++opr_type=0++++resc_hier=demoResc++++selected_hierarchy=demoResc
-# r+:  create_mode=0++++data_size=-1++++                         num_threads=0++++obj_path=/tempZone/home/centos/python-obj1++++offset=0++++              open_flags=2++  ++opr_type=0++++resc_hier=demoResc++++selected_hierarchy=demoResc
-# w:   create_mode=0++++data_size=-1++++destRescName=demoResc++++num_threads=0++++obj_path=/tempZone/home/centos/python-obj1++++offset=0++++openType=3++++open_flags=578++++opr_type=0++++resc_hier=demoResc++++selected_hierarchy=demoResc
-# w+:  create_mode=0++++data_size=-1++++destRescName=demoResc++++num_threads=0++++obj_path=/tempZone/home/centos/python-obj1++++offset=0++++openType=3++++open_flags=578++++opr_type=0++++resc_hier=demoResc++++selected_hierarchy=demoResc
-# a:   create_mode=0++++data_size=-1++++destRescName=demoResc++++num_threads=0++++obj_path=/tempZone/home/centos/python-obj1++++offset=0++++openType=3++++open_flags=66++ ++opr_type=0++++resc_hier=demoResc++++selected_hierarchy=demoResc
-# a+:  create_mode=0++++data_size=-1++++destRescName=demoResc++++num_threads=0++++obj_path=/tempZone/home/centos/python-obj1++++offset=0++++openType=3++++open_flags=66++ ++opr_type=0++++resc_hier=demoResc++++selected_hierarchy=demoResc
-#
 pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
 
   # checksum policy
-  if (_getValue(*DataObjInp, 'open_flags') != '0') {
+  *flags = _ipc_getValue(IDataObjInp, 'open_flags');
+  if (*flags != _ipc_OPEN_FLAG_R) {
     temporaryStorage.dataObjClose_objPath = _ipc_getValue(*DataObjInp, 'obj_path');
     temporaryStorage.dataObjClose_selectedHierarchy = _ipc_getValue(
       *DataObjInp, 'selected_hierarchy' );
+    if (*flags != _ipc_OPEN_FLAG_RP && *flags != _ipc_OPEN_FLAG_A) {
+      temporaryStorage.dataObjClose_needsChecksum = 'checksum';
+    }
   }
 
 #  *msg = 'pep_api_data_obj_open_post(\*Instance, \*Comm, \*DataObjInp) called\n'
@@ -686,9 +759,7 @@ pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
 pep_api_data_obj_write_post(*Instance, *Comm, *DataObjWriteInp, *DataObjWriteInpBBuf) {
 
   # checksum policy
-  if (_ipc_getValue(temporaryStorage, 'dataobjClose_objPath') != '') {
-    temporaryStorage.dataObjClose_needsChecksum = 'checksum';
-  }
+  temporaryStorage.dataObjClose_needsChecksum = 'checksum';
 
 #  *msg = 
 #    'pep_api_data_obj_write_post(\*Instance, \*Comm, \*DataObjWriteInp, \*DataObjWriteInpBBuf) called\n'
@@ -711,12 +782,10 @@ pep_api_data_obj_close_post(*Instance, *Comm, *DataObjCloseInp) {
 
   # checksum policy
   *path =  _ipc_getValue(temporaryStorage, 'dataObjClose_objPath');
-
   if (*path != '' && _ipc_getValue(temporaryStorage, 'dataObjClose_needsChecksum') != '') {
     *resc = _ipc_getValue(temporaryStorage, 'dataObjClose_selectedHierarchy');
     ipc_ensureReplicasChecksum(*path, *resc);
   }
-
   temporaryStorage.dataObjClose_objPath = '';
   temporaryStorage.dataObjClose_selectedHierarchy = '';
   temporaryStorage.dataObjClose_needsChecksum = '';

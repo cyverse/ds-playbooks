@@ -685,24 +685,24 @@ pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
 # CHKSUM ALGORITHM:
 #
 # Always compute checksum.
-
+#
+# DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM:
+#
+# Alway publish a data object create message.
+#
 # *DataObjInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gab5b8db16a4951cf048e88c8538d8aa56
 #
 pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
+  temporaryStorage.dataObjClose_objPath = _ipc_getValue(*DataObjInp, 'obj_path');
 
   # checksum policy
-  temporaryStorage.dataObjClose_objPath = _ipc_getValue(*DataObjInp, 'obj_path');
   temporaryStorage.dataObjClose_selectedHierarchy = _ipc_getValue(
     *DataObjInp, 'selected_hierarchy' );
   temporaryStorage.dataObjClose_needsChecksum = 'checksum';
 
-#  *msg = 'pep_api_data_obj_create_post(\*Instance, \*Comm, \*DataObjInp) called\n'
-#    ++ '\t\*Instance = *Instance\n'
-#    ++ '\t\*Comm = *Comm\n'
-#    ++ '\t\*DataObjInp = *DataObjInp';
-#
-#  writeLine('serverLog', *msg);
+  # data object creation message publishing policy
+  tempoaryStorage.dataObjClose_created = 'created'
 }
 
 
@@ -779,16 +779,26 @@ pep_api_data_obj_write_post(*Instance, *Comm, *DataObjWriteInp, *DataObjWriteInp
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#ga9dcea65009d7cc49ed0106f88540f431
 #
 pep_api_data_obj_close_post(*Instance, *Comm, *DataObjCloseInp) {
-
-  # checksum policy
   *path =  _ipc_getValue(temporaryStorage, 'dataObjClose_objPath');
-  if (*path != '' && _ipc_getValue(temporaryStorage, 'dataObjClose_needsChecksum') != '') {
-    *resc = _ipc_getValue(temporaryStorage, 'dataObjClose_selectedHierarchy');
-    ipc_ensureReplicasChecksum(*path, *resc);
+  if (*path != '') {
+
+    # checksum policy
+    if (_ipc_getValue(temporaryStorage, 'dataObjClose_needsChecksum') != '') {
+      *resc = _ipc_getValue(temporaryStorage, 'dataObjClose_selectedHierarchy');
+      ipc_ensureReplicasChecksum(*path, *resc);
+    }
+    temporaryStorage.dataObjClose_selectedHierarchy = '';
+    temporaryStorage.dataObjClose_needsChecksum = '';
+
+    # data object creation and modification message publishing policy
+    if (_ipc_getValue(temporaryStorage, 'dataObjClose_created') != '') {
+      *authorName = _ipc_getValue(*Comm, 'user_user_name');
+      *authorZone = _ipc_getValue(*Comm, 'user_rods_zone');
+      ipc_notifyDataObjCreated(*path, *authorName, *authorZone);
+    }
+
+    temporaryStorage.dataObjClose_objPath = '';
   }
-  temporaryStorage.dataObjClose_objPath = '';
-  temporaryStorage.dataObjClose_selectedHierarchy = '';
-  temporaryStorage.dataObjClose_needsChecksum = '';
 
 #  *msg = 'pep_api_data_obj_close_post(\*Instance, \*Comm, \*DataObjCloseInp) called\n'
 #    ++ '\t\*Instance = *Instance\n'

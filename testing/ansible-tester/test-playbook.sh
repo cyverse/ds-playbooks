@@ -159,9 +159,11 @@ setup_env() {
 
 wait_for_env() {
 	local inventory="$1"
-
-	printf 'waiting for environment to be ready\n'
-	ansible-playbook --inventory-file="$inventory" /wait-for-ready.yml > /dev/null
+	if ! output=$(ansible-playbook --inventory-file="$inventory" /wait-for-ready.yml); #> /dev/null
+	then
+		printf "failed to bring up the environment\n%s", "$output"
+		return 1
+	fi
 }
 
 

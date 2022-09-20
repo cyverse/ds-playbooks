@@ -8,7 +8,7 @@ from irods.session import iRODSSession
 from irods.exception import ResourceDoesNotExist
 
 
-DOCUMENTATION = '''
+DOCUMENTATION = r'''
 ---
 module: irods_unixfilesystem_resource
 
@@ -17,57 +17,57 @@ short_description: Create an iRODS Unix filesystem storage resource
 version added: "2.11.11"
 
 description: >
-    - An ansible module for creating an iRODS Unix filesystem storage resource
+  An ansible module for creating an iRODS Unix filesystem storage resource
 
 options:
-    name:
-        description: the name of the resource
-        required: true
-        type: str
-    host:
-        description: the FQDN or IP address of the resource server hosting this
-            resource
-        required: true
-        type: str
-    vault_path:
-        description: the absolute path to the root directory of the vault
-        required: true
-        type: str
-    context:
-        description: any context to attach to this resource
-        required: false
-        type: str
-    status:
-        description: starting status 'up' or 'down'
-        required: false
-        type: str
-    free_space:
-        description: amount of free space to allocate
-        required: false
-        type: int
-    host:
-        description: hostname of the iRODS server
-        required: true
-        type: str
-    port:
-        description: port of the iRODS server
-        required: true
-        type: int
-    admin_user:
-        description: username of the admin user
-        required: true
-        type: str
-    admin_password:
-        description: password of the admin user
-        required: true
-        type: str
-    zone:
-        description: zone of the admin user
-        required: true
-        type: str
+  name:
+    description: the name of the resource
+    required: true
+    type: string
+  location:
+    description: >
+      the identity of the resource server that will host this resource
+    required: true
+    type: str
+  vault:
+    description: the absolute path to the root directory of the vault
+    required: true
+    type: path
+  context:
+    description: any context to attach to this resource
+    required: false
+    type: str
+  status:
+    description: starting status 'up' or 'down'
+    required: false
+    type: str
+  free_space:
+    description: the current amount of free space in bytes 
+    required: false
+    type: int
+  host:
+    description: the FQN or IP address of the iRODS server to connect to
+    required: false
+    default: the value of `location` will be used
+    type: str
+  port:
+    description: port of the iRODS server
+    required: true
+    type: int
+  admin_user:
+    description: username of the admin user
+    required: true
+    type: str
+  admin_password:
+    description: password of the admin user
+    required: true
+    type: str
+  zone:
+    description: zone of the admin user
+      required: true
+      type: str
 
-author:
-    - Fenn Garnett (@Fennersteel)
+author: Fenn Garnett (@Fennersteel)
 '''
 
 
@@ -83,11 +83,12 @@ class IRODSUnixResourceModule:
         # define argument
         self.module_args = dict(
             name=dict(type="str", required=True),
-            vault_path=dict(type="str", required=True),
+            location=dict(type="str", required=True),
+            vault=dict(type="path", required=True),
             context=dict(type="str", required=False),
             status=dict(type="str", required=False),
             free_space=dict(type="int", required=False),
-            host=dict(type="str", required=True),
+            host=dict(type='str', required=False),
             port=dict(type="int", required=True),
             admin_user=dict(type="str", no_log=True, required=True),
             admin_password=dict(type="str", no_log=True, required=True),
@@ -106,6 +107,8 @@ class IRODSUnixResourceModule:
             argument_spec=self.module_args,
             supports_check_mode=True
         )
+        if not self.module.params["host"]:
+            self.module.params["host"] = self.module.params["location"]
         self.ssl_context = ssl.create_default_context(
             purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None,
             cadata=None)
@@ -115,18 +118,13 @@ class IRODSUnixResourceModule:
     def _init_session(self):
         try:
             self.session = iRODSSession(
-                vault_path=self.module.params["vault_path"],
-                context=self.module.params["context"],
-                status=self.module.params["status"],
-                name=self.module.params["name"],
-                free_space=self.module.params["free_space"],
                 host=self.module.params["host"],
                 port=self.module.params["port"],
                 user=self.module.params["admin_user"],
                 password=self.module.params["admin_password"],
                 zone=self.module.params["zone"],
-                **self.ssl_settings)
-
+                **self.ssl_settings
+            )
         except Exception as exc:  # pylint: disable=broad-except
             self.result["exc"] = exc
             self.result["exc_message"] = "Unable to connect to iRODS."
@@ -170,8 +168,8 @@ class IRODSUnixResourceModule:
                 self.session.resources.create(
                     self.module.params["name"],
                     "unixfilesystem",
-                    self.module.params["host"],
-                    self.module.params["vault_path"],
+                    self.module.params["location"],
+                    self.module.params["vault"],
                     self.module.params["context"],
                     self.module.params["zone"],
                     "cache"

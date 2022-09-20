@@ -3,28 +3,31 @@
   hosts: localhost
   gather_facts: false
   vars:
-    TEST_RSC_NAME: test_unix_rsc
-    TEST_RSC_NAME2: test_unix_rsc2
-    TEST_HOST_NAME: "{{ groups['irods_catalog'][0] }}"
-    TEST_VAULT_PATH: /irods/test_vault
-    TEST_VAULT_PATH2: /irods/test_vault2
-    TEST_CONTEXT: context_message_here
-    TEST_STATUS: up
-    TEST_FREE_SPACE: 2000000
+    rs: "{{ groups['irods_catalog'][0] }}"
+    default_resc_vault: /irods/test_vault
+    default_resc_name: defaultRes
+    options_resc_name: optionsRes
+    options_resc_vault: /irods/test_vault2
+    options_resc_context: context_message_here
+    options_resc_status: up
+    options_resc_free_space: 2000000
   pre_tasks:
     - name: create test irods environment
       shell: |
         set -o errexit
-        iinit "$IRODS_PASSWORD"
-      tags: 
-        - non_idempotent
+        if ! [[ -e /var/lib/.irods/.irodsA ]]; then
+          iinit "$IRODS_PASSWORD"
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
 
   tasks:
     - name: run script without optional vars
       irods_unixfilesystem_resource:
-        name: "{{ TEST_RSC_NAME }}"
-        host: "{{ TEST_HOST_NAME }}"
-        vault_path: "{{ TEST_VAULT_PATH }}"
+        name: "{{ default_resc_name }}"
+        host: "{{ rs }}"
+        vault: "{{ default_resc_vault }}"
         port: 1247
         admin_user: rods
         admin_password: rods
@@ -33,50 +36,66 @@
 
     - name: run script with optional vars
       irods_unixfilesystem_resource:
-        name: "{{ TEST_RSC_NAME2 }}"
-        host: "{{ TEST_HOST_NAME }}"
-        vault_path: "{{ TEST_VAULT_PATH2 }}"
-        context: "{{ TEST_CONTEXT }}"
-        status: "{{ TEST_STATUS }}"
-        free_space: " {{ TEST_FREE_SPACE }} "
+        name: "{{ options_resc_name }}"
+        host: "{{ rs }}"
+        vault: "{{ options_resc_vault }}"
+        context: "{{ options_resc_context }}"
+        status: "{{ options_resc_status }}"
+        free_space: " {{ options_resc_free_space }} "
         port: 1247
         admin_user: rods
         admin_password: rods
         zone: testing
       register: response
 
-    - name: check resource name
+    - name: check resource names
       shell: |
         set -o errexit
-        test "$(iquest %s "SELECT RESC_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME }}'")" == '{{ TEST_RSC_NAME }}'
-        test "$(iquest %s "SELECT RESC_NAME WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" == '{{ TEST_RSC_NAME2 }}'
+        test \
+          "$(iquest %s "SELECT RESC_NAME WHERE RESC_NAME = '{{ default_resc_name }}'")" \
+          = '{{ default_resc_name }}'
+        test \
+          "$(iquest %s "SELECT RESC_NAME WHERE RESC_NAME = '{{ options_resc_name }}'")" \
+          = '{{ options_resc_name }}'
       changed_when: false
 
     - name: check resource path
       shell: |
         set -o errexit
-        test "$(iquest %s "SELECT RESC_VAULT_PATH WHERE RESC_NAME = '{{ TEST_RSC_NAME }}'")" == '{{ TEST_VAULT_PATH }}'
-        test "$(iquest %s "SELECT RESC_VAULT_PATH WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" == '{{ TEST_VAULT_PATH2 }}'
+        test \
+          "$(iquest %s "SELECT RESC_VAULT_PATH WHERE RESC_NAME = '{{ default_resc_name }}'")" \
+          = '{{ default_resc_vault }}'
+        test \
+          "$(iquest %s "SELECT RESC_VAULT_PATH WHERE RESC_NAME = '{{ options_resc_name }}'")" \
+          = '{{ options_resc_vault }}'
       changed_when: false
 
     - name: check resource host
       shell: |
         set -o errexit
-        test "$(iquest %s "SELECT RESC_LOC WHERE RESC_NAME = '{{ TEST_RSC_NAME }}'")" == '{{ TEST_HOST_NAME }}'
-        test "$(iquest %s "SELECT RESC_LOC WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" == '{{ TEST_HOST_NAME }}'
+        test \
+          "$(iquest %s "SELECT RESC_LOC WHERE RESC_NAME = '{{ default_resc_name }}'")" = '{{ rs }}'
+        test \
+          "$(iquest %s "SELECT RESC_LOC WHERE RESC_NAME = '{{ options_resc_name }}'")" = '{{ rs }}'
       changed_when: false
 
     - name: check resource context
       shell: |
-        test "$(iquest %s "SELECT RESC_CONTEXT WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" = '{{ TEST_CONTEXT }}'
+        test \
+          "$(iquest %s "SELECT RESC_CONTEXT WHERE RESC_NAME = '{{ options_resc_name }}'")" \
+          = '{{ options_resc_context }}'
       changed_when: false
 
     - name: check resource status
       shell: |
-        test "$(iquest %s "SELECT RESC_STATUS WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" = '{{ TEST_STATUS }}'
+        test \
+          "$(iquest %s "SELECT RESC_STATUS WHERE RESC_NAME = '{{ options_resc_name }}'")" \
+          = '{{ options_resc_status }}'
       changed_when: false
 
     - name: check init_free_space
       shell: |
-        test "$(iquest %s "SELECT RESC_FREE_SPACE WHERE RESC_NAME = '{{ TEST_RSC_NAME2 }}'")" = '{{ TEST_FREE_SPACE }}'
+        test \
+          "$(iquest %s "SELECT RESC_FREE_SPACE WHERE RESC_NAME = '{{ options_resc_name }}'")" \
+          = '{{ options_resc_free_space }}'
       changed_when: false

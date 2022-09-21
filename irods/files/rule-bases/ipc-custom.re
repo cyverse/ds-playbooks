@@ -570,6 +570,17 @@ _ipc_OPEN_FLAG_A_CREATE = '65'
 _ipc_OPEN_FLAG_AP_CREATE = '66'
 
 
+# Determines if a data object was truncted on open.
+#
+# Parameters:
+#  *OpenFlags  the open flag set
+#
+# _ipc_replTruncated: string -> bool
+_ipc_replTruncated(*OpenFlags) = 
+  *OpenFlags == _ipc_OPEN_FLAG_W || *OpenFlags == _ipc_OPEN_FLAG_W_CREATE || 
+  *OpenFlags == _ipc_OPEN_FLAG_WP || *OpenFlags == _ipc_OPEN_FLAG_WP_CREATE
+
+
 # CHKSUM ALGORITHM:
 #
 # If neither *BulkOpInp.regChksum nor *BulkOpInp.verifyChksum exist, calculate 
@@ -684,11 +695,20 @@ pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
 #
 # CHKSUM ALGORITHM:
 #
-# Always compute checksum.
+# Always compute checksum. Store the path to the data object and the selected 
+# resource hierarchy for its replica in temporyStorage using the keys 
+# `dataObjClose_objPath` and `dataObjClose_selectedHierarchy`, respectively. 
+# Also, set the temporaryStorage key `dataObjClose_needsChecksum` to some value.
+# `data_obj_close` will use the existence of this key and the other two values
+# to compute the checksum of the indicated replica.
 #
 # DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM:
 #
-# Alway publish a data object create message.
+# Alway publish a data object create message. Store the path to the data object 
+# in temporyStorage using the key `dataObjClose_objPath`. Also, set the 
+# temporaryStorage key `dataObjClose_created` to some value. `data_obj_close` 
+# will use the existence of this key and the other object's path to publish a 
+# data object create message.
 #
 # *DataObjInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gab5b8db16a4951cf048e88c8538d8aa56
@@ -708,46 +728,75 @@ pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
 
 # data_obj_open, data_obj_write, and data_obj_close are used together
 #
-# CHKSUM ALGORITHM:
-# 
-# CASE open_flags)
+# How *DataObjInp.open_flags maps to the open mode, and what this means when 
+# combined with the value of *DataObjInp.openType.
+
+# case open_flags)
 #   'r': do nothing
-#   'r+': a write is possible, so record path and selected hierarchy
-#   'w':
-#     no create: truncation occurred, so needs checksum
-#     create:  possibly created, so needs checksum
+#   'r+': a write is possible
+#   'w': 
+#     no create: truncated
+#     create:  created or truncated
 #   'w+':
-#     no create: truncation occurred, so needs checksum
-#     create: possibly created, so needs checksum
+#     no create: truncated
+#     create: created or truncated
 #   'a':
-#     no create: a write is possibe, so record path and selected hierarchy
-#     create: possibly created, so needs checksum
+#     no create: a write is possible
+#     create: possibly created and a write is possible
 #   'a+':
 #     no create: indistinct from r+
-#     create:  possibly created, so needs checksum
+#     create:  possibly created and a write is possible
+#
+# CHECKSUM ALGORITHM:
+#
+# A checksum can only be computed after the replica has been modified, so this
+# needs to happen in data_obj_close. Only when a change occurs does a checksum 
+# need to be computed. A change won't occur if the open mode was 'r'. If the 
+# mode isn't 'r', store the data object's path and the resource holding its 
+# replica for use by data_obj_close. A change definitely occured when a replica 
+# is created or truncated, so if this happens, store a flag to let 
+# `data_obj_close` know that it needs to perform a checksum. If a replica is 
+# written to, it has also been modified, so  `data_obj_write` needs to store a 
+# flag to let `data_obj_close` know this has happened.
+#
+# DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM:
+#
+# The decision on whether or not to publish a message will occur in 
+# `data_obj_close`. Only when a change occurs does a message need to be 
+# published. A change won't occur if the open mode was 'r'. If the mode isn't 
+# 'r', store the data object's path and for use by `data_obj_close`. A change 
+# definitely occured when a data object is created or truncated. If an object is  
+# created, store a flag indicating that a create message should be published. If 
+# an existing object was truncated, store a flag indicating that a modify 
+# message should be published. If an object is written to, it has also been 
+# modified, so `data_obj_write` needs to store the flag indicated a modify 
+# message should be published. `data_obj_close` will use the flags along with 
+# the path to publish the correct message.
 #
 # *DataObjInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gab869f78a9d131b1e973d425cd1ebf1f2
 #
 pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
-
-  # checksum policy
   *flags = _ipc_getValue(*DataObjInp, 'open_flags');
   if (*flags != _ipc_OPEN_FLAG_R) {
     temporaryStorage.dataObjClose_objPath = _ipc_getValue(*DataObjInp, 'obj_path');
+
+    # checksum policy
     temporaryStorage.dataObjClose_selectedHierarchy = _ipc_getValue(
       *DataObjInp, 'selected_hierarchy' );
-    if (*flags != _ipc_OPEN_FLAG_RP && *flags != _ipc_OPEN_FLAG_A) {
+    if (_ipc_getValue(*DataObjInp, 'openType', _ipc_FILE_CREATE)) {
+      temporaryStorage.dataObjClose_needsChecksum = 'checksum';
+    } else if (_ipc_replTruncated(*flags)) {
       temporaryStorage.dataObjClose_needsChecksum = 'checksum';
     }
-  }
 
-#  *msg = 'pep_api_data_obj_open_post(\*Instance, \*Comm, \*DataObjInp) called\n'
-#    ++ '\t\*Instance = *Instance\n'
-#    ++ '\t\*Comm = *Comm\n'
-#    ++ '\t\*DataObjInp = *DataObjInp';
-#
-#  writeLine('serverLog', *msg);
+    # data object creation and modification message publishing policy
+    if (_ipc_getValue(*DataObjInp, 'openType', _ipc_FILE_CREATE)) {
+      temporaryStorage.dataObjClose_created = 'created';
+    } else if (_ipc_replTruncated(*flags)) {
+      temporaryStorage.dataObjClose_modified = 'modified';
+    }
+  }
 }
 
 
@@ -761,14 +810,8 @@ pep_api_data_obj_write_post(*Instance, *Comm, *DataObjWriteInp, *DataObjWriteInp
   # checksum policy
   temporaryStorage.dataObjClose_needsChecksum = 'checksum';
 
-#  *msg = 
-#    'pep_api_data_obj_write_post(\*Instance, \*Comm, \*DataObjWriteInp, \*DataObjWriteInpBBuf) called\n'
-#    ++ '\t\*Instance = *Instance\n'
-#    ++ '\t\*Comm = *Comm\n'
-#    ++ '\t\*DataObjWriteInp = *DataObjWriteInp\n'
-#    ++ '\t\*DataObjWriteInpBBuf = *DataObjWriteInpBBuf';
-#
-#  writeLine('serverLog', *msg);
+  # data object creation and modification message publishing policy
+  temporaryStorage.dataObjClose_modified = 'modified';
 }
 
 
@@ -791,21 +834,18 @@ pep_api_data_obj_close_post(*Instance, *Comm, *DataObjCloseInp) {
     temporaryStorage.dataObjClose_needsChecksum = '';
 
     # data object creation and modification message publishing policy
+    *authorName = _ipc_getValue(*Comm, 'user_user_name');
+    *authorZone = _ipc_getValue(*Comm, 'user_rods_zone');
     if (_ipc_getValue(temporaryStorage, 'dataObjClose_created') != '') {
-      *authorName = _ipc_getValue(*Comm, 'user_user_name');
-      *authorZone = _ipc_getValue(*Comm, 'user_rods_zone');
       ipc_notifyDataObjCreated(*path, *authorName, *authorZone);
+    } else if (_ipc_getValue(temporaryStorage, 'dataObjClose_modified') != '') {      
+      ipc_notifyDataObjMod(*path, *authorName, *authorZone); 
     }
+    temporaryStorage.dataObjClose_created = '';
+    temporaryStorage.dataObjClose_modified = '';
 
     temporaryStorage.dataObjClose_objPath = '';
   }
-
-#  *msg = 'pep_api_data_obj_close_post(\*Instance, \*Comm, \*DataObjCloseInp) called\n'
-#    ++ '\t\*Instance = *Instance\n'
-#    ++ '\t\*Comm = *Comm\n'
-#    ++ '\t\*DataObjCloseInp = *DataObjCloseInp';
-#
-#  writeLine('serverLog', *msg);
 }
 
 

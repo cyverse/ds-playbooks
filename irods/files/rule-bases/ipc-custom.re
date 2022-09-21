@@ -434,47 +434,6 @@ _ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 
 ## API ##
 
-# Common input types
-#
-# *Comm:
-#   auth_scheme
-#   client_addr
-#   proxy_auth_info_auth_flag
-#   proxy_auth_info_auth_scheme
-#   proxy_auth_info_auth_str
-#   proxy_auth_info_flag
-#   proxy_auth_info_host
-#   proxy_auth_info_ppid
-#   proxy_rods_zone
-#   proxy_sys_uid
-#   proxy_user_name
-#   proxy_user_other_info_user_comments
-#   proxy_user_other_info_user_create
-#   proxy_user_other_info_user_info
-#   proxy_user_other_info_user_modify
-#   proxy_user_type
-#   user_auth_info_auth_flag
-#   user_auth_info_auth_scheme
-#   user_auth_info_auth_str
-#   user_auth_info_flag
-#   user_auth_info_host
-#   user_auth_info_ppid
-#   user_rods_zone
-#   user_sys_uid
-#   user_user_name
-#   user_user_other_info_user_comments
-#   user_user_other_info_user_create
-#   user_user_other_info_user_info
-#   user_user_other_info_user_modify
-#   user_user_type
-#
-# *Instance: string
-#
-# *JSON_INPUT:
-#   buf
-#   len
-
-
 # Tests to see if the given map contains the given key
 #
 #_ipc_hasKey : `KEYVALPAIR_MS_T` * string -> bool
@@ -599,10 +558,6 @@ _ipc_replTruncated(*OpenFlags) =
 # *BulkOpInp: 
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gafeecbd87f6ba164e8c1d189c42a8c93e
 #
-# *BulkOpInpBBuf:
-#   buf
-#   len
-#
 # N.B. This can be triggered by `iput -b -r`.
 # N.B. `-k` adds `regChksum` to BulkOpInp.
 # N.B. `-K` adds `verifyChksum` to BUKOPRINP.
@@ -611,6 +566,7 @@ _ipc_replTruncated(*OpenFlags) =
 # N.B. large files are not passed through rcBulkDataObjPut
 #
 pep_api_bulk_data_obj_put_post(*Instance, *Comm, *BulkOpInp, *BulkOpInpBBuf) {
+
   # checksum sum policy
   if (_ipc_needsChecksum(*BulkOpInp)) {
     foreach (*key in *BulkOpInp) {
@@ -664,8 +620,6 @@ pep_api_bulk_data_obj_put_post(*Instance, *Comm, *BulkOpInp, *BulkOpInpBBuf) {
 # *DataObjCopyInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gaad62fbc609d67726e15e7330bbbdf98d
 #
-# *TransStat: *NOT SUPPORTED*
-#
 pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
   *destPath = _ipc_getValue(*DataObjCopyInp, 'dst_obj_path');
 
@@ -709,7 +663,7 @@ pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
 # temporaryStorage key `dataObjClose_created` to some value. `data_obj_close` 
 # will use the existence of this key and the other object's path to publish a 
 # data object create message.
-#
+
 # *DataObjInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gab5b8db16a4951cf048e88c8538d8aa56
 #
@@ -730,22 +684,22 @@ pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
 #
 # How *DataObjInp.open_flags maps to the open mode, and what this means when 
 # combined with the value of *DataObjInp.openType.
-
-# case open_flags)
-#   'r': do nothing
-#   'r+': a write is possible
-#   'w': 
-#     no create: truncated
-#     create:  created or truncated
-#   'w+':
-#     no create: truncated
-#     create: created or truncated
-#   'a':
-#     no create: a write is possible
-#     create: possibly created and a write is possible
-#   'a+':
-#     no create: indistinct from r+
-#     create:  possibly created and a write is possible
+#
+#    case open_flags)
+#       'r': do nothing
+#       'r+': a write is possible
+#       'w': 
+#           no create: truncated
+#           create:  created or truncated
+#       'w+':
+#           no create: truncated
+#           create: created or truncated
+#       'a':
+#           no create: a write is possible
+#           create: possibly created and a write is possible
+#       'a+':
+#           no create: indistinct from r+
+#           create:  possibly created and a write is possible
 #
 # CHECKSUM ALGORITHM:
 #
@@ -772,12 +726,13 @@ pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
 # modified, so `data_obj_write` needs to store the flag indicated a modify 
 # message should be published. `data_obj_close` will use the flags along with 
 # the path to publish the correct message.
-#
+
 # *DataObjInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gab869f78a9d131b1e973d425cd1ebf1f2
 #
 pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
   *flags = _ipc_getValue(*DataObjInp, 'open_flags');
+
   if (*flags != _ipc_OPEN_FLAG_R) {
     temporaryStorage.dataObjClose_objPath = _ipc_getValue(*DataObjInp, 'obj_path');
 
@@ -799,9 +754,6 @@ pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
   }
 }
 
-
-# data_obj_write is used with data_obj_open and data_obj_close
-#
 # *DataObjWriteInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gaaa88dd8ad00161d5c48115bebbe6866c
 #
@@ -815,14 +767,12 @@ pep_api_data_obj_write_post(*Instance, *Comm, *DataObjWriteInp, *DataObjWriteInp
 }
 
 
-# data_obj_close is used with either data_obj_create or data_obj_open and 
-# data_obj_write
-#
 # *DataObjCloseInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#ga9dcea65009d7cc49ed0106f88540f431
 #
 pep_api_data_obj_close_post(*Instance, *Comm, *DataObjCloseInp) {
   *path =  _ipc_getValue(temporaryStorage, 'dataObjClose_objPath');
+
   if (*path != '') {
 
     # checksum policy
@@ -862,12 +812,6 @@ pep_api_data_obj_close_post(*Instance, *Comm, *DataObjCloseInp) {
 #
 # *DataObjInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#ga1b1d0d95bd1cbc6f07860d6f8174371f
-#
-# *DataObjInpBBuf:
-#   buf
-#   len
-#
-# *PORTAL_OPR_OUT: *NOT SUPPORTED*
 #
 pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT) {
   *path = _ipc_getValue(*DataObjInp, 'obj_path');
@@ -953,8 +897,6 @@ pep_api_phy_path_reg_post(*Instance, *Comm, *PhyPathRegInp) {
 
 # *DataObjInp: https://docs.irods.org/4.2.10/doxygen/structDataObjInp.html
 #
-# *JSON_OUTPUT : *NOT SUPPORTED*
-#
 pep_api_replica_open_post(*Instance, *Comm, *DataObjInp, *JSON_OUTPUT) {
   *path = _ipc_getValue(*DataObjInp, 'obj_path');
 
@@ -973,6 +915,7 @@ pep_api_replica_open_post(*Instance, *Comm, *DataObjInp, *JSON_OUTPUT) {
 
 pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
   *path = _ipc_getValue(temporaryStorage, 'replica_dataObjPath');
+
   if (*path != '') {
 
     # checksum policy
@@ -984,6 +927,7 @@ pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
     if (!*chksumComputed) {
       ipc_ensureReplicasChecksum(*path, _ipc_getValue(temporaryStorage, 'replica_rescHier'));
     }
+    temporaryStorage.replica_rescHier = '';
 
     # data object creation and modification message publishing policy
     *authorName = _ipc_getValue(*Comm, 'user_user_name');
@@ -993,11 +937,10 @@ pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
     } else {
       ipc_notifyDataObjMod(*path, *authorName, *authorZone);
     }
+    temporaryStorage.replica_openType = '';
   }
 
   temporaryStorage.replica_dataObjPath = '';
-  temporaryStorage.replica_rescHier = '';
-  temporaryStorage.replica_openType = '';
 }
 
 

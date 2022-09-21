@@ -784,14 +784,14 @@ pep_api_data_obj_open_post(*Instance, *Comm, *DataObjInp) {
     # checksum policy
     temporaryStorage.dataObjClose_selectedHierarchy = _ipc_getValue(
       *DataObjInp, 'selected_hierarchy' );
-    if (_ipc_getValue(*DataObjInp, 'openType', _ipc_FILE_CREATE)) {
+    if (_ipc_getValue(*DataObjInp, 'openType') == _ipc_FILE_CREATE) {
       temporaryStorage.dataObjClose_needsChecksum = 'checksum';
     } else if (_ipc_replTruncated(*flags)) {
       temporaryStorage.dataObjClose_needsChecksum = 'checksum';
     }
 
     # data object creation and modification message publishing policy
-    if (_ipc_getValue(*DataObjInp, 'openType', _ipc_FILE_CREATE)) {
+    if (_ipc_getValue(*DataObjInp, 'openType') == _ipc_FILE_CREATE) {
       temporaryStorage.dataObjClose_created = 'created';
     } else if (_ipc_replTruncated(*flags)) {
       temporaryStorage.dataObjClose_modified = 'modified';

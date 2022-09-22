@@ -22,9 +22,14 @@
     - name: define storage resource
       irods_unixfilesystem_resource:
         name: "{{ item.name }}"
-        host: "{{ inventory_hostname }}"
+        location: "{{ inventory_hostname }}"
         vault: "{{ item.vault }}"
         context: "{{ item.context }}"
         status: down
         init_free_space: true
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"
+
       with_items: "{{ _irods_storage_resources }}"

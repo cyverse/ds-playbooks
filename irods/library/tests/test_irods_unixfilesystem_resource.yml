@@ -31,7 +31,6 @@
         admin_user: rods
         admin_password: rods
         zone: testing
-      register: response
 
     - name: run script with optional vars
       irods_unixfilesystem_resource:
@@ -46,7 +45,6 @@
         admin_user: rods
         admin_password: rods
         zone: testing
-      register: response
 
     - name: check resource names
       shell: |

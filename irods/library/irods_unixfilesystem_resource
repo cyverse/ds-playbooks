@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 """Provide irods_unixfilesystem_resource Ansible module"""
 
-from typing import Any
+from typing import Any, Optional
 from ansible.module_utils.basic import AnsibleModule
 from irods.exception import ResourceDoesNotExist
-from irods.resource import iRODSResource
 from irods.session import iRODSSession
 
 
@@ -43,7 +42,7 @@ options:
     required: false
     type: str
   free_space:
-    description: the current amount of free space in bytes 
+    description: the current amount of free space in bytes
     required: false
     type: int
   host:
@@ -73,7 +72,9 @@ author: Fenn Garnett (@Fennersteel)
 
 
 class _IRODSError(Exception):
+
     def __init__(self, message: str, cause: Exception = None):
+        super().__init__()
         self._message = message
         self._cause = cause
 
@@ -81,11 +82,12 @@ class _IRODSError(Exception):
         return self._message
 
     @property
-    def cause(self) -> Exception:
+    def cause(self) -> Optional[Exception]:
+        """the cause of the error"""
         return self._cause
 
 
-class IRODSUnixResourceModule:
+class IRODSUnixResourceModule:  # pylint: disable=too-few-public-methods
     """
     Module class
     """
@@ -113,7 +115,6 @@ class IRODSUnixResourceModule:
         if not self._module.params["host"]:
             self._module.params["host"] = self._module.params["location"]
         self._result = dict(changed=False, response="", exc="", exc_msg="")
-        self._failed = False
 
     def run_module(self):
         """
@@ -122,13 +123,12 @@ class IRODSUnixResourceModule:
         if self._module.check_mode:
             self._module.exit_json(**self._result)
             return
-        with self._init_session() as session:
-            try:
+        try:
+            with self._init_session() as session:
                 self._ensure_resource_exists(session)
-            except _IRODSError as err:
-                self._fail(msg="Unable to run module.", exc=exc)
-        if not self._failed:
-            self._module.exit_json()
+            self._module.exit_json(**self._result)
+        except _IRODSError as err:
+            self._fail(err)
 
     def _init_session(self) -> iRODSSession:
         try:
@@ -140,24 +140,39 @@ class IRODSUnixResourceModule:
                 zone=self._module.params["zone"],
             )
         except Exception as exc:  # pylint: disable=broad-except
-            self._fail(msg="unable to connect to iRODS server", exc=exc)
+            raise _IRODSError(
+                message="unable to connect to iRODS server", cause=exc
+            ) from exc
 
     def _ensure_resource_exists(self, session: iRODSSession):
         if not self._resource_exists(session):
             self._create_resource(session)
-        if not self._failed and self._module.params["free_space"]:
+        else:
+            self._ensure_attribute(
+                session=session, attribute="type", value="unixfilesystem")
+            self._ensure_attribute(
+                session=session,
+                attribute="location",
+                value=self._module.params["location"],
+            )
+            self._ensure_attribute(
+                session=session,
+                attribute="vault_path",
+                value=self._module.params["vault"],
+            )
+        if self._module.params["free_space"]:
             self._ensure_attribute(
                 session=session,
                 attribute="free_space",
                 value=self._module.params["free_space"],
             )
-        if not self._failed and self._module.params["status"]:
+        if self._module.params["status"]:
             self._ensure_attribute(
                 session=session,
                 attribute="status",
                 value=self._module.params["status"],
             )
-        if not self._failed and self._module.params["context"]:
+        if self._module.params["context"]:
             self._ensure_attribute(
                 session=session,
                 attribute="context",
@@ -171,24 +186,31 @@ class IRODSUnixResourceModule:
                 resource_type="unixfilesystem",
                 host=self._module.params["location"],
                 path=self._module.params["vault"],
-                zone=self._module.params["zone"],
             )
             self._result["changed"] = True
         except Exception as exc:  # pylint: disable=broad-except
-            self._fail(msg="unable to create resource", exc=exc)
+            raise _IRODSError(
+                message="unable to create resource", cause=exc
+            ) from exc
 
-    def _ensure_attribute(self, session: iRODSSession, attribute: str, value: Any):
+    def _ensure_attribute(
+        self, session: iRODSSession, attribute: str, value: Any
+    ):
         try:
             current_value = getattr(
                 session.resources.get(self._module.params["name"]), attribute
             )
-            if current_value != value:
+            if not current_value or str(current_value) != str(value):
                 session.resources.modify(
-                    name=self._module.params["name"], attribute=attribute, value=value
+                    name=self._module.params["name"],
+                    attribute=attribute,
+                    value=value,
                 )
                 self._result["changed"] = True
         except Exception as exc:  # pylint: disable=broad-except
-            self._fail(msg=f"unable to modify {attribute}", exc=exc)
+            raise _IRODSError(
+                message=f"unable to modify {attribute}", cause=exc
+            ) from exc
 
     def _resource_exists(self, session: iRODSSession) -> bool:
         try:
@@ -197,12 +219,12 @@ class IRODSUnixResourceModule:
         except ResourceDoesNotExist:
             return False
 
-    def _fail(self, msg: str = "", exc: Exception = None):
-        self._failed = True
-        if exc:
-            self._result["exc"] = type(exc).__name__
-            self._result["exc_msg"] = str(exc)
-        fail_msg = "\n".join(filter(lambda x: x != "", [msg, self._result["exc_msg"]]))
+    def _fail(self, err: _IRODSError):
+        if err.cause:
+            self._result["exc"] = type(err.cause).__name__
+            self._result["exc_msg"] = str(err.cause)
+        fail_msg = "\n".join(
+            filter(lambda x: x != "", [str(err), self._result["exc_msg"]]))
         self._module.fail_json(msg=fail_msg, **self._result)
 
 
@@ -210,11 +232,7 @@ def main():
     """
     Entrypoint of the Ansible module
     """
-    try:
-        module = IRODSUnixResourceModule()
-        module.run_module()
-    except Exception:  # pylint: disable=broad-except
-        pass
+    IRODSUnixResourceModule().run_module()
 
 
 if __name__ == "__main__":

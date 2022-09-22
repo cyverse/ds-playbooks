@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 """Provide irods_unixfilesystem_resource Ansible module"""
 
-import ssl
+from typing import Any
 from ansible.module_utils.basic import AnsibleModule
-from irods.session import iRODSSession
 from irods.exception import ResourceDoesNotExist
+from irods.resource import iRODSResource
+from irods.session import iRODSSession
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: irods_unixfilesystem_resource
 
@@ -68,7 +69,20 @@ options:
       type: str
 
 author: Fenn Garnett (@Fennersteel)
-'''
+"""
+
+
+class _IRODSError(Exception):
+    def __init__(self, message: str, cause: Exception = None):
+        self._message = message
+        self._cause = cause
+
+    def __str__(self) -> str:
+        return self._message
+
+    @property
+    def cause(self) -> Exception:
+        return self._cause
 
 
 class IRODSUnixResourceModule:
@@ -80,127 +94,116 @@ class IRODSUnixResourceModule:
         """
         Initialize the module
         """
-        # define argument
-        self.module_args = dict(
+        module_args = dict(
             name=dict(type="str", required=True),
             location=dict(type="str", required=True),
             vault=dict(type="path", required=True),
             context=dict(type="str", required=False),
             status=dict(type="str", required=False),
             free_space=dict(type="int", required=False),
-            host=dict(type='str', required=False),
+            host=dict(type="str", required=False),
             port=dict(type="int", required=True),
             admin_user=dict(type="str", no_log=True, required=True),
             admin_password=dict(type="str", no_log=True, required=True),
             zone=dict(type="str", required=True),
         )
-        # result
-        self.result = dict(
-            changed=False,
-            response="",
-            exc="",
-            exc_msg=""
+        self._module = AnsibleModule(
+            argument_spec=module_args, supports_check_mode=True
         )
-        self.failed = False
-        # init module
-        self.module = AnsibleModule(
-            argument_spec=self.module_args,
-            supports_check_mode=True
-        )
-        if not self.module.params["host"]:
-            self.module.params["host"] = self.module.params["location"]
-        self.ssl_context = ssl.create_default_context(
-            purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None,
-            cadata=None)
-        self.ssl_settings = {"ssl_context": self.ssl_context}
-        self.session = None
-
-    def _init_session(self):
-        try:
-            self.session = iRODSSession(
-                host=self.module.params["host"],
-                port=self.module.params["port"],
-                user=self.module.params["admin_user"],
-                password=self.module.params["admin_password"],
-                zone=self.module.params["zone"],
-                **self.ssl_settings
-            )
-        except Exception as exc:  # pylint: disable=broad-except
-            self.result["exc"] = exc
-            self.result["exc_message"] = "Unable to connect to iRODS."
-            self._fail(self.result["exc_message"])
+        if not self._module.params["host"]:
+            self._module.params["host"] = self._module.params["location"]
+        self._result = dict(changed=False, response="", exc="", exc_msg="")
+        self._failed = False
 
     def run_module(self):
         """
         Main module operative function
         """
-        if self.module.check_mode:
-            self.module.exit_json(**self.result)
+        if self._module.check_mode:
+            self._module.exit_json(**self._result)
+            return
+        with self._init_session() as session:
+            try:
+                self._ensure_resource_exists(session)
+            except _IRODSError as err:
+                self._fail(msg="Unable to run module.", exc=exc)
+        if not self._failed:
+            self._module.exit_json()
 
+    def _init_session(self) -> iRODSSession:
         try:
-            self._init_session()
-            self._create_unix_resource()
-            if not self.failed:
-                self.module.exit_json()
-        except Exception as exc:  # pylint: disable=broad-except
-            self.result["exc"] = type(exc).__name__
-            self.result["exc_msg"] = str(exc)
-            self._fail("Unable to run module.", exc)
-
-    def _modify_resource(self, attribute):
-        try:
-            self.session.resources.modify(
-                self.module.params["name"],
-                f"{attribute}",
-                self.module.params[f"{attribute}"]
+            return iRODSSession(
+                host=self._module.params["host"],
+                port=self._module.params["port"],
+                user=self._module.params["admin_user"],
+                password=self._module.params["admin_password"],
+                zone=self._module.params["zone"],
             )
         except Exception as exc:  # pylint: disable=broad-except
-            self.result["exc"] = exc
-            self.result["exc_message"] = f"Unable to modify {attribute}."
-            self._fail(self.result["exc_message"])
+            self._fail(msg="unable to connect to iRODS server", exc=exc)
 
-    def _create_unix_resource(self):
+    def _ensure_resource_exists(self, session: iRODSSession):
+        if not self._resource_exists(session):
+            self._create_resource(session)
+        if not self._failed and self._module.params["free_space"]:
+            self._ensure_attribute(
+                session=session,
+                attribute="free_space",
+                value=self._module.params["free_space"],
+            )
+        if not self._failed and self._module.params["status"]:
+            self._ensure_attribute(
+                session=session,
+                attribute="status",
+                value=self._module.params["status"],
+            )
+        if not self._failed and self._module.params["context"]:
+            self._ensure_attribute(
+                session=session,
+                attribute="context",
+                value=self._module.params["context"],
+            )
+
+    def _create_resource(self, session: iRODSSession):
         try:
-            if self.session.resources.get(self.module.params["name"]):
-                pass
-        except ResourceDoesNotExist:
-            try:
-                self.session.resources.create(
-                    self.module.params["name"],
-                    "unixfilesystem",
-                    self.module.params["location"],
-                    self.module.params["vault"],
-                    self.module.params["context"],
-                    self.module.params["zone"],
-                    "cache"
+            session.resources.create(
+                name=self._module.params["name"],
+                resource_type="unixfilesystem",
+                host=self._module.params["location"],
+                path=self._module.params["vault"],
+                zone=self._module.params["zone"],
+            )
+            self._result["changed"] = True
+        except Exception as exc:  # pylint: disable=broad-except
+            self._fail(msg="unable to create resource", exc=exc)
+
+    def _ensure_attribute(self, session: iRODSSession, attribute: str, value: Any):
+        try:
+            current_value = getattr(
+                session.resources.get(self._module.params["name"]), attribute
+            )
+            if current_value != value:
+                session.resources.modify(
+                    name=self._module.params["name"], attribute=attribute, value=value
                 )
+                self._result["changed"] = True
+        except Exception as exc:  # pylint: disable=broad-except
+            self._fail(msg=f"unable to modify {attribute}", exc=exc)
 
-                self.result["changed"] = True
+    def _resource_exists(self, session: iRODSSession) -> bool:
+        try:
+            session.resources.get(self._module.params["name"])
+            return True
+        except ResourceDoesNotExist:
+            return False
 
-            except Exception as exc:  # pylint: disable=broad-except
-                self.result["exc"] = exc
-                self.result["exc_message"] = "Unable to instantiate resource."
-                self._fail(self.result["exc_message"])
-
-        if self.module.params["free_space"]:
-            self._modify_resource("free_space")
-
-        if self.module.params["status"]:
-            self._modify_resource("status")
-
-        if self.module.params["context"]:
-            self._modify_resource("context")
-
-    def _fail(self, msg, err=None):
-        if self.session:
-            self.session.cleanup()
-
-        self.failed = True
-
-        if err:
-            self.module.fail_json(msg=msg + "\n" + str(err), **self.result)
-        else:
-            self.module.fail_json(msg=msg, **self.result)
+    def _fail(self, msg: str = "", exc: Exception = None):
+        self._failed = True
+        if exc:
+            self._result["exc"] = type(exc).__name__
+            self._result["exc_msg"] = str(exc)
+        fail_msg = "\n".join(filter(lambda x: x != "", [msg, self._result["exc_msg"]]))
+        self._module.fail_json(msg=fail_msg, **self._result)
 
 
 def main():
@@ -214,5 +217,5 @@ def main():
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

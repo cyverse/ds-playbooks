@@ -1,9 +1,8 @@
 ---
 - name: test irods_unixfilesystem_resource module
   hosts: localhost
-  gather_facts: false
   vars:
-    rs: "{{ groups['irods_catalog'][0] }}"
+    rs: "{{ groups['irods_resource'][0] }}"
     default_resc_vault: /irods/test_vault
     default_resc_name: defaultRes
     options_resc_name: optionsRes
@@ -15,7 +14,7 @@
     - name: create test irods environment
       shell: |
         set -o errexit
-        if ! [[ -e /var/lib/.irods/.irodsA ]]; then
+        if ! [[ -e "$HOME"/.irods/.irodsA ]]; then
           iinit "$IRODS_PASSWORD"
           echo changed
         fi
@@ -26,7 +25,7 @@
     - name: run script without optional vars
       irods_unixfilesystem_resource:
         name: "{{ default_resc_name }}"
-        host: "{{ rs }}"
+        location: "{{ rs }}"
         vault: "{{ default_resc_vault }}"
         port: 1247
         admin_user: rods
@@ -37,12 +36,13 @@
     - name: run script with optional vars
       irods_unixfilesystem_resource:
         name: "{{ options_resc_name }}"
-        host: "{{ rs }}"
+        location: "{{ rs }}"
         vault: "{{ options_resc_vault }}"
         context: "{{ options_resc_context }}"
         status: "{{ options_resc_status }}"
         free_space: " {{ options_resc_free_space }} "
         port: 1247
+        host: "{{ groups['irods_catalog'][0] }}"
         admin_user: rods
         admin_password: rods
         zone: testing

@@ -938,9 +938,9 @@ pep_api_replica_close_post(*Instance, *Comm, *JsonInput) {
       ipc_notifyDataObjMod(*path, *authorName, *authorZone);
     }
     temporaryStorage.replica_openType = '';
-  }
 
-  temporaryStorage.replica_dataObjPath = '';
+    temporaryStorage.replica_dataObjPath = '';
+  }
 }
 
 

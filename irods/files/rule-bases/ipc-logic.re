@@ -315,7 +315,7 @@ _ipc_sendDataObjectAclModified(*Data, *AccessLevel, *UserName, *UserZone, *Autho
 
 # Publish a data-obj.add message to AMQP exchange
 #
-ipc_sendDataObjectAdd(
+_ipc_sendDataObjectAdd(
 	*AuthorName, *AuthorZone, *Data, *Path, *OwnerName, *OwnerZone, *Size, *Type
 ) {
 	*msg = json_obj(
@@ -331,7 +331,7 @@ ipc_sendDataObjectAdd(
 }
 
 # Publish a data-object.mod message to AMQP exchange
-ipc_sendDataObjectMod(
+_ipc_sendDataObjectMod(
 	*AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
 ) {
 	*msg = json_obj(
@@ -1016,7 +1016,7 @@ ipc_notifyDataObjCreated(*Path, *AuthorName, *AuthorZone) {
   if (*id != '') {
     *info = _ipc_retrieveDataInfo(*Path);
 
-    ipc_sendDataObjectAdd(
+    _ipc_sendDataObjectAdd(
       *AuthorName, 
       *AuthorZone, 
       *id, 
@@ -1038,7 +1038,7 @@ ipc_notifyDataObjMod(*Path, *AuthorName, *AuthorZone) {
   if (*id != '') {
     *info = _ipc_retrieveDataInfo(*Path);
 
-    ipc_sendDataObjectMod(
+    _ipc_sendDataObjectMod(
       *AuthorName, 
       *AuthorZone, 
       *id, 

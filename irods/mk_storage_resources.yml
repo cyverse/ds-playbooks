@@ -13,6 +13,11 @@
         state: directory
       with_items: "{{ _irods_storage_resources }}"
 
+    - name: install python modules for irods_unixfilesystem_resource
+      pip:
+        name: python-irodsclient
+        state: present
+
 
 - name: create storage resources
   hosts: irods_resource

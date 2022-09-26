@@ -11,6 +11,7 @@ RUN printf 'Package: irods-*\nPin: version 4.2.8\nPin-Priority: 1001\n' \
   > /etc/apt/preferences.d/irods
 RUN apt-get --quiet=2 update
 RUN apt-get --yes --quiet=2 install irods-server
+RUN python3 -m pip install python-irodsclient
 
 ### Configure iRODS
 ARG IRODS_CATALOG_PROVIDER=csp

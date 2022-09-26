@@ -3,12 +3,14 @@
   hosts: irods_resource
   become: true
   become_user: irods
+  collections:
+    - community.general
   vars:
-    expected_resources: "{{ 
-      groups['irods_resource'] 
-        | map('extract', hostvars, 'irods_storage_resources') 
-        | flatten 
-        | map(attribute='name') 
+    expected_resources: "{{
+      groups['irods_resource']
+        | map('extract', hostvars, 'irods_storage_resources')
+        | flatten
+        | map(attribute='name')
         | union(['bundleResc']) }}"
   tasks:
     - name: test create vault directory
@@ -24,6 +26,15 @@
         or not response.stat.xusr
       with_items: "{{ irods_storage_resources }}"
 
+    - name: determine installed pip packages
+      pip_package_info:
+        clients: pip3
+      register: pip_info
+
+    - name: verify python modules for irods_unixfilesystem_resource installed
+      when: "'python-irodsclient' not in pip_info.packages['pip3']"
+      fail:
+
     - name: test define storage resource
       run_once: true
       command: iquest '%s' "select RESC_NAME where RESC_TYPE_NAME = 'unixfilesystem'"
@@ -33,7 +44,7 @@
 
     - name: verify context is correct
       shell: |
-        if ! context="$(iquest '%s' "select RESC_CONTEXT where RESC_NAME = '{{ item.name }}'")" 
+        if ! context="$(iquest '%s' "select RESC_CONTEXT where RESC_NAME = '{{ item.name }}'")"
         then
           exit 1
         fi

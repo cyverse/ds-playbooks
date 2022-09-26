@@ -2,6 +2,7 @@ FROM test-env-base:ubuntu2004
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+RUN apt-get update
 RUN apt-get install --yes openssl rsyslog ssl-cert ufw
 RUN pip install pyOpenSSL
 

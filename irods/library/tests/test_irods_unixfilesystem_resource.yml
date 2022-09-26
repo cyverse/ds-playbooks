@@ -1,50 +1,40 @@
 ---
 - name: test irods_unixfilesystem_resource module
-  hosts: localhost
+  hosts: dstesting-consumer_configured_centos-1.dstesting_default
+  become: true
+  become_user: irods
   vars:
-    rs: "{{ groups['irods_resource'][0] }}"
-    default_resc_vault: /irods/test_vault
+    default_resc_vault: /var/lib/irods/test_vault
     default_resc_name: defaultRes
     options_resc_name: optionsRes
-    options_resc_vault: /irods/test_vault2
+    options_resc_vault: /var/lib/irods/test_vault2
     options_resc_context: context_message_here
     options_resc_status: up
-    options_resc_free_space: 2000000
   pre_tasks:
-    - name: create test irods environment
-      shell: |
-        set -o errexit
-        if ! [[ -e "$HOME"/.irods/.irodsA ]]; then
-          iinit "$IRODS_PASSWORD"
-          echo changed
-        fi
-      register: response
-      changed_when: response.stdout == 'changed'
+    - name: create vaults
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: ug=rwx
+      with_items:
+        - "{{ default_resc_vault }}"
+        - "{{ options_resc_vault }}"
 
   tasks:
     - name: run script without optional vars
       irods_unixfilesystem_resource:
         name: "{{ default_resc_name }}"
-        location: "{{ rs }}"
+        host: "{{ inventory_hostname }}"
         vault: "{{ default_resc_vault }}"
-        port: 1247
-        admin_user: rods
-        admin_password: rods
-        zone: testing
 
     - name: run script with optional vars
       irods_unixfilesystem_resource:
         name: "{{ options_resc_name }}"
-        location: "{{ rs }}"
+        host: "{{ inventory_hostname }}"
         vault: "{{ options_resc_vault }}"
         context: "{{ options_resc_context }}"
         status: "{{ options_resc_status }}"
-        free_space: " {{ options_resc_free_space }} "
-        port: 1247
-        host: "{{ groups['irods_catalog'][0] }}"
-        admin_user: rods
-        admin_password: rods
-        zone: testing
+        init_free_space: true
 
     - name: check resource names
       shell: |
@@ -72,9 +62,11 @@
       shell: |
         set -o errexit
         test \
-          "$(iquest %s "SELECT RESC_LOC WHERE RESC_NAME = '{{ default_resc_name }}'")" = '{{ rs }}'
+          "$(iquest %s "SELECT RESC_LOC WHERE RESC_NAME = '{{ default_resc_name }}'")" \
+          = '{{ inventory_hostname }}'
         test \
-          "$(iquest %s "SELECT RESC_LOC WHERE RESC_NAME = '{{ options_resc_name }}'")" = '{{ rs }}'
+          "$(iquest %s "SELECT RESC_LOC WHERE RESC_NAME = '{{ options_resc_name }}'")" \
+          = '{{ inventory_hostname }}'
       changed_when: false
 
     - name: check resource context
@@ -91,9 +83,8 @@
           = '{{ options_resc_status }}'
       changed_when: false
 
-    - name: check init_free_space
+    - name: check free space initialized
       shell: |
         test \
-          "$(iquest %s "SELECT RESC_FREE_SPACE WHERE RESC_NAME = '{{ options_resc_name }}'")" \
-          = '{{ options_resc_free_space }}'
+          "$(iquest %s "SELECT RESC_FREE_SPACE WHERE RESC_NAME = '{{ options_resc_name }}'")" != ''
       changed_when: false

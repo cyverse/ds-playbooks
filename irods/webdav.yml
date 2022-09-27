@@ -165,7 +165,7 @@
                 # RequestHeader merge Cache-Control no-store
               </Elseif>
 
-              RequestHeader edit Destination ^https: http: early  #DAV destination header rewrite
+              RequestHeader edit Destination ^https: http: early  
 
               ProxyPass / http://127.0.0.1:{{ _webdav_varnish_service_port }}/ retry=0 timeout=300
               ProxyHTMLURLMap ^http: https: [R]

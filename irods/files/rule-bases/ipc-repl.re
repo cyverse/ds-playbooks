@@ -97,10 +97,21 @@ _repl_replicate(*Object, *RescName) {
 
     temporaryStorage.repl_replicate = '';
 
-    if (*err < 0 && *err != -808000 && *err != -817000) {
-      _repl_logMsg('failed to replicate data object *Object, retry in 8 hours');
-      _repl_logMsg(*msg);
-      *err;
+    if (*err < 0){
+      if (*err == -808000 || *err == -817000) {
+        _repl_logMsg('failed to replicate data object *Object, data no longer exists');
+        _repl_logMsg(*msg);
+        0
+      } else if (*err == -314000) {
+        _repl_logMsg('failed to replicate data object *Object due to checksum error');
+        _repl_logMsg(*msg);
+        0 
+        # the exit status is 0 to indicate that replication should not be retried
+      } else {
+        _repl_logMsg('failed to replicate data object *Object, retry in 8 hours');
+        _repl_logMsg(*msg);
+        *err;
+      }
     } else {
       _repl_logMsg('replicated data object *Object');
     }

@@ -845,7 +845,8 @@ pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTA
 #
 # DATA OBJ CREATE AND MOD MSG PUBLISHING ALGORITHM:
 #
-# If PhyPathRegInp.regRepl isn't set, publish a data object create message.
+# If PhyPathRegInp.regRepl is set, publish a data object modified message, 
+# otherwise publish a data object created message.
 #
 # *PhyPathRegInp:
 #   https://docs.irods.org/4.2.10/doxygen/group__data__object.html#gad63565afa69981320220cea5d1d1f6c3
@@ -859,11 +860,13 @@ pep_api_phy_path_reg_post(*Instance, *Comm, *PhyPathRegInp) {
   }
 
   # data object creation and message publishing policy
-  if (!_ipc_hasKey(*PhyPathRegInp, 'regRepl')) {
-    ipc_notifyDataObjCreated(
-      _ipc_getValue(*PhyPathRegInp, 'obj_path'), 
-      _ipc_getValue(*Comm, 'user_user_name'), 
-      _ipc_getValue(*Comm, 'user_rods_zone') );
+  *path = _ipc_getValue(*PhyPathRegInp, 'obj_path');
+  *authorName = _ipc_getValue(*Comm, 'user_user_name');
+  *authorZone = _ipc_getValue(*Comm, 'user_rods_zone');
+  if (_ipc_hasKey(*PhyPathRegInp, 'regRepl')) {
+    ipc_notifyDataObjMod(*path, *authorName, *authorZone);
+  } else {
+    ipc_notifyDataObjCreated(*path, *authorName, *authorZone);
   }
 }
 

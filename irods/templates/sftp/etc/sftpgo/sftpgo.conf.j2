@@ -1,6 +1,14 @@
 SFTPGO_ADMIN_USERNAME={{ _sftpgo_admin_username }}
 SFTPGO_ADMIN_PASSWORD={{ _sftpgo_admin_password }}
 
-SFTPGO_LOG_FILE_PATH="/var/log/sftpgo/sftpgo.log"
+SFTPGO_LOG_FILE_PATH=/var/log/sftpgo/sftpgo.log
 SFTPGO_LOG_MAX_SIZE=100
+
 TZ="America/Phoenix"
+
+IRODS_PROXY_USER={{ _sftpgo_irods_proxy_username }}
+IRODS_PROXY_PASSWORD={{ _sftpgo_irods_proxy_password }}
+IRODS_HOST={{ _canonical_hostname }}
+IRODS_PORT={{ _irods_zone_port }}
+IRODS_ZONE={{ _irods_zone_name }}
+IRODS_SHARED=/{{ _irods_zone_name }}/home/shared

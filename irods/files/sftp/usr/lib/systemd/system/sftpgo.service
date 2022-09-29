@@ -1,0 +1,16 @@
+[Unit]
+Description=SFTPGo, a SFTP Service for iRODS
+After=network-online.target nss-lookup.target
+
+[Service]
+Type=forking
+KillMode=process
+
+ExecStart=/usr/bin/sftpgo serve
+ExecReload=
+
+EnvironmentFile=/etc/sftpgo/sftpgo.conf
+User=sftpgo
+
+[Install]
+WantedBy=multi-user.target

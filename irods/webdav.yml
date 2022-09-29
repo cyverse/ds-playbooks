@@ -529,9 +529,7 @@
     - name: setup purgeman service
       copy:
         src: files/webdav/usr/lib/systemd/system/purgeman.service
-        dest: /usr/lib/systemd/system
-      with_items:
-        - purgeman.service
+        dest: /usr/lib/systemd/system/purgeman.service
       notify:
         - reload systemd
         - restart purgeman

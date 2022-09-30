@@ -303,7 +303,7 @@
       blockinfile:
         path: /etc/sysconfig/iptables
         insertbefore: -A INPUT -j REJECT
-        marker: "# {mark} DS MANAGED BLOCK (webdav)"
+        marker: "# {mark} DS MANAGED BLOCK (sftp)"
         content: |
           {% for i in _sftp_allowed_src %}
           -A INPUT -m state --state NEW -p tcp -s {{ i }} --dport {{ _sftp_port }} -j ACCEPT

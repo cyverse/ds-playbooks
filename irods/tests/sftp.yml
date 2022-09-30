@@ -1,0 +1,86 @@
+---
+- name: test SFTP config template expansion
+  hosts: localhost
+  run_once: true
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+    - group_vars/sftp_cfg.yml
+  vars:
+    sftpgo_conf: "{{ lookup('template', '../templates/sftp/etc/sftpgo/sftpgo.conf.j2') }}"
+    sftpgo_json: "{{ lookup('template', '../templates/sftp/etc/sftpgo/sftpgo.json.j2') }}"
+  tasks:
+    - name: verify sftpgo.conf expands correctly
+      assert:
+        that:
+          - sftpgo_conf is search('SFTPGO_ADMIN_USERNAME=admin')
+          - sftpgo_conf is search('SFTPGO_ADMIN_PASSWORD=sftpgo_pass')
+          - sftpgo_conf is search('IRODS_PROXY_USER=sftp')
+          - sftpgo_conf is search('IRODS_PROXY_PASSWORD=sftpgo_irods_pass')
+          - sftpgo_conf is search('IRODS_HOST=dstesting_provider_configured_1.dstesting_default')
+          - sftpgo_conf is search('IRODS_PORT=1247')
+          - sftpgo_conf is search('IRODS_ZONE=testing')
+          - sftpgo_conf is search('IRODS_SHARED=/testing/home/shared')
+
+    - name: load sftpgo.json
+      set_fact:
+        sftpgo_json_config: "{{ ieEncoded.content | b64decode }}"
+
+    - name: retrieve sftpgo.json
+      slurp:
+        src: /etc/sftpgo/sftpgo.json
+      register: ieEncoded
+
+    - name: decode sftpgo.json
+      set_fact:
+        sftpgo_json_config: "{{ ieEncoded.content | b64decode }}"
+
+    - name: test sftpgo.json contents
+      assert:
+        that:
+          - sftpgo_json_config.sftpd.bindings.port == 22
+          - sftpgo_json_config.data_provider.users_base_dir == '/sftpgo_vault/data'
+          - sftpgo_json_config.data_provider.backups_path == '/sftpgo_vault/backups'
+          - sftpgo_json_config.httpd.bindings.port == 18023
+          
+    - name: test sftpgo installed
+      stat:
+        path: /usr/bin/sftpgo
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test sftpgo-auth-irods installed
+      stat:
+        path: /usr/bin/sftpgo-auth-irods
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test sftpgo.json deployed
+      stat:
+        path: /etc/sftpgo/sftpgo.json
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test sftpgo.conf deployed
+      stat:
+        path: /etc/sftpgo/sftpgo.conf
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test blacklist.json deployed
+      stat:
+        path: /etc/sftpgo/blacklist.json
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test sftpgo.service deployed
+      stat:
+        path: /usr/lib/systemd/system/sftpgo.service
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: test open SFTP connection in firewall
+      script: scripts/check-sftpgo-iptables.awk /etc/sysconfig/iptables
+      changed_when: false
+
+          

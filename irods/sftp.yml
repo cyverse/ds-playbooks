@@ -104,7 +104,13 @@
         path: /usr/bin/sftpgo-auth-irods
       register: sftpgoAuthIrodsResp
 
-    - when: not sftpgoAuthIrodsResp.stat.exists
+    - name: check sftpgo-auth-irods version
+      shell: /usr/bin/sftpgo-auth-irods -v | grep releaseVersion | tr -d '",' | awk '{print $2}'
+      register: sftpgoAuthIrodsVersion
+      when: sftpgoAuthIrodsResp.stat.exists
+      changed_when: false
+
+    - when: (not sftpgoAuthIrodsResp.stat.exists) or (sftpgoAuthIrodsVersion.stdout != 'v0.1.2')
       block:
         - name: create download dir for sftpgo-auth-irods package 
           file:
@@ -113,7 +119,7 @@
 
         - name: download sftpgo-auth-irods package from github and uncompress
           unarchive:
-            src: https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.0/sftpgo-auth-irods-v0.1.0-linux-amd64.tar.gz
+            src: https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.2/sftpgo-auth-irods-v0.1.2-linux-amd64.tar.gz
             dest: /tmp/sftpgo_auth_irods_setup
             remote_src: True
           register: unarchiveResp

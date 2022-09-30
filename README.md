@@ -42,11 +42,6 @@ Docker Compose needs to be installed on development machines as the root user.
 * docker-compose (CentOS)
 * docker-compose-plugin (Ubuntu)
 
-Docker Compose needs to be installed on development machines.
-
-* docker-compose (CentOS)
-* docker-compose-plugin (Ubuntu)
-
 The following python packages need to be installed on the development machines and Ansible control
 nodes using `pip`.
 

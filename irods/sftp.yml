@@ -69,7 +69,7 @@
           when: unarchiveResp is changed
           copy:
             src: /tmp/sftpgo_setup/etc/sftpgo
-            dest: /etc/sftpgo
+            dest: /etc
             owner: root
             group: root
             mode: '0660'
@@ -79,14 +79,25 @@
           when: unarchiveResp is changed
           copy:
             src: /tmp/sftpgo_setup/usr/share/sftpgo
-            dest: /usr/share/sftpgo
+            dest: /usr/share
             owner: root
             group: root
             mode: '0755'
             remote_src: True
 
-        - name: create sftpgo service account
-          shell: id -u sftpgo &> /dev/null || adduser --system --no-create-home --home /var/lib/sftpgo --shell /sbin/nologin sftpgo
+        - name: create sftpgo group for a service account
+          group:
+            name: sftpgo
+            system: True
+
+        - name: create sftpgo user for a service account
+          user:
+            name: sftpgo
+            shell: /sbin/nologin
+            home: /var/lib/sftpgo
+            create_home: False
+            system: True
+            group: sftpgo
           
         - name: delete download dir for sftpgo package
           file:
@@ -133,6 +144,11 @@
             group: root
             mode: '0755'
             remote_src: True
+
+        - name: delete download dir for sftpgo-auth-irods package
+          file:
+            path: /tmp/sftpgo_auth_irods_setup
+            state: absent
 
     # SFTPGo Dirs
     - name: delete a vault dir if exists
@@ -299,24 +315,7 @@
         - reload systemd
         - restart sftpgo
 
-    - name: open SFTP connection in firewall
-      blockinfile:
-        path: /etc/sysconfig/iptables
-        insertbefore: -A INPUT -j REJECT
-        marker: "# {mark} DS MANAGED BLOCK (sftp)"
-        content: |
-          {% for i in _sftp_allowed_src %}
-          -A INPUT -m state --state NEW -p tcp -s {{ i }} --dport {{ _sftp_port }} -j ACCEPT
-          {% endfor %}
-      notify: restart firewall
-
   handlers:
-    - name: restart firewall
-      when: notifications_enabled | default(false)
-      service:
-        name: iptables
-        state: restarted
-
     - name: reload systemd
       when: notifications_enabled | default(false)
       systemd:

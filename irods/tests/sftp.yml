@@ -1,6 +1,6 @@
 ---
 - name: test SFTP config template expansion
-  hosts: localhost
+  hosts: sftp
   run_once: true
   gather_facts: false
   vars_files:
@@ -22,26 +22,22 @@
           - sftpgo_conf is search('IRODS_ZONE=testing')
           - sftpgo_conf is search('IRODS_SHARED=/testing/home/shared')
 
-    - name: load sftpgo.json
-      set_fact:
-        sftpgo_json_config: "{{ ieEncoded.content | b64decode }}"
-
     - name: retrieve sftpgo.json
       slurp:
         src: /etc/sftpgo/sftpgo.json
       register: ieEncoded
 
-    - name: decode sftpgo.json
+    - name: load sftpgo.json
       set_fact:
         sftpgo_json_config: "{{ ieEncoded.content | b64decode }}"
 
     - name: test sftpgo.json contents
       assert:
         that:
-          - sftpgo_json_config.sftpd.bindings.port == 22
+          - sftpgo_json_config.sftpd.bindings[0].port == 22
           - sftpgo_json_config.data_provider.users_base_dir == '/sftpgo_vault/data'
           - sftpgo_json_config.data_provider.backups_path == '/sftpgo_vault/backups'
-          - sftpgo_json_config.httpd.bindings.port == 18023
+          - sftpgo_json_config.httpd.bindings[0].port == 18023
           
     - name: test sftpgo installed
       stat:
@@ -78,9 +74,5 @@
         path: /usr/lib/systemd/system/sftpgo.service
       register: response
       failed_when: not response.stat.exists
-
-    - name: test open SFTP connection in firewall
-      script: scripts/check-sftpgo-iptables.awk /etc/sysconfig/iptables
-      changed_when: false
 
           

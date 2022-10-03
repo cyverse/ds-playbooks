@@ -11,7 +11,9 @@ services:
       dockerfile: apache/Dockerfile
 
   sftp:
-    image: test-env-base:ubuntu2004
+    build:
+      context: .
+      dockerfile: sftp/Dockerfile
 
   dbms_configured:
     build:

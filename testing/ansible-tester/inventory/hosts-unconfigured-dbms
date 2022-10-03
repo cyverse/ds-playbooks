@@ -32,5 +32,8 @@ dstesting-proxy-1.dstesting_default
 [webdav]
 dstesting-apache-1.dstesting_default
 
+[sftp]
+dstesting_sftp_1.dstesting_default
+
 [unmanaged_systems]
 dstesting-amqp-1.dstesting_default

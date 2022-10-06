@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Usage:
 #  controller INC_FILE (start|stop)
@@ -14,14 +14,17 @@ set -e
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
-  readonly ExecName=$(greadlink -f "$0")
+  ExecName=$(greadlink -f "$0")
 else
-  readonly ExecName=$(readlink --canonicalize "$0")
+  ExecName=$(readlink --canonicalize "$0")
 fi
+readonly ExecName
+
 
 main()
 {
-  local baseDir=$(dirname "$ExecName")
+  local baseDir 
+  baseDir=$(dirname "$ExecName")
 
   if [ "$#" -lt 1 ]
   then
@@ -44,6 +47,7 @@ main()
     cfg="$(pwd)"/"$cfg"
   fi
 
+  # shellcheck disable=SC1090
   . "$cfg"
 
   local dcCmd

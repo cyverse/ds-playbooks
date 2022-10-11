@@ -49,6 +49,7 @@ nodes using `pip`.
 * ansible-lint<5.5   (development machines only)
 * docker
 * dnspython
+* Jinja2>=3
 * netaddr
 * python-irodsclient
 * requests

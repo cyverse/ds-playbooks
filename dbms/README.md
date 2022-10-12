@@ -11,13 +11,13 @@ This is a collection of playbooks for maintaining the DBMS for the Data Store.
 
 Variable                                | Required | Default       | Comments
 --------------------------------------- | -------- | ------------- | --------
-`dbms_checkpoint_completion_target`     | no       | 0.9           | WAL checkpoint target duration fraction 
+`dbms_checkpoint_completion_target`     | no       | 0.9           | WAL checkpoint target duration fraction
 `dbms_checkpoint_timeout`               | no       | 15            | WAL checkpoint timeout in minutes
 `dbms_effective_cache_size`             | no       | _see comment_ | the value the query planner uses to estimate the total size of data caches in GiB, the default in 50% of the total memory
 `dbms_effective_io_concurrency`         | no       | 200           | the number of concurrent disk I/O operations that can be executed simultaneously
 `dbms_log_line_prefix`                  | no       | < %m %r >     | PostgreSQL log message prefix (see PostgreSQL documentation for possible values)
 `dbms_log_min_duration`                 | no       | 1000          | the number of milliseconds a query should take before it is logged in the DBMS logs. `-1` disables query logging
-`dbms_maintenance_work_mem`             | no       | 2             | the amount of memory in gibibytes for maintenance operations 
+`dbms_maintenance_work_mem`             | no       | 2             | the amount of memory in gibibytes for maintenance operations
 `dbms_max_connections`                  | no       | 1500          | the maximum number of connections allowed to the DBMS (change requires restart)
 `dbms_max_wal_senders`                  | no       | 120           | the maximum number of walsender processes (change requires restart)
 `dbms_max_wal_size`                     | no       | 8             | the maximum size of a WAL file in gibibytes

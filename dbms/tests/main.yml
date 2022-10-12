@@ -68,13 +68,13 @@
           - cyverse_conf is search('shared_buffers = 1GB')
           - cyverse_conf is search('huge_pages = on')
           - cyverse_conf is search('work_mem = 8MB')
+          - cyverse_conf is search('maintenance_work_mem = 16MB')
+          - cyverse_conf is search('effective_io_concurrency = 2')
 
     - name: test cyverse.conf expansion, no downstream or upstream nodes
       debug:
         msg: TODO implement for {{ item }}
       with_items:
-        - maintenance_work_mem
-        - effective_io_concurrency
         - max_worker_processes
         - max_parallel_maintenance_workers
         - max_parallel_workers_per_gather

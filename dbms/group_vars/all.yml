@@ -1,5 +1,5 @@
 ---
-_dbms_reboot_allowed: false
+_dbms_reboot_allowed: "{{ dbms_reboot_allowed | d(false) }}"
 
 _dbms_checkpoint_completion_target: "{{ dbms_checkpoint_completion_target | default(0.9) }}"
 _dbms_checkpoint_timeout: "{{ dbms_checkpoint_timeout | default(15) }}"

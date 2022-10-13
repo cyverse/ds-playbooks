@@ -7,3 +7,6 @@ RUN locale-gen en_US.UTF-8
 
 ARG LC_COLLATE=C
 
+COPY sftp/service.sh /
+
+CMD [ "/service.sh" ]

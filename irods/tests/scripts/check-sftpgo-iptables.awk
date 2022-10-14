@@ -9,7 +9,7 @@ BEGIN {
   table = "";
   idx = 0;
 
-  Rules[1] = "-A INPUT -m state --state NEW -p tcp -s 0.0.0.0/0 --dport 22 -j ACCEPT";
+  Rules[1] = "-A INPUT -m state --state NEW -p tcp -s 0.0.0.0/0 --dport 2022 -j ACCEPT";
 }
 
 

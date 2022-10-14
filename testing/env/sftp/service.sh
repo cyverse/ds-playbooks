@@ -38,7 +38,8 @@ start()
 {
   if id --user sftpgo &> /dev/null
   then
-    sudo -i -u sftpgo sftpgo serve
+    eval $(cat /etc/sftpgo/sftpgo.conf | sed 's/^/export /')
+    sudo -E -u sftpgo sh -c "cd /var/lib/sftpgo && sftpgo serve --config-file /etc/sftpgo/sftpgo.json &"
   fi
 }
 
@@ -48,7 +49,7 @@ stop()
   if id --user sftpgo &> /dev/null
   then
     # sending SIGINT (Ctrl+C)
-    sudo -i -u sftpgo pkill -SIGINT sftpgo
+    sudo -u sftpgo pkill -SIGINT sftpgo
   fi
 }
 

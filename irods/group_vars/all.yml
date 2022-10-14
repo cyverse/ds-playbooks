@@ -131,7 +131,7 @@ _webdav_tls_key_file: "{{ webdav_tls_key_file | default('/etc/ssl/certs/dummy.ke
 _webdav_varnish_service_port: "{{ webdav_varnish_service_port | default(6081) }}"
 
 _sftp_allowed_src: "{{ sftp_allowed_src | default(['0.0.0.0/0']) }}"
-_sftp_port: "{{ sftp_port | default(22) }}"
+_sftp_port: "{{ sftp_port | default(2022) }}"
 _sftpgo_admin_ui_port:  "{{ sftpgo_admin_ui_port | default(18023) }}"
 _sftpgo_vault_dir: "{{ sftpgo_vault_dir | default('/sftpgo_vault') }}"
 _sftpgo_admin_username: "{{ sftpgo_admin_username | default('admin') }}"

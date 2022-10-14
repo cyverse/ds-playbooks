@@ -3,11 +3,11 @@ Description=SFTPGo, a SFTP Service for iRODS
 After=network-online.target nss-lookup.target
 
 [Service]
-Type=forking
+Type=simple
 KillMode=process
 
 WorkingDirectory=/var/lib/sftpgo
-ExecStart=/usr/bin/sftpgo serve
+ExecStart=/usr/bin/sftpgo serve --config-file /etc/sftpgo/sftpgo.json
 ExecReload=
 
 EnvironmentFile=/etc/sftpgo/sftpgo.conf

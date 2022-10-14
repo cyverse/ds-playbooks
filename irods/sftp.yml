@@ -99,7 +99,7 @@
         - name: create sftpgo user for a service account
           user:
             name: sftpgo
-            shell: /sbin/nologin
+            shell: /bin/bash
             home: /var/lib/sftpgo
             create_home: False
             system: True

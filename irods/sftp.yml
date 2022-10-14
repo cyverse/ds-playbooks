@@ -3,6 +3,12 @@
   hosts: sftp
   become: true
   tasks:
+    - name: enable notifcations when not testing
+      set_fact:
+        notifications_enabled: true
+      tags:
+        - no_testing
+        
     # Install SFTPGo
     - name: delete stale download dir for sftpgo package if exists
       file:

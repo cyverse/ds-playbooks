@@ -29,7 +29,8 @@
   roles:
     - role: postgres12
       vars:
-        pg_checkpoint_completion_target: "{{ _dbms_checkpoint_completion_target }}"
+        pg_checkpoint_completion_target: >-
+          {{ _dbms_checkpoint_completion_target }}
         pg_checkpoint_timeout: "{{ _dbms_checkpoint_timeout }}min"
         pg_effective_cache_size: "{{ effective_cache_size }}"
         pg_extra_listen_addresses: "{{ ansible_facts['all_ipv4_addresses'] }}"
@@ -49,11 +50,14 @@
         pg_effective_io_concurrency: "{{ _dbms_effective_io_concurrency }}"
         pg_max_worker_processes: "{{ max_worker_processes }}"
         pg_max_parallel_workers: "{{ max_worker_processes }}"
-        pg_max_parallel_workers_per_gather: "{{ _dbms_max_parallel_workers_per_gather }}"
-        pg_max_parallel_maintenance_workers: "{{ _dbms_max_parallel_maintenance_workers }}"
+        pg_max_parallel_workers_per_gather: >-
+          {{ _dbms_max_parallel_workers_per_gather }}
+        pg_max_parallel_maintenance_workers: >-
+          {{ _dbms_max_parallel_maintenance_workers }}
         pg_wal_buffers: 16MB
         pg_num_huge_pages: "{{ _dbms_mem_num_huge_pages }}"
-        pg_huge_pages: "{{ 'on' if _dbms_mem_num_huge_pages|int > 0 else 'off' }}"
+        pg_huge_pages: >-
+          {{ 'on' if _dbms_mem_num_huge_pages|int > 0 else 'off' }}
         pg_downstream_nodes: "{{ groups['dbms_replicas'] }}"
         pg_wal_keep_segments: "{{ _dbms_wal_keep_segments }}"
         pg_reboot_allowed: "{{ _dbms_reboot_allowed }}"
@@ -73,7 +77,8 @@
   roles:
     - role: postgres12
       vars:
-        pg_checkpoint_completion_target: "{{ _dbms_checkpoint_completion_target }}"
+        pg_checkpoint_completion_target: >-
+          {{ _dbms_checkpoint_completion_target }}
         pg_checkpoint_timeout: "{{ _dbms_checkpoint_timeout }}min"
         pg_destroy_default_db_on_init: "{{ _dbms_replication_start }}"
         pg_effective_cache_size: "{{ effective_cache_size }}"
@@ -94,10 +99,13 @@
         pg_effective_io_concurrency: "{{ _dbms_effective_io_concurrency }}"
         pg_max_worker_processes: "{{ max_worker_processes }}"
         pg_max_parallel_workers: "{{ max_worker_processes }}"
-        pg_max_parallel_workers_per_gather: "{{ _dbms_max_parallel_workers_per_gather }}"
-        pg_max_parallel_maintenance_workers: "{{ _dbms_max_parallel_maintenance_workers }}"
+        pg_max_parallel_workers_per_gather: >-
+          {{ _dbms_max_parallel_workers_per_gather }}
+        pg_max_parallel_maintenance_workers: >-
+          {{ _dbms_max_parallel_maintenance_workers }}
         pg_wal_buffers: 16MB
         pg_num_huge_pages: "{{ _dbms_mem_num_huge_pages }}"
-        pg_huge_pages: "{{ 'on' if _dbms_mem_num_huge_pages|int > 0 else 'off' }}"
+        pg_huge_pages: >-
+          {{ 'on' if _dbms_mem_num_huge_pages|int > 0 else 'off' }}
         pg_upstream_node: "{{ groups['dbms_primary'][0] }}"
         pg_reboot_allowed: "{{ _dbms_reboot_allowed }}"

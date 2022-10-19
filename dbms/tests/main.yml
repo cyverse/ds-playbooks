@@ -9,8 +9,10 @@
     pg_replication_user: ''
     pg_replication_pass: ''
 
-    cyverse_conf: "{{ lookup('template', '../roles/postgres12/templates/cyverse.conf.j2') }}"
-    pgpass: "{{ lookup('template', '../roles/postgres12/templates/pgpass.j2') }}"
+    cyverse_conf: >-
+      {{ lookup('template', '../roles/postgres12/templates/cyverse.conf.j2') }}
+    pgpass: >-
+      {{ lookup('template', '../roles/postgres12/templates/pgpass.j2') }}
   tasks:
     - name: verify config values expand correctly in cyverse.conf
       assert:
@@ -31,7 +33,8 @@
           - cyverse_conf is search('checkpoint_timeout = 5min')
           - cyverse_conf is search('max_wal_size = 1GB')
           - cyverse_conf is search('min_wal_size = 80MB')
-          - cyverse_conf is search('checkpoint_completion_target = 0.5' | regex_escape)
+          - cyverse_conf
+            is search('checkpoint_completion_target = 0.5' | regex_escape)
           - cyverse_conf is not search('^max_wal_senders =')
           - cyverse_conf is not search('^wal_keep_segments =')
           - cyverse_conf is not search('^hot_standby = ')
@@ -40,12 +43,14 @@
           - cyverse_conf is search('effective_cache_size = 4GB')
           - cyverse_conf is search('default_statistics_target = 100')
           - cyverse_conf is search('log_min_duration_statement = -1')
-          - cyverse_conf is search("log_line_prefix = '%m [%p] %q%u@%d '" | regex_escape)
+          - cyverse_conf
+            is search("log_line_prefix = '%m [%p] %q%u@%d '" | regex_escape)
           - cyverse_conf is search('standard_conforming_strings = on')
 
     - name: test .pgpass expansion
       assert:
-        that: pgpass is search('\n' ~ ('*:5432:*:'|regex_escape) ~ '[^:]*:[^:]*$')
+        that:
+          - pgpass is search('\n' ~ ('*:5432:*:'|regex_escape) ~ '[^:]*:[^:]*$')
 
 
 - name: test postgresql12 role custom var template expansion
@@ -56,13 +61,16 @@
     - ../roles/postgres12/defaults/main.yml
     - vars/solo_node.yml
   vars:
-    cyverse_conf: "{{ lookup('template', '../roles/postgres12/templates/cyverse.conf.j2') }}"
+    cyverse_conf: >-
+      {{ lookup('template', '../roles/postgres12/templates/cyverse.conf.j2') }}
   tasks:
     - name: verify config values expand correctly in cyverse.conf
       assert:
         that:
           - cyverse_conf
-            is search("listen_addresses = 'localhost,one.localdomain,two.localdomain'"|regex_escape)
+            is search(
+              "listen_addresses = 'localhost,one.localdomain,two.localdomain'"
+              | regex_escape )
           - cyverse_conf is search('port = 1')
           - cyverse_conf is search('max_connections = 2')
           - cyverse_conf is search('shared_buffers = 1GB')

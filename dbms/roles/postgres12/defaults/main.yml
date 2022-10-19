@@ -10,7 +10,9 @@ pg_upstream_node: null
 pg_conf_path: /etc/postgresql/12/main
 
 pg_db: postgres
-pg_db_path: /var/lib/postgresql/12/main  # changing this requires adjusting the systemctl file.
+
+# changing this requires adjusting the systemctl file.
+pg_db_path: /var/lib/postgresql/12/main
 
 pg_hba_insertafter: '# ----------------------------------'
 pg_hba_users: []

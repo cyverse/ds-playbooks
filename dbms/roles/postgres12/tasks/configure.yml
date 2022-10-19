@@ -58,11 +58,17 @@
       {%   set ip =
              pg_upstream_node if pg_upstream_node|ansible.utils.ipaddr else
              lookup('dig', pg_upstream_node) %}
-      {{ '%-7s %-15s %-15s %-23s %s'|format('host', 'replication', pg_replication_user, ip ~ '/32', 'trust') }}
+      {{ '%-7s %-15s %-15s %-23s %s'
+         | format(
+           'host', 'replication', pg_replication_user, ip ~ '/32', 'trust' ) }}
       {% endif %}
       {% for replica in pg_downstream_nodes %}
-      {%   set ip = replica if replica|ansible.utils.ipaddr else lookup('dig', replica) %}
-      {{ '%-7s %-15s %-15s %-23s %s'|format('host', 'replication', pg_replication_user, ip ~ '/32', 'trust') }}
+      {%   set ip =
+             replica if replica|ansible.utils.ipaddr else
+             lookup('dig', replica) %}
+      {{ '%-7s %-15s %-15s %-23s %s'
+         | format(
+           'host', 'replication', pg_replication_user, ip ~ '/32', 'trust' ) }}
       {% endfor %}
   notify:
     - restart postgres

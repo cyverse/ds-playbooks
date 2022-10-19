@@ -2,5 +2,6 @@
 extends: default
 
 ignore: |
+  admin/roles/cyverse.ip/
   dbms/roles/adfinis_sygroup.grub/
   irods/roles/cyverse.irods_cfg/

@@ -19,7 +19,8 @@
     - name: call ethtool
       shell: |
         set -o pipefail
-        ethtool {{ ansible_default_ipv4.alias }} | sed -n 's/\tSpeed: \\([0-9]*\\).*/\\1/p'
+        ethtool {{ ansible_default_ipv4.alias }} \
+          | sed -n 's/\tSpeed: \\([0-9]*\\).*/\\1/p'
       args:
         executable: /bin/bash
       register: ethtool

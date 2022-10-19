@@ -18,4 +18,3 @@
       service:
         name: "{{ 'cron' if 'ansible_distribution' == 'Ubuntu' else 'crond' }}"
         state: restarted
-

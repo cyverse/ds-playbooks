@@ -12,5 +12,6 @@
   when: >
     pkg not in ansible_facts.packages or
     ansible_facts.packages[pkg] | length != 1 or
-    version is defined and ansible_facts.packages[pkg][0].version is version_compare(version, '!=')
+    version is defined
+    and ansible_facts.packages[pkg][0].version is version_compare(version, '!=')
   fail:

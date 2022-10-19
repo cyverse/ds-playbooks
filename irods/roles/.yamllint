@@ -1,5 +1,0 @@
----
-extends: default
-
-ignore: |
-  cyverse.irods_cfg/*

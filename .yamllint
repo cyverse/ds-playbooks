@@ -1,0 +1,6 @@
+---
+extends: default
+
+ignore: |
+  dbms/roles/adfinis_sygroup.grub/
+  irods/roles/cyverse.irods_cfg/

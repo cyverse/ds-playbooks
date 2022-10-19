@@ -4,7 +4,7 @@
   become: true
   tasks:
     - name: test allow communication with Postgres DBMS
-      shell: |
+      ansible.builtin.shell: |
         sed --quiet \
             '/^# BEGIN DS IRODS MANAGED BLOCK$/{
                n;
@@ -39,11 +39,11 @@
         loop_var: pkg
 
     - name: test install PostgreSQL 12 ODBC Driver
-      command: odbcinst -q -d -n PostgreSQL
+      ansible.builtin.command: odbcinst -q -d -n PostgreSQL
       changed_when: false
 
     - name: test ensure pika installed
-      shell: |
+      ansible.builtin.shell: |
         set -o pipefail
         pip --disable-pip-version-check show pika | sed --quiet 's/^Version: //p' 2> /dev/null
       register: resp
@@ -51,7 +51,7 @@
       failed_when: resp.stdout is version('1.2', '>=')
 
     - name: test lock irods-database-plugin-postgres to required version
-      shell: |
+      ansible.builtin.shell: |
         set -o pipefail
         if ! yum versionlock status | grep --quiet irods-database-plugin-postgres; then
           printf 'irods-database-plugin-postgres not locked\n' >&2
@@ -85,11 +85,29 @@
         dir: /var/lib/irods
 
     - name: test correct psql version
-      assert:
+      ansible.builtin.assert:
         that: ansible_env.PATH is search('/usr/pgsql-12/bin' | regex_escape)
 
 
 - import_playbook: cfg_irods.yml
+
+
+- name: test initialize ICAT schema
+  hosts: dbms_primary
+  become: true
+  become_user: postgres
+  collections:
+    - community.postgresql
+  tasks:
+    - name: verify ICAT schema version
+      postgresql_query:
+        db: ICAT
+        query: >
+          SELECT option_value
+          FROM r_grid_configuration
+          WHERE namespace = 'database' AND option_name = 'schema_version'
+      register: response
+      failed_when: response.failed or response.query_result[0]['option_value'] != '7'
 
 
 - name: test start iRODS on catalog service providers
@@ -101,7 +119,7 @@
     - import_tasks: tasks/test_irods_running.yml
 
     - name: verify that clerver auth file exists
-      stat:
+      ansible.builtin.stat:
         path: /var/lib/irods/.irods/.irodsA
       register: response
       failed_when: not response.stat.exists or response.stat.pw_name != 'irods'

@@ -3,3 +3,6 @@ offline: true
 
 kinds:
   - playbook: "irods/library/tests/*.yml"
+
+skip_list:
+  - yaml

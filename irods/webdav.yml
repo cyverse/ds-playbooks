@@ -455,11 +455,6 @@
         src: /usr/lib/systemd/system/varnishncsa.service
         state: link
 
-    - name: delete stale build dir for purgeman package if exists
-      file:
-        path: /tmp/purgeman_setup
-        state: absent
-
     - name: check if purgeman is already installed
       stat:
         path: /usr/bin/purgeman

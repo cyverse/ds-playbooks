@@ -10,11 +10,6 @@
         - no_testing
         
     # Install SFTPGo
-    - name: delete stale download dir for sftpgo package if exists
-      file:
-        path: /tmp/sftpgo_setup
-        state: absent
-
     - name: check if sftpgo is already installed
       stat: 
         path: /usr/bin/sftpgo
@@ -111,11 +106,6 @@
             state: absent
 
     # Install SFTPGo External Authentication Module for iRODS
-    - name: delete stale download dir for sftpgo-auth-irods package if exists
-      file:
-        path: /tmp/sftpgo_auth_irods_setup
-        state: absent
-
     - name: check if sftpgo-auth-irods is already installed
       stat: 
         path: /usr/bin/sftpgo-auth-irods
@@ -157,11 +147,6 @@
             state: absent
 
     # SFTPGo Dirs
-    - name: delete a vault dir if exists
-      file:
-        path: "{{ _sftpgo_vault_dir }}"
-        state: absent
-
     - name: create a vault dir
       file:
         path: "{{ _sftpgo_vault_dir }}"
@@ -185,11 +170,6 @@
         state: directory
         owner: sftpgo
         mode: '0755'
-
-    - name: delete a work dir if exists
-      file:
-        path: "/var/lib/sftpgo"
-        state: absent
 
     - name: create a work dir
       file:

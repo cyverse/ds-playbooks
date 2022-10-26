@@ -7,6 +7,14 @@
   tags:
     - no_testing
   tasks:
+    - name: terminate SFTP connections
+      haproxy:
+        backend: sftp
+        host: sftp
+        state: disabled
+        shutdown_sessions: true
+        fail_on_not_found: true
+
     - name: terminate WebDAV connections
       haproxy:
         backend: webdav

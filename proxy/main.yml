@@ -19,3 +19,5 @@
         haproxy_irods_vip_client_hosts: "{{ proxy_irods_vip_client_hosts }}"
         haproxy_webdav_hosts: "{{ groups['webdav'] }}"
         haproxy_webdav_check_period: 6s
+        haproxy_sftp_hosts: "{{ groups['sftp'] }}"
+        haproxy_sftp_check_period: 6s

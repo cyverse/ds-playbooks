@@ -28,3 +28,12 @@
         fail_on_not_found: true
       tags:
         - no_testing
+
+    - name: enable SFTP access
+      haproxy:
+        backend: sftp
+        host: sftp
+        state: enabled
+        fail_on_not_found: true
+      tags:
+        - no_testing

@@ -458,26 +458,30 @@
     - name: check if purgeman is already installed
       stat:
         path: /usr/bin/purgeman
-      register: purgemanResp
+      register: purgeman_resp
 
     - name: check purgeman version
-      shell: /usr/bin/purgeman -v | grep 'serviceVersion' | tr -d '",' | awk '{print $2}'
-      register: purgemanVersion
-      when: purgemanResp.stat.exists
+      shell: |
+        set -o pipefail
+        /usr/bin/purgeman -v | grep 'serviceVersion' | tr -d '",' | awk '{print $2}'
+      args:
+        executable: bash
+      register: purgeman_version
+      when: purgeman_resp.stat.exists
       changed_when: false
 
     - name: check purgeman service account
-      shell: id purgeman
-      register: purgemanAccount
+      command: id purgeman
+      register: purgeman_account
       failed_when: false
       changed_when: false
 
-    - when: (not purgemanResp.stat.exists) or (purgemanAccount.rc != 0) or (purgemanVersion.stdout != 'v0.3.0')
+    - when: (not purgeman_resp.stat.exists) or (purgeman_account.rc != 0) or (purgeman_version.stdout != 'v0.3.0')
       block:
         - name: check if purgeman service exists
           stat:
             path: /usr/lib/systemd/system/purgeman.service
-          register: serviceResp
+          register: service_resp
           tags:
             - no_testing
 
@@ -485,7 +489,7 @@
           service:
             name: purgeman
             state: stopped
-          when: serviceResp.stat.exists
+          when: service_resp.stat.exists
           tags:
             - no_testing
 
@@ -498,11 +502,11 @@
           unarchive:
             src: https://github.com/cyverse/purgeman/releases/download/v0.3.0/purgeman_0.3.0.tar.gz
             dest: /tmp/purgeman_setup
-            remote_src: True
-          register: unarchiveResp
+            remote_src: true
+          register: unarchive_resp
 
         - name: install purgeman service
-          when: unarchiveResp is changed
+          when: unarchive_resp is changed
           make:
             chdir: /tmp/purgeman_setup
             target: install_centos

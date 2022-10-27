@@ -9,6 +9,19 @@
       tags:
         - no_testing
 
+    - name: ensure iRODS user for SFTPGo exists
+      delegate_to: localhost
+      become: false
+      irods_user:
+        name: "{{ _sftpgo_irods_proxy_username }}"
+        password: "{{ _sftpgo_irods_proxy_password }}"
+        state: present
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"
+
     # Install SFTPGo
     - name: check if sftpgo is already installed
       stat:

@@ -16,6 +16,7 @@
         name: "{{ _sftpgo_irods_proxy_username }}"
         password: "{{ _sftpgo_irods_proxy_password }}"
         state: present
+        type: rodsadmin
         host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"
         admin_user: "{{ _irods_clerver_user }}"

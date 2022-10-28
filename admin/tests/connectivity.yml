@@ -2,6 +2,14 @@
 - name: test install maintainer keys
   hosts: all:!localhost
   tasks:
-    - name: test install key
-      shell: grep --quiet 'testing env maintainer' "$HOME"/.ssh/authorized_keys
+    - name: test allowed keys installed
+      shell: grep --quiet '{{ item }}' "$HOME"/.ssh/authorized_keys
+      with_items:
+        - allowed 1
+        - allowed 2
+        - allowed 3
+      changed_when: false
+
+    - name: test disallowed keys not installed
+      shell: grep --invert --quiet disallowed "$HOME"/.ssh/authorized_keys
       changed_when: false

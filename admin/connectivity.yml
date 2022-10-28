@@ -5,6 +5,6 @@
     - name: install key
       authorized_key:
         user: "{{ ansible_user_id }}"
-        state: present
-        key: "{{ item }}"
+        state: "{{ item.state | d('present') if item is mapping else 'present' }}"
+        key: "{{ item.key if item is mapping else item }}"
       with_items: "{{ _maintainer_keys }}"

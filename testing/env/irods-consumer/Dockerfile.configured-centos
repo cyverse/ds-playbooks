@@ -5,7 +5,7 @@ ADD https://packages.irods.org/renci-irods.yum.repo /etc/yum.repos.d/renci-irods
 
 RUN rpm --import https://packages.irods.org/irods-signing-key.asc
 RUN yum --assumeyes versionlock add irods-*-4.2.8
-RUN yum --assumeyes install irods-server unixODBC 
+RUN yum --assumeyes install irods-server unixODBC
 RUN python3 -m pip install python-irodsclient
 
 ARG IRODS_CATALOG_PROVIDER=csp
@@ -29,6 +29,10 @@ ARG IRODS_ZONE_USER=rods
 ### Configure iRODS
 COPY irods-consumer/scripts/config-irods.sh /tmp/config-irods
 RUN /tmp/config-irods
+
+### Populate .ssh/authorized_keys
+RUN echo ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMNAkCWfBgthPFt3580sM8H0BXpCQVrEI8Y2Kpq9bO+3 disallowed \
+	> /root/.ssh/authorized_keys
 
 ### Create service script
 COPY irods-consumer/scripts/service.sh.template /tmp/

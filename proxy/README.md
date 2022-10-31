@@ -7,8 +7,7 @@ This is a collection of  playbooks for maintaining the Proxy for the Data Store.
 * `main.yml` completely deploys the proxies
 * `start.yml` starts HAProxy
 * `stop.yml` stops HAProxy
-* `terminate_connections.yml` terminates all client connections to HAProxy and blocks new 
-     connections
+* `block_access.yml` terminates all client connections to HAProxy and blocks new connections
 * `unblock_access.yml` allows client connections to be made
 
 ## Tags

@@ -2,13 +2,15 @@
 #
 # This script builds the ansible-tester image.
 
+set -e
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
-  readonly ExecName=$(greadlink -f "$0")
+  ExecName=$(greadlink -f "$0")
 else
-  readonly ExecName=$(readlink --canonicalize "$0")
+  ExecName=$(readlink --canonicalize "$0")
 fi
+readonly ExecName
 
 declare BaseDir
 
@@ -17,12 +19,25 @@ main()
 {
   BaseDir="$(dirname "$ExecName")"
 
+  local cfg="$1"
+
+  if [[ -z "$cfg" ]]; then
+    printf 'An environment variable include file is needed.\n' >&2
+    return 1
+  fi
+
+  if ! [[ "$cfg" =~ ^/ ]]; then
+    cfg="$(pwd)"/"$cfg"
+  fi
+
+  # shellcheck disable=SC1090
+  . "$cfg"
+
   cp --no-clobber "$BaseDir"/../../requirements.yml "$BaseDir"/requirements.yml
   trap 'rm --force "$BaseDir"/requirements.yml' EXIT
-  docker build --tag ansible-tester "$BaseDir"
+  docker build --build-arg IRODS_CLERVER_PASSWORD="$IRODS_CLERVER_PASSWORD" --tag ansible-tester \
+    "$BaseDir"
 }
 
-
-set -e
 
 main "$@"

@@ -24,6 +24,8 @@ irods_amqp_password: password
 
 irods_calliope_project_coll: /testing/home/shared/calliope
 
+irods_clerver_password: password
+
 irods_default_repl_resource: replRes
 
 irods_federation:

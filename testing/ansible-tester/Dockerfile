@@ -5,14 +5,14 @@ RUN yum --assumeyes --quiet upgrade
 
 ### Install additional ansible support
 RUN yum --assumeyes --quiet install dmidecode python3 rpm-build wget
-# XXX - The latest version of pip (21.3.1) is breaking on CentOS 7 without 
+# XXX - The latest version of pip (21.3.1) is breaking on CentOS 7 without
 #       following encoding setup.
 ENV LANG=en_US.UTF-8
 # XXX - ^^^
 RUN python3 -m pip --quiet install --upgrade pip
 RUN python3 -m pip --disable-pip-version-check --quiet install \
   dnspython netaddr python-irodsclient requests urllib3 wheel
-# NB: ansible-core 2.12+ requires Python 3.8, which can't be installed from the 
+# NB: ansible-core 2.12+ requires Python 3.8, which can't be installed from the
 #     epel on CentOS 7.
 RUN python3 -m pip --disable-pip-version-check --quiet install 'ansible-core<2.12'
 
@@ -29,8 +29,10 @@ RUN mkdir /root/.ssh
 COPY ssh-config /root/.ssh/config
 RUN chmod --recursive go-rwx /root/.ssh
 
+ARG IRODS_CLERVER_PASSWORD=rods
+
 ENV IRODS_HOST=localhost
-ENV IRODS_PASSWORD=rods
+ENV IRODS_PASSWORD=$IRODS_CLERVER_PASSWORD
 ENV IRODS_PORT=1247
 ENV IRODS_USER_NAME=rods
 ENV IRODS_ZONE_NAME=tempZone

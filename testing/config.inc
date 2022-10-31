@@ -5,6 +5,7 @@ export DOMAIN="$ENV_NAME"_default
 
 export DBMS_HOST="$ENV_NAME"-dbms_configured-1."$DOMAIN"
 
+export IRODS_CLERVER_PASSWORD=password
 export IRODS_LAST_EPHEMERAL_PORT=20009
 export IRODS_PROVIDER_SYSTEM_GROUP=irods_provider
 export IRODS_RES_CONF_CENTOS_NAME=replRes

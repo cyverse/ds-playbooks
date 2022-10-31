@@ -1,4 +1,21 @@
 ---
+- name: Verify iRODS user for SFTPGo exists
+  hosts: irods_catalog
+  become: true
+  become_user: irods
+  run_once: true
+  tasks:
+    - name: retrieve SFTPGo iRODS user information
+      command: iadmin lu sftp
+      register: user_info
+      changed_when: false
+
+    - name: verify user information
+      assert:
+        that:
+          - user_info.stdout is search('user_type_name: rodsadmin')
+
+
 - name: test SFTP config template expansion
   hosts: sftp
   run_once: true

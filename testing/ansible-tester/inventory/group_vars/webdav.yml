@@ -4,7 +4,7 @@ webdav_cache_size: 500
 webdav_cache_max_file_size: 10
 
 webdav_purgeman_irods_user: rods
-webdav_purgeman_irods_password: rods
+webdav_purgeman_irods_password: password
 
 webdav_tls_chain_file: /etc/pki/tls/certs/testing.crt
 webdav_tls_key_file: "{{ webdav_tls_chain_file }}"

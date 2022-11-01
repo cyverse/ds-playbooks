@@ -1,17 +1,10 @@
 ---
-- name: Install and configure sftpgo
-  hosts: sftp
-  become: true
+- name: Create iRODS user for SFTPGo
+  hosts: irods_catalog
+  run_once: true
   tasks:
-    - name: enable notifcations when not testing
-      set_fact:
-        notifications_enabled: true
-      tags:
-        - no_testing
-
     - name: ensure iRODS user for SFTPGo exists
       delegate_to: localhost
-      become: false
       irods_user:
         name: "{{ _sftpgo_irods_proxy_username }}"
         password: "{{ _sftpgo_irods_proxy_password }}"
@@ -22,6 +15,17 @@
         admin_user: "{{ _irods_clerver_user }}"
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
+
+
+- name: Install and configure sftpgo
+  hosts: sftp
+  become: true
+  tasks:
+    - name: enable notifcations when not testing
+      set_fact:
+        notifications_enabled: true
+      tags:
+        - no_testing
 
     # Install SFTPGo
     - name: check if sftpgo is already installed

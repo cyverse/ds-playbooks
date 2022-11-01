@@ -11,6 +11,7 @@
 
     - name: ensure iRODS user for SFTPGo exists
       delegate_to: localhost
+      become: false
       run_once: true
       irods_user:
         name: "{{ _sftpgo_irods_proxy_username }}"

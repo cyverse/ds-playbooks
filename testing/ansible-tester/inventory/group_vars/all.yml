@@ -6,6 +6,8 @@ check_routes_timeout: 5
 domain_name: testing_default
 
 irods_admin_password: password
+irods_ephemeral_port_range_first: 19990
+irods_ephemeral_port_range_last: 19999
 irods_icat_password: testpassword
 irods_zone_name: testing
 

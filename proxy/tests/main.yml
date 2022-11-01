@@ -45,11 +45,14 @@
       ansible.builtin.assert:
         that: haproxy is search('\nfrontend irods_main\n(  [^\n]*\n)*  bind +:1247\n')
 
+    - name: Verify haproxy config irods_reconn frontend
+      ansible.builtin.assert:
+        that: haproxy is search('\nfrontend irods_reconn\n(  [^\n]*\n)*  bind +:20000-20199\n')
+
     - name: Verify haproxy config IRODS section
       ansible.builtin.debug:
         msg: TODO verify {{ item }}
       with_items:
-        - irods_reconn frontend
         - irods_throttled backend
         - irods_direct backend
 

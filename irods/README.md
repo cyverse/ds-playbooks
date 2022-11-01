@@ -35,6 +35,7 @@ Variable                                   | Required | Default                 
 `check_routes_timeout`                     | no       | 3                                    |         | The number of seconds the `check_route` playbook will wait for a response during a single port check
 `de_job_irods_user`                        | no       |                                      |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
 `firewall_chain`                           | no       | INPUT                                |         | The iptables chain managing authorizing iRODS connections
+`irods_admin_password`                     | no       | `irods_clerver_password`             |         | The iRODS admin account password
 `irods_admin_username`                     | no       | `irods_clerver_user`                 |         | The iRODS admin account name
 `irods_amqp_exchange`                      | no       | irods                                |         | The AMQP exchange used to publish events
 `irods_amqp_host`                          | no       | `groups['amqp'][0]`                  |         | the FQDN or IP address of the server hosting the AMQP service
@@ -105,7 +106,7 @@ Variable                                   | Required | Default                 
 `webdav_purgeman_irods_password`           | yes      |                                      |         | The password of the purgeman irods user
 `webdav_server_limit`                      | no       | 48                                   |         | The number of cpu cores to be used
 `webdav_threads_per_child`                 | no       | 4                                    |         | The number of threads per core to be created
-`webdav_tls_cert`                          | no       |                                      |         | The TLS certificate file contents 
+`webdav_tls_cert`                          | no       |                                      |         | The TLS certificate file contents
 `webdav_tls_cert_file`                     | no       | /etc/ssl/certs/dummy.crt             |         | The TLS certificate file used for encrypted communication
 `webdav_tls_chain`                         | no       |                                      |         | The TLS certificate chain file contents
 `weddav_tls_chain_file`                    | no       | /etc/ssl/certs/dummy-chain.crt       |         | The TLS certificate chain file used for encrypted communication

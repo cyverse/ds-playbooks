@@ -2,16 +2,13 @@
 
 This is a collection of playbooks for deploying iRODS for the CyVerse Data Store.
 
-
 ## Tags
 
 * `firewall` for tasks related to firewall configuration
 * `no_testing` for tasks that shouldn't be run within the containerized testing environment
 * `non_idempotent` for tasks that aren't idempotent
 
-
 ## Variables
-
 
 Variable                                   | Required | Default                              | Choices | Comments
 ------------------------------------------ | -------- | ------------------------------------ | ------- | --------
@@ -121,8 +118,6 @@ Variable                                   | Required | Default                 
 `sftpgo_admin_password`                    | yes      |                                      |         | The password of the SFTPGo admin user
 `sftpgo_irods_proxy_username`              | no       | sftp                                 |         | The irods user who provides proxy access to SFTPGo
 `sftpgo_irods_proxy_password`              | yes      |                                      |         | The password of the SFTPGo irods proxy user
-
-
 
 `irods_federatation` entry fields
 

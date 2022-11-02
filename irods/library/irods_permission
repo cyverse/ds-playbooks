@@ -4,6 +4,7 @@
 Provides an ansible module for creating and removing iRODS collection.
 """
 
+import itertools
 import ssl
 from os.path import basename, dirname
 from ansible.module_utils.basic import AnsibleModule
@@ -11,8 +12,7 @@ from ansible.module_utils.basic import AnsibleModule
 ANSIBLE_METADATA = {
     "metadata_version": "1.1",
     "status": ["preview"],
-    "supported_by": "community"
-}
+    "supported_by": "community"}
 
 DOCUMENTATION = """
 ---
@@ -49,9 +49,11 @@ options:
         required: true
         type: str
     recursive:
-        description:
-            - whether or not the subject should be granted the same permission on everything in the collection.
-            - object must be a collection
+        description: >
+          whether or not the subject should be granted the same permission on
+          everything in the collection.
+
+          object must be a collection
         required: false
         type: bool
     subject_zone:
@@ -93,7 +95,7 @@ author:
     - John Xu
 """
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: ensure anonymous user has read access to required collections
   irods_permission:
     subject: anonymous
@@ -115,23 +117,29 @@ EXAMPLES = '''
     admin_user: rods
     admin_password: 1234
     zone: tempZone
-'''
+"""
 
-RETURN = '''
+RETURN = """
 perm_before:
-    description:
-        - permission user(subject) has on the object before the module has run
-        - null if user has no permission
-        - only shows permission of the object itself not its members even with recursive option
-    type: str
-    returned: always
+  description: >
+    permission user(subject) has on the object before the module has run.
+
+    null if user has no permission
+
+    only shows permission of the object itself not its members even with
+    recursive option
+  type: str
+  returned: always
 perm_after:
-    description:
-        - permission user(subject) has on the object after the module has run
-        - null if user has no permission
-        - only shows permission of the object itself not its members even with recursive option
-    type: str
-    returned: always
+  description: >
+    permission user(subject) has on the object after the module has run
+
+    null if user has no permission
+
+    only shows permission of the object itself not its members even with
+    recursive option
+  type: str
+  returned: always
 exc:
     description:
         - type of last iRODS exception thrown
@@ -144,16 +152,16 @@ exc_msg:
         - empty string when none is thrown
     type: str
     returned: always
-'''
+"""
 
 try:
     USE_IRODS_CLIENT = True
     from irods.session import iRODSSession
     from irods.models import DataObject, DataAccess, User
-    from irods.models import Collection, CollectionAccess, CollectionUser
+    from irods.models import Collection, CollectionAccess
     from irods.access import iRODSAccess
     from irods.exception import DataObjectDoesNotExist
-    from irods.column import Criterion
+    from irods.column import Like
 except ImportError:
     USE_IRODS_CLIENT = False
 
@@ -170,12 +178,13 @@ class IRODSPermissionModule:
         # define argument
         self.module_args = dict(
             subject=dict(type="str", required=True),
-            permission=dict(type="str", required=True,
-                            choices=["null", "read", "write", "own"]),
+            permission=dict(
+                type="str",
+                required=True,
+                choices=["null", "read", "write", "own"]),
             object=dict(type="str", required=True),
             recursive=dict(type="bool", required=False, default=False),
             subject_zone=dict(type="str", required=False),
-
             host=dict(type="str", required=True),
             port=dict(type="int", required=True),
             admin_user=dict(type="str", no_log=True, required=True),
@@ -184,23 +193,22 @@ class IRODSPermissionModule:
         )
         # result
         self.result = dict(
-            changed=False,
-            exc="",
-            exc_msg="",
-            perm_before=[],
-            perm_after=[]
-        )
+            changed=False, exc="", exc_msg="", perm_before=[], perm_after=[])
 
         # init module
         self.module = AnsibleModule(
-            argument_spec=self.module_args,
-            supports_check_mode=True
-        )
+            argument_spec=self.module_args, supports_check_mode=True)
 
         self.session = None
 
-        self.perm_str_mapping = {"read object": "read", "modify object": "write", "own": "own"}
-        self.perm_str_reverse_map = {"read": "read object", "write": "modify object", "own": "own"}
+        self.perm_str_mapping = {
+            "read object": "read",
+            "modify object": "write",
+            "own": "own"}
+        self.perm_str_reverse_map = {
+            "read": "read object",
+            "write": "modify object",
+            "own": "own"}
 
     def run(self):
         """
@@ -212,10 +220,11 @@ class IRODSPermissionModule:
         # only-check mode
         if self.module.check_mode:
             self.module.exit_json(**self.result)
+            return
 
         self.init_session()
 
-        action = self.select_action()
+        action = self._select_action()
         action()
 
     def _fail(self, msg, err=None):
@@ -251,7 +260,9 @@ class IRODSPermissionModule:
         Initialize the iRODS session with iRODS server
         """
         ssl_context = ssl.create_default_context(
-            purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None,
+            purpose=ssl.Purpose.SERVER_AUTH,
+            cafile=None,
+            capath=None,
             cadata=None)
         ssl_settings = {"ssl_context": ssl_context}
         self.session = iRODSSession(
@@ -262,7 +273,7 @@ class IRODSPermissionModule:
             zone=self.module.params["zone"],
             **ssl_settings)
 
-    def select_action(self):
+    def _select_action(self):
         """
         Dispatch action according to the argument passed to the module
         """
@@ -272,6 +283,7 @@ class IRODSPermissionModule:
             return self.permission_present_recursive
         return self.permission_present
 
+    # TODO convert this to class
     def permission_absent(self):
         """
         Ensure the permission on the object with given subject is absent
@@ -295,18 +307,26 @@ class IRODSPermissionModule:
             self._fail("recursive option can only be used on collection")
 
         # remove permission if exists
-        if recursive and not self._check_null_permission_recursive(path, username):
-            self._set_permission(path, "null", username, recursive=True, user_zone=subject_zone)
+        if (
+            recursive
+            and not self._check_null_permission_recursive(path, username)
+        ):
+            self._set_permission(
+                path, "null", username, recursive=True, user_zone=subject_zone)
             self.result["changed"] = True
         elif not recursive and permission:
-            self._set_permission(path, "null", username, user_zone=subject_zone)
+            self._set_permission(
+                path, "null", username, user_zone=subject_zone)
             self.result["changed"] = True
-        self.result["perm_after"] = self._get_permission(obj_type, path, username)
+        self.result["perm_after"] = self._get_permission(
+            obj_type, path, username)
         self._success("permission is absent")
 
+    # TODO convert this to class
     def permission_present(self):
         """
-        Ensure the specified permission on the object with given subject is present
+        Ensure the specified permission on the object with given subject is
+        present
         """
         # fetch object at the path
         path = self.module.params["object"]
@@ -326,14 +346,18 @@ class IRODSPermissionModule:
         # set permission if different
         # or if recursive option is set
         if _permission_diff(permission, [target_perm]):
-            self._set_permission(path, target_perm, username, user_zone=subject_zone)
+            self._set_permission(
+                path, target_perm, username, user_zone=subject_zone)
             self.result["changed"] = True
-        self.result["perm_after"] = self._get_permission(obj_type, path, username)
+        self.result["perm_after"] = self._get_permission(
+            obj_type, path, username)
         self._success("permission is present")
 
+    # TODO convert this to class
     def permission_present_recursive(self):
         """
-        Ensure the target permission on the collection and its members is present
+        Ensure the target permission on the collection and its members is
+        present
         """
         # fetch object at the path
         path = self.module.params["object"]
@@ -355,26 +379,36 @@ class IRODSPermissionModule:
             self._fail("recursive option can only be used on collection")
 
         if not self._check_permission_recursive(path, username, target_perm):
-            self._set_permission(path, target_perm, username, recursive=recursive, user_zone=subject_zone)
+            self._set_permission(
+                path, target_perm, username,
+                recursive=recursive, user_zone=subject_zone)
             self.result["changed"] = True
-            if not self._check_permission_recursive(path, username, target_perm):
+            if (
+                not self._check_permission_recursive(
+                    path, username, target_perm)
+            ):
                 self._fail("permission changed after setting permission")
-        self.result["perm_after"] = self._get_permission(obj_type, path, username)
+        self.result["perm_after"] = self._get_permission(
+            obj_type, path, username)
         self._success("permission is present")
 
-    def _set_permission(self, path, perm_str, user, recursive=False, user_zone=""):
+    def _set_permission(
+        self, path, perm_str, user, recursive=False, user_zone=""
+    ):
         """
         Set permission
         """
-        self.session.permissions.set(iRODSAccess(perm_str, path, user, user_zone=user_zone), recursive=recursive)
+        self.session.permissions.set(
+            iRODSAccess(perm_str, path, user, user_zone=user_zone),
+            recursive=recursive)
 
     def _get_permission(self, obj_type, path, username):
         """
         Get all permission on the given object for the given user
 
         Args:
-            obj (iRODSCollection|iRODSDataObject): a iRODS object, either a collection
-                or a data object
+            obj (iRODSCollection|iRODSDataObject): a iRODS object, either a
+                collection or a data object
             username (str): username to look up permission for
 
         Returns:
@@ -382,27 +416,31 @@ class IRODSPermissionModule:
                 empty list if no permission
         """
         if obj_type == Collection:
-# XXX - in iRODS < 4.2, CollectionUser.name isn't supported.
-#            query = self.session.query(Collection, CollectionAccess).filter(
-#                CollectionUser.name == username, Collection.name == path)
-#            result = [self.perm_str_mapping[row[CollectionAccess.name]] for row in query
+            # XXX - in iRODS < 4.2, CollectionUser.name isn't supported.
+            #            query = self.session.query(Collection, CollectionAccess).filter(  # noqa
+            #                CollectionUser.name == username, Collection.name == path)  # noqa
+            #            result = [self.perm_str_mapping[row[CollectionAccess.name]] for row in query  # noqa # pylint: disable=line-too-long
             query = self.session.query(User.id).filter(User.name == username)
             for row in query:
-                id = row[User.id]
+                uid = row[User.id]
             query = self.session.query(Collection, CollectionAccess).filter(
-                CollectionAccess.user_id == id, Collection.name == path)
-            result = [self.perm_str_mapping[row[CollectionAccess.name]] for row in query]
-### XXX - ^^^
+                CollectionAccess.user_id == uid, Collection.name == path)
+            result = [
+                self.perm_str_mapping[row[CollectionAccess.name]]
+                for row in query]
+            # XXX - ^^^
             return result
         if obj_type == DataObject:
             conditions = [
                 Collection.name == dirname(path),
                 DataObject.name == basename(path),
-                User.name == username
-            ]
-            query = self.session.query(DataObject.name, DataAccess.name) \
-                .filter(*conditions).all()
-            result = [self.perm_str_mapping[row[DataAccess.name]] for row in query]
+                User.name == username]
+            query = (
+                self.session.query(DataObject.name, DataAccess.name)
+                .filter(*conditions)
+                .all())
+            result = [
+                self.perm_str_mapping[row[DataAccess.name]] for row in query]
             return result
         self._fail("Unsupported Object type")
         return None
@@ -417,26 +455,27 @@ class IRODSPermissionModule:
             perm_subject (str): name of the recipent of the permission
 
         Returns:
-            bool: True if subject's permission on the collection are absent, False otherwise
+            bool: True if subject's permission on the collection are absent,
+                False otherwise
         """
         query = self.session.query(User.id).filter(User.name == perm_subject)
         perm_subj_id = query.first()[User.id]
 
         # check the number of related collections that subject has access to
         coll_obj_query = self.session.query(CollectionAccess.access_id).filter(
-            Criterion('like', Collection.name, '{}%'.format(coll_path)))
+            Like(Collection.name, f"{coll_path}%"))
         coll_obj_query = coll_obj_query.filter(
             CollectionAccess.user_id == perm_subj_id)
         colls_count = len(
-            [row[CollectionAccess.access_id] for row in coll_obj_query]
-        )
+            [row[CollectionAccess.access_id] for row in coll_obj_query])
         if colls_count > 0:
             return False
 
         # check the number of related data objects that subject has access to
-        data_obj_query = self.session.query(DataAccess.data_id).filter(
-            Criterion('like', Collection.name, '{}%'.format(coll_path))).filter(
-                DataAccess.user_id == perm_subj_id)
+        data_obj_query = (
+            self.session.query(DataAccess.data_id)
+            .filter(Like(Collection.name, f"{coll_path}%"))
+            .filter(DataAccess.user_id == perm_subj_id))
         data_obj_count = len(data_obj_query.execute())
         if data_obj_count > 0:
             return False
@@ -450,48 +489,70 @@ class IRODSPermissionModule:
         Args:
             coll_path (str): path to the collection
             perm_subject (str): name of the recipent of the permission
-            permission (str): target permission, "read" | "write" | "own", cannot be "null"
+            permission (str): target permission, "read" | "write" | "own",
+                cannot be "null"
 
         Returns:
-            bool: True if permission are consistent with target, False otherwise
+            bool: True if permission are consistent with target, False
+                otherwise
         """
         if permission == "null":
-            raise ValueError("permission cannot be null, use other functions instead")
+            raise ValueError(
+                "permission cannot be null, use other functions instead")
         query = self.session.query(User.id).filter(User.name == perm_subject)
         perm_subj_id = query.first()[User.id]
 
-        # find all related collections (including self)
-        coll_obj_query = self.session.query(CollectionAccess.access_id).filter(
-            Criterion('like', Collection.name, '{}%'.format(coll_path)))
-        coll_count = len(coll_obj_query.execute())
+        # Count all collections
+        sub_colls = self.session.query().count(Collection.id).filter(
+            Like(Collection.name, f"{coll_path}/%"))
+        # 1 parent collection + subcollections
+        coll_count = 1 + sub_colls.execute()[0][Collection.id]
 
-        # find all related collection that has correct permission
-        coll_obj_query = self.session.query(CollectionAccess.access_id).filter(
-            Criterion('like', Collection.name, '{}%'.format(coll_path)))
-        coll_obj_query = coll_obj_query.filter(
-            CollectionAccess.name == self.perm_str_reverse_map[permission])
-        coll_obj_query = coll_obj_query.filter(
-            CollectionAccess.user_id == perm_subj_id)
-        correct_colls_count = len(
-            [row[CollectionAccess.access_id] for row in coll_obj_query]
-        )
-        if correct_colls_count != coll_count:
+        # Count all collections that have correct permission
+        base_coll_access = (
+            self.session.query().count(Collection.id)
+            .filter(Collection.name == coll_path)
+            .filter(
+                CollectionAccess.name == self.perm_str_reverse_map[permission])
+            .filter(CollectionAccess.user_id == perm_subj_id))
+        sub_coll_access = (
+            self.session.query().count(Collection.id)
+            .filter(Like(Collection.name, f"{coll_path}/%"))
+            .filter(
+                CollectionAccess.name == self.perm_str_reverse_map[permission])
+            .filter(CollectionAccess.user_id == perm_subj_id))
+        coll_access_count = (
+            base_coll_access.execute()[0][Collection.id]
+            + sub_coll_access.execute()[0][Collection.id])
+
+        if coll_access_count != coll_count:
             return False
 
-        # check permission for members of all related collections
-        data_obj_query = self.session.query(DataAccess.data_id).filter(
-            Criterion('like', Collection.name, '{}%'.format(coll_path)))
-        data_obj_count = len(data_obj_query.execute())
+        # find all related data objects
+        base_data = self.session.query(DataObject.id).filter(
+            Collection.name == coll_path)
+        sub_data = self.session.query(DataObject.id).filter(
+            Like(Collection.name, f"{coll_path}/%"))
+        data_count = 0
+        for _ in itertools.chain(base_data, sub_data):
+            data_count = data_count + 1
 
-        data_obj_query = self.session.query(DataAccess.data_id).filter(
-            Criterion('like', Collection.name, '{}%'.format(coll_path)))
-        data_obj_query = data_obj_query.filter(
-            DataAccess.user_id == perm_subj_id)
-        data_obj_query = data_obj_query.filter(
-            DataAccess.name == self.perm_str_reverse_map[permission])
-        correct_data_obj_count = len(data_obj_query.execute())
+        # find all related data objects that have correct permission
+        base_data_access = (
+            self.session.query(DataAccess.data_id)
+            .filter(Collection.name == coll_path)
+            .filter(DataAccess.name == self.perm_str_reverse_map[permission])
+            .filter(DataAccess.user_id == perm_subj_id))
+        sub_data_access = (
+            self.session.query(DataAccess.data_id)
+            .filter(Like(Collection.name, f"{coll_path}/%"))
+            .filter(DataAccess.name == self.perm_str_reverse_map[permission])
+            .filter(DataAccess.user_id == perm_subj_id))
+        data_access_count = 0
+        for _ in itertools.chain(base_data_access, sub_data_access):
+            data_access_count = data_access_count + 1
 
-        if data_obj_count != correct_data_obj_count:
+        if data_access_count != data_count:
             return False
 
         return True
@@ -517,6 +578,7 @@ class IRODSPermissionModule:
         except DataObjectDoesNotExist:
             return None
 
+
 def _permission_diff(perm1, perm2):
     """
     Difference in permission
@@ -526,11 +588,13 @@ def _permission_diff(perm1, perm2):
         perm2 ([str]): list of permission string
 
     Returns:
-        set(str): a set of difference between the two list of permission strings
+        set(str): a set of difference between the two list of permission
+            strings
     """
     perm_set1 = set(perm1)
     perm_set2 = set(perm2)
     return perm_set1.symmetric_difference(perm_set2)
+
 
 def main():
     """
@@ -540,5 +604,5 @@ def main():
     module.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

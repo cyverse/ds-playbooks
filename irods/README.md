@@ -2,16 +2,13 @@
 
 This is a collection of playbooks for deploying iRODS for the CyVerse Data Store.
 
-
 ## Tags
 
 * `firewall` for tasks related to firewall configuration
 * `no_testing` for tasks that shouldn't be run within the containerized testing environment
 * `non_idempotent` for tasks that aren't idempotent
 
-
 ## Variables
-
 
 Variable                                   | Required | Default                              | Choices | Comments
 ------------------------------------------ | -------- | ------------------------------------ | ------- | --------
@@ -105,7 +102,7 @@ Variable                                   | Required | Default                 
 `webdav_purgeman_irods_password`           | yes      |                                      |         | The password of the purgeman irods user
 `webdav_server_limit`                      | no       | 48                                   |         | the number of cpu cores to be used
 `webdav_threads_per_child`                 | no       | 4                                    |         | the number of threads per core to be created
-`webdav_tls_cert`                          | no       |                                      |         | The TLS certificate file contents 
+`webdav_tls_cert`                          | no       |                                      |         | The TLS certificate file contents
 `webdav_tls_cert_file`                     | no       | /etc/ssl/certs/dummy.crt             |         | The TLS certificate file used for encrypted communication
 `webdav_tls_chain`                         | no       |                                      |         | The TLS certificate chain file contents
 `weddav_tls_chain_file`                    | no       | /etc/ssl/certs/dummy-chain.crt       |         | The TLS certificate chain file used for encrypted communication

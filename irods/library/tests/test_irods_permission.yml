@@ -2,10 +2,10 @@
 - name: testing irods_permission module
   hosts: localhost
   vars:
-    test_coll: /testing/home/rods/test_coll1
-    test_sub_coll: "{{ test_coll }}/sub_coll1"
-    test_data: /testing/home/rods/test_obj1
     zone: testing
+    test_coll: /{{ zone }}/home/rods/test_coll1
+    test_sub_coll: "{{ test_coll }}/sub_coll1"
+    test_data: /{{ zone }}/home/rods/test_obj1
   pre_tasks:
     - name: Initialized iRODS session
       shell: |
@@ -89,14 +89,13 @@
         port: 1247
         admin_user: rods
         admin_password: rods
-        zone: testing
+        zone: "{{ zone }}"
       register: perm_call
 
     - name: Check read permission on test_coll1
       shell: |
         set -o pipefail
-        ils -A '{{ test_coll }}' \
-          | grep --quiet 'reader#{{ zone }}:read object'
+        ils -A '{{ test_coll }}' | grep --quiet 'reader#{{ zone }}:read object'
       changed_when: false
 
     - name: Check no read permission on test_coll1/sub_coll1
@@ -104,15 +103,15 @@
         set -o pipefail
         ils -A '{{ test_sub_coll }}' | grep --quiet 'reader#{{ zone }}'
       register: result
-      failed_when: result.rc == 0
+      failed_when: not (result is failed)
       changed_when: false
       when: perm_call is changed
+      tags: skip_ansible_lint
 
     - name: Check read permission on test_coll1
       shell: |
         set -o pipefail
-        ils -A '{{ test_coll }}' \
-          | grep --quiet 'reader#{{ zone }}:read object'
+        ils -A '{{ test_coll }}' | grep --quiet 'reader#{{ zone }}:read object'
       changed_when: false
 
     - name: Grant reader read permission on test_coll1 (recursive)
@@ -125,17 +124,13 @@
         port: 1247
         admin_user: rods
         admin_password: rods
-        zone: testing
-      register: result
+        zone: "{{ zone }}"
 
     - name: Check read permission on test_coll1 & test_coll1/sub_coll1
       shell: |
         set -o errexit -o pipefail
-        ils -A '{{ test_coll }}' \
-          | grep --quiet 'reader#{{ zone }}:read object'
-        ils -A '{{ test_sub_coll }}' \
-          | sed --quiet 2p \
-          | grep --quiet 'reader#{{ zone }}:read object'
+        ils -A '{{ test_coll }}' | grep --quiet 'reader#{{ zone }}:read object'
+        ils -A '{{ test_sub_coll }}' | sed --quiet 2p | grep --quiet 'reader#{{ zone }}:read object'
       changed_when: false
 
     - name: Grant writer write permission on test_coll1
@@ -147,14 +142,12 @@
         port: 1247
         admin_user: rods
         admin_password: rods
-        zone: testing
-      register: result
+        zone: "{{ zone }}"
 
     - name: Check write permission on test_coll1
       shell: |
         set -o pipefail
-        ils -A '{{ test_coll }}' \
-          | grep --quiet 'writer#{{ zone }}:modify object'
+        ils -A '{{ test_coll }}' | grep --quiet 'writer#{{ zone }}:modify object'
       changed_when: false
 
     - name: Grant owner ownership permission on test_coll1
@@ -166,8 +159,7 @@
         port: 1247
         admin_user: rods
         admin_password: rods
-        zone: testing
-      register: result
+        zone: "{{ zone }}"
 
     - name: Check ownership permission on test_coll1
       shell: |
@@ -184,13 +176,12 @@
         port: 1247
         admin_user: rods
         admin_password: rods
-        zone: testing
-      register: result
+        zone: "{{ zone }}"
 
     - name: Check null/no permission on test_coll1
       command: ils -A '{{ test_coll }}'
       register: result
-      failed_when: result.failed or 'forbidden#testing:' in result.stdout
+      failed_when: result.failed or 'forbidden#' ~ zone ~ ':' in result.stdout
       changed_when: false
 
     - name: Remove forbidden permission on test_coll1 (recursive)
@@ -203,13 +194,12 @@
         port: 1247
         admin_user: rods
         admin_password: rods
-        zone: testing
-      register: result
+        zone: "{{ zone }}"
 
     - name: Check null/no permission on test_sub_coll
       command: ils -A '{{ test_sub_coll }}'
       register: result
-      failed_when: result.failed or "forbidden#testing:" in result.stdout
+      failed_when: result.failed or 'forbidden#' ~ zone ~ ':' in result.stdout
       changed_when: false
 
     - name: Grant reader read permission on test_obj1
@@ -221,8 +211,13 @@
         port: 1247
         admin_user: rods
         admin_password: rods
-        zone: testing
-      register: result
+        zone: "{{ zone }}"
+
+    - name: Check read permission on test_obj1
+      shell: |
+        set -o pipefail
+        ils -A '{{ test_data }}' | grep --quiet 'reader#{{ zone }}:read object'
+      changed_when: false
 
     - name: Grant writer write permission on test_obj1
       irods_permission:
@@ -233,15 +228,12 @@
         port: 1247
         admin_user: rods
         admin_password: rods
-        zone: testing
-      register: result
+        zone: "{{ zone }}"
 
     - name: Check write permission on test_obj1
       shell: |
         set -o pipefail
-        ils -A '{{ test_data }}' \
-          | grep --quiet 'write#{{ zone }}:modify object'
-      register: result
+        ils -A '{{ test_data }}' | grep --quiet 'writer#{{ zone }}:modify object'
       changed_when: false
 
     - name: Grant owner ownership permission on test_obj1
@@ -253,15 +245,12 @@
         port: 1247
         admin_user: rods
         admin_password: rods
-        zone: testing
-      register: result
+        zone: "{{ zone }}"
 
     - name: Check ownership permission on test_obj1
       shell: |
         set -o pipefail
-        ils -A '{{ test_data }}' \
-          | grep --quiet 'owner#{{ zone }}:own'
-      register: result
+        ils -A '{{ test_data }}' | grep --quiet 'owner#{{ zone }}:own'
       changed_when: false
 
     - name: Remove forbidden permission on test_obj1
@@ -273,13 +262,12 @@
         port: 1247
         admin_user: rods
         admin_password: rods
-        zone: testing
-      register: result
+        zone: "{{ zone }}"
 
     - name: Check null/no permission on test_obj1
       command: ils -A '{{ test_data }}'
       register: result
-      failed_when: result.failed or 'forbidden#testing:' in result.stdout
+      failed_when: result.failed or 'forbidden#' ~ zone ~ ':' in result.stdout
       changed_when: false
 
     - name: Grant remote_user#other_zone read permission on test_obj1
@@ -292,12 +280,10 @@
         port: 1247
         admin_user: rods
         admin_password: rods
-        zone: testing
-      register: result
+        zone: "{{ zone }}"
 
     - name: Check permission on test_obj1
       shell: |
         set -o pipefail
-        ils -A '{{ test_data }}' \
-          | grep --quiet 'remote_user#other_zone:read'
+        ils -A '{{ test_data }}' | grep --quiet 'remote_user#other_zone:read'
       changed_when: false

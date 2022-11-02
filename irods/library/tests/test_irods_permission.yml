@@ -4,8 +4,7 @@
   vars:
     test_coll: /testing/home/rods/test_coll1
     test_sub_coll: "{{ test_coll }}/sub_coll1"
-    test_data_obj_1: /testing/home/rods/test_obj1
-    test_data_obj_2: "{{ test_sub_coll }}/test_obj2"
+    test_data: /testing/home/rods/test_obj1
     zone: testing
   pre_tasks:
     - name: Initialized iRODS session
@@ -34,27 +33,15 @@
     - name: Create test users
       shell: |
         set -o errexit
-        if ! res="$(iadmin lu test_user1)"; then
-          exit 1
-        fi
-        if [[ "$res" == 'No rows found' ]]; then
-          iadmin mkuser test_user1 rodsuser
-          echo changed
-        fi
-        if ! res="$(iadmin lu test_user2)"; then
-          exit 1
-        fi
-        if [[ "$res" == 'No rows found' ]]; then
-          iadmin mkuser test_user2 rodsuser
-          echo changed
-        fi
-        if ! res="$(iadmin lu 'test_user3#other_zone')"; then
-          exit 1
-        fi
-        if [[ "$res" == 'No rows found' ]]; then
-          iadmin mkuser 'test_user3#other_zone' rodsuser
-          echo changed
-        fi
+        for user in forbidden reader writer owner 'remote_user#other_zone'; do
+          if ! res="$(iadmin lu "$user")"; then
+            exit 1
+          fi
+          if [[ "$res" == 'No rows found' ]]; then
+            iadmin mkuser "$user" rodsuser
+            echo changed
+          fi
+        done
       register: response
       changed_when:
         - response.stdout_lines | length > 0
@@ -72,27 +59,30 @@
     - name: Create data objects
       shell: |
         set -o errexit
-        if ! ils '{{ test_data_obj_1 }}' &> /dev/null; then
-          file1=/tmp/"$(basename '{{ test_data_obj_1 }}')"
+        if ! ils '{{ test_data }}' &> /dev/null; then
+          file1=/tmp/"$(basename '{{ test_data }}')"
           echo data_object_1 > "$file1"
-          iput -R ingestRes "$file1" '{{ test_data_obj_1 }}' >&2
-          echo changed
-        fi
-        if ! ils '{{ test_data_obj_2 }}' &> /dev/null; then
-          file2=/tmp/"$(basename '{{ test_data_obj_2 }}')"
-          echo data_object_2 > "$file2"
-          iput -R ingestRes "$file2" '{{ test_data_obj_2 }}' >&2
+          iput -R ingestRes "$file1" '{{ test_data }}' >&2
           echo changed
         fi
       register: response
-      changed_when:
-        - response.stdout_lines | length > 0
-        - response.stdout_lines[0] == 'changed'
+      changed_when: response.stdout == 'changed'
+
+    - name: Grant forbidden read permission on everything
+      shell: |
+        set -o errexit
+        if ! clientUserName=forbidden ils -A '{{ test_coll }}'; then
+          ichmod -M read forbidden '{{ test_coll }}' '{{ test_sub_coll }}' '{{ test_data }}'
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+      tags: non_idempotent
 
   tasks:
-    - name: Grant test_user1 read permission on test_coll1 (non-recursive)
+    - name: Grant reader read permission on test_coll1 (non-recursive)
       irods_permission:
-        subject: test_user1
+        subject: reader
         permission: read
         object: "{{ test_coll }}"
         host: "{{ groups['irods_catalog'][0] }}"
@@ -100,32 +90,34 @@
         admin_user: rods
         admin_password: rods
         zone: testing
+      register: perm_call
 
     - name: Check read permission on test_coll1
       shell: |
         set -o pipefail
         ils -A '{{ test_coll }}' \
-          | grep --quiet 'test_user1#{{ zone }}:read object'
+          | grep --quiet 'reader#{{ zone }}:read object'
       changed_when: false
 
     - name: Check no read permission on test_coll1/sub_coll1
       shell: |
         set -o pipefail
-        ils -A '{{ test_sub_coll }}' | grep --quiet 'test_user1#{{ zone }}'
+        ils -A '{{ test_sub_coll }}' | grep --quiet 'reader#{{ zone }}'
       register: result
       failed_when: result.rc == 0
       changed_when: false
+      when: perm_call is changed
 
     - name: Check read permission on test_coll1
       shell: |
         set -o pipefail
         ils -A '{{ test_coll }}' \
-          | grep --quiet 'test_user1#{{ zone }}:read object'
+          | grep --quiet 'reader#{{ zone }}:read object'
       changed_when: false
 
-    - name: Grant test_user1 read permission on test_coll1 (recursive)
+    - name: Grant reader read permission on test_coll1 (recursive)
       irods_permission:
-        subject: test_user1
+        subject: reader
         permission: read
         object: "{{ test_coll }}"
         recursive: true
@@ -140,15 +132,15 @@
       shell: |
         set -o errexit -o pipefail
         ils -A '{{ test_coll }}' \
-          | grep --quiet 'test_user1#{{ zone }}:read object'
+          | grep --quiet 'reader#{{ zone }}:read object'
         ils -A '{{ test_sub_coll }}' \
           | sed --quiet 2p \
-          | grep --quiet 'test_user1#{{ zone }}:read object'
+          | grep --quiet 'reader#{{ zone }}:read object'
       changed_when: false
 
-    - name: Grant test_user2 write permission on test_coll1
+    - name: Grant writer write permission on test_coll1
       irods_permission:
-        subject: test_user2
+        subject: writer
         permission: write
         object: "{{ test_coll }}"
         host: "{{ groups['irods_catalog'][0] }}"
@@ -162,12 +154,12 @@
       shell: |
         set -o pipefail
         ils -A '{{ test_coll }}' \
-          | grep --quiet 'test_user2#{{ zone }}:modify object'
+          | grep --quiet 'writer#{{ zone }}:modify object'
       changed_when: false
 
-    - name: Grant test_user1 ownership permission on test_coll1
+    - name: Grant owner ownership permission on test_coll1
       irods_permission:
-        subject: test_user1
+        subject: owner
         permission: own
         object: "{{ test_coll }}"
         host: "{{ groups['irods_catalog'][0] }}"
@@ -180,12 +172,12 @@
     - name: Check ownership permission on test_coll1
       shell: |
         set -o pipefail
-        ils -A '{{ test_coll }}' | grep --quiet 'test_user1#{{ zone }}:own'
+        ils -A '{{ test_coll }}' | grep --quiet 'owner#{{ zone }}:own'
       changed_when: false
 
-    - name: Remove test_user1 permission on test_coll1
+    - name: Remove forbidden permission on test_coll1
       irods_permission:
-        subject: test_user1
+        subject: forbidden
         permission: "null"
         object: "{{ test_coll }}"
         host: "{{ groups['irods_catalog'][0] }}"
@@ -198,12 +190,12 @@
     - name: Check null/no permission on test_coll1
       command: ils -A '{{ test_coll }}'
       register: result
-      failed_when: result.failed or "test_user1#testing:" in result.stdout
+      failed_when: result.failed or 'forbidden#testing:' in result.stdout
       changed_when: false
 
-    - name: Remove test_user1 permission on test_coll1 (recursive)
+    - name: Remove forbidden permission on test_coll1 (recursive)
       irods_permission:
-        subject: test_user1
+        subject: forbidden
         permission: "null"
         object: "{{ test_coll }}"
         recursive: true
@@ -214,17 +206,17 @@
         zone: testing
       register: result
 
-    - name: Check null/no permission on test_coll1
-      command: ils -A '{{ test_coll }}'
+    - name: Check null/no permission on test_sub_coll
+      command: ils -A '{{ test_sub_coll }}'
       register: result
-      failed_when: result.failed or "test_user1#testing:" in result.stdout
+      failed_when: result.failed or "forbidden#testing:" in result.stdout
       changed_when: false
 
-    - name: Grant test_user1 read permission on test_obj1
+    - name: Grant reader read permission on test_obj1
       irods_permission:
-        subject: test_user1
+        subject: reader
         permission: read
-        object: "{{ test_data_obj_1 }}"
+        object: "{{ test_data }}"
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
@@ -232,11 +224,11 @@
         zone: testing
       register: result
 
-    - name: Grant test_user1 write permission on test_obj1
+    - name: Grant writer write permission on test_obj1
       irods_permission:
-        subject: test_user1
+        subject: writer
         permission: write
-        object: "{{ test_data_obj_1 }}"
+        object: "{{ test_data }}"
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
@@ -247,16 +239,16 @@
     - name: Check write permission on test_obj1
       shell: |
         set -o pipefail
-        ils -A '{{ test_data_obj_1 }}' \
-          | grep --quiet 'test_user1#{{ zone }}:modify object'
+        ils -A '{{ test_data }}' \
+          | grep --quiet 'write#{{ zone }}:modify object'
       register: result
       changed_when: false
 
-    - name: Grant test_user1 ownership permission on test_obj1
+    - name: Grant owner ownership permission on test_obj1
       irods_permission:
-        subject: test_user1
+        subject: owner
         permission: own
-        object: "{{ test_data_obj_1 }}"
+        object: "{{ test_data }}"
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
@@ -267,16 +259,16 @@
     - name: Check ownership permission on test_obj1
       shell: |
         set -o pipefail
-        ils -A '{{ test_data_obj_1 }}' \
-          | grep --quiet 'test_user1#{{ zone }}:own'
+        ils -A '{{ test_data }}' \
+          | grep --quiet 'owner#{{ zone }}:own'
       register: result
       changed_when: false
 
-    - name: Remove test_user1 permission on test_obj1
+    - name: Remove forbidden permission on test_obj1
       irods_permission:
-        subject: test_user1
+        subject: forbidden
         permission: "null"
-        object: "{{ test_data_obj_1 }}"
+        object: "{{ test_data }}"
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
@@ -285,17 +277,17 @@
       register: result
 
     - name: Check null/no permission on test_obj1
-      command: ils -A '{{ test_data_obj_1 }}'
+      command: ils -A '{{ test_data }}'
       register: result
-      failed_when: result.failed or 'test_user1#testing:' in result.stdout
+      failed_when: result.failed or 'forbidden#testing:' in result.stdout
       changed_when: false
 
-    - name: Grant test_user3#other_zone read permission on test_obj1
+    - name: Grant remote_user#other_zone read permission on test_obj1
       irods_permission:
-        subject: test_user3
+        subject: remote_user
         subject_zone: other_zone
         permission: "read"
-        object: "{{ test_data_obj_1 }}"
+        object: "{{ test_data }}"
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
@@ -306,6 +298,6 @@
     - name: Check permission on test_obj1
       shell: |
         set -o pipefail
-        ils -A '{{ test_data_obj_1 }}' \
-          | grep --quiet 'test_user3#other_zone:read'
+        ils -A '{{ test_data }}' \
+          | grep --quiet 'remote_user#other_zone:read'
       changed_when: false

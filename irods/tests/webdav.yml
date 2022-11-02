@@ -50,13 +50,13 @@
               'PURGEMAN_IRODS_HOST=dstesting-provider_configured-1.dstesting_default'
                 | regex_escape )
           - purgeman_conf is search('PURGEMAN_IRODS_PORT=1247')
+          - purgeman_conf is search('PURGEMAN_IRODS_USERNAME=rods')
+          - purgeman_conf is search('PURGEMAN_IRODS_PASSWORD=purgeman_pass')
 
     - name: Verify remainder fo purgeman.conf expands correctly
       ansible.builtin.debug:
         msg: TODO check {{ item }}
       with_items:
-        - PURGEMAN_IRODS_USERNAME
-        - PURGEMAN_IRODS_PASSWORD
         - PURGEMAN_IRODS_ZONE
         - PURGEMAN_VARNISH_URLS
 

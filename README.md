@@ -33,6 +33,7 @@ Ansible control nodes.
 
 * dmidecode
 * docker-ce
+* jq
 * python3
 * python3-pip
 * rpm-build (CentOS) or rpm (Ubuntu)
@@ -42,21 +43,29 @@ Docker Compose needs to be installed on development machines as the root user.
 * docker-compose (CentOS)
 * docker-compose-plugin (Ubuntu)
 
+The docker service needs to be started, and the developer needs to be a member of the `docker`
+group, and the docker service needs to be. Do the following as the root user where *DEVELOPER* is
+the username of the developer.
+
+```console
+prompt> systemctl enable docker
+prompt> systemctl start docker
+prompt> usermod --append --groups docker DEVELOPER
+```
+
 The following python packages need to be installed on the development machines and Ansible control
 nodes using `pip`.
 
 * ansible-core<2.12
 * ansible-lint<5.5   (development machines only)
-* docker
 * dnspython
+* docker
 * Jinja2>=3
 * netaddr
 * python-irodsclient
 * requests
 * urllib3
 * wheel
-
-The user executing ansible needs to be a member of the `docker` group.
 
 Finally, the required ansible collections and roles need to be installed. This can be done by
 running the `init-ansible` script.

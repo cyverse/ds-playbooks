@@ -127,11 +127,12 @@
           docker_image_info:
             name: "{{ _irods_rs_image }}"
           register: previous
+          failed_when: false
           tags:
             - no_testing
 
         - name: extract previous docker image Id
-          when: previous.images | length > 0
+          when: previous.images | d([]) | length > 0
           set_fact:
             previous_id: "{{ previous.images[0].Id }}"
           tags:

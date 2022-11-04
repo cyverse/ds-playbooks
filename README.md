@@ -33,15 +33,11 @@ Ansible control nodes.
 
 * dmidecode
 * docker-ce
+* docker-compose-plugin
 * jq
 * python3
 * python3-pip
 * rpm-build (CentOS) or rpm (Ubuntu)
-
-Docker Compose needs to be installed on development machines as the root user.
-
-* docker-compose (CentOS)
-* docker-compose-plugin (Ubuntu)
 
 The docker service needs to be started, and the developer needs to be a member of the `docker`
 group, and the docker service needs to be. Do the following as the root user where *DEVELOPER* is

@@ -38,7 +38,7 @@ _de_job_irods_user: "{{ de_job_irods_user | default(None) }}"
 
 _firewall_chain: "{{ firewall_chain | default('INPUT') }}"
 
-_irods_admin_password: "{{ irods_admin_password | d(_irods_clerver_password) }}"
+_irods_admin_password: "{{ irods_admin_password | default(_irods_clerver_password) }}"
 _irods_admin_username: "{{ irods_admin_username | default(_irods_clerver_user) }}"
 _irods_allowed_clients: "{{ irods_allowed_src | default('0.0.0.0/0') }}"
 _irods_clerver_password: "{{ irods_clerver_password | default('rods') }}"

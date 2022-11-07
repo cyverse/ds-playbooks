@@ -52,13 +52,12 @@
           - purgeman_conf is search('PURGEMAN_IRODS_PORT=1247')
           - purgeman_conf is search('PURGEMAN_IRODS_USERNAME=rods')
           - purgeman_conf is search('PURGEMAN_IRODS_PASSWORD=purgeman_pass')
-
-    - name: Verify remainder fo purgeman.conf expands correctly
-      ansible.builtin.debug:
-        msg: TODO check {{ item }}
-      with_items:
-        - PURGEMAN_IRODS_ZONE
-        - PURGEMAN_VARNISH_URLS
+          - purgeman_conf is search('PURGEMAN_IRODS_ZONE=testing')
+          - >-
+            purgeman_conf
+            is search(
+              'PURGEMAN_VARNISH_URLS=http://127.0.0.1:6081/dav,http://127.0.0.1:6081/dav-anon'
+                | regex_escape )
 
     - name: Verify varnish.service expands correctly
       ansible.builtin.assert:
@@ -340,6 +339,10 @@
         path: /usr/lib/systemd/system/varnish.service
       register: response
       failed_when: not response.stat.exists
+
+    - name: Test configure apache log rotation
+      ansible.builtin.debug:
+        msg: TODO implement
 
     - name: Test create apache systemd service dependencies directory
       ansible.builtin.stat:

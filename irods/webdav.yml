@@ -165,7 +165,7 @@
                 # RequestHeader merge Cache-Control no-store
               </Elseif>
 
-              RequestHeader edit Destination ^https: http: early  
+              RequestHeader edit Destination ^https: http: early
 
               ProxyPass / http://127.0.0.1:{{ _webdav_varnish_service_port }}/ retry=0 timeout=300
               ProxyHTMLURLMap ^http: https: [R]
@@ -433,6 +433,12 @@
         - restart varnishncsa
 
   post_tasks:
+    - name: configure apache log rotation
+      copy:
+        src: files/webdav/etc/logrotate.d/httpd
+        dest: /etc/logrotate.d/httpd
+        mode: a+r
+
     - name: create apache systemd service dependencies directory
       file:
         path: /etc/systemd/system/httpd.service.requires

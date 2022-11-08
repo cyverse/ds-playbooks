@@ -15,7 +15,7 @@
       block:
         - name: retrieve SFTPGo iRODS user information
           shell: |
-            iinit '{{ irods_admin_password }}'
+            iinit '{{ _irods_admin_password }}'
             iadmin lu sftp
           register: user_info
           changed_when: false
@@ -27,8 +27,9 @@
     - name: verify sftpgo.conf expands correctly
       assert:
         that:
-          - sftpgo_conf is search('SFTPGO_ADMIN_USERNAME=admin')
-          - sftpgo_conf is search('SFTPGO_ADMIN_PASSWORD=sftpgo_pass')
+          - sftpgo_conf is search('SFTPGO_DEFAULT_ADMIN_USERNAME=admin')
+          - sftpgo_conf is search('SFTPGO_DEFAULT_ADMIN_PASSWORD=sftpgo_pass')
+          - sftpgo_conf is search('SFTPGO_HOME_PATH=/sftpgo_vault/data')
           - sftpgo_conf is search('IRODS_PROXY_USER=sftp')
           - sftpgo_conf is search('IRODS_PROXY_PASSWORD=sftpgo_irods_pass')
           - sftpgo_conf is search('IRODS_HOST=dstesting-provider_configured-1.dstesting_default')

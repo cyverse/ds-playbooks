@@ -63,7 +63,7 @@ Variable                                   | Required | Default                 
 `irods_parallel_transfer_buffer_size`      | no       | 4                                    |         | The transfer buffer size in MiB for each stream during parallel transfer
 `irods_publish_rs_image`                   | no       | false                                |         | Whether or not to publish a freshly build resource server docker image to dockerhub.
 `irods_re_host`                            | no       | `group_vars['irods_catalog'][0]`     |         | The FQDN or IP address of the iRODS rule engine host
-`irods_resource_hierarchies`               | no       | [ { "name": "demoResc" } ]           |         | The list of resource hierarchies that need to exist, _see below_
+`irods_resource_hierarchies`               | no       | `[ { "name": "demoResc" } ]`         |         | The list of resource hierarchies that need to exist, _see below_
 `irods_rs_image`                           | no       | ds-irods-rs-onbuild                  |         | The name of the unpublished RS image to be generated
 `irods_server_control_plane_key`           | no       | TEMPORARY__32byte_ctrl_plane_key     |         | The server control plane key
 `irods_server_port_range_end`              | no       | 20199                                |         | The last address in the range of auxillary TCP and UDP ports
@@ -90,7 +90,7 @@ Variable                                   | Required | Default                 
 `terraref_manager`                         | no       | `irods_clerver_user`                 |         | The iRODS user who is responsible for TerraREF data.
 `terraref_resource_hierarchy`              | no       | `irods_resource_hierarchies[0]`      |         | The resource used by the TerraREF project.
 `webdav_access_limit`                      | no       |                                      |         | If defined, the upper limit on the number of simultaneous requests that will be served by webdav
-`webdav_allowed_src`                       | no       | [ "0.0.0.0/0" ]                      |         | A list of network/masks for the clients allowed direct access to the WebDAV servers
+`webdav_allowed_src`                       | no       | `[ "0.0.0.0/0" ]`                    |         | A list of network/masks for the clients allowed direct access to the WebDAV servers
 `webdav_auth_name`                         | no       | CyVerse                              |         | Authorization realm to use for the Data Store
 `webdav_cache_dir`                         | no       | /var/cache/varnish                   |         | The directory varnish-cache will use for the WebDAV cache
 `webdav_cache_max_file_size`               | no       | 10                                   |         | The maximum size in mebibytes of the largest WebDAV file varnish-cache will cache
@@ -110,7 +110,7 @@ Variable                                   | Required | Default                 
 `webdav_tls_key`                           | no       |                                      |         | The TLS key
 `webdav_tls_key_file`                      | no       | /etc/ssl/certs/dummy.key             |         | The TLS key file used for encrypted communication
 `webdav_varnish_service_port`              | no       | 6081                                 |         | The service port number for varnish-cache
-`sftp_allowed_src`                         | no       | [ "0.0.0.0/0" ]                      |         | A list of network/masks for the clients allowed direct access to the SFTP servers
+`sftp_allowed_src`                         | no       | `[ "0.0.0.0/0" ]`                    |         | A list of network/masks for the clients allowed direct access to the SFTP servers
 `sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
 `sftpgo_admin_ui_port`                     | no       | 18023                                |         | The SFTPGo admin UI service port number
 `sftpgo_vault_dir`                         | no       | /sftpgo_vault                        |         | The directory SFTPGo will use for saving state

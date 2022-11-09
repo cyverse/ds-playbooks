@@ -1,0 +1,353 @@
+---
+- name: Install and configure sftpgo
+  hosts: sftp
+  become: true
+  tasks:
+    - name: enable notifcations when not testing
+      set_fact:
+        notifications_enabled: true
+      tags:
+        - no_testing
+
+    - name: ensure iRODS user for SFTPGo exists
+      delegate_to: localhost
+      become: false
+      run_once: true
+      irods_user:
+        name: "{{ _sftpgo_irods_proxy_username }}"
+        password: "{{ _sftpgo_irods_proxy_password }}"
+        state: present
+        type: rodsadmin
+        host: "{{ _canonical_hostname }}"
+        port: "{{ _canonical_irods_port }}"
+        admin_user: "{{ _irods_admin_username }}"
+        admin_password: "{{ _irods_admin_password }}"
+        zone: "{{ _irods_zone_name }}"
+
+    # Install SFTPGo
+    - name: check if sftpgo is already installed
+      stat:
+        path: /usr/bin/sftpgo
+      register: sftpgo_resp
+
+    - name: check sftpgo version
+      shell: |
+        set -o pipefail
+        /usr/bin/sftpgo -v | tr '-' ' ' | awk '{print $2, $4}'
+      args:
+        executable: /bin/bash
+      register: sftpgo_version
+      when: sftpgo_resp.stat.exists
+      changed_when: false
+
+    - name: check sftpgo service account
+      command: id sftpgo
+      register: sftpgo_account
+      failed_when: false
+      changed_when: false
+
+    - when: >-
+        (not sftpgo_resp.stat.exists)
+        or (sftpgo_account.rc != 0)
+        or (sftpgo_version.stdout != '2.2.2 1a32add')
+      block:
+        - name: check if sftpgo service exists
+          stat:
+            path: /usr/lib/systemd/system/sftpgo.service
+          register: service_resp
+          tags:
+            - no_testing
+
+        - name: stop sftpgo service if running
+          service:
+            name: sftpgo
+            state: stopped
+          when: service_resp.stat.exists
+          tags:
+            - no_testing
+
+        - name: create download dir for sftpgo package
+          file:
+            path: /tmp/sftpgo_setup
+            state: directory
+            mode: u+rwx
+
+        - name: download sftpgo package from github and uncompress
+          unarchive:
+            src: >-
+              https://github.com/cyverse/sftpgo/releases/download/v2.2.2i/sftpgo_amd64_linux_v2.2.2i.tar
+            dest: /tmp/sftpgo_setup
+            remote_src: true
+          register: unarchive_resp
+
+        - name: install sftpgo binary
+          when: unarchive_resp is changed
+          copy:
+            src: /tmp/sftpgo_setup/sftpgo
+            dest: /usr/bin/sftpgo
+            owner: root
+            group: root
+            mode: '0755'
+            remote_src: true
+
+        - name: install sftpgo config file
+          when: unarchive_resp is changed
+          copy:
+            src: /tmp/sftpgo_setup/etc/sftpgo
+            dest: /etc
+            owner: root
+            group: root
+            mode: '0660'
+            remote_src: true
+
+        - name: install sftpgo template files
+          when: unarchive_resp is changed
+          copy:
+            src: /tmp/sftpgo_setup/usr/share/sftpgo
+            dest: /usr/share
+            owner: root
+            group: root
+            mode: '0755'
+            remote_src: true
+
+        - name: create sftpgo group for a service account
+          group:
+            name: sftpgo
+            system: true
+
+        - name: create sftpgo user for a service account
+          user:
+            name: sftpgo
+            shell: /bin/bash
+            home: /var/lib/sftpgo
+            create_home: false
+            system: true
+            group: sftpgo
+
+        - name: delete download dir for sftpgo package
+          file:
+            path: /tmp/sftpgo_setup
+            state: absent
+
+    # Install SFTPGo External Authentication Module for iRODS
+    - name: check if sftpgo-auth-irods is already installed
+      stat:
+        path: /usr/bin/sftpgo-auth-irods
+      register: sftpgo_auth_irods_resp
+
+    - name: check sftpgo-auth-irods version
+      shell: |
+        set -o pipefail
+        /usr/bin/sftpgo-auth-irods -v | grep releaseVersion | tr -d '",' | awk '{print $2}'
+      args:
+        executable: bash
+      register: sftpgo_auth_irods_version
+      when: sftpgo_auth_irods_resp.stat.exists
+      changed_when: false
+
+    - when: >-
+        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.4')
+      block:
+        - name: create download dir for sftpgo-auth-irods package
+          file:
+            path: /tmp/sftpgo_auth_irods_setup
+            state: directory
+            mode: u+rwx
+
+        - name: download sftpgo-auth-irods package from github and uncompress
+          unarchive:
+            src: >-
+              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.4/sftpgo-auth-irods-v0.1.4-linux-amd64.tar.gz
+            dest: /tmp/sftpgo_auth_irods_setup
+            remote_src: true
+          register: unarchive_resp
+
+        - name: install sftpgo-auth-irods binary
+          when: unarchive_resp is changed
+          copy:
+            src: /tmp/sftpgo_auth_irods_setup/sftpgo-auth-irods
+            dest: /usr/bin/sftpgo-auth-irods
+            owner: root
+            group: root
+            mode: '0755'
+            remote_src: true
+
+        - name: delete download dir for sftpgo-auth-irods package
+          file:
+            path: /tmp/sftpgo_auth_irods_setup
+            state: absent
+
+    # SFTPGo Dirs
+    - name: create a vault dir
+      file:
+        path: "{{ _sftpgo_vault_dir }}"
+        state: directory
+        owner: sftpgo
+        mode: '0700'
+
+    - name: create a vault data, backup dir
+      file:
+        path: "{{ _sftpgo_vault_dir }}/{{ item }}"
+        state: directory
+        owner: sftpgo
+        mode: '0700'
+      with_items:
+        - "data"
+        - "backups"
+
+    - name: create a log dir
+      file:
+        path: "/var/log/sftpgo"
+        state: directory
+        owner: sftpgo
+        mode: '0755'
+
+    - name: create a work dir
+      file:
+        path: "/var/lib/sftpgo"
+        state: directory
+        owner: sftpgo
+        mode: '0750'
+
+    - name: create a config dir
+      file:
+        path: "/etc/sftpgo"
+        state: directory
+        owner: root
+        mode: '0755'
+
+    # SFTPGo Config
+    - name: configure sftpgo
+      template:
+        src: templates/sftp/etc/sftpgo/{{ item }}.j2
+        dest: /etc/sftpgo/{{ item }}
+        owner: sftpgo
+        mode: '0664'
+      with_items:
+        - "sftpgo.json"
+        - "sftpgo.conf"
+      notify:
+        - restart sftpgo
+
+    - name: configure sftpgo black lists
+      copy:
+        src: files/sftp/etc/sftpgo/blacklist.json
+        dest: /etc/sftpgo/blacklist.json
+        owner: sftpgo
+        mode: '0664'
+      notify:
+        - restart sftpgo
+
+    # SSH Host Keys
+    - name: check if there are ssh host_keys on the host
+      stat:
+        path: /etc/ssh
+      register: ssh_host_keys_resp
+
+    - when: ssh_host_keys_resp.stat.exists
+      block:
+        - name: checking ecdsa private key
+          stat:
+            path: /etc/ssh/ssh_host_ecdsa_key
+          register: ssh_host_keys_ecdsa_priv_resp
+
+        - name: configure host_keys - ecdsa private key
+          copy:
+            src: /etc/ssh/ssh_host_ecdsa_key
+            dest: /var/lib/sftpgo/id_ecdsa
+            owner: sftpgo
+            mode: '0640'
+            remote_src: true
+          when: ssh_host_keys_ecdsa_priv_resp.stat.exists
+
+        - name: checking ecdsa public key
+          stat:
+            path: /etc/ssh/ssh_host_ecdsa_key.pub
+          register: ssh_host_keys_ecdsa_pub_resp
+
+        - name: configure host_keys - ecdsa public key
+          copy:
+            src: /etc/ssh/ssh_host_ecdsa_key.pub
+            dest: /var/lib/sftpgo/id_ecdsa.pub
+            owner: sftpgo
+            mode: '0644'
+            remote_src: true
+          when: ssh_host_keys_ecdsa_pub_resp.stat.exists
+
+        - name: checking ed25519 private key
+          stat:
+            path: /etc/ssh/ssh_host_ed25519_key
+          register: ssh_host_keys_ed25519_priv_resp
+
+        - name: configure host_keys - ed25519 private key
+          copy:
+            src: /etc/ssh/ssh_host_ed25519_key
+            dest: /var/lib/sftpgo/id_ed25519
+            owner: sftpgo
+            mode: '0640'
+            remote_src: true
+          when: ssh_host_keys_ed25519_priv_resp.stat.exists
+
+        - name: checking ed25519 public key
+          stat:
+            path: /etc/ssh/ssh_host_ed25519_key.pub
+          register: ssh_host_keys_ed25519_pub_resp
+
+        - name: configure host_keys - ed25519 public key
+          copy:
+            src: /etc/ssh/ssh_host_ed25519_key.pub
+            dest: /var/lib/sftpgo/id_ed25519.pub
+            owner: sftpgo
+            mode: '0644'
+            remote_src: true
+          when: ssh_host_keys_ed25519_pub_resp.stat.exists
+
+        - name: checking ras private key
+          stat:
+            path: /etc/ssh/ssh_host_rsa_key
+          register: ssh_host_keys_rsa_priv_resp
+
+        - name: configure host_keys - rsa private key
+          copy:
+            src: /etc/ssh/ssh_host_rsa_key
+            dest: /var/lib/sftpgo/id_rsa
+            owner: sftpgo
+            mode: '0640'
+            remote_src: true
+          when: ssh_host_keys_rsa_priv_resp.stat.exists
+
+        - name: checking rsa public key
+          stat:
+            path: /etc/ssh/ssh_host_rsa_key.pub
+          register: ssh_host_keys_rsa_pub_resp
+
+        - name: configure host_keys - rsa public key
+          copy:
+            src: /etc/ssh/ssh_host_rsa_key.pub
+            dest: /var/lib/sftpgo/id_rsa.pub
+            owner: sftpgo
+            mode: '0644'
+            remote_src: true
+          when: ssh_host_keys_rsa_pub_resp.stat.exists
+
+    # SFTPGo System Service
+    - name: setup sftpgo service
+      copy:
+        src: files/sftp/usr/lib/systemd/system/sftpgo.service
+        dest: /usr/lib/systemd/system
+        mode: u+r
+      notify:
+        - reload systemd
+        - restart sftpgo
+
+  handlers:
+    - name: reload systemd
+      when: notifications_enabled | default(false)
+      systemd:
+        daemon_reload: true
+
+    - name: restart sftpgo
+      when: notifications_enabled | default(false)
+      service:
+        name: sftpgo
+        state: restarted

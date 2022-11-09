@@ -4,12 +4,12 @@
   become: true
   collections:
     - community.general
+  tags:
+    - no_testing
   tasks:
     - name: disable testing
       set_fact:
         _full_os: true
-      tags:
-        - no_testing
 
     - name: enable iRODS access
       haproxy:
@@ -17,8 +17,6 @@
         host: irods
         state: enabled
         fail_on_not_found: true
-      tags:
-        - no_testing
 
     - name: enable WebDAV access
       haproxy:
@@ -26,5 +24,10 @@
         host: dav
         state: enabled
         fail_on_not_found: true
-      tags:
-        - no_testing
+
+    - name: enable SFTP access
+      haproxy:
+        backend: sftp
+        host: sftp
+        state: enabled
+        fail_on_not_found: true

@@ -27,3 +27,8 @@ haproxy_webdav_tls_port: 443
 haproxy_webdav_hosts:
   - localhost
 haproxy_webdav_check_period: "{{ haproxy_default_check_period }}"
+
+haproxy_sftp_port: 22
+haproxy_sftp_hosts:
+  - localhost
+haproxy_sftp_check_period: "{{ haproxy_default_check_period }}"

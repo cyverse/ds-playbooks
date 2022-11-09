@@ -133,3 +133,17 @@ listen webdav
  #{% endfor %}
  #  option httpchk  OPTIONS /
  #}
+
+
+##########################
+#         SFTP           #
+##########################
+
+listen sftp
+  bind            :{{ haproxy_sftp_port }}
+  mode            tcp
+  server          sftp {{ haproxy_sftp_hosts[0] if haproxy_sftp_hosts[0]|ansible.utils.ipaddr else lookup('dig', haproxy_sftp_hosts[0]) }}
+{#{% for w in haproxy_sftp_hosts %}
+ # server          sftp-{{ loop.index }} {{ w if w|ansible.utils.ipaddr else lookup('dig', w) }} check port {{ haproxy_sftp_port }} fall 2 inter {{ haproxy_sftp_check_period }} downinter 3s fastinter 1s
+ #{% endfor %}
+ #}

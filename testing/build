@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #
 # This script builds the Docker images that compose the testing environment and
 # the ansible-tester image.
@@ -6,17 +6,20 @@
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
-  readonly ExecName=$(greadlink -f "$0")
+  ExecName=$(greadlink -f "$0")
 else
-  readonly ExecName=$(readlink --canonicalize "$0")
+  ExecName=$(readlink --canonicalize "$0")
 fi
+readonly ExecName
+
 
 main()
 {
-  local baseDir=$(dirname "$ExecName")
+  local baseDir
+  baseDir=$(dirname "$ExecName")
 
   "$baseDir"/env/build "$baseDir"/config.inc
-  "$baseDir"/ansible-tester/build
+  "$baseDir"/ansible-tester/build "$baseDir"/config.inc
 }
 
 

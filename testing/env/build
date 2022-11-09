@@ -39,7 +39,7 @@ main()
   . "$cfg"
 
   local os
-  for os in centos7 ubuntu1804 ubuntu2004; do
+  for os in centos7 ubuntu1804 ubuntu2004 ubuntu2204; do
     docker build --file "$baseDir"/base/Dockerfile."$os" --tag test-env-base:"$os" "$baseDir"
   done
 

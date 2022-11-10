@@ -340,6 +340,15 @@
         - reload systemd
         - restart sftpgo
 
+    # update MOTD 
+    # it updates MOTD by installing a shell script
+    # the shell script generates a message for SFTPGo
+    - name: update message of the day
+      copy:
+        src: files/sftp/etc/update-motd.d/99-sftpgo
+        dest: /etc/update-motd.d
+        mode: '0755'
+
   handlers:
     - name: reload systemd
       when: notifications_enabled | default(false)

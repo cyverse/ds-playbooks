@@ -142,8 +142,8 @@ listen webdav
 listen sftp
   bind            :{{ haproxy_sftp_port }}
   mode            tcp
-  server          sftp {{ haproxy_sftp_hosts[0] if haproxy_sftp_hosts[0]|ansible.utils.ipaddr else lookup('dig', haproxy_sftp_hosts[0]) }}
+  server          sftp {{ haproxy_sftp_hosts[0] if haproxy_sftp_hosts[0]|ansible.utils.ipaddr else lookup('dig', haproxy_sftp_hosts[0]) }}:{{ haproxy_sftp_backend_port }}
 {#{% for w in haproxy_sftp_hosts %}
- # server          sftp-{{ loop.index }} {{ w if w|ansible.utils.ipaddr else lookup('dig', w) }} check port {{ haproxy_sftp_port }} fall 2 inter {{ haproxy_sftp_check_period }} downinter 3s fastinter 1s
+ # server          sftp-{{ loop.index }} {{ w if w|ansible.utils.ipaddr else lookup('dig', w) }}:{{ haproxy_sftp_backend_port }} check port {{ haproxy_sftp_port }} fall 2 inter {{ haproxy_sftp_check_period }} downinter 3s fastinter 1s
  #{% endfor %}
  #}

@@ -10,3 +10,4 @@ proxy_irods_reconn_ports: 20000-20399
 proxy_irods_vip_client_hosts: []
 
 proxy_sftp_port: 22
+proxy_sftp_backend_port: 2022

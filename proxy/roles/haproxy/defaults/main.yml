@@ -29,6 +29,7 @@ haproxy_webdav_hosts:
 haproxy_webdav_check_period: "{{ haproxy_default_check_period }}"
 
 haproxy_sftp_port: 22
+haproxy_sftp_backend_port: 2022
 haproxy_sftp_hosts:
   - localhost
 haproxy_sftp_check_period: "{{ haproxy_default_check_period }}"

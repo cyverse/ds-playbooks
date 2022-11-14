@@ -302,7 +302,7 @@
             remote_src: true
           when: ssh_host_keys_ed25519_pub_resp.stat.exists
 
-        - name: checking ras private key
+        - name: checking rsa private key
           stat:
             path: /etc/ssh/ssh_host_rsa_key
           register: ssh_host_keys_rsa_priv_resp
@@ -339,6 +339,15 @@
       notify:
         - reload systemd
         - restart sftpgo
+
+    # update MOTD
+    # it updates MOTD by installing a shell script
+    # the shell script generates a message for SFTPGo
+    - name: update message of the day
+      copy:
+        src: files/sftp/etc/update-motd.d/99-sftpgo
+        dest: /etc/update-motd.d
+        mode: '0755'
 
   handlers:
     - name: reload systemd

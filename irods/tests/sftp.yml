@@ -54,6 +54,10 @@
           - sftpgo_json_config.data_provider.backups_path == '/sftpgo_vault/backups'
           - sftpgo_json_config.httpd.bindings[0].port == 18023
 
+    - name: test iRODS user for SFTPGo exists
+      debug:
+        msg: TODO implement
+
     - name: test sftpgo installed
       stat:
         path: /usr/bin/sftpgo
@@ -84,8 +88,48 @@
       register: response
       failed_when: not response.stat.exists
 
+    - name: test sftpgo template files installed
+      debug:
+        msg: TODO implement
+
+    - name: test sftpgo system group exists
+      debug:
+        msg: TODO implement
+
+    - name: test sftpgo service account exists
+      debug:
+        msg: TODO implement
+
+    - name: test create vault dir
+      debug:
+        msg: TODO implement
+
+    - name: test create a vault data, backup dir
+      debug:
+        msg: TODO implement
+
+    - name: test create a log dir
+      debug:
+        msg: TODO implement
+
+    - name: test create a work dir
+      debug:
+        msg: TODO implement
+
+    - name: test create a config dir
+      debug:
+        msg: TODO implement
+
+    - name: test SSH Host Keys
+      debug:
+        msg: TODO implement
+
     - name: test sftpgo.service deployed
       stat:
         path: /usr/lib/systemd/system/sftpgo.service
       register: response
       failed_when: not response.stat.exists
+
+    - name: test update message of the day
+      debug:
+        msg: TODO implement

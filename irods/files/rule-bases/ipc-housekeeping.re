@@ -130,16 +130,54 @@ ipc_rescheduleStorageFreeSpaceDetermination {
 
 _ipc_rmTrash {
   writeLine('serverLog', 'DS: starting trash removal');
+  *zone = ipc_ZONE;
+  *verdict = true;
+  msiGetSystemTime(*timestamp, "");
 
-  msiGetFormattedSystemTime(*date, 'human', '%d-%02d-%02d');
-  *logFileArg = execCmdArg("/var/lib/irods/log/trash-removal.log-*date");
+  # 2592000 is the epoch time for 30 days, we want to delete items which are older than 30 days in trash from the current date.
+  *month_timestamp = int(*timestamp) - 2592000;
 
-  if (0 == errorcode(msiExecCmd('rm-trash', "--log *logFileArg", 'null', 'null', 'null', *out))) {
+  *KeyValStr = "";
+  msiAddKeyValToMspStr("irodsAdminRmTrash", "", *KeyValStr);
+  foreach(*Row in SELECT META_COLL_ATTR_VALUE, COLL_NAME
+                    WHERE COLL_NAME like '*zone/trash/%'
+                      AND META_COLL_ATTR_NAME like 'ipc::trash_timestamp'
+                        AND META_COLL_ATTR_VALUE <= month_timestamp) {
+                          *rowCollName = *Row.COLL_NAME;
+                          *status = errorcode(msiRmColl(*rowCollName, *KeyValStr, *Status));
+                          if (*status == 0) {
+                            writeLine("serverLog", "DS: Removed trash collection - *rowCollName");
+                          } else {
+                            writeLine("serverLog", "DS: Unable to remove trash collection - *rowCollName, error code returned *status");
+                            *verdict = false;
+                          }
+  }
+
+  foreach(*Row in SELECT META_DATA_ATTR_VALUE, DATA_NAME, COLL_NAME
+                    WHERE COLL_NAME like '*zone/trash/%'
+                      AND META_DATA_ATTR_NAME like 'ipc::trash_timestamp'
+                        AND META_DATA_ATTR_VALUE <= month_timestamp) {
+                          *KeyValStr = "";
+                          *rowCollName = *Row.COLL_NAME;
+                          *rowDataName = *Row.DATA_NAME;
+                          *absDataPath = *rowCollName ++ "/" ++ *rowDataName;
+                          msiAddKeyValToMspStr("objPath", *absDataPath, *KeyValStr);
+                          msiAddKeyValToMspStr("irodsAdminRmTrash", "", *KeyValStr);
+                          *status = errorcode(msiDataObjUnlink(*KeyValStr, *Status));
+                          if (*status == 0) {
+                            writeLine("serverLog", "DS: Removed trash data object - *absDataPath");
+                          } else {
+                            writeLine("serverLog", "DS: Unable to remove trash data object - *absDataPath, error code returned *status");
+                            *verdict = false;
+                          }
+  }
+
+  if (*verdict) {
     *subject = ipc_ZONE ++ ' trash removal succeeded';
     *body = 'SSIA';
   } else {
     *subject = ipc_ZONE ++ ' trash removal failed';
-    msiGetStderrInExecCmdOut(*out, *body);
+    *body = 'View the irods logs for details';
   }
 
   if (0 != errorcode(msiSendMail(ipc_REPORT_EMAIL_ADDR, *subject, *body))) {

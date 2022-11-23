@@ -709,11 +709,11 @@ pep_api_data_obj_rename_post(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
       *srcObjPath = *DATAOBJRENAMEINP.src_obj_path;
       *timestampVar = _ipc_mkDataObjAndCollTimestampVar(/*srcObjPath);
       msiGetObjType(*DATAOBJRENAMEINP.dst_obj_path, *Type);
-      if (ipc_isCollection(*Type)) {
-        msiModAVUMetadata("-C", *DATAOBJRENAMEINP.dst_obj_path, "rm", "ipc::trash_timestamp", temporaryStorage.'*timestampVar', "");
-      }
-      if (ipc_isCollection(*Type)) {
+      if (ipc_isDataObject(*Type)) {
         msiModAVUMetadata("-d", *DATAOBJRENAMEINP.dst_obj_path, "rm", "ipc::trash_timestamp", temporaryStorage.'*timestampVar', "");
+      }
+      else if (ipc_isCollection(*Type)) {
+        msiModAVUMetadata("-C", *DATAOBJRENAMEINP.dst_obj_path, "rm", "ipc::trash_timestamp", temporaryStorage.'*timestampVar', "");
       }
     }
   }
@@ -735,7 +735,7 @@ pep_api_data_obj_rename_pre(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
                               temporaryStorage.'*timestampVar' = *row_meta_coll_attr_value;
         }
       }
-      if (ipc_isDataObject(*Type)) {
+      else if (ipc_isDataObject(*Type)) {
         msiSplitPath(*srcObjPath, *Coll, *File);
         foreach(*Row in SELECT META_DATA_ATTR_VALUE
                           WHERE COLL_NAME like '*Coll'

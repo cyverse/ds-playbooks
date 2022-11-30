@@ -228,38 +228,6 @@ _bisque_scheduleLn(*Permission, *Client, *Path) {
 }
 
 
-_bisque_scheduleMv(*Client, *OldPath, *NewPath) {
-  if (*Client != '') {
-    _bisque_logMsg('scheduling link move from *OldPath to *NewPath for *Client');
-  } else {
-    _bisque_logMsg('scheduling link move from *OldPath to *NewPath');
-  }
-# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
-#       https://github.com/irods/irods/issues/5413.
-  #delay("<PLUSET>1s</PLUSET>") {_bisque_Mv(*Client, *OldPath, *NewPath);}
-  delay(
-    ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
-      <PLUSET>1s</PLUSET> '
-  ) {_bisque_Mv(*Client, *OldPath, *NewPath);}
-}
-
-
-_bisque_scheduleRm(*Client, *Path) {
-  if (*Client != '') {
-    _bisque_logMsg("scheduling removal of link to *Path for *Client");
-  } else {
-    _bisque_logMsg("scheduling removal of link to *Path");
-  }
-# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
-#       https://github.com/irods/irods/issues/5413.
-  #delay("<PLUSET>1s</PLUSET>") {_bisque_Rm(*Client, *Path);}
-  delay(
-    ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
-      <PLUSET>1s</PLUSET> '
-  ) {_bisque_Rm(*Client, *Path);}
-}
-
-
 _bisque_handleNewObject(*Client, *Path) {
   ipc_giveAccessObj(_bisque_USER, 'write', *Path);
   *perm = if _bisque_isInProjects(bisque_PROJECTS, *Path) then 'published' else 'private';
@@ -300,7 +268,7 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 
         if (_bisque_isInBisque(*collName, *dataName)) {
           *srcSubColl = _bisque_determineSrc(*SrcEntity, *DestEntity, *collName);
-          _bisque_scheduleMv(*client, '*srcSubColl/*dataName', '*collName/*dataName');
+          _bisque_Mv(*client, '*srcSubColl/*dataName', '*collName/*dataName');
         } else if (*forBisque) {
           _bisque_handleNewObject(*client, '*collName/*dataName');
         }
@@ -310,7 +278,7 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
     msiSplitPath(*DestEntity, *collName, *dataName);
 
     if (_bisque_isInBisque(*collName, *dataName)) {
-      _bisque_scheduleMv(*client, *SrcEntity, *DestEntity);
+      _bisque_Mv(*client, *SrcEntity, *DestEntity);
     } else if (*forBisque) {
       _bisque_handleNewObject(*client, *DestEntity);
     }
@@ -328,7 +296,7 @@ bisque_acDataDeletePolicy {
 # Add a call to this rule from inside the acPostProcForDelete PEP.
 bisque_acPostProcForDelete {
   if (temporaryStorage.'bisque_$objPath' == 'rm') {
-    _bisque_scheduleRm(_bisque_getClient($userNameClient, $rodsZoneClient, $objPath), $objPath);
+    _bisque_Rm(_bisque_getClient($userNameClient, $rodsZoneClient, $objPath), $objPath);
   }
 }
 

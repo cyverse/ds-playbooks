@@ -3,20 +3,26 @@
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
+    - name: Test install packages
+      include_tasks: tasks/test_pkg_installed.yml
+      with_items:
+        - dmidecode
+        - jq
+        - python3
+        - python3-pip
+      loop_control:
+        loop_var: pkg
+
     - name: test install packages on CentOS
       when: ansible_distribution == 'CentOS'
       include_tasks: tasks/test_pkg_installed.yml
       with_items:
-        - dmidecode
         - epel-release
         - iproute
-        - jq
         - libselinux-python
         - python-dns
         - python-requests
         - python-virtualenv
-        - python3
-        - python3-pip
         - yum-plugin-versionlock
       loop_control:
         loop_var: pkg
@@ -25,14 +31,17 @@
       when: ansible_distribution == 'Ubuntu'
       include_tasks: tasks/test_pkg_installed.yml
       with_items:
-        - dmidecode
         - iproute2
-        - jq
-        - python3
         - python3-dns
-        - python3-pip
         - python3-requests
         - python3-selinux
         - python3-virtualenv
       loop_control:
         loop_var: pkg
+
+    - name: Test install packages on Ubuntu 22.04
+      when: >-
+        ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('22.04', '>=')
+      include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: python-is-python3

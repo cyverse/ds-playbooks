@@ -36,4 +36,5 @@ dstesting-apache-1.dstesting_default
 dstesting-sftp-1.dstesting_default
 
 [unmanaged_systems]
+localhost
 dstesting-amqp-1.dstesting_default

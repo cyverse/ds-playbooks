@@ -32,4 +32,5 @@ dstesting-proxy-1.dstesting_default
 [sftp]
 
 [unmanaged_systems]
+localhost
 dstesting-amqp-1.dstesting_default

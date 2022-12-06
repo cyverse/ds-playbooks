@@ -1,6 +1,6 @@
 ---
 - name: test install maintainer keys
-  hosts: all:!localhost
+  hosts: all:!unmanaged_systems
   tasks:
     - name: test allowed keys installed
       shell: grep --quiet '{{ item }}' "$HOME"/.ssh/authorized_keys

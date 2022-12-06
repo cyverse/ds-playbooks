@@ -1,8 +1,9 @@
 ---
 - name: install maintainer keys
-  hosts: all:!localhost
+  hosts: all:!unmanaged_systems
   tasks:
     - name: install key
+      when: not _proxied_ssh
       authorized_key:
         user: "{{ ansible_user_id }}"
         state: "{{ item.state | d('present') if item is mapping else 'present' }}"

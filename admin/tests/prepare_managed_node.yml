@@ -36,3 +36,18 @@
         - python3-virtualenv
       loop_control:
         loop_var: pkg
+
+- name: test uninstall packages on ubuntu
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  tasks:
+    - name: block for ubuntu distribution
+      block:
+        - name: Gather the package facts
+          ansible.builtin.package_facts:
+            manager: "auto"
+
+        - name: fail if unattended-upgrades package is present
+          fail:
+          when: "'unattended-upgrades' in ansible_facts.packages"
+      when: ansible_distribution == 'Ubuntu'

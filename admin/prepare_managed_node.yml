@@ -47,3 +47,15 @@
           - >-
             {{ 'python3-virtualenv' if ansible_distribution == 'Ubuntu' else 'python-virtualenv' }}
         state: present
+
+- name: remove packages on ubuntu
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  tasks:
+    - name: remove unattended-upgrades on Ubuntu machines
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        name: unattended-upgrades
+        state: absent
+      tags:
+        - non_idempotent

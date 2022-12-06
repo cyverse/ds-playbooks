@@ -95,6 +95,11 @@
         name: irods-server
         state: present
 
+    - name: Ensure iRODS does not attempt to start on boot
+      ansible.builtin.service:
+        name: irods
+        enabled: false
+
     - name: Create service group
       ansible.builtin.group:
         name: "{{ _irods_service_group_name }}"

@@ -146,7 +146,7 @@
       changed_when: false
 
     - when: >-
-        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.4')
+        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.5')
       block:
         - name: create download dir for sftpgo-auth-irods package
           file:
@@ -157,7 +157,7 @@
         - name: download sftpgo-auth-irods package from github and uncompress
           unarchive:
             src: >-
-              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.4/sftpgo-auth-irods-v0.1.4-linux-amd64.tar.gz
+              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.5/sftpgo-auth-irods-v0.1.5-linux-amd64.tar.gz
             dest: /tmp/sftpgo_auth_irods_setup
             remote_src: true
           register: unarchive_resp

@@ -54,3 +54,16 @@
       package:
         name: python-is-python3
         state: present
+
+- name: remove packages on ubuntu
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  tasks:
+    - name: remove unattended-upgrades on Ubuntu machines
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        name: unattended-upgrades
+        state: absent
+      tags:
+        - idempotent
+        

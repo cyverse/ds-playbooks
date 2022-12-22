@@ -2,7 +2,7 @@ FROM test-env-base:ubuntu2204
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get install --yes --quiet=2 locales
+RUN apt-get install --yes --quiet=2 locales unattended-upgrades
 RUN locale-gen en_US.UTF-8
 
 ARG LC_COLLATE=C

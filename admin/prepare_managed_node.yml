@@ -28,12 +28,6 @@
         name: epel-release
         state: present
 
-    - name: install yum-plugin-versionlock on CentOS machines
-      when: ansible_distribution == 'CentOS'
-      package:
-        name: yum-plugin-versionlock
-        state: present
-
     - name: install packages
       package:
         name:
@@ -48,6 +42,19 @@
             {{ 'python3-virtualenv' if ansible_distribution == 'Ubuntu' else 'python-virtualenv' }}
         state: present
 
+    - name: install yum-plugin-versionlock on CentOS machines
+      when: ansible_distribution == 'CentOS'
+      package:
+        name: yum-plugin-versionlock
+        state: present
+
+    - name: Install python-is-python3 on Ubuntu 22.04 machines
+      when: >-
+        ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('22.04', '>=')
+      package:
+        name: python-is-python3
+        state: present
+
 - name: remove packages on ubuntu
   hosts: all:!unmanaged_systems:!localhost
   become: true
@@ -58,4 +65,4 @@
         name: unattended-upgrades
         state: absent
       tags:
-        - non_idempotent
+        - idempotent

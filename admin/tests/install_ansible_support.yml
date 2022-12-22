@@ -45,7 +45,7 @@
       include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: python-is-python3
-        
+
 - name: test uninstall packages on ubuntu
   hosts: all:!unmanaged_systems:!localhost
   become: true

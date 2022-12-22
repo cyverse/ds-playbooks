@@ -66,4 +66,3 @@
         state: absent
       tags:
         - idempotent
-        

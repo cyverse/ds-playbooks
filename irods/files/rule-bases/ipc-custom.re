@@ -740,6 +740,7 @@ pep_api_data_obj_rename_post(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
 }
 
 pep_api_data_obj_copy_post(*INSTANCE, *COMM, *DATAOBJCOPYINP, *TRANSSTAT) {
+  *zone = ipc_ZONE;
   *destObjPath = *DATAOBJCOPYINP.dst_obj_path
   if (*destObjPath like '*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");
@@ -748,6 +749,7 @@ pep_api_data_obj_copy_post(*INSTANCE, *COMM, *DATAOBJCOPYINP, *TRANSSTAT) {
 }
 
 pep_api_bulk_data_obj_put_post(*INSTANCE, *COMM, *BULKOPRINP, *BULKOPRINPBBUF) {
+  *zone = ipc_ZONE;
   *destObjPath = *BULKOPRINP.dst_obj_path
   if (*destObjPath like '*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");
@@ -756,6 +758,7 @@ pep_api_bulk_data_obj_put_post(*INSTANCE, *COMM, *BULKOPRINP, *BULKOPRINPBBUF) {
 }
 
 pep_api_data_obj_create_post(*INSTANCE, *COMM, *DATAOBJINP) {
+  *zone = ipc_ZONE;
   *objPath = *DATAOBJINP.obj_path
   if (*objPath like '*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");

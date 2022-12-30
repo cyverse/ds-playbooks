@@ -141,7 +141,7 @@ _ipc_rmTrash {
   msiAddKeyValToMspStr("irodsAdminRmTrash", "", *KeyValStr);
   foreach(*Row in SELECT META_COLL_ATTR_VALUE, COLL_NAME
                     WHERE COLL_NAME like '*zone/trash/%'
-                      AND META_COLL_ATTR_NAME like 'ipc::trash_timestamp'
+                      AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp'
                         AND META_COLL_ATTR_VALUE <= month_timestamp) {
                           *rowCollName = *Row.COLL_NAME;
                           *status = errorcode(msiRmColl(*rowCollName, *KeyValStr, *Status));
@@ -155,7 +155,7 @@ _ipc_rmTrash {
 
   foreach(*Row in SELECT META_DATA_ATTR_VALUE, DATA_NAME, COLL_NAME
                     WHERE COLL_NAME like '*zone/trash/%'
-                      AND META_DATA_ATTR_NAME like 'ipc::trash_timestamp'
+                      AND META_DATA_ATTR_NAME = 'ipc::trash_timestamp'
                         AND META_DATA_ATTR_VALUE <= month_timestamp) {
                           *KeyValStr = "";
                           *rowCollName = *Row.COLL_NAME;

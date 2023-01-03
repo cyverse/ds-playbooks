@@ -78,9 +78,13 @@
         - de-create-collection
         - delete-scheduled-rule
         - generateuuid
-        - rm-trash
         - set-uuid
 
+    - name: remove rm-trash if present
+      file:
+        path: /var/lib/irods/msiExecCmd_bin/rm-trash
+        state: absent
+    
     - name: Verify database_config.json does not exist
       stat:
         path: /etc/irods/database_config.json

@@ -134,13 +134,13 @@ _ipc_rmTrash {
   *verdict = true;
   msiGetSystemTime(*timestamp, "");
 
-  # 2592000 is the epoch time for 30 days, we want to delete items which are older than 30 days in trash from the current date.
+  # 2,592,000 is the number of seconds in 30 days, items older than one month in the trash will be deleted.
   *month_timestamp = int(*timestamp) - 2592000;
 
   *KeyValStr = "";
   msiAddKeyValToMspStr("irodsAdminRmTrash", "", *KeyValStr);
   foreach(*Row in SELECT META_COLL_ATTR_VALUE, COLL_NAME
-                    WHERE COLL_NAME like '*zone/trash/%'
+                    WHERE COLL_NAME like '/*zone/trash/%'
                       AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp'
                         AND META_COLL_ATTR_VALUE <= month_timestamp) {
                           *rowCollName = *Row.COLL_NAME;
@@ -154,7 +154,7 @@ _ipc_rmTrash {
   }
 
   foreach(*Row in SELECT META_DATA_ATTR_VALUE, DATA_NAME, COLL_NAME
-                    WHERE COLL_NAME like '*zone/trash/%'
+                    WHERE COLL_NAME like '/*zone/trash/%'
                       AND META_DATA_ATTR_NAME = 'ipc::trash_timestamp'
                         AND META_DATA_ATTR_VALUE <= month_timestamp) {
                           *KeyValStr = "";

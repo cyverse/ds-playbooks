@@ -22,9 +22,13 @@
         - de-create-collection
         - delete-scheduled-rule
         - generateuuid
-        - rm-trash
         - set-uuid
         - sparcd-ingest
+
+    - name: remove rm-trash if present
+      file:
+        path: /var/lib/irods/msiExecCmd_bin/rm-trash
+        state: absent
 
     - name: verify deposition of server_config.json
       stat:

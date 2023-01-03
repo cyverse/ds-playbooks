@@ -653,7 +653,7 @@ pep_api_data_obj_unlink_except(*INSTANCE, *COMM, *DATAOBJUNLINKINP) {
 
 pep_api_data_obj_put_post(*INSTANCE, *COMM, *DATAOBJINP, *DATAOBJINPBBUF, *PORTALOPROUT) {
   *zone = ipc_ZONE;
-  if (*DATAOBJINP.obj_path like '*zone/trash/*') {
+  if (*DATAOBJINP.obj_path like '/*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");
     msiModAVUMetadata("-d", *DATAOBJINP.obj_path, "set", "ipc::trash_timestamp", *timestamp, "");
   }
@@ -679,7 +679,7 @@ pep_api_rm_coll_except(*INSTANCE, *COMM, *RMCOLLINP, *COLLOPRSTAT) {
 
 pep_api_coll_create_post(*INSTANCE, *COMM, *COLLCREATEINP) {
   *zone = ipc_ZONE;
-  if (*COLLCREATEINP.coll_name like '*zone/trash/*') {
+  if (*COLLCREATEINP.coll_name like '/*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");
     msiModAVUMetadata("-C", *COLLCREATEINP.coll_name, "set", "ipc::trash_timestamp", *timestamp, "");
   }
@@ -687,7 +687,7 @@ pep_api_coll_create_post(*INSTANCE, *COMM, *COLLCREATEINP) {
 
 pep_api_data_obj_rename_pre(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
   *zone = ipc_ZONE;
-  if ((*DATAOBJRENAMEINP.src_obj_path like '*zone/trash/*') && (*DATAOBJRENAMEINP.dst_obj_path not like '*zone/trash/*')) {
+  if ((*DATAOBJRENAMEINP.src_obj_path like '/*zone/trash/*') && (*DATAOBJRENAMEINP.dst_obj_path not like '/*zone/trash/*')) {
     *srcObjPath = *DATAOBJRENAMEINP.src_obj_path;
     *timestampVar = _ipc_mkDataObjAndCollTimestampVar(/*srcObjPath);
     msiGetObjType(*srcObjPath, *Type);
@@ -714,7 +714,7 @@ pep_api_data_obj_rename_pre(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
 
 pep_api_data_obj_rename_post(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
   *zone = ipc_ZONE;
-  if (*DATAOBJRENAMEINP.dst_obj_path like '*zone/trash/*') {
+  if (*DATAOBJRENAMEINP.dst_obj_path like '/*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");
     msiGetObjType(*DATAOBJRENAMEINP.dst_obj_path, *Type);
     if (ipc_isDataObject(*Type)) {
@@ -724,7 +724,7 @@ pep_api_data_obj_rename_post(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
       msiModAVUMetadata("-C", *DATAOBJRENAMEINP.dst_obj_path, "set", "ipc::trash_timestamp", *timestamp, "");
     }
   }
-  else if ((*DATAOBJRENAMEINP.src_obj_path like '*zone/trash/*') && (*DATAOBJRENAMEINP.dst_obj_path not like '*zone/trash/*')) {
+  else if ((*DATAOBJRENAMEINP.src_obj_path like '/*zone/trash/*') && (*DATAOBJRENAMEINP.dst_obj_path not like '/*zone/trash/*')) {
     *srcObjPath = *DATAOBJRENAMEINP.src_obj_path;
     *timestampVar = _ipc_mkDataObjAndCollTimestampVar(/*srcObjPath);
     if (errorcode(temporaryStorage.'*timestampVar') == 0) {
@@ -742,7 +742,7 @@ pep_api_data_obj_rename_post(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
 pep_api_data_obj_copy_post(*INSTANCE, *COMM, *DATAOBJCOPYINP, *TRANSSTAT) {
   *zone = ipc_ZONE;
   *destObjPath = *DATAOBJCOPYINP.dst_obj_path
-  if (*destObjPath like '*zone/trash/*') {
+  if (*destObjPath like '/*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");
     msiModAVUMetadata("-d", *destObjPath, "set", "ipc::trash_timestamp", *timestamp, "");
   }
@@ -751,7 +751,7 @@ pep_api_data_obj_copy_post(*INSTANCE, *COMM, *DATAOBJCOPYINP, *TRANSSTAT) {
 pep_api_bulk_data_obj_put_post(*INSTANCE, *COMM, *BULKOPRINP, *BULKOPRINPBBUF) {
   *zone = ipc_ZONE;
   *destObjPath = *BULKOPRINP.dst_obj_path
-  if (*destObjPath like '*zone/trash/*') {
+  if (*destObjPath like '/*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");
     msiModAVUMetadata("-d", *destObjPath, "set", "ipc::trash_timestamp", *timestamp, "");
   }

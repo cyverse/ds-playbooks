@@ -105,7 +105,7 @@ _repl_replicate(*Object, *RescName) {
       } else if (*err == -314000) {
         _repl_logMsg('failed to replicate data object *Object due to checksum error');
         _repl_logMsg(*msg);
-        0 
+        0
         # the exit status is 0 to indicate that replication should not be retried
       } else {
         _repl_logMsg('failed to replicate data object *Object, retry in 8 hours');
@@ -220,18 +220,18 @@ _repl_syncReplicas(*Object) {
   _repl_logMsg('syncing replicas of data object *Object');
 
   *dataPath = '';
-# XXX - Replica updating is broken for large files in 4.2.8. See 
+# XXX - Replica updating is broken for large files in 4.2.8. See
 #       https://github.com/irods/irods/issues/5160. This is fixed in 4.2.9.
 #   foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
 #     *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
 #   }
-# 
+#
 #   if (*dataPath == '') {
 #     _repl_logMsg('data object *Object no longer exists');
 #   } else {
 #     *err = errormsg(
 #       msiDataObjRepl(*dataPath, 'all=++++updateRepl=++++verifyChksum=', *status), *msg);
-# 
+#
 #     if (*err < 0 && *err != -808000) {
 #       _repl_logMsg('failed to sync replicas of data object *Object trying again in 8 hours');
 #       _repl_logMsg(*msg);
@@ -240,8 +240,8 @@ _repl_syncReplicas(*Object) {
 #       _repl_logMsg('synced replicas of data object *Object');
 #     }
 #   }
-  foreach (*rec in 
-    SELECT COLL_NAME, DATA_NAME, DATA_SIZE, order_asc(DATA_REPL_NUM) 
+  foreach (*rec in
+    SELECT COLL_NAME, DATA_NAME, DATA_SIZE, order_asc(DATA_REPL_NUM)
     WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '1'
   ) {
     *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
@@ -321,7 +321,7 @@ _scheduleMv(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalSt
 #       https://github.com/irods/irods/issues/5413.
 #     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5257
-#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See 
+#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/4055
 #   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
 #   {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)));}
@@ -363,7 +363,7 @@ _repl_scheduleMv(*Object, *IngestName, *ReplName) {
 #       https://github.com/irods/irods/issues/5413.
 #     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5257
-#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See 
+#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/4055
 #   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
 #   {_repl_mvReplicas(*Object, *IngestName, *ReplName);}
@@ -448,7 +448,7 @@ _repl_scheduleRepl(*Object, *RescName) {
 #       https://github.com/irods/irods/issues/5413.
 #     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5257
-#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See 
+#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/4055
 #   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
 #   {_repl_replicate(*Object, *RescName);}
@@ -487,7 +487,7 @@ _repl_scheduleSyncReplicas(*Object) {
 #       https://github.com/irods/irods/issues/5413.
 #     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5257
-#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See 
+#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/4055
 #       delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
 #       {_repl_syncReplicas(*Object)}
@@ -530,11 +530,9 @@ _ipcRepl_createOrOverwrite_old(*DataPath, *DestResc, *New, *IngestResc, *ReplRes
     *dataId = *rec.DATA_ID;
 
     if (*New) {
-# XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
-#      (*ingestName, *optional) = *IngestResc;
-#      (*replName, *optional) = *ReplResc;
-#      _repl_scheduleRepl(*dataId, if *DestResc == *replName then *ingestName else *replName);
-# XXX - ^^^
+      (*ingestName, *optional) = *IngestResc;
+      (*replName, *optional) = *ReplResc;
+      _repl_scheduleRepl(*dataId, if *DestResc == *replName then *ingestName else *replName);
     } else {
       _repl_scheduleSyncReplicas(*dataId);
     }
@@ -549,9 +547,7 @@ _ipcRepl_createOrOverwrite(*DataPath, *DestResc, *New, *IngestResc, *ReplResc) {
     *dataId = *rec.DATA_ID;
 
     if (*New) {
-# XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
-#      _repl_scheduleRepl(*dataId, if *DestResc == *ReplResc then *IngestResc else *ReplResc);
-# XXX - ^^^
+      _repl_scheduleRepl(*dataId, if *DestResc == *ReplResc then *IngestResc else *ReplResc);
     } else {
       _repl_scheduleSyncReplicas(*dataId);
     }

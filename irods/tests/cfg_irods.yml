@@ -56,6 +56,12 @@
       register: response
       failed_when: response.stat.exists
 
+    - name: test ensure rm-trash is gone
+      stat:
+        path: /var/lib/irods/msiExecCmd_bin/rm-trash
+      register: response
+      failed_when: response.stat.exists
+
     - name: Verify irods_environment.json is in place
       stat:
         path: /var/lib/irods/.irods/irods_environment.json
@@ -79,11 +85,6 @@
         - delete-scheduled-rule
         - generateuuid
         - set-uuid
-
-    - name: remove rm-trash if present
-      file:
-        path: /var/lib/irods/msiExecCmd_bin/rm-trash
-        state: absent
     
     - name: Verify database_config.json does not exist
       stat:

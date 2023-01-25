@@ -90,6 +90,12 @@
               - uuid-runtime
             state: present
 
+          # TODO: When upgrading to iRODS 4.2.9, remove this task.
+        - name: Ubuntu | ensure unixODBC is installed (irods issue 5389)
+          ansible.builtin.package:
+            name: unixodbc
+            state: present
+
     - name: Install iRODS server
       ansible.builtin.package:
         name: irods-server

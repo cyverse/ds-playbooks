@@ -10,7 +10,7 @@
     "setstat_mode": 0,
     "temp_path": "",
     "proxy_protocol": 1,
-    "proxy_allowed": ["0.0.0.0/0"],
+    "proxy_allowed": {{ groups['proxy'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }},
     "startup_hook": "",
     "post_connect_hook": "",
     "post_disconnect_hook": "",

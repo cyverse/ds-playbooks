@@ -10,7 +10,7 @@
     "setstat_mode": 0,
     "temp_path": "",
     "proxy_protocol": 1,
-    "proxy_allowed": {{ groups['proxy'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }},
+    "proxy_allowed": {{ _sftp_proxy_allowed }},
     "startup_hook": "",
     "post_connect_hook": "",
     "post_disconnect_hook": "",

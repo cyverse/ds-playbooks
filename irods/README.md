@@ -112,6 +112,7 @@ Variable                                   | Required | Default                 
 `webdav_varnish_service_port`              | no       | 6081                                 |         | The service port number for varnish-cache
 `sftp_allowed_src`                         | no       | `[ "0.0.0.0/0" ]`                    |         | A list of network/masks for the clients allowed direct access to the SFTP servers
 `sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
+`sftp_proxy_allowed`                       | no       | `[]`                                 |         | A list of network/masks for the proxy servers allowed access to the SFTP servers
 `sftpgo_admin_ui_port`                     | no       | 18023                                |         | The SFTPGo admin UI service port number
 `sftpgo_vault_dir`                         | no       | /sftpgo_vault                        |         | The directory SFTPGo will use for saving state
 `sftpgo_admin_username`                    | no       | admin                                |         | The SFTPGo admin account name

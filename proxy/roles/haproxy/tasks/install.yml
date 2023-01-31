@@ -1,5 +1,17 @@
 ---
-- ansible.builtin.import_tasks: _testing.yml
+- name: install | prepare if testing
+  ansible.builtin.import_tasks: _testing.yml
+
+- name: install | determine os
+  when: ansible_distribution is not defined
+  ansible.builtin.setup:
+    gather_subset: pkg_mgr
+    filter: ansible_pkg_mgr
+
+- name: install | update apt cache
+  when: ansible_pkg_mgr == 'apt'
+  ansible.builtin.apt:
+    update_cache: true
 
 - name: install | install haproxy
   ansible.builtin.package:

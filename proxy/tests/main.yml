@@ -53,12 +53,11 @@
       ansible.builtin.assert:
         that: haproxy is search('\nbackend irods_throttled\n(  [^\n]*\n)*  server .* maxconn 500\n')
 
-    - name: Verify haproxy config IRODS section
+    - name: Verify haproxy config irods_direct backend
       ansible.builtin.debug:
         msg: TODO verify {{ item }}
       with_items:
-        - irods_indirect frontend
-        - irods_direct backend
+        - server
 
     - name: Verify WEBDAV section
       ansible.builtin.debug:

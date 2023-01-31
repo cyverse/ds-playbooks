@@ -131,7 +131,6 @@ _webdav_tls_key: "{{ webdav_tls_key | default(None) }}"
 _webdav_tls_key_file: "{{ webdav_tls_key_file | default('/etc/ssl/certs/dummy.key') }}"
 _webdav_varnish_service_port: "{{ webdav_varnish_service_port | default(6081) }}"
 
-_sftp_allowed_src: "{{ sftp_allowed_src | default(['0.0.0.0/0']) }}"
 _sftp_port: "{{ sftp_port | default(2022) }}"
 _sftp_proxy_allowed: "{{ sftp_proxy_allowed | default([]) }}"
 _sftpgo_admin_ui_port:  "{{ sftpgo_admin_ui_port | default(18023) }}"

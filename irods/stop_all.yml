@@ -1,13 +1,11 @@
 ---
 - name: stop iRODS resource servers
   hosts: irods_resource:!irods_catalog
-  become_user: "{{ _irods_service_account_name }}"
   tasks:
     - import_tasks: tasks/stop_irods.yml
 
 
 - name: stop catalog service providers
   hosts: irods_catalog
-  become_user: "{{ _irods_service_account_name }}"
   tasks:
     - import_tasks: tasks/stop_irods.yml

@@ -41,6 +41,8 @@
         tcp_ports:
           - "{{ _irods_server_control_plane_port }}"
       ignore_errors: true
+      tags:
+        - skip_ansible_lint
 
     - name: check other providers grid port
       port_check_sender:
@@ -53,6 +55,8 @@
           groups['irods_catalog']
             | difference(groups['irods_resource'])
             | difference([ inventory_hostname ]) }}
+      tags:
+        - skip_ansible_lint
 
     - name: check resource server ports
       port_check_sender:
@@ -63,6 +67,8 @@
         timeout: "{{ _check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['irods_resource'] | difference([inventory_hostname]) }}"
+      tags:
+        - skip_ansible_lint
 
 
 - name: check port access from resource servers
@@ -80,6 +86,8 @@
         timeout: "{{ _check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['irods_catalog'] | difference([inventory_hostname]) }}"
+      tags:
+        - skip_ansible_lint
 
     - name: check other resource servers ports
       port_check_sender:
@@ -101,6 +109,8 @@
         timeout: "{{ _check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['irods_resource'] | difference([inventory_hostname]) }}"
+      tags:
+        - skip_ansible_lint
 
 
 - name: stop receivers
@@ -115,6 +125,8 @@
           - "{{ _irods_zone_port }}"
         msg: finished
       ignore_errors: true
+      tags:
+        - skip_ansible_lint
 
     - name: wait for receiver to stop
       async_status:
@@ -129,6 +141,8 @@
       fail:
         msg: '{{ job_result.msg }}'
       ignore_errors: true
+      tags:
+        - skip_ansible_lint
 
 
 - name: restart previously stopped iRODS servers

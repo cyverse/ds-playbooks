@@ -7,12 +7,13 @@
     else
       printf missing
     fi
-  register: idResult
+  register: id_result
   changed_when: false
 
 - name: stop server
   become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
   irods_ctl:
     state: stopped
   register: stop_irods_result
-  when: idResult.stdout == 'exists'
+  when: id_result.stdout == 'exists'

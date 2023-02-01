@@ -10,7 +10,12 @@
     "setstat_mode": 0,
     "temp_path": "",
     "proxy_protocol": 1,
-    "proxy_allowed": {{ _sftp_proxy_allowed }},
+    "proxy_allowed": [
+      {% for proxy in _sftp_proxy_allowed %}
+        {% set ip = proxy if proxy|ansible.utils.ipaddr else lookup('dig', proxy) %}
+        "{{ ip }}"{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ],
     "startup_hook": "",
     "post_connect_hook": "",
     "post_disconnect_hook": "",

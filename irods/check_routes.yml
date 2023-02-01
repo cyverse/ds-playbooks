@@ -16,7 +16,7 @@
       wait_for:
         port: "{{ _irods_zone_port }}"
         state: drained
- 
+
     - name: start receiver
       port_check_receiver:
         tcp_ports: >-
@@ -49,9 +49,9 @@
           - "{{ hostvars[item]._irods_server_control_plane_port }}"
       ignore_errors: true
       with_items: >-
-        {{ 
-          groups['irods_catalog'] 
-            | difference(groups['irods_resource']) 
+        {{
+          groups['irods_catalog']
+            | difference(groups['irods_resource'])
             | difference([ inventory_hostname ]) }}
 
     - name: check resource server ports
@@ -85,18 +85,18 @@
       port_check_sender:
         destination: "{{ item }}"
         tcp_ports: >-
-          {{ 
+          {{
             [ hostvars[item]._irods_zone_port ]
               | union(
                 range(
-                    hostvars[item]._irods_server_port_range_start|int, 
-                    hostvars[item]._irods_server_port_range_end|int + 1 ) 
+                    hostvars[item]._irods_server_port_range_start|int,
+                    hostvars[item]._irods_server_port_range_end|int + 1 )
                   | list ) }}
         udp_ports: >-
-          {{ 
+          {{
             range(
-                hostvars[item]._irods_server_port_range_start|int, 
-                hostvars[item]._irods_server_port_range_end|int + 1 ) 
+                hostvars[item]._irods_server_port_range_start|int,
+                hostvars[item]._irods_server_port_range_end|int + 1 )
               | list }}
         timeout: "{{ _check_routes_timeout }}"
       ignore_errors: true
@@ -136,6 +136,8 @@
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
+  tags:
+    - non_idempotent
   tasks:
     - when: stop_irods_result is changed
       include_tasks: tasks/restart_irods.yml

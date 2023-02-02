@@ -9,8 +9,13 @@
     },
     "setstat_mode": 0,
     "temp_path": "",
-    "proxy_protocol": 0,
-    "proxy_allowed": [],
+    "proxy_protocol": 1,
+    "proxy_allowed": [
+      {% for proxy in _sftp_proxy_allowed %}
+        {% set ip = proxy if proxy|ansible.utils.ipaddr else lookup('dig', proxy) %}
+        "{{ ip }}"{% if not loop.last %},{% endif +%}
+      {% endfor %}
+    ],
     "startup_hook": "",
     "post_connect_hook": "",
     "post_disconnect_hook": "",
@@ -19,7 +24,7 @@
     "max_per_host_connections": 20,
     "whitelist_file": "",
     "defender": {
-      "enabled": false,
+      "enabled": true,
       "driver": "memory",
       "ban_time": 30,
       "ban_time_increment": 50,

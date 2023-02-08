@@ -3,8 +3,3 @@ sftpgo_admin_username: admin
 sftpgo_admin_password: admin
 sftpgo_irods_proxy_username: sftp
 sftpgo_irods_proxy_password: sftp
-
-# The testing environment does not have a DNS entry for the cname of the iRODS
-# server, so override the default so that the iRODS user can be created by the
-# sftp playbook during testing.
-canonical_hostname: dstesting-provider_configured-1.dstesting_default

@@ -18,8 +18,8 @@
         password: "{{ _sftpgo_irods_proxy_password }}"
         state: present
         type: rodsadmin
-        host: "{{ _canonical_hostname }}"
-        port: "{{ _canonical_irods_port }}"
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: "{{ _irods_zone_port }}"
         admin_user: "{{ _irods_admin_username }}"
         admin_password: "{{ _irods_admin_password }}"
         zone: "{{ _irods_zone_name }}"

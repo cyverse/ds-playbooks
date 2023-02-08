@@ -89,12 +89,14 @@
       failed_when: not response.stat.exists
 
     - name: test sftpgo system group exists
-      debug:
-        msg: TODO implement
+      getent:
+        database: group
+        key: sftpgo
 
     - name: test sftpgo service account exists
-      debug:
-        msg: TODO implement
+      getent:
+        database: passwd
+        key: sftpgo
 
     - name: test create vault dir
       debug:

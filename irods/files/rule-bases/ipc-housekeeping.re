@@ -137,7 +137,11 @@ _ipc_rmTrash {
   # 2,592,000 is the number of seconds in 30 days, items older than one month in the trash will be deleted.
   *month_timestamp = int(*timestamp) - 2592000;
 
-  msiAddKeyValToMspStr("irodsAdminRmTrash", "", *FlagObj); 
+  # XXX - Because of https://github.com/irods/irods/issues/6918
+  # Intended to use *FlagObj = ""; msiAddKeyValToMspStr("irodsAdminRmTrash", "", *FlagObj);
+  # Instead, setting the *FlagObj = 'irodsAdminRmTrash=' without using msiAddKeyValToMspStr
+  # Applying the same logic for *FlagColl below
+  *FlagObj = 'irodsAdminRmTrash='
   foreach(*Row in SELECT META_COLL_ATTR_VALUE, COLL_NAME
                     WHERE COLL_NAME like '/*zone/trash/%'
                       AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp'
@@ -152,7 +156,6 @@ _ipc_rmTrash {
                           }
   }
 
-  msiAddKeyValToMspStr("irodsAdminRmTrash", "", *FlagColl);
   foreach(*Row in SELECT META_DATA_ATTR_VALUE, DATA_NAME, COLL_NAME
                     WHERE COLL_NAME like '/*zone/trash/%'
                       AND META_DATA_ATTR_NAME = 'ipc::trash_timestamp'
@@ -160,6 +163,7 @@ _ipc_rmTrash {
                           *rowCollName = *Row.COLL_NAME;
                           *rowDataName = *Row.DATA_NAME;
                           *absDataPath = *rowCollName ++ "/" ++ *rowDataName;
+                          *FlagColl = 'irodsAdminRmTrash='
                           msiAddKeyValToMspStr("objPath", *absDataPath, *FlagColl);
                           *status = errorcode(msiDataObjUnlink(*FlagColl, *Status));
                           if (*status == 0) {

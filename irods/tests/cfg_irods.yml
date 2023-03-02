@@ -85,6 +85,7 @@
         - delete-scheduled-rule
         - generateuuid
         - set-uuid
+        - imeta-exec
     
     - name: Verify database_config.json does not exist
       stat:

@@ -22,7 +22,6 @@
         - de-create-collection
         - delete-scheduled-rule
         - generateuuid
-        - rm-trash
         - set-uuid
         - sparcd-ingest
 

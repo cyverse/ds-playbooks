@@ -46,6 +46,11 @@
         path: /etc/irods/ipc-uuid.re
         state: absent
 
+    - name: ensure rm-trash is gone
+      file:
+        path: /var/lib/irods/msiExecCmd_bin/rm-trash
+        state: absent
+        
   roles:
     - role: cyverse.irods_cfg
       vars:

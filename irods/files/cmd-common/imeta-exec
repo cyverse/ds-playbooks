@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#
+# Calls the imeta service with the given parameters
+#
+# USAGE:
+#  imeta <args>
+#
+set -e
+main()
+{
+  imeta "$@"
+}
+main "$@"

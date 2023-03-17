@@ -56,6 +56,12 @@
       register: response
       failed_when: response.stat.exists
 
+    - name: test ensure rm-trash is gone
+      stat:
+        path: /var/lib/irods/msiExecCmd_bin/rm-trash
+      register: response
+      failed_when: response.stat.exists
+
     - name: Verify irods_environment.json is in place
       stat:
         path: /var/lib/irods/.irods/irods_environment.json
@@ -78,9 +84,9 @@
         - de-create-collection
         - delete-scheduled-rule
         - generateuuid
-        - rm-trash
         - set-uuid
-
+        - imeta-exec
+    
     - name: Verify database_config.json does not exist
       stat:
         path: /etc/irods/database_config.json

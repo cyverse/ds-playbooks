@@ -647,12 +647,12 @@ _ipc_mkDataObjDataIdVar: path -> string
 _ipc_mkDataObjDataIdVar(*Path) = 'data_id_' ++ str(*Path)
 
 imeta_exec_ipc_trash_timestamp(*action, *type, *path, *avuValue) {
-    *action_arg = execCmdArg(*action);
-    *type_arg = execCmdArg(*type);
-    *path_arg = execCmdArg(*path);
-    *avuValue_arg = execCmdArg(*avuValue);
+    *actionArg = execCmdArg(*action);
+    *typeArg = execCmdArg(*type);
+    *pathArg = execCmdArg(*path);
+    *avuValueArg = execCmdArg(*avuValue);
     *avuName = execCmdArg("ipc::trash_timestamp");
-    *argv = "*action_arg *type_arg *path_arg *avuName *avuValue_arg";
+    *argv = "*actionArg *typeArg *pathArg *avuName *avuValueArg";
     *err = errormsg(msiExecCmd('imeta-exec', *argv, "", "", "", *out), *msg);
     if (*err < 0) { 
       msiGetStderrInExecCmdOut(*out, *resp);

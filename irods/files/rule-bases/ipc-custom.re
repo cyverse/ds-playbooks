@@ -622,24 +622,37 @@ pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST,
 # XXX - ^^^
 }
 
-# generates a unique timestamp variable name for a data object or collection
+# generates a unique variable name for a data object or collection based on its absolute path,
+# the variable name is prefixed with "trash_timestamp_".
 #
 # Parameters:
-#  *Path the absolute path to the data object or collection
+#  *Path:  the absolute path to the data object or collection
 #
 # Return:
-#  the timestamp variable name used in temporary storage
+#  the variable name to be used in temporaryStorage to store a timestamp value
 #
 _ipc_mkDataObjAndCollTimestampVar: path -> string
 _ipc_mkDataObjAndCollTimestampVar(*Path) = 'trash_timestamp_' ++ str(*Path)
 
+# generates a unique variable name for a data object based on its absolute path,
+# the variable name is prefixed with "data_id_".
+#
+# Parameters:
+#  *Path:  the absolute path to the data object
+#
+# Return:
+#  the variable name to be used in temporaryStorage to store a DATA_ID
+#
+_ipc_mkDataObjDataIdVar: path -> string
+_ipc_mkDataObjDataIdVar(*Path) = 'data_id_' ++ str(*Path)
+
 imeta_exec_ipc_trash_timestamp(*action, *type, *path, *avuValue) {
-    *action = execCmdArg(*action);
-    *type = execCmdArg(*type);
-    *path = execCmdArg(*path);
+    *action_arg = execCmdArg(*action);
+    *type_arg = execCmdArg(*type);
+    *path_arg = execCmdArg(*path);
+    *avuValue_arg = execCmdArg(*avuValue);
     *avuName = execCmdArg("ipc::trash_timestamp");
-    *avuValue = execCmdArg(*avuValue);
-    *argv = "*action *type *path *avuName *avuValue";
+    *argv = "*action_arg *type_arg *path_arg *avuName *avuValue_arg";
     *err = errormsg(msiExecCmd('imeta-exec', *argv, "", "", "", *out), *msg);
     if (*err < 0) { 
       msiGetStderrInExecCmdOut(*out, *resp);
@@ -656,6 +669,34 @@ pep_api_data_obj_unlink_pre(*INSTANCE, *COMM, *DATAOBJUNLINKINP) {
     *timestampVar = _ipc_mkDataObjAndCollTimestampVar(/*dataObjPath);
     temporaryStorage.'*timestampVar' = *timestamp;
     imeta_exec_ipc_trash_timestamp("set", ipc_DATA_OBJECT, *dataObjPath, *timestamp);
+  }
+
+  msiSplitPath(*dataObjPath, *Coll, *File);
+  foreach(*Row in SELECT DATA_ID
+                    WHERE COLL_NAME = '*Coll'
+                      AND DATA_NAME = '*File') {
+                          *dataIdVar = _ipc_mkDataObjDataIdVar(/*dataObjPath);
+                          temporaryStorage.'*dataIdVar' = *Row.DATA_ID;
+  }
+}
+
+pep_api_data_obj_unlink_post(*INSTANCE, *COMM, *DATAOBJUNLINKINP) {
+  *dataObjPath = *DATAOBJUNLINKINP.obj_path;
+  *dataIdVar = _ipc_mkDataObjDataIdVar(/*dataObjPath);
+  if (errorcode(temporaryStorage.'*dataIdVar') == 0) {
+    *dataIdVarTemp = temporaryStorage.'*dataIdVar';
+    foreach(*Row in SELECT COLL_NAME
+                      WHERE DATA_ID = '*dataIdVarTemp') {
+                        *collNameList = split(*Row.COLL_NAME, '/');
+                        if (size(*collNameList) >= 5) {
+                          *parentCollPath = "";
+                          for (*i = 0; *i < 5; *i = *i + 1) {
+                            *parentCollPath = *parentCollPath ++ "/" ++ elem(*collNameList, *i);
+                          }
+                          msiGetSystemTime(*timestamp, "");
+                          imeta_exec_ipc_trash_timestamp("set", ipc_COLLECTION, *parentCollPath, *timestamp);
+                        }
+    }
   }
 }
 
@@ -712,8 +753,7 @@ pep_api_data_obj_rename_pre(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
       foreach(*Row in SELECT META_COLL_ATTR_VALUE
                         WHERE COLL_NAME like '*srcObjPath'
                           AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp') {
-                            *row_meta_coll_attr_value = *Row.META_COLL_ATTR_VALUE;
-                            temporaryStorage.'*timestampVar' = *row_meta_coll_attr_value;
+                            temporaryStorage.'*timestampVar' = *Row.META_COLL_ATTR_VALUE;
       }
     }
     else if (ipc_isDataObject(*Type)) {
@@ -722,8 +762,7 @@ pep_api_data_obj_rename_pre(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
                         WHERE COLL_NAME like '*Coll'
                           AND DATA_NAME like '*File'
                             AND META_DATA_ATTR_NAME = 'ipc::trash_timestamp') {
-                              *row_meta_data_attr_value = *Row.META_DATA_ATTR_VALUE;
-                              temporaryStorage.'*timestampVar' = *row_meta_data_attr_value;
+                              temporaryStorage.'*timestampVar' = *Row.META_DATA_ATTR_VALUE;
       }
     }
   }

@@ -631,8 +631,8 @@ pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST,
 # Return:
 #  the variable name to be used in temporaryStorage to store a timestamp value
 #
-_ipc_mkDataObjAndCollTimestampVar: path -> string
-_ipc_mkDataObjAndCollTimestampVar(*Path) = 'trash_timestamp_' ++ str(*Path)
+_ipc_mkTimestampVar: path -> string
+_ipc_mkTimestampVar(*Path) = 'trash_timestamp_' ++ str(*Path)
 
 # generates a unique variable name for a data object based on its absolute path,
 # the variable name is prefixed with "data_id_".
@@ -643,8 +643,8 @@ _ipc_mkDataObjAndCollTimestampVar(*Path) = 'trash_timestamp_' ++ str(*Path)
 # Return:
 #  the variable name to be used in temporaryStorage to store a DATA_ID
 #
-_ipc_mkDataObjDataIdVar: path -> string
-_ipc_mkDataObjDataIdVar(*Path) = 'data_id_' ++ str(*Path)
+_ipc_mkObjDataIdVar: path -> string
+_ipc_mkObjDataIdVar(*Path) = 'data_id_' ++ str(*Path)
 
 imeta_exec_ipc_trash_timestamp(*action, *type, *path, *avuValue) {
     *actionArg = execCmdArg(*action);
@@ -666,7 +666,7 @@ pep_api_data_obj_unlink_pre(*INSTANCE, *COMM, *DATAOBJUNLINKINP) {
   if (errorcode(*DATAOBJUNLINKINP.forceFlag) != 0) {
     msiGetSystemTime(*timestamp, "");
     *dataObjPath = *DATAOBJUNLINKINP.obj_path;
-    *timestampVar = _ipc_mkDataObjAndCollTimestampVar(/*dataObjPath);
+    *timestampVar = _ipc_mkTimestampVar(/*dataObjPath);
     temporaryStorage.'*timestampVar' = *timestamp;
     imeta_exec_ipc_trash_timestamp("set", ipc_DATA_OBJECT, *dataObjPath, *timestamp);
   }
@@ -675,14 +675,18 @@ pep_api_data_obj_unlink_pre(*INSTANCE, *COMM, *DATAOBJUNLINKINP) {
   foreach(*Row in SELECT DATA_ID
                     WHERE COLL_NAME = '*Coll'
                       AND DATA_NAME = '*File') {
-                          *dataIdVar = _ipc_mkDataObjDataIdVar(/*dataObjPath);
+                          *dataIdVar = _ipc_mkObjDataIdVar(/*dataObjPath);
                           temporaryStorage.'*dataIdVar' = *Row.DATA_ID;
   }
 }
 
 pep_api_data_obj_unlink_post(*INSTANCE, *COMM, *DATAOBJUNLINKINP) {
   *dataObjPath = *DATAOBJUNLINKINP.obj_path;
-  *dataIdVar = _ipc_mkDataObjDataIdVar(/*dataObjPath);
+  *timestampVar = _ipc_mkTimestampVar(/*dataObjPath);
+  if (errorcode(temporaryStorage.'*timestampVar') == 0) {
+    temporaryStorage.'*timestampVar' = "";
+  }
+  *dataIdVar = _ipc_mkObjDataIdVar(/*dataObjPath);
   if (errorcode(temporaryStorage.'*dataIdVar') == 0) {
     *dataIdVarTemp = temporaryStorage.'*dataIdVar';
     foreach(*Row in SELECT COLL_NAME
@@ -702,9 +706,11 @@ pep_api_data_obj_unlink_post(*INSTANCE, *COMM, *DATAOBJUNLINKINP) {
 
 pep_api_data_obj_unlink_except(*INSTANCE, *COMM, *DATAOBJUNLINKINP) {
   *dataObjPath = *DATAOBJUNLINKINP.obj_path;
-  *timestampVar = _ipc_mkDataObjAndCollTimestampVar(/*dataObjPath);
+  *timestampVar = _ipc_mkTimestampVar(/*dataObjPath);
   if (errorcode(temporaryStorage.'*timestampVar') == 0) {
-    imeta_exec_ipc_trash_timestamp("rm", ipc_DATA_OBJECT, *dataObjPath, temporaryStorage.'*timestampVar');
+    if (temporaryStorage.'*timestampVar' != "") {
+      imeta_exec_ipc_trash_timestamp("rm", ipc_DATA_OBJECT, *dataObjPath, temporaryStorage.'*timestampVar');
+    }
   }
 }
 
@@ -720,7 +726,7 @@ pep_api_rm_coll_pre(*INSTANCE, *COMM, *RMCOLLINP, *COLLOPRSTAT) {
   if (errorcode(*RMCOLLINP.forceFlag) != 0) {
     msiGetSystemTime(*timestamp, "");
     *collNamePath = *RMCOLLINP.coll_name;
-    *timestampVar = _ipc_mkDataObjAndCollTimestampVar(/*collNamePath);
+    *timestampVar = _ipc_mkTimestampVar(/*collNamePath);
     temporaryStorage.'*timestampVar' = *timestamp;
     imeta_exec_ipc_trash_timestamp("set", ipc_COLLECTION, *collNamePath, *timestamp);
   }
@@ -728,7 +734,7 @@ pep_api_rm_coll_pre(*INSTANCE, *COMM, *RMCOLLINP, *COLLOPRSTAT) {
 
 pep_api_rm_coll_except(*INSTANCE, *COMM, *RMCOLLINP, *COLLOPRSTAT) {
   *collNamePath = *RMCOLLINP.coll_name;
-  *timestampVar = _ipc_mkDataObjAndCollTimestampVar(/*collNamePath);
+  *timestampVar = _ipc_mkTimestampVar(/*collNamePath);
   if (errorcode(temporaryStorage.'*timestampVar') == 0) {
     imeta_exec_ipc_trash_timestamp("rm", ipc_COLLECTION, *collNamePath, temporaryStorage.'*timestampVar');
   }
@@ -747,7 +753,7 @@ pep_api_data_obj_rename_pre(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
   *zone = ipc_ZONE;
   if ((*DATAOBJRENAMEINP.src_obj_path like '/*zone/trash/*') && (*DATAOBJRENAMEINP.dst_obj_path not like '/*zone/trash/*')) {
     *srcObjPath = *DATAOBJRENAMEINP.src_obj_path;
-    *timestampVar = _ipc_mkDataObjAndCollTimestampVar(/*srcObjPath);
+    *timestampVar = _ipc_mkTimestampVar(/*srcObjPath);
     msiGetObjType(*srcObjPath, *Type);
     if (ipc_isCollection(*Type)) {
       foreach(*Row in SELECT META_COLL_ATTR_VALUE
@@ -777,7 +783,7 @@ pep_api_data_obj_rename_post(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
   }
   else if ((*DATAOBJRENAMEINP.src_obj_path like '/*zone/trash/*') && (*DATAOBJRENAMEINP.dst_obj_path not like '/*zone/trash/*')) {
     *srcObjPath = *DATAOBJRENAMEINP.src_obj_path;
-    *timestampVar = _ipc_mkDataObjAndCollTimestampVar(/*srcObjPath);
+    *timestampVar = _ipc_mkTimestampVar(/*srcObjPath);
     if (errorcode(temporaryStorage.'*timestampVar') == 0) {
       imeta_exec_ipc_trash_timestamp("rm", ipc_getEntityType(*destObjPath), *destObjPath, temporaryStorage.'*timestampVar');
     }

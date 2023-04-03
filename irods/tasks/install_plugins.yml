@@ -7,31 +7,33 @@
       - irods-api-plugin-netcdf
     state: absent
 
-- name: Ensure netcdf rpms removed
-  ansible.builtin.file:
-    path: /root/{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm
-    state: absent
-  with_items:
-    - irods-icommands-netcdf
-    - irods-microservice-plugin-netcdf
-    - irods-api-plugin-netcdf
+# # XXX - netcdf is no longer accessible for iRODS 4.2.8, needs to be readded when upgrading to iRODS 4.2.11
+# - name: Ensure netcdf rpms removed
+#   ansible.builtin.file:
+#     path: /root/{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm
+#     state: absent
+#   with_items:
+#     - irods-icommands-netcdf
+#     - irods-microservice-plugin-netcdf
+#     - irods-api-plugin-netcdf
 
-- name: Install NetCDF plugins
-  ansible.builtin.yum:
-    name:
-      - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-client_modules-4.2.8.0-centos-7-x86_64.rpm
-      - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-icommands-4.2.8.0-centos-7-x86_64.rpm
-      - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm
-    state: present
+# - name: Install NetCDF plugins
+#   ansible.builtin.yum:
+#     name:
+#       - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-client_modules-4.2.8.0-centos-7-x86_64.rpm
+#       - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-icommands-4.2.8.0-centos-7-x86_64.rpm
+#       - http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm
+#     state: present
 
-- name: Lock NetCDF plugins to 4.2.8.0
-  community.general.yum_versionlock:
-    name:
-      - irods-netcdf-client_modules-4.2.8.0
-      - irods-netcdf-icommands-4.2.8.0
-      - irods-netcdf-server_modules-4.2.8.0
-    state: present
-# XXX - Due to https://github.com/ansible-collections/community.general/issues/4470, this isn't
-# idempotent.
-  tags: non_idempotent
-# XXX - ^^^
+# - name: Lock NetCDF plugins to 4.2.8.0
+#   community.general.yum_versionlock:
+#     name:
+#       - irods-netcdf-client_modules-4.2.8.0
+#       - irods-netcdf-icommands-4.2.8.0
+#       - irods-netcdf-server_modules-4.2.8.0
+#     state: present
+# # XXX - Due to https://github.com/ansible-collections/community.general/issues/4470, this isn't
+# # idempotent.
+#   tags: non_idempotent
+# # XXX - ^^^
+# # XXX - ^^^

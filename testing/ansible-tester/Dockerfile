@@ -2,10 +2,10 @@ FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+### Update system packages
 RUN apt-get -q -y update
 RUN apt-get -q -y upgrade
 
-### Update system packages
 RUN apt-get install -q -y \
     dmidecode \
     python3 \

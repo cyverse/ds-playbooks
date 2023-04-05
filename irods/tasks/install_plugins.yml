@@ -1,22 +1,5 @@
 ---
-- name: Ensure netcdf plugins not installed
-  ansible.builtin.package:
-    name:
-      - irods-icommands-netcdf
-      - irods-microservice-plugin-netcdf
-      - irods-api-plugin-netcdf
-    state: absent
-
 # # XXX - netcdf is no longer accessible for iRODS 4.2.8, needs to be readded when upgrading to iRODS 4.2.11
-# - name: Ensure netcdf rpms removed
-#   ansible.builtin.file:
-#     path: /root/{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm
-#     state: absent
-#   with_items:
-#     - irods-icommands-netcdf
-#     - irods-microservice-plugin-netcdf
-#     - irods-api-plugin-netcdf
-
 # - name: Install NetCDF plugins
 #   ansible.builtin.yum:
 #     name:

@@ -1,27 +1,5 @@
 ---
-- name: retrieve installed package info
-  package_facts:
-
-- name: test ensure netcdf plugins not installed
-  assert:
-    that:
-      - not "{{ item }}" in ansible_facts.packages
-  with_items:
-    - irods-icommands-netcdf
-    - irods-microservice-plugin-netcdf
-    - irods-api-plugin-netcdf
-
 # # XXX - netcdf is no longer accessible for iRODS 4.2.8, needs to be readded when upgrading to iRODS 4.2.11
-# - name: test ensure netcdf rpms removed
-#   stat:
-#     path: /root/{{ item }}-1.0-centos{{ ansible_distribution_major_version }}.rpm
-#   register: response
-#   failed_when: response.stat.exists
-#   with_items:
-#     - irods-icommands-netcdf
-#     - irods-microservice-plugin-netcdf
-#     - irods-api-plugin-netcdf
-
 # - include_tasks: test_pkg_installed.yml
 #   vars:
 #     pkg: irods-runtime

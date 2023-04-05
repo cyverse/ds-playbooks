@@ -1,29 +1,70 @@
-FROM williamyeh/ansible:centos7
+FROM ubuntu:22.04
 
 ### Update system packages
-RUN yum --assumeyes --quiet upgrade
+ARG DEBIAN_FRONTEND=noninteractive
 
-### Install additional ansible support
-RUN yum --assumeyes --quiet install dmidecode python3 rpm-build wget
+RUN apt-get -q -y update
+RUN apt-get -q -y upgrade
+
+RUN apt-get install -q -y \
+    dmidecode \
+    python3 \
+    python3-pip \
+    gpg-agent \
+    rpm  \
+    openssh-client \
+    wget
+
 # XXX - The latest version of pip (21.3.1) is breaking on CentOS 7 without
 #       following encoding setup.
-ENV LANG=en_US.UTF-8
+ ENV LANG=en_US.UTF-8
 # XXX - ^^^
+
+# XXX - To resolve ansible.utils.display.initialize_locale (unsupported locale setting).
+ ENV LC_ALL=C
+ # XXX - ^^^
+
 RUN python3 -m pip --quiet install --upgrade pip
 RUN python3 -m pip --disable-pip-version-check --quiet install \
-  dnspython netaddr python-irodsclient requests urllib3 wheel
-# NB: ansible-core 2.12+ requires Python 3.8, which can't be installed from the
-#     epel on CentOS 7.
-RUN python3 -m pip --disable-pip-version-check --quiet install 'ansible-core<2.12'
+  dnspython netaddr python-irodsclient requests urllib3 wheel jinja2 ansible-core==2.11.12
 
 ### Install inspection support
-RUN yum --assumeyes install ca-certificates epel-release
-RUN python -m pip --quiet uninstall --yes urllib3
+RUN apt-get install -y ca-certificates
 
-ADD https://packages.irods.org/renci-irods.yum.repo /etc/yum.repos.d/renci-irods.yum.repo
+RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | sudo apt-key add -
+RUN echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" | tee /etc/apt/sources.list.d/renci-irods.list
 
-RUN rpm --import https://packages.irods.org/irods-signing-key.asc
-RUN yum --assumeyes --quiet install irods-icommands-4.2.8 postgresql
+RUN apt-get -q -y update
+COPY apt-preferences-irods /etc/apt/preferences.d/irods
+RUN wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb
+RUN apt-get install ./libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb
+
+RUN mkdir irods-runtime
+WORKDIR /irods-runtime
+RUN wget https://packages.irods.org/apt/pool/bionic/main/i/irods-runtime/irods-runtime_4.2.8_amd64.deb
+RUN ar x irods-runtime_4.2.8_amd64.deb
+RUN tar xzf control.tar.gz
+RUN sed --in-place '/^Depends:/s/ libssl1.0.0,/ libssl1.1,/' control
+RUN sed --in-place '/^Depends:/s/ python/ python3/g' control
+RUN tar c control md5sums | gzip -c > control.tar.gz
+RUN pwd
+RUN ar rcs irods-runtime_hack.deb debian-binary control.tar.gz data.tar.gz
+RUN sudo apt-get install -y ./irods-runtime_hack.deb
+WORKDIR /
+
+RUN mkdir irods-icommands
+WORKDIR /irods-icommands
+RUN wget https://packages.irods.org/apt/pool/bionic/main/i/irods-icommands/irods-icommands_4.2.8_amd64.deb
+RUN ar x irods-icommands_4.2.8_amd64.deb
+RUN tar xzf control.tar.gz
+RUN sed --in-place '/^Depends:/s/ libssl1.0.0$/ libssl1.1/' control
+RUN tar c control md5sums | gzip -c > control.tar.gz
+RUN ar rcs irods-icommands_hack.deb debian-binary control.tar.gz data.tar.gz
+RUN sudo apt-get install -y ./irods-icommands_hack.deb
+WORKDIR /
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y -q postgresql
+
 RUN mkdir /root/.ssh
 
 COPY ssh-config /root/.ssh/config

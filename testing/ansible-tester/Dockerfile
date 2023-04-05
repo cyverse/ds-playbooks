@@ -1,11 +1,11 @@
 FROM ubuntu:22.04
 
-### Update system packages
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -q -y update
 RUN apt-get -q -y upgrade
 
+### Update system packages
 RUN apt-get install -q -y \
     dmidecode \
     python3 \
@@ -31,7 +31,7 @@ RUN python3 -m pip --disable-pip-version-check --quiet install \
 ### Install inspection support
 RUN apt-get install -y ca-certificates
 
-RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | sudo apt-key add -
+RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add -
 RUN echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" | tee /etc/apt/sources.list.d/renci-irods.list
 
 RUN apt-get -q -y update
@@ -49,7 +49,7 @@ RUN sed --in-place '/^Depends:/s/ python/ python3/g' control
 RUN tar c control md5sums | gzip -c > control.tar.gz
 RUN pwd
 RUN ar rcs irods-runtime_hack.deb debian-binary control.tar.gz data.tar.gz
-RUN sudo apt-get install -y ./irods-runtime_hack.deb
+RUN apt-get install -y ./irods-runtime_hack.deb
 WORKDIR /
 
 RUN mkdir irods-icommands
@@ -60,7 +60,7 @@ RUN tar xzf control.tar.gz
 RUN sed --in-place '/^Depends:/s/ libssl1.0.0$/ libssl1.1/' control
 RUN tar c control md5sums | gzip -c > control.tar.gz
 RUN ar rcs irods-icommands_hack.deb debian-binary control.tar.gz data.tar.gz
-RUN sudo apt-get install -y ./irods-icommands_hack.deb
+RUN apt-get install -y ./irods-icommands_hack.deb
 WORKDIR /
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y -q postgresql

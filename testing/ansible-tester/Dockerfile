@@ -47,7 +47,6 @@ RUN tar xzf control.tar.gz
 RUN sed --in-place '/^Depends:/s/ libssl1.0.0,/ libssl1.1,/' control
 RUN sed --in-place '/^Depends:/s/ python/ python3/g' control
 RUN tar c control md5sums | gzip -c > control.tar.gz
-RUN pwd
 RUN ar rcs irods-runtime_hack.deb debian-binary control.tar.gz data.tar.gz
 RUN apt-get install -y ./irods-runtime_hack.deb
 WORKDIR /

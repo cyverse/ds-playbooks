@@ -2,6 +2,9 @@ FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+# NB - To resolve ansible.utils.display.initialize_locale (unsupported locale setting) warning
+ENV LC_ALL=C
+
 ### Update system packages
 RUN apt-get -q -y update
 RUN apt-get -q -y upgrade
@@ -15,16 +18,6 @@ RUN apt-get install -q -y \
     openssh-client \
     wget
 
-# XXX - The latest version of pip (21.3.1) is breaking on CentOS 7 without
-#       following encoding setup.
- ENV LANG=en_US.UTF-8
-# XXX - ^^^
-
-# XXX - To resolve ansible.utils.display.initialize_locale (unsupported locale setting).
- ENV LC_ALL=C
- # XXX - ^^^
-
-RUN python3 -m pip --quiet install --upgrade pip
 RUN python3 -m pip --disable-pip-version-check --quiet install \
   dnspython netaddr python-irodsclient requests urllib3 wheel jinja2 ansible-core==2.11.12
 
@@ -32,7 +25,8 @@ RUN python3 -m pip --disable-pip-version-check --quiet install \
 RUN apt-get install -y ca-certificates
 
 RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add -
-RUN echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" | tee /etc/apt/sources.list.d/renci-irods.list
+RUN echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" \
+    > /etc/apt/sources.list.d/renci-irods.list
 
 RUN apt-get -q -y update
 COPY apt-preferences-irods /etc/apt/preferences.d/irods
@@ -62,7 +56,7 @@ RUN ar rcs irods-icommands_hack.deb debian-binary control.tar.gz data.tar.gz
 RUN apt-get install -y ./irods-icommands_hack.deb
 WORKDIR /
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y -q postgresql
+RUN apt-get install -y -q postgresql
 
 RUN mkdir /root/.ssh
 
@@ -70,7 +64,6 @@ COPY ssh-config /root/.ssh/config
 RUN chmod --recursive go-rwx /root/.ssh
 
 ARG IRODS_CLERVER_PASSWORD=rods
-
 ENV IRODS_HOST=localhost
 ENV IRODS_PASSWORD=$IRODS_CLERVER_PASSWORD
 ENV IRODS_PORT=1247

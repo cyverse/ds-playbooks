@@ -49,7 +49,7 @@
     - when: >-
         (not sftpgo_resp.stat.exists)
         or (sftpgo_account.rc != 0)
-        or (sftpgo_version.stdout != '2.2.2 1a32add')
+        or (sftpgo_version.stdout != '2.2.2 62af53d')
       block:
         - name: check if sftpgo service exists
           stat:
@@ -75,7 +75,7 @@
         - name: download sftpgo package from github and uncompress
           unarchive:
             src: >-
-              https://github.com/cyverse/sftpgo/releases/download/v2.2.2i/sftpgo_amd64_linux_v2.2.2i.tar
+              https://github.com/cyverse/sftpgo/releases/download/v2.2.2i2/sftpgo_amd64_linux_v2.2.2i2.tar
             dest: /tmp/sftpgo_setup
             remote_src: true
           register: unarchive_resp

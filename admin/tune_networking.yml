@@ -1,4 +1,6 @@
 ---
+# XXX - DS-580, Centos ansible_virtualization_type incorrectly identified as
+# "kvm", Ansible version upgrade required.
 - name: determine the servers that are on physical machines
   hosts: all:!unmanaged_systems:!localhost
   become: true
@@ -32,7 +34,7 @@
                 '10G' if ethtool.stdout|int >= 10000 else
                 '1G'  if ethtool.stdout|int >= 1000 else '' }}
       changed_when: false
-
+# XXX - ^^^
 
 - name: tune MTU
   hosts: physical

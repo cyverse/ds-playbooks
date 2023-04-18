@@ -3,13 +3,8 @@ FROM cyverse/irods:4.2.8
 ### Switch back to root for installation
 USER root
 
-### Install NetCDF plugins
-RUN yum --assumeyes install \
-      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-client_modules-4.2.8.0-centos-7-x86_64.rpm \
-      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-icommands-4.2.8.0-centos-7-x86_64.rpm \
-      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm && \
 ### Install support for UUID generation
-    yum --assumeyes install uuidd && \
+RUN yum --assumeyes install uuidd && \
 ### Install support for periphery script
     yum --assumeyes install moreutils && \
 ### Clean up installation artifacts

@@ -33,7 +33,7 @@
     - name: check sftpgo version
       shell: |
         set -o pipefail
-        /usr/bin/sftpgo -v | tr '-' ' ' | awk '{print $2, $4}'
+        /usr/bin/sftpgo -v | tr '-' ' ' | awk '{print $2}'
       args:
         executable: /bin/bash
       register: sftpgo_version
@@ -49,7 +49,7 @@
     - when: >-
         (not sftpgo_resp.stat.exists)
         or (sftpgo_account.rc != 0)
-        or (sftpgo_version.stdout != '2.2.2 62af53d')
+        or (sftpgo_version.stdout != '2.4.5')
       block:
         - name: check if sftpgo service exists
           stat:
@@ -75,7 +75,7 @@
         - name: download sftpgo package from github and uncompress
           unarchive:
             src: >-
-              https://github.com/cyverse/sftpgo/releases/download/v2.2.2i2/sftpgo_amd64_linux_v2.2.2i2.tar
+              https://github.com/cyverse/sftpgo/releases/download/v2.4.5i/sftpgo_amd64_linux_v2.4.5i.tar
             dest: /tmp/sftpgo_setup
             remote_src: true
           register: unarchive_resp
@@ -100,7 +100,7 @@
             mode: '0660'
             remote_src: true
 
-        - name: install sftpgo template files
+        - name: install sftpgo template, openapi, static files
           when: unarchive_resp is changed
           copy:
             src: /tmp/sftpgo_setup/usr/share/sftpgo
@@ -146,7 +146,7 @@
       changed_when: false
 
     - when: >-
-        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.5')
+        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.7')
       block:
         - name: create download dir for sftpgo-auth-irods package
           file:
@@ -157,7 +157,7 @@
         - name: download sftpgo-auth-irods package from github and uncompress
           unarchive:
             src: >-
-              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.5/sftpgo-auth-irods-v0.1.5-linux-amd64.tar.gz
+              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.7/sftpgo-auth-irods-v0.1.7-linux-amd64.tar.gz
             dest: /tmp/sftpgo_auth_irods_setup
             remote_src: true
           register: unarchive_resp

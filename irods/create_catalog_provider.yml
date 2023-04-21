@@ -151,18 +151,6 @@
 - import_playbook: cfg_irods.yml
 
 
-- name: initialize ICAT schema
-  hosts: irods_catalog
-  become: true
-  run_once: true
-  gather_facts: false
-  tasks:
-    - name: ensure schema initialized
-      include_role:
-        name: cyverse.irods_cfg
-        tasks_from: setup_irods.yml
-
-
 - name: start iRODS on catalog service providers
   hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"

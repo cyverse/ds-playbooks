@@ -3,7 +3,7 @@
   hosts: irods
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
-  pre_tasks:
+  tasks:
     - name: initialize flag
       set_fact:
         irods_cfg_made_changes: false
@@ -50,9 +50,11 @@
       file:
         path: /var/lib/irods/msiExecCmd_bin/rm-trash
         state: absent
-        
-  roles:
-    - role: cyverse.irods_cfg
+
+    - name: configure iRODS service
+      import_role:
+        name: cyverse.irods_cfg
+        tasks_from: setup_irods.yml
       vars:
         amqp_user_info: "{{ _amqp_user }}:{{ _amqp_password }}"
         amqp_authority: "{{ amqp_user_info }}@{{ _amqp_host }}:{{ _amqp_port }}"
@@ -112,7 +114,6 @@
         irods_cfg_zone_port: "{{ _irods_zone_port }}"
         irods_cfg_zone_user: "{{ _irods_clerver_user }}"
 
-  post_tasks:
     - when: _restart_irods and irods_cfg_made_changes
       import_tasks: tasks/restart_irods.yml
 

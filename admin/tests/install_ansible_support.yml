@@ -23,6 +23,7 @@
         - python-dns
         - python-requests
         - python-virtualenv
+        - python2-pip
         - yum-plugin-versionlock
       loop_control:
         loop_var: pkg

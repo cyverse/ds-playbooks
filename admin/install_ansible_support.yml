@@ -42,6 +42,12 @@
             {{ 'python3-virtualenv' if ansible_distribution == 'Ubuntu' else 'python-virtualenv' }}
         state: present
 
+    - name: install pip2 on CentOS machines
+      when: ansible_distribution == 'CentOS'
+      package:
+       name: python2-pip
+       state: present
+
     - name: install yum-plugin-versionlock on CentOS machines
       when: ansible_distribution == 'CentOS'
       package:

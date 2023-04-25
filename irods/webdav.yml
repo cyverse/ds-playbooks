@@ -48,7 +48,7 @@
           ProxyHTMLLinks a href
           ProxyHTMLLinks base href
         apache_vhosts:
-          - servername: "{{ _canonical_hostname }}"
+          - servername: "{{ _webdav_canonical_hostname }}"
             extra_parameters: |
               ServerAlias {{ inventory_hostname }}
 
@@ -56,9 +56,9 @@
               CustomLog logs/http_request_log {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %a \"%r\" %>s %L %{forensic-id}n"' }}
               LogLevel warn
 
-              RedirectPermanent / https://{{ _canonical_hostname }}/
+              RedirectPermanent / https://{{ _webdav_canonical_hostname }}/
             comment: Redirect HTTP to HTTPS
-          - servername: "{{ _canonical_hostname }}"
+          - servername: "{{ _webdav_canonical_hostname }}"
             listen_ip: 127.0.0.1
             extra_parameters: |
               {% if _webdav_davrods_access_limit %}
@@ -136,7 +136,7 @@
                   Require host localhost
 
         apache_vhosts_ssl:
-          - servername: "{{ _canonical_hostname }}"
+          - servername: "{{ _webdav_canonical_hostname }}"
             certificate_file: "{{ _webdav_tls_cert_file }}"
             certificate_key_file: "{{ _webdav_tls_key_file }}"
             certificate_chain_file: "{{ _webdav_tls_chain_file }}"

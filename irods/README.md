@@ -97,6 +97,7 @@ Variable                                   | Required | Default                 
 `webdav_cache_max_ttl`                     | no       | 86400                                |         | The maximum cache TTL in seconds
 `webdav_cache_size`                        | no       | 1000                                 |         | The maximum size in mebibytes the cache can be
 `webdav_cache_ttl_fraction`                | no       | 0.1                                  |         | The fraction elapsed time since the last-modified time of a file for cache TTL (Time-to-live) configuration
+`webdav_canonical_hostname`                | no       | `canonical_hostname`                 |         | The FQDN or IP address of the WebDAV service.
 `webdav_davrods_access_limit`              | no       |                                      |         | If defined, the upper limit on the number of simultaneous requests that will be served by davrods
 `webdav_max_request_workers`               | no       | 192                                  |         | The upper limit on the number of simultaneous requests that will be served. This typically have the value of `webdav_server_limit` multiplied by `webdav_threads_per_child`
 `webdav_purgeman_irods_user`               | no       | `irods_admin_username`               |         | The irods user who converts data object uuid to path

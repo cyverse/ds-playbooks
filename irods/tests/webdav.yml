@@ -175,6 +175,16 @@
   become: true
   tasks:
     - name: Test place TLS certificate chain file
+      ansible.builtin.stat:
+        path: /etc/pki/tls/certs/testing.crt
+      register: resp
+      failed_when: not resp.stat.exists
+
+    - name: Verify TLS certificate chain file has correct permissions
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Verify TLS certificat chain file has correct content
       ansible.builtin.debug:
         msg: TODO implement
 

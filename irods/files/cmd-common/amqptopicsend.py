@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # This always exits with 0 status, as a work around for iRODS msiExecCmd microservice. To detect

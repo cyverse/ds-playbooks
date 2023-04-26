@@ -761,7 +761,7 @@ ipcRepl_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
 
 
 ipcRepl_dataObjModified(*_, *_, *DATA_OBJ_INFO) {
-  _ipcRepl_put(*DATA_OBJ_INFO.logical_path, *DATA_OBJ_INFO.destRescName, false);
+  _ipcRepl_put(*DATA_OBJ_INFO.logical_path, hd(split(*DATA_OBJ_INFO.resc_hier, ';')), false);
 }
 
 

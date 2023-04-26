@@ -6,7 +6,7 @@
 
 _ipc_schedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
   writeLine('serverLog', 'DS: scheduling *Desc');
-  # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
+  # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
   #       https://github.com/irods/irods/issues/5413.
   #eval(``delay('<PLUSET>0s</PLUSET><EF>*Freq</EF>') {`` ++ *RuleName ++ ``}`` );
   eval(
@@ -152,10 +152,13 @@ _ipc_rmTrash {
                     WHERE COLL_NAME like '/*zone/trash/%'
                       AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp'
                         AND META_COLL_ATTR_VALUE <= *month_timestamp) {
+                          *ts = *Row.META_COLL_ATTR_VALUE;
                           *rowCollName = *Row.COLL_NAME;
                           *status = errorcode(msiRmColl(*rowCollName, *FlagObj, *Status));
                           if (*status == 0) {
-                            writeLine("serverLog", "DS: Removed trash collection - *rowCollName with trash timestamp - *Row.META_COLL_ATTR_VALUE");
+                            writeLine(
+                              "serverLog",
+                              "DS: Removed trash collection - *rowCollName with trash timestamp - *ts" );
                           } else {
                             writeLine("serverLog", "DS: Unable to remove trash collection - *rowCollName, error code returned *status");
                             *verdict = false;
@@ -166,6 +169,7 @@ _ipc_rmTrash {
                     WHERE COLL_NAME like '/*zone/trash/%'
                       AND META_DATA_ATTR_NAME = 'ipc::trash_timestamp'
                         AND META_DATA_ATTR_VALUE <= *month_timestamp) {
+                          *ts = *Row.META_COLL_ATTR_VALUE;
                           *rowCollName = *Row.COLL_NAME;
                           *rowDataName = *Row.DATA_NAME;
                           *absDataPath = *rowCollName ++ "/" ++ *rowDataName;
@@ -173,7 +177,9 @@ _ipc_rmTrash {
                           msiAddKeyValToMspStr("objPath", *absDataPath, *FlagColl);
                           *status = errorcode(msiDataObjUnlink(*FlagColl, *Status));
                           if (*status == 0) {
-                            writeLine("serverLog", "DS: Removed trash data object - *absDataPath with trash timestamp - *Row.META_DATA_ATTR_VALUE");
+                            writeLine(
+                              "serverLog",
+                              "DS: Removed trash data object - *absDataPath with trash timestamp - *ts" );
                           } else {
                             writeLine("serverLog", "DS: Unable to remove trash data object - *absDataPath, error code returned *status");
                             *verdict = false;

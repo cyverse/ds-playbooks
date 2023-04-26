@@ -148,7 +148,15 @@ _ipc_rmTrash {
   # Instead, setting the *FlagObj = 'irodsAdminRmTrash=' without using msiAddKeyValToMspStr
   # Applying the same logic for *FlagColl below
   *FlagObj = 'irodsAdminRmTrash='
-  foreach(*Row in SELECT META_COLL_ATTR_VALUE, COLL_NAME
+
+  # The results are sorted in reverse order to ensure a subcollection with a
+  # timestamp is deleted before its parent, which also has a timestamp. If the
+  # parent were deleted before the child was attempted to be deleted, the child
+  # delete call would fail, logging an error and causing the the trash removal
+  # run to fail. This happens, because the call to delete the parent also
+  # deletes the child. Sort the results by collection path in descending order,
+  # lists a child collection before its parent.
+  foreach(*Row in SELECT META_COLL_ATTR_VALUE, ORDER_DESC(COLL_NAME)
                     WHERE COLL_NAME like '/*zone/trash/%'
                       AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp'
                         AND META_COLL_ATTR_VALUE <= *month_timestamp) {

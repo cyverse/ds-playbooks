@@ -9,6 +9,8 @@ KillMode=process
 WorkingDirectory=/var/lib/sftpgo
 ExecStart=/usr/bin/sftpgo serve --config-file /etc/sftpgo/sftpgo.json
 ExecReload=
+Restart=on-failure
+RestartSec=10s
 
 EnvironmentFile=/etc/sftpgo/sftpgo.conf
 User=sftpgo

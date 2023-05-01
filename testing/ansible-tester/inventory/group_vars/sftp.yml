@@ -3,3 +3,4 @@ sftpgo_admin_username: admin
 sftpgo_admin_password: admin
 sftpgo_irods_proxy_username: sftp
 sftpgo_irods_proxy_password: sftp
+sftp_proxy_allowed: ['1.1.1.1', '2.2.2.2/32', 'data.cyverse.org']

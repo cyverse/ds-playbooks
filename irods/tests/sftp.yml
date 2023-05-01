@@ -16,12 +16,6 @@
           - sftpgo_conf is search('SFTPGO_DEFAULT_ADMIN_USERNAME=admin')
           - sftpgo_conf is search('SFTPGO_DEFAULT_ADMIN_PASSWORD=sftpgo_pass')
           - sftpgo_conf is search('SFTPGO_HOME_PATH=/sftpgo_vault/data')
-          - sftpgo_conf is search('IRODS_PROXY_USER=sftp')
-          - sftpgo_conf is search('IRODS_PROXY_PASSWORD=sftpgo_irods_pass')
-          - sftpgo_conf is search('IRODS_HOST=dstesting-provider_configured-1.dstesting_default')
-          - sftpgo_conf is search('IRODS_PORT=1247')
-          - sftpgo_conf is search('IRODS_ZONE=testing')
-          - sftpgo_conf is search('IRODS_SHARED=/testing/home/shared')
 
     - name: retrieve sftpgo.json
       slurp:
@@ -39,6 +33,12 @@
           - sftpgo_json_config.data_provider.users_base_dir == '/sftpgo_vault/data'
           - sftpgo_json_config.data_provider.backups_path == '/sftpgo_vault/backups'
           - sftpgo_json_config.httpd.bindings[0].port == 18023
+          - sftpgo_json_config.command.commands[0].env[0] == 'IRODS_PROXY_USER=sftp'
+          - sftpgo_json_config.command.commands[0].env[1] == 'IRODS_PROXY_PASSWORD=sftp'
+          - sftpgo_json_config.command.commands[0].env[2] == 'IRODS_HOST=dstesting-provider_configured-1.dstesting_default'
+          - sftpgo_json_config.command.commands[0].env[3] == 'IRODS_PORT=1247'
+          - sftpgo_json_config.command.commands[0].env[4] == 'IRODS_ZONE=testing'
+          - sftpgo_json_config.command.commands[0].env[5] == 'IRODS_SHARED=/testing/home/shared'
 
     - delegate_to: localhost
       run_once: true

@@ -390,7 +390,8 @@
           "IRODS_HOST={{ _canonical_hostname }}",
           "IRODS_PORT={{ _irods_zone_port }}",
           "IRODS_ZONE={{ _irods_zone_name }}",
-          "IRODS_SHARED=/{{ _irods_zone_name }}/home/shared"
+          "IRODS_SHARED=/{{ _irods_zone_name }}/home/shared",
+          "SFTPGO_HOME_PATH={{ _sftpgo_vault_dir }}/data"
         ],
         "args": [],
         "hook": ""

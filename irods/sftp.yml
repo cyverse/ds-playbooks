@@ -100,6 +100,12 @@
             mode: '0660'
             remote_src: true
 
+        - name: remove old sftpgo template, openapi, static files
+          when: unarchive_resp is changed
+          file:
+            path: /tmp/sftpgo_setup/usr/share/sftpgo
+            state: absent
+
         - name: install sftpgo template, openapi, static files
           when: unarchive_resp is changed
           copy:
@@ -197,21 +203,27 @@
 
     - name: create a log dir
       file:
-        path: "/var/log/sftpgo"
+        path: /var/log/sftpgo
         state: directory
         owner: sftpgo
         mode: '0755'
 
     - name: create a work dir
       file:
-        path: "/var/lib/sftpgo"
+        path: /var/lib/sftpgo
         state: directory
         owner: sftpgo
         mode: '0750'
 
+    # remove old db file, we don't need old db because we recreate it dynamically
+    - name: remove an old sftpgo.db file
+      file:
+        path: /var/lib/sftpgo/sftpgo.db
+        state: absent
+
     - name: create a config dir
       file:
-        path: "/etc/sftpgo"
+        path: /etc/sftpgo
         state: directory
         owner: root
         mode: '0755'

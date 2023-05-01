@@ -103,7 +103,7 @@
         - name: remove old sftpgo template, openapi, static files
           when: unarchive_resp is changed
           file:
-            path: /tmp/sftpgo_setup/usr/share/sftpgo
+            path: /usr/share/sftpgo
             state: absent
 
         - name: install sftpgo template, openapi, static files

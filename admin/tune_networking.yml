@@ -30,9 +30,7 @@
 
     - name: group by NIC speed
       group_by:
-        key: centos{{ ansible_distribution_major_version }}_{{
-                '10G' if ethtool.stdout|int >= 10000 else
-                '1G'  if ethtool.stdout|int >= 1000 else '' }}
+        key: network_{{ '10G' if ethtool.stdout|int >= 10000 else '1G' }}
       changed_when: false
 # XXX - ^^^
 

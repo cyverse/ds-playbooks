@@ -6,57 +6,55 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C
 
 ### Update system packages
-RUN apt-get -q -y update
-RUN apt-get -q -y upgrade
+RUN apt-get --quiet --yes update
+RUN apt-get --quiet --yes upgrade
 
-RUN apt-get install -q -y \
-    dmidecode \
-    python3 \
-    python3-pip \
-    gpg-agent \
-    rpm  \
-    openssh-client \
-    wget
+RUN apt-get install --quiet --yes  dmidecode gpg-agent python3 python3-pip openssh-client rpm wget
 
 RUN python3 -m pip --disable-pip-version-check --quiet install \
   dnspython netaddr python-irodsclient requests urllib3 wheel jinja2 ansible-core==2.11.12
 
 ### Install inspection support
-RUN apt-get install -y ca-certificates
+RUN apt-get install --quiet --yes ca-certificates
 
-RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add -
+RUN wget --quiet --directory-prefix=/etc/apt/trusted.gpg.d \
+  https://packages.irods.org/irods-signing-key.asc
 RUN echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" \
-    > /etc/apt/sources.list.d/renci-irods.list
-
-RUN apt-get -q -y update
+  > /etc/apt/sources.list.d/renci-irods.list
+RUN apt-get --quiet --yes update
 COPY apt-preferences-irods /etc/apt/preferences.d/irods
-RUN wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb
-RUN apt-get install ./libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb
+
+RUN echo "deb http://security.ubuntu.com/ubuntu focal-security main" \
+  > /etc/apt/sources.list.d/focal-security.list
+RUN apt-get --quiet --yes update
+RUN apt-get --quiet --yes install libssl1.1
 
 RUN mkdir irods-runtime
 WORKDIR /irods-runtime
-RUN wget https://packages.irods.org/apt/pool/bionic/main/i/irods-runtime/irods-runtime_4.2.8_amd64.deb
+RUN wget \
+  https://packages.irods.org/apt/pool/bionic/main/i/irods-runtime/irods-runtime_4.2.8_amd64.deb
 RUN ar x irods-runtime_4.2.8_amd64.deb
 RUN tar xzf control.tar.gz
 RUN sed --in-place '/^Depends:/s/ libssl1.0.0,/ libssl1.1,/' control
 RUN sed --in-place '/^Depends:/s/ python/ python3/g' control
 RUN tar c control md5sums | gzip -c > control.tar.gz
 RUN ar rcs irods-runtime_hack.deb debian-binary control.tar.gz data.tar.gz
-RUN apt-get install -y ./irods-runtime_hack.deb
+RUN apt-get install --quiet --yes ./irods-runtime_hack.deb
 WORKDIR /
 
 RUN mkdir irods-icommands
 WORKDIR /irods-icommands
-RUN wget https://packages.irods.org/apt/pool/bionic/main/i/irods-icommands/irods-icommands_4.2.8_amd64.deb
+RUN wget \
+  https://packages.irods.org/apt/pool/bionic/main/i/irods-icommands/irods-icommands_4.2.8_amd64.deb
 RUN ar x irods-icommands_4.2.8_amd64.deb
 RUN tar xzf control.tar.gz
 RUN sed --in-place '/^Depends:/s/ libssl1.0.0$/ libssl1.1/' control
 RUN tar c control md5sums | gzip -c > control.tar.gz
 RUN ar rcs irods-icommands_hack.deb debian-binary control.tar.gz data.tar.gz
-RUN apt-get install -y ./irods-icommands_hack.deb
+RUN apt-get install --quiet --yes ./irods-icommands_hack.deb
 WORKDIR /
 
-RUN apt-get install -y -q postgresql
+RUN apt-get install --quiet --yes postgresql
 
 RUN mkdir /root/.ssh
 

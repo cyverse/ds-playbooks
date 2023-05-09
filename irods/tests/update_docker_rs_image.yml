@@ -35,7 +35,7 @@
       slurp:
         src: /tmp/etc/irods/server_config.json
       register: scEncoded
-    
+
     - name: decode server_config.json
       set_fact:
         server_config: "{{ scEncoded.content | b64decode }}"
@@ -45,24 +45,18 @@
         that:
           - server_config.advanced_settings.default_number_of_transfer_threads == 4
           - >-
-            server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes 
+            server_config.advanced_settings.transfer_buffer_size_for_parallel_transfer_in_megabytes
             == 4
           - >-
-            server_config.catalog_provider_hosts 
+            server_config.catalog_provider_hosts
               | symmetric_difference(
                 [
-                  'dstesting-provider_configured-1.dstesting_default', 
-                  'dstesting-provider_unconfigured-1.dstesting_default' ] ) 
-              | length 
+                  'dstesting-provider_configured-1.dstesting_default',
+                  'dstesting-provider_unconfigured-1.dstesting_default' ] )
+              | length
             == 0
-    
-    - name: verify server_config.catalog_service_role
-      debug:
-        msg: TODO implement
-
-    - name: verify server_config.default_dir_mode
-      debug:
-        msg: TODO implement
+          - server_config.catalog_service_role == 'consumer'
+          - server_config.default_dir_mode == '0750'
 
     - name: verify server_config.default_file_mode
       debug:

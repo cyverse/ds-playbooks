@@ -51,5 +51,6 @@ ONBUILD RUN /on-build-instantiate && \
 ONBUILD VOLUME /irods_vault/"$IRODS_STORAGE_RES"
 
 ONBUILD USER irods-host-user
+ONBUILD ENV HOME=/var/lib/irods
 
 ONBUILD ENV IRODS_STORAGE_RES="$IRODS_STORAGE_RES"

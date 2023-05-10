@@ -43,14 +43,14 @@ ipc_isCollection(*Type) = *Type == ipc_COLLECTION || *Type == '-c'
 ipc_isDataObject: string -> boolean
 ipc_isDataObject(*Type) = *Type == ipc_DATA_OBJECT
 
-# tests whether a given entity type identifier indicates a collection or a data 
+# tests whether a given entity type identifier indicates a collection or a data
 # object
 #
 # Parameters:
 #   *Type - the entity type identifier
 #
 ipc_isFileSystemType: string -> boolean
-ipc_isFileSystemType(*Type) = ipc_isCollection(*Type) || ipc_isDataObject(*Type) 
+ipc_isFileSystemType(*Type) = ipc_isCollection(*Type) || ipc_isDataObject(*Type)
 
 # tests whether a given entity type identifier indicates a resource
 #
@@ -77,25 +77,27 @@ ipc_isUser(*Type) = *Type == ipc_USER
 #          object
 #
 # RETURNS:
-#  It returns the type
+#  It returns the type or '' if the type of Entity can't be determined
 #
 ipc_getEntityType: string -> string
 ipc_getEntityType(*Entity) =
   let *type = '' in
-  let *_ = msiGetObjType(*Entity, *type) in 
-  if ipc_isCollection(*type) then ipc_COLLECTION
-  else if ipc_isDataObject(*type) then ipc_DATA_OBJECT
-  else if ipc_isResource(*type) then ipc_RESOURCE
-  else if ipc_isUser(*type) then ipc_USER
-  else *type
+  if errormsg(msiGetObjType(*Entity, *type), *err) < 0
+  then let *_ = writeLine('serverLog', 'ipc_getEntityType(*Entity) -> *err') in ''
+  else
+    if ipc_isCollection(*type) then ipc_COLLECTION
+    else if ipc_isDataObject(*type) then ipc_DATA_OBJECT
+    else if ipc_isResource(*type) then ipc_RESOURCE
+    else if ipc_isUser(*type) then ipc_USER
+    else *type
 
 # The base collection for staging
 ipc_STAGING_BASE: path
 ipc_STAGING_BASE = let *zone = ipc_ZONE in /*zone/jobs
 
-# This function checks to see if a collection or data object is in the staging 
+# This function checks to see if a collection or data object is in the staging
 # collection.
-# 
+#
 # PARAMETERS:
 #  Path  the absolute path to the entity
 #

@@ -35,6 +35,9 @@
         - ipc-housekeeping.re
         - ipc-json.re
         - ipc-logic.re
+        - ipc-trash.re
+        - mdrepo.re
+        - mdrepo-env.re
         - pire.re
         - pire-env.re
         - sernec.re
@@ -86,7 +89,7 @@
         - generateuuid
         - set-uuid
         - imeta-exec
-    
+
     - name: Verify database_config.json does not exist
       stat:
         path: /etc/irods/database_config.json

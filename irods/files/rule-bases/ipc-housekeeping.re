@@ -177,21 +177,22 @@ _ipc_rmTrash {
                     WHERE COLL_NAME like '/*zone/trash/%'
                       AND META_DATA_ATTR_NAME = 'ipc::trash_timestamp'
                         AND META_DATA_ATTR_VALUE <= *month_timestamp) {
-                          *ts = *Row.META_COLL_ATTR_VALUE;
-                          *rowCollName = *Row.COLL_NAME;
-                          *rowDataName = *Row.DATA_NAME;
-                          *absDataPath = *rowCollName ++ "/" ++ *rowDataName;
-                          *FlagColl = 'irodsAdminRmTrash='
-                          msiAddKeyValToMspStr("objPath", *absDataPath, *FlagColl);
-                          *status = errorcode(msiDataObjUnlink(*FlagColl, *Status));
-                          if (*status == 0) {
-                            writeLine(
-                              "serverLog",
-                              "DS: Removed trash data object - *absDataPath with trash timestamp - *ts" );
-                          } else {
-                            writeLine("serverLog", "DS: Unable to remove trash data object - *absDataPath, error code returned *status");
-                            *verdict = false;
-                          }
+    *ts = *Row.META_DATA_ATTR_VALUE;
+    *rowCollName = *Row.COLL_NAME;
+    *rowDataName = *Row.DATA_NAME;
+    *absDataPath = *rowCollName ++ "/" ++ *rowDataName;
+    *FlagColl = 'irodsAdminRmTrash='
+    msiAddKeyValToMspStr("objPath", *absDataPath, *FlagColl);
+    *status = errorcode(msiDataObjUnlink(*FlagColl, *Status));
+    if (*status == 0) {
+      writeLine(
+        "serverLog", "DS: Removed trash data object - *absDataPath with trash timestamp - *ts" );
+    } else {
+      writeLine(
+        "serverLog",
+        "DS: Unable to remove trash data object - *absDataPath, error code returned *status" );
+      *verdict = false;
+    }
   }
 
   if (*verdict) {

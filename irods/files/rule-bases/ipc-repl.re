@@ -480,8 +480,14 @@ _repl_replicate_workaround(*Object, *RescName) {
 
 
 _repl_scheduleSyncReplicas(*Object) {
-  foreach (*rec in SELECT COUNT(DATA_REPL_NUM) WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '0')
-  {
+# XXX - There is a bug in iRODS 4.2.8 that prevents a general query that doesn't explicitly use
+#       r_coll_main from working when authorization is controlled by a ticket on a collection.
+#   foreach (*rec in SELECT COUNT(DATA_REPL_NUM) WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '0')
+#   {
+  foreach ( *rec in
+    SELECT COUNT(DATA_REPL_NUM), COLL_ID WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '0'
+  ) {
+# XXX - ^^^
     if (int(*rec.DATA_REPL_NUM) > 0) {
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5413.

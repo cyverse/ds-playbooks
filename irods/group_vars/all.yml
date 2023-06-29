@@ -81,6 +81,7 @@ _irods_version: "{{ irods_version | default('4.2.8') }}"
 _irods_zone_key: "{{ irods_zone_key | default(None) }}"
 _irods_zone_name: "{{ irods_zone_name | default('tempZone') }}"
 
+_mdrepo_cli_account: "{{ mdrepo_cli_account | d('md-cli' if _mdrepo_collection != '' else None) }}"
 _mdrepo_collection: "{{ mdrepo_collection | d(None) }}"
 _mdrepo_landing_collection: "{{ mdrepo_landing_collection | d('') }}"
 _mdrepo_manager: "{{ mdrepo_manager | d(_irods_admin_username) }}"

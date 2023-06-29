@@ -75,9 +75,10 @@ Variable                                   | Required | Default                 
 `irods_version`                            | no       | 4.2.8                                |         | The version of iRODS to work with
 `irods_zone_key`                           | no       | TEMPORARY_zone_key                   |         | The zone key
 `irods_zone_name`                          | no       | tempZone                             |         | The name of the zone
+`mdrepo_clie_account`                      | no       | md-cli if mdrepo_collection exists   |         | The iRODS account used my the MD Repo CLI
 `mdrepo_collection`                        | no       | null                                 |         | The base collection path for the MD Repo service
 `mdrepo_landing_collection`                | no       | ''                                   |         | The collection path where user data are uploaded relative to `mdrepo_collection`
-`mdrepo_manager`                           | no       | `irods_admin_username`               |         | The account of the user who is responsible for the MD Repo data
+`mdrepo_manager`                           | no       | `irods_admin_username`               |         | The iRODS account of the user who is responsible for the MD Repo data
 `mdrepo_svc_account`                       | no       | md-svc if mdrepo_collection exists   |         | The iRODS account used by the MD Repo service
 `mdrepo_svc_password`                      | maybe    |                                      |         | The password used to authenticate `mdrepo_svc_account`, required if mdrepo_svc_account is not null
 `pire_manager`                             | no       | null                                 |         | The username that owns the PIRE project collection, if `null`, the collection isn't created.

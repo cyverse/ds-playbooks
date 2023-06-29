@@ -113,6 +113,7 @@
         irods_cfg_zone_name: "{{ _irods_zone_name }}"
         irods_cfg_zone_port: "{{ _irods_zone_port }}"
         irods_cfg_zone_user: "{{ _irods_clerver_user }}"
+        irods_cfg_zone_password: "{{ _irods_clerver_password }}"
 
     - when: _restart_irods and irods_cfg_made_changes
       import_tasks: tasks/restart_irods.yml

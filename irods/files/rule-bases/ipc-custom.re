@@ -20,6 +20,7 @@
 
 @include 'ipc-logic'
 @include 'ipc-repl'
+@include 'ipc-trash'
 
 
 # THIRD PARTY RULES
@@ -35,6 +36,7 @@
 @include 'captcn'
 @include 'coge'
 @include 'de'
+@include 'mdrepo'
 @include 'pire'
 @include 'sciapps'
 @include 'sernec'
@@ -434,10 +436,87 @@ _ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 }
 
 
+## API ##
+
+# COLL_CREATE
+
+pep_api_coll_create_post(*Instance, *Comm, *CollCreateInp) {
+  ipcTrash_api_coll_create_post(*Instance, *Comm, *CollCreateInp);
+}
+
+
+# DATA_OBJ_COPY
+
+pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
+  ipcTrash_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat);
+}
+
+
+# DATA_OBJ_CREATE
+
+pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
+  ipcTrash_api_data_obj_create_post(*Instance, *Comm, *DataObjInp);
+}
+
+
+# DATA_OBJ_OPEN
+
+pep_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp) {
+  mdrepo_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp);
+}
+
+
+# DATA_OBJ_PUT
+
+pep_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PortalOprOut) {
+  mdrepo_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PortalOprOut);
+}
+
+pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTALOPROUT) {
+  ipcTrash_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTALOPROUT);
+}
+
+
+# DATA_OBJ_RENAME
+
+pep_api_data_obj_rename_pre(*Instance, *Comm, *DataObjRenameInp) {
+  ipcTrash_api_data_obj_rename_pre(*Instance, *Comm, *DataObjRenameInp);
+}
+
+pep_api_data_obj_rename_post(*Instance, *Comm, *DataObjRenameInp) {
+  ipcTrash_api_data_obj_rename_post(*Instance, *Comm, *DataObjRenameInp);
+}
+
+
+# DATA_OBJ_UNLINK
+
+pep_api_data_obj_unlink_pre(*Instance, *Comm, *DataObjUnlinkInp) {
+  ipcTrash_api_data_obj_unlink_pre(*Instance, *Comm, *DataObjUnlinkInp);
+}
+
+pep_api_data_obj_unlink_post(*Instance, *Comm, *DataObjUnlinkInp) {
+  ipcTrash_api_data_obj_unlink_post(*Instance, *Comm, *DataObjUnlinkInp);
+}
+
+pep_api_data_obj_unlink_except(*Instance, *Comm, *DataObjUnlinkInp) {
+  ipcTrash_api_data_obj_unlink_except(*Instance, *Comm, *DataObjUnlinkInp);
+}
+
+
+# RM_COLL
+
+pep_api_rm_coll_pre(*Instance, *Comm, *RmCollInp, *CollOprStat) {
+  ipcTrash_api_rm_coll_pre(*Instance, *Comm, *RmCollInp, *CollOprStat);
+}
+
+pep_api_rm_coll_except(*Instance, *Comm, *RmCollInp, *CollOprStat) {
+  ipcTrash_api_rm_coll_except(*Instance, *Comm, *RmCollInp, *CollOprStat);
+}
+
+
 ## DATABASE ##
 
 # CLOSE
-
 
 pep_database_close_post(*INSTANCE, *CONTEXT, *OUT) {
 # XXX - Because of https://github.com/irods/irods/issues/5540,
@@ -471,7 +550,6 @@ pep_database_close_post(*INSTANCE, *CONTEXT, *OUT) {
 #   }
 }
 
-
 pep_database_close_finally(*INSTANCE, *CONTEXT, *OUT) {
 # XXX - Because of https://github.com/irods/irods/issues/5540,
 # cleanup can't happen
@@ -482,7 +560,6 @@ pep_database_close_finally(*INSTANCE, *CONTEXT, *OUT) {
 
 
 # MOD DATA OBJ META
-
 
 pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *REG_PARAM) {
   *handled = false;
@@ -567,8 +644,16 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
 }
 
 
-# REG DATA OBJ
+# MOD TICKET
 
+pep_database_mod_ticket_post(*Instance, *Context, *OUT, *OpName, *TicketString, *Arg3, *Arg4, *Arg5)
+{
+  mdrepo_database_mod_ticket_post(
+    *Instance, *Context, *OUT, *OpName, *TicketString, *Arg3, *Arg4, *Arg5);
+}
+
+
+# REG DATA OBJ
 
 pep_database_reg_data_obj_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO) {
 # XXX - These fields are empty. See https://github.com/irods/irods/issues/5554
@@ -609,7 +694,6 @@ pep_database_reg_data_obj_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO) {
 
 # RESOLVE HIERARCHY
 
-
 # This rule is meant for project specific implementations where an project
 # implementation is within an `on` block that restricts the resource resolution
 # to entities relevant to the project.
@@ -620,188 +704,4 @@ pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST,
     failmsg(-32000, temporaryStorage.resource_resolve_hierarchy_err);
   }
 # XXX - ^^^
-}
-
-# generates a unique variable name for a data object or collection based on its absolute path,
-# the variable name is prefixed with "trash_timestamp_".
-#
-# Parameters:
-#  *Path:  the absolute path to the data object or collection
-#
-# Return:
-#  the variable name to be used in temporaryStorage to store a timestamp value
-#
-_ipc_mkTimestampVar: path -> string
-_ipc_mkTimestampVar(*Path) = 'trash_timestamp_' ++ str(*Path)
-
-# generates a unique variable name for a data object based on its absolute path,
-# the variable name is prefixed with "data_id_".
-#
-# Parameters:
-#  *Path:  the absolute path to the data object
-#
-# Return:
-#  the variable name to be used in temporaryStorage to store a DATA_ID
-#
-_ipc_mkObjDataIdVar: path -> string
-_ipc_mkObjDataIdVar(*Path) = 'data_id_' ++ str(*Path)
-
-imeta_exec_ipc_trash_timestamp(*action, *type, *path, *avuValue) {
-  *actionArg = execCmdArg(*action);
-  *typeArg = execCmdArg(*type);
-  *pathArg = execCmdArg(*path);
-  *avuValueArg = execCmdArg(*avuValue);
-  *avuName = execCmdArg("ipc::trash_timestamp");
-  *argv = "*actionArg *typeArg *pathArg *avuName *avuValueArg";
-  *err = errormsg(msiExecCmd('imeta-exec', *argv, "", "", "", *out), *msg);
-  if (*err < 0) {
-    msiGetStderrInExecCmdOut(*out, *resp);
-    writeLine('serverLog', 'imeta-exec stderr: *resp');
-    writeLine('serverLog', 'imeta_exec_ipc_trash_timestamp: *msg');
-    *err;
-  }
-}
-
-pep_api_data_obj_unlink_pre(*INSTANCE, *COMM, *DATAOBJUNLINKINP) {
-  if (errorcode(*DATAOBJUNLINKINP.forceFlag) != 0) {
-    msiGetSystemTime(*timestamp, "");
-    *dataObjPath = *DATAOBJUNLINKINP.obj_path;
-    *timestampVar = _ipc_mkTimestampVar(/*dataObjPath);
-    temporaryStorage.'*timestampVar' = *timestamp;
-    imeta_exec_ipc_trash_timestamp("set", ipc_DATA_OBJECT, *dataObjPath, *timestamp);
-
-    msiSplitPath(*dataObjPath, *coll, *file);
-    foreach(*row in SELECT DATA_ID WHERE COLL_NAME = '*coll' AND DATA_NAME = '*file') {
-      *dataIdVar = _ipc_mkObjDataIdVar(/*dataObjPath);
-      temporaryStorage.'*dataIdVar' = *row.DATA_ID;
-    }
-  }
-}
-
-pep_api_data_obj_unlink_post(*INSTANCE, *COMM, *DATAOBJUNLINKINP) {
-  *dataObjPath = *DATAOBJUNLINKINP.obj_path;
-  *timestampVar = _ipc_mkTimestampVar(/*dataObjPath);
-  if (errorcode(temporaryStorage.'*timestampVar') == 0) {
-    temporaryStorage.'*timestampVar' = "";
-  }
-  *dataIdVar = _ipc_mkObjDataIdVar(/*dataObjPath);
-  if (errorcode(temporaryStorage.'*dataIdVar') == 0) {
-    *dataIdVarTemp = temporaryStorage.'*dataIdVar';
-    foreach(*Row in SELECT COLL_NAME
-                      WHERE DATA_ID = '*dataIdVarTemp') {
-                        *collNameList = split(*Row.COLL_NAME, '/');
-                        if (size(*collNameList) >= 5) {
-                          *parentCollPath = "";
-                          for (*i = 0; *i < 5; *i = *i + 1) {
-                            *parentCollPath = *parentCollPath ++ "/" ++ elem(*collNameList, *i);
-                          }
-                          msiGetSystemTime(*timestamp, "");
-                          imeta_exec_ipc_trash_timestamp("set", ipc_COLLECTION, *parentCollPath, *timestamp);
-                        }
-    }
-  }
-}
-
-pep_api_data_obj_unlink_except(*INSTANCE, *COMM, *DATAOBJUNLINKINP) {
-  *dataObjPath = *DATAOBJUNLINKINP.obj_path;
-  *timestampVar = _ipc_mkTimestampVar(/*dataObjPath);
-  if (errorcode(temporaryStorage.'*timestampVar') == 0) {
-    if (temporaryStorage.'*timestampVar' != "") {
-      imeta_exec_ipc_trash_timestamp("rm", ipc_DATA_OBJECT, *dataObjPath, temporaryStorage.'*timestampVar');
-    }
-  }
-}
-
-pep_api_data_obj_put_post(*INSTANCE, *COMM, *DATAOBJINP, *DATAOBJINPBBUF, *PORTALOPROUT) {
-  *zone = ipc_ZONE;
-  if (*DATAOBJINP.obj_path like '/*zone/trash/*') {
-    msiGetSystemTime(*timestamp, "");
-    imeta_exec_ipc_trash_timestamp("set", ipc_DATA_OBJECT, *DATAOBJINP.obj_path, *timestamp);
-  }
-}
-
-pep_api_rm_coll_pre(*INSTANCE, *COMM, *RMCOLLINP, *COLLOPRSTAT) {
-  if (errorcode(*RMCOLLINP.forceFlag) != 0) {
-    msiGetSystemTime(*timestamp, "");
-    *collNamePath = *RMCOLLINP.coll_name;
-    *timestampVar = _ipc_mkTimestampVar(/*collNamePath);
-    temporaryStorage.'*timestampVar' = *timestamp;
-    imeta_exec_ipc_trash_timestamp("set", ipc_COLLECTION, *collNamePath, *timestamp);
-  }
-}
-
-pep_api_rm_coll_except(*INSTANCE, *COMM, *RMCOLLINP, *COLLOPRSTAT) {
-  *collNamePath = *RMCOLLINP.coll_name;
-  *timestampVar = _ipc_mkTimestampVar(/*collNamePath);
-  if (errorcode(temporaryStorage.'*timestampVar') == 0) {
-    imeta_exec_ipc_trash_timestamp("rm", ipc_COLLECTION, *collNamePath, temporaryStorage.'*timestampVar');
-  }
-}
-
-pep_api_coll_create_post(*INSTANCE, *COMM, *COLLCREATEINP) {
-  *zone = ipc_ZONE;
-  *collNamePath = *COLLCREATEINP.coll_name;
-  if (*collNamePath like '/*zone/trash/*') {
-    msiGetSystemTime(*timestamp, "");
-    imeta_exec_ipc_trash_timestamp("set", ipc_COLLECTION, *collNamePath, *timestamp);
-  }
-}
-
-pep_api_data_obj_rename_pre(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
-  *zone = ipc_ZONE;
-  if ((*DATAOBJRENAMEINP.src_obj_path like '/*zone/trash/*') && (*DATAOBJRENAMEINP.dst_obj_path not like '/*zone/trash/*')) {
-    *srcObjPath = *DATAOBJRENAMEINP.src_obj_path;
-    *timestampVar = _ipc_mkTimestampVar(/*srcObjPath);
-    msiGetObjType(*srcObjPath, *Type);
-    if (ipc_isCollection(*Type)) {
-      foreach(*Row in SELECT META_COLL_ATTR_VALUE
-                        WHERE COLL_NAME like '*srcObjPath'
-                          AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp') {
-                            temporaryStorage.'*timestampVar' = *Row.META_COLL_ATTR_VALUE;
-      }
-    }
-    else if (ipc_isDataObject(*Type)) {
-      msiSplitPath(*srcObjPath, *Coll, *File);
-      foreach(*Row in SELECT META_DATA_ATTR_VALUE
-                        WHERE COLL_NAME like '*Coll'
-                          AND DATA_NAME like '*File'
-                            AND META_DATA_ATTR_NAME = 'ipc::trash_timestamp') {
-                              temporaryStorage.'*timestampVar' = *Row.META_DATA_ATTR_VALUE;
-      }
-    }
-  }
-}
-
-pep_api_data_obj_rename_post(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
-  *zone = ipc_ZONE;
-  *destObjPath = *DATAOBJRENAMEINP.dst_obj_path;
-  if (*destObjPath like '/*zone/trash/*') {
-    msiGetSystemTime(*timestamp, "");
-    imeta_exec_ipc_trash_timestamp("set", ipc_getEntityType(*destObjPath), *destObjPath, *timestamp);
-  }
-  else if ((*DATAOBJRENAMEINP.src_obj_path like '/*zone/trash/*') && (*DATAOBJRENAMEINP.dst_obj_path not like '/*zone/trash/*')) {
-    *srcObjPath = *DATAOBJRENAMEINP.src_obj_path;
-    *timestampVar = _ipc_mkTimestampVar(/*srcObjPath);
-    if (errorcode(temporaryStorage.'*timestampVar') == 0) {
-      imeta_exec_ipc_trash_timestamp("rm", ipc_getEntityType(*destObjPath), *destObjPath, temporaryStorage.'*timestampVar');
-    }
-  }
-}
-
-pep_api_data_obj_copy_post(*INSTANCE, *COMM, *DATAOBJCOPYINP, *TRANSSTAT) {
-  *zone = ipc_ZONE;
-  *destObjPath = *DATAOBJCOPYINP.dst_obj_path;
-  if (*destObjPath like '/*zone/trash/*') {
-    msiGetSystemTime(*timestamp, "");
-    imeta_exec_ipc_trash_timestamp("set", ipc_DATA_OBJECT, *destObjPath, *timestamp);
-  }
-}
-
-pep_api_data_obj_create_post(*INSTANCE, *COMM, *DATAOBJINP) {
-  *zone = ipc_ZONE;
-  *objPath = *DATAOBJINP.obj_path;
-  if (*objPath like '/*zone/trash/*') {
-    msiGetSystemTime(*timestamp, "");
-    imeta_exec_ipc_trash_timestamp("set", ipc_DATA_OBJECT, *objPath, *timestamp);
-  }
 }

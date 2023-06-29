@@ -1,0 +1,140 @@
+---
+- name: Configure iRODS for MD Repo
+  hosts: irods_catalog
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  run_once: true
+  vars:
+    landing_path: >-
+      {{ _mdrepo_collection  }}{{
+      '/' ~ _mdrepo_landing_collection if _mdrepo_landing_collection != '' else '' }}
+  tasks:
+    - when: _mdrepo_collection|length > 0
+      block:
+        - name: create project collection
+          delegate_to: localhost
+          become: false
+          irods_collection:
+            path: "{{ _mdrepo_collection }}"
+            parents: true
+            state: present
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            admin_user: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+            zone: "{{ _irods_zone_name }}"
+
+        - name: create landing collection
+          delegate_to: localhost
+          become: false
+          irods_collection:
+            path: "{{ landing_path }}"
+            parents: true
+            state: present
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            admin_user: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+            zone: "{{ _irods_zone_name }}"
+
+        - name: assign owner to project collection
+          delegate_to: localhost
+          become: false
+          irods_permission:
+            subject: "{{ _mdrepo_manager }}"
+            permission: own
+            object: "{{ _mdrepo_collection }}"
+            recursive: true
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            admin_user: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+            zone: "{{ _irods_zone_name }}"
+
+        - name: create service account
+          delegate_to: localhost
+          become: false
+          irods_user:
+            name: "{{ _mdrepo_svc_account }}"
+            type: ds-service
+            info: MD Repo service
+            password: "{{ _mdrepo_svc_password }}"
+            state: present
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            admin_user: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+            zone: "{{ _irods_zone_name }}"
+
+        - name: give service account write access to landing collection
+          delegate_to: localhost
+          become: false
+          irods_permission:
+            subject: "{{ _mdrepo_svc_account }}"
+            permission: write
+            object: "{{ landing_path }}"
+            recursive: false
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            admin_user: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+            zone: "{{ _irods_zone_name }}"
+
+
+- name: add MD Repo rule logic
+  hosts: irods
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tasks:
+    - when: _mdrepo_collection|length > 0
+      block:
+        - name: install command script
+          copy:
+            src: files/mdrepo/var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
+            dest: /var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
+            mode: u+rx
+
+        - name: install mdrepo-env.re
+          template:
+            src: templates/rule-bases/mdrepo-env.re.j2
+            dest: /etc/irods/mdrepo-env.re
+            mode: u+r
+          notify: reload rules
+
+        - name: install mdrepo.re
+          copy:
+            src: files/rule-bases/mdrepo.re
+            dest: /etc/irods/mdrepo.re
+            mode: u+r
+          notify: reload rules
+
+  handlers:
+    - name: reload rules
+      file:
+        path: /etc/irods/core.re
+        state: touch
+        mode: u+r
+
+
+- name: Configure for MD Repo CLI
+  hosts: irods_catalog
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  run_once: true
+  gather_facts: false
+  tasks:
+    - name: create MD Repo CLI account
+      when: _mdrepo_collection|length > 0
+      delegate_to: localhost
+      become: false
+      irods_user:
+        name: "{{ _mdrepo_cli_account }}"
+        type: ds-service
+        info: MD Repo command line interface
+        password: ''
+        state: present
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"

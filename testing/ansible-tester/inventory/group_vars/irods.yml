@@ -47,6 +47,13 @@ irods_resource_hierarchies:
 
 irods_server_port_range_end: 20009
 
+mdrepo_cli_account: md_cli
+mdrepo_collection: /testing/home/shared/md-repo
+mdrepo_landing_collection: path/to/landing
+mdrepo_manager: md_mgr
+mdrepo_svc_account: md_svc
+mdrepo_svc_password: md_svc_pass
+
 pire_manager: pire_mgr
 pire_resource_hierarchy:
   name: pireRes

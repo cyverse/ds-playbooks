@@ -52,5 +52,6 @@ insert into R_RESC_MAIN (resc_id, resc_name, zone_name, resc_type_name, resc_cla
 insert into R_TOKN_MAIN values ('user_type', 10000, 'ds-service', '', 'a Data Store service', '', '', '1170000000','1170000000');
 
 insert into R_USER_MAIN values (10001,'avra_mgr','rodsuser','ZONE_NAME_TEMPLATE','','Avra project manager','1170000000','1170000000');
-insert into R_USER_MAIN values (10002,'terraref_mgr','rodsuser','ZONE_NAME_TEMPLATE','','TerraREF project manager','1170000000','1170000000');
+insert into R_USER_MAIN values (10002,'md_mgr','rodsuser','ZONE_NAME_TEMPLATE','','MD Repo project manager','1170000000','1170000000');
 insert into R_USER_MAIN values (10003,'pire_mgr','rodsuser','ZONE_NAME_TEMPLATE','','PIRE project manager','1170000000','1170000000');
+insert into R_USER_MAIN values (10004,'terraref_mgr','rodsuser','ZONE_NAME_TEMPLATE','','TerraREF project manager','1170000000','1170000000');

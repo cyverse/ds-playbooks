@@ -42,16 +42,6 @@
           | grep --quiet 'md_svc#testing:modify object'
       changed_when: false
 
-    - name: test install command script
-      stat:
-        path: /var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
-      register: response
-      failed_when: >-
-        not response.stat.exists or
-        response.stat.pw_name != 'irods' or
-        not response.stat.rusr or
-        not response.stat.xusr
-
 
 - name: test mdrepo-env default expansion
   hosts: localhost
@@ -107,6 +97,16 @@
   become: true
   become_user: irods
   tasks:
+    - name: test install command script
+      stat:
+        path: /var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
+      register: response
+      failed_when: >-
+        not response.stat.exists or
+        response.stat.pw_name != 'irods' or
+        not response.stat.rusr or
+        not response.stat.xusr
+
     - name: test install of rule bases
       stat:
         path: /etc/irods/mdrepo-env.re
@@ -116,3 +116,32 @@
       with_items:
         - mdrepo-env.re
         - mdrepo.re
+
+
+- name: Test configure for MD Repo CLI
+  hosts: irods_catalog
+  become: true
+  become_user: irods
+  run_once: true
+  gather_facts: false
+  tasks:
+    - name: retrieve MD Repo CLI user information
+      command: iadmin lu md_cli
+      register: user_info
+      changed_when: false
+
+    - name: verify user information
+      assert:
+        that:
+          - user_info.stdout != 'No rows found'
+          - 'user_info.stdout is search("user_type_name: ds-service")'
+          - 'user_info.stdout is search("user_info: MD Repo command line interface")'
+
+    - name: verify user has empty password
+      environment:
+        IRODS_USER_NAME: md_cli
+        IRODS_AUTHENTICATION_FILE: /dev/null
+      shell: |
+        ils /cyverse.dev <<< '' &> /dev/null
+        (( $? == 4 ))
+      changed_when: false

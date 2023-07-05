@@ -22,7 +22,7 @@
         - de-create-collection
         - delete-scheduled-rule
         - generateuuid
-        - set-uuid
+        - imeta-exec
         - sparcd-ingest
 
     - name: verify deposition of server_config.json
@@ -34,11 +34,11 @@
     - name: retrieve encoded server_config.json
       slurp:
         src: /tmp/etc/irods/server_config.json
-      register: scEncoded
+      register: sc_encoded
 
     - name: decode server_config.json
       set_fact:
-        server_config: "{{ scEncoded.content | b64decode }}"
+        server_config: "{{ sc_encoded.content | b64decode }}"
 
     - name: verify server_config.json
       assert:
@@ -57,14 +57,8 @@
             == 0
           - server_config.catalog_service_role == 'consumer'
           - server_config.default_dir_mode == '0750'
-
-    - name: verify server_config.default_file_mode
-      debug:
-        msg: TODO implement
-
-    - name: verify server_config.default_hash_scheme
-      debug:
-        msg: TODO implement
+          - server_config.default_file_mode == '0600'
+          - server_config.default_hash_scheme == 'MD5'
 
     - name: verify server_config.default_resource_directory
       debug:

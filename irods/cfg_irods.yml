@@ -16,6 +16,11 @@
       with_fileglob:
         - "files/cmd-common/*"
 
+    - name: ensure set-uuid has been removed
+      file:
+        path: /var/lib/irods/msiExecCmd_bin/set-uuid
+        state: absent
+
     - name: place dynamic rule bases in /etc/irods
       template:
         src: "{{ item }}"

@@ -91,7 +91,7 @@ ipcTrash_api_data_obj_unlink_except(*INSTANCE, *COMM, *DATAOBJUNLINKINP) {
 }
 
 ipcTrash_api_data_obj_put_post(*INSTANCE, *COMM, *DATAOBJINP, *DATAOBJINPBBUF, *PORTALOPROUT) {
-  *zone = ipc_ZONE;
+  *zone = cyverse_ZONE;
   if (*DATAOBJINP.obj_path like '/*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");
     _ipcTrash_manageTimeAVU("set", ipc_DATA_OBJECT, *DATAOBJINP.obj_path, *timestamp);
@@ -117,7 +117,7 @@ ipcTrash_api_rm_coll_except(*INSTANCE, *COMM, *RMCOLLINP, *COLLOPRSTAT) {
 }
 
 ipcTrash_api_coll_create_post(*INSTANCE, *COMM, *COLLCREATEINP) {
-  *zone = ipc_ZONE;
+  *zone = cyverse_ZONE;
   *collNamePath = *COLLCREATEINP.coll_name;
   if (*collNamePath like '/*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");
@@ -126,7 +126,7 @@ ipcTrash_api_coll_create_post(*INSTANCE, *COMM, *COLLCREATEINP) {
 }
 
 ipcTrash_api_data_obj_rename_pre(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
-  *zone = ipc_ZONE;
+  *zone = cyverse_ZONE;
   if (
     (*DATAOBJRENAMEINP.src_obj_path like '/*zone/trash/*')
     && (*DATAOBJRENAMEINP.dst_obj_path not like '/*zone/trash/*')
@@ -154,7 +154,7 @@ ipcTrash_api_data_obj_rename_pre(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
 }
 
 ipcTrash_api_data_obj_rename_post(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
-  *zone = ipc_ZONE;
+  *zone = cyverse_ZONE;
   *destObjPath = *DATAOBJRENAMEINP.dst_obj_path;
   if (*destObjPath like '/*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");
@@ -174,7 +174,7 @@ ipcTrash_api_data_obj_rename_post(*INSTANCE, *COMM, *DATAOBJRENAMEINP) {
 }
 
 ipcTrash_api_data_obj_copy_post(*INSTANCE, *COMM, *DATAOBJCOPYINP, *TRANSSTAT) {
-  *zone = ipc_ZONE;
+  *zone = cyverse_ZONE;
   *destObjPath = *DATAOBJCOPYINP.dst_obj_path;
   if (*destObjPath like '/*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");
@@ -183,7 +183,7 @@ ipcTrash_api_data_obj_copy_post(*INSTANCE, *COMM, *DATAOBJCOPYINP, *TRANSSTAT) {
 }
 
 ipcTrash_api_data_obj_create_post(*INSTANCE, *COMM, *DATAOBJINP) {
-  *zone = ipc_ZONE;
+  *zone = cyverse_ZONE;
   *objPath = *DATAOBJINP.obj_path;
   if (*objPath like '/*zone/trash/*') {
     msiGetSystemTime(*timestamp, "");

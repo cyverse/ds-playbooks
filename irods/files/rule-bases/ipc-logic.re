@@ -30,8 +30,8 @@ _ipc_startsWith(*Str, *Prefix) =
 # Removes a prefix from a string.
 _ipc_removePrefix(*Orig, *Prefixes) =
 	if size(*Prefixes) == 0 then *Orig
-	else 
-		if _ipc_startsWith(*Orig, hd(*Prefixes)) 
+	else
+		if _ipc_startsWith(*Orig, hd(*Prefixes))
 		then substr(*Orig, strlen(hd(*Prefixes)), strlen(*Orig))
 		else _ipc_removePrefix(*Orig, tl(*Prefixes))
 
@@ -42,7 +42,7 @@ _ipc_removePrefix(*Orig, *Prefixes) =
 
 _ipc_getCollectionId(*Path) =
 	let *id = -1 in
-	let *_ = foreach (*rec in SELECT COLL_ID WHERE COLL_NAME = *Path) { *id = int(*rec.COLL_ID) } in 
+	let *_ = foreach (*rec in SELECT COLL_ID WHERE COLL_NAME = *Path) { *id = int(*rec.COLL_ID) } in
 	*id
 
 _ipc_getDataId(*Path) =
@@ -50,9 +50,9 @@ _ipc_getDataId(*Path) =
 	let *dataName = '' in
 	let *_ = msiSplitPath(*Path, *collPath, *dataName) in
 	let *id = -1 in
-	let *_ = foreach ( *rec in 
+	let *_ = foreach ( *rec in
 			SELECT DATA_ID WHERE COLL_NAME = *collPath AND DATA_NAME = *dataName
-		) { *id = int(*rec.DATA_ID) } in 
+		) { *id = int(*rec.DATA_ID) } in
 	*id
 
 _ipc_getEntityId(*Path) =
@@ -85,7 +85,7 @@ _ipc_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 	if size(*Candidates) == 0 then *Orig
 	else
 		let *candidate = hd(*Candidates) in
-		if _ipc_startsWith(*candidate, *Prefix) 
+		if _ipc_startsWith(*candidate, *Prefix)
 		then substr(*candidate, 2, strlen(*candidate))
 		else _ipc_getNewAVUSetting(*Orig, *Prefix, tl(*Candidates))
 
@@ -105,7 +105,7 @@ _ipc_chksumRepl(*Object, *ReplNum) {
 
 #
 # UUIDS
-# 
+#
 
 _ipc_UUID_ATTR = 'ipc_UUID'
 
@@ -113,7 +113,7 @@ _ipc_UUID_ATTR = 'ipc_UUID'
 _ipc_retrieveCollectionUUID(*Coll) =
 	let *uuid = '' in
 	let *attr = _ipc_UUID_ATTR in
-	let *_ = foreach ( *record in 
+	let *_ = foreach ( *record in
 			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr
 		) { *uuid = *record.META_COLL_ATTR_VALUE; } in
 	*uuid
@@ -125,10 +125,10 @@ _ipc_retrieveDataUUID(*Data) =
 	let *_ = msiSplitPath(*Data, *parentColl, *dataName) in
 	let *uuid = '' in
 	let *attr = _ipc_UUID_ATTR in
-	let *_ = foreach ( *record in 
+	let *_ = foreach ( *record in
 			SELECT META_DATA_ATTR_VALUE
 			WHERE COLL_NAME == *parentColl AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *attr
-		) { *uuid = *record.META_DATA_ATTR_VALUE; } in 
+		) { *uuid = *record.META_DATA_ATTR_VALUE; } in
 	*uuid
 
 # Looks up the UUID for a given type of entity (collection or data object)
@@ -224,7 +224,7 @@ _ipc_getMsgType(*ItemType) =
 	else if ipc_isUser(*ItemType) then _ipc_USER_MSG_TYPE
 	else ''
 
-_ipc_mkAVUObject(*Field, *Name, *Value, *Unit) = 
+_ipc_mkAVUObject(*Field, *Name, *Value, *Unit) =
 	ipcJson_object(
 		*Field,
 		list(
@@ -236,15 +236,15 @@ _ipc_mkEntityField(*Uuid) = ipcJson_string('entity', *Uuid)
 
 _ipc_mkPathField(*Path) = ipcJson_string('path', *Path)
 
-_ipc_mkUserObject(*Field, *Name, *Zone) = 
+_ipc_mkUserObject(*Field, *Name, *Zone) =
 	ipcJson_object(*Field, list(ipcJson_string('name', *Name), ipcJson_string('zone', *Zone)))
 
 _ipc_mkAuthorField(*Name, *Zone) = _ipc_mkUserObject('author', *Name, *Zone)
 
 _ipc_resolve_msg_entity_id(*EntityType, *EntityName) =
 	let *id = '' in
-	let *_ = 
-		if ipc_isFileSystemType(*EntityType) 
+	let *_ =
+		if ipc_isFileSystemType(*EntityType)
 		then _ipc_ensureUUID(*EntityType, *EntityName, *id)
 		else *id = *EntityName in
 	*id
@@ -259,13 +259,13 @@ _ipc_resolve_msg_entity_id(*EntityType, *EntityName) =
 # It executes the amqptopicsend.py command script on the rule engine host
 #
 sendMsg(*Topic, *Msg) {
-	*exchangeArg = execCmdArg(ipc_AMQP_EXCHANGE);
+	*exchangeArg = execCmdArg(cyverse_AMQP_EXCHANGE);
 	*topicArg = execCmdArg(*Topic);
 	*msgArg = execCmdArg(*Msg);
 	*argStr = '*exchangeArg *topicArg *msgArg';
 
 	*status = errormsg(
-		msiExecCmd('amqptopicsend.py', *argStr, ipc_RE_HOST, 'null', 'null', *out), *errMsg );
+		msiExecCmd('amqptopicsend.py', *argStr, cyverse_RE_HOST, 'null', 'null', *out), *errMsg );
 
 	if (*status < 0) {
 		writeLine("serverLog", "Failed to send AMQP message: *errMsg");
@@ -525,15 +525,15 @@ setAVUIfUnprotected(*ItemType, *ItemName, *A, *V, *U) {
 
 # Copies the unprotected AVUs from a given collection to the given item.
 cpUnprotectedCollAVUs(*Coll, *TargetType, *TargetName) =
-	foreach (*avu in 
-		SELECT META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE, META_COLL_ATTR_UNITS 
+	foreach (*avu in
+		SELECT META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE, META_COLL_ATTR_UNITS
 		WHERE COLL_NAME == *Coll
 	) {
 		setAVUIfUnprotected(
-			*TargetType, 
-			*TargetName, 
-			*avu.META_COLL_ATTR_NAME, 
-			*avu.META_COLL_ATTR_VALUE, 
+			*TargetType,
+			*TargetName,
+			*avu.META_COLL_ATTR_NAME,
+			*avu.META_COLL_ATTR_VALUE,
 			*avu.META_COLL_ATTR_UNITS );
 	}
 
@@ -541,44 +541,44 @@ cpUnprotectedCollAVUs(*Coll, *TargetType, *TargetName) =
 cpUnprotectedDataObjAVUs(*ObjPath, *TargetType, *TargetName) {
 	msiSplitPath(*ObjPath, *parentColl, *objName);
 
-	foreach (*avu in 
+	foreach (*avu in
 		SELECT META_DATA_ATTR_NAME, META_DATA_ATTR_VALUE, META_DATA_ATTR_UNITS
 		WHERE COLL_NAME == *parentColl AND DATA_NAME == *objName
 	) {
 		setAVUIfUnprotected(
-			*TargetType, 
-			*TargetName, 
+			*TargetType,
+			*TargetName,
 			*avu.META_DATA_ATTR_NAME,
-			*avu.META_DATA_ATTR_VALUE, 
+			*avu.META_DATA_ATTR_VALUE,
 			*avu.META_DATA_ATTR_UNITS );
 	}
 }
 
 # Copies the unprotected AVUs from a given resource to the given item.
 cpUnprotectedRescAVUs(*Resc, *TargetType, *TargetName) =
-	foreach (*avu in 
-		SELECT META_RESC_ATTR_NAME, META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS 
+	foreach (*avu in
+		SELECT META_RESC_ATTR_NAME, META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
 		WHERE RESC_NAME == *Resc
 	) {
 		setAVUIfUnprotected(
-			*TargetType, 
-			*TargetName, 
+			*TargetType,
+			*TargetName,
 			*avu.META_RESC_ATTR_NAME,
-			*avu.META_RESC_ATTR_VALUE, 
+			*avu.META_RESC_ATTR_VALUE,
 			*avu.META_RESC_ATTR_UNITS );
 	}
 
 # Copies the unprotected AVUs from a given user to the given item.
 cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) =
-	foreach (*avu in 
-		SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS 
+	foreach (*avu in
+		SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
 		WHERE USER_NAME == *User
 	) {
 		setAVUIfUnprotected(
-			*TargetType, 
-			*TargetName, 
+			*TargetType,
+			*TargetName,
 			*avu.META_USER_ATTR_NAME,
-			*avu.META_USER_ATTR_VALUE, 
+			*avu.META_USER_ATTR_VALUE,
 			*avu.META_USER_ATTR_UNITS );
 	}
 
@@ -611,7 +611,7 @@ ipc_acPreConnect(*OUT) { *OUT = 'CS_NEG_REFUSE'; }
 ipc_acSetNumThreads { msiSetNumThreads('default', 'default', 'default'); }
 
 # Set maximum number of rule engine processes
-ipc_acSetReServerNumProc { msiSetReServerNumProc(str(ipc_MAX_NUM_RE_PROCS)); }
+ipc_acSetReServerNumProc { msiSetReServerNumProc(str(cyverse_MAX_NUM_RE_PROCS)); }
 
 # This rule sets the rodsadin group permission of a collection when a collection
 # is created by an administrative means, i.e. iadmin mkuser. It also pushes a
@@ -719,7 +719,7 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
 		if (_ipc_isCurrentAction(*entityId, *me)) {
 			*level = _ipc_removePrefix(*AccessLevel, list('admin:'));
 			*type = ipc_getEntityType(*Path);
-			*userZone = if *UserZone == '' then ipc_ZONE else *UserZone;
+			*userZone = if *UserZone == '' then cyverse_ZONE else *UserZone;
 			*uuid = '';
 			_ipc_ensureUUID(*type, *Path, *uuid);
 
@@ -784,8 +784,8 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
 
 			*query =
 				SELECT META_DATA_ATTR_ID
-				WHERE COLL_NAME == *collPath 
-					AND DATA_NAME == *dataName 
+				WHERE COLL_NAME == *collPath
+					AND DATA_NAME == *dataName
 					AND META_DATA_ATTR_NAME == *AName;
 		} else if (ipc_isResource(*ItemType)) {
 			*query =
@@ -838,7 +838,7 @@ ipc_acPreProcForModifyAVUMetadata(
 
 # This rule sends a message indicating that an AVU was modified.
 ipc_acPostProcForModifyAVUMetadata(
-	*Option, *ItemType, *ItemName, *AName, *AValue, *new1, *new2, *new3, *new4 
+	*Option, *ItemType, *ItemName, *AName, *AValue, *new1, *new2, *new3, *new4
 ) {
 	*newArgs = list(*new1, *new2, *new3, *new4);
 	*uuid = '';
@@ -904,36 +904,36 @@ ipc_acPostProcForModifyAVUMetadata(
 			if (ipc_isCollection(*TargetItemType)) {
 
 				foreach( *rec in
-					SELECT META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE, META_COLL_ATTR_UNITS  
+					SELECT META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE, META_COLL_ATTR_UNITS
 					WHERE COLL_NAME == *SourceItemName AND META_COLL_ATTR_NAME != *uuidAttr
 				) {
 					_ipc_sendAvuSet(
-						'add', 
-						*TargetItemType, 
-						*target, 
-						*rec.META_COLL_ATTR_NAME, 
-						*rec.META_COLL_ATTR_VALUE, 
-						*rec.META_COLL_ATTR_UNITS, 
-						$userNameClient, 
+						'add',
+						*TargetItemType,
+						*target,
+						*rec.META_COLL_ATTR_NAME,
+						*rec.META_COLL_ATTR_VALUE,
+						*rec.META_COLL_ATTR_UNITS,
+						$userNameClient,
 						$rodsZoneClient );
 				}
 			} else {
 				msiSplitPath(*SourceItemName, *srcCollPath, *srcDataName);
 
 				foreach( *rec in
-					SELECT META_DATA_ATTR_NAME, META_DATA_ATTR_VALUE, META_DATA_ATTR_UNITS  
-					WHERE COLL_NAME == *srcCollPath 
-						AND DATA_NAME == *srcDataName 
+					SELECT META_DATA_ATTR_NAME, META_DATA_ATTR_VALUE, META_DATA_ATTR_UNITS
+					WHERE COLL_NAME == *srcCollPath
+						AND DATA_NAME == *srcDataName
 						AND META_DATA_ATTR_NAME != *uuidAttr
 				) {
 					_ipc_sendAvuSet(
-						'add', 
-						*TargetItemType, 
-						*target, 
-						*rec.META_DATA_ATTR_NAME, 
-						*rec.META_DATA_ATTR_VALUE, 
-						*rec.META_DATA_ATTR_UNITS, 
-						$userNameClient, 
+						'add',
+						*TargetItemType,
+						*target,
+						*rec.META_DATA_ATTR_NAME,
+						*rec.META_DATA_ATTR_VALUE,
+						*rec.META_DATA_ATTR_UNITS,
+						$userNameClient,
 						$rodsZoneClient );
 				}
 			}

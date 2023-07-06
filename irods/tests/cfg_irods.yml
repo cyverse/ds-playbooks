@@ -87,8 +87,13 @@
         - de-create-collection
         - delete-scheduled-rule
         - generateuuid
-        - set-uuid
         - imeta-exec
+
+    - name: verify set-uuid is gone
+      stat:
+        path: /var/lib/irods/msiExecCmd_bin/set-uuid
+      register: response
+      failed_when: response.stat.exists
 
     - name: Verify database_config.json does not exist
       stat:
@@ -105,11 +110,11 @@
     - name: retrieve encoded irods_environment.json
       slurp:
         src: /var/lib/irods/.irods/irods_environment.json
-      register: ieEncoded
+      register: ie_encoded
 
     - name: decode irods_environment.json
       set_fact:
-        irods_environment: "{{ ieEncoded.content | b64decode }}"
+        irods_environment: "{{ ie_encoded.content | b64decode }}"
 
     - name: verify irods_environment.json has correct contents
       assert:
@@ -134,11 +139,11 @@
         - name: retrieve encoded server_config.json
           slurp:
             src: /etc/irods/server_config.json
-          register: scEncoded
+          register: sc_encoded
 
         - name: decode server_config.json
           set_fact:
-            server_config: "{{ scEncoded.content | b64decode }}"
+            server_config: "{{ sc_encoded.content | b64decode }}"
 
         - name: verify server_config.json has correct contents
           assert:
@@ -202,11 +207,11 @@
         - name: retrieve encoded server_config.json
           slurp:
             src: /etc/irods/server_config.json
-          register: scEncoded
+          register: sc_encoded
 
         - name: decode server_config.json
           set_fact:
-            server_config: "{{ scEncoded.content | b64decode }}"
+            server_config: "{{ sc_encoded.content | b64decode }}"
 
         - name: verify server_config.json has correct contents
           assert:
@@ -266,11 +271,11 @@
         - name: retrieve encoded hosts_config.json
           slurp:
             src: /etc/irods/hosts_config.json
-          register: hcEncoded
+          register: hc_encoded
 
         - name: decode hosts_config.json
           set_fact:
-            hosts_config: "{{ hcEncoded.content | b64decode }}"
+            hosts_config: "{{ hc_encoded.content | b64decode }}"
 
         - name: verify hosts_config.json contents
           assert:

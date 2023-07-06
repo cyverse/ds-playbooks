@@ -4,10 +4,11 @@
 #
 # USAGE:
 #  imeta <args>
-#
-set -e
-main()
-{
-  imeta "$@"
+
+set -o errexit -o nounset -o pipefail
+
+main() {
+	imeta "$@"
 }
+
 main "$@"

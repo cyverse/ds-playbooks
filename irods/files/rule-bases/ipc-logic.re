@@ -179,7 +179,10 @@ _ipc_assignUUID(*ItemType, *ItemName, *Uuid, *ClientName, *ClientZone) {
 	}
 
 	if (*status != 0) {
-		writeLine('serverLog', "Failed to assign UUID: *msg");
+		msiGetStderrInExecCmdOut(*out, *err);
+		writeLine('serverLog', "DS: Failed to assign UUID to *ItemName");
+		writeLine('serverLog', "DS: *msg");
+		writeLine('serverLog', "DS: *err");
 		fail;
 	}
 }
@@ -188,7 +191,7 @@ _ipc_ensureUUID(*EntityType, *EntityPath, *UUID, *ClientName, *ClientZone) {
 	*uuid = _ipc_retrieveUUID(*EntityType, *EntityPath);
 	if (*uuid == '') {
 		_ipc_generateUUID(*uuid);
-		_ipc_assignUUID(*EntityType, *EntityPath, *uuid);
+		_ipc_assignUUID(*EntityType, *EntityPath, *uuid, *ClientName, *ClientZone);
 	}
 	*UUID = *uuid;
 }
@@ -510,7 +513,7 @@ canModProtectedAVU(*UserName, *UserZone) {
 
 # Verifies that an attribute can be modified. If it can't it fails and sends an
 # error message to the caller.
-ensureAVUEditable(*EditorNane, *EditorZone, *A, *V, *U) {
+ensureAVUEditable(*EditorName, *EditorZone, *A, *V, *U) {
 	if (avuProtected(*A) && !canModProtectedAVU(*EditorName, *EditorZone)) {
 		cut;
 		failmsg(-830000, 'CYVERSE ERROR: attempt to alter protected AVU <*A, *V, *U>');

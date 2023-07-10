@@ -169,21 +169,28 @@ _ipc_assignUUID(*ItemType, *ItemName, *Uuid, *ClientName, *ClientZone) {
 	if (_ipc_isAdmin(*ClientName, *ClientZone)) {
 		*status = errormsg(
 			msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, ''), *msg );
+
+		if (*status != 0) {
+			writeLine('serverLog', "DS: Failed to assign UUID to *ItemName");
+			writeLine('serverLog', "DS: *msg");
+			fail;
+		}
 	} else {
 		*cmdArg = execCmdArg('set');
 		*typeArg = execCmdArg(*ItemType);
 		*nameArg = execCmdArg(*ItemName);
+		*attrArg = execCmdArg(_ipc_UUID_ATTR);
 		*valArg = execCmdArg(*Uuid);
-		*argStr = "*cmdArg *typeArg *nameArg *valArg";
+		*argStr = "*cmdArg *typeArg *nameArg *attrArg *valArg";
 		*status = errormsg(msiExecCmd('imeta-exec', *argStr, "null", "null", "null", *out), *msg);
-	}
 
-	if (*status != 0) {
-		msiGetStderrInExecCmdOut(*out, *err);
-		writeLine('serverLog', "DS: Failed to assign UUID to *ItemName");
-		writeLine('serverLog', "DS: *msg");
-		writeLine('serverLog', "DS: *err");
-		fail;
+		if (*status != 0) {
+			msiGetStderrInExecCmdOut(*out, *err);
+			writeLine('serverLog', "DS: Failed to assign UUID to *ItemName");
+			writeLine('serverLog', "DS: *msg");
+			writeLine('serverLog', "DS: *err");
+			fail;
+		}
 	}
 }
 

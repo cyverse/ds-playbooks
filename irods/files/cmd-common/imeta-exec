@@ -4,10 +4,29 @@
 #
 # USAGE:
 #  imeta <args>
-#
-set -e
-main()
-{
-  imeta "$@"
+
+set -o errexit -o nounset -o pipefail
+
+main() {
+# XXX - Due to a bug in imeta version 4.2.8, imeta writes some errors to stdout and exits
+#       successfully.
+# 	imeta "$@"
+	local resp
+	if ! resp="$(imeta "$@")"; then
+		if [[ -n "$resp" ]]; then
+			echo "$resp"
+		fi
+
+		return 1
+	fi
+
+	if [[ "$resp" =~ Error: ]]; then
+		echo "$resp" >&2
+		return 1
+	else
+		echo "$resp"
+	fi
+# XXX - ^^^
 }
+
 main "$@"

@@ -13,7 +13,7 @@ _sparcd_encode_subject(*Subject) =
   let *_ = while (*len > *pos) {
     *c = substr(*Subject, *pos, *pos + 1);
     *enc = *enc ++ if *c like regex '[a-zA-Z0-9,./ ]' then *c else '.';
-    *pos = *pos + 1 } 
+    *pos = *pos + 1 }
   in *enc
 
 _sparcd_encode_url(*Url) =
@@ -26,7 +26,7 @@ _sparcd_encode_url(*Url) =
     *pos = *pos + 1 }
   in *enc
 
- 
+
 _sparcd_logMsg(*Msg) {
   writeLine('serverLog', 'SPARCD: *Msg');
 }
@@ -44,9 +44,9 @@ _sparcd_ingest(*Uploader, *TarPath) {
   _sparcd_logMsg('ingesting *TarPath for *Uploader');
 
   *coll = trimr(*TarPath, '-');
-  *url = _sparcd_encode_url('https://' ++ sparcd_WEBDAV_HOST ++ '/dav' ++ *coll ++ '/');   
+  *url = _sparcd_encode_url('https://' ++ sparcd_WEBDAV_HOST ++ '/dav' ++ *coll ++ '/');
 
-  *zoneArg = execCmdArg(ipc_ZONE);
+  *zoneArg = execCmdArg(cyverse_ZONE);
   *adminArg = execCmdArg(sparcd_ADMIN);
   *uploaderArg = execCmdArg(*Uploader);
   *tarArg = execCmdArg(*TarPath);
@@ -55,8 +55,9 @@ _sparcd_ingest(*Uploader, *TarPath) {
   *status = 0;
   *resp = '';
   for (*try = 0; *try <= _sparcd_MAX_RETRIES; *try = *try + 1) {
-    *status = errormsg(msiExecCmd("sparcd-ingest", *args, ipc_RE_HOST, "null", "null", *out), *err);
-    
+    *status = errormsg(
+      msiExecCmd("sparcd-ingest", *args, cyverse_RE_HOST, "null", "null", *out), *err );
+
     if (*status == 0) {
       break;
     } else {
@@ -75,7 +76,7 @@ _sparcd_ingest(*Uploader, *TarPath) {
 
   if (*status == 0) {
     _sparcd_notify(
-      "ingest success for *TarPath", 
+      "ingest success for *TarPath",
       "*Uploader successfully ingested the image bundle *TarPath into *coll (*url)." );
 
     _sparcd_logMsg('finished ingesting *TarPath for *Uploader');
@@ -83,7 +84,7 @@ _sparcd_ingest(*Uploader, *TarPath) {
     *notificationBody =
       "*Uploader failed to completely ingest the image bundle *TarPath into *coll (*url). The " ++
       "error is as follows.\n" ++
-      "\n" ++ 
+      "\n" ++
       *resp;
 
     _sparcd_notify("ingest failure for *TarPath", *notificationBody);
@@ -106,13 +107,13 @@ _sparcd_handle_new_object(*User, *Object) {
     if (*Object like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
       _sparcd_logMsg('scheduling ingest of *Object for *User');
 
-# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5413.
 #       delay("<PLUSET>1s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
       delay(
         ' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
           <PLUSET>0s</PLUSET>
-          <EF>0s REPEAT 0 TIMES</EF> ' 
+          <EF>0s REPEAT 0 TIMES</EF> '
       ) {_sparcd_ingest(*User, *Object)}
 # XXX - ^^^
     }

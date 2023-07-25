@@ -27,11 +27,11 @@
         - core.dvm
         - core.fnm
         - core.re
+        - cyverse-env.re
         - de.re
         - host_access_control_config.json
         - hosts_config.json
         - ipc-custom.re
-        - ipc-env.re
         - ipc-housekeeping.re
         - ipc-json.re
         - ipc-logic.re
@@ -47,21 +47,9 @@
         - terraref.re
         - terraref-env.re
 
-    - name: test ensure ipc-amqp.re is gone
+    - name: test ensure ipc-env.re is gone
       stat:
-        path: /etc/irods/ipc-amqp.re
-      register: response
-      failed_when: response.stat.exists
-
-    - name: test ensure ipc-uuid.re is gone
-      stat:
-        path: /etc/irods/ipc-uuid.re
-      register: response
-      failed_when: response.stat.exists
-
-    - name: test ensure rm-trash is gone
-      stat:
-        path: /var/lib/irods/msiExecCmd_bin/rm-trash
+        path: /etc/irods/ipc-env.re
       register: response
       failed_when: response.stat.exists
 

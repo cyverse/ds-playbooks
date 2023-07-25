@@ -4,7 +4,7 @@
 
 
 _calliope_TAR_REGEX =
-  '^/' ++ ipc_ZONE ++ '/home/[^/]+/calliope_data/collections/[^/]+/uploads/[^/]*\\.tar$'
+  '^/' ++ cyverse_ZONE ++ '/home/[^/]+/calliope_data/collections/[^/]+/uploads/[^/]*\\.tar$'
 
 
 _calliope_isForCalliope(*Path) = *Path like regex _calliope_TAR_REGEX
@@ -18,7 +18,7 @@ _calliope_logMsg(*Msg) {
 _calliope_ingest(*Uploader, *TarPath) {
   _calliope_logMsg('ingesting *TarPath for *Uploader');
 
-  *zoneArg = execCmdArg(ipc_ZONE);
+  *zoneArg = execCmdArg(cyverse_ZONE);
   *uploaderArg = execCmdArg(*Uploader);
   *tarArg = execCmdArg(*TarPath);
   *args= "*zoneArg *uploaderArg *tarArg";
@@ -41,7 +41,7 @@ calliope_dataObjCreated(*User, *_, *DATA_OBJ_INFO) {
     _calliope_logMsg(
       'scheduling ingest of ' ++ *DATA_OBJ_INP.logical_path ++ ' for ' ++ *User);
 
-# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5413.
     #delay("<PLUSET>0s</PLUSET><EF>1s REPEAT 0 TIMES</EF>")
     delay(
@@ -51,5 +51,3 @@ calliope_dataObjCreated(*User, *_, *DATA_OBJ_INFO) {
     {_calliope_ingest(*User, *DATA_OBJ_INFO.logical_path);}
   }
 }
-
-

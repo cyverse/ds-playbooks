@@ -31,6 +31,11 @@
       notify:
         - reload rules
 
+    - name: ensure ipc-env.re is gone
+      file:
+        path: /etc/irods/ipc-env.re
+        state: absent
+
     - name: place static config in /etc/irods
       copy:
         src: "{{ item }}"

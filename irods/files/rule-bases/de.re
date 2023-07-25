@@ -144,7 +144,7 @@ de_replBelongsTo(*Entity) = ipc_inStaging(*Entity)
 #   the user.
 #
 de_replIngestResc : string * boolean
-de_replIngestResc = (ipc_DEFAULT_RESC, false)
+de_replIngestResc = (cyverse_DEFAULT_RESC, false)
 
 
 # Returns the resource where the second and subsequent replicas of a file will

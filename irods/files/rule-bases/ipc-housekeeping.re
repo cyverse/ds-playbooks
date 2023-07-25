@@ -130,7 +130,7 @@ ipc_rescheduleStorageFreeSpaceDetermination {
 
 _ipc_rmTrash {
   writeLine('serverLog', 'DS: starting trash removal');
-  *zone = ipc_ZONE;
+  *zone = cyverse_ZONE;
   *verdict = true;
   msiGetSystemTime(*timestamp, "");
 
@@ -156,21 +156,25 @@ _ipc_rmTrash {
   # run to fail. This happens, because the call to delete the parent also
   # deletes the child. Sort the results by collection path in descending order,
   # lists a child collection before its parent.
-  foreach(*Row in SELECT META_COLL_ATTR_VALUE, ORDER_DESC(COLL_NAME)
-                    WHERE COLL_NAME like '/*zone/trash/%'
-                      AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp'
-                        AND META_COLL_ATTR_VALUE <= *month_timestamp) {
-                          *ts = *Row.META_COLL_ATTR_VALUE;
-                          *rowCollName = *Row.COLL_NAME;
-                          *status = errorcode(msiRmColl(*rowCollName, *FlagObj, *Status));
-                          if (*status == 0) {
-                            writeLine(
-                              "serverLog",
-                              "DS: Removed trash collection - *rowCollName with trash timestamp - *ts" );
-                          } else {
-                            writeLine("serverLog", "DS: Unable to remove trash collection - *rowCollName, error code returned *status");
-                            *verdict = false;
-                          }
+  foreach( *Row in
+    SELECT META_COLL_ATTR_VALUE, ORDER_DESC(COLL_NAME)
+    WHERE COLL_NAME like '/*zone/trash/%'
+      AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp'
+      AND META_COLL_ATTR_VALUE <= *month_timestamp
+  ) {
+    *ts = *Row.META_COLL_ATTR_VALUE;
+    *rowCollName = *Row.COLL_NAME;
+    *status = errorcode(msiRmColl(*rowCollName, *FlagObj, *Status));
+    if (*status == 0) {
+      writeLine(
+        "serverLog",
+        "DS: Removed trash collection - *rowCollName with trash timestamp - *ts" );
+    } else {
+      writeLine(
+        "serverLog",
+        "DS: Unable to remove trash collection - *rowCollName, error code returned *status" );
+      *verdict = false;
+    }
   }
 
   foreach(*Row in SELECT META_DATA_ATTR_VALUE, DATA_NAME, COLL_NAME
@@ -196,14 +200,14 @@ _ipc_rmTrash {
   }
 
   if (*verdict) {
-    *subject = ipc_ZONE ++ ' trash removal succeeded';
+    *subject = cyverse_ZONE ++ ' trash removal succeeded';
     *body = 'SSIA';
   } else {
-    *subject = ipc_ZONE ++ ' trash removal failed';
+    *subject = cyverse_ZONE ++ ' trash removal failed';
     *body = 'View the irods logs for details';
   }
 
-  if (0 != errorcode(msiSendMail(ipc_REPORT_EMAIL_ADDR, *subject, *body))) {
+  if (0 != errorcode(msiSendMail(cyverse_REPORT_EMAIL_ADDR, *subject, *body))) {
     writeLine('serverLog', 'DS: failed to mail trash removal report');
   }
 

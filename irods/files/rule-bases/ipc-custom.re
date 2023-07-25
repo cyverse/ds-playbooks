@@ -6,9 +6,9 @@
 # For license information, see https://cyverse.org/license.
 
 # The environment-specific configuration constants belong in the file
-# ipc-env.re.
+# cyverse-env.re.
 
-@include 'ipc-env'
+@include 'cyverse-env'
 
 # All CyVerse specific, environment independent logic goes in the file
 # ipc-logic.re. These rules will be called by the hooks implemented in

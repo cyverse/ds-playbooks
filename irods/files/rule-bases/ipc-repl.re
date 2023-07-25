@@ -43,7 +43,7 @@
 #
 #   Example:
 #     project_replBelongsTo : path -> boolean
-#     project_replBelongsTo(*Entity) = str(*Entity) like '/' ++ ipc_ZONE ++ '/home/shared/project/*'
+#     project_replBelongsTo(*Entity) = str(*Entity) like '/' ++ cyverse_ZONE ++ '/home/shared/project/*'
 #
 # <file_name>_replIngestResc
 #   Returns the resource where newly ingested files for the project should be
@@ -286,11 +286,11 @@ _repl_syncReplicas(*Object) {
 # SUPPORTING FUNCTIONS AND RULES
 
 _defaultIngestResc : string * boolean
-_defaultIngestResc = (ipc_DEFAULT_RESC, true)
+_defaultIngestResc = (cyverse_DEFAULT_RESC, true)
 
 
 _defaultReplResc : string * boolean
-_defaultReplResc = (ipc_DEFAULT_REPL_RESC, true)
+_defaultReplResc = (cyverse_DEFAULT_REPL_RESC, true)
 
 
 _delayTime : int
@@ -574,7 +574,7 @@ _setDefaultResc(*Resource) {
 # cannot override this choice, and 'preferred' means they can.
 _repl_findResc(*DataPath) {
   msiSplitPath(*DataPath, *collPath, *dataName);
-  *resc = ipc_DEFAULT_RESC;
+  *resc = cyverse_DEFAULT_RESC;
   *residency = 'preferred';
   *bestColl = '/';
 
@@ -597,7 +597,7 @@ _repl_findResc(*DataPath) {
 # Given a resource, this rule determines the list of resources that
 # asynchronously replicate its replicas.
 _repl_findReplResc(*Resc) {
-  *repl = ipc_DEFAULT_REPL_RESC;
+  *repl = cyverse_DEFAULT_REPL_RESC;
   *residency = 'preferred';
 
   foreach (*record in SELECT META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
@@ -648,15 +648,15 @@ _old_replEntityRename(*SourceObject, *DestObject) {
 _old_replEntityRename(*SourceObject, *DestObject) {
   (*srcResc, *_) = _repl_findResc(*SourceObject);
 
-  if (*srcResc != ipc_DEFAULT_RESC) {
-    _repl_scheduleMoves(*DestObject, ipc_DEFAULT_RESC, ipc_DEFAULT_REPL_RESC);
+  if (*srcResc != cyverse_DEFAULT_RESC) {
+    _repl_scheduleMoves(*DestObject, cyverse_DEFAULT_RESC, cyverse_DEFAULT_REPL_RESC);
   }
 }
 
 replEntityRename(*SourceObject, *DestObject) {
   (*destResc, *_) = _repl_findResc(*DestObject);
 
-  if (*destResc != ipc_DEFAULT_RESC) {
+  if (*destResc != cyverse_DEFAULT_RESC) {
     (*srcResc, *_) = _repl_findResc(*SourceObject);
 
     if (*srcResc != *destResc) {
@@ -691,7 +691,7 @@ _ipcRepl_acSetRescSchemeForCreate {
 ipcRepl_acSetRescSchemeForCreate {
   (*resc, *residency) = _repl_findResc($objPath);
 
-  if (*resc != ipc_DEFAULT_RESC) {
+  if (*resc != cyverse_DEFAULT_RESC) {
     msiSetDefaultResc(*resc, *residency);
   } else {
     _ipcRepl_acSetRescSchemeForCreate;
@@ -725,7 +725,7 @@ ipcRepl_acSetRescSchemeForRepl {
   ) {
     (*resc, *_) = _repl_findResc($objPath);
 
-    if (*resc != ipc_DEFAULT_RESC) {
+    if (*resc != cyverse_DEFAULT_RESC) {
       (*repl, *residency) = _repl_findReplResc(*resc);
       msiSetDefaultResc(*repl, *residency);
     } else {
@@ -752,7 +752,7 @@ _ipcRepl_put_old(*ObjPath, *DestResc, *New) {
 _ipcRepl_put(*ObjPath, *DestResc, *New) {
   (*ingestResc, *_) = _repl_findResc(*ObjPath);
 
-  if (*ingestResc != ipc_DEFAULT_RESC) {
+  if (*ingestResc != cyverse_DEFAULT_RESC) {
     (*replResc, *_) = _repl_findReplResc(*ingestResc);
     _ipcRepl_createOrOverwrite(*ObjPath, *DestResc, *New, *ingestResc, *replResc);
   } else {

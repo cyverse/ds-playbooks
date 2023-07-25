@@ -5,7 +5,7 @@
 
 @include "sernec-env"
 
-sernec_isForSernec(*Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/sernec/\*'
+sernec_isForSernec(*Path) = *Path like '/' ++ cyverse_ZONE ++ '/home/shared/sernec/\*'
 
 
 sernec_assignPerms(*Path, *UserNameClient) {

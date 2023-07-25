@@ -40,7 +40,7 @@ _mdrepo_touchDataObj(*DataObj) {
 	*svcAcntArg = execCmdArg(mdrepo_SVC_ACCOUNT);
 	*dataObjArg = execCmdArg(*DataObj);
 	*args = "*svcAcntArg *dataObjArg";
-	*err = errormsg(msiExecCmd('md-repo-touch-obj', "*args", ipc_RE_HOST, "", "", *out), *msg);
+	*err = errormsg(msiExecCmd('md-repo-touch-obj', "*args", cyverse_RE_HOST, "", "", *out), *msg);
 
 	if (*err != 0) {
 		*_ = errorcode(msiGetStderrInExecCmdOut(*out, *cmdErr));

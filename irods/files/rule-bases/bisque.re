@@ -19,15 +19,17 @@ _bisque_determineSrc(*BaseSrcColl, *BaseDestColl, *DestEntity) =
     ++ substr(*dest, strlen(_bisque_stripTrailingSlash(*BaseDestColl)), strlen(*dest))
 
 _bisque_getHomeUser(*Path) =
-  if *Path like regex '^/' ++ ipc_ZONE ++ '/home/shared($|/.*)' then ''
-  else if *Path like regex '^/' ++ ipc_ZONE ++ '/home/[^/]+/.+' then elem(split(*Path, '/'), 2)
-  else if *Path like regex '^/' ++ ipc_ZONE ++ '/trash/home/[^/]+/.+' then elem(split(*Path, '/'), 3)
+  if *Path like regex '^/' ++ cyverse_ZONE ++ '/home/shared($|/.*)' then ''
+  else if *Path like regex '^/' ++ cyverse_ZONE ++ '/home/[^/]+/.+' then elem(split(*Path, '/'), 2)
+  else
+    if *Path like regex '^/' ++ cyverse_ZONE ++ '/trash/home/[^/]+/.+'
+    then elem(split(*Path, '/'), 3)
   else ''
 
 _bisque_getClient(*AuthorName, *AuthorZone, *Path) =
-  let *homeUser = _bisque_getHomeUser(*Path) in 
+  let *homeUser = _bisque_getHomeUser(*Path) in
   if *homeUser != '' then *homeUser
-  else if *AuthorZone == ipc_ZONE then *AuthorName 
+  else if *AuthorZone == cyverse_ZONE then *AuthorName
   else ''
 
 _bisque_isInBisque(*CollName, *DataName) =
@@ -41,7 +43,7 @@ _bisque_isInBisque(*CollName, *DataName) =
     }
   in *found
 
-_bisque_isInProject(*Project, *Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/*Project/*'
+_bisque_isInProject(*Project, *Path) = *Path like '/' ++ cyverse_ZONE ++ '/home/shared/*Project/*'
 
 _bisque_isInProjects(*Projects, *Path) =
   if size(*Projects) == 0
@@ -58,9 +60,9 @@ _bisque_isForBisque(*Author, *Path) =
 _bisque_isUser(*Client) =
   if *Client == '' then false
   else
-    let *zone = ipc_ZONE in
+    let *zone = cyverse_ZONE in
     let *ans = false in
-    let *_ = foreach (*_ in 
+    let *_ = foreach (*_ in
         SELECT USER_TYPE WHERE USER_NAME = *Client AND USER_ZONE = *zone AND USER_TYPE = 'rodsuser'
       ) { *ans = true } in
     *ans
@@ -74,12 +76,12 @@ _bisque_logMsg(*Msg) {
 _bisque_mkIrodsUrl(*Path, *URL) {
   *pathArg = execCmdArg(*Path);
   *status = errorcode(
-    msiExecCmd('url-encode-path-segments.sh', *pathArg, ipc_RE_HOST, "", "", *out) );
+    msiExecCmd('url-encode-path-segments.sh', *pathArg, cyverse_RE_HOST, "", "", *out) );
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
     _bisque_logMsg('FAILURE - failed to encode path (*resp)');
-    fail;  
+    fail;
   } else {
     msiGetStdoutInExecCmdOut(*out, *encodedPath);
     *URL = bisque_IRODS_URL_BASE ++ *encodedPath;
@@ -103,7 +105,8 @@ _bisque_Ln(*Permission, *Client, *Path) {
   *pArg = execCmdArg(*Permission);
   *pathArg = execCmdArg(*irodsUrl);
   *argStr = '*aliasOpt ln -P *pArg *pathArg';
-  *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
+  *status = errorcode(
+    msiExecCmd("bisque_paths.py", *argStr, cyverse_RE_HOST, "null", "null", *out) );
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
@@ -155,7 +158,8 @@ _bisque_Mv(*Client, *OldPath, *NewPath) {
   *oldPathArg = execCmdArg(*oldUrl);
   *newPathArg = execCmdArg(*newUrl);
   *argStr = '*aliasOpt mv *oldPathArg *newPathArg';
-  *status = errorcode(msiExecCmd('bisque_paths.py', *argStr, ipc_RE_HOST, 'null', 'null', *out));
+  *status = errorcode(
+    msiExecCmd('bisque_paths.py', *argStr, cyverse_RE_HOST, 'null', 'null', *out) );
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
@@ -191,7 +195,8 @@ _bisque_Rm(*Client, *Path) {
   *aliasOpt = if _bisque_isUser(*Client) then '--alias ' ++ execCmdArg(*Client) else '';
   *pathArg = execCmdArg(*irodsUrl);
   *argStr = '*aliasOpt rm *pathArg';
-  *status = errorcode(msiExecCmd("bisque_paths.py", *argStr, ipc_RE_HOST, "null", "null", *out));
+  *status = errorcode(
+    msiExecCmd("bisque_paths.py", *argStr, cyverse_RE_HOST, "null", "null", *out) );
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
@@ -218,7 +223,7 @@ _bisque_scheduleLn(*Permission, *Client, *Path) {
   } else {
     _bisque_logMsg("scheduling linking of *Path with permission *Permission");
   }
-# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See 
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5413.
   #delay("<PLUSET>1s</PLUSET>") {_bisque_Ln(*Permission, *Client, *Path)};
   delay(

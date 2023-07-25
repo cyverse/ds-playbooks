@@ -3,7 +3,7 @@
 # ipc-services.re
 # This is a library of rules to support service specific policies.
 
-_ipc_HOME = '/' ++ ipc_ZONE ++ '/home'
+_ipc_HOME = '/' ++ cyverse_ZONE ++ '/home'
 
 #
 # These are the constants used by iRODS to identity the type of an entity.
@@ -93,7 +93,7 @@ ipc_getEntityType(*Entity) =
 
 # The base collection for staging
 ipc_STAGING_BASE: path
-ipc_STAGING_BASE = let *zone = ipc_ZONE in /*zone/jobs
+ipc_STAGING_BASE = let *zone = cyverse_ZONE in /*zone/jobs
 
 # This function checks to see if a collection or data object is in the staging
 # collection.

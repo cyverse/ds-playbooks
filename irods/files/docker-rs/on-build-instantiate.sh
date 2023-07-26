@@ -22,7 +22,7 @@
 #                     this server
 # IRODS_STORAGE_RES   the unix file system resource to server
 
-set -o errexit
+set -o errexit -o nounset -o pipefail
 
 
 main()
@@ -50,7 +50,7 @@ main()
      .irods_user_name        |= \"$IRODS_CLERVER_USER\"" \
     /var/lib/irods/.irods/irods_environment.json
 
-  sed --in-place "s/_IRODS_STORAGE_RESOURCE_/$IRODS_DEFAULT_RES/" /etc/irods/cyverse-env.re
+  sed --in-place "s/_IRODS_DEFAULT_RESOURCE_/$IRODS_DEFAULT_RES/" /etc/irods/cyverse-env.re
 
   local hostUID
   if [[ -n "$IRODS_HOST_UID" ]]

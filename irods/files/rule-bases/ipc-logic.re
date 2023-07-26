@@ -509,7 +509,7 @@ avuProtected(*Attribute) {
 canModProtectedAVU(*UserName, *UserZone) {
 	*canMod = false;
 
-	if (*UserName == 'bisque' && *UserZone == ipc_ZONE) {
+	if (*UserName == 'bisque' && *UserZone == cyverse_ZONE) {
 		*canMod = true;
 	} else {
 		*canMod = _ipc_isAdmin(*UserName, *UserZone);

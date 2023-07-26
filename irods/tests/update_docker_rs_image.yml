@@ -59,14 +59,8 @@
           - server_config.default_dir_mode == '0750'
           - server_config.default_file_mode == '0600'
           - server_config.default_hash_scheme == 'MD5'
-
-    - name: verify server_config.default_resource_directory
-      debug:
-        msg: TODO implement
-
-    - name: verify server_config.default_resource_name
-      debug:
-        msg: TODO implement
+          - server_config.default_resource_directory == '/irods_vault/_IRODS_STORAGE_RESOURCE_'
+          - server_config.default_resource_name == '_IRODS_DEFAULT_RESOURCE_'
 
     - name: verify server_config.negotiation_key
       debug:

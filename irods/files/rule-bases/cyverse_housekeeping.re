@@ -1,6 +1,5 @@
 # VERSION 3
 #
-# ipc-housekeeping.re
 # This is a library of rules for periodic tasks like updating quota usage data.
 
 

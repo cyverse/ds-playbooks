@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This script configures a catalog provider.
 #
@@ -52,7 +52,7 @@ readonly ENV_DIR="$HOME_DIR"/.irods
 readonly ENV_CFG="$ENV_DIR"/irods_environment.json
 
 
-main() 
+main()
 {
   validate_32_byte_key "$IRODS_NEGOTIATION_KEY" "iRODS server's negotiation key"
   validate_32_byte_key "$IRODS_CONTROL_PLANE_KEY" 'Control Plane key'
@@ -64,7 +64,7 @@ main()
   mk_host_access_control_cfg > "$HOST_ACCESS_CTRL_CFG"
   mk_hosts_cfg > "$HOSTS_CFG"
 
-  update_odbc_def 
+  update_odbc_def
 
   mk_version "$(date +%FT%T.000000)" > "$VERSION"
 
@@ -76,7 +76,7 @@ main()
 }
 
 
-ensure_ownership() 
+ensure_ownership()
 {
   local fsEntity="$1"
 
@@ -86,7 +86,7 @@ ensure_ownership()
 
 
 # define service account for this installation
-mk_svc_account() 
+mk_svc_account()
 {
   groupadd --force --system "$IRODS_SYSTEM_GROUP"
 
@@ -105,26 +105,26 @@ mk_svc_account()
 }
 
 
-mk_host_access_control_cfg() 
+mk_host_access_control_cfg()
 {
   cat /var/lib/irods/packaging/host_access_control_config.json.template
 }
 
 
-mk_hosts_cfg() 
+mk_hosts_cfg()
 {
   cat /var/lib/irods/packaging/hosts_config.json.template
 }
 
 
-mk_irods_env() 
+mk_irods_env()
 {
   jq --sort-keys --from-file /dev/stdin <(echo '{}') <<JQ
 .irods_host = "$IRODS_HOST" |
 .irods_port = $IRODS_ZONE_PORT |
 .irods_user_name = "$IRODS_ZONE_USER" |
 .irods_zone_name = "$IRODS_ZONE_NAME" |
-.irods_client_server_negotiation = "request_server_negotiation" | 
+.irods_client_server_negotiation = "request_server_negotiation" |
 .irods_client_server_policy = "CS_NEG_REFUSE" |
 .irods_control_plane_key = "$IRODS_CONTROL_PLANE_KEY" |
 .irods_control_plane_port = $IRODS_CONTROL_PLANE_PORT |
@@ -143,7 +143,7 @@ JQ
 }
 
 
-mk_server_cfg() 
+mk_server_cfg()
 {
   jq --sort-keys --from-file /dev/stdin /var/lib/irods/packaging/server_config.json.template <<JQ
 .catalog_provider_hosts |= [ "localhost" ] |
@@ -167,19 +167,19 @@ mk_server_cfg()
   "db_port": $DBMS_PORT,
   "db_username": "$DB_USER"
 } |
-# Add stub version of ipc-housekeeping contents so tests work
+# Add stub version of cyverse_housekeeping contents so tests work
 .plugin_configuration.rule_engines |= map_values(
-  if .instance_name == "irods_rule_engine_plugin-irods_rule_language-instance" then 
-    .plugin_specific_configuration.re_rulebase_set = 
-      [ "pre-config" ] + .plugin_specific_configuration.re_rulebase_set  
-  else 
+  if .instance_name == "irods_rule_engine_plugin-irods_rule_language-instance" then
+    .plugin_specific_configuration.re_rulebase_set =
+      [ "pre-config" ] + .plugin_specific_configuration.re_rulebase_set
+  else
     .
   end )
 JQ
 }
 
 
-mk_svc_account_cfg() 
+mk_svc_account_cfg()
 {
   cat <<EOF
 IRODS_SERVICE_ACCOUNT_NAME=$IRODS_SYSTEM_USER
@@ -188,16 +188,16 @@ EOF
 }
 
 
-mk_version() 
+mk_version()
 {
   local installTime="$1"
 
   jq --sort-keys --from-file /dev/stdin /var/lib/irods/VERSION.json.dist <<JQ
-.installation_time |= "$installTime" 
+.installation_time |= "$installTime"
 JQ
 }
 
-update_odbc_def() 
+update_odbc_def()
 {
   odbcinst -i -d -r -v <<EOF
 [PostgreSQL]
@@ -208,7 +208,7 @@ EOF
 }
 
 
-validate_32_byte_key() 
+validate_32_byte_key()
 {
   local keyVal="$1"
   local keyName="$2"

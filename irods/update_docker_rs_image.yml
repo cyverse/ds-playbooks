@@ -59,7 +59,7 @@
             irods_cfg_negotiation_key: __IRODS_NEGOTIATION_KEY__
             irods_cfg_re_additional_rulebases:
               - ipc-custom
-              - ipc-housekeeping
+              - cyverse_housekeeping
             irods_cfg_root_dir: "{{ _build_dir }}"
             irods_cfg_schema_validation_base_uri: 'off'
             irods_cfg_server_control_plane_key: __IRODS_SERVER_CONTROL_PLANE_KEY__

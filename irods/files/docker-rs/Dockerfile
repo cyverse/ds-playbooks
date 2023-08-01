@@ -25,8 +25,6 @@ COPY periphery.sh /periphery
 RUN chown irods:irods /periphery && \
     chmod ug+x /periphery
 
-VOLUME /var/lib/irods/log /var/lib/irods/log/proc
-
 EXPOSE 1247/tcp 1248/tcp 20000-20009/tcp 20000-20009/udp
 
 ENV IRODS_CONTROL_PLANE_KEY=TEMPORARY__32byte_ctrl_plane_key
@@ -47,8 +45,6 @@ ONBUILD ARG IRODS_STORAGE_RES
 
 ONBUILD RUN /on-build-instantiate && \
             rm --force /on-build-instantiate
-
-ONBUILD VOLUME /irods_vault/"$IRODS_STORAGE_RES"
 
 ONBUILD USER irods-host-user
 ONBUILD ENV HOME=/var/lib/irods

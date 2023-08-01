@@ -61,12 +61,9 @@
           - server_config.default_hash_scheme == 'MD5'
           - server_config.default_resource_directory == '/irods_vault/_IRODS_STORAGE_RESOURCE_'
           - server_config.default_resource_name == '_IRODS_DEFAULT_RESOURCE_'
+          - server_config.negotiation_key == '__IRODS_NEGOTIATION_KEY__'
 
-    - name: verify server_config.negotiation_key
-      debug:
-        msg: TODO implement
-
-    - name: verfiy server_config.plugin_configuration
+    - name: verfiy server_config.plugin_configuration.rule_engines
       debug:
         msg: TODO implement
 

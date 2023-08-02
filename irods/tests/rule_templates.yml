@@ -9,19 +9,21 @@
     avra_env: "{{ lookup('template', '../templates/rule-bases/avra-env.re.j2') }}"
     bisque_env: "{{ lookup('template', '../templates/rule-bases/bisque-env.re.j2') }}"
     captcn_env: "{{ lookup('template', '../templates/rule-bases/captcn-env.re.j2') }}"
-    ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
+    cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
     pire_env: "{{ lookup('template', '../templates/rule-bases/pire-env.re.j2') }}"
     sernec_env: "{{ lookup('template', '../templates/rule-bases/sernec-env.re.j2') }}"
     terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
   tasks:
-    - name: verify constants expand correctly in ipc-env.re.j2
+    - name: verify constants expand correctly in cyverse-env.re.j2
       assert:
         that:
-          - ipc_env is search("ipc_AMQP_EXCHANGE = 'irods'")
-          - ipc_env is search("ipc_DEFAULT_REPL_RESC = 'demoResc'")
-          - ipc_env is search("ipc_DEFAULT_RESC = 'demoResc'")
-          - ipc_env is search("ipc_MAX_NUM_RE_PROCS = 4")
-          - ipc_env is search("ipc_RE_HOST = 'dstesting-provider_configured-1.dstesting_default'")
+          - cyverse_env is search("cyverse_AMQP_EXCHANGE = 'irods'")
+          - cyverse_env is search("cyverse_DEFAULT_REPL_RESC = 'demoResc'")
+          - cyverse_env is search("cyverse_DEFAULT_RESC = 'demoResc'")
+          - cyverse_env is search("cyverse_MAX_NUM_RE_PROCS = 4")
+          - >-
+            cyverse_env
+              is search("cyverse_RE_HOST = 'dstesting-provider_configured-1.dstesting_default'")
 
     - name: verify constants expand correctly in avra-env.re.j2
       assert:
@@ -61,64 +63,64 @@
           - terraref_env is search("terraref_RESC = 'demoResc'")
 
 
-- name: test that custom AMQP exchange set correctly in ipc-env.re
+- name: test that custom AMQP exchange set correctly in cyverse-env.re
   hosts: localhost
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
   vars:
     irods_amqp_exchange: exchange
-    ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
+    cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
   tasks:
     - name: verify resource constants
       assert:
-        that: ipc_env is search("ipc_AMQP_EXCHANGE = 'exchange'")
+        that: cyverse_env is search("cyverse_AMQP_EXCHANGE = 'exchange'")
 
 
-- name: test that custom default resc set correctly in ipc-env.re
+- name: test that custom default resc set correctly in cyverse-env.re
   hosts: localhost
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
   vars:
     irods_default_resource: custom
-    ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
+    cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
   tasks:
     - name: verify resource constants
       assert:
         that:
-          - ipc_env is search("ipc_DEFAULT_REPL_RESC = 'custom'")
-          - ipc_env is search("ipc_DEFAULT_RESC = 'custom'")
+          - cyverse_env is search("cyverse_DEFAULT_REPL_RESC = 'custom'")
+          - cyverse_env is search("cyverse_DEFAULT_RESC = 'custom'")
 
 
-- name: test that custom default replication resc set correctly in ipc-env.re
+- name: test that custom default replication resc set correctly in cyverse-env.re
   hosts: localhost
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
   vars:
     irods_default_repl_resource: custom
-    ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
+    cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
   tasks:
     - name: verify resource constants
       assert:
         that:
-          - ipc_env is search("ipc_DEFAULT_REPL_RESC = 'custom'")
-          - ipc_env is search("ipc_DEFAULT_RESC = 'demoResc'")
+          - cyverse_env is search("cyverse_DEFAULT_REPL_RESC = 'custom'")
+          - cyverse_env is search("cyverse_DEFAULT_RESC = 'demoResc'")
 
 
-- name: test that ipc_MAX_NUM_RE_PROCS set correctly in ipc-env.re
+- name: test that cyverse_MAX_NUM_RE_PROCS set correctly in cyverse-env.re
   hosts: localhost
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
   vars:
     irods_max_num_re_procs: 1
-    ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
+    cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
   tasks:
-    - name: verify ipc_MAX_NUM_RE_PROCS
+    - name: verify cyverse_MAX_NUM_RE_PROCS
       assert:
-        that: ipc_env is search("ipc_MAX_NUM_RE_PROCS = 1")
+        that: cyverse_env is search("cyverse_MAX_NUM_RE_PROCS = 1")
 
 
 - name: test Avra params are set correctly

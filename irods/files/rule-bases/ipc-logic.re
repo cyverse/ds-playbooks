@@ -279,13 +279,13 @@ _ipc_resolve_msg_entity_id(*EntityType, *EntityName, *ClientName, *ClientZone) =
 # It executes the amqptopicsend.py command script on the rule engine host
 #
 sendMsg(*Topic, *Msg) {
-	*exchangeArg = execCmdArg(ipc_AMQP_EXCHANGE);
+	*exchangeArg = execCmdArg(cyverse_AMQP_EXCHANGE);
 	*topicArg = execCmdArg(*Topic);
 	*msgArg = execCmdArg(*Msg);
 	*argStr = '*exchangeArg *topicArg *msgArg';
 
 	*status = errormsg(
-		msiExecCmd('amqptopicsend.py', *argStr, ipc_RE_HOST, 'null', 'null', *out), *errMsg );
+		msiExecCmd('amqptopicsend.py', *argStr, cyverse_RE_HOST, 'null', 'null', *out), *errMsg );
 
 	if (*status < 0) {
 		writeLine("serverLog", "Failed to send AMQP message: *errMsg");
@@ -509,7 +509,7 @@ avuProtected(*Attribute) {
 canModProtectedAVU(*UserName, *UserZone) {
 	*canMod = false;
 
-	if (*UserName == 'bisque' && *UserZone == ipc_ZONE) {
+	if (*UserName == 'bisque' && *UserZone == cyverse_ZONE) {
 		*canMod = true;
 	} else {
 		*canMod = _ipc_isAdmin(*UserName, *UserZone);
@@ -622,7 +622,7 @@ ipc_acPreConnect(*OUT) { *OUT = 'CS_NEG_REFUSE'; }
 ipc_acSetNumThreads { msiSetNumThreads('default', 'default', 'default'); }
 
 # Set maximum number of rule engine processes
-ipc_acSetReServerNumProc { msiSetReServerNumProc(str(ipc_MAX_NUM_RE_PROCS)); }
+ipc_acSetReServerNumProc { msiSetReServerNumProc(str(cyverse_MAX_NUM_RE_PROCS)); }
 
 # This rule sets the rodsadin group permission of a collection when a collection
 # is created by an administrative means, i.e. iadmin mkuser. It also pushes a
@@ -730,7 +730,7 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
 		if (_ipc_isCurrentAction(*entityId, *me)) {
 			*level = _ipc_removePrefix(*AccessLevel, list('admin:'));
 			*type = ipc_getEntityType(*Path);
-			*userZone = if *UserZone == '' then ipc_ZONE else *UserZone;
+			*userZone = if *UserZone == '' then cyverse_ZONE else *UserZone;
 			*uuid = '';
 			_ipc_ensureUUID(*type, *Path, *uuid, $userNameClient, $rodsZoneClient);
 

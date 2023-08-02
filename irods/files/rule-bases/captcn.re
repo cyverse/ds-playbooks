@@ -5,7 +5,7 @@
 
 @include "captcn-env"
 
-captcn_isForCapTcn(*Path) = *Path like '/' ++ ipc_ZONE ++ '/home/shared/CAP_TCN/\*'
+captcn_isForCapTcn(*Path) = *Path like '/' ++ cyverse_ZONE ++ '/home/shared/CAP_TCN/\*'
 
 
 captcn_assignPerms(*Path) {

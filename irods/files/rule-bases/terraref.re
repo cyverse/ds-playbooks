@@ -47,7 +47,7 @@ terraref_replReplResc = terraref_replIngestResc
 # Restrict the TerraREF resource to files in the TerraREF collection
 pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST, *PARSER, *VOTE) {
   on (
-    terraref_RESC != ipc_DEFAULT_RESC
+    terraref_RESC != cyverse_DEFAULT_RESC
     && *CONTEXT.resc_hier == terraref_RESC
     && !_terraref_isForTerraRef(*CONTEXT.logical_path)
   ) {

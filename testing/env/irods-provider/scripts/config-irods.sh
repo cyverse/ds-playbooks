@@ -51,7 +51,6 @@ readonly VERSION="$HOME_DIR"/VERSION.json
 readonly ENV_DIR="$HOME_DIR"/.irods
 readonly ENV_CFG="$ENV_DIR"/irods_environment.json
 
-
 main()
 {
   validate_32_byte_key "$IRODS_NEGOTIATION_KEY" "iRODS server's negotiation key"
@@ -75,7 +74,6 @@ main()
   ensure_ownership "$CFG_DIR"
 }
 
-
 ensure_ownership()
 {
   local fsEntity="$1"
@@ -83,7 +81,6 @@ ensure_ownership()
   chown --recursive "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" "$fsEntity"
   chmod --recursive u+rw,go= "$fsEntity"
 }
-
 
 # define service account for this installation
 mk_svc_account()
@@ -104,18 +101,15 @@ mk_svc_account()
   fi
 }
 
-
 mk_host_access_control_cfg()
 {
   cat /var/lib/irods/packaging/host_access_control_config.json.template
 }
 
-
 mk_hosts_cfg()
 {
   cat /var/lib/irods/packaging/hosts_config.json.template
 }
-
 
 mk_irods_env()
 {
@@ -141,7 +135,6 @@ mk_irods_env()
 .schema_version = "v3"
 JQ
 }
-
 
 mk_server_cfg()
 {
@@ -171,13 +164,12 @@ mk_server_cfg()
 .plugin_configuration.rule_engines |= map_values(
   if .instance_name == "irods_rule_engine_plugin-irods_rule_language-instance" then
     .plugin_specific_configuration.re_rulebase_set =
-      [ "pre-config" ] + .plugin_specific_configuration.re_rulebase_set
+      [ "pre_config" ] + .plugin_specific_configuration.re_rulebase_set
   else
     .
   end )
 JQ
 }
-
 
 mk_svc_account_cfg()
 {
@@ -186,7 +178,6 @@ IRODS_SERVICE_ACCOUNT_NAME=$IRODS_SYSTEM_USER
 IRODS_SERVICE_GROUP_NAME=$IRODS_SYSTEM_GROUP
 EOF
 }
-
 
 mk_version()
 {
@@ -207,7 +198,6 @@ Setup = /usr/pgsql-12/lib/psqlodbcw.so
 EOF
 }
 
-
 validate_32_byte_key()
 {
   local keyVal="$1"
@@ -220,6 +210,5 @@ validate_32_byte_key()
     return 1
   fi
 }
-
 
 main "$@"

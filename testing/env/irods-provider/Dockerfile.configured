@@ -6,7 +6,7 @@ RUN yum --assumeyes install \
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 RUN yum --assumeyes install postgresql12-odbc
 
-### Install iRODS 
+### Install iRODS
 ADD https://packages.irods.org/renci-irods.yum.repo /etc/yum.repos.d/renci-irods.yum.repo
 
 RUN rpm --import https://packages.irods.org/irods-signing-key.asc
@@ -57,4 +57,4 @@ CMD [ "/service.sh" ]
 
 ### Install testing support artifacts
 RUN python3 -m pip --quiet install python-irodsclient
-COPY irods-provider/config/pre-config.re /etc/irods/
+COPY irods-provider/config/pre_config.re /etc/irods/

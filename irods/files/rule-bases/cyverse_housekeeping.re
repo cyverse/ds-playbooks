@@ -3,7 +3,7 @@
 # This is a library of rules for periodic tasks like updating quota usage data.
 
 
-_ipc_schedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
+_cyverse_housekeeping_schedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
   writeLine('serverLog', 'DS: scheduling *Desc');
   # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
   #       https://github.com/irods/irods/issues/5413.
@@ -17,7 +17,7 @@ _ipc_schedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
 }
 
 
-_ipc_reschedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
+_cyverse_housekeeping_reschedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
   *scheduled = false;
 
   foreach(*row in SELECT RULE_EXEC_ID, RULE_EXEC_FREQUENCY WHERE RULE_EXEC_NAME = '*RuleName') {
@@ -41,7 +41,7 @@ _ipc_reschedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
   if (*scheduled) {
     writeLine('stdout', '*Desc already scheduled');
   } else {
-    _ipc_schedulePeriodicPolicy(*RuleName, *Freq, *Desc);
+    _cyverse_housekeeping_schedulePeriodicPolicy(*RuleName, *Freq, *Desc);
     writeLine('stdout', 'scheduled *Desc');
   }
 }
@@ -51,7 +51,7 @@ _ipc_reschedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
 # QUOTAS
 #
 
-_ipc_updateQuotaUsage {
+cyverse_housekeeping_updateQuotaUsage {
   writeLine('serverLog', 'DS: updating quota usage');
 
   if (0 == errormsg(msiQuota, *msg)) {
@@ -67,9 +67,9 @@ _ipc_updateQuotaUsage {
 # standard output. If it doesn't error out, but doesn't reschedule the
 # calculation, it writes 'quota usage updates already scheduled'.
 #
-ipc_rescheduleQuotaUsageUpdate {
-  _ipc_reschedulePeriodicPolicy(
-    ``_ipc_updateQuotaUsage``, '1h REPEAT FOR EVER', 'quota usage updates');
+cyverse_housekeeping_rescheduleQuotaUsageUpdate {
+  _cyverse_housekeeping_reschedulePeriodicPolicy(
+    ``cyverse_housekeeping_updateQuotaUsage``, '1h REPEAT FOR EVER', 'quota usage updates');
 }
 
 
@@ -79,7 +79,7 @@ ipc_rescheduleQuotaUsageUpdate {
 
 # NOTE: This runs on the resource server hosting the resource whose free space
 #       is in question.
-_ipc_determineStorageFreeSpace(*Host, *RescName) {
+_cyverse_housekeeping_determineStorageFreeSpace(*Host, *RescName) {
   writeLine('serverLog', "DS: remotely determining free space on *Host for *RescName");
 
   remote(*Host, '') {
@@ -94,7 +94,7 @@ _ipc_determineStorageFreeSpace(*Host, *RescName) {
 }
 
 
-_ipc_determineAllStorageFreeSpace {
+cyverse_housekeeping_determineAllStorageFreeSpace {
   writeLine('serverLog', 'DS: determining free space on resource servers');
 
   foreach(*record in SELECT RESC_LOC, RESC_NAME
@@ -102,7 +102,7 @@ _ipc_determineAllStorageFreeSpace {
     *host = *record.RESC_LOC;
     *resc = *record.RESC_NAME;
 
-    if (0 > errormsg(_ipc_determineStorageFreeSpace(*host, *resc), *msg)) {
+    if (0 > errormsg(_cyverse_housekeeping_determineStorageFreeSpace(*host, *resc), *msg)) {
       writeLine('serverLog', "DS: failed to determine free space on *host for *resc: *msg");
     }
   }
@@ -117,9 +117,11 @@ _ipc_determineAllStorageFreeSpace {
 # out, but it doesn't reschedule the determination, it writes 'storage
 # determination already scheduled'.
 #
-ipc_rescheduleStorageFreeSpaceDetermination {
-  _ipc_reschedulePeriodicPolicy(
-    ``_ipc_determineAllStorageFreeSpace``, '1d REPEAT FOR EVER', 'storage determination');
+cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination {
+  _cyverse_housekeeping_reschedulePeriodicPolicy(
+    ``cyverse_housekeeping_determineAllStorageFreeSpace``,
+    '1d REPEAT FOR EVER',
+    'storage determination' );
 }
 
 
@@ -127,7 +129,7 @@ ipc_rescheduleStorageFreeSpaceDetermination {
 # TRASH REMOVAL
 #
 
-_ipc_rmTrash {
+cyverse_housekeeping_rmTrash {
   writeLine('serverLog', 'DS: starting trash removal');
   *zone = cyverse_ZONE;
   *verdict = true;
@@ -219,6 +221,7 @@ _ipc_rmTrash {
 # out, but it doesn't reschedule the removal, it writes 'trash removal already
 # scheduled'.
 #
-ipc_rescheduleTrashRemoval {
-  _ipc_reschedulePeriodicPolicy(``_ipc_rmTrash``, '7d REPEAT FOR EVER', 'trash removal');
+cyverse_housekeeping_rescheduleTrashRemoval {
+  _cyverse_housekeeping_reschedulePeriodicPolicy(
+    ``cyverse_housekeeping_rmTrash``, '7d REPEAT FOR EVER', 'trash removal' );
 }

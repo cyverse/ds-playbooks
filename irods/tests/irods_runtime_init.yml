@@ -119,7 +119,7 @@
         set -o pipefail
         iqstat -a | grep --quiet {{ item }}
       with_items:
-        - _ipc_updateQuotaUsage
-        - _ipc_determineAllStorageFreeSpace
-        - _ipc_rmTrash
+        - cyverse_housekeeping_updateQuotaUsage
+        - cyverse_housekeeping_determineAllStorageFreeSpace
+        - cyverse_housekeeping_rmTrash
       changed_when: false

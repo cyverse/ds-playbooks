@@ -28,11 +28,11 @@
         - core.fnm
         - core.re
         - cyverse-env.re
+        - cyverse_housekeeping.re
         - de.re
         - host_access_control_config.json
         - hosts_config.json
         - ipc-custom.re
-        - ipc-housekeeping.re
         - ipc-json.re
         - ipc-logic.re
         - ipc-trash.re
@@ -50,6 +50,12 @@
     - name: test ensure ipc-env.re is gone
       stat:
         path: /etc/irods/ipc-env.re
+      register: response
+      failed_when: response.stat.exists
+
+    - name: test ensure ipc-housekeeping.re is gone
+      stat:
+        path: /etc/irods/ipc-housekeeping.re
       register: response
       failed_when: response.stat.exists
 
@@ -177,7 +183,7 @@
                 == 'ipc-custom'
               - >-
                 server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1]
-                == 'ipc-housekeeping'
+                == 'cyverse_housekeeping'
               - >-
                 server_config.schema_validation_base_uri
                 == 'file:///var/lib/irods/configuration_schemas'
@@ -229,7 +235,7 @@
                 == 'ipc-custom'
               - >-
                 server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1]
-                == 'ipc-housekeeping'
+                == 'cyverse_housekeeping'
               - >-
                 server_config.schema_validation_base_uri
                 == 'file:///var/lib/irods/configuration_schemas'

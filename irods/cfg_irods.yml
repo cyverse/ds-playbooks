@@ -46,14 +46,9 @@
       notify:
         - reload rules
 
-    - name: ensure ipc-amqp.re is gone
+    - name: ensure ipc-housekeeping.re is gone
       file:
-        path: /etc/irods/ipc-amqp.re
-        state: absent
-
-    - name: ensure ipc-uuid.re is gone
-      file:
-        path: /etc/irods/ipc-uuid.re
+        path: /etc/irods/ipc-housekeeping.re
         state: absent
 
     - name: ensure rm-trash is gone
@@ -109,7 +104,7 @@
         irods_cfg_negotiation_key: "{{ _irods_negotiation_key }}"
         irods_cfg_re_additional_rulebases:
           - ipc-custom
-          - ipc-housekeeping
+          - cyverse_housekeeping
         irods_cfg_schema_validation_base_uri: file:///var/lib/irods/configuration_schemas
         irods_cfg_server_control_plane_key: "{{ _irods_server_control_plane_key }}"
         irods_cfg_server_control_plane_port: "{{ _irods_server_control_plane_port }}"

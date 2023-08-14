@@ -4,46 +4,45 @@
 
 
 _cyverse_housekeeping_schedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
-  writeLine('serverLog', 'DS: scheduling *Desc');
-  # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
-  #       https://github.com/irods/irods/issues/5413.
-  #eval(``delay('<PLUSET>0s</PLUSET><EF>*Freq</EF>') {`` ++ *RuleName ++ ``}`` );
-  eval(
-    ``delay(
-        '<INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
-         <PLUSET>0s</PLUSET>
-         <EF>*Freq</EF>'
-      ) {`` ++ *RuleName ++ ``}`` );
+	writeLine('serverLog', 'DS: scheduling *Desc');
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
+#       https://github.com/irods/irods/issues/5413.
+# 	eval(``delay('<PLUSET>0s</PLUSET><EF>*Freq</EF>') {`` ++ *RuleName ++ ``}`` );
+	eval(
+		``delay(
+			'<INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+			<PLUSET>0s</PLUSET>
+			<EF>*Freq</EF>'
+		) {`` ++ *RuleName ++ ``}`` );
 }
 
-
 _cyverse_housekeeping_reschedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
-  *scheduled = false;
+	*scheduled = false;
 
-  foreach(*row in SELECT RULE_EXEC_ID, RULE_EXEC_FREQUENCY WHERE RULE_EXEC_NAME = '*RuleName') {
-    if (*scheduled || *row.RULE_EXEC_FREQUENCY != *Freq) {
-      writeLine('serverLog', 'DS: unscheduling *Desc');
+	foreach(*row in SELECT RULE_EXEC_ID, RULE_EXEC_FREQUENCY WHERE RULE_EXEC_NAME = '*RuleName') {
+		if (*scheduled || *row.RULE_EXEC_FREQUENCY != *Freq) {
+			writeLine('serverLog', 'DS: unscheduling *Desc');
 
-      *idArg = execCmdArg(*row.RULE_EXEC_ID);
+			*idArg = execCmdArg(*row.RULE_EXEC_ID);
 
-      *status = errorcode(
-        msiExecCmd('delete-scheduled-rule', *idArg, 'null', 'null', 'null', *out));
+			*status = errorcode(
+				msiExecCmd('delete-scheduled-rule', *idArg, 'null', 'null', 'null', *out) );
 
-      if (*status < 0) {
-        msiGetStderrInExecCmdOut(*out, *resp);
-        failmsg(*status, *resp);
-      }
-    } else {
-      *scheduled = true;
-    }
-  }
+			if (*status < 0) {
+				msiGetStderrInExecCmdOut(*out, *resp);
+				failmsg(*status, *resp);
+			}
+		} else {
+			*scheduled = true;
+		}
+	}
 
-  if (*scheduled) {
-    writeLine('stdout', '*Desc already scheduled');
-  } else {
-    _cyverse_housekeeping_schedulePeriodicPolicy(*RuleName, *Freq, *Desc);
-    writeLine('stdout', 'scheduled *Desc');
-  }
+	if (*scheduled) {
+		writeLine('stdout', '*Desc already scheduled');
+	} else {
+		_cyverse_housekeeping_schedulePeriodicPolicy(*RuleName, *Freq, *Desc);
+		writeLine('stdout', 'scheduled *Desc');
+	}
 }
 
 
@@ -52,15 +51,14 @@ _cyverse_housekeeping_reschedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
 #
 
 cyverse_housekeeping_updateQuotaUsage {
-  writeLine('serverLog', 'DS: updating quota usage');
+	writeLine('serverLog', 'DS: updating quota usage');
 
-  if (0 == errormsg(msiQuota, *msg)) {
-    writeLine('serverLog', 'DS: quota usage updated');
-  } else {
-    writeLine('serverLog', "DS: quota usage update failed: *msg");
-  }
+	if (0 == errormsg(msiQuota, *msg)) {
+		writeLine('serverLog', 'DS: quota usage updated');
+	} else {
+		writeLine('serverLog', "DS: quota usage update failed: *msg");
+	}
 }
-
 
 # This rule shedules the hourly calculation of quota usage data. If it
 # reschedules the calculation, it writes 'scheduled quota usage updates' to
@@ -68,8 +66,8 @@ cyverse_housekeeping_updateQuotaUsage {
 # calculation, it writes 'quota usage updates already scheduled'.
 #
 cyverse_housekeeping_rescheduleQuotaUsageUpdate {
-  _cyverse_housekeeping_reschedulePeriodicPolicy(
-    ``cyverse_housekeeping_updateQuotaUsage``, '1h REPEAT FOR EVER', 'quota usage updates');
+	_cyverse_housekeeping_reschedulePeriodicPolicy(
+		``cyverse_housekeeping_updateQuotaUsage``, '1h REPEAT FOR EVER', 'quota usage updates' );
 }
 
 
@@ -80,36 +78,35 @@ cyverse_housekeeping_rescheduleQuotaUsageUpdate {
 # NOTE: This runs on the resource server hosting the resource whose free space
 #       is in question.
 _cyverse_housekeeping_determineStorageFreeSpace(*Host, *RescName) {
-  writeLine('serverLog', "DS: remotely determining free space on *Host for *RescName");
+	writeLine('serverLog', "DS: remotely determining free space on *Host for *RescName");
 
-  remote(*Host, '') {
-    writeLine('serverLog', "DS: locally determining free space for *RescName");
+	remote(*Host, '') {
+		writeLine('serverLog', "DS: locally determining free space for *RescName");
 
-    if (0 == errormsg(msi_update_unixfilesystem_resource_free_space(*RescName), *msg)) {
-      writeLine('serverLog', "DS: determined free space for *RescName");
-    } else {
-      writeLine('serverLog', "DS: failed to determine free space for *RescName: *msg");
-    }
-  }
+		if (0 == errormsg(msi_update_unixfilesystem_resource_free_space(*RescName), *msg)) {
+			writeLine('serverLog', "DS: determined free space for *RescName");
+		} else {
+			writeLine('serverLog', "DS: failed to determine free space for *RescName: *msg");
+		}
+	}
 }
-
 
 cyverse_housekeeping_determineAllStorageFreeSpace {
-  writeLine('serverLog', 'DS: determining free space on resource servers');
+	writeLine('serverLog', 'DS: determining free space on resource servers');
 
-  foreach(*record in SELECT RESC_LOC, RESC_NAME
-                     WHERE RESC_TYPE_NAME = 'unixfilesystem' AND RESC_STATUS = 'up') {
-    *host = *record.RESC_LOC;
-    *resc = *record.RESC_NAME;
+	foreach(*record in
+		SELECT RESC_LOC, RESC_NAME WHERE RESC_TYPE_NAME = 'unixfilesystem' AND RESC_STATUS = 'up'
+	) {
+		*host = *record.RESC_LOC;
+		*resc = *record.RESC_NAME;
 
-    if (0 > errormsg(_cyverse_housekeeping_determineStorageFreeSpace(*host, *resc), *msg)) {
-      writeLine('serverLog', "DS: failed to determine free space on *host for *resc: *msg");
-    }
-  }
+		if (0 > errormsg(_cyverse_housekeeping_determineStorageFreeSpace(*host, *resc), *msg)) {
+			writeLine('serverLog', "DS: failed to determine free space on *host for *resc: *msg");
+		}
+	}
 
-  writeLine('serverLog', 'DS: determined free space on resource servers');
+	writeLine('serverLog', 'DS: determined free space on resource servers');
 }
-
 
 # This rule schedules the daily determination of the available disk space for
 # all Unix file system resources. If it reschedules the determination, it writes
@@ -118,10 +115,10 @@ cyverse_housekeeping_determineAllStorageFreeSpace {
 # determination already scheduled'.
 #
 cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination {
-  _cyverse_housekeeping_reschedulePeriodicPolicy(
-    ``cyverse_housekeeping_determineAllStorageFreeSpace``,
-    '1d REPEAT FOR EVER',
-    'storage determination' );
+	_cyverse_housekeeping_reschedulePeriodicPolicy(
+		``cyverse_housekeeping_determineAllStorageFreeSpace``,
+		'1d REPEAT FOR EVER',
+		'storage determination' );
 }
 
 
@@ -130,91 +127,104 @@ cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination {
 #
 
 cyverse_housekeeping_rmTrash {
-  writeLine('serverLog', 'DS: starting trash removal');
-  *zone = cyverse_ZONE;
-  *verdict = true;
-  msiGetSystemTime(*timestamp, "");
+	writeLine('serverLog', 'DS: starting trash removal');
+	*zone = cyverse_ZONE;
+	*verdict = true;
+	msiGetSystemTime(*timestamp, "");
 
-  # 2,592,000 is the number of seconds in 30 days. We subtract this value from the current timestamp
-  # to calculate the threshold time for items in the trash that are older than 30 days.
-  *int_month_timestamp = int(*timestamp) - 2592000;
+	# 2,592,000 is the number of seconds in 30 days. We subtract this value from
+	# the current timestamp to calculate the threshold time for items in the
+	# trash that are older than 30 days.
+	*int_month_timestamp = int(*timestamp) - 2592000;
 
-  # iRODS appends a leading 0 to epoch timestamps, but the int conversion removes it.
-  # To enable string comparison done below, we add a leading 0 to the month_timestamp string.
-  *month_timestamp = '0'++'*int_month_timestamp';
+	# iRODS appends a leading 0 to epoch timestamps, but the int conversion
+	# removes it. To enable string comparison done below, we add a leading 0 to
+	# the month_timestamp string.
+	*month_timestamp = '0'++'*int_month_timestamp';
 
+# XXX - Because of https://github.com/irods/irods/issues/6918
+#       Instead, setting the *flagObj = 'irodsAdminRmTrash=' without using msiAddKeyValToMspStr
+# 	*flagObj = "";
+# 	msiAddKeyValToMspStr("irodsAdminRmTrash", "", *flagObj);
+	*flagObj = 'irodsAdminRmTrash='
+# XXX - ^^^
 
-  # XXX - Because of https://github.com/irods/irods/issues/6918
-  # Intended to use *FlagObj = ""; msiAddKeyValToMspStr("irodsAdminRmTrash", "", *FlagObj);
-  # Instead, setting the *FlagObj = 'irodsAdminRmTrash=' without using msiAddKeyValToMspStr
-  # Applying the same logic for *FlagColl below
-  *FlagObj = 'irodsAdminRmTrash='
+	# The results are sorted in reverse order to ensure a subcollection with a
+	# timestamp is deleted before its parent, which also has a timestamp. If the
+	# parent were deleted before the child was attempted to be deleted, the child
+	# delete call would fail, logging an error and causing the the trash removal
+	# run to fail. This happens, because the call to delete the parent also
+	# deletes the child. Sort the results by collection path in descending order,
+	# lists a child collection before its parent.
+	foreach( *row in
+		SELECT META_COLL_ATTR_VALUE, ORDER_DESC(COLL_NAME)
+		WHERE COLL_NAME like '/*zone/trash/%'
+			AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp'
+			AND META_COLL_ATTR_VALUE <= *month_timestamp
+	) {
+		*ts = *row.META_COLL_ATTR_VALUE;
+		*rowCollName = *row.COLL_NAME;
+		*status = errorcode(msiRmColl(*rowCollName, *flagObj, *status));
 
-  # The results are sorted in reverse order to ensure a subcollection with a
-  # timestamp is deleted before its parent, which also has a timestamp. If the
-  # parent were deleted before the child was attempted to be deleted, the child
-  # delete call would fail, logging an error and causing the the trash removal
-  # run to fail. This happens, because the call to delete the parent also
-  # deletes the child. Sort the results by collection path in descending order,
-  # lists a child collection before its parent.
-  foreach( *Row in
-    SELECT META_COLL_ATTR_VALUE, ORDER_DESC(COLL_NAME)
-    WHERE COLL_NAME like '/*zone/trash/%'
-      AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp'
-      AND META_COLL_ATTR_VALUE <= *month_timestamp
-  ) {
-    *ts = *Row.META_COLL_ATTR_VALUE;
-    *rowCollName = *Row.COLL_NAME;
-    *status = errorcode(msiRmColl(*rowCollName, *FlagObj, *Status));
-    if (*status == 0) {
-      writeLine(
-        "serverLog",
-        "DS: Removed trash collection - *rowCollName with trash timestamp - *ts" );
-    } else {
-      writeLine(
-        "serverLog",
-        "DS: Unable to remove trash collection - *rowCollName, error code returned *status" );
-      *verdict = false;
-    }
-  }
+		if (*status == 0) {
+			writeLine(
+				"serverLog",
+				"DS: Removed trash collection - *rowCollName with trash timestamp - *ts" );
+		} else {
+			writeLine(
+				"serverLog",
+				"DS: Unable to remove trash collection - *rowCollName, error code returned *status" );
 
-  foreach(*Row in SELECT META_DATA_ATTR_VALUE, DATA_NAME, COLL_NAME
-                    WHERE COLL_NAME like '/*zone/trash/%'
-                      AND META_DATA_ATTR_NAME = 'ipc::trash_timestamp'
-                        AND META_DATA_ATTR_VALUE <= *month_timestamp) {
-    *ts = *Row.META_DATA_ATTR_VALUE;
-    *rowCollName = *Row.COLL_NAME;
-    *rowDataName = *Row.DATA_NAME;
-    *absDataPath = *rowCollName ++ "/" ++ *rowDataName;
-    *FlagColl = 'irodsAdminRmTrash='
-    msiAddKeyValToMspStr("objPath", *absDataPath, *FlagColl);
-    *status = errorcode(msiDataObjUnlink(*FlagColl, *Status));
-    if (*status == 0) {
-      writeLine(
-        "serverLog", "DS: Removed trash data object - *absDataPath with trash timestamp - *ts" );
-    } else {
-      writeLine(
-        "serverLog",
-        "DS: Unable to remove trash data object - *absDataPath, error code returned *status" );
-      *verdict = false;
-    }
-  }
+			*verdict = false;
+		}
+	}
 
-  if (*verdict) {
-    *subject = cyverse_ZONE ++ ' trash removal succeeded';
-    *body = 'SSIA';
-  } else {
-    *subject = cyverse_ZONE ++ ' trash removal failed';
-    *body = 'View the irods logs for details';
-  }
+	foreach( *row in
+		SELECT META_DATA_ATTR_VALUE, DATA_NAME, COLL_NAME
+		WHERE COLL_NAME like '/*zone/trash/%'
+			AND META_DATA_ATTR_NAME = 'ipc::trash_timestamp'
+			AND META_DATA_ATTR_VALUE <= *month_timestamp
+	) {
+		*ts = *row.META_DATA_ATTR_VALUE;
+		*rowCollName = *row.COLL_NAME;
+		*rowDataName = *row.DATA_NAME;
+		*absDataPath = *rowCollName ++ "/" ++ *rowDataName;
+# XXX - Because of https://github.com/irods/irods/issues/6918
+#       Instead, setting the *flagCool = 'irodsAdminRmTrash=' without using msiAddKeyValToMspStr
+# 		*flagColl = "";
+# 		msiAddKeyValToMspStr("irodsAdminRmTrash", "", *flagColl);
+		*flagColl = 'irodsAdminRmTrash='
+# XXX - ^^^
+		msiAddKeyValToMspStr("objPath", *absDataPath, *flagColl);
+		*status = errorcode(msiDataObjUnlink(*flagColl, *status));
 
-  if (0 != errorcode(msiSendMail(cyverse_REPORT_EMAIL_ADDR, *subject, *body))) {
-    writeLine('serverLog', 'DS: failed to mail trash removal report');
-  }
+		if (*status == 0) {
+			writeLine(
+				"serverLog",
+				"DS: Removed trash data object - *absDataPath with trash timestamp - *ts" );
+		} else {
+			writeLine(
+				"serverLog",
+				"DS: Unable to remove trash data object - *absDataPath, error code returned *status" );
 
-  writeLine('serverLog', 'DS: completed trash removal');
+			*verdict = false;
+		}
+	}
+
+	if (*verdict) {
+		*subject = cyverse_ZONE ++ ' trash removal succeeded';
+		*body = 'SSIA';
+	} else {
+		*subject = cyverse_ZONE ++ ' trash removal failed';
+		*body = 'View the irods logs for details';
+	}
+
+	if (0 != errorcode(msiSendMail(cyverse_REPORT_EMAIL_ADDR, *subject, *body))) {
+		writeLine('serverLog', 'DS: failed to mail trash removal report');
+	}
+
+	writeLine('serverLog', 'DS: completed trash removal');
 }
-
 
 # This rule shedules the weekly trash removal. If it reschedules the removal,
 # it writes 'scheduled trash removal' to standard output. If it doesn't error
@@ -222,6 +232,6 @@ cyverse_housekeeping_rmTrash {
 # scheduled'.
 #
 cyverse_housekeeping_rescheduleTrashRemoval {
-  _cyverse_housekeeping_reschedulePeriodicPolicy(
-    ``cyverse_housekeeping_rmTrash``, '7d REPEAT FOR EVER', 'trash removal' );
+	_cyverse_housekeeping_reschedulePeriodicPolicy(
+		``cyverse_housekeeping_rmTrash``, '7d REPEAT FOR EVER', 'trash removal' );
 }

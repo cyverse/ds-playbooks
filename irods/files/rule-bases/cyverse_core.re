@@ -11,9 +11,9 @@
 @include 'cyverse-env'
 
 # All CyVerse specific, environment independent logic goes in the file
-# ipc-logic.re. These rules will be called by the hooks implemented in
-# ipc-custom.re. The rule names should be prefixed with 'ipc' and suffixed with
-# the name of the rule hook that will call the custom rule.
+# ipc-logic.re. These rules will be called by the hooks implemented here. The
+# rule names should be prefixed with 'ipc' and suffixed with the name of the
+# rule hook that will call the custom rule.
 
 # The shared logic usable by all CyVerse and third parties
 @include 'ipc-services'

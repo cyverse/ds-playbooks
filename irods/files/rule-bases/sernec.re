@@ -1,7 +1,6 @@
 # VERSION: 2
 #
 # Rules particular to the sernec project
-# include this file from with ipc-custom.re
 
 @include "sernec-env"
 

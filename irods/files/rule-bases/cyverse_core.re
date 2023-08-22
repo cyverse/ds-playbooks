@@ -56,14 +56,14 @@
 #  *ParColl    the absolute path to the parent of the collection being created
 #  *ChildColl  the name of the collection being created
 #
-exclusive_acCreateCollByAdmin(*ParColl, *ChildColl) {
+_cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl) {
 	ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl);
 }
 
 # This rule applies the project specific collection creation policies to a newly
 # created collection that wasn't created administratively.
 #
-exclusive_acPostProcForCollCreate {
+_cyverse_core_acPostProcForCollCreate_exclusive {
 	*err = errormsg(ipc_archive_acPostProcForCollCreate, *msg);
 	if (*err < 0) { writeLine('serverLog', *msg); }
 
@@ -89,7 +89,7 @@ exclusive_acPostProcForCollCreate {
 # This rule applies the project specific policies to a data object created
 # through copying another data object.
 #
-exclusive_acPostProcForCopy {
+_cyverse_core_acPostProcForCopy_exclusive {
 	*err = errormsg(captcn_acPostProcForCopy, *msg);
 	if (*err < 0) { writeLine('serverLog', *msg); }
 
@@ -118,7 +118,7 @@ acCreateCollByAdmin(*ParColl, *ChildColl) {
 	*err = errormsg(ipc_acCreateCollByAdmin(*ParColl, *ChildColl), *msg);
 	if (*err < 0) { writeLine('serverLog', *msg); }
 
-	exclusive_acCreateCollByAdmin(*ParColl, *ChildColl);
+	_cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl);
 }
 
 acCreateUser {
@@ -213,18 +213,18 @@ acPreprocForRmColl {
 # invalidate IPC rules.
 
 acPostProcForCopy {
-	exclusive_acPostProcForCopy;
+	_cyverse_core_acPostProcForCopy_exclusive;
 }
 
 acPostProcForCollCreate {
 	*err = errormsg(ipc_acPostProcForCollCreate, *msg);
 	if (*err < 0) { writeLine('serverLog', *msg); }
 
-	exclusive_acPostProcForCollCreate;
+	_cyverse_core_acPostProcForCollCreate_exclusive;
 }
 
-acPostProcForDataCopyReceived(*leaf_resource) {
-	ipc_acPostProcForDataCopyReceived(*leaf_resource);
+acPostProcForDataCopyReceived(*LeafResource) {
+	ipc_acPostProcForDataCopyReceived(*LeafResource);
 }
 
 acPostProcForOpen {
@@ -302,10 +302,10 @@ acPostProcForParallelTransferReceived(*LeafResource) {
 
 ## SUPPORTING FUNCTIONS AND RULES ##
 
-_ipc_getObjPath(*DATA_OBJ_INFO) =
-	let *path = *DATA_OBJ_INFO.logical_path in
+_cyverse_core_getObjPath(*DataObjInfo) =
+	let *path = *DataObjInfo.logical_path in
 	let *_ = if (*path == '') {
-		*id = *DATA_OBJ_INFO.data_id;
+		*id = *DataObjInfo.data_id;
 		foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = *id) {
 			*path = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
 		} } in
@@ -319,95 +319,95 @@ _ipc_getObjPath(*DATA_OBJ_INFO) =
 # Return:
 #  the session variable name
 #
-_ipc_mkDataObjSessVar: path -> string
-_ipc_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
+_cyverse_core_mkDataObjSessVar: path -> string
+_cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 
 # XXX - Because of https://github.com/irods/irods/issues/5540
-# _ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO) {
-# 	*path = *DATA_OBJ_INFO.logical_path;
+# _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo) {
+# 	*path = *DataObjInfo.logical_path;
 #
 # 	if (ipc_inStaging(/*path)) {
-# 		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO), *msg);
+# 		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) { writeLine('serverLog', *msg); }
 #
-# 		*err = errormsg(de_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+# 		*err = errormsg(de_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) { writeLine('serverLog', *msg); }
 # 	} else {
-# 		*err = errormsg(ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO), *msg);
+# 		*err = errormsg(ipc_dataObjCreated_default(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) { writeLine('serverLog', *msg); }
 #
-# 		*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+# 		*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) { writeLine('serverLog', *msg); }
 #
-# 		*err = errormsg(calliope_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+# 		*err = errormsg(calliope_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) { writeLine('serverLog', *msg); }
 #
-# 		*err = errormsg(coge_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+# 		*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) { writeLine('serverLog', *msg); }
 #
-# 		*err = errormsg(sciapps_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+# 		*err = errormsg(sciapps_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) { writeLine('serverLog', *msg); }
 #
-# 		*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+# 		*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) { writeLine('serverLog', *msg); }
 #
-# 		*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+# 		*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) { writeLine('serverLog', *msg); }
 # 	}
 # }
-_ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO, *Step) {
-	*path = *DATA_OBJ_INFO.logical_path;
+_cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
+	*path = *DataObjInfo.logical_path;
 
 	if (ipc_inStaging(/*path)) {
-		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO, *Step), *msg);
+		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo, *Step), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 
 		if (*Step != 'START') {
-			*err = errormsg(de_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+			*err = errormsg(de_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 			if (*err < 0) { writeLine('serverLog', *msg); }
 		}
 	} else {
-		*err = errormsg(ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step), *msg);
+		*err = errormsg(ipc_dataObjCreated_default(*User, *Zone, *DataObjInfo, *Step), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 
 		if (*Step != 'FINISH') {
-			*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+			*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 			if (*err < 0) { writeLine('serverLog', *msg); }
 
-			*err = errormsg(coge_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+			*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 			if (*err < 0) { writeLine('serverLog', *msg); }
 
-			*err = errormsg(sciapps_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+			*err = errormsg(sciapps_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 			if (*err < 0) { writeLine('serverLog', *msg); }
 		}
 
 		if (*Step != 'START') {
-			*err = errormsg(calliope_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+			*err = errormsg(calliope_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 			if (*err < 0) { writeLine('serverLog', *msg); }
 
-			*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+			*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 			if (*err < 0) { writeLine('serverLog', *msg); }
 
-			*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO), *msg);
+			*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 			if (*err < 0) { writeLine('serverLog', *msg); }
 		}
 	}
 }
 # XXX - ^^^
 
-_ipc_dataObjModified(*User, *Zone, *DATA_OBJ_INFO) {
-	*path = *DATA_OBJ_INFO.logical_path;
+_cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
+	*path = *DataObjInfo.logical_path;
 
 	if (! ipc_inStaging(/*path)) {
-		*err = errormsg(ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO), *msg);
+		*err = errormsg(ipc_dataObjModified_default(*User, *Zone, *DataObjInfo), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 
-		*err = errormsg(ipcRepl_dataObjModified(*User, *Zone, *DATA_OBJ_INFO), *msg);
+		*err = errormsg(ipcRepl_dataObjModified(*User, *Zone, *DataObjInfo), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 	}
 }
 
-_ipc_dataObjMetadataModified(*User, *Zone, *Object) {
+_cyverse_core_dataObjMetadataModified(*User, *Zone, *Object) {
 	ipc_dataObjMetadataModified(*User, *Zone, *Object);
 }
 
@@ -494,15 +494,15 @@ pep_api_rm_coll_except(*Instance, *Comm, *RmCollInp, *CollOprStat) {
 
 # CLOSE
 
-pep_database_close_post(*INSTANCE, *CONTEXT, *OUT) {
+pep_database_close_post(*Instance, *Context, *OUT) {
 # XXX - Because of https://github.com/irods/irods/issues/5540,
 # nothing can be done here
 # 	foreach (*key in temporaryStorage) {
 # 		*vals = split(temporaryStorage.'*key', ' ');
-# # XXX - Because of https://github.com/irods/irods/issues/5538, the CONTEXT
+# # XXX - Because of https://github.com/irods/irods/issues/5538, the Context
 # # variables need to passed through temporaryStorage
-# # 		*user = *CONTEXT.user_user_name
-# # 		*zone = *CONTEXT.user_rods_zone
+# # 		*user = *Context.user_user_name
+# # 		*zone = *Context.user_rods_zone
 # # 		*doiMspStr = triml(temporaryStorage.'*key', ' ');
 # 		*user = elem(*vals, 1);
 # 		*zone = elem(*vals, 2);
@@ -519,14 +519,14 @@ pep_database_close_post(*INSTANCE, *CONTEXT, *OUT) {
 # 		msiString2KeyValPair(*doiStr, *doi);
 #
 # 		if (*op == 'CREATE') {
-# 			_ipc_dataObjCreated(*user, *zone, *doi);
+# 			_cyverse_core_dataObjCreated(*user, *zone, *doi);
 # 		} else if (*op == 'MODIFY') {
-# 			_ipc_dataObjModified(*user, *zone, *doi);
+# 			_cyverse_core_dataObjModified(*user, *zone, *doi);
 # 		}
 # 	}
 }
 
-pep_database_close_finally(*INSTANCE, *CONTEXT, *OUT) {
+pep_database_close_finally(*Instance, *Context, *OUT) {
 # XXX - Because of https://github.com/irods/irods/issues/5540,
 # cleanup can't happen
 # 	foreach (*key in temporaryStorage) {
@@ -537,15 +537,15 @@ pep_database_close_finally(*INSTANCE, *CONTEXT, *OUT) {
 
 # MOD DATA OBJ META
 
-pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *REG_PARAM) {
+pep_database_mod_data_obj_meta_post(*Instance, *Context, *OUT, *DataObjInfo, *RegParam) {
 	*handled = false;
-	*logicalPath = _ipc_getObjPath(*DATA_OBJ_INFO);
+	*logicalPath = _cyverse_core_getObjPath(*DataObjInfo);
 
 # XXX - Because of https://github.com/irods/irods/issues/5540,
-# _ipc_dataObjCreated needs to be called here when not created through file
+# _cyverse_core_dataObjCreated needs to be called here when not created through file
 # registration
-	if (! *handled && errorcode(*REG_PARAM.dataSize) == 0) {
-		*pathVar = _ipc_mkDataObjSessVar(*logicalPath);
+	if (! *handled && errorcode(*RegParam.dataSize) == 0) {
+		*pathVar = _cyverse_core_mkDataObjSessVar(*logicalPath);
 
 		if (
 			(
@@ -559,11 +559,11 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
 			)
 		) {
 			*parts = split(temporaryStorage.'XXX5540:*pathVar', ' ');
-			*DATA_OBJ_INFO.data_owner_name = elem(*parts, 1);
-			*DATA_OBJ_INFO.data_owner_zone = elem(*parts, 2);
+			*DataObjInfo.data_owner_name = elem(*parts, 1);
+			*DataObjInfo.data_owner_zone = elem(*parts, 2);
 
-			_ipc_dataObjCreated(
-			*CONTEXT.user_user_name, *CONTEXT.user_rods_zone, *DATA_OBJ_INFO, 'FINISH');
+			_cyverse_core_dataObjCreated(
+				*Context.user_user_name, *Context.user_rods_zone, *DataObjInfo, 'FINISH' );
 
 			*handled = true;
 		}
@@ -572,32 +572,33 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
 
 	# If modification timestamp is being modified, the data object has been
 	# modified, so publish a data-object.mod message.
-	if (! *handled && errorcode(*REG_PARAM.dataModify) == 0) {
-		*pathVar = _ipc_mkDataObjSessVar(*logicalPath);
+	if (! *handled && errorcode(*RegParam.dataModify) == 0) {
+		*pathVar = _cyverse_core_mkDataObjSessVar(*logicalPath);
 
 		if (
 			if errorcode(temporaryStorage.'*pathVar') != 0 then true
 			else ! (temporaryStorage.'*pathVar' like 'CREATE *')
 		) {
-			# If REG_PARAM.allReplStatus is TRUE, then this is a modification and not
+			# If RegParam.allReplStatus is TRUE, then this is a modification and not
 			# a replica update.
 			if (
-				if errorcode(*REG_PARAM.allReplStatus) != 0 then false
-				else *REG_PARAM.allReplStatus == 'TRUE'
+				if errorcode(*RegParam.allReplStatus) != 0 then false
+				else *RegParam.allReplStatus == 'TRUE'
 			) {
 # XXX - Because of https://github.com/irods/irods/issues/5540,
-# _ipc_dataObjModified needs to be called here
-# # XXX - Because of https://github.com/irods/irods/issues/5538, the CONTEXT
+# _cyverse_core_dataObjModified needs to be called here
+# # XXX - Because of https://github.com/irods/irods/issues/5538, the Context
 # # variables need to passed through temporaryStorage
-# # 				temporaryStorage.'*pathVar' = 'MODIFY *DATA_OBJ_INFO';
+# # 				temporaryStorage.'*pathVar' = 'MODIFY *DataObjInfo';
 # 				temporaryStorage.'*pathVar'
 # 					= 'MODIFY '
-# 					++ *CONTEXT.user_user_name
+# 					++ *Context.user_user_name
 # 					++ ' '
-# 					++ *CONTEXT.user_rods_zone
-# 					++ ' *DATA_OBJ_INFO';
+# 					++ *Context.user_rods_zone
+# 					++ ' *DataObjInfo';
 # # XXX - ^^^
-				_ipc_dataObjModified(*CONTEXT.user_user_name, *CONTEXT.user_rods_zone, *DATA_OBJ_INFO);
+				_cyverse_core_dataObjModified(
+					*Context.user_user_name, *Context.user_rods_zone, *DataObjInfo );
 # XXX - ^^^
 			}
 
@@ -606,15 +607,16 @@ pep_database_mod_data_obj_meta_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO, *
 	}
 
 # XXX - Because of https://github.com/irods/irods/issues/5584, when an expiry
-# time, data type, or comment is set on a data object, sometimes *REG_PARAM is a
+# time, data type, or comment is set on a data object, sometimes *RegParam is a
 # string, and we can't tell which field was set. Due to
 # https://github.com/irods/irods/issues/5583, we have can't risk calling
 # msiExecCmd when a data object is being overwritten using parallel transfer.
-# Through experimentation, *REG_PARAM serializes to '0', for the calls to this
+# Through experimentation, *RegParam serializes to '0', for the calls to this
 # PEP that happen during a data object modification that don't set dataSize or
 # dataModify.
-	if (! *handled && '*REG_PARAM' != '0') {
-		_ipc_dataObjMetadataModified(*CONTEXT.user_user_name, *CONTEXT.user_rods_zone, *logicalPath);
+	if (! *handled && '*RegParam' != '0') {
+		_cyverse_core_dataObjMetadataModified(
+			*Context.user_user_name, *Context.user_rods_zone, *logicalPath );
 	}
 # XXX - ^^^
 }
@@ -632,37 +634,38 @@ pep_database_mod_ticket_post(
 
 # REG DATA OBJ
 
-pep_database_reg_data_obj_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO) {
+pep_database_reg_data_obj_post(*Instance, *Context, *OUT, *DataObjInfo) {
 # XXX - These fields are empty. See https://github.com/irods/irods/issues/5554
-	*DATA_OBJ_INFO.data_owner_name = *CONTEXT.user_user_name;
-	*DATA_OBJ_INFO.data_owner_zone = *CONTEXT.user_rods_zone;
+	*DataObjInfo.data_owner_name = *Context.user_user_name;
+	*DataObjInfo.data_owner_zone = *Context.user_rods_zone;
 # XXX - ^^^
 # XXX - Because of https://github.com/irods/irods/issues/5870,
-# *DATA_OBJ_INFO.logical_path cannot directly be converted to a path.
-# 	*pathVar = _ipc_mkDataObjSessVar(/*DATA_OBJ_INFO.logical_path);
-	*logicalPath = *DATA_OBJ_INFO.logical_path;
-	*pathVar = _ipc_mkDataObjSessVar(/*logicalPath);
+# *DataObjInfo.logical_path cannot directly be converted to a path.
+# 	*pathVar = _cyverse_core_mkDataObjSessVar(/*DataObjInfo.logical_path);
+	*logicalPath = *DataObjInfo.logical_path;
+	*pathVar = _cyverse_core_mkDataObjSessVar(/*logicalPath);
 # XXX - ^^^
-# XXX - Because of https://github.com/irods/irods/issues/5538, the CONTEXT
+# XXX - Because of https://github.com/irods/irods/issues/5538, the Context
 # variables need to passed through temporaryStorage
-# 	temporaryStorage.'*pathVar' = 'CREATE *DATA_OBJ_INFO';
+# 	temporaryStorage.'*pathVar' = 'CREATE *DataObjInfo';
 	temporaryStorage.'*pathVar'
-		= 'CREATE ' ++ *CONTEXT.user_user_name ++ ' ' ++ *CONTEXT.user_rods_zone ++ ' *DATA_OBJ_INFO';
+		= 'CREATE ' ++ *Context.user_user_name ++ ' ' ++ *Context.user_rods_zone ++ ' *DataObjInfo';
 # XXX - Because of https://github.com/irods/irods/issues/5540,
-# _ipc_dataObjCreated needs to be called here for data objects created when
+# _cyverse_core_dataObjCreated needs to be called here for data objects created when
 # registering a file already on a resource server.
 	# NB: When a data object is created due to file registration, the size of the
 	# file is known. Almost always the size will be greater than 0. This isn't
 	# good enough. We get lots of zero byte files.
-	*step = if *DATA_OBJ_INFO.data_size == '0' then 'START' else 'FULL';
-	_ipc_dataObjCreated(*CONTEXT.user_user_name, *CONTEXT.user_rods_zone, *DATA_OBJ_INFO, *step);
+	*step = if *DataObjInfo.data_size == '0' then 'START' else 'FULL';
+	_cyverse_core_dataObjCreated(
+		*Context.user_user_name, *Context.user_rods_zone, *DataObjInfo, *step );
 
 	temporaryStorage.'XXX5540:*pathVar'
 		= *step
 		++ ' '
-		++ *DATA_OBJ_INFO.data_owner_name
+		++ *DataObjInfo.data_owner_name
 		++ ' '
-		++ *DATA_OBJ_INFO.data_owner_zone;
+		++ *DataObjInfo.data_owner_zone;
 # XXX - ^^^
 }
 
@@ -674,7 +677,7 @@ pep_database_reg_data_obj_post(*INSTANCE, *CONTEXT, *OUT, *DATA_OBJ_INFO) {
 # This rule is meant for project specific implementations where an project
 # implementation is within an `on` block that restricts the resource resolution
 # to entities relevant to the project.
-pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST, *PARSER, *VOTE) {
+pep_resource_resolve_hierarchy_pre(*Instance, *Context, *OUT, *Operation, *Host, *PARSER, *VOTE) {
 # XXX - Because of https://github.com/irods/irods/issues/6463, an error
 # happening in an `ON` condition needs to be captured and sent in the catch-all.
 	if (errorcode(temporaryStorage.resource_resolve_hierarchy_err) == 0) {

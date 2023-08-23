@@ -122,78 +122,63 @@ cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination {
 # TRASH REMOVAL
 #
 
-# This rule deletes all collections and data objects that have the
-# ipc::trash_timestamp AVU set to a time that is at least 30 days in the past.
-# It sends an email indicating whether or not it succeeded. It is safe to be run
-# asynchronously.
-#
-cyverse_housekeeping_rmTrash {
-	writeLine('serverLog', 'DS: starting trash removal');
+_cyverse_housekeeping_rmTrashColl(*CutOffTimestamp, *SUCCEEDED) {
+	*SUCCEEDED = true;
 	*zone = cyverse_ZONE;
-	*verdict = true;
-	msiGetSystemTime(*timestamp, "");
-
-	# 2,592,000 is the number of seconds in 30 days. We subtract this value from
-	# the current timestamp to calculate the threshold time for items in the
-	# trash that are older than 30 days.
-	*int_month_timestamp = int(*timestamp) - 2592000;
-
-	# iRODS appends a leading 0 to epoch timestamps, but the int conversion
-	# removes it. To enable string comparison done below, we add a leading 0 to
-	# the month_timestamp string.
-	*month_timestamp = '0'++'*int_month_timestamp';
-
 # XXX - Because of https://github.com/irods/irods/issues/6918
-# 	*flagObj = "";
-# 	msiAddKeyValToMspStr("irodsAdminRmTrash", "", *flagObj);
-	*flagObj = 'irodsAdminRmTrash='
+# 	*rmOpts = "";
+# 	msiAddKeyValToMspStr("irodsAdminRmTrash", "", *rmOpts);
+	*rmOpts = 'irodsAdminRmTrash='
 # XXX - ^^^
 
 	# The results are sorted in reverse order to ensure a subcollection with a
 	# timestamp is deleted before its parent, which also has a timestamp. If the
-	# parent were deleted before the child was attempted to be deleted, the child
-	# delete call would fail, logging an error and causing the the trash removal
-	# run to fail. This happens, because the call to delete the parent also
-	# deletes the child. Sort the results by collection path in descending order,
-	# lists a child collection before its parent.
+	# parent were deleted before the child was attempted to be deleted, the
+	# child delete call would fail, logging an error and causing the the trash
+	# removal run to fail. This happens, because the call to delete the parent
+	# also deletes the child. Sort the results by collection path in descending
+	# order, lists a child collection before its parent.
 	foreach( *row in
 		SELECT META_COLL_ATTR_VALUE, ORDER_DESC(COLL_NAME)
 		WHERE COLL_NAME like '/*zone/trash/%'
 			AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp'
-			AND META_COLL_ATTR_VALUE <= *month_timestamp
+			AND META_COLL_ATTR_VALUE <= *CutOffTimestamp
 	) {
-		*ts = *row.META_COLL_ATTR_VALUE;
+		*ts = *Row.META_COLL_ATTR_VALUE;
 		*rowCollName = *row.COLL_NAME;
-		*status = errorcode(msiRmColl(*rowCollName, *flagObj, *status));
+		*status = errorcode(msiRmColl(*rowCollName, *rmOpts, *_));
 		if (*status == 0) {
 			writeLine(
-				"serverLog",
-				"DS: Removed trash collection - *rowCollName with trash timestamp - *ts" );
+				"serverLog", "DS: Removed trash collection - *rowCollName with trash timestamp - *ts" );
 		} else {
 			writeLine(
 				"serverLog",
 				"DS: Unable to remove trash collection - *rowCollName, error code returned *status" );
-			*verdict = false;
+			*SUCCEEDED = false;
 		}
 	}
+}
 
+_cyverse_housekeeping_rmTrashData(*CutOffTimestamp, *SUCCEEDED) {
+	*SUCCEEDED = true;
+	*zone = cyverse_ZONE;
 	foreach( *row in
 		SELECT META_DATA_ATTR_VALUE, DATA_NAME, COLL_NAME
 		WHERE COLL_NAME like '/*zone/trash/%'
 			AND META_DATA_ATTR_NAME = 'ipc::trash_timestamp'
-			AND META_DATA_ATTR_VALUE <= *month_timestamp
+			AND META_DATA_ATTR_VALUE <= *CutOffTimestamp
 	) {
-		*ts = *row.META_DATA_ATTR_VALUE;
+		*ts = *Row.META_DATA_ATTR_VALUE;
 		*rowCollName = *row.COLL_NAME;
 		*rowDataName = *row.DATA_NAME;
 		*absDataPath = *rowCollName ++ "/" ++ *rowDataName;
 # XXX - Because of https://github.com/irods/irods/issues/6918
-# 		*flagColl = "";
-# 		msiAddKeyValToMspStr("irodsAdminRmTrash", "", *flagColl);
-		*flagColl = 'irodsAdminRmTrash='
+# 		*rmOpts = "";
+#		msiAddKeyValToMspStr("irodsAdminRmTrash", "", *rmOpts);
+		*rmOpts = 'irodsAdminRmTrash='
 # XXX - ^^^
-		msiAddKeyValToMspStr("objPath", *absDataPath, *flagColl);
-		*status = errorcode(msiDataObjUnlink(*flagColl, *status));
+		msiAddKeyValToMspStr("objPath", *absDataPath, *rmOpts);
+		*status = errorcode(msiDataObjUnlink(*rmOpts, *_));
 		if (*status == 0) {
 			writeLine(
 				"serverLog",
@@ -202,14 +187,37 @@ cyverse_housekeeping_rmTrash {
 			writeLine(
 				"serverLog",
 				"DS: Unable to remove trash data object - *absDataPath, error code returned *status" );
-			*verdict = false;
+			*SUCCEEDED = false;
 		}
 	}
-	if (*verdict) {
+}
+
+# This rule deletes all collections and data objects that have the
+# ipc::trash_timestamp AVU set to a time that is at least 30 days in the past.
+# It sends an email indicating whether or not it succeeded. It is safe to be run
+# asynchronously.
+#
+cyverse_housekeeping_rmTrash {
+	writeLine('serverLog', 'DS: starting trash removal');
+	msiGetSystemTime(*timestamp, "");
+
+	# 2,592,000 is the number of seconds in 30 days. We subtract this value from
+	# the current timestamp to calculate the threshold time for items in the
+	# trash that are older than 30 days.
+	*intMonthTimestamp = int(*timestamp) - 2592000;
+
+	# iRODS appends a leading 0 to epoch timestamps, but the int conversion
+	# removes it. To enable string comparison done below, we add a leading 0 to
+	# the month_timestamp string.
+	*monthTimestamp = '0'++'*intMonthTimestamp';
+
+	_cyverse_housekeeping_rmTrashColl(*monthTimestamp, *rmCollSuccess);
+	_cyverse_housekeeping_rmTrashData(*monthTimestamp, *rmDataSuccess);
+	if (*rmCollSuccess && *rmDataSuccess) {
 		*subject = cyverse_ZONE ++ ' trash removal succeeded';
 		*body = 'SSIA';
 	} else {
-		*subject = cyverse_ZONE ++ ' trash removal failed';
+		*subject = ipc_ZONE ++ ' trash removal failed';
 		*body = 'View the irods logs for details';
 	}
 	if (0 != errorcode(msiSendMail(cyverse_REPORT_EMAIL_ADDR, *subject, *body))) {

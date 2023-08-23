@@ -1,7 +1,7 @@
-# VERSION 3
-#
 # This is a library of rules for periodic tasks like updating quota usage data.
-
+#
+# © 2023 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
 
 _cyverse_housekeeping_schedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
 	writeLine('serverLog', 'DS: scheduling *Desc');
@@ -14,6 +14,7 @@ _cyverse_housekeeping_schedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
 			<PLUSET>0s</PLUSET>
 			<EF>*Freq</EF>'
 		) {`` ++ *RuleName ++ ``}`` );
+# XXX - ^^^
 }
 
 _cyverse_housekeeping_reschedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
@@ -50,6 +51,9 @@ _cyverse_housekeeping_reschedulePeriodicPolicy(*RuleName, *Freq, *Desc) {
 # QUOTAS
 #
 
+# This rule updates the storage usage of every user. It is safe to be run
+# asynchronously.
+#
 cyverse_housekeeping_updateQuotaUsage {
 	writeLine('serverLog', 'DS: updating quota usage');
 
@@ -60,7 +64,7 @@ cyverse_housekeeping_updateQuotaUsage {
 	}
 }
 
-# This rule shedules the hourly calculation of quota usage data. If it
+# This rule schedules the hourly calculation of quota usage data. If it
 # reschedules the calculation, it writes 'scheduled quota usage updates' to
 # standard output. If it doesn't error out, but doesn't reschedule the
 # calculation, it writes 'quota usage updates already scheduled'.
@@ -76,7 +80,7 @@ cyverse_housekeeping_rescheduleQuotaUsageUpdate {
 #
 
 # NOTE: This runs on the resource server hosting the resource whose free space
-#       is in question.
+# is in question.
 _cyverse_housekeeping_determineStorageFreeSpace(*Host, *RescName) {
 	writeLine('serverLog', "DS: remotely determining free space on *Host for *RescName");
 
@@ -91,6 +95,9 @@ _cyverse_housekeeping_determineStorageFreeSpace(*Host, *RescName) {
 	}
 }
 
+# This rule updates the catalog information on the amount of free space exists
+# in each resource. It is safe to be run asynchronously.
+#
 cyverse_housekeeping_determineAllStorageFreeSpace {
 	writeLine('serverLog', 'DS: determining free space on resource servers');
 
@@ -110,9 +117,9 @@ cyverse_housekeeping_determineAllStorageFreeSpace {
 
 # This rule schedules the daily determination of the available disk space for
 # all Unix file system resources. If it reschedules the determination, it writes
-# 'scheduled storage determination' to standard output. If it doesn't error
-# out, but it doesn't reschedule the determination, it writes 'storage
-# determination already scheduled'.
+# 'scheduled storage determination' to standard output. If it doesn't error out,
+# but it doesn't reschedule the determination, it writes 'storage determination
+# already scheduled'.
 #
 cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination {
 	_cyverse_housekeeping_reschedulePeriodicPolicy(
@@ -126,6 +133,11 @@ cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination {
 # TRASH REMOVAL
 #
 
+# This rule deletes all collections and data objects that have the
+# ipc::trash_timestamp AVU set to a time that is at least 30 days in the past.
+# It sends an email indicating whether or not it succeeded. It is safe to be run
+# asynchronously.
+#
 cyverse_housekeeping_rmTrash {
 	writeLine('serverLog', 'DS: starting trash removal');
 	*zone = cyverse_ZONE;
@@ -143,7 +155,6 @@ cyverse_housekeeping_rmTrash {
 	*month_timestamp = '0'++'*int_month_timestamp';
 
 # XXX - Because of https://github.com/irods/irods/issues/6918
-#       Instead, setting the *flagObj = 'irodsAdminRmTrash=' without using msiAddKeyValToMspStr
 # 	*flagObj = "";
 # 	msiAddKeyValToMspStr("irodsAdminRmTrash", "", *flagObj);
 	*flagObj = 'irodsAdminRmTrash='
@@ -190,7 +201,6 @@ cyverse_housekeeping_rmTrash {
 		*rowDataName = *row.DATA_NAME;
 		*absDataPath = *rowCollName ++ "/" ++ *rowDataName;
 # XXX - Because of https://github.com/irods/irods/issues/6918
-#       Instead, setting the *flagCool = 'irodsAdminRmTrash=' without using msiAddKeyValToMspStr
 # 		*flagColl = "";
 # 		msiAddKeyValToMspStr("irodsAdminRmTrash", "", *flagColl);
 		*flagColl = 'irodsAdminRmTrash='

@@ -2,7 +2,7 @@
 # core CyVerse Data Store policies. All policy logic is in this file or
 # included by this file.
 #
-# © 2021 The Arizona Board of Regents on behalf of The University of Arizona.
+# © 2023 The Arizona Board of Regents on behalf of The University of Arizona.
 # For license information, see https://cyverse.org/license.
 
 # The environment-specific configuration constants belong in the file
@@ -10,12 +10,10 @@
 
 @include 'cyverse-env'
 
-# All CyVerse specific, environment independent logic goes in the file
-# ipc-logic.re. These rules will be called by the hooks implemented here. The
-# rule names should be prefixed with 'ipc' and suffixed with the name of the
-# rule hook that will call the custom rule.
+# All Data Store specific, environment independent logic goes in the file
+# ipc-logic.re. These rules will be called by the hooks implemented here.
 
-# The shared logic usable by all CyVerse and third parties
+# The shared logic usable by the Data Store and other service rules.
 @include 'ipc-services'
 
 @include 'ipc-logic'
@@ -23,12 +21,13 @@
 @include 'ipc-trash'
 
 
-# THIRD PARTY RULES
+# SERVICE SPECIFIC RULES
 #
-# Third party rule logic goes in its own file, and the file should be included
-# in this section. Third party rule logic should be implemented in a rule
-# prefixed with the name of the rule file and suffixed with the name of the rule
-# hook that will call the custome rule.
+# Rule logic specific to supporting a service that uses the Data Store goes in
+# its own file, and the file should be included in this section. Service specfic
+# rule logic should be implemented in a rule prefixed with the name of the rule
+# file and suffixed with the name of the rule hook that will call the service's
+# rule.
 
 @include 'avra'
 @include 'bisque'
@@ -44,10 +43,16 @@
 @include 'terraref'
 
 
+#
+### STATIC PEPs ###
+#
+
+## SUPPORTING FUNCTIONS AND RULES ##
+
 # EXCLUSIVE RULES
 #
 # For events occur that should belong to one and only one project,
-# the following rules may be extended with ON conditions.
+# the following rules may be extended with on conditions.
 
 # This rule applies the project specific collection creation policies to an
 # administratively created collection.
@@ -65,25 +70,33 @@ _cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl) {
 #
 _cyverse_core_acPostProcForCollCreate_exclusive {
 	*err = errormsg(ipc_archive_acPostProcForCollCreate, *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
 	*err = errormsg(bisque_acPostProcForCollCreate, *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
 	*err = errormsg(captcn_acPostProcForCollCreate, *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
 	*err = errormsg(coge_acPostProcForCollCreate, *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
 	*err = errormsg(sciapps_acPostProcForCollCreate, *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
 	*err = errormsg(sernec_acPostProcForCollCreate, *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
 	*err = errormsg(sparcd_acPostProcForCollCreate, *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
 }
 
 # This rule applies the project specific policies to a data object created
@@ -91,14 +104,17 @@ _cyverse_core_acPostProcForCollCreate_exclusive {
 #
 _cyverse_core_acPostProcForCopy_exclusive {
 	*err = errormsg(captcn_acPostProcForCopy, *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
 	*err = errormsg(sernec_acPostProcForCopy, *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
 }
 
 
-# POLICIES
+# POLICY
 
 # This rule administratively creates a collection, e.g., creating a home
 # collection when a user is created. It ensures all collection creation policies
@@ -114,69 +130,148 @@ _cyverse_core_acPostProcForCopy_exclusive {
 #
 acCreateCollByAdmin(*ParColl, *ChildColl) {
 	msiCreateCollByAdmin(*ParColl, *ChildColl);
-
 	*err = errormsg(ipc_acCreateCollByAdmin(*ParColl, *ChildColl), *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
 	_cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl);
 }
 
+# This rule handles the creation of a ds-service type user.
+#
+# Session Variables:
+#  $otherUserType
+#
 acCreateUser {
-	ON ($otherUserType == 'ds-service') {
+	on ($otherUserType == 'ds-service') {
 		ipc_acCreateUser;
 	}
 }
 
+# This rule applies the project specific data delete policies.
+#
 acDataDeletePolicy {
 	bisque_acDataDeletePolicy;
 	ipc_acDataDeletePolicy;
 }
 
+# This rule applies the collection delete policies for a collection being
+# administratively deleted.
+#
+# Parametrs:
+#  *ParColl    (string) the absolute path to the parent collection of the
+#              collection being deleted
+#  *ChildColl  (string) the name of collection being deleted
+#
 acDeleteCollByAdmin(*ParColl, *ChildColl) {
 	msiDeleteCollByAdmin(*ParColl, *ChildColl);
 	ipc_acDeleteCollByAdmin(*ParColl, *ChildColl);
 }
 
+# This rule applies the collection delete polices for a home or trash collection
+# being administratively deleted. This rule overrides the
+# acDeleteCollByAdminIfPresent rule in core.re. It is called indirectly by the
+# acDeleteUser PEP through the corresponding rule in core.re.
+#
+# Parameters:
+#  *ParColl    (string) the absolute path to the parent collection of the
+#              collection being deleted
+#  *ChildColl  (string) the name of collection being deleted
+#
 acDeleteCollByAdminIfPresent(*ParColl, *ChildColl) {
 	*status = errormsg(ipc_acDeleteCollByAdmin(*ParColl, *ChildColl), *msg);
-	if(*status < 0) { writeLine('serverLog', *msg); }
-
+	if(*status < 0) {
+		writeLine('serverLog', *msg);
+	}
 	*status = errormsg(msiDeleteCollByAdmin(*ParColl, *ChildColl),*msg);
 	if(*status != 0 && *status != -808000) {
 		failmsg(*status, *msg);
 	}
 }
 
-acPreConnect(*OUT) { ipc_acPreConnect(*OUT); }
+# This rule returns the connection encryption policy to a connection being
+# established.
+#
+# Parameters:
+#  *OUT  (string) the policy name, "CS_NEG_REFUSE". "CS_NEG_REQUIRE", or
+#        "CS_NEG_DONT_CARE"
+#
+acPreConnect(*OUT) {
+	ipc_acPreConnect(*OUT);
+}
 
-acSetNumThreads { ipc_acSetNumThreads; }
+# This rule sets the default values for parameters related to parallel transfer.
+#
+acSetNumThreads {
+	ipc_acSetNumThreads;
+}
 
+# This rule sets the maximum number of deferred rule executors.
+#
 acSetRescSchemeForCreate {
 	ipcRepl_acSetRescSchemeForCreate;
 }
 
+# This rule sets the default resource selection scheme for the replica of a
+# newly created data object.
+#
 acSetRescSchemeForRepl {
 	ipcRepl_acSetRescSchemeForRepl;
 }
 
+# This rule sets the default resource selection schemae for replication of an
+# existing data object.
+#
 acSetReServerNumProc {
 	ipc_acSetReServerNumProc;
 }
 
 
 #
-# PRE-PROC RULE HOOKS
+# PRE-PROC
 #
 # The first custom pre-proc rule that fails should cause the rest to not be
 # executed. Third party pre-proc rule effects should be rolled back if a
 # subsequent pre-proc rule fails. Third party pre-proc rules should be called
-# before any IPC pre-proc rules to ensure that third party rules don't
-# invalidate IPC rules.
+# before any CyVerse pre-proc rules to ensure that third party rules don't
+# invalidate CyVerse rules.
 
+# This rule sets the preprocessing policy for access control modification.
+#
+# Parameters:
+#  *RecursiveFlag  (string) indicates if the permision change applies
+#                  recursively to the contents of a *Path, "1" indicates the
+#                  flag is present, and "0" indicates the opposite.
+#  *AccessLevel    (string) the permission being granted to *UserName, if the
+#                  value is "null", "read", "write", or "own", enable
+#                  inheritance if the value is "inherit", or disable
+#                  inheritance if the value is "noinherit"
+#  *UserName       (string) the account or group being given *AccessLvl, ignored
+#                  if *AccessLvl is "inherit" or "noinherit"
+#  *Zone           (string) the zone where *UserName belongs, ignored if
+#                  *AccessLvl in "inherit" or "noinherit"
+#  *Path           (string) the path to the collection or data object whose ACL
+#                  is being altered
+#
 acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
 	ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
 }
 
+# This rule sets the preprocessing policy for manipulating AVUs other than
+# copying and modification.
+#
+# Parameters:
+#  *Option    (string) the subCommand, one of 'add', 'adda', 'addw', 'rm', 'rmw'
+#             'rmi', or 'set'
+#  *ItemType  (string) the type of entity whose AVU is being modified, '-C' for
+#             collection, '-d' for data object, '-R' for resource, or '-u' for
+#             user
+#  *ItemName  (string) the name of the entity whose AVU is being modified, this
+#             is an absolute path for a collection or data object
+#  *AName     (string) the name of the attribute
+#  *AValue    (string) the value of the attribute
+#  *AUnit     (string) the unit of the attribute
+#
 acPreProcForModifyAVUMetadata(
 	*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit
 ) {
@@ -184,10 +279,49 @@ acPreProcForModifyAVUMetadata(
 		*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit );
 }
 
+# This rule sets the preprocessing policy for modifying AVUs.
+#
+# Parameters:
+#  *Option    (string) the value 'mod'
+#  *ItemType  (string) the type of entity whose AVU is being modified, '-C' for
+#             collection, '-d' for data object, '-R' for resource, or '-u' for
+#             user
+#  *ItemName  (string) the name of the entity whose AVU is being modified, this
+#             is an absolute path for a collection or data object
+#  *AName     (string) the attribute name before modification
+#  *AValue    (string) the attribute value before modification
+#  *New1      (string) if a attribute has a unit before modification, this
+#             parameter holds that unit, otherwise, it holds an update to the
+#             name, value, or unit prefixed by 'n:', 'v:', or 'u:', respectively
+#  *New2      (string) either empty or holds an update to the name, value, or
+#             unit prefixed by 'n:', 'v:', or 'u:', respectively
+#  *New3      (string) either empty or holds an update to the name, value, or
+#             unit prefixed by 'n:', 'v:', or 'u:', respectively
+#  *New4      (string) either empty or holds an update to the name, value, or
+#             unit prefixed by 'n:', 'v:', or 'u:', respectively
+#
 acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
 	ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit);
 }
 
+
+# This rule sets the preprocessing policy for copying AVUs between entities.
+#
+# Parameters:
+#  *Option          (string) the value 'cp'
+#  *SourceItemType  (string) the type of entity whose AVUs are being copied,
+#                   '-C' for collection, '-d' for data object, '-R' for
+#                   resource, or '-u' for user
+#  *TargetItemType  (string) the type of entity receiving the AVUs, '-C' for
+#                   collection, '-d' for data object, '-R' for resource, or '-u'
+#                   for user
+#  *SourceItemName  (string) the name of the entity whose AVUs are being copied,
+#                   for a collection or data object, this is the entity's
+#                   absolute path
+#  *TargetItemName  (string) the name of the entity receiving the AVUs, for a
+#                   collection or data object, this is the entity's absolute
+#                   path
+#
 acPreProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
 ) {
@@ -195,27 +329,35 @@ acPreProcForModifyAVUMetadata(
 		*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName );
 }
 
+# This rule sets the preprocessing policy for moving or renaming a collection or
+# data object.
+#
+# Parameters:
+#  *SourceObject  (string) the absolute path to the collection or data object
+#                 before it is moved
+#  *DestObject    (string) the absolute path to the collection or data object
+#                 after it is moved
+#
 acPreProcForObjRename(*SourceObject, *DestObject) {
 	de_acPreProcForObjRename(*SourceObject, *DestObject);
 }
 
-# NOTE: The camelcasing is inconsistent here
+# This rule sets the preprocessing policy for deleting a collection.
+#
 acPreprocForRmColl {
 	ipc_acPreprocForRmColl;
 }
 
 
-# POST-PROC RULE HOOKS
+# POST-PROC
 #
 # Post-proc rules cannot be rolled back on failure, so all custom post-proc
 # rules should always be called. Third party post-proc rules should be called
-# before any IPC post-proc rules to ensure that third party rules don't
-# invalidate IPC rules.
+# before any CyVerse post-proc rules to ensure that third party rules don't
+# invalidate CyVerse rules.
 
-acPostProcForCopy {
-	_cyverse_core_acPostProcForCopy_exclusive;
-}
-
+# This rule sets the post-processing policy for a newly created collection.
+#
 acPostProcForCollCreate {
 	*err = errormsg(ipc_acPostProcForCollCreate, *msg);
 	if (*err < 0) { writeLine('serverLog', *msg); }
@@ -223,56 +365,100 @@ acPostProcForCollCreate {
 	_cyverse_core_acPostProcForCollCreate_exclusive;
 }
 
+# This rule sets the post-processing policy for a data object created or
+# modified by copying another data object.
+#
+acPostProcForCopy {
+	_cyverse_core_acPostProcForCopy_exclusive;
+}
+
+# This rule sets the post-processing policy for when a data object's replica is
+# received due to a copy operation.
+#
+# Parameters:
+#  *LeafResource  (string) the name of the storage resource where the replica
+#                 was stored
+#
 acPostProcForDataCopyReceived(*LeafResource) {
 	ipc_acPostProcForDataCopyReceived(*LeafResource);
 }
 
-acPostProcForOpen {
-	if (!ipc_inStaging(/$objPath)) {
-		*err = errormsg(ipc_acPostProcForOpen, *msg);
-		if (*err < 0) { writeLine('serverLog', *msg); }
+# This rule sets the post-processing policy for deleting a data object.
+#
+acPostProcForDelete {
+	err = errormsg(ipc_acPostProcForDelete, *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
+	*err = errormsg(bisque_acPostProcForDelete, *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
 	}
 }
 
-acPostProcForRmColl { ipc_acPostProcForRmColl; }
-
-acPostProcForDelete {
-	err = errormsg(ipc_acPostProcForDelete, *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
-	*err = errormsg(bisque_acPostProcForDelete, *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-}
-
-acPostProcForObjRename(*SourceObject, *DestObject) {
-	*err = errormsg(ipc_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
-	*err = errormsg(bisque_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
-	*err = errormsg(captcn_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
-	*err = errormsg(coge_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
-	*err = errormsg(sciapps_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
-	*err = errormsg(sernec_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-
-	*err = errormsg(replEntityRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) { writeLine('serverLog', *msg); }
-}
-
+# This rule sets the post-processing policy for an ACL change.
+#
+# Parameters:
+#  *RecursiveFlag  (string) indicates if the permision change applied
+#                  recursively to the contents of a *Path, "1" indicates the
+#                  flag was present, and "0" indicates the opposite.
+#  *AccessLevel    (string) the permission granted to *UserName, if the value
+#                  was "null", "read", "write", or "own", enabled inheritance if
+#                  the value was "inherit", or disabled inheritance if the value
+#                  was "noinherit"
+#  *UserName       (string) the account or group ggiven *AccessLevel, ignored if
+#                  *AccessLevel was "inherit" or "noinherit"
+#  *Zone           (string) the zone where *UserName belongs, ignored if
+#                  *AccessLevel in "inherit" or "noinherit"
+#  *Path           (string) the path to the collection or data object whose ACL
+#                  was altered
+#
 acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
 	if (!ipc_inStaging(/*Path)) {
 		ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
 	}
 }
 
+# This rule sets the post-processing policy for manipulating AVUs other than
+# copying and modification.
+#
+# Parameters:
+#  *Option    (string) the subCommand, one of 'add', 'adda', 'addw', 'rm', 'rmw'
+#             'rmi', or 'set'
+#  *ItemType  (string) the type of entity whose AVU was modified, '-C' for
+#             collection, '-d' for data object, '-R' for resource, or '-u' for
+#             user
+#  *ItemName  (string) the name of the entity whose AVU was modified, this is an
+#             absolute path for a collection or data object
+#  *AName     (string) the name of the attribute
+#  *AValue    (string) the value of the attribute
+#  *AUnit     (string) the unit of the attribute
+#
+acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
+	ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit);
+}
+
+# This rule sets the post-processing policy for modifying AVUs.
+#
+# Parameters:
+#  *Option    (string) the value 'mod'
+#  *ItemType  (string) the type of entity whose AVU was modified, '-C' for
+#             collection, '-d' for data object, '-R' for resource, or '-u' for
+#             user
+#  *ItemName  (string) the name of the entity whose AVU was modified, this is an
+#             absolute path for a collection or data object
+#  *AName     (string) the attribute name before modification
+#  *AValue    (string) the attribute value before modification
+#  *New1      (string) if a attribute has a unit before modification, this
+#             parameter holds that unit, otherwise, it holds the updated name,
+#             value, or unit prefixed by 'n:', 'v:', or 'u:', respectively
+#  *New2      (string) either empty or holds the updated name, value, or unit
+#             prefixed by 'n:', 'v:', or 'u:', respectively
+#  *New3      (string) either empty or holds the updated name, value, or unit
+#             prefixed by 'n:', 'v:', or 'u:', respectively
+#  *New4      (string) either empty or holds the updated name, value, or unit
+#             prefixed by 'n:', 'v:', or 'u:', respectively
+#
 acPostProcForModifyAVUMetadata(
 	*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit
 ) {
@@ -280,10 +466,23 @@ acPostProcForModifyAVUMetadata(
 		*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit );
 }
 
-acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
-	ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit);
-}
-
+# This rule sets the post-processing policy for copying AVUs between entities.
+#
+# Parameters:
+#  *Option          (string) the value 'cp'
+#  *SourceItemType  (string) the type of entity whose AVUs were copied, '-C' for
+#                   collection, '-d' for data object, '-R' for resource, or '-u'
+#                   for user
+#  *TargetItemType  (string) the type of entity that received the AVUs, '-C' for
+#                   collection, '-d' for data object, '-R' for resource, or '-u'
+#                   for user
+#  *SourceItemName  (string) the name of the entity whose AVUs were copied, for
+#                   a collection or data object, this is the entity's absolute
+#                   path
+#  *TargetItemName  (string) the name of the entity that received the AVUs, for
+#                   a collection or data object, this is the entity's absolute
+#                   path
+#
 acPostProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
 ) {
@@ -291,126 +490,80 @@ acPostProcForModifyAVUMetadata(
 		*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName );
 }
 
+# This rule sets the post-processing policy for a moved or renamed collection or
+# data object.
+#
+# Parameters:
+#  *SourceObject  (string) the path to the collection or data object prior to
+#                 being moved or renamed.
+#  *DestObject    (string) the new path
+#
+acPostProcForObjRename(*SourceObject, *DestObject) {
+	*err = errormsg(ipc_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
+	*err = errormsg(bisque_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
+	*err = errormsg(captcn_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
+	*err = errormsg(coge_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
+	*err = errormsg(sciapps_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
+	*err = errormsg(sernec_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
+	*err = errormsg(replEntityRename(*SourceObject, *DestObject), *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
+}
+
+# This rule sets the post-processing policy for when a data object is opened.
+#
+# Session Variables:
+#  $objPath
+#
+acPostProcForOpen {
+	if (!ipc_inStaging(/$objPath)) {
+		*err = errormsg(ipc_acPostProcForOpen, *msg);
+		if (*err < 0) {
+			writeLine('serverLog', *msg);
+		}
+	}
+}
+
+# This rule sets the post-processing policy for when a data object is uploaded
+# via parallel transport.
+#
+# Parameters:
+#  *LeafResource  (string) the name of the storage resource where the replica
+#                 was stored
+#
 acPostProcForParallelTransferReceived(*LeafResource) {
 	ipc_acPostProcForParallelTransferReceived(*LeafResource);
+}
+
+# Ths rule sets the post-processing policy for when a collection is removed.
+#
+acPostProcForRmColl {
+	ipc_acPostProcForRmColl;
 }
 
 
 #
 ### DYNAMIC PEPS ###
 #
-
-## SUPPORTING FUNCTIONS AND RULES ##
-
-_cyverse_core_getObjPath(*DataObjInfo) =
-	let *path = *DataObjInfo.logical_path in
-	let *_ = if (*path == '') {
-		*id = *DataObjInfo.data_id;
-		foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = *id) {
-			*path = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
-		} } in
-	/*path
-
-# generates a unique session variable name for a data object
-#
-# Parameters:
-#  *Path  the absolute path to the data object
-#
-# Return:
-#  the session variable name
-#
-_cyverse_core_mkDataObjSessVar: path -> string
-_cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
-
-# XXX - Because of https://github.com/irods/irods/issues/5540
-# _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo) {
-# 	*path = *DataObjInfo.logical_path;
-#
-# 	if (ipc_inStaging(/*path)) {
-# 		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) { writeLine('serverLog', *msg); }
-#
-# 		*err = errormsg(de_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) { writeLine('serverLog', *msg); }
-# 	} else {
-# 		*err = errormsg(ipc_dataObjCreated_default(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) { writeLine('serverLog', *msg); }
-#
-# 		*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) { writeLine('serverLog', *msg); }
-#
-# 		*err = errormsg(calliope_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) { writeLine('serverLog', *msg); }
-#
-# 		*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) { writeLine('serverLog', *msg); }
-#
-# 		*err = errormsg(sciapps_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) { writeLine('serverLog', *msg); }
-#
-# 		*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) { writeLine('serverLog', *msg); }
-#
-# 		*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) { writeLine('serverLog', *msg); }
-# 	}
-# }
-_cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
-	*path = *DataObjInfo.logical_path;
-
-	if (ipc_inStaging(/*path)) {
-		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo, *Step), *msg);
-		if (*err < 0) { writeLine('serverLog', *msg); }
-
-		if (*Step != 'START') {
-			*err = errormsg(de_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) { writeLine('serverLog', *msg); }
-		}
-	} else {
-		*err = errormsg(ipc_dataObjCreated_default(*User, *Zone, *DataObjInfo, *Step), *msg);
-		if (*err < 0) { writeLine('serverLog', *msg); }
-
-		if (*Step != 'FINISH') {
-			*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) { writeLine('serverLog', *msg); }
-
-			*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) { writeLine('serverLog', *msg); }
-
-			*err = errormsg(sciapps_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) { writeLine('serverLog', *msg); }
-		}
-
-		if (*Step != 'START') {
-			*err = errormsg(calliope_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) { writeLine('serverLog', *msg); }
-
-			*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) { writeLine('serverLog', *msg); }
-
-			*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) { writeLine('serverLog', *msg); }
-		}
-	}
-}
-# XXX - ^^^
-
-_cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
-	*path = *DataObjInfo.logical_path;
-
-	if (! ipc_inStaging(/*path)) {
-		*err = errormsg(ipc_dataObjModified_default(*User, *Zone, *DataObjInfo), *msg);
-		if (*err < 0) { writeLine('serverLog', *msg); }
-
-		*err = errormsg(ipcRepl_dataObjModified(*User, *Zone, *DataObjInfo), *msg);
-		if (*err < 0) { writeLine('serverLog', *msg); }
-	}
-}
-
-_cyverse_core_dataObjMetadataModified(*User, *Zone, *Object) {
-	ipc_dataObjMetadataModified(*User, *Zone, *Object);
-}
-
 
 ## API ##
 
@@ -492,6 +645,140 @@ pep_api_rm_coll_except(*Instance, *Comm, *RmCollInp, *CollOprStat) {
 
 ## DATABASE ##
 
+## SUPPORTING FUNCTIONS AND RULES ##
+
+_cyverse_core_getObjPath(*DataObjInfo) =
+	let *path = *DataObjInfo.logical_path in
+	let *_ = if (*path == '') {
+		*id = *DataObjInfo.data_id;
+		foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = *id) {
+			*path = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
+		} } in
+	/*path
+
+# generates a unique session variable name for a data object
+#
+# Parameters:
+#  *Path  the absolute path to the data object
+#
+# Return:
+#  the session variable name
+#
+#_cyverse_core_mkDataObjSessVar: path -> string
+_cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
+
+# XXX - Because of https://github.com/irods/irods/issues/5540
+# _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo) {
+# 	*path = *DataObjInfo.logical_path;
+# 	if (ipc_inStaging(/*path)) {
+# 		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo), *msg);
+# 		if (*err < 0) {
+# 			writeLine('serverLog', *msg);
+#		}
+# 		*err = errormsg(de_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+# 		if (*err < 0) {
+# 			writeLine('serverLog', *msg);
+# 		}
+# 	} else {
+# 		*err = errormsg(ipc_dataObjCreated_default(*User, *Zone, *DataObjInfo), *msg);
+# 		if (*err < 0) {
+# 			writeLine('serverLog', *msg);
+# 		}
+# 		*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+# 		if (*err < 0) {
+# 			writeLine('serverLog', *msg);
+# 		}
+# 		*err = errormsg(calliope_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+# 		if (*err < 0) {
+# 			writeLine('serverLog', *msg);
+# 		}
+# 		*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+# 		if (*err < 0) {
+# 			writeLine('serverLog', *msg);
+# 		}
+# 		*err = errormsg(sciapps_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+# 		if (*err < 0) {
+# 			writeLine('serverLog', *msg);
+# 		}
+# 		*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+# 		if (*err < 0) {
+#			writeLine('serverLog', *msg);
+# 		}
+# 		*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+# 		if (*err < 0) {
+# 			writeLine('serverLog', *msg);
+#		}
+# 	}
+# }
+_cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
+	*path = *DataObjInfo.logical_path;
+	if (ipc_inStaging(/*path)) {
+		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo, *Step), *msg);
+		if (*err < 0) {
+			writeLine('serverLog', *msg);
+		}
+		if (*Step != 'START') {
+			*err = errormsg(de_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+			if (*err < 0) {
+				writeLine('serverLog', *msg);
+			}
+		}
+	} else {
+		*err = errormsg(ipc_dataObjCreated_default(*User, *Zone, *DataObjInfo, *Step), *msg);
+		if (*err < 0) {
+			writeLine('serverLog', *msg);
+		}
+		if (*Step != 'FINISH') {
+			*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+			if (*err < 0) {
+				writeLine('serverLog', *msg);
+			}
+			*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+			if (*err < 0) {
+				writeLine('serverLog', *msg);
+			}
+			*err = errormsg(sciapps_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+			if (*err < 0) {
+				writeLine('serverLog', *msg);
+			}
+		}
+		if (*Step != 'START') {
+			*err = errormsg(calliope_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+			if (*err < 0) {
+				writeLine('serverLog', *msg);
+			}
+			*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+			if (*err < 0) {
+				writeLine('serverLog', *msg);
+			}
+			*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+			if (*err < 0) {
+				writeLine('serverLog', *msg);
+			}
+		}
+	}
+}
+# XXX - ^^^
+
+_cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
+	*path = *DataObjInfo.logical_path;
+	if (! ipc_inStaging(/*path)) {
+		*err = errormsg(ipc_dataObjModified_default(*User, *Zone, *DataObjInfo), *msg);
+		if (*err < 0) {
+			writeLine('serverLog', *msg);
+		}
+		*err = errormsg(ipcRepl_dataObjModified(*User, *Zone, *DataObjInfo), *msg);
+		if (*err < 0) {
+			writeLine('serverLog', *msg);
+		}
+	}
+}
+
+_cyverse_core_dataObjMetadataModified(*User, *Zone, *Object) {
+	ipc_dataObjMetadataModified(*User, *Zone, *Object);
+}
+
+
 # CLOSE
 
 pep_database_close_post(*Instance, *Context, *OUT) {
@@ -510,14 +797,11 @@ pep_database_close_post(*Instance, *Context, *OUT) {
 # # XXX - ^^^
 # 		*doiKvs = split(*doiMspStr, '++++');
 # 		*op = elem(*vals, 0);
-#
 # 		*doiStr = '';
 # 		foreach (*kv in *doiKvs) {
 # 			*doiStr = if *doiStr == '' then *kv else *doiStr ++ '%' ++ *kv;
 # 		}
-#
 # 		msiString2KeyValPair(*doiStr, *doi);
-#
 # 		if (*op == 'CREATE') {
 # 			_cyverse_core_dataObjCreated(*user, *zone, *doi);
 # 		} else if (*op == 'MODIFY') {
@@ -540,13 +824,11 @@ pep_database_close_finally(*Instance, *Context, *OUT) {
 pep_database_mod_data_obj_meta_post(*Instance, *Context, *OUT, *DataObjInfo, *RegParam) {
 	*handled = false;
 	*logicalPath = _cyverse_core_getObjPath(*DataObjInfo);
-
 # XXX - Because of https://github.com/irods/irods/issues/5540,
 # _cyverse_core_dataObjCreated needs to be called here when not created through file
 # registration
 	if (! *handled && errorcode(*RegParam.dataSize) == 0) {
 		*pathVar = _cyverse_core_mkDataObjSessVar(*logicalPath);
-
 		if (
 			(
 				if errorcode(temporaryStorage.'*pathVar') == 0
@@ -561,20 +843,16 @@ pep_database_mod_data_obj_meta_post(*Instance, *Context, *OUT, *DataObjInfo, *Re
 			*parts = split(temporaryStorage.'XXX5540:*pathVar', ' ');
 			*DataObjInfo.data_owner_name = elem(*parts, 1);
 			*DataObjInfo.data_owner_zone = elem(*parts, 2);
-
 			_cyverse_core_dataObjCreated(
 				*Context.user_user_name, *Context.user_rods_zone, *DataObjInfo, 'FINISH' );
-
 			*handled = true;
 		}
 	}
 # XXX - ^^^
-
 	# If modification timestamp is being modified, the data object has been
 	# modified, so publish a data-object.mod message.
 	if (! *handled && errorcode(*RegParam.dataModify) == 0) {
 		*pathVar = _cyverse_core_mkDataObjSessVar(*logicalPath);
-
 		if (
 			if errorcode(temporaryStorage.'*pathVar') != 0 then true
 			else ! (temporaryStorage.'*pathVar' like 'CREATE *')
@@ -601,11 +879,9 @@ pep_database_mod_data_obj_meta_post(*Instance, *Context, *OUT, *DataObjInfo, *Re
 					*Context.user_user_name, *Context.user_rods_zone, *DataObjInfo );
 # XXX - ^^^
 			}
-
 			*handled = true;
 		}
 	}
-
 # XXX - Because of https://github.com/irods/irods/issues/5584, when an expiry
 # time, data type, or comment is set on a data object, sometimes *RegParam is a
 # string, and we can't tell which field was set. Due to
@@ -659,7 +935,6 @@ pep_database_reg_data_obj_post(*Instance, *Context, *OUT, *DataObjInfo) {
 	*step = if *DataObjInfo.data_size == '0' then 'START' else 'FULL';
 	_cyverse_core_dataObjCreated(
 		*Context.user_user_name, *Context.user_rods_zone, *DataObjInfo, *step );
-
 	temporaryStorage.'XXX5540:*pathVar'
 		= *step
 		++ ' '

@@ -218,3 +218,33 @@ ipc_ensureAccessOnMv(*SvcUser, *SvcColl, *Permission, *OldPath, *NewPath) {
     }
   }
 }
+
+
+# This rule sets a protected AVU on an entity as a rodsadmin user.
+#
+# PARAMETERS:
+#  Entity     the name of a resource or user or the path of a collection or data
+#             object
+#  Attribute  the protected attribute being set
+#  Value      the value to set
+#  Unit       the unit of the value
+#
+ipc_setProtectedAVU(*Name, *Attribute, *Value, *Unit) {
+  *cmdArg = execCmdArg('set');
+  *typeArg = execCmdArg(ipc_getEntityType(*Entity));
+  *entityArg = execCmdArg(*Entity);
+  *attrArg = execCmdArg(*Attribute);
+  *valArg = execCmdArg(*Value);
+  *unitArg = execCmdArg(*Unit);
+  *argStr = "*cmdArg *typeArg *entityArg *attrArg *valArg *unitArg";
+  *status = errormsg(msiExecCmd('imeta-exec', *argStr, "null", "null", "null", *out), *msg);
+
+  if (*status != 0) {
+    msiGetStderrInExecCmdOut(*out, *err);
+    writeLine('serverLog', "DS: Failed to set AVU *Attribute on *Entity");
+    writeLine('serverLog', "DS: *msg");
+    writeLine('serverLog', "DS: *err");
+  }
+
+  *status;
+}

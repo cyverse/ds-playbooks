@@ -176,21 +176,7 @@ _ipc_assignUUID(*ItemType, *ItemName, *Uuid, *ClientName, *ClientZone) {
 			fail;
 		}
 	} else {
-		*cmdArg = execCmdArg('set');
-		*typeArg = execCmdArg(*ItemType);
-		*nameArg = execCmdArg(*ItemName);
-		*attrArg = execCmdArg(_ipc_UUID_ATTR);
-		*valArg = execCmdArg(*Uuid);
-		*argStr = "*cmdArg *typeArg *nameArg *attrArg *valArg";
-		*status = errormsg(msiExecCmd('imeta-exec', *argStr, "null", "null", "null", *out), *msg);
-
-		if (*status != 0) {
-			msiGetStderrInExecCmdOut(*out, *err);
-			writeLine('serverLog', "DS: Failed to assign UUID to *ItemName");
-			writeLine('serverLog', "DS: *msg");
-			writeLine('serverLog', "DS: *err");
-			fail;
-		}
+		ipc_setProtectedAVU(*ItemName, _ipc_UUID_ATTR, *Uuid, '');
 	}
 }
 

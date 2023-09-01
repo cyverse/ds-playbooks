@@ -56,10 +56,10 @@
     - name: initialize rodsadmin perms
       script: >
         scripts/init-rodsadmin-perms.sh \
-          '{{ groups["dbms"][0] }}' \
+          '{{ groups["dbms_primary"][0] }}' \
           postgres \
-          '{{ hostvars[groups["dbms"][0]]["ansible_port"]|default(22) }}' \
-          '{{ hostvars[groups["dbms"][0]]["ansible_user"]|default("root") }}' \
+          '{{ hostvars[groups["dbms_primary"][0]]["ansible_port"]|d(22) }}' \
+          '{{ hostvars[groups["dbms_primary"][0]]["ansible_user"]|d("root") }}' \
           '{{ groups["irods_catalog"][0] }}' \
           '{{ hostvars[groups["irods_catalog"][0]]["_irods_service_account_name"] }}' \
           '{{ hostvars[groups["irods_catalog"][0]]["ansible_port"]|default(22) }}' \

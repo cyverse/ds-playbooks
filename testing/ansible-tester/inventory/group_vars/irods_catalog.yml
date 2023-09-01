@@ -1,4 +1,5 @@
 ---
+irods_dbms_host: "{{ groups['dbms_primary'][0] }}"
 irods_server_port_range_end: "{{ irods_ephemeral_port_range_last }}"
 irods_server_port_range_start: "{{ irods_ephemeral_port_range_first }}"
 

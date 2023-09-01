@@ -1,6 +1,4 @@
 # DE project policy
-# include this file from with ipc-custom.re
-
 
 _de_inStagedJob(*Path) = str(*Path) like regex '^' ++ str(ipc_STAGING_BASE) ++ '/[^/]+/.+'
 

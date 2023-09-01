@@ -1,7 +1,6 @@
 # VERSION: 1
 #
 # Rules particular to the captcn project
-# include this file from with ipc-custom.re
 
 @include "captcn-env"
 

@@ -1,5 +1,4 @@
 # TerraREF project policy
-# include this file from within ipc-custom.re
 
 @include 'terraref-env'
 

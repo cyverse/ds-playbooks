@@ -1,5 +1,4 @@
 # Avra project policy
-# include this file from within ipc-custom.re
 
 @include 'avra-env'
 

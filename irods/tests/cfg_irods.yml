@@ -28,11 +28,11 @@
         - core.fnm
         - core.re
         - cyverse-env.re
+        - cyverse_core.re
         - cyverse_housekeeping.re
         - de.re
         - host_access_control_config.json
         - hosts_config.json
-        - ipc-custom.re
         - ipc-json.re
         - ipc-logic.re
         - ipc-trash.re
@@ -46,18 +46,6 @@
         - service_account.config
         - terraref.re
         - terraref-env.re
-
-    - name: test ensure ipc-env.re is gone
-      stat:
-        path: /etc/irods/ipc-env.re
-      register: response
-      failed_when: response.stat.exists
-
-    - name: test ensure ipc-housekeeping.re is gone
-      stat:
-        path: /etc/irods/ipc-housekeeping.re
-      register: response
-      failed_when: response.stat.exists
 
     - name: Verify irods_environment.json is in place
       stat:
@@ -82,12 +70,6 @@
         - delete-scheduled-rule
         - generateuuid
         - imeta-exec
-
-    - name: verify set-uuid is gone
-      stat:
-        path: /var/lib/irods/msiExecCmd_bin/set-uuid
-      register: response
-      failed_when: response.stat.exists
 
     - name: Verify database_config.json does not exist
       stat:
@@ -180,7 +162,7 @@
                 == 3
               - >-
                 server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[0]
-                == 'ipc-custom'
+                == 'cyverse_core'
               - >-
                 server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1]
                 == 'cyverse_housekeeping'
@@ -232,7 +214,7 @@
                 == 3
               - >-
                 server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[0]
-                == 'ipc-custom'
+                == 'cyverse_core'
               - >-
                 server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1]
                 == 'cyverse_housekeeping'
@@ -280,3 +262,13 @@
                 == 'dstesting-consumer_configured_ubuntu-1.dstesting_default'
               - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
               - hosts_config.host_entries[0].addresses[2].address == 'alias-2'
+
+    - name: test ensure rule file is gone
+      stat:
+        path: /etc/irods/{{ item }}
+      register: response
+      failed_when: response.stat.exists
+      with_items:
+        - ipc-custom.re
+        - ipc-env.re
+        - ipc-housekeeping.re

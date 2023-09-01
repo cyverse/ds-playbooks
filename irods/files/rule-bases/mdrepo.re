@@ -1,5 +1,4 @@
 # MD Repo project policy
-# include this file from within ipc-custom.re
 #
 # XXX - This works around a bug in tickets that prevents a new data object from  being created in a
 #       folder using a write ticket. Before an attempt is made to create a data object using a

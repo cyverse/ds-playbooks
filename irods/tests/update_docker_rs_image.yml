@@ -63,7 +63,23 @@
           - server_config.default_resource_name == '_IRODS_DEFAULT_RESOURCE_'
           - server_config.negotiation_key == '__IRODS_NEGOTIATION_KEY__'
 
-    - name: verfiy server_config.plugin_configuration.rule_engines
+    - name: verfiy server_config.plugin_configuration.rule_engines rule language instance_name
+      debug:
+        msg: TODO implement
+
+    - name: verfiy server_config.plugin_configuration.rule_engines rule language plugin_name
+      debug:
+        msg: TODO implement
+
+    - name: verfiy server_config.plugin_configuration.rule_engines rule language plugin_specific_configuration
+      debug:
+        msg: TODO implement
+
+    - name: verfiy server_config.plugin_configuration.rule_engines rule language shared_memory_instance
+      debug:
+        msg: TODO implement
+
+    - name: verfiy server_config.plugin_configuration.rule_engines CPP default policy
       debug:
         msg: TODO implement
 

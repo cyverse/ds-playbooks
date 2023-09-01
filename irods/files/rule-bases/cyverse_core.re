@@ -58,8 +58,8 @@
 # administratively created collection.
 #
 # Parameters:
-#  *ParColl    the absolute path to the parent of the collection being created
-#  *ChildColl  the name of the collection being created
+#  ParColl    the absolute path to the parent of the collection being created
+#  ChildColl  the name of the collection being created
 #
 _cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl) {
 	ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl);
@@ -121,8 +121,8 @@ _cyverse_core_acPostProcForCopy_exclusive {
 # are applied to then newly created collection.
 #
 # Parameters:
-#  *ParColl    the absolute path to the parent of the collection being created
-#  *ChildColl  the name of the collection being created
+#  ParColl    the absolute path to the parent of the collection being created
+#  ChildColl  the name of the collection being created
 #
 # Error Codes:
 #  -43000 (SYS_NO_RCAT_SERVER_ERR)
@@ -140,7 +140,7 @@ acCreateCollByAdmin(*ParColl, *ChildColl) {
 # This rule handles the creation of a ds-service type user.
 #
 # Session Variables:
-#  $otherUserType
+#  otherUserType
 #
 acCreateUser {
 	on ($otherUserType == 'ds-service') {
@@ -159,9 +159,9 @@ acDataDeletePolicy {
 # administratively deleted.
 #
 # Parametrs:
-#  *ParColl    (string) the absolute path to the parent collection of the
+#  ParColl    (string) the absolute path to the parent collection of the
 #              collection being deleted
-#  *ChildColl  (string) the name of collection being deleted
+#  ChildColl  (string) the name of collection being deleted
 #
 acDeleteCollByAdmin(*ParColl, *ChildColl) {
 	msiDeleteCollByAdmin(*ParColl, *ChildColl);
@@ -174,9 +174,9 @@ acDeleteCollByAdmin(*ParColl, *ChildColl) {
 # acDeleteUser PEP through the corresponding rule in core.re.
 #
 # Parameters:
-#  *ParColl    (string) the absolute path to the parent collection of the
-#              collection being deleted
-#  *ChildColl  (string) the name of collection being deleted
+#  ParColl    (string) the absolute path to the parent collection of the
+#             collection being deleted
+#  ChildColl  (string) the name of collection being deleted
 #
 acDeleteCollByAdminIfPresent(*ParColl, *ChildColl) {
 	*status = errormsg(ipc_acDeleteCollByAdmin(*ParColl, *ChildColl), *msg);
@@ -193,8 +193,8 @@ acDeleteCollByAdminIfPresent(*ParColl, *ChildColl) {
 # established.
 #
 # Parameters:
-#  *OUT  (string) the policy name, "CS_NEG_REFUSE". "CS_NEG_REQUIRE", or
-#        "CS_NEG_DONT_CARE"
+#  OUT  (string) the policy name, "CS_NEG_REFUSE". "CS_NEG_REQUIRE", or
+#       "CS_NEG_DONT_CARE"
 #
 acPreConnect(*OUT) {
 	ipc_acPreConnect(*OUT);
@@ -239,19 +239,19 @@ acSetReServerNumProc {
 # This rule sets the preprocessing policy for access control modification.
 #
 # Parameters:
-#  *RecursiveFlag  (string) indicates if the permision change applies
-#                  recursively to the contents of a *Path, "1" indicates the
-#                  flag is present, and "0" indicates the opposite.
-#  *AccessLevel    (string) the permission being granted to *UserName, if the
-#                  value is "null", "read", "write", or "own", enable
-#                  inheritance if the value is "inherit", or disable
-#                  inheritance if the value is "noinherit"
-#  *UserName       (string) the account or group being given *AccessLvl, ignored
-#                  if *AccessLvl is "inherit" or "noinherit"
-#  *Zone           (string) the zone where *UserName belongs, ignored if
-#                  *AccessLvl in "inherit" or "noinherit"
-#  *Path           (string) the path to the collection or data object whose ACL
-#                  is being altered
+#  RecursiveFlag  (string) indicates if the permision change applies recursively
+#                 to the contents of a *Path, "1" indicates the flag is present,
+#                 and "0" indicates the opposite.
+#  AccessLevel    (string) the permission being granted to *UserName, if the
+#                 value is "null", "read", "write", or "own", enable inheritance
+#                 if the value is "inherit", or disable inheritance if the value
+#                 is "noinherit"
+#  UserName       (string) the account or group being given *AccessLvl, ignored
+#                 if *AccessLvl is "inherit" or "noinherit"
+#  Zone           (string) the zone where *UserName belongs, ignored if
+#                 *AccessLvl in "inherit" or "noinherit"
+#  *Path          (string) the path to the collection or data object whose ACL
+#                 is being altered
 #
 acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
 	ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
@@ -261,16 +261,16 @@ acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, 
 # copying and modification.
 #
 # Parameters:
-#  *Option    (string) the subCommand, one of 'add', 'adda', 'addw', 'rm', 'rmw'
-#             'rmi', or 'set'
-#  *ItemType  (string) the type of entity whose AVU is being modified, '-C' for
-#             collection, '-d' for data object, '-R' for resource, or '-u' for
-#             user
-#  *ItemName  (string) the name of the entity whose AVU is being modified, this
-#             is an absolute path for a collection or data object
-#  *AName     (string) the name of the attribute
-#  *AValue    (string) the value of the attribute
-#  *AUnit     (string) the unit of the attribute
+#  Option    (string) the subCommand, one of 'add', 'adda', 'addw', 'rm', 'rmw'
+#            'rmi', or 'set'
+#  ItemType  (string) the type of entity whose AVU is being modified, '-C' for
+#            collection, '-d' for data object, '-R' for resource, or '-u' for
+#            user
+#  ItemName  (string) the name of the entity whose AVU is being modified, this
+#            is an absolute path for a collection or data object
+#  AName     (string) the name of the attribute
+#  AValue    (string) the value of the attribute
+#  AUnit     (string) the unit of the attribute
 #
 acPreProcForModifyAVUMetadata(
 	*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit
@@ -282,45 +282,43 @@ acPreProcForModifyAVUMetadata(
 # This rule sets the preprocessing policy for modifying AVUs.
 #
 # Parameters:
-#  *Option    (string) the value 'mod'
-#  *ItemType  (string) the type of entity whose AVU is being modified, '-C' for
-#             collection, '-d' for data object, '-R' for resource, or '-u' for
-#             user
-#  *ItemName  (string) the name of the entity whose AVU is being modified, this
-#             is an absolute path for a collection or data object
-#  *AName     (string) the attribute name before modification
-#  *AValue    (string) the attribute value before modification
-#  *New1      (string) if a attribute has a unit before modification, this
-#             parameter holds that unit, otherwise, it holds an update to the
-#             name, value, or unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  *New2      (string) either empty or holds an update to the name, value, or
-#             unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  *New3      (string) either empty or holds an update to the name, value, or
-#             unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  *New4      (string) either empty or holds an update to the name, value, or
-#             unit prefixed by 'n:', 'v:', or 'u:', respectively
+#  Option    (string) the value 'mod'
+#  ItemType  (string) the type of entity whose AVU is being modified, '-C' for
+#            collection, '-d' for data object, '-R' for resource, or '-u' for
+#            user
+#  ItemName  (string) the name of the entity whose AVU is being modified, this
+#            is an absolute path for a collection or data object
+#  AName     (string) the attribute name before modification
+#  AValue    (string) the attribute value before modification
+#  New1      (string) if a attribute has a unit before modification, this
+#            parameter holds that unit, otherwise, it holds an update to the
+#            name, value, or unit prefixed by 'n:', 'v:', or 'u:', respectively
+#  New2      (string) either empty or holds an update to the name, value, or
+#            unit prefixed by 'n:', 'v:', or 'u:', respectively
+#  New3      (string) either empty or holds an update to the name, value, or
+#            unit prefixed by 'n:', 'v:', or 'u:', respectively
+#  New4      (string) either empty or holds an update to the name, value, or
+#            unit prefixed by 'n:', 'v:', or 'u:', respectively
 #
 acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
 	ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit);
 }
 
-
 # This rule sets the preprocessing policy for copying AVUs between entities.
 #
 # Parameters:
-#  *Option          (string) the value 'cp'
-#  *SourceItemType  (string) the type of entity whose AVUs are being copied,
-#                   '-C' for collection, '-d' for data object, '-R' for
-#                   resource, or '-u' for user
-#  *TargetItemType  (string) the type of entity receiving the AVUs, '-C' for
-#                   collection, '-d' for data object, '-R' for resource, or '-u'
-#                   for user
-#  *SourceItemName  (string) the name of the entity whose AVUs are being copied,
-#                   for a collection or data object, this is the entity's
-#                   absolute path
-#  *TargetItemName  (string) the name of the entity receiving the AVUs, for a
-#                   collection or data object, this is the entity's absolute
-#                   path
+#  Option          (string) the value 'cp'
+#  SourceItemType  (string) the type of entity whose AVUs are being copied, '-C'
+#                   for collection, '-d' for data object, '-R' for resource, or
+#                   '-u' for user
+#  TargetItemType  (string) the type of entity receiving the AVUs, '-C' for
+#                  collection, '-d' for data object, '-R' for resource, or '-u'
+#                  for user
+#  SourceItemName  (string) the name of the entity whose AVUs are being copied,
+#                  for a collection or data object, this is the entity's
+#                  absolute path
+#  TargetItemName  (string) the name of the entity receiving the AVUs, for a
+#                  collection or data object, this is the entity's absolute path
 #
 acPreProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
@@ -333,10 +331,10 @@ acPreProcForModifyAVUMetadata(
 # data object.
 #
 # Parameters:
-#  *SourceObject  (string) the absolute path to the collection or data object
-#                 before it is moved
-#  *DestObject    (string) the absolute path to the collection or data object
-#                 after it is moved
+#  SourceObject  (string) the absolute path to the collection or data object
+#                before it is moved
+#  DestObject    (string) the absolute path to the collection or data object
+#                after it is moved
 #
 acPreProcForObjRename(*SourceObject, *DestObject) {
 	de_acPreProcForObjRename(*SourceObject, *DestObject);
@@ -376,8 +374,8 @@ acPostProcForCopy {
 # received due to a copy operation.
 #
 # Parameters:
-#  *LeafResource  (string) the name of the storage resource where the replica
-#                 was stored
+#  LeafResource  (string) the name of the storage resource where the replica was
+#                stored
 #
 acPostProcForDataCopyReceived(*LeafResource) {
 	ipc_acPostProcForDataCopyReceived(*LeafResource);
@@ -399,18 +397,18 @@ acPostProcForDelete {
 # This rule sets the post-processing policy for an ACL change.
 #
 # Parameters:
-#  *RecursiveFlag  (string) indicates if the permision change applied
-#                  recursively to the contents of a *Path, "1" indicates the
-#                  flag was present, and "0" indicates the opposite.
-#  *AccessLevel    (string) the permission granted to *UserName, if the value
-#                  was "null", "read", "write", or "own", enabled inheritance if
-#                  the value was "inherit", or disabled inheritance if the value
-#                  was "noinherit"
-#  *UserName       (string) the account or group ggiven *AccessLevel, ignored if
-#                  *AccessLevel was "inherit" or "noinherit"
-#  *Zone           (string) the zone where *UserName belongs, ignored if
-#                  *AccessLevel in "inherit" or "noinherit"
-#  *Path           (string) the path to the collection or data object whose ACL
+#  RecursiveFlag  (string) indicates if the permision change applied recursively
+#                 to the contents of a *Path, "1" indicates the flag was
+#                 present, and "0" indicates the opposite.
+#  AccessLevel    (string) the permission granted to *UserName, if the value was
+#                 "null", "read", "write", or "own", enabled inheritance if the
+#                 value was "inherit", or disabled inheritance if the value was
+#                 "noinherit"
+#  UserName       (string) the account or group ggiven *AccessLevel, ignored if
+#                 *AccessLevel was "inherit" or "noinherit"
+#  Zone           (string) the zone where *UserName belongs, ignored if
+#                 *AccessLevel in "inherit" or "noinherit"
+#  Path           (string) the path to the collection or data object whose ACL
 #                  was altered
 #
 acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
@@ -423,16 +421,16 @@ acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone,
 # copying and modification.
 #
 # Parameters:
-#  *Option    (string) the subCommand, one of 'add', 'adda', 'addw', 'rm', 'rmw'
-#             'rmi', or 'set'
-#  *ItemType  (string) the type of entity whose AVU was modified, '-C' for
-#             collection, '-d' for data object, '-R' for resource, or '-u' for
-#             user
-#  *ItemName  (string) the name of the entity whose AVU was modified, this is an
-#             absolute path for a collection or data object
-#  *AName     (string) the name of the attribute
-#  *AValue    (string) the value of the attribute
-#  *AUnit     (string) the unit of the attribute
+#  Option    (string) the subCommand, one of 'add', 'adda', 'addw', 'rm', 'rmw'
+#            'rmi', or 'set'
+#  ItemType  (string) the type of entity whose AVU was modified, '-C' for
+#            collection, '-d' for data object, '-R' for resource, or '-u' for
+#            user
+#  ItemName  (string) the name of the entity whose AVU was modified, this is an
+#            absolute path for a collection or data object
+#  AName     (string) the name of the attribute
+#  AValue    (string) the value of the attribute
+#  AUnit     (string) the unit of the attribute
 #
 acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
 	ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit);
@@ -441,23 +439,23 @@ acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *
 # This rule sets the post-processing policy for modifying AVUs.
 #
 # Parameters:
-#  *Option    (string) the value 'mod'
-#  *ItemType  (string) the type of entity whose AVU was modified, '-C' for
-#             collection, '-d' for data object, '-R' for resource, or '-u' for
-#             user
-#  *ItemName  (string) the name of the entity whose AVU was modified, this is an
-#             absolute path for a collection or data object
-#  *AName     (string) the attribute name before modification
-#  *AValue    (string) the attribute value before modification
-#  *New1      (string) if a attribute has a unit before modification, this
-#             parameter holds that unit, otherwise, it holds the updated name,
-#             value, or unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  *New2      (string) either empty or holds the updated name, value, or unit
-#             prefixed by 'n:', 'v:', or 'u:', respectively
-#  *New3      (string) either empty or holds the updated name, value, or unit
-#             prefixed by 'n:', 'v:', or 'u:', respectively
-#  *New4      (string) either empty or holds the updated name, value, or unit
-#             prefixed by 'n:', 'v:', or 'u:', respectively
+#  Option    (string) the value 'mod'
+#  ItemType  (string) the type of entity whose AVU was modified, '-C' for
+#            collection, '-d' for data object, '-R' for resource, or '-u' for
+#            user
+#  ItemName  (string) the name of the entity whose AVU was modified, this is an
+#            absolute path for a collection or data object
+#  AName     (string) the attribute name before modification
+#  AValue    (string) the attribute value before modification
+#  New1      (string) if a attribute has a unit before modification, this
+#            parameter holds that unit, otherwise, it holds the updated name,
+#            value, or unit prefixed by 'n:', 'v:', or 'u:', respectively
+#  New2      (string) either empty or holds the updated name, value, or unit
+#            prefixed by 'n:', 'v:', or 'u:', respectively
+#  New3      (string) either empty or holds the updated name, value, or unit
+#            prefixed by 'n:', 'v:', or 'u:', respectively
+#  New4      (string) either empty or holds the updated name, value, or unit
+#            prefixed by 'n:', 'v:', or 'u:', respectively
 #
 acPostProcForModifyAVUMetadata(
 	*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit
@@ -469,19 +467,18 @@ acPostProcForModifyAVUMetadata(
 # This rule sets the post-processing policy for copying AVUs between entities.
 #
 # Parameters:
-#  *Option          (string) the value 'cp'
-#  *SourceItemType  (string) the type of entity whose AVUs were copied, '-C' for
-#                   collection, '-d' for data object, '-R' for resource, or '-u'
-#                   for user
-#  *TargetItemType  (string) the type of entity that received the AVUs, '-C' for
-#                   collection, '-d' for data object, '-R' for resource, or '-u'
-#                   for user
-#  *SourceItemName  (string) the name of the entity whose AVUs were copied, for
-#                   a collection or data object, this is the entity's absolute
-#                   path
-#  *TargetItemName  (string) the name of the entity that received the AVUs, for
-#                   a collection or data object, this is the entity's absolute
-#                   path
+#  Option          (string) the value 'cp'
+#  SourceItemType  (string) the type of entity whose AVUs were copied, '-C' for
+#                  collection, '-d' for data object, '-R' for resource, or '-u'
+#                  for user
+#  TargetItemType  (string) the type of entity that received the AVUs, '-C' for
+#                  collection, '-d' for data object, '-R' for resource, or '-u'
+#                  for user
+#  SourceItemName  (string) the name of the entity whose AVUs were copied, for
+#                  a collection or data object, this is the entity's absolute
+#                  path
+#  TargetItemName  (string) the name of the entity that received the AVUs, for a
+#                  collection or data object, this is the entity's absolute path
 #
 acPostProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
@@ -494,9 +491,9 @@ acPostProcForModifyAVUMetadata(
 # data object.
 #
 # Parameters:
-#  *SourceObject  (string) the path to the collection or data object prior to
-#                 being moved or renamed.
-#  *DestObject    (string) the new path
+#  SourceObject  (string) the path to the collection or data object prior to
+#                being moved or renamed.
+#  DestObject    (string) the new path
 #
 acPostProcForObjRename(*SourceObject, *DestObject) {
 	*err = errormsg(ipc_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
@@ -532,7 +529,7 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
 # This rule sets the post-processing policy for when a data object is opened.
 #
 # Session Variables:
-#  $objPath
+#  objPath
 #
 acPostProcForOpen {
 	if (!ipc_inStaging(/$objPath)) {
@@ -547,8 +544,8 @@ acPostProcForOpen {
 # via parallel transport.
 #
 # Parameters:
-#  *LeafResource  (string) the name of the storage resource where the replica
-#                 was stored
+#  LeafResource  (string) the name of the storage resource where the replica was
+#                stored
 #
 acPostProcForParallelTransferReceived(*LeafResource) {
 	ipc_acPostProcForParallelTransferReceived(*LeafResource);
@@ -569,6 +566,13 @@ acPostProcForRmColl {
 
 # COLL_CREATE
 
+# This is the post processing logic for when a collection is created through the
+# API using a COLL_CREATE request.
+#
+#  Instance       (string) unknown
+#  Comm           (`KeyValuePair_PI`) user connnection and auth information
+#  CollCreateInp  (`KeyValuePair_PI`) information related to the new collection
+#
 pep_api_coll_create_post(*Instance, *Comm, *CollCreateInp) {
 	ipcTrash_api_coll_create_post(*Instance, *Comm, *CollCreateInp);
 }
@@ -576,6 +580,14 @@ pep_api_coll_create_post(*Instance, *Comm, *CollCreateInp) {
 
 # DATA_OBJ_COPY
 
+# This is the post processing logic for when a data object is copied through the
+# API using a DATA_OBJ_COPY request.
+#
+#  Instance        (string) unknown
+#  Comm            (`KeyValuePair_PI`) user connnection and auth information
+#  DataObjCopyInp  (`KeyValuePair_PI`) information related to copy operation
+#  TransStat       unknown
+#
 pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
 	ipcTrash_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat);
 }
@@ -583,6 +595,14 @@ pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
 
 # DATA_OBJ_CREATE
 
+# This is the post processing logic for when a data object is created through
+# API using a DATA_OBJ_CREATE request.
+#
+#  Instance    (string) unknown
+#  Comm        (`KeyValuePair_PI`) user connnection and auth information
+#  DataObjInp  (`KeyValuePair_PI`) information related to the created data
+#              object
+#
 pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
 	ipcTrash_api_data_obj_create_post(*Instance, *Comm, *DataObjInp);
 }
@@ -590,6 +610,13 @@ pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
 
 # DATA_OBJ_OPEN
 
+# This is the pre processing logic for when an attempt is made to open a data
+# object through the API using a DATA_OBJ_OPEN request.
+#
+#  Instance    (string) unknown
+#  Comm        (`KeyValuePair_PI`) user connnection and auth information
+#  DataObjInp  (`KeyValuePair_PI`) information related to the data object
+#
 pep_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp) {
 	mdrepo_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp);
 }
@@ -597,21 +624,55 @@ pep_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp) {
 
 # DATA_OBJ_PUT
 
-pep_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PortalOprOut) {
-	mdrepo_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PortalOprOut);
+# This is the pre processing logic for when an attempt is made to upload a data
+# object through the API using a DATA_OBJ_PUT request.
+#
+#  Instance        (string) unknown
+#  Comm            (`KeyValuePair_PI`) user connnection and auth information
+#  DataObjInp      (`KeyValuePair_PI`) information related to the data object
+#  DataObjInpBBuf  (unknown) may contain the contents of the file being uploaded
+#  PORTAL_OPR_OUT  unknown
+#
+pep_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT) {
+	mdrepo_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT);
 }
 
-pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTALOPROUT) {
-	ipcTrash_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTALOPROUT);
+# This is the post processing logic for when a data object is uploaded through
+# the API using a DATA_OBJ_PUT request.
+#
+#  Instance        (string) unknown
+#  Comm            (`KeyValuePair_PI`) user connnection and auth information
+#  DataObjInp      (`KeyValuePair_PI`) information related to the data object
+#  DataObjInpBBuf  (unknown) may contain the contents of the file being uploaded
+#  PORTAL_OPR_OUT  unknown
+#
+pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT) {
+	ipcTrash_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT);
 }
 
 
 # DATA_OBJ_RENAME
 
+# This is the pre processing logic for when an attempt is made to rename a data
+# object through the API using a DATA_OBJ_RENAME request.
+#
+#  Instance          (string) unknown
+#  Comm              (`KeyValuePair_PI`) user connnection and auth information
+#  DataObjRenameInp  (`KeyValuePair_PI`) information about the data object and
+#                    its new path
+#
 pep_api_data_obj_rename_pre(*Instance, *Comm, *DataObjRenameInp) {
 	ipcTrash_api_data_obj_rename_pre(*Instance, *Comm, *DataObjRenameInp);
 }
 
+# This is the post processing logic for when a data object is renamed through
+# the API using a DATA_OBJ_RENAME request.
+#
+#  Instance          (string) unknown
+#  Comm              (`KeyValuePair_PI`) user connnection and auth information
+#  DataObjRenameInp  (`KeyValuePair_PI`) information about the data object and
+#                    its old path
+#
 pep_api_data_obj_rename_post(*Instance, *Comm, *DataObjRenameInp) {
 	ipcTrash_api_data_obj_rename_post(*Instance, *Comm, *DataObjRenameInp);
 }
@@ -619,14 +680,37 @@ pep_api_data_obj_rename_post(*Instance, *Comm, *DataObjRenameInp) {
 
 # DATA_OBJ_UNLINK
 
+# This is the pre processing logic for when an attempt is made to delete a data
+# object through the API using a DATA_OBJ_UNLINK request.
+#
+#  Instance          (string) unknown
+#  Comm              (`KeyValuePair_PI`) user connnection and auth information
+#  DataObjUnlinkInp  (`KeyValuePair_PI`) information about the data object being
+#                    deleted
+#
 pep_api_data_obj_unlink_pre(*Instance, *Comm, *DataObjUnlinkInp) {
 	ipcTrash_api_data_obj_unlink_pre(*Instance, *Comm, *DataObjUnlinkInp);
 }
 
+# This is the post processing logic for when a data object is deleted through
+# the API using a DATA_OBJ_UNLINK request.
+#
+#  Instance          (string) unknown
+#  Comm              (`KeyValuePair_PI`) user connnection and auth information
+#  DataObjUnlinkInp  (`KeyValuePair_PI`) information about the data object being
+#                    deleted
+#
 pep_api_data_obj_unlink_post(*Instance, *Comm, *DataObjUnlinkInp) {
 	ipcTrash_api_data_obj_unlink_post(*Instance, *Comm, *DataObjUnlinkInp);
 }
 
+# This is the exception logic for when an API DATA_OBJ_UNLINK request fails.
+#
+#  Instance          (string) unknown
+#  Comm              (`KeyValuePair_PI`) user connnection and auth information
+#  DataObjUnlinkInp  (`KeyValuePair_PI`) information about the data object being
+#                    deleted
+#
 pep_api_data_obj_unlink_except(*Instance, *Comm, *DataObjUnlinkInp) {
 	ipcTrash_api_data_obj_unlink_except(*Instance, *Comm, *DataObjUnlinkInp);
 }
@@ -634,10 +718,27 @@ pep_api_data_obj_unlink_except(*Instance, *Comm, *DataObjUnlinkInp) {
 
 # RM_COLL
 
+# This is the pre processing logic for when an attempt is made to delete a
+# collection through the API using a RM_COLL request.
+#
+#  Instance     (string) unknown
+#  Comm         (`KeyValuePair_PI`) user connnection and auth information
+#  RmCollInp    (`KeyValuePair_PI`) information about the collection being
+#               deleted
+#  CollOprStat  unknown
+#
 pep_api_rm_coll_pre(*Instance, *Comm, *RmCollInp, *CollOprStat) {
 	ipcTrash_api_rm_coll_pre(*Instance, *Comm, *RmCollInp, *CollOprStat);
 }
 
+# This is the exception logic for when an API RM_COLL request fails.
+#
+#  Instance     (string) unknown
+#  Comm         (`KeyValuePair_PI`) user connnection and auth information
+#  RmCollInp    (`KeyValuePair_PI`) information about the collection being
+#               deleted
+#  CollOprStat  unknown
+#
 pep_api_rm_coll_except(*Instance, *Comm, *RmCollInp, *CollOprStat) {
 	ipcTrash_api_rm_coll_except(*Instance, *Comm, *RmCollInp, *CollOprStat);
 }
@@ -659,7 +760,7 @@ _cyverse_core_getObjPath(*DataObjInfo) =
 # generates a unique session variable name for a data object
 #
 # Parameters:
-#  *Path  the absolute path to the data object
+#  Path  the absolute path to the data object
 #
 # Return:
 #  the session variable name
@@ -781,6 +882,14 @@ _cyverse_core_dataObjMetadataModified(*User, *Zone, *Object) {
 
 # CLOSE
 
+# The rule handles the post-processing logic for when a database connection is
+# closed.
+#
+# Parameters:
+#  Instance  (string) the type of DBMS being used
+#  Context   (`KeyValuePair_PI`) the database plugin context
+#  OUT       (`KeyValuePair_PI`) unused
+#
 pep_database_close_post(*Instance, *Context, *OUT) {
 # XXX - Because of https://github.com/irods/irods/issues/5540,
 # nothing can be done here
@@ -810,6 +919,13 @@ pep_database_close_post(*Instance, *Context, *OUT) {
 # 	}
 }
 
+# The rule handles the final logic for when a database connection is closed.
+#
+# Parameters:
+#  Instance  (string) the type of DBMS being used
+#  Context   (`KeyValuePair_PI`) the database plugin context
+#  OUT       (`KeyValuePair_PI`) unused
+#
 pep_database_close_finally(*Instance, *Context, *OUT) {
 # XXX - Because of https://github.com/irods/irods/issues/5540,
 # cleanup can't happen
@@ -821,6 +937,26 @@ pep_database_close_finally(*Instance, *Context, *OUT) {
 
 # MOD DATA OBJ META
 
+# The rule handles the post-processing logic for when data object system
+# metadata are modified in the catalog.
+#
+# Parameters:
+#  Instance     (string) the type of DBMS being used
+#  Context      (`KeyValuePair_PI`) the database plugin context
+#  OUT          (`KeyValuePair_PI`) unused
+#  DataObjInfo  (`KeyValuePair_PI`) the DATA_OBJ_INFO map for the event
+#  RegParam     (`KeyValuePair_PI`) the metadata updates
+#
+# temporaryStorage:
+#  ipc-data-obj-*DataObjInfo.logical_path          this value is read to
+#                                                  determine whether a system
+#                                                  metadata modification or a
+#                                                  data object was created
+#  ipc-data-obj-XXX5540:*DataOBjInfo.logical_path  this value is read to
+#                                                  determine what the transfer
+#                                                  stage is for a newly created
+#                                                  data object
+#
 pep_database_mod_data_obj_meta_post(*Instance, *Context, *OUT, *DataObjInfo, *RegParam) {
 	*handled = false;
 	*logicalPath = _cyverse_core_getObjPath(*DataObjInfo);
@@ -900,6 +1036,18 @@ pep_database_mod_data_obj_meta_post(*Instance, *Context, *OUT, *DataObjInfo, *Re
 
 # MOD TICKET
 
+# This is this post processing logic for when a ticket is added to the catalog
+# or modified with in the catalog.
+#
+#  Instance      (string) the type of DBMS being used
+#  Context       (`KeyValuePair_PI`) the database plugin context
+#  OUT           (`KeyValuePair_PI`) unknown
+#  OpName        unknown
+#  TicketString  (string) the ticket label
+#  Arg3          unknown
+#  Arg4          unknown
+#  Arg5          unknown
+#
 pep_database_mod_ticket_post(
 	*Instance, *Context, *OUT, *OpName, *TicketString, *Arg3, *Arg4, *Arg5
 ) {
@@ -910,6 +1058,32 @@ pep_database_mod_ticket_post(
 
 # REG DATA OBJ
 
+# This is the post-processing logic for when a data object is added to the
+# catalog.
+#
+#  Instance     (string) the type of DBMS being used
+#  Context      (`KeyValuePair_PI`) the database plugin context
+#  OUT          (`KeyValuePair_PI`) unused
+#  DataObjInfo  (`KeyValuePair_PI`) the DATA_OBJ_INFO map for the event
+#
+# temporaryStorage:
+#  ipc-data-obj-*DataObjInfo.logical_path          the value
+#                                                  "CREATE *user *zone *DataObjInfo"
+#                                                  is written here where *user
+#                                                  is the user who created the
+#                                                  data object and *zone is the
+#                                                  user's authentication zone
+#  ipc-data-obj-XXX5540:*DataOBjInfo.logical_path  the value
+#                                                  "*step *owner *zone" is
+#                                                  written here where *owner is
+#                                                  the user who owns the data
+#                                                  object, *zone is the owner's
+#                                                  authentication zone, and
+#                                                  *step is either "START" to
+#                                                  indicate the upload is in
+#                                                  progress or "FULL" to
+#                                                  indicate the upload completed
+#
 pep_database_reg_data_obj_post(*Instance, *Context, *OUT, *DataObjInfo) {
 # XXX - These fields are empty. See https://github.com/irods/irods/issues/5554
 	*DataObjInfo.data_owner_name = *Context.user_user_name;
@@ -949,9 +1123,31 @@ pep_database_reg_data_obj_post(*Instance, *Context, *OUT, *DataObjInfo) {
 
 # RESOLVE HIERARCHY
 
-# This rule is meant for project specific implementations where an project
-# implementation is within an `on` block that restricts the resource resolution
-# to entities relevant to the project.
+# This rule is provides the preprocessing logic for determine which  storage
+# resource to choose for a replica. It is meant for project specific
+# implementations where a project implementation is within an `on` block that
+# restricts the resource resolution to entities relevant to the project.
+#
+# Parameters:
+#  Instance  (string) the resource being considered
+#  Context   (`KeyValuePair_PI`) the resource plugin context
+#  OUT       (`KeyValuePair_PI`) unused
+#  Op        (string) the operation of the replicat that will be performed,
+#            "CREATE" for creating the replica, "OPEN" for reading the replica,
+#            and "WRITE" for overwriting an existing replica.
+#  Host      (string) the host executing this policy
+#  PARSER    (`KeyValuePair_PI`) unused
+#  VOTE      (float) unused
+#
+# temporaryStorage:
+#  resource_resolve_hierarchy_err  this value is read to see if an error
+#                                  occurred on a previously tried on branch of
+#                                  this rule
+#
+# Error Codes:
+#  -32000 (SYS_INVALID_RESC_INPUT)  this is returned when an error occurred in
+#                                   one of the on branches of this rule
+#
 pep_resource_resolve_hierarchy_pre(*Instance, *Context, *OUT, *Operation, *Host, *PARSER, *VOTE) {
 # XXX - Because of https://github.com/irods/irods/issues/6463, an error
 # happening in an `ON` condition needs to be captured and sent in the catch-all.

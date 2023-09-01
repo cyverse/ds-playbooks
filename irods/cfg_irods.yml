@@ -94,7 +94,7 @@
           {{
             None if not provider|bool else
             {
-              'db_host': groups['dbms'][0],
+              'db_host': _irods_dbms_host,
               'db_password': _irods_db_password,
               'db_port': _irods_dbms_port,
               'db_username': _irods_db_user

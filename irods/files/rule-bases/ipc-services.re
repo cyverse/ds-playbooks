@@ -229,7 +229,7 @@ ipc_ensureAccessOnMv(*SvcUser, *SvcColl, *Permission, *OldPath, *NewPath) {
 #  Value      the value to set
 #  Unit       the unit of the value
 #
-ipc_setProtectedAVU(*Name, *Attribute, *Value, *Unit) {
+ipc_setProtectedAVU(*Entity, *Attribute, *Value, *Unit) {
   *cmdArg = execCmdArg('set');
   *typeArg = execCmdArg(ipc_getEntityType(*Entity));
   *entityArg = execCmdArg(*Entity);

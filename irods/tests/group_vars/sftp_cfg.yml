@@ -1,3 +1,4 @@
 ---
 sftpgo_admin_password: sftpgo_pass
 sftpgo_irods_proxy_password: sftpgo_irods_pass
+sftpgo_irods_auth_scheme: native

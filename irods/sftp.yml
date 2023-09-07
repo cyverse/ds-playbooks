@@ -31,11 +31,11 @@
       register: sftpgo_resp
 
     - name: Check sftpgo version
-      ansible.builtin.shell:
+      ansible.builtin.shell: |
         executable: /bin/bash
         cmd: |
           set -o pipefail
-          /usr/bin/sftpgo -v | tr '-' ' ' | awk '{print $2}'
+          /usr/bin/sftpgo -v | tr '-' ' ' | awk '{print $2,$3}'
       register: sftpgo_version
       when: sftpgo_resp.stat.exists
       changed_when: false
@@ -50,7 +50,7 @@
       when: >-
         (not sftpgo_resp.stat.exists)
         or (sftpgo_account.rc != 0)
-        or (sftpgo_version.stdout != '2.4.5')
+        or (sftpgo_version.stdout != '2.4.5 b7ec3ed1')
       block:
         - name: Check if sftpgo service exists
           ansible.builtin.stat:
@@ -75,7 +75,8 @@
 
         - name: Download sftpgo package from github and uncompress
           ansible.builtin.unarchive:
-            src: https://github.com/cyverse/sftpgo/releases/download/v2.4.5i/sftpgo_amd64_linux_v2.4.5i.tar
+            src: >-
+              https://github.com/cyverse/sftpgo/releases/download/v2.4.5i2/sftpgo_amd64_linux_v2.4.5i2.tar
             dest: /tmp/sftpgo_setup
             remote_src: true
           notify: Install sftpgo
@@ -111,7 +112,7 @@
 
     - name: Install SFTPGo iRODS Auth plugin
       when: >-
-        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.7')
+        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.8')
       block:
         - name: Create download dir for sftpgo-auth-irods package
           ansible.builtin.file:
@@ -121,7 +122,8 @@
 
         - name: Download sftpgo-auth-irods package from github and uncompress
           ansible.builtin.unarchive:
-            src: https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.7/sftpgo-auth-irods-v0.1.7-linux-amd64.tar.gz
+            src: >-
+              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.8/sftpgo-auth-irods-v0.1.8-linux-amd64.tar.gz
             dest: /tmp/sftpgo_auth_irods_setup
             remote_src: true
           notify: Install sftpgo-auth-irods

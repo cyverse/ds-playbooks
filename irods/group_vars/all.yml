@@ -144,7 +144,12 @@ _sftpgo_admin_username: "{{ sftpgo_admin_username | default('admin') }}"
 _sftpgo_admin_password: "{{ sftpgo_admin_password | mandatory }}"
 _sftpgo_irods_proxy_username: "{{ sftpgo_irods_proxy_username | default('sftp') }}"
 _sftpgo_irods_proxy_password: "{{ sftpgo_irods_proxy_password | mandatory }}"
-
+_sftpgo_irods_auth_scheme: "{{ sftpgo_irods_auth_scheme | default('native') }}"
+_sftpgo_irods_ssl_ca_cert_path: "{{ sftpgo_irods_ssl_ca_cert_path | default('') }}"
+_sftpgo_irods_ssl_algorithm: "{{ sftpgo_irods_ssl_algorithm | default('') }}"
+_sftpgo_irods_ssl_key_size: "{{ sftpgo_irods_ssl_key_size | default(0) }}"
+_sftpgo_irods_ssl_salt_size: "{{ sftpgo_irods_ssl_salt_size | default(0) }}"
+_sftpgo_irods_ssl_hash_rounds: "{{ sftpgo_irods_ssl_hash_rounds | default(0) }}"
 
 # The following are internal constants
 

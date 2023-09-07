@@ -126,11 +126,8 @@ _bisque_Ln(*Permission, *Client, *Path) {
     *id = substr(*qId, 1, strlen(*qId) - 1);
     msiGetValByKey(*kvs, 'uri', *qURI);
     *uri = substr(*qURI, 1, strlen(*qURI) - 1);
-
-    msiString2KeyValPair(_bisque_ID_ATTR ++ '=' ++ *id ++ '%' ++ _bisque_URI_ATTR ++ '=' ++ *uri,
-                         *kv);
-
-    msiSetKeyValuePairsToObj(*kv, *Path, '-d');
+    ipc_setProtectedAVU(*Path, _bisque_ID_ATTR, *id, '');
+    ipc_setProtectedAVU(*Path, _bisque_URI_ATTR, *uri, '');
 
     if (*Client != '') {
       _bisque_logMsg('linked *Path for *Client with permission *Permission');

@@ -31,11 +31,11 @@
       register: sftpgo_resp
 
     - name: Check sftpgo version
-      ansible.builtin.shell:
+      ansible.builtin.shell: |
         executable: /bin/bash
         cmd: |
           set -o pipefail
-          /usr/bin/sftpgo -v | tr '-' ' ' | awk '{print $2}'
+          /usr/bin/sftpgo -v | tr '-' ' ' | awk '{print $2,$3}'
       register: sftpgo_version
       when: sftpgo_resp.stat.exists
       changed_when: false

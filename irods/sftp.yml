@@ -33,7 +33,7 @@
     - name: Check sftpgo version
       ansible.builtin.shell: |
         set -o pipefail
-        /usr/bin/sftpgo -v | tr '-' ' ' | awk '{print $2,$3}'
+        /usr/bin/sftpgo -v | tr '-' ' ' | awk '{print $2}'
       args:
         executable: /bin/bash
         cmd: |

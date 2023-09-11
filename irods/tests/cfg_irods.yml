@@ -30,10 +30,10 @@
         - cyverse-env.re
         - cyverse_core.re
         - cyverse_housekeeping.re
+        - cyverse_json.re
         - de.re
         - host_access_control_config.json
         - hosts_config.json
-        - ipc-json.re
         - ipc-logic.re
         - ipc-trash.re
         - mdrepo.re
@@ -272,3 +272,4 @@
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re
+        - ipc-json.re

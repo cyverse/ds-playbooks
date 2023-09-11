@@ -131,7 +131,7 @@ Variable                                   | Required | Default                 
 `sftpgo_admin_password`                    | yes      |                                      |         | The password of the SFTPGo admin user
 `sftpgo_irods_proxy_username`              | no       | sftp                                 |         | The irods user who provides proxy access to SFTPGo
 `sftpgo_irods_proxy_password`              | yes      |                                      |         | The password of the SFTPGo irods proxy user
-`sftpgo_irods_auth_scheme`                 | no       | native                               |         | The auth scheme of irods. 'pam' is also an available option.
+`sftpgo_irods_auth_scheme`                 | no       | native                               |         | The auth scheme of irods. 'pam' and 'pam_for_users' are also available.
 `sftpgo_irods_ssl_ca_cert_path`            | no       |                                      |         | The SSL CA certificate file path (required by PAM auth scheme)
 `sftpgo_irods_ssl_algorithm`               | no       |                                      |         | The SSL encryption algorithm (required by PAM auth scheme)
 `sftpgo_irods_ssl_key_size`                | no       |                                      |         | The SSL encryption key size (required by PAM auth scheme)

@@ -112,7 +112,7 @@
       changed_when: false
 
     - when: >-
-        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.10')
+        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.11')
       block:
         - name: Create download dir for sftpgo-auth-irods package
           ansible.builtin.file:
@@ -123,7 +123,7 @@
         - name: download sftpgo-auth-irods package from github and uncompress
           unarchive:
             src: >-
-              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.10/sftpgo-auth-irods-v0.1.10-linux-amd64.tar.gz
+              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.11/sftpgo-auth-irods-v0.1.11-linux-amd64.tar.gz
             dest: /tmp/sftpgo_auth_irods_setup
             remote_src: true
           notify: Install sftpgo-auth-irods

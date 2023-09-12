@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This script initializes the iRODS permissions for the rodsadmin group.
 # rodsadmin will be give write permission on /. For collections and data objects
@@ -6,7 +6,7 @@
 # write permission. For everything else, rodsadmin group will be given own
 # permission.
 #
-# This script is intended to be executed on a catalog service provider by the 
+# This script is intended to be executed on a catalog service provider by the
 # service account.
 #
 # Usage:

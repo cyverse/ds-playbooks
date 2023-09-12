@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This script initializes the iRODS permissions for the rodsadmin group.
 # rodsadmin will be give write permission on /. For collections and data objects
@@ -6,7 +6,7 @@
 # write permission. For everything else, rodsadmin group will be given own
 # permission.
 #
-# This script is intended to be executed on a catalog service provider by the 
+# This script is intended to be executed on a catalog service provider by the
 # service account.
 #
 # Usage:
@@ -102,7 +102,7 @@ SELECT a.object_id, t.token_name
 CREATE INDEX rodsadmin_perms_idx ON rodsadmin_perms (object_id);
 
 CREATE TEMPORARY TABLE all_entities (id, path) AS
-SELECT coll_id, coll_name FROM r_coll_main
+SELECT coll_id, coll_name FROM r_coll_main WHERE coll_type != 'linkPoint'
 UNION SELECT d.data_id, c.coll_name || '/' || d.data_name
   FROM r_data_main AS d JOIN r_coll_main AS c ON c.coll_id = d.coll_id;
 

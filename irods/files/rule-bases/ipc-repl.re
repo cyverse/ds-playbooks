@@ -1,5 +1,4 @@
 # Replication logic
-# include this file from within ipc-custom.re
 #
 # Replication is controlled by AVUs attached to relevant root resources.
 #
@@ -25,7 +24,7 @@
 # THIRD PARTY REPLICATION LOGIC
 #
 # Third party replication logic goes in its own file, and the file should be
-# included in ipc-custom.re. Third party logic should be implement a set of
+# included in cyverse_core.re. Third party logic should be implement a set of
 # functions prefixed by the containing file name.
 #
 # Here's the list of functions that need to be provided by in the replication

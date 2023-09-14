@@ -50,7 +50,7 @@
         (not sftpgo_resp.stat.exists)
         or (sftpgo_account.rc != 0)
         or (sftpgo_version.stdout != '2.4.5')
-        or (sftpgo_resp.stat.checksum != '5f388eb1dbe4a3e379678a45c35b1b5aa80876aa')
+        or (sftpgo_resp.stat.checksum != '296a2f4aca242833560461c88d4367008ba1166e')
       block:
         - name: check if sftpgo service exists
           stat:
@@ -76,7 +76,7 @@
         - name: download sftpgo package from github and uncompress
           unarchive:
             src: >-
-              https://github.com/cyverse/sftpgo/releases/download/v2.4.5i2/sftpgo_amd64_linux_v2.4.5i2.tar
+              https://github.com/cyverse/sftpgo/releases/download/v2.4.5i3/sftpgo_amd64_linux_v2.4.5i3.tar
             dest: /tmp/sftpgo_setup
             remote_src: true
           register: unarchive_resp
@@ -153,7 +153,7 @@
       changed_when: false
 
     - when: >-
-        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.11')
+        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.12')
       block:
         - name: create download dir for sftpgo-auth-irods package
           file:
@@ -164,7 +164,7 @@
         - name: download sftpgo-auth-irods package from github and uncompress
           unarchive:
             src: >-
-              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.11/sftpgo-auth-irods-v0.1.11-linux-amd64.tar.gz
+              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.12/sftpgo-auth-irods-v0.1.12-linux-amd64.tar.gz
             dest: /tmp/sftpgo_auth_irods_setup
             remote_src: true
           register: unarchive_resp

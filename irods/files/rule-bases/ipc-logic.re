@@ -240,7 +240,7 @@ _ipc_mkAVUObject(*Field, *Name, *Value, *Unit) =
 
 _ipc_mkEntityField(*Uuid) = cyverse_json_string('entity', *Uuid)
 
-_ipc_mkPathField(*Path) = cyverse_json_string('path', *Path)
+_ipc_mkPathField(*Path) = cyverse_json_string('path', "*Path")
 
 _ipc_mkUserObject(*Field, *Name, *Zone) = cyverse_json_object(
 	*Field, list(cyverse_json_string('name', *Name), cyverse_json_string('zone', *Zone)) )

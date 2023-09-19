@@ -466,8 +466,8 @@ _ipc_sendEntityMove(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Id),
-			cyverse_json_string('old-path', *OldPath),
-			cyverse_json_string('new-path', *NewPath) ) );
+			cyverse_json_string('old-path', '*OldPath'),
+			cyverse_json_string('new-path', '*NewPath') ) );
 
 	sendMsg(_ipc_getMsgType(*Type) ++ '.mv', *msg);
 }
@@ -477,7 +477,7 @@ _ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Id),
-			cyverse_json_string('path', *Path) ) );
+			_ipc_mkPathField(*Path) ) );
 
 	sendMsg(_ipc_getMsgType(*Type) ++ '.rm', *msg);
 }

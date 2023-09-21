@@ -5,16 +5,11 @@
 # © 2023 The Arizona Board of Regents on behalf of The University of Arizona.
 # For license information, see https://cyverse.org/license.
 
-# The environment-specific configuration constants belong in the file
-# cyverse-env.re.
-
-@include 'cyverse-env'
-
 # All Data Store specific, environment independent logic goes in the file
 # ipc-logic.re. These rules will be called by the hooks implemented here.
 
 # The shared logic usable by the Data Store and other service rules.
-@include 'ipc-services'
+@include 'cyverse'
 
 @include 'ipc-logic'
 @include 'ipc-repl'
@@ -34,7 +29,7 @@
 @include 'calliope'
 @include 'captcn'
 @include 'coge'
-@include 'de'
+@include 'cyverse_de'
 @include 'mdrepo'
 @include 'pire'
 @include 'sciapps'
@@ -61,14 +56,14 @@
 #  ParColl    the absolute path to the parent of the collection being created
 #  ChildColl  the name of the collection being created
 #
-_cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl) {
+cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl) {
 	ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl);
 }
 
 # This rule applies the project specific collection creation policies to a newly
 # created collection that wasn't created administratively.
 #
-_cyverse_core_acPostProcForCollCreate_exclusive {
+cyverse_core_acPostProcForCollCreate_exclusive {
 	*err = errormsg(ipc_archive_acPostProcForCollCreate, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
@@ -102,7 +97,7 @@ _cyverse_core_acPostProcForCollCreate_exclusive {
 # This rule applies the project specific policies to a data object created
 # through copying another data object.
 #
-_cyverse_core_acPostProcForCopy_exclusive {
+cyverse_core_acPostProcForCopy_exclusive {
 	*err = errormsg(captcn_acPostProcForCopy, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
@@ -134,7 +129,7 @@ acCreateCollByAdmin(*ParColl, *ChildColl) {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
-	_cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl);
+	cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl);
 }
 
 # This rule handles the creation of a ds-service type user.
@@ -239,9 +234,9 @@ acSetReServerNumProc {
 # This rule sets the preprocessing policy for access control modification.
 #
 # Parameters:
-#  RecursiveFlag  (string) indicates if the permission change applies recursively
-#                 to the contents of a *Path, "1" indicates the flag is present,
-#                 and "0" indicates the opposite.
+#  RecursiveFlag  (string) indicates if the permission change applies
+#                 recursively to the contents of a *Path, "1" indicates the flag
+#                 is present, and "0" indicates the opposite.
 #  AccessLevel    (string) the permission being granted to *UserName, if the
 #                 value is "null", "read", "write", or "own", enable inheritance
 #                 if the value is "inherit", or disable inheritance if the value
@@ -360,14 +355,14 @@ acPostProcForCollCreate {
 	*err = errormsg(ipc_acPostProcForCollCreate, *msg);
 	if (*err < 0) { writeLine('serverLog', *msg); }
 
-	_cyverse_core_acPostProcForCollCreate_exclusive;
+	cyverse_core_acPostProcForCollCreate_exclusive;
 }
 
 # This rule sets the post-processing policy for a data object created or
 # modified by copying another data object.
 #
 acPostProcForCopy {
-	_cyverse_core_acPostProcForCopy_exclusive;
+	cyverse_core_acPostProcForCopy_exclusive;
 }
 
 # This rule sets the post-processing policy for when a data object's replica is
@@ -397,9 +392,9 @@ acPostProcForDelete {
 # This rule sets the post-processing policy for an ACL change.
 #
 # Parameters:
-#  RecursiveFlag  (string) indicates if the permission change applied recursively
-#                 to the contents of a *Path, "1" indicates the flag was
-#                 present, and "0" indicates the opposite.
+#  RecursiveFlag  (string) indicates if the permission change applied
+#                 recursively to the contents of a *Path, "1" indicates the flag
+#                 was present, and "0" indicates the opposite.
 #  AccessLevel    (string) the permission granted to *UserName, if the value was
 #                 "null", "read", "write", or "own", enabled inheritance if the
 #                 value was "inherit", or disabled inheritance if the value was
@@ -412,7 +407,7 @@ acPostProcForDelete {
 #                  was altered
 #
 acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
-	if (!ipc_inStaging(/*Path)) {
+	if (!cyverse_inStaging(/*Path)) {
 		ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
 	}
 }
@@ -532,7 +527,7 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
 #  objPath
 #
 acPostProcForOpen {
-	if (!ipc_inStaging(/$objPath)) {
+	if (!cyverse_inStaging(/$objPath)) {
 		*err = errormsg(ipc_acPostProcForOpen, *msg);
 		if (*err < 0) {
 			writeLine('serverLog', *msg);
@@ -565,6 +560,17 @@ acPostProcForRmColl {
 ## API ##
 
 # COLL_CREATE
+
+# This is the preprocessing logic for when a collection is created through the
+# API using a COLL_CREATE request.
+#
+#  Instance       (string) unknown
+#  Comm           (`KeyValuePair_PI`) user connection and auth information
+#  CollCreateInp  (`KeyValuePair_PI`) information related to the new collection
+#
+pep_api_coll_create_pre(*Instance, *Comm, *CollCreateInp) {
+	mdrepo_api_coll_create_pre(*Instance, *Comm, *CollCreateInp);
+}
 
 # This is the post processing logic for when a collection is created through the
 # API using a COLL_CREATE request.
@@ -771,7 +777,7 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # XXX - Because of https://github.com/irods/irods/issues/5540
 # _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo) {
 # 	*path = *DataObjInfo.logical_path;
-# 	if (ipc_inStaging(/*path)) {
+# 	if (cyverse_inStaging(/*path)) {
 # 		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) {
 # 			writeLine('serverLog', *msg);
@@ -813,7 +819,7 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # }
 _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 	*path = *DataObjInfo.logical_path;
-	if (ipc_inStaging(/*path)) {
+	if (cyverse_inStaging(/*path)) {
 		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo, *Step), *msg);
 		if (*err < 0) {
 			writeLine('serverLog', *msg);
@@ -863,7 +869,7 @@ _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 
 _cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
 	*path = *DataObjInfo.logical_path;
-	if (! ipc_inStaging(/*path)) {
+	if (! cyverse_inStaging(/*path)) {
 		*err = errormsg(ipc_dataObjModified_default(*User, *Zone, *DataObjInfo), *msg);
 		if (*err < 0) {
 			writeLine('serverLog', *msg);
@@ -1100,6 +1106,7 @@ pep_database_reg_data_obj_post(*Instance, *Context, *OUT, *DataObjInfo) {
 # 	temporaryStorage.'*pathVar' = 'CREATE *DataObjInfo';
 	temporaryStorage.'*pathVar'
 		= 'CREATE ' ++ *Context.user_user_name ++ ' ' ++ *Context.user_rods_zone ++ ' *DataObjInfo';
+# XXX - ^^^
 # XXX - Because of https://github.com/irods/irods/issues/5540,
 # _cyverse_core_dataObjCreated needs to be called here for data objects created when
 # registering a file already on a resource server.
@@ -1126,13 +1133,13 @@ pep_database_reg_data_obj_post(*Instance, *Context, *OUT, *DataObjInfo) {
 # This rule is provides the preprocessing logic for determine which  storage
 # resource to choose for a replica. It is meant for project specific
 # implementations where a project implementation is within an `on` block that
-# restricts the resource resolution to entities relevant to the project.
+# restricts the resource resolution to entities relevant to the project.post
 #
 # Parameters:
 #  Instance  (string) the resource being considered
 #  Context   (`KeyValuePair_PI`) the resource plugin context
 #  OUT       (`KeyValuePair_PI`) unused
-#  Op        (string) the operation on the replica that will be performed,
+#  Op        (string) the operation that will be performed on the replica,
 #            "CREATE" for creating the replica, "OPEN" for reading the replica,
 #            and "WRITE" for overwriting an existing replica.
 #  Host      (string) the host executing this policy

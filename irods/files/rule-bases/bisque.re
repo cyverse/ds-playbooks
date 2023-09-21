@@ -54,7 +54,7 @@ _bisque_isInProjects(*Projects, *Path) =
 
 _bisque_isForBisque(*Author, *Path) =
   *Author != _bisque_USER
-  && (ipc_isForService(_bisque_USER, _bisque_COLL, /*Path)
+  && (cyverse_isForSvc(_bisque_USER, _bisque_COLL, /*Path)
       || _bisque_isInProjects(bisque_PROJECTS, *Path))
 
 _bisque_isUser(*Client) =
@@ -126,8 +126,8 @@ _bisque_Ln(*Permission, *Client, *Path) {
     *id = substr(*qId, 1, strlen(*qId) - 1);
     msiGetValByKey(*kvs, 'uri', *qURI);
     *uri = substr(*qURI, 1, strlen(*qURI) - 1);
-    ipc_setProtectedAVU(*Path, _bisque_ID_ATTR, *id, '');
-    ipc_setProtectedAVU(*Path, _bisque_URI_ATTR, *uri, '');
+    cyverse_setProtectedAVU(*Path, _bisque_ID_ATTR, *id, '');
+    cyverse_setProtectedAVU(*Path, _bisque_URI_ATTR, *uri, '');
 
     if (*Client != '') {
       _bisque_logMsg('linked *Path for *Client with permission *Permission');
@@ -231,7 +231,7 @@ _bisque_scheduleLn(*Permission, *Client, *Path) {
 
 
 _bisque_handleNewObject(*Client, *Path) {
-  ipc_giveAccessObj(_bisque_USER, 'write', *Path);
+  cyverse_giveAccessDataObj(_bisque_USER, 'write', *Path);
   *perm = if _bisque_isInProjects(bisque_PROJECTS, *Path) then 'published' else 'private';
   _bisque_scheduleLn(*perm, *Client, *Path);
 }
@@ -247,7 +247,7 @@ _bisque_handleObjCreate(*CreatorName, *CreatorZone, *Path) {
 # Add a call to this rule from inside the acPostProcForCollCreate PEP.
 bisque_acPostProcForCollCreate {
   if (_bisque_isForBisque($userNameClient, $collName)) {
-    ipc_giveAccessColl(_bisque_USER, 'write', $collName);
+    cyverse_giveAccessColl(_bisque_USER, 'write', $collName);
   }
 }
 
@@ -256,11 +256,11 @@ bisque_acPostProcForCollCreate {
 bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   *client = _bisque_getClient($userNameClient, $rodsZoneClient, *SrcEntity);
   *forBisque = _bisque_isForBisque($userNameClient, *DestEntity);
-  *type = ipc_getEntityType(*DestEntity);
+  *type = cyverse_getEntityType(*DestEntity);
 
-  if (ipc_isCollection(*type)) {
+  if (cyverse_isColl(*type)) {
     if (*forBisque) {
-      ipc_giveAccessColl(_bisque_USER, 'write', *DestEntity);
+      cyverse_giveAccessColl(_bisque_USER, 'write', *DestEntity);
     }
 
     foreach (*collPat in list(*DestEntity, *DestEntity ++ '/%')) {
@@ -276,7 +276,7 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
         }
       }
     }
-  } else if (ipc_isDataObject(*type)) {
+  } else if (cyverse_isDataObj(*type)) {
     msiSplitPath(*DestEntity, *collName, *dataName);
 
     if (_bisque_isInBisque(*collName, *dataName)) {

@@ -4,7 +4,6 @@
 
 set -o errexit -o nounset -o pipefail
 
-
 main() {
 	if (( $# < 1 )); then
 		printf 'Requires a path to encode\n' >&2
@@ -20,6 +19,5 @@ main() {
    # form.
 	printf '%s' "${encodedPath//+/%20}"
 }
-
 
 main "$@"

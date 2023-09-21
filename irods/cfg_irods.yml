@@ -8,7 +8,7 @@
     amqp_authority: "{{ amqp_user_info }}@{{ _amqp_host }}:{{ _amqp_port }}"
     amqp_path: /{{ _amqp_vhost | replace('/', '%2F') }}
     amqp_uri: amqp://{{ amqp_authority }}{{ amqp_path }}
-    provider: "{{ inventory_hostname in groups['irods_catalog'] }}"
+    is_provider: "{{ inventory_hostname in groups['irods_catalog'] }}"
   tasks:
     - name: Initialize flag
       ansible.builtin.set_fact:
@@ -48,8 +48,8 @@
         tasks_from: setup_irods.yml
       vars:
         irods_cfg_catalog_provider_hosts: >-
-          {{ [inventory_hostname] if provider | bool else groups['irods_catalog'] }}
-        irods_cfg_catalog_service_role: "{{ 'provider' if provider | bool else 'consumer' }}"
+          {{ [inventory_hostname] if is_provider | bool else groups['irods_catalog'] }}
+        irods_cfg_catalog_service_role: "{{ 'provider' if is_provider | bool else 'consumer' }}"
         irods_cfg_client_server_policy: "{{ _irods_client_server_policy }}"
         irods_cfg_database_user_password_salt: "{{ _irods_user_password_salt }}"
         irods_cfg_default_dir_mode: "{{ _irods_default_dir_mode }}"
@@ -60,7 +60,7 @@
         irods_cfg_default_resource_directory: "{{ _irods_default_vault }}"
         irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
         irods_cfg_environment_variables: >-
-          {{ {'IRODS_AMQP_URI': amqp_uri} if provider | bool else {} }}
+          {{ {'IRODS_AMQP_URI': amqp_uri} if is_provider | bool else {} }}
         irods_cfg_federation: "{{ _irods_federation }}"
         irods_cfg_host_entries: >-
           {{
@@ -73,7 +73,7 @@
             ] }}
         irods_cfg_icat: >-
           {{
-            None if not provider | bool else
+            None if not is_provider | bool else
             {
               'db_host': _irods_dbms_host,
               'db_password': _irods_db_password,
@@ -102,7 +102,7 @@
         irods_cfg_zone_user: "{{ _irods_clerver_user }}"
         irods_cfg_zone_password: "{{ _irods_clerver_password }}"
 
-    - name: Restart irods
+    - name: Restart iRODS
       when: _restart_irods and irods_cfg_made_changes
       ansible.builtin.import_tasks: tasks/restart_irods.yml
 
@@ -112,10 +112,12 @@
         path: /etc/irods/{{ item }}
         state: absent
       with_items:
+        - de.re
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re
         - ipc-json.re
+        - ipc-services.re
 
   handlers:
     - name: Reload rules

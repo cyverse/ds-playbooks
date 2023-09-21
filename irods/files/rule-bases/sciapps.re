@@ -16,16 +16,16 @@ _sciapps_USER = 'maizecode'
 
 
 sciapps_acPostProcForCollCreate {
-  ipc_ensureAccessOnCreateColl(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, $collName);
+  cyverse_ensureAccessOnCreateColl(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, $collName);
 }
 
 
 sciapps_acPostProcForObjRename(*SrcEntity, *DestEntity) {
-  ipc_ensureAccessOnMv(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, *SrcEntity, *DestEntity);
+  cyverse_ensureAccessOnMv(_sciapps_USER, _sciapps_COLL, _sciapps_PERM, *SrcEntity, *DestEntity);
 }
 
 
 sciapps_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
-  ipc_ensureAccessOnCreateObj(
-    _sciapps_USER, _sciapps_COLL, _sciapps_PERM, *DATA_OBJ_INFO.logical_path);
+  cyverse_ensureAccessOnCreateDataObj(
+    _sciapps_USER, _sciapps_COLL, _sciapps_PERM, *DATA_OBJ_INFO.logical_path );
 }

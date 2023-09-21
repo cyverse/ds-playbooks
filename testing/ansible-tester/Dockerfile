@@ -2,17 +2,15 @@ FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# NB - To resolve ansible.utils.display.initialize_locale (unsupported locale setting) warning
-ENV LC_ALL=C
-
 ### Update system packages
 RUN apt-get --quiet --yes update
 RUN apt-get --quiet --yes upgrade
 
-RUN apt-get install --quiet --yes  dmidecode gpg-agent python3 python3-pip openssh-client rpm wget
+RUN apt-get install --quiet --yes \
+  dmidecode gpg-agent python-is-python3 python3 python3-pip openssh-client rpm wget
 
 RUN python3 -m pip --disable-pip-version-check --quiet install \
-  dnspython netaddr python-irodsclient requests urllib3 wheel jinja2 ansible-core==2.11.12
+  ansible-core dnspython jinja2 netaddr python-irodsclient requests urllib3 wheel
 
 ### Install inspection support
 RUN apt-get install --quiet --yes ca-certificates

@@ -113,6 +113,7 @@
         - ipc-env.re
         - ipc-housekeeping.re
         - ipc-json.re
+        - ipc-services.re
 
   handlers:
     - name: reload rules

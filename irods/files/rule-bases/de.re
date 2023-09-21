@@ -1,6 +1,6 @@
 # DE project policy
 
-_de_inStagedJob(*Path) = str(*Path) like regex '^' ++ str(ipc_STAGING_BASE) ++ '/[^/]+/.+'
+_de_inStagedJob(*Path) = str(*Path) like regex '^' ++ str(cyverse_STAGING_BASE) ++ '/[^/]+/.+'
 
 _de_rmStagedDataCopy(*StagingPath) {
    *opts='';
@@ -26,7 +26,7 @@ _de_getJobInfo(*StagingRelPath) =
   let *info.creator = '' in
   let *info.appId = '' in
   let *info.archiveBase = '' in
-  let *stagingBase = str(ipc_STAGING_BASE) ++ '/' ++ *info.id in
+  let *stagingBase = str(cyverse_STAGING_BASE) ++ '/' ++ *info.id in
   let *_ = foreach(*res in select META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE
                            where COLL_NAME = *stagingBase) {
              if (*res.META_COLL_ATTR_NAME == 'ipc-creator') {
@@ -62,12 +62,12 @@ _de_createArchiveColl(*ArchiveColl, *StageColl, *Creator, *AppId, *JobId) {
 
 
 _de_archiveData(*StagingPath) {
-  *stagingRelPath = triml(*StagingPath, str(ipc_STAGING_BASE) ++ '/');
+  *stagingRelPath = triml(*StagingPath, str(cyverse_STAGING_BASE) ++ '/');
   *jobInfo = _de_getJobInfo(*stagingRelPath);
 
   if (*jobInfo.creator != '' && *jobInfo.archiveBase != '') {
     if (*stagingRelPath like regex '^' ++ *jobInfo.id ++ '/[^/]+') {
-      *jobStagingBase = str(ipc_STAGING_BASE) ++ '/' ++ *jobInfo.id;
+      *jobStagingBase = str(cyverse_STAGING_BASE) ++ '/' ++ *jobInfo.id;
 
       _de_createArchiveColl(*jobInfo.archiveBase, *jobStagingBase, *jobInfo.creator,
                             *jobInfo.appId, *jobInfo.id);
@@ -99,12 +99,12 @@ _de_archiveData(*StagingPath) {
 
 _de_createArchiveCollFor(*StagingColl) {
   if (_de_inStagedJob(*StagingColl)) {
-    *stagingRelPath = triml(*StagingColl, str(ipc_STAGING_BASE) ++ '/');
+    *stagingRelPath = triml(*StagingColl, str(cyverse_STAGING_BASE) ++ '/');
     *jobInfo = _de_getJobInfo(*stagingRelPath);
 
     if (*jobInfo.creator != '' && *jobInfo.archiveBase != '') {
       if (*stagingRelPath like regex '^' ++ *jobInfo.id ++ '/[^/]+') {
-        *jobStagingBase = str(ipc_STAGING_BASE) ++ '/' ++ *jobInfo.id;
+        *jobStagingBase = str(cyverse_STAGING_BASE) ++ '/' ++ *jobInfo.id;
 
         _de_createArchiveColl(*jobInfo.archiveBase, *jobStagingBase, *jobInfo.creator,
                               *jobInfo.appId, *jobInfo.id);
@@ -131,7 +131,7 @@ _de_createArchiveCollFor(*StagingColl) {
 #  false
 #
 de_replBelongsTo : path -> boolean
-de_replBelongsTo(*Entity) = ipc_inStaging(*Entity)
+de_replBelongsTo(*Entity) = cyverse_inStaging(*Entity)
 
 
 # Returns the resource where newly ingested files will be stored
@@ -160,7 +160,7 @@ de_replReplResc = de_replIngestResc
 # Verifies that a collection or data object isn't being moved within the staging
 #  area.
 de_acPreProcForObjRename(*SourceObject, *DestObject) {
-  if (ipc_inStaging(/*SourceObject) || ipc_inStaging(/*DestObject)) {
+  if (cyverse_inStaging(/*SourceObject) || cyverse_inStaging(/*DestObject)) {
     cut;
     failmsg(-350000, "CYVERSE ERROR:  attempt to move entity within DE's staging area");
   }
@@ -168,14 +168,14 @@ de_acPreProcForObjRename(*SourceObject, *DestObject) {
 
 
 exclusive_acCreateCollByAdmin(*ParColl, *ChildColl) {
-  on (ipc_inStaging(/*ParColl/*ChildColl)) {
+  on (cyverse_inStaging(/*ParColl/*ChildColl)) {
     _de_createArchiveCollFor("*ParColl/*ChildColl");
   }
 }
 
 
 exclusive_acPostProcForCollCreate {
-  on (ipc_inStaging(/$collName)) {
+  on (cyverse_inStaging(/$collName)) {
     _de_createArchiveCollFor($collName);
   }
 }
@@ -197,8 +197,8 @@ de_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
 
 
 pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST, *PARSER, *VOTE) {
-  on (*CONTEXT.logical_path like regex '^' ++ str(ipc_STAGING_BASE) ++ '/[^/]+') {
+  on (*CONTEXT.logical_path like regex '^' ++ str(cyverse_STAGING_BASE) ++ '/[^/]+') {
     cut;
-    failmsg(-350000, "CYVERSE ERROR:  cannot put files into " ++ str(ipc_STAGING_BASE));
+    failmsg(-350000, "CYVERSE ERROR:  cannot put files into " ++ str(cyverse_STAGING_BASE));
   }
 }

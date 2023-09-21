@@ -1,29 +1,31 @@
-# VERSION 2
-#
-# ipc-services.re
 # This is a library of rules to support service specific policies.
+#
+# © 2023 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
 
-_ipc_HOME = '/' ++ cyverse_ZONE ++ '/home'
+@include 'cyverse-env'
+
+_cyverse_HOME = '/' ++ cyverse_ZONE ++ '/home'
 
 #
 # These are the constants used by iRODS to identity the type of an entity.
 #
 
 # Identifies a collection
-ipc_COLLECTION: string
-ipc_COLLECTION = '-C'
+cyverse_COLL: string
+cyverse_COLL = '-C'
 
 # Identifies a data object
-ipc_DATA_OBJECT: string
-ipc_DATA_OBJECT = '-d'
+cyverse_DATA_OBJ: string
+cyverse_DATA_OBJ = '-d'
 
 # Identifies a resource
-ipc_RESOURCE: string
-ipc_RESOURCE = '-R'
+cyverse_RESC: string
+cyverse_RESC = '-R'
 
 # Identifies a user
-ipc_USER: string
-ipc_USER = '-u'
+cyverse_USER: string
+cyverse_USER = '-u'
 
 # tests whether a given entity type identifier indicates a collection
 #
@@ -32,16 +34,16 @@ ipc_USER = '-u'
 #
 # NB: Sometimes iRODS passes `-c` to indicate a collection
 #
-ipc_isCollection: string -> boolean
-ipc_isCollection(*Type) = *Type == ipc_COLLECTION || *Type == '-c'
+cyverse_isColl: string -> boolean
+cyverse_isColl(*Type) = *Type == cyverse_COLL || *Type == '-c'
 
 # tests whether a given entity type identifier indicates a data object
 #
 # Parameters:
 #   *Type - the entity type identifier
 #
-ipc_isDataObject: string -> boolean
-ipc_isDataObject(*Type) = *Type == ipc_DATA_OBJECT
+cyverse_isDataObj: string -> boolean
+cyverse_isDataObj(*Type) = *Type == cyverse_DATA_OBJ
 
 # tests whether a given entity type identifier indicates a collection or a data
 # object
@@ -49,8 +51,8 @@ ipc_isDataObject(*Type) = *Type == ipc_DATA_OBJECT
 # Parameters:
 #   *Type - the entity type identifier
 #
-ipc_isFileSystemType: string -> boolean
-ipc_isFileSystemType(*Type) = ipc_isCollection(*Type) || ipc_isDataObject(*Type)
+cyverse_isFSType: string -> boolean
+cyverse_isFSType(*Type) = cyverse_isColl(*Type) || cyverse_isDataObj(*Type)
 
 # tests whether a given entity type identifier indicates a resource
 #
@@ -59,16 +61,16 @@ ipc_isFileSystemType(*Type) = ipc_isCollection(*Type) || ipc_isDataObject(*Type)
 #
 # NB: Sometimes iRODS passes `-r` to indicated a resource
 #
-ipc_isResource: string -> boolean
-ipc_isResource(*Type) = *Type == ipc_RESOURCE || *Type == '-r'
+cyverse_isResc: string -> boolean
+cyverse_isResc(*Type) = *Type == cyverse_RESC || *Type == '-r'
 
 # tests whether a given entity type identifier indicates a user
 #
 # Parameters:
 #   *Type - the entity type identifier
 #
-ipc_isUser: string -> boolean
-ipc_isUser(*Type) = *Type == ipc_USER
+cyverse_isUser: string -> boolean
+cyverse_isUser(*Type) = *Type == cyverse_USER
 
 # Looks up the type of an entity
 #
@@ -79,21 +81,21 @@ ipc_isUser(*Type) = *Type == ipc_USER
 # RETURNS:
 #  It returns the type or '' if the type of Entity can't be determined
 #
-ipc_getEntityType: string -> string
-ipc_getEntityType(*Entity) =
+cyverse_getEntityType: string -> string
+cyverse_getEntityType(*Entity) =
   let *type = '' in
   if errormsg(msiGetObjType(*Entity, *type), *err) < 0
-  then let *_ = writeLine('serverLog', 'ipc_getEntityType(*Entity) -> *err') in ''
+  then let *_ = writeLine('serverLog', 'cyverse_getEntityType(*Entity) -> *err') in ''
   else
-    if ipc_isCollection(*type) then ipc_COLLECTION
-    else if ipc_isDataObject(*type) then ipc_DATA_OBJECT
-    else if ipc_isResource(*type) then ipc_RESOURCE
-    else if ipc_isUser(*type) then ipc_USER
+    if cyverse_isColl(*type) then cyverse_COLL
+    else if cyverse_isDataObj(*type) then cyverse_DATA_OBJ
+    else if cyverse_isResc(*type) then cyverse_RESC
+    else if cyverse_isUser(*type) then cyverse_USER
     else *type
 
 # The base collection for staging
-ipc_STAGING_BASE: path
-ipc_STAGING_BASE = let *zone = cyverse_ZONE in /*zone/jobs
+cyverse_STAGING_BASE: path
+cyverse_STAGING_BASE = let *zone = cyverse_ZONE in /*zone/jobs
 
 # This function checks to see if a collection or data object is in the staging
 # collection.
@@ -103,8 +105,8 @@ ipc_STAGING_BASE = let *zone = cyverse_ZONE in /*zone/jobs
 #
 # RETURNS:
 #  It returns true if then entity is inside staging, otherwise false
-ipc_inStaging: path -> boolean
-ipc_inStaging(*Path) = str(*Path) like str(ipc_STAGING_BASE) ++ '/*'
+cyverse_inStaging: path -> boolean
+cyverse_inStaging(*Path) = str(*Path) like str(cyverse_STAGING_BASE) ++ '/*'
 
 
 # This function checks to see if a collection or data object is inside a user
@@ -119,12 +121,12 @@ ipc_inStaging(*Path) = str(*Path) like str(ipc_STAGING_BASE) ++ '/*'
 #  It returns true if the collection or data object is inside the user
 #  collection, otherwise it returns false.
 #
-ipc_isForService: string * string * path -> boolean
-ipc_isForService(*SvcUser, *SvcColl, *Path) =
+cyverse_isForSvc: string * string * path -> boolean
+cyverse_isForSvc(*SvcUser, *SvcColl, *Path) =
   let *strPath = str(*Path) in
-  *strPath like regex _ipc_HOME ++ '/[^/]+/*SvcColl($|/.*)'
-  && !(*strPath like _ipc_HOME ++ '/*SvcUser/*')
-  && !(*strPath like _ipc_HOME ++ '/shared/*')
+  *strPath like regex _cyverse_HOME ++ '/[^/]+/*SvcColl($|/.*)'
+  && !(*strPath like _cyverse_HOME ++ '/*SvcUser/*')
+  && !(*strPath like _cyverse_HOME ++ '/shared/*')
 
 
 # This rule gives access to a service for a collection and everything in it.
@@ -135,7 +137,7 @@ ipc_isForService(*SvcUser, *SvcColl, *Path) =
 #              'own'.
 #  CollPath    the path to the collection of begin given write access to
 #
-ipc_giveAccessColl(*SvcUser, *Permission, *CollPath) {
+cyverse_giveAccessColl(*SvcUser, *Permission, *CollPath) {
   writeLine('serverLog',
             'permitting *SvcUser *Permission access to *CollPath and everything in it');
 
@@ -151,7 +153,7 @@ ipc_giveAccessColl(*SvcUser, *Permission, *CollPath) {
 #              'own'.
 #  ObjPath     the path to the data object of begin given write access to
 #
-ipc_giveAccessObj(*SvcUser, *Permission, *ObjPath) {
+cyverse_giveAccessObj(*SvcUser, *Permission, *ObjPath) {
   writeLine('serverLog', 'permitting *SvcUser write access to *ObjPath');
   msiSetACL('default', *Permission, *SvcUser, *ObjPath);
 }
@@ -168,9 +170,9 @@ ipc_giveAccessObj(*SvcUser, *Permission, *ObjPath) {
 #              'own'.
 #  CollPath    the path to the collection of interest
 #
-ipc_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *Permission, *CollPath) {
-  if (ipc_isForService(*SvcUser, *SvcColl, /*CollPath)) {
-    ipc_giveAccessColl(*SvcUser, *Permission, *CollPath);
+cyverse_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *Permission, *CollPath) {
+  if (cyverse_isForSvc(*SvcUser, *SvcColl, /*CollPath)) {
+    cyverse_giveAccessColl(*SvcUser, *Permission, *CollPath);
   }
 }
 
@@ -186,9 +188,9 @@ ipc_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *Permission, *CollPath) {
 #              'own'.
 #  ObjPath     the path to the data object of interest
 #
-ipc_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *Permission, *ObjPath) {
-  if (ipc_isForService(*SvcUser, *SvcColl, /*ObjPath)) {
-    ipc_giveAccessObj(*SvcUser, *Permission, *ObjPath);
+cyverse_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *Permission, *ObjPath) {
+  if (cyverse_isForSvc(*SvcUser, *SvcColl, /*ObjPath)) {
+    cyverse_giveAccessObj(*SvcUser, *Permission, *ObjPath);
   }
 }
 
@@ -204,17 +206,17 @@ ipc_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *Permission, *ObjPath) {
 #  OldPath     the original iRODS path to the entity
 #  NewPath     the new iRODS path to the entity
 #
-ipc_ensureAccessOnMv(*SvcUser, *SvcColl, *Permission, *OldPath, *NewPath) {
+cyverse_ensureAccessOnMv(*SvcUser, *SvcColl, *Permission, *OldPath, *NewPath) {
   if (
-    !ipc_isForService(*SvcUser, *SvcColl, /*OldPath)
-    && ipc_isForService(*SvcUser, *SvcColl, /*NewPath)
+    !cyverse_isForSvc(*SvcUser, *SvcColl, /*OldPath)
+    && cyverse_isForSvc(*SvcUser, *SvcColl, /*NewPath)
   ) {
-    *type = ipc_getEntityType(*NewPath);
+    *type = cyverse_getEntityType(*NewPath);
 
-    if (ipc_isCollection(*type)) {
-      ipc_giveAccessColl(*SvcUser, *Permission, *NewPath);
-    } else if (ipc_isDataObject(*type)) {
-      ipc_giveAccessObj(*SvcUser, *Permission, *NewPath);
+    if (cyverse_isColl(*type)) {
+      cyverse_giveAccessColl(*SvcUser, *Permission, *NewPath);
+    } else if (cyverse_isDataObj(*type)) {
+      cyverse_giveAccessObj(*SvcUser, *Permission, *NewPath);
     }
   }
 }
@@ -229,9 +231,9 @@ ipc_ensureAccessOnMv(*SvcUser, *SvcColl, *Permission, *OldPath, *NewPath) {
 #  Value      the value to set
 #  Unit       the unit of the value
 #
-ipc_setProtectedAVU(*Entity, *Attribute, *Value, *Unit) {
+cyverse_setProtectedAVU(*Entity, *Attribute, *Value, *Unit) {
   *cmdArg = execCmdArg('set');
-  *typeArg = execCmdArg(ipc_getEntityType(*Entity));
+  *typeArg = execCmdArg(cyverse_getEntityType(*Entity));
   *entityArg = execCmdArg(*Entity);
   *attrArg = execCmdArg(*Attribute);
   *valArg = execCmdArg(*Value);

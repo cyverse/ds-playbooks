@@ -38,7 +38,7 @@
     - name: test create clerver user
       delegate_to: "{{ groups['irods_catalog'][0] }}"
       shell: |
-        userType=$(iquest '%s' "select USER_TYPE where USER_NAME = 'rs7_admin'")
+        userType="$(iquest '%s' "select USER_TYPE where USER_NAME = 'rs7_admin'")"
         if (( $? != 0 )); then
           printf \
               'Catalog service provider appears to be down on {{ groups['irods_catalog'][0] }}\n' \
@@ -54,9 +54,9 @@
           exit 1
         fi
         IRODS_HOST='{{ groups['irods_catalog'][0] }}' \
-        IRODS_USER_NAME=rods \
+        IRODS_USER_NAME=rs7_admin \
         IRODS_AUTHENTICATION_FILE="$(mktemp)" \
-        iinit rods
+        iinit rs7_password
         if (( $? != 0 )); then
           printf 'rs7_admin has incorrect password\n' >&2
           exit 1

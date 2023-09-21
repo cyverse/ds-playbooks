@@ -89,7 +89,6 @@
     - name: test create service group
       command:
         cmd: sed --quiet 's/^{{ group_name }}:x:\([0-9]\+\):.*/\1/p' /etc/group
-        warn: false
       register: gid_resp
       changed_when: false
       failed_when: gid_resp.stdout|length == 0

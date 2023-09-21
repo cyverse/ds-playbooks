@@ -52,8 +52,8 @@ prompt> usermod --append --groups docker DEVELOPER
 The following python packages need to be installed on the development machines and Ansible control
 nodes using `pip`.
 
-* ansible-core<2.12
-* ansible-lint<5.5   (development machines only)
+* ansible-core
+* ansible-lint
 * dnspython
 * docker
 * Jinja2>=3

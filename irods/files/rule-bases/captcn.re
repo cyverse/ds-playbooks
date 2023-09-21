@@ -9,7 +9,7 @@ captcn_isForCapTcn(*Path) = *Path like '/' ++ cyverse_ZONE ++ '/home/shared/CAP_
 
 captcn_assignPerms(*Path) {
   *type = ipc_getEntityType(*Path);
-  *recursiveFlag = if *type == '-C' then 'recursive' else 'default';
+  *recursiveFlag = if ipc_COLLECTION(*type) then 'recursive' else 'default';
 
   foreach(*user in captcn_OWNERS) {
     msiSetACL(*recursiveFlag, 'own', *user, *Path);
@@ -23,7 +23,7 @@ captcn_assignPerms(*Path) {
     msiSetACL(*recursiveFlag, 'read', *user, *Path);
   }
 
-  if (*type == '-C') {
+  if (ipc_isCollection(*type)) {
     msiSetACL(*recursiveFlag, 'inherit', 'null', *Path);
   }
 }

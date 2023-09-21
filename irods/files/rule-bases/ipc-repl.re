@@ -398,7 +398,7 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
   (*replName, *replOptional) = *ReplResc;
   *type = ipc_getEntityType(*Entity);
 
-  if (*type == '-C') {
+  if (ipc_isCollection(*type)) {
     # if the entity is a collection
     foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
       foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
@@ -421,7 +421,7 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
 _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
   *type = ipc_getEntityType(*Entity);
 
-  if (*type == '-C') {
+  if (ipc_isCollection(*type)) {
     # if the entity is a collection
     foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
       foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {

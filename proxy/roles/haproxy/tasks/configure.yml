@@ -1,5 +1,6 @@
 ---
-- ansible.builtin.import_tasks: _testing.yml
+- name: prep for possible testing
+  ansible.builtin.import_tasks: _testing.yml
 
 - name: configure | allowing proxy to listen on stats port
   when: ansible_selinux.status == 'enabled'

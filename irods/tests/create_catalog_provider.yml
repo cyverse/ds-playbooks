@@ -15,8 +15,6 @@
                /^# END DS IRODS MANAGED BLOCK$/Q0 };
              $ Q1' \
           /etc/postgresql/12/main/pg_hba.conf
-      args:
-        warn: false
       changed_when: false
 
 

@@ -6,7 +6,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get --quiet --yes update
 RUN apt-get --quiet --yes upgrade
 
-RUN apt-get install --quiet --yes  dmidecode gpg-agent python3 python3-pip openssh-client rpm wget
+RUN apt-get install --quiet --yes \
+  dmidecode gpg-agent python-is-python3 python3 python3-pip openssh-client rpm wget
 
 RUN python3 -m pip --disable-pip-version-check --quiet install \
   ansible-core dnspython jinja2 netaddr python-irodsclient requests urllib3 wheel

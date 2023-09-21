@@ -1,4 +1,6 @@
 ---
+ansible_python_interpreter: /usr/bin/python3
+
 irods_default_dir_mode: '0770'
 irods_default_file_mode: '0660'
 

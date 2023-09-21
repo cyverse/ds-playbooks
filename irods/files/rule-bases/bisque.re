@@ -258,7 +258,7 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
   *forBisque = _bisque_isForBisque($userNameClient, *DestEntity);
   *type = ipc_getEntityType(*DestEntity);
 
-  if (*type == '-C') {
+  if (ipc_isCollection(*type)) {
     if (*forBisque) {
       ipc_giveAccessColl(_bisque_USER, 'write', *DestEntity);
     }

@@ -406,7 +406,7 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
         _scheduleMv(*dataId, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
       }
     }
-  } else if (*type == '-d') {
+  } else if (ipc_isDataObject(*type)) {
     # if the entity is a data object
     msiSplitPath(*Entity, *collPath, *dataName);
 
@@ -429,7 +429,7 @@ _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
         _repl_scheduleMv(*dataId, *IngestName, *ReplName);
       }
     }
-  } else if (*type == '-d') {
+  } else if (ipc_isDataObject(*type)) {
     # if the entity is a data object
     msiSplitPath(*Entity, *collPath, *dataName);
 

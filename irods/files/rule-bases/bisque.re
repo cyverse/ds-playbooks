@@ -276,7 +276,7 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
         }
       }
     }
-  } else if (*type == '-d') {
+  } else if (ipc_isDataObject(*type)) {
     msiSplitPath(*DestEntity, *collName, *dataName);
 
     if (_bisque_isInBisque(*collName, *dataName)) {

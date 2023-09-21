@@ -225,12 +225,12 @@ class _State(Enum):
     ABSENT = enum.auto()
     PRESENT = enum.auto()
 
-    @staticmethod
-    def from_param(param: str):
+    @classmethod
+    def from_param(cls, param: str):
         """Creates a _State from its corresponding state parameter value"""
         if param.lower() == 'absent':
-            return _State.ABSENT
-        return _State.PRESENT
+            return cls.ABSENT
+        return cls.PRESENT
 
 
 class Request:
@@ -472,8 +472,7 @@ def main() -> None:
     """Entrypoint of the Ansible module"""
     ansible = AnsibleModule(argument_spec=_ARG_SPEC, supports_check_mode=True)
     if _IRODSCLIENT_PACK_ERR:
-        err_msg = f"python-irodsclient issue: {_IRODSCLIENT_PACK_ERR}"
-        ansible.fail_json(msg=err_msg)
+        ansible.fail_json(msg=f"python-irodsclient issue: {_IRODSCLIENT_PACK_ERR}")
         return
     result = {
         'user': ansible.params['name'],

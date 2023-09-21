@@ -10,15 +10,16 @@ _coge_USER = 'coge'
 
 
 coge_acPostProcForCollCreate {
-  ipc_ensureAccessOnCreateColl(_coge_USER, _coge_COLL, _coge_PERM, $collName);
+  cyverse_ensureAccessOnCreateColl(_coge_USER, _coge_COLL, _coge_PERM, $collName);
 }
 
 
 coge_acPostProcForObjRename(*SrcEntity, *DestEntity) {
-  ipc_ensureAccessOnMv(_coge_USER, _coge_COLL, _coge_PERM, *SrcEntity, *DestEntity);
+  cyverse_ensureAccessOnMv(_coge_USER, _coge_COLL, _coge_PERM, *SrcEntity, *DestEntity);
 }
 
 
 coge_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
-  ipc_ensureAccessOnCreateObj(_coge_USER, _coge_COLL, _coge_PERM, *DATA_OBJ_INFO.logical_path);
+  cyverse_ensureAccessOnCreateDataObj(
+    _coge_USER, _coge_COLL, _coge_PERM, *DATA_OBJ_INFO.logical_path );
 }

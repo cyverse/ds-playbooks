@@ -6,6 +6,7 @@
     - name: Test install packages
       ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       with_items:
+        - acl
         - dmidecode
         - jq
         - python3

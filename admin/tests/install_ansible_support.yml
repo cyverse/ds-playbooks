@@ -1,10 +1,10 @@
 ---
-- name: test install required packages for ansible
+- name: Test install required packages for ansible
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
     - name: Test install packages
-      include_tasks: tasks/test_pkg_installed.yml
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       with_items:
         - dmidecode
         - jq
@@ -13,9 +13,9 @@
       loop_control:
         loop_var: pkg
 
-    - name: test install packages on CentOS
+    - name: Test install packages on CentOS
       when: ansible_distribution == 'CentOS'
-      include_tasks: tasks/test_pkg_installed.yml
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       with_items:
         - epel-release
         - iproute
@@ -28,9 +28,9 @@
       loop_control:
         loop_var: pkg
 
-    - name: test install packages on Ubuntu
+    - name: Test install packages on Ubuntu
       when: ansible_distribution == 'Ubuntu'
-      include_tasks: tasks/test_pkg_installed.yml
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       with_items:
         - iproute2
         - python3-dns
@@ -43,21 +43,21 @@
     - name: Test install packages on Ubuntu 22.04
       when: >-
         ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('22.04', '>=')
-      include_tasks: tasks/test_pkg_installed.yml
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: python-is-python3
 
-- name: test uninstall packages on ubuntu
+- name: Test uninstall packages on ubuntu
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - name: block for ubuntu distribution
+    - name: Block for ubuntu distribution
       when: ansible_distribution == 'Ubuntu'
       block:
         - name: Gather the package facts
           ansible.builtin.package_facts:
             manager: "auto"
 
-        - name: fail if unattended-upgrades package is present
-          fail:
+        - name: Fail if unattended-upgrades package is present
+          ansible.builtin.fail:
           when: "'unattended-upgrades' in ansible_facts.packages"

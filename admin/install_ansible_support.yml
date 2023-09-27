@@ -1,36 +1,37 @@
 ---
-- name: install ansible core facts requirement
+- name: Install ansible core facts requirement
   hosts: all:!unmanaged_systems:!localhost
   become: true
   gather_facts: false
   tasks:
-    - name: install dmidecode support
-      package:
+    - name: Install dmidecode support
+      ansible.builtin.package:
         name: dmidecode
         state: present
         use: "{{ _package_manager }}"
 
 
-- name: install required packages for ansible
+- name: Install required packages for ansible
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - name: update apt cache on Ubuntu machines
+    - name: Update apt cache on Ubuntu machines
       when: ansible_distribution == 'Ubuntu'
-      apt:
+      ansible.builtin.apt:
         update_cache: true
       tags:
         - non_idempotent
 
-    - name: install EPEL repository on CentOS machines
+    - name: Install EPEL repository on CentOS machines
       when: ansible_distribution == 'CentOS'
-      package:
+      ansible.builtin.package:
         name: epel-release
         state: present
 
-    - name: install packages
-      package:
+    - name: Install packages
+      ansible.builtin.package:
         name:
+          - acl
           - "{{ 'iproute2' if ansible_distribution == 'Ubuntu' else 'iproute' }}"
           - jq
           - python3
@@ -42,32 +43,32 @@
             {{ 'python3-virtualenv' if ansible_distribution == 'Ubuntu' else 'python-virtualenv' }}
         state: present
 
-    - name: install pip2 on CentOS machines
+    - name: Install pip2 on CentOS machines
       when: ansible_distribution == 'CentOS'
-      package:
+      ansible.builtin.package:
        name: python2-pip
        state: present
 
-    - name: install yum-plugin-versionlock on CentOS machines
+    - name: Install yum-plugin-versionlock on CentOS machines
       when: ansible_distribution == 'CentOS'
-      package:
+      ansible.builtin.package:
         name: yum-plugin-versionlock
         state: present
 
     - name: Install python-is-python3 on Ubuntu 22.04 machines
       when: >-
         ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('22.04', '>=')
-      package:
+      ansible.builtin.package:
         name: python-is-python3
         state: present
 
-- name: remove packages on ubuntu
+- name: Remove packages on ubuntu
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - name: remove unattended-upgrades on Ubuntu machines
+    - name: Remove unattended-upgrades on Ubuntu machines
       when: ansible_distribution == 'Ubuntu'
-      apt:
+      ansible.builtin.apt:
         name: unattended-upgrades
         state: absent
       tags:

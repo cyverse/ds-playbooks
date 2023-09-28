@@ -30,7 +30,7 @@ cyverse_USER = '-u'
 # tests whether a given entity type identifier indicates a collection
 #
 # Parameters:
-#  *Type - the entity type identifier
+#  Type  the entity type identifier
 #
 # NB: Sometimes iRODS passes `-c` to indicate a collection
 #
@@ -40,7 +40,7 @@ cyverse_isColl(*Type) = *Type == cyverse_COLL || *Type == '-c'
 # tests whether a given entity type identifier indicates a data object
 #
 # Parameters:
-#  *Type - the entity type identifier
+#  Type  the entity type identifier
 #
 cyverse_isDataObj: string -> boolean
 cyverse_isDataObj(*Type) = *Type == cyverse_DATA_OBJ
@@ -49,7 +49,7 @@ cyverse_isDataObj(*Type) = *Type == cyverse_DATA_OBJ
 # object
 #
 # Parameters:
-#  *Type - the entity type identifier
+#  Type  the entity type identifier
 #
 cyverse_isFSType: string -> boolean
 cyverse_isFSType(*Type) = cyverse_isColl(*Type) || cyverse_isDataObj(*Type)
@@ -57,7 +57,7 @@ cyverse_isFSType(*Type) = cyverse_isColl(*Type) || cyverse_isDataObj(*Type)
 # tests whether a given entity type identifier indicates a resource
 #
 # Parameters:
-#  *Type - the entity type identifier
+#  Type  the entity type identifier
 #
 # NB: Sometimes iRODS passes `-r` to indicated a resource
 #
@@ -67,7 +67,7 @@ cyverse_isResc(*Type) = *Type == cyverse_RESC || *Type == '-r'
 # tests whether a given entity type identifier indicates a user
 #
 # Parameters:
-#  *Type - the entity type identifier
+#  Type  the entity type identifier
 #
 cyverse_isUser: string -> boolean
 cyverse_isUser(*Type) = *Type == cyverse_USER

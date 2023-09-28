@@ -5,16 +5,11 @@
 # © 2023 The Arizona Board of Regents on behalf of The University of Arizona.
 # For license information, see https://cyverse.org/license.
 
-# The environment-specific configuration constants belong in the file
-# cyverse-env.re.
-
-@include 'cyverse-env'
-
 # All Data Store specific, environment independent logic goes in the file
 # ipc-logic.re. These rules will be called by the hooks implemented here.
 
 # The shared logic usable by the Data Store and other service rules.
-@include 'ipc-services'
+@include 'cyverse'
 
 @include 'ipc-logic'
 @include 'ipc-repl'
@@ -412,7 +407,7 @@ acPostProcForDelete {
 #                  was altered
 #
 acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
-	if (!ipc_inStaging(/*Path)) {
+	if (!cyverse_inStaging(/*Path)) {
 		ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
 	}
 }
@@ -532,7 +527,7 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
 #  objPath
 #
 acPostProcForOpen {
-	if (!ipc_inStaging(/$objPath)) {
+	if (!cyverse_inStaging(/$objPath)) {
 		*err = errormsg(ipc_acPostProcForOpen, *msg);
 		if (*err < 0) {
 			writeLine('serverLog', *msg);
@@ -771,7 +766,7 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # XXX - Because of https://github.com/irods/irods/issues/5540
 # _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo) {
 # 	*path = *DataObjInfo.logical_path;
-# 	if (ipc_inStaging(/*path)) {
+# 	if (cyverse_inStaging(/*path)) {
 # 		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) {
 # 			writeLine('serverLog', *msg);
@@ -813,7 +808,7 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # }
 _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 	*path = *DataObjInfo.logical_path;
-	if (ipc_inStaging(/*path)) {
+	if (cyverse_inStaging(/*path)) {
 		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo, *Step), *msg);
 		if (*err < 0) {
 			writeLine('serverLog', *msg);
@@ -863,7 +858,7 @@ _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 
 _cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
 	*path = *DataObjInfo.logical_path;
-	if (! ipc_inStaging(/*path)) {
+	if (! cyverse_inStaging(/*path)) {
 		*err = errormsg(ipc_dataObjModified_default(*User, *Zone, *DataObjInfo), *msg);
 		if (*err < 0) {
 			writeLine('serverLog', *msg);

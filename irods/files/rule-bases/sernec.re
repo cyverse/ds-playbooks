@@ -8,8 +8,8 @@ sernec_isForSernec(*Path) = *Path like '/' ++ cyverse_ZONE ++ '/home/shared/sern
 
 
 sernec_assignPerms(*Path, *UserNameClient) {
-  *type = ipc_getEntityType(*Path);
-  *recursiveFlag = if *type == '-C' then 'recursive' else 'default';
+  *type = cyverse_getEntityType(*Path);
+  *recursiveFlag = if cyverse_isColl(*type) then 'recursive' else 'default';
   msiSetACL(*recursiveFlag, 'own', *UserNameClient, *Path);
 
   foreach(*user in sernec_OWNERS) {
@@ -28,7 +28,7 @@ sernec_assignPerms(*Path, *UserNameClient) {
     }
   }
 
-  if (*type == '-C') {
+  if (cyverse_isColl(*type)) {
     msiSetACL(*recursiveFlag, 'inherit', 'null', *Path);
   }
 }

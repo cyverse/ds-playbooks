@@ -397,9 +397,9 @@ _repl_mvReplicas_workaround(*Object, *IngestName, *ReplName) {
 _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
   (*ingestName, *ingestOptional) = *IngestResc;
   (*replName, *replOptional) = *ReplResc;
-  *type = ipc_getEntityType(*Entity);
+  *type = cyverse_getEntityType(*Entity);
 
-  if (*type == '-C') {
+  if (cyverse_isColl(*type)) {
     # if the entity is a collection
     foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
       foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
@@ -407,7 +407,7 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
         _scheduleMv(*dataId, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
       }
     }
-  } else if (*type == '-d') {
+  } else if (cyverse_isDataObj(*type)) {
     # if the entity is a data object
     msiSplitPath(*Entity, *collPath, *dataName);
 
@@ -420,9 +420,9 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
 
 
 _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
-  *type = ipc_getEntityType(*Entity);
+  *type = cyverse_getEntityType(*Entity);
 
-  if (*type == '-C') {
+  if (cyverse_isColl(*type)) {
     # if the entity is a collection
     foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
       foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
@@ -430,7 +430,7 @@ _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
         _repl_scheduleMv(*dataId, *IngestName, *ReplName);
       }
     }
-  } else if (*type == '-d') {
+  } else if (cyverse_isDataObj(*type)) {
     # if the entity is a data object
     msiSplitPath(*Entity, *collPath, *dataName);
 

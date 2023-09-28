@@ -131,28 +131,28 @@ cyverse_isForSvc(*SvcUser, *SvcColl, *Path) =
 #
 # PARAMETERS:
 #  SvcUser     the iRODS user name used by the service
-#  Permission  the permission to grant. It should be 'null', 'read', 'write', or
+#    the permission to grant. It should be 'null', 'read', 'write', or
 #              'own'.
 #  CollPath    the path to the collection of begin given write access to
 #
-cyverse_giveAccessColl(*SvcUser, *Permission, *CollPath) {
+cyverse_giveAccessColl(*SvcUser, *, *CollPath) {
 	writeLine(
-		'serverLog', 'permitting *SvcUser *Permission access to *CollPath and everything in it' );
+		'serverLog', 'permitting *SvcUser * access to *CollPath and everything in it' );
 
-	msiSetACL('recursive', *Permission, *SvcUser, *CollPath);
+	msiSetACL('recursive', *, *SvcUser, *CollPath);
 }
 
 # This rule gives access to a service for a data object.
 #
 # PARAMETERS:
 #  SvcUser     the iRODS user name used by the service
-#  Permission  the permission to grant. It should be 'null', 'read', 'write', or
+#    the permission to grant. It should be 'null', 'read', 'write', or
 #              'own'.
 #  ObjPath     the path to the data object of begin given write access to
 #
-cyverse_giveAccessObj(*SvcUser, *Permission, *ObjPath) {
+cyverse_giveAccessObj(*SvcUser, *, *ObjPath) {
 	writeLine('serverLog', 'permitting *SvcUser write access to *ObjPath');
-	msiSetACL('default', *Permission, *SvcUser, *ObjPath);
+	msiSetACL('default', *, *SvcUser, *ObjPath);
 }
 
 # This rule ensures that a service user gets access to a presumably newly
@@ -162,13 +162,13 @@ cyverse_giveAccessObj(*SvcUser, *Permission, *ObjPath) {
 # PARAMETERS:
 #  SvcUser     the iRODS user name used by the service
 #  SvcColl     the name of the user collection managed by the service
-#  Permission  the permission to grant. It should be 'null', 'read', 'write', or
+#    the permission to grant. It should be 'null', 'read', 'write', or
 #              'own'.
 #  CollPath    the path to the collection of interest
 #
-cyverse_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *Permission, *CollPath) {
+cyverse_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *, *CollPath) {
 	if (cyverse_isForSvc(*SvcUser, *SvcColl, /*CollPath)) {
-		cyverse_giveAccessColl(*SvcUser, *Permission, *CollPath);
+		cyverse_giveAccessColl(*SvcUser, *, *CollPath);
 	}
 }
 
@@ -177,15 +177,15 @@ cyverse_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *Permission, *CollPath) {
 # service.
 #
 # PARAMETERS:
-#  SvcUser     the iRODS user name used by the service
-#  SvcColl     the name of the user collection managed by the service
-#  Permission  the permission to grant. It should be 'null', 'read', 'write', or
-#              'own'.
-#  ObjPath     the path to the data object of interest
+#  SvcUser  the iRODS user name used by the service
+#  SvcColl  the name of the user collection managed by the service
+#  Perm     the permission to grant. It should be 'null', 'read', 'write', or
+#           'own'.
+#  ObjPath  the path to the data object of interest
 #
-cyverse_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *Permission, *ObjPath) {
+cyverse_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *Perm, *ObjPath) {
 	if (cyverse_isForSvc(*SvcUser, *SvcColl, /*ObjPath)) {
-		cyverse_giveAccessObj(*SvcUser, *Permission, *ObjPath);
+		cyverse_giveAccessObj(*SvcUser, *Perm, *ObjPath);
 	}
 }
 
@@ -193,14 +193,14 @@ cyverse_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *Permission, *ObjPath) {
 # object if it has been moved into a user collection managed by the service.
 #
 # PARAMETERS:
-#  SvcUser     the iRODS user name used by the service
-#  SvcColl     the name of the user collection managed by the service
-#  Permission  the permission to grant. It should be 'null', 'read', 'write', or
-#              'own'.
-#  OldPath     the original iRODS path to the entity
-#  NewPath     the new iRODS path to the entity
+#  SvcUser  the iRODS user name used by the service
+#  SvcColl  the name of the user collection managed by the service
+#  Perm     the permission to grant. It should be 'null', 'read', 'write', or
+#           'own'.
+#  OldPath  the original iRODS path to the entity
+#  NewPath  the new iRODS path to the entity
 #
-cyverse_ensureAccessOnMv(*SvcUser, *SvcColl, *Permission, *OldPath, *NewPath) {
+cyverse_ensureAccessOnMv(*SvcUser, *SvcColl, *Perm, *OldPath, *NewPath) {
 	if (
 		!cyverse_isForSvc(*SvcUser, *SvcColl, /*OldPath)
 		&& cyverse_isForSvc(*SvcUser, *SvcColl, /*NewPath)
@@ -208,9 +208,9 @@ cyverse_ensureAccessOnMv(*SvcUser, *SvcColl, *Permission, *OldPath, *NewPath) {
 		*type = cyverse_getEntityType(*NewPath);
 
 		if (cyverse_isColl(*type)) {
-			cyverse_giveAccessColl(*SvcUser, *Permission, *NewPath);
+			cyverse_giveAccessColl(*SvcUser, *Perm, *NewPath);
 		} else if (cyverse_isDataObj(*type)) {
-			cyverse_giveAccessObj(*SvcUser, *Permission, *NewPath);
+			cyverse_giveAccessObj(*SvcUser, *Perm, *NewPath);
 		}
 	}
 }
@@ -218,25 +218,25 @@ cyverse_ensureAccessOnMv(*SvcUser, *SvcColl, *Permission, *OldPath, *NewPath) {
 # This rule sets a protected AVU on an entity as a rodsadmin user.
 #
 # PARAMETERS:
-#  Entity     the name of a resource or user or the path of a collection or data
-#             object
-#  Attribute  the protected attribute being set
-#  Value      the value to set
-#  Unit       the unit of the value
+#  Entity  the name of a resource or user or the path of a collection or data
+#          object
+#  Attr    the protected attribute being set
+#  Val     the value to set
+#  Unit    the unit of the value
 #
-cyverse_setProtectedAVU(*Entity, *Attribute, *Value, *Unit) {
+cyverse_setProtectedAVU(*Entity, *Attr, *Val, *Unit) {
 	*cmdArg = execCmdArg('set');
 	*typeArg = execCmdArg(cyverse_getEntityType(*Entity));
 	*entityArg = execCmdArg(*Entity);
-	*attrArg = execCmdArg(*Attribute);
-	*valArg = execCmdArg(*Value);
+	*attrArg = execCmdArg(*Attr);
+	*valArg = execCmdArg(*Val);
 	*unitArg = execCmdArg(*Unit);
 	*argStr = "*cmdArg *typeArg *entityArg *attrArg *valArg *unitArg";
 	*status = errormsg(msiExecCmd('imeta-exec', *argStr, "null", "null", "null", *out), *msg);
 
 	if (*status != 0) {
 		msiGetStderrInExecCmdOut(*out, *err);
-		writeLine('serverLog', "DS: Failed to set AVU *Attribute on *Entity");
+		writeLine('serverLog', "DS: Failed to set AVU *Attr on *Entity");
 		writeLine('serverLog', "DS: *msg");
 		writeLine('serverLog', "DS: *err");
 	}

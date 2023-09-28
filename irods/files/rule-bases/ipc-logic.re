@@ -4,7 +4,7 @@
 # © 2021 The Arizona Board of Regents on behalf of The University of Arizona.
 # For license information, see https://cyverse.org/license.
 
-@include 'ipc-json'
+@include 'cyverse_json'
 
 #
 # LISTS
@@ -231,19 +231,19 @@ _ipc_getMsgType(*ItemType) =
 	else ''
 
 _ipc_mkAVUObject(*Field, *Name, *Value, *Unit) =
-	ipcJson_object(
+	cyverse_json_object(
 		*Field,
 		list(
-			ipcJson_string('attribute', *Name),
-			ipcJson_string('value', *Value),
-			ipcJson_string('unit', *Unit) ) )
+			cyverse_json_string('attribute', *Name),
+			cyverse_json_string('value', *Value),
+			cyverse_json_string('unit', *Unit) ) )
 
-_ipc_mkEntityField(*Uuid) = ipcJson_string('entity', *Uuid)
+_ipc_mkEntityField(*Uuid) = cyverse_json_string('entity', *Uuid)
 
-_ipc_mkPathField(*Path) = ipcJson_string('path', *Path)
+_ipc_mkPathField(*Path) = cyverse_json_string('path', "*Path")
 
-_ipc_mkUserObject(*Field, *Name, *Zone) =
-	ipcJson_object(*Field, list(ipcJson_string('name', *Name), ipcJson_string('zone', *Zone)))
+_ipc_mkUserObject(*Field, *Name, *Zone) = cyverse_json_object(
+	*Field, list(cyverse_json_string('name', *Name), cyverse_json_string('zone', *Zone)) )
 
 _ipc_mkAuthorField(*Name, *Zone) = _ipc_mkUserObject('author', *Name, *Zone)
 
@@ -283,24 +283,24 @@ sendMsg(*Topic, *Msg) {
 _ipc_sendCollectionAclModified(
 	*Collection, *AccessLevel, *UserName, *UserZone, *Recursive, *AuthorName, *AuthorZone )
 {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Collection),
-			ipcJson_boolean('recursive', *Recursive),
-			ipcJson_string('permission', *AccessLevel),
+			cyverse_json_boolean('recursive', *Recursive),
+			cyverse_json_string('permission', *AccessLevel),
 			_ipc_mkUserObject('user', *UserName, *UserZone) ) );
 
 	sendMsg(_ipc_COLL_MSG_TYPE ++ '.acl.mod', *msg);
 }
 
 _ipc_sendCollectionInheritModified(*Collection, *Inherit, *Recursive, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Collection),
-			ipcJson_boolean('recursive', *Recursive),
-			ipcJson_boolean('inherit', *Inherit) ) );
+			cyverse_json_boolean('recursive', *Recursive),
+			cyverse_json_boolean('inherit', *Inherit) ) );
 
 	sendMsg(_ipc_COLL_MSG_TYPE ++ '.acl.mod', *msg);
 }
@@ -321,7 +321,7 @@ _ipc_sendCollectionAccessModified(
 }
 
 _ipc_sendCollectionAdd(*Id, *Path, *CreatorName, *CreatorZone) {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*CreatorName, *CreatorZone),
 			_ipc_mkEntityField(*Id),
@@ -332,11 +332,11 @@ _ipc_sendCollectionAdd(*Id, *Path, *CreatorName, *CreatorZone) {
 
 _ipc_sendDataObjectAclModified(*Data, *AccessLevel, *UserName, *UserZone, *AuthorName, *AuthorZone)
 {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Data),
-			ipcJson_string('permission', *AccessLevel),
+			cyverse_json_string('permission', *AccessLevel),
 			_ipc_mkUserObject('user', *UserName, *UserZone) ) );
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.acl.mod', *msg);
@@ -345,14 +345,14 @@ _ipc_sendDataObjectAclModified(*Data, *AccessLevel, *UserName, *UserZone, *Autho
 _ipc_sendDataObjectAdd(
 	*AuthorName, *AuthorZone, *Data, *Path, *OwnerName, *OwnerZone, *Size, *Type
 ) {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Data),
 			_ipc_mkPathField(*Path),
 			_ipc_mkUserObject('creator', *OwnerName, *OwnerZone),
-			ipcJson_number('size', *Size),
-			ipcJson_string('type', *Type) ) );
+			cyverse_json_number('size', *Size),
+			cyverse_json_string('type', *Type) ) );
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.add', *msg);
 }
@@ -361,13 +361,13 @@ _ipc_sendDataObjectAdd(
 _ipc_sendDataObjectMod(
 	*AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
 ) {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Object),
 			_ipc_mkUserObject('creator', *OwnerName, *OwnerZone),
-			ipcJson_number('size', *Size),
-			ipcJson_string('type', *Type) ) );
+			cyverse_json_number('size', *Size),
+			cyverse_json_string('type', *Type) ) );
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.mod', *msg);
 }
@@ -375,20 +375,20 @@ _ipc_sendDataObjectMod(
 _ipc_sendDataObjectOpen(*Id, *Path, *CreatorName, *CreatorZone, *Size) {
 	msiGetSystemTime(*timestamp, 'human');
 
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*CreatorName, *CreatorZone),
 			_ipc_mkEntityField(*Id),
 			_ipc_mkPathField(*Path),
-			ipcJson_number('size', *Size),
-			ipcJson_string('timestamp', *timestamp) ) );
+			cyverse_json_number('size', *Size),
+			cyverse_json_string('timestamp', *timestamp) ) );
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.open', *msg);
 }
 
 # Publish a data-object.sys-metadata.mod message to AMQP exchange
 _ipc_sendDataObjectMetadataModified(*Data, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Data) ) );
@@ -397,22 +397,22 @@ _ipc_sendDataObjectMetadataModified(*Data, *AuthorName, *AuthorZone) {
 }
 
 _ipc_sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			ipcJson_string('pattern', *ItemName),
+			cyverse_json_string('pattern', *ItemName),
 			_ipc_mkAVUObject('metadatum', *AName, *AValue, *AUnit) ) );
 
 	sendMsg(_ipc_DATA_MSG_TYPE ++ '.metadata.addw', *msg);
 }
 
 _ipc_sendAvuCopy(*SourceItemType, *Source, *TargetItemType, *Target, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			ipcJson_string('source', *Source),
-			ipcJson_string('source-type', _ipc_getMsgType(*SourceItemType)),
-			ipcJson_string('destination', *Target) ) );
+			cyverse_json_string('source', *Source),
+			cyverse_json_string('source-type', _ipc_getMsgType(*SourceItemType)),
+			cyverse_json_string('destination', *Target) ) );
 
 	sendMsg(_ipc_getMsgType(*TargetItemType) ++ '.metadata.cp', *msg);
 }
@@ -429,7 +429,7 @@ _ipc_sendAvuMod(
 	*AuthorName,
 	*AuthorZone )
 {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Item),
@@ -440,19 +440,19 @@ _ipc_sendAvuMod(
 }
 
 _ipc_sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Item),
-			ipcJson_string('attribute-pattern', *AName),
-			ipcJson_string('value-pattern', *AValue),
-			ipcJson_string('unit-pattern', *AUnit) ) );
+			cyverse_json_string('attribute-pattern', *AName),
+			cyverse_json_string('value-pattern', *AValue),
+			cyverse_json_string('unit-pattern', *AUnit) ) );
 
 	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.rmw', *msg);
 }
 
 _ipc_sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Item),
@@ -462,22 +462,22 @@ _ipc_sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName,
 }
 
 _ipc_sendEntityMove(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Id),
-			ipcJson_string('old-path', *OldPath),
-			ipcJson_string('new-path', *NewPath) ) );
+			cyverse_json_string('old-path', '*OldPath'),
+			cyverse_json_string('new-path', '*NewPath') ) );
 
 	sendMsg(_ipc_getMsgType(*Type) ++ '.mv', *msg);
 }
 
 _ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
-	*msg = ipcJson_document(
+	*msg = cyverse_json_document(
 		list(
 			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
 			_ipc_mkEntityField(*Id),
-			ipcJson_string('path', *Path) ) );
+			_ipc_mkPathField(*Path) ) );
 
 	sendMsg(_ipc_getMsgType(*Type) ++ '.rm', *msg);
 }
@@ -488,61 +488,48 @@ _ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 #
 
 # Indicates whether or not an AVU is protected
-avuProtected(*Attribute) {
-	_ipc_startsWith(*Attribute, 'ipc');
-}
-
-canModProtectedAVU(*UserName, *UserZone) {
-	*canMod = false;
-
-	if (*UserName == 'bisque' && *UserZone == cyverse_ZONE) {
-		*canMod = true;
-	} else {
-		*canMod = _ipc_isAdmin(*UserName, *UserZone);
-	}
-
-	*canMod;
-}
+_ipc_avuProtected(*Attribute) = _ipc_startsWith(*Attribute, 'ipc')
 
 # Verifies that an attribute can be modified. If it can't it fails and sends an
 # error message to the caller.
-ensureAVUEditable(*EditorName, *EditorZone, *A, *V, *U) {
-	if (avuProtected(*A) && !canModProtectedAVU(*EditorName, *EditorZone)) {
+_ipc_ensureAVUEditable(*EditorName, *EditorZone, *A, *V, *U) {
+	if (_ipc_avuProtected(*A) && !_ipc_isAdmin(*EditorName, *EditorZone)) {
 		cut;
 		failmsg(-830000, 'CYVERSE ERROR: attempt to alter protected AVU <*A, *V, *U>');
 	}
 }
 
 # If an AVU is not protected, it sets the AVU to the given item
-setAVUIfUnprotected(*ItemType, *ItemName, *A, *V, *U) {
-	if (!avuProtected(*A)) {
+_ipc_setAVUIfUnprotected(*ItemType, *ItemName, *A, *V, *U) {
+	if (!_ipc_avuProtected(*A)) {
 		msiModAVUMetadata(*ItemType, *ItemName, 'set', *A, *V, *U);
 	}
 }
 
 # Copies the unprotected AVUs from a given collection to the given item.
-cpUnprotectedCollAVUs(*Coll, *TargetType, *TargetName) =
+_ipc_cpUnprotectedCollAVUs(*Coll, *TargetType, *TargetName) {
 	foreach (*avu in
 		SELECT META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE, META_COLL_ATTR_UNITS
 		WHERE COLL_NAME == *Coll
 	) {
-		setAVUIfUnprotected(
+		_ipc_setAVUIfUnprotected(
 			*TargetType,
 			*TargetName,
 			*avu.META_COLL_ATTR_NAME,
 			*avu.META_COLL_ATTR_VALUE,
 			*avu.META_COLL_ATTR_UNITS );
 	}
+}
 
 # Copies the unprotected AVUs from a given data object to the given item.
-cpUnprotectedDataObjAVUs(*ObjPath, *TargetType, *TargetName) {
+_ipc_cpUnprotectedDataObjAVUs(*ObjPath, *TargetType, *TargetName) {
 	msiSplitPath(*ObjPath, *parentColl, *objName);
 
 	foreach (*avu in
 		SELECT META_DATA_ATTR_NAME, META_DATA_ATTR_VALUE, META_DATA_ATTR_UNITS
 		WHERE COLL_NAME == *parentColl AND DATA_NAME == *objName
 	) {
-		setAVUIfUnprotected(
+		_ipc_setAVUIfUnprotected(
 			*TargetType,
 			*TargetName,
 			*avu.META_DATA_ATTR_NAME,
@@ -552,32 +539,34 @@ cpUnprotectedDataObjAVUs(*ObjPath, *TargetType, *TargetName) {
 }
 
 # Copies the unprotected AVUs from a given resource to the given item.
-cpUnprotectedRescAVUs(*Resc, *TargetType, *TargetName) =
+_ipc_cpUnprotectedRescAVUs(*Resc, *TargetType, *TargetName) {
 	foreach (*avu in
 		SELECT META_RESC_ATTR_NAME, META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
 		WHERE RESC_NAME == *Resc
 	) {
-		setAVUIfUnprotected(
+		_ipc_setAVUIfUnprotected(
 			*TargetType,
 			*TargetName,
 			*avu.META_RESC_ATTR_NAME,
 			*avu.META_RESC_ATTR_VALUE,
 			*avu.META_RESC_ATTR_UNITS );
 	}
+}
 
 # Copies the unprotected AVUs from a given user to the given item.
-cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) =
+_ipc_cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) {
 	foreach (*avu in
 		SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
 		WHERE USER_NAME == *User
 	) {
-		setAVUIfUnprotected(
+		_ipc_setAVUIfUnprotected(
 			*TargetType,
 			*TargetName,
 			*avu.META_USER_ATTR_NAME,
 			*avu.META_USER_ATTR_VALUE,
 			*avu.META_USER_ATTR_UNITS );
 	}
+}
 
 
 #
@@ -763,54 +752,15 @@ ipc_acPreProcForModifyAVUMetadata(
 	*newValue = _ipc_getNewAVUSetting(*AValue, 'v:', *newArgs);
 	*newUnit = _ipc_getNewAVUSetting(*origUnit, 'u:', *newArgs);
 
-	ensureAVUEditable($userNameClient, $rodsZoneClient, *AName, *AValue, *origUnit);
-	ensureAVUEditable($userNameClient, $rodsZoneClient, *newName, *newValue, *newUnit);
+	_ipc_ensureAVUEditable($userNameClient, $rodsZoneClient, *AName, *AValue, *origUnit);
+	_ipc_ensureAVUEditable($userNameClient, $rodsZoneClient, *newName, *newValue, *newUnit);
 }
 
 # This rule checks that AVU being added, set or removed isn't a protected one.
 # Only rodsadmin users are allowed to add, remove or update protected AVUs.
 ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
-	if (*Option == 'add' || *Option == 'addw') {
-		ensureAVUEditable($userNameProxy, $rodsZoneProxy, *AName, *AValue, *AUnit);
-	} else if (*Option == 'set') {
-		if (ipc_isCollection(*ItemType)) {
-			*query =
-				SELECT META_COLL_ATTR_ID WHERE COLL_NAME == *ItemName AND META_COLL_ATTR_NAME == *AName;
-		} else if (ipc_isDataObject(*ItemType)) {
-			msiSplitPath(*ItemName, *collPath, *dataName);
-
-			*query =
-				SELECT META_DATA_ATTR_ID
-				WHERE COLL_NAME == *collPath
-					AND DATA_NAME == *dataName
-					AND META_DATA_ATTR_NAME == *AName;
-		} else if (ipc_isResource(*ItemType)) {
-			*query =
-				SELECT META_RESC_ATTR_ID WHERE RESC_NAME == *ItemName AND META_RESC_ATTR_NAME == *AName;
-		} else if (ipc_isUser(*ItemType)) {
-			*query =
-				SELECT META_USER_ATTR_ID WHERE USER_NAME == *ItemName AND META_USER_ATTR_NAME == *AName;
-		} else {
-			writeLine('serverLog', 'unknown imeta item type "*ItemType"');
-			fail;
-		}
-
-		*exists = false;
-
-		foreach (*record in *query) {
-			*exists = true;
-			break;
-		}
-
-		(*authenticateeName, *authenticateeZone) = if *exists
-			then ($userNameClient, $rodsZoneClient)
-			else ($userNameProxy, $rodsZoneProxy);
-
-		ensureAVUEditable(*authenticateeName, *authenticateeZone, *AName, *AValue, *AUnit);
-	} else if (*Option == 'rm' || *Option == 'rmw') {
-		ensureAVUEditable($userNameClient, $rodsZoneClient, *AName, *AValue, *AUnit);
-	} else if (*Option != 'adda') {
-		writeLine('serverLog', 'unknown imeta option "*Option"');
+	if (*Option != 'adda') {
+		_ipc_ensureAVUEditable($userNameClient, $rodsZoneClient, *AName, *AValue, *AUnit);
 	}
 }
 
@@ -819,15 +769,15 @@ ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue
 ipc_acPreProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
 ) {
-	if (!canModProtectedAVU($userNameClient, $rodsZoneClient)) {
+	if (!_ipc_isAdmin($userNameClient, $rodsZoneClient)) {
 		if (ipc_isCollection(*SourceItemType)) {
-			cpUnprotectedCollAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
+			_ipc_cpUnprotectedCollAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
 		} else if (ipc_isDataObject(*SourceItemType)) {
-			cpUnprotectedDataObjAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
+			_ipc_cpUnprotectedDataObjAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
 		} else if (ipc_isResource(*SourceItemType)) {
-			cpUnprotectedRescAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
+			_ipc_cpUnprotectedRescAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
 		} else if (ipc_isUser(*SourceItemType)) {
-			cpUnprotectedUserAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
+			_ipc_cpUnprotectedUserAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
 		}
 
 		# fail to prevent iRODS from also copying the protected metadata

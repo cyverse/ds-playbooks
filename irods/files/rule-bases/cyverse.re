@@ -30,7 +30,7 @@ cyverse_USER = '-u'
 # tests whether a given entity type identifier indicates a collection
 #
 # Parameters:
-#   *Type - the entity type identifier
+#  *Type - the entity type identifier
 #
 # NB: Sometimes iRODS passes `-c` to indicate a collection
 #
@@ -40,7 +40,7 @@ cyverse_isColl(*Type) = *Type == cyverse_COLL || *Type == '-c'
 # tests whether a given entity type identifier indicates a data object
 #
 # Parameters:
-#   *Type - the entity type identifier
+#  *Type - the entity type identifier
 #
 cyverse_isDataObj: string -> boolean
 cyverse_isDataObj(*Type) = *Type == cyverse_DATA_OBJ
@@ -49,7 +49,7 @@ cyverse_isDataObj(*Type) = *Type == cyverse_DATA_OBJ
 # object
 #
 # Parameters:
-#   *Type - the entity type identifier
+#  *Type - the entity type identifier
 #
 cyverse_isFSType: string -> boolean
 cyverse_isFSType(*Type) = cyverse_isColl(*Type) || cyverse_isDataObj(*Type)
@@ -57,7 +57,7 @@ cyverse_isFSType(*Type) = cyverse_isColl(*Type) || cyverse_isDataObj(*Type)
 # tests whether a given entity type identifier indicates a resource
 #
 # Parameters:
-#   *Type - the entity type identifier
+#  *Type - the entity type identifier
 #
 # NB: Sometimes iRODS passes `-r` to indicated a resource
 #
@@ -67,7 +67,7 @@ cyverse_isResc(*Type) = *Type == cyverse_RESC || *Type == '-r'
 # tests whether a given entity type identifier indicates a user
 #
 # Parameters:
-#   *Type - the entity type identifier
+#  *Type - the entity type identifier
 #
 cyverse_isUser: string -> boolean
 cyverse_isUser(*Type) = *Type == cyverse_USER
@@ -83,15 +83,15 @@ cyverse_isUser(*Type) = *Type == cyverse_USER
 #
 cyverse_getEntityType: string -> string
 cyverse_getEntityType(*Entity) =
-  let *type = '' in
-  if errormsg(msiGetObjType(*Entity, *type), *err) < 0
-  then let *_ = writeLine('serverLog', 'cyverse_getEntityType(*Entity) -> *err') in ''
-  else
-    if cyverse_isColl(*type) then cyverse_COLL
-    else if cyverse_isDataObj(*type) then cyverse_DATA_OBJ
-    else if cyverse_isResc(*type) then cyverse_RESC
-    else if cyverse_isUser(*type) then cyverse_USER
-    else *type
+	let *type = '' in
+	if errormsg(msiGetObjType(*Entity, *type), *err) < 0
+	then let *_ = writeLine('serverLog', 'cyverse_getEntityType(*Entity) -> *err') in ''
+	else
+		if cyverse_isColl(*type) then cyverse_COLL
+		else if cyverse_isDataObj(*type) then cyverse_DATA_OBJ
+		else if cyverse_isResc(*type) then cyverse_RESC
+		else if cyverse_isUser(*type) then cyverse_USER
+		else *type
 
 # The base collection for staging
 cyverse_STAGING_BASE: path
@@ -108,7 +108,6 @@ cyverse_STAGING_BASE = let *zone = cyverse_ZONE in /*zone/jobs
 cyverse_inStaging: path -> boolean
 cyverse_inStaging(*Path) = str(*Path) like str(cyverse_STAGING_BASE) ++ '/*'
 
-
 # This function checks to see if a collection or data object is inside a user
 # collection managed by a service.
 #
@@ -123,11 +122,10 @@ cyverse_inStaging(*Path) = str(*Path) like str(cyverse_STAGING_BASE) ++ '/*'
 #
 cyverse_isForSvc: string * string * path -> boolean
 cyverse_isForSvc(*SvcUser, *SvcColl, *Path) =
-  let *strPath = str(*Path) in
-  *strPath like regex _cyverse_HOME ++ '/[^/]+/*SvcColl($|/.*)'
-  && !(*strPath like _cyverse_HOME ++ '/*SvcUser/*')
-  && !(*strPath like _cyverse_HOME ++ '/shared/*')
-
+	let *strPath = str(*Path) in
+	*strPath like regex _cyverse_HOME ++ '/[^/]+/*SvcColl($|/.*)'
+	&& !(*strPath like _cyverse_HOME ++ '/*SvcUser/*')
+	&& !(*strPath like _cyverse_HOME ++ '/shared/*')
 
 # This rule gives access to a service for a collection and everything in it.
 #
@@ -138,12 +136,11 @@ cyverse_isForSvc(*SvcUser, *SvcColl, *Path) =
 #  CollPath    the path to the collection of begin given write access to
 #
 cyverse_giveAccessColl(*SvcUser, *Permission, *CollPath) {
-  writeLine('serverLog',
-            'permitting *SvcUser *Permission access to *CollPath and everything in it');
+	writeLine(
+		'serverLog', 'permitting *SvcUser *Permission access to *CollPath and everything in it' );
 
-  msiSetACL('recursive', *Permission, *SvcUser, *CollPath);
+	msiSetACL('recursive', *Permission, *SvcUser, *CollPath);
 }
-
 
 # This rule gives access to a service for a data object.
 #
@@ -154,10 +151,9 @@ cyverse_giveAccessColl(*SvcUser, *Permission, *CollPath) {
 #  ObjPath     the path to the data object of begin given write access to
 #
 cyverse_giveAccessObj(*SvcUser, *Permission, *ObjPath) {
-  writeLine('serverLog', 'permitting *SvcUser write access to *ObjPath');
-  msiSetACL('default', *Permission, *SvcUser, *ObjPath);
+	writeLine('serverLog', 'permitting *SvcUser write access to *ObjPath');
+	msiSetACL('default', *Permission, *SvcUser, *ObjPath);
 }
-
 
 # This rule ensures that a service user gets access to a presumably newly
 # created collection if it were created inside a user collection managed by the
@@ -171,11 +167,10 @@ cyverse_giveAccessObj(*SvcUser, *Permission, *ObjPath) {
 #  CollPath    the path to the collection of interest
 #
 cyverse_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *Permission, *CollPath) {
-  if (cyverse_isForSvc(*SvcUser, *SvcColl, /*CollPath)) {
-    cyverse_giveAccessColl(*SvcUser, *Permission, *CollPath);
-  }
+	if (cyverse_isForSvc(*SvcUser, *SvcColl, /*CollPath)) {
+		cyverse_giveAccessColl(*SvcUser, *Permission, *CollPath);
+	}
 }
-
 
 # This rule ensures that a service user gets access to a presumably newly
 # created data object if it were created inside a user collection managed by the
@@ -189,11 +184,10 @@ cyverse_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *Permission, *CollPath) {
 #  ObjPath     the path to the data object of interest
 #
 cyverse_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *Permission, *ObjPath) {
-  if (cyverse_isForSvc(*SvcUser, *SvcColl, /*ObjPath)) {
-    cyverse_giveAccessObj(*SvcUser, *Permission, *ObjPath);
-  }
+	if (cyverse_isForSvc(*SvcUser, *SvcColl, /*ObjPath)) {
+		cyverse_giveAccessObj(*SvcUser, *Permission, *ObjPath);
+	}
 }
-
 
 # This rule ensures that a service user gets access to a collection or data
 # object if it has been moved into a user collection managed by the service.
@@ -207,20 +201,19 @@ cyverse_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *Permission, *ObjPath) {
 #  NewPath     the new iRODS path to the entity
 #
 cyverse_ensureAccessOnMv(*SvcUser, *SvcColl, *Permission, *OldPath, *NewPath) {
-  if (
-    !cyverse_isForSvc(*SvcUser, *SvcColl, /*OldPath)
-    && cyverse_isForSvc(*SvcUser, *SvcColl, /*NewPath)
-  ) {
-    *type = cyverse_getEntityType(*NewPath);
+	if (
+		!cyverse_isForSvc(*SvcUser, *SvcColl, /*OldPath)
+		&& cyverse_isForSvc(*SvcUser, *SvcColl, /*NewPath)
+	) {
+		*type = cyverse_getEntityType(*NewPath);
 
-    if (cyverse_isColl(*type)) {
-      cyverse_giveAccessColl(*SvcUser, *Permission, *NewPath);
-    } else if (cyverse_isDataObj(*type)) {
-      cyverse_giveAccessObj(*SvcUser, *Permission, *NewPath);
-    }
-  }
+		if (cyverse_isColl(*type)) {
+			cyverse_giveAccessColl(*SvcUser, *Permission, *NewPath);
+		} else if (cyverse_isDataObj(*type)) {
+			cyverse_giveAccessObj(*SvcUser, *Permission, *NewPath);
+		}
+	}
 }
-
 
 # This rule sets a protected AVU on an entity as a rodsadmin user.
 #
@@ -232,21 +225,21 @@ cyverse_ensureAccessOnMv(*SvcUser, *SvcColl, *Permission, *OldPath, *NewPath) {
 #  Unit       the unit of the value
 #
 cyverse_setProtectedAVU(*Entity, *Attribute, *Value, *Unit) {
-  *cmdArg = execCmdArg('set');
-  *typeArg = execCmdArg(cyverse_getEntityType(*Entity));
-  *entityArg = execCmdArg(*Entity);
-  *attrArg = execCmdArg(*Attribute);
-  *valArg = execCmdArg(*Value);
-  *unitArg = execCmdArg(*Unit);
-  *argStr = "*cmdArg *typeArg *entityArg *attrArg *valArg *unitArg";
-  *status = errormsg(msiExecCmd('imeta-exec', *argStr, "null", "null", "null", *out), *msg);
+	*cmdArg = execCmdArg('set');
+	*typeArg = execCmdArg(cyverse_getEntityType(*Entity));
+	*entityArg = execCmdArg(*Entity);
+	*attrArg = execCmdArg(*Attribute);
+	*valArg = execCmdArg(*Value);
+	*unitArg = execCmdArg(*Unit);
+	*argStr = "*cmdArg *typeArg *entityArg *attrArg *valArg *unitArg";
+	*status = errormsg(msiExecCmd('imeta-exec', *argStr, "null", "null", "null", *out), *msg);
 
-  if (*status != 0) {
-    msiGetStderrInExecCmdOut(*out, *err);
-    writeLine('serverLog', "DS: Failed to set AVU *Attribute on *Entity");
-    writeLine('serverLog', "DS: *msg");
-    writeLine('serverLog', "DS: *err");
-  }
+	if (*status != 0) {
+		msiGetStderrInExecCmdOut(*out, *err);
+		writeLine('serverLog', "DS: Failed to set AVU *Attribute on *Entity");
+		writeLine('serverLog', "DS: *msg");
+		writeLine('serverLog', "DS: *err");
+	}
 
-  *status;
+	*status;
 }

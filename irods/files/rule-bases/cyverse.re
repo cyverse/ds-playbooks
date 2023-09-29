@@ -130,29 +130,27 @@ cyverse_isForSvc(*SvcUser, *SvcColl, *Path) =
 # This rule gives access to a service for a collection and everything in it.
 #
 # PARAMETERS:
-#  SvcUser     the iRODS user name used by the service
-#    the permission to grant. It should be 'null', 'read', 'write', or
-#              'own'.
-#  CollPath    the path to the collection of begin given write access to
+#  SvcUser   the iRODS user name used by the service
+#  Perm      the permission to grant. It should be 'null', 'read', 'write', or
+#            'own'.
+#  CollPath  the path to the collection of begin given write access to
 #
-cyverse_giveAccessColl(*SvcUser, *, *CollPath) {
-	writeLine(
-		'serverLog', 'permitting *SvcUser * access to *CollPath and everything in it' );
-
-	msiSetACL('recursive', *, *SvcUser, *CollPath);
+cyverse_giveAccessColl(*SvcUser, *Perm, *CollPath) {
+	writeLine('serverLog', 'permitting *SvcUser *Perm access to *CollPath and everything in it');
+	msiSetACL('recursive', *Perm, *SvcUser, *CollPath);
 }
 
 # This rule gives access to a service for a data object.
 #
 # PARAMETERS:
-#  SvcUser     the iRODS user name used by the service
-#    the permission to grant. It should be 'null', 'read', 'write', or
-#              'own'.
-#  ObjPath     the path to the data object of begin given write access to
+#  SvcUser  the iRODS user name used by the service
+#  Perm     the permission to grant. It should be 'null', 'read', 'write', or
+#           'own'.
+#  ObjPath  the path to the data object of begin given write access to
 #
-cyverse_giveAccessObj(*SvcUser, *, *ObjPath) {
-	writeLine('serverLog', 'permitting *SvcUser write access to *ObjPath');
-	msiSetACL('default', *, *SvcUser, *ObjPath);
+cyverse_giveAccessObj(*SvcUser, *Perm, *ObjPath) {
+	writeLine('serverLog', 'permitting *SvcUser *Perm access to *ObjPath');
+	msiSetACL('default', *Perm, *SvcUser, *ObjPath);
 }
 
 # This rule ensures that a service user gets access to a presumably newly
@@ -160,15 +158,15 @@ cyverse_giveAccessObj(*SvcUser, *, *ObjPath) {
 # service.
 #
 # PARAMETERS:
-#  SvcUser     the iRODS user name used by the service
-#  SvcColl     the name of the user collection managed by the service
-#    the permission to grant. It should be 'null', 'read', 'write', or
-#              'own'.
-#  CollPath    the path to the collection of interest
+#  SvcUser   the iRODS user name used by the service
+#  SvcColl   the name of the user collection managed by the service
+#  Perm      the permission to grant. It should be 'null', 'read', 'write', or
+#            'own'.
+#  CollPath  the path to the collection of interest
 #
-cyverse_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *, *CollPath) {
+cyverse_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *Perm, *CollPath) {
 	if (cyverse_isForSvc(*SvcUser, *SvcColl, /*CollPath)) {
-		cyverse_giveAccessColl(*SvcUser, *, *CollPath);
+		cyverse_giveAccessColl(*SvcUser, *Perm, *CollPath);
 	}
 }
 

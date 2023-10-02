@@ -181,7 +181,7 @@ cyverse_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *Perm, *CollPath) {
 #           'own'.
 #  ObjPath  the path to the data object of interest
 #
-cyverse_ensureAccessonCreateDataObj(*SvcUser, *SvcColl, *Perm, *ObjPath) {
+cyverse_ensureAccessOnCreateDataObj(*SvcUser, *SvcColl, *Perm, *ObjPath) {
 	if (cyverse_isForSvc(*SvcUser, *SvcColl, /*ObjPath)) {
 		cyverse_giveAccessDataObj(*SvcUser, *Perm, *ObjPath);
 	}

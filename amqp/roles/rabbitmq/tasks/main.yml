@@ -1,0 +1,62 @@
+---
+- name: Install epel repository
+  ansible.builtin.package:
+    name: epel-release
+    state: present
+
+- name: Ensure erlang-erts isn't installed
+  ansible.builtin.package:
+    name: erlang-erts
+    state: absent
+
+- name: Install erlang (stripped-down rabbitmq-provided RPM)
+  ansible.builtin.yum:
+    name: >-
+      https://github.com/rabbitmq/erlang-rpm/releases/download/v23.2.7/erlang-23.2.7-1.el7.x86_64.rpm
+
+- name: Install from web
+  ansible.builtin.yum:
+    name: >-
+      https://github.com/rabbitmq/rabbitmq-server/releases/download/v3.8.14/rabbitmq-server-3.8.14-1.el7.noarch.rpm
+
+- name: Place rabbitmq config file
+  ansible.builtin.template:
+    src: rabbitmq.conf.j2
+    dest: /etc/rabbitmq/rabbitmq.conf
+    owner: rabbitmq
+    group: rabbitmq
+    mode: u+r
+
+- name: Start broker
+  ansible.builtin.service:
+    name: rabbitmq-server
+    enabled: true
+    state: started
+  tags: molecule-notest
+
+- name: Enable management plugin
+  community.rabbitmq.rabbitmq_plugin:
+    names: rabbitmq_management
+    state: enabled
+  tags: molecule-notest
+
+- name: Create admin user
+  community.rabbitmq.rabbitmq_user:
+    user: "{{ rabbitmq__admin_username }}"
+    password: "{{ rabbitmq_admin_password }}"
+    vhost: /
+    configure_priv: .*
+    read_priv: .*
+    write_priv: .*
+    tags: administrator
+    state: present
+  no_log: true
+  tags: molecule-notest
+
+- name: Remove guest user
+  when: rabbitmq_admin_username != 'guest'
+  community.rabbitmq.rabbitmq_user:
+    user: guest
+    state: absent
+  no_log: true
+  tags: molecule-notest

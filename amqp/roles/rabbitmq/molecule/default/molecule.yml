@@ -1,0 +1,14 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: podman
+platforms:
+  - name: instance
+    image: centos:7
+    command: /sbin/init
+    systemd: always
+provisioner:
+  name: ansible
+verifier:
+  name: ansible

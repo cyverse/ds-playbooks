@@ -1,0 +1,64 @@
+---
+- name: Verify | test rabbitmq.conf template default expansion
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../../vars/main.yml
+    - ../../defaults/main.yml
+  vars:
+    rabbitmq_conf: "{{ lookup('template', '../../templates/rabbitmq.conf.j2') }}"
+  tasks:
+    - name: Verify listeners.tcp.1 set correctly
+      ansible.builtin.assert:
+        that:
+          - rabbitmq_conf is search("listeners.tcp.1 = :::5672" | regex_escape)
+          - rabbitmq_conf is search("management.tcp.port = 15672" | regex_escape)
+
+
+- name: Verify | test rabbitmq.conf template custom expansion
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Break into tasks
+      ansible.builtin.debug:
+        msg: TODO implement
+
+
+- name: Verify | test set up RabbitMQ broker
+  hosts: all
+  become: true
+  tasks:
+    - name: Retrieve facts about distro packages
+      ansible.builtin.package_facts:
+
+    - name: Verify correct packages installed
+      ansible.builtin.assert:
+        that:
+          - "'epel-release' in ansible_facts.packages"
+          - "'erlang-erts' not in ansible_facts.packages"
+          - "'erlang' in ansible_facts.packages"
+          - ansible_facts.packages['erlang'] | length == 1
+          - ansible_facts.packages['erlang'][0].version is version_compare('23.2.7', '>=')
+          - "'rabbitmq-server' in ansible_facts.packages"
+          - ansible_facts.packages['rabbitmq-server'] | length == 1
+          - ansible_facts.packages['rabbitmq-server'][0].version is version_compare('3.8.14', '>=')
+
+    - name: Test place rabbitmq config file
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test start broker
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test enable management plugin
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test create admin user
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test remove guest user
+      ansible.builtin.debug:
+        msg: TODO implement

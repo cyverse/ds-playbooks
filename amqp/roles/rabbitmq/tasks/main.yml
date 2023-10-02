@@ -42,7 +42,7 @@
 
 - name: Create admin user
   community.rabbitmq.rabbitmq_user:
-    user: "{{ rabbitmq__admin_username }}"
+    user: "{{ rabbitmq_admin_username }}"
     password: "{{ rabbitmq_admin_password }}"
     vhost: /
     configure_priv: .*

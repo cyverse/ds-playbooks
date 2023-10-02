@@ -231,7 +231,7 @@ _bisque_scheduleLn(*Permission, *Client, *Path) {
 
 
 _bisque_handleNewObject(*Client, *Path) {
-  cyverse_giveAccessObj(_bisque_USER, 'write', *Path);
+  cyverse_giveAccessDataObj(_bisque_USER, 'write', *Path);
   *perm = if _bisque_isInProjects(bisque_PROJECTS, *Path) then 'published' else 'private';
   _bisque_scheduleLn(*perm, *Client, *Path);
 }

@@ -148,7 +148,7 @@ cyverse_giveAccessColl(*SvcUser, *Perm, *CollPath) {
 #           'own'.
 #  ObjPath  the path to the data object of begin given write access to
 #
-cyverse_giveAccessObj(*SvcUser, *Perm, *ObjPath) {
+cyverse_giveAccessDataObj(*SvcUser, *Perm, *ObjPath) {
 	writeLine('serverLog', 'permitting *SvcUser *Perm access to *ObjPath');
 	msiSetACL('default', *Perm, *SvcUser, *ObjPath);
 }
@@ -181,9 +181,9 @@ cyverse_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *Perm, *CollPath) {
 #           'own'.
 #  ObjPath  the path to the data object of interest
 #
-cyverse_ensureAccessOnCreateObj(*SvcUser, *SvcColl, *Perm, *ObjPath) {
+cyverse_ensureAccessonCreateDataObj(*SvcUser, *SvcColl, *Perm, *ObjPath) {
 	if (cyverse_isForSvc(*SvcUser, *SvcColl, /*ObjPath)) {
-		cyverse_giveAccessObj(*SvcUser, *Perm, *ObjPath);
+		cyverse_giveAccessDataObj(*SvcUser, *Perm, *ObjPath);
 	}
 }
 
@@ -208,7 +208,7 @@ cyverse_ensureAccessOnMv(*SvcUser, *SvcColl, *Perm, *OldPath, *NewPath) {
 		if (cyverse_isColl(*type)) {
 			cyverse_giveAccessColl(*SvcUser, *Perm, *NewPath);
 		} else if (cyverse_isDataObj(*type)) {
-			cyverse_giveAccessObj(*SvcUser, *Perm, *NewPath);
+			cyverse_giveAccessDataObj(*SvcUser, *Perm, *NewPath);
 		}
 	}
 }

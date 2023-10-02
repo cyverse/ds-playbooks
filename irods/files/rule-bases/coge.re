@@ -20,5 +20,6 @@ coge_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 
 
 coge_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
-  cyverse_ensureAccessOnCreateObj(_coge_USER, _coge_COLL, _coge_PERM, *DATA_OBJ_INFO.logical_path);
+  cyverse_ensureAccessOnCreateDataObj(
+    _coge_USER, _coge_COLL, _coge_PERM, *DATA_OBJ_INFO.logical_path );
 }

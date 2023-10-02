@@ -1,0 +1,10 @@
+---
+- name: Prepare
+  hosts: all
+  become: true
+  tasks:
+    - name: Update packages
+      ansible.builtin.yum:
+        name: '*'
+        state: latest
+        update_only: true

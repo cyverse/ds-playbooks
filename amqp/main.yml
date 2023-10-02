@@ -1,68 +1,11 @@
 ---
-- name: set up RabbitMQ broker
+- name: Set up RabbitMQ broker
   hosts: amqp
   become: true
-  tasks:
-    - name: install epel repository
-      package:
-        name: epel-release
-        state: present
-
-    - name: ensure erlang-erts isn't installed
-      package:
-        name: erlang-erts
-        state: absent
-
-    - name: install erlang (stripped-down rabbitmq-provided RPM)
-      yum:
-        name: 'https://github.com/rabbitmq/erlang-rpm/releases/download/v23.2.7/erlang-23.2.7-1.el7.x86_64.rpm'
-
-    - name: install from web
-      yum:
-        name: 'https://github.com/rabbitmq/rabbitmq-server/releases/download/v3.8.14/rabbitmq-server-3.8.14-1.el7.noarch.rpm'
-
-    - name: place rabbitmq config file
-      template:
-        src: templates/rabbitmq.conf.j2
-        dest: "/etc/rabbitmq/rabbitmq.conf"
-        owner: rabbitmq
-        group: rabbitmq
-        mode: u+r
-
-    - name: start broker
-      service:
-        name: rabbitmq-server
-        enabled: true
-        state: started
-      tags:
-        no_testing
-
-    - name: enable management plugin
-      rabbitmq_plugin:
-        names: rabbitmq_management
-        state: enabled
-      tags:
-        no_testing
-
-    - name: create admin user
-      rabbitmq_user:
-        user: "{{ _admin_username }}"
-        password: "{{ _admin_password }}"
-        vhost: /
-        configure_priv: .*
-        read_priv: .*
-        write_priv: .*
-        tags: administrator
-        state: present
-      no_log: true
-      tags:
-        no_testing
-
-    - name: remove guest user
-      when: _admin_username != 'guest'
-      rabbitmq_user:
-        user: guest
-        state: absent
-      no_log: true
-      tags:
-        no_testing
+  roles:
+    - role: rabbitmq
+      vars:
+        rabbitmq_admin_username: "{{ _admin_username }}"
+        rabbitmq_admin_password: "{{ _admin_password }}"
+        rabbitmq_broker_port: "{{ _broker_port }}"
+        rabbitmq_mgmt_port: "{{ _management_port }}"

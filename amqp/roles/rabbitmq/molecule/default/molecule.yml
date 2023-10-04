@@ -4,11 +4,24 @@ dependency:
 driver:
   name: podman
 platforms:
-  - name: instance
+  - name: centos
     image: centos:7
-    command: /sbin/init
-    systemd: always
+    pre_build_image: true
+  - name: ubuntu
+    image: ubuntu-systemd
+    pre_build_image: false
+    dockerfile: ubuntu.dockerfile
+    command: /lib/systemd/systemd
 provisioner:
   name: ansible
+  inventory:
+    group_vars:
+      all:
+        mgmt_port: 2000
+        admin_user: admin
+        admin_passwd: password
+    host_vars:
+      centos:
+        rabbitmq_has_systemd: false
 verifier:
   name: ansible

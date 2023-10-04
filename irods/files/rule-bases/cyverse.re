@@ -81,11 +81,12 @@ cyverse_isUser(*Type) = *Type == cyverse_USER
 # RETURNS:
 #  It returns the type or '' if the type of Entity can't be determined
 #
-cyverse_getEntityType: string -> string
+cyverse_getEntityType: forall X in {path string}, X -> string
 cyverse_getEntityType(*Entity) =
+	let *entity = str(*Entity) in
 	let *type = '' in
-	if errormsg(msiGetObjType(*Entity, *type), *err) < 0
-	then let *_ = writeLine('serverLog', 'cyverse_getEntityType(*Entity) -> *err') in ''
+	if errormsg(msiGetObjType(*entity, *type), *err) < 0
+	then let *_ = writeLine('serverLog', 'cyverse_getEntityType(*entity) -> *err') in ''
 	else
 		if cyverse_isColl(*type) then cyverse_COLL
 		else if cyverse_isDataObj(*type) then cyverse_DATA_OBJ
@@ -105,7 +106,7 @@ cyverse_STAGING_BASE = let *zone = cyverse_ZONE in /*zone/jobs
 #
 # RETURNS:
 #  It returns true if then entity is inside staging, otherwise false
-cyverse_inStaging: path -> boolean
+cyverse_inStaging: forall X in {path string}, X -> boolean
 cyverse_inStaging(*Path) = str(*Path) like str(cyverse_STAGING_BASE) ++ '/*'
 
 # This function checks to see if a collection or data object is inside a user
@@ -120,12 +121,12 @@ cyverse_inStaging(*Path) = str(*Path) like str(cyverse_STAGING_BASE) ++ '/*'
 #  It returns true if the collection or data object is inside the user
 #  collection, otherwise it returns false.
 #
-cyverse_isForSvc: string * string * path -> boolean
+cyverse_isForSvc: forall X in {path string}, string * string * X -> boolean
 cyverse_isForSvc(*SvcUser, *SvcColl, *Path) =
-	let *strPath = str(*Path) in
-	*strPath like regex _cyverse_HOME ++ '/[^/]+/*SvcColl($|/.*)'
-	&& !(*strPath like _cyverse_HOME ++ '/*SvcUser/*')
-	&& !(*strPath like _cyverse_HOME ++ '/shared/*')
+	let *path = str(*Path) in
+	*path like regex _cyverse_HOME ++ '/[^/]+/*SvcColl($|/.*)'
+	&& !(*path like _cyverse_HOME ++ '/*SvcUser/*')
+	&& !(*path like _cyverse_HOME ++ '/shared/*')
 
 # This rule gives access to a service for a collection and everything in it.
 #
@@ -136,8 +137,9 @@ cyverse_isForSvc(*SvcUser, *SvcColl, *Path) =
 #  CollPath  the path to the collection of begin given write access to
 #
 cyverse_giveAccessColl(*SvcUser, *Perm, *CollPath) {
-	writeLine('serverLog', 'permitting *SvcUser *Perm access to *CollPath and everything in it');
-	msiSetACL('recursive', *Perm, *SvcUser, *CollPath);
+	*path = str(*CollPath);
+	writeLine('serverLog', 'permitting *SvcUser *Perm access to *path and everything in it');
+	msiSetACL('recursive', *Perm, *SvcUser, *path);
 }
 
 # This rule gives access to a service for a data object.
@@ -149,8 +151,9 @@ cyverse_giveAccessColl(*SvcUser, *Perm, *CollPath) {
 #  ObjPath  the path to the data object of begin given write access to
 #
 cyverse_giveAccessDataObj(*SvcUser, *Perm, *ObjPath) {
-	writeLine('serverLog', 'permitting *SvcUser *Perm access to *ObjPath');
-	msiSetACL('default', *Perm, *SvcUser, *ObjPath);
+	*path = str(*ObjPath);
+	writeLine('serverLog', 'permitting *SvcUser *Perm access to *path');
+	msiSetACL('default', *Perm, *SvcUser, *path);
 }
 
 # This rule ensures that a service user gets access to a presumably newly
@@ -165,7 +168,7 @@ cyverse_giveAccessDataObj(*SvcUser, *Perm, *ObjPath) {
 #  CollPath  the path to the collection of interest
 #
 cyverse_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *Perm, *CollPath) {
-	if (cyverse_isForSvc(*SvcUser, *SvcColl, /*CollPath)) {
+	if (cyverse_isForSvc(*SvcUser, *SvcColl, *CollPath)) {
 		cyverse_giveAccessColl(*SvcUser, *Perm, *CollPath);
 	}
 }
@@ -182,7 +185,7 @@ cyverse_ensureAccessOnCreateColl(*SvcUser, *SvcColl, *Perm, *CollPath) {
 #  ObjPath  the path to the data object of interest
 #
 cyverse_ensureAccessOnCreateDataObj(*SvcUser, *SvcColl, *Perm, *ObjPath) {
-	if (cyverse_isForSvc(*SvcUser, *SvcColl, /*ObjPath)) {
+	if (cyverse_isForSvc(*SvcUser, *SvcColl, *ObjPath)) {
 		cyverse_giveAccessDataObj(*SvcUser, *Perm, *ObjPath);
 	}
 }
@@ -200,8 +203,8 @@ cyverse_ensureAccessOnCreateDataObj(*SvcUser, *SvcColl, *Perm, *ObjPath) {
 #
 cyverse_ensureAccessOnMv(*SvcUser, *SvcColl, *Perm, *OldPath, *NewPath) {
 	if (
-		!cyverse_isForSvc(*SvcUser, *SvcColl, /*OldPath)
-		&& cyverse_isForSvc(*SvcUser, *SvcColl, /*NewPath)
+		!cyverse_isForSvc(*SvcUser, *SvcColl, *OldPath)
+		&& cyverse_isForSvc(*SvcUser, *SvcColl, *NewPath)
 	) {
 		*type = cyverse_getEntityType(*NewPath);
 

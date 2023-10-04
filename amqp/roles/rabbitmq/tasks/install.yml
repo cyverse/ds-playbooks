@@ -1,0 +1,11 @@
+---
+- name: Install | Gather facts
+  ansible.builtin.setup:
+
+- name: Install | CentOS
+  when: ansible_distribution == 'CentOS'
+  ansible.builtin.include_tasks: _install_centos.yml
+
+- name: Install | Ubuntu
+  when: ansible_distribution == 'Ubuntu'
+  ansible.builtin.include_tasks: _install_ubuntu.yml

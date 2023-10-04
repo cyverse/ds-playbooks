@@ -1,0 +1,42 @@
+---
+- name: Configure | place rabbitmq config file
+  ansible.builtin.template:
+    src: rabbitmq.conf.j2
+    dest: /etc/rabbitmq/rabbitmq.conf
+    owner: rabbitmq
+    group: rabbitmq
+    mode: u+r
+  notify: Restart RabbitMQ
+
+- name: Configure | enable and start broker
+  ansible.builtin.service:
+    name: rabbitmq-server
+    enabled: true
+    state: started
+  when: rabbitmq_has_systemd
+
+- name: Configure | enable management plugin
+  community.rabbitmq.rabbitmq_plugin:
+    names: rabbitmq_management
+    state: enabled
+  notify: Restart RabbitMQ
+  when: rabbitmq_has_systemd
+
+- name: Configure | create admin user
+  community.rabbitmq.rabbitmq_user:
+    user: "{{ rabbitmq_admin_username }}"
+    password: "{{ rabbitmq_admin_password }}"
+    vhost: /
+    configure_priv: .*
+    read_priv: .*
+    write_priv: .*
+    tags: administrator
+    state: present
+  no_log: true
+  when: rabbitmq_has_systemd
+
+- name: Configure | remove guest user
+  when: rabbitmq_admin_username != 'guest' and rabbitmq_has_systemd
+  community.rabbitmq.rabbitmq_user:
+    user: guest
+    state: absent

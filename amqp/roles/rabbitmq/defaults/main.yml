@@ -5,3 +5,8 @@ rabbitmq_admin_password: guest
 rabbitmq_broker_port: 5672
 
 rabbitmq_mgmt_port: 15672
+
+# NB: This should be removed when CentOS 7 is no longer supported.
+# This decides whether or not to perform operations that require systemd to be
+# working on the host. It is intended only for testing.
+rabbitmq_has_systemd: true

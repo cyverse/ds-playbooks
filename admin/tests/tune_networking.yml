@@ -1,6 +1,7 @@
 ---
-- name: test tune_networking
+- name: Test tune_networking
   hosts: physical
   tasks:
-    - fail:
+    - name: Fail when container misidentified
+      ansible.builtin.fail:
         msg: Detected a container as a physical machine

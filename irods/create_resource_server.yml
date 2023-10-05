@@ -1,34 +1,37 @@
 ---
-- import_playbook: provision.yml
+- name: Provision
+  ansible.builtin.import_playbook: provision.yml
 
-- name: resource server specific provisioning
+- name: Resource server specific provisioning
   hosts: irods_resource:!unmanaged_systems
   become: true
   tasks:
-    - name: ensure NetCDF plugins not installed
-      package:
+    - name: Ensure NetCDF plugins not installed
+      ansible.builtin.package:
         name:
           - irods-netcdf-client_modules
           - irods-netcdf-icommands
           - irods-netcdf-server_modules
         state: absent
 
-    - import_tasks: tasks/ensure_irods_ownership.yml
+    - name: Ensure iRODS ownership
+      ansible.builtin.import_tasks: tasks/ensure_irods_ownership.yml
 
 
-- import_playbook: cfg_irods.yml
+- name: Configure iRODS
+  import_playbook: cfg_irods.yml
 
 
-- name: ensure catalog service providers are started
+- name: Ensure catalog service providers are started
   hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
-    - name: start iRODS
+    - name: Start iRODS
       irods_ctl:
 
 
-- name: bootstrap iRODS start
+- name: Bootstrap iRODS start
   hosts: irods_resource:!irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
@@ -37,7 +40,7 @@
     admin_user: "{{ hostvars[groups['irods_catalog'][0]]['_irods_clerver_user'] }}"
     admin_password: "{{ hostvars[groups['irods_catalog'][0]]['_irods_clerver_password'] }}"
   tasks:
-    - name: create clerver user
+    - name: Create clerver user
       delegate_to: localhost
       become: false
       irods_user:
@@ -51,7 +54,7 @@
         admin_password: "{{ admin_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: ensure clerver user is in group rodsadmin
+    - name: Ensure clerver user is in group rodsadmin
       delegate_to: localhost
       become: false
       irods_group_member:
@@ -65,13 +68,14 @@
         admin_password: "{{ admin_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: initialize resource server connection to catalog service providers
+    - name: Initialize resource server connection to catalog service providers
       irods_clerver_auth:
         provider: "{{ groups['irods_catalog'][0] }}"
         password: "{{ _irods_clerver_password }}"
 
-    - name: start iRODS
+    - name: Start iRODS
       irods_ctl:
 
 
-- import_playbook: mk_storage_resources.yml
+- name: Create storage resources
+  ansible.builtin.import_playbook: mk_storage_resources.yml

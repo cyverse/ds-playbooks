@@ -1,7 +1,13 @@
 ---
-- name: Test tune_networking
-  hosts: physical
+- name: Test tune TCP
+  hosts: all:!unmanaged_systems:!localhost
   tasks:
-    - name: Fail when container misidentified
-      ansible.builtin.fail:
-        msg: Detected a container as a physical machine
+    - name: Test pace network traffic
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          expMaxrate='{{ "1Gbit" if inventory_hostname in groups['irods_resource'] else "" }}'
+          tcRep="$(tc qdisc show dev '{{ ansible_default_ipv4.alias }}')"
+          maxrate="$(sed --quiet 's/^qdisc fq .* root .* maxrate \([^ ]\+\) .*/\1/p' <<< "$tcRep")"
+          [[ "$maxrate" == "$expMaxrate" ]]
+      changed_when: false

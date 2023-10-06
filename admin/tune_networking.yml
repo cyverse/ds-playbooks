@@ -1,38 +1,37 @@
 ---
-- name: determine the servers that are on physical machines
+- name: Determine the servers that are on physical machines
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - name: group by virtualization type
-      group_by:
+    - name: Group by virtualization type
+      ansible.builtin.group_by:
         key: "{{ 'physical' if ansible_virtualization_type == 'NA'
                             or ansible_virtualization_type == 'kvm' else
                  'virtual' }}"
       changed_when: false
 
 
-- name: determine the NIC throughput and OS version for the physical servers
+- name: Determine the NIC throughput and OS version for the physical servers
   hosts: physical
   become: true
   gather_facts: false
   tasks:
-    - name: call ethtool
-      shell: |
-        set -o pipefail
-        ethtool {{ ansible_default_ipv4.alias }} \
-          | sed -n 's/\tSpeed: \\([0-9]*\\).*/\\1/p'
-      args:
+    - name: Call ethtool
+      ansible.builtin.shell:
         executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ethtool {{ ansible_default_ipv4.alias }} | sed -n 's/\tSpeed: \\([0-9]*\\).*/\\1/p'
       register: ethtool
       changed_when: false
 
-    - name: group by NIC speed
-      group_by:
-        key: network_{{ '10G' if ethtool.stdout|int >= 10000 else '1G' }}
+    - name: Group by NIC speed
+      ansible.builtin.group_by:
+        key: network_{{ '10G' if ethtool.stdout | int >= 10000 else '1G' }}
       changed_when: false
 
 
-- name: tune MTU
+- name: Tune MTU
   hosts: physical
   become: true
   gather_facts: false
@@ -41,7 +40,7 @@
       ip_link_mtu: "{{ _nic_mtu }}"
 
 
-- name: tune txqueuelen
+- name: Tune txqueuelen
   hosts: physical
   become: true
   gather_facts: false
@@ -50,15 +49,36 @@
       ip_link_txqueuelen: "{{ _nic_txqueuelen }}"
 
 
-- name: tune TCP
+- name: Tune TCP
   hosts: all:!unmanaged_systems:!localhost
   become: true
   gather_facts: false
   tasks:
-    - name: configure linux kernel
-      sysctl:
+    - name: Configure linux kernel
+      ansible.posix.sysctl:
         name: net.{{ item.name }}
         value: "{{ item.value }}"
       with_items: "{{ _sysctl_net }}"
-  tags:
-    - no_testing
+      tags: no_testing
+
+    - name: Pace network traffic
+      when: _transfer_max_rate != ''
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit
+          if ! tcRep="$(tc qdisc show dev '{{ ansible_default_ipv4.alias }}')"; then
+            exit 1
+          fi
+          if ! maxrate="$(
+            sed --quiet 's/^qdisc fq .* root .* maxrate \([^ ]\+\) .*/\1/p' <<< "$tcRep" )"
+          then
+            exit 1
+          fi
+          newMaxrate='{{ _transfer_max_rate }}'Gbit
+          if [[ "$maxrate" != "$newMaxrate" ]]; then
+            tc qdisc add dev '{{ ansible_default_ipv4.alias }}' root fq maxrate "$newMaxrate"
+            echo changed
+          fi
+      register: resp
+      changed_when: resp.stdout == 'changed'

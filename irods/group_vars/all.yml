@@ -51,8 +51,7 @@ _irods_dbms_pg_version: "{{ irods_dbms_pg_version | default('12') }}"
 _irods_dbms_port: "{{ irods_dbms_port | default(5432) }}"
 _irods_default_dir_mode: "{{ irods_default_dir_mode | default('0750') }}"
 _irods_default_file_mode: "{{ irods_default_file_mode | default('0600') }}"
-_irods_default_number_of_transfer_threads: >-
-  {{ irods_default_number_of_transfer_threads | default(None) }}
+_irods_default_number_of_transfer_threads: "{{ irods_default_number_of_transfer_threads | d(3) }}"
 _irods_default_repl_resource: "{{ irods_default_repl_resource | default(_irods_default_resource) }}"
 _irods_default_resource: >-
   {{ irods_default_resource | default(_irods_resource_hierarchies[0].name) }}
@@ -62,7 +61,7 @@ _irods_host_aliases: "{{ irods_host_aliases | default([]) }}"
 _irods_max_num_re_procs: "{{ irods_max_num_re_procs | default(4) }}"
 _irods_negotiation_key: "{{ irods_negotiation_key | default(None) }}"
 _irods_other_host_entries: "{{ irods_other_host_entries | default([]) }}"
-_irods_parallel_transfer_buffer_size: "{{ irods_parallel_transfer_buffer_size | default(None) }}"
+_irods_parallel_transfer_buffer_size: "{{ irods_parallel_transfer_buffer_size | d(100) }}"
 _irods_publish_rs_image: "{{ irods_publish_rs_image | default(false) }}"
 _irods_re_host: "{{ irods_re_host | default(groups['irods_catalog'][0]) }}"
 _irods_resource_hierarchies: >-

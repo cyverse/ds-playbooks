@@ -1,19 +1,23 @@
 ---
-version: "2.0"
+version: "3.0"
 
 services:
   amqp:
     image: test-env-base:centos7
+    privileged: true
+
 
   apache:
     build:
       context: .
       dockerfile: apache/Dockerfile
+    privileged: true
 
   sftp:
     build:
       context: .
       dockerfile: sftp/Dockerfile
+    privileged: true
 
   dbms_configured:
     build:
@@ -23,12 +27,14 @@ services:
         IRODS_RESOURCES: "$IRODS_RES_CONF_CENTOS_NAME:$IRODS_CONSUMER_CONF_CENTOS_HOST:$IRODS_VAULT $IRODS_RES_CONF_UBUNTU_NAME:$IRODS_CONSUMER_CONF_UBUNTU_HOST:$IRODS_VAULT"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
         IRODS_ZONE_PASSWORD: "$IRODS_CLERVER_PASSWORD"
+    privileged: true
     tty: true
 
   dbms_unconfigured:
     build:
       context: .
       dockerfile: postgresql/Dockerfile.unconfigured
+    privileged: true
     tty: true
 
   provider_configured:
@@ -45,6 +51,7 @@ services:
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
         IRODS_ZONE_PASSWORD: "$IRODS_CLERVER_PASSWORD"
     hostname: "$IRODS_PROVIDER_CONF_HOST"
+    privileged: true
     tty: true
     depends_on:
       - amqp
@@ -58,6 +65,7 @@ services:
         DBMS_HOST: "$DBMS_HOST"
         IRODS_SYSTEM_GROUP: "$IRODS_PROVIDER_SYSTEM_GROUP"
     hostname: "$IRODS_PROVIDER_UNCONF_HOST"
+    privileged: true
     tty: true
     depends_on:
       - amqp
@@ -76,9 +84,8 @@ services:
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
         IRODS_ZONE_PASSWORD: "$IRODS_CLERVER_PASSWORD"
-    cap_add:
-      - NET_ADMIN
     hostname: "$IRODS_CONSUMER_CONF_CENTOS_HOST"
+    privileged: true
     tty: true
     depends_on:
       - provider_configured
@@ -96,9 +103,8 @@ services:
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
         IRODS_ZONE_PASSWORD: "$IRODS_CLERVER_PASSWORD"
-    cap_add:
-      - NET_ADMIN
     hostname: "$IRODS_CONSUMER_CONF_UBUNTU_HOST"
+    privileged: true
     tty: true
     depends_on:
       - provider_configured
@@ -110,6 +116,7 @@ services:
       args:
         IRODS_CATALOG_PROVIDER: "$IRODS_PROVIDER_CONF_HOST"
     hostname: "${ENV_NAME}_consumer_configured_1.${DOMAIN}"
+    privileged: true
     tty: true
     depends_on:
       - provider_configured
@@ -118,8 +125,7 @@ services:
     build:
       context: .
       dockerfile: haproxy/Dockerfile
-    cap_add:
-      - NET_ADMIN
+    privileged: true
     depends_on:
       - apache
       - provider_configured

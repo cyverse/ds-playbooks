@@ -52,7 +52,7 @@ Variable                                   | Required | Default                 
 `irods_dbms_port`                          | no       | 5432                                 |         | The TCP port the DBMS listens on.
 `irods_default_dir_mode`                   | no       | 0750                                 |         | The default permissions assigned to newly created directories in the vault
 `irods_default_file_mode`                  | no       | 0600                                 |         | The default permissions assigned to newly created files in the vault
-`irods_default_number_of_transfer_threads` | no       | 4                                    |         | The default maximum number of transfer streams for parallel transfer
+`irods_default_number_of_transfer_threads` | no       | 3                                    |         | The default maximum number of transfer streams for parallel transfer
 `irods_default_repl_resource`              | no       | `irods_default_resource`             |         | The default resource for replication
 `irods_default_resource`                   | no       | `irods_resource_hierarchies[0].name` |         | the name of the default resource
 `irods_default_vault`                      | no       |                                      |         | The default path to the vault on the server being configured
@@ -61,7 +61,7 @@ Variable                                   | Required | Default                 
 `irods_max_num_re_procs`                   | no       | 4                                    |         | The maximum number of rule engine processes to run
 `irods_negotiation_key`                    | no       | TEMPORARY_32byte_negotiation_key     |         | The negotiation key
 `irods_other_host_entries`                 | no       | []                                   |         | A list of other FQDNs to add to /etc/hosts
-`irods_parallel_transfer_buffer_size`      | no       | 4                                    |         | The transfer buffer size in MiB for each stream during parallel transfer
+`irods_parallel_transfer_buffer_size`      | no       | 100                                  |         | The transfer buffer size in MiB for each stream during parallel transfer
 `irods_publish_rs_image`                   | no       | false                                |         | Whether or not to publish a freshly build resource server docker image to dockerhub.
 `irods_re_host`                            | no       | `group_vars['irods_catalog'][0]`     |         | The FQDN or IP address of the iRODS rule engine host
 `irods_resource_hierarchies`               | no       | `[ { "name": "demoResc" } ]`         |         | The list of resource hierarchies that need to exist, _see below_

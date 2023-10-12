@@ -21,7 +21,7 @@
         executable: /bin/bash
         cmd: |
           set -o pipefail
-          ethtool {{ ansible_default_ipv4.alias }} | sed -n 's/\tSpeed: \\([0-9]*\\).*/\\1/p'
+          ethtool {{ ansible_default_ipv4.alias }} | sed -n 's/\tSpeed: \([0-9]*\).*/\1/p'
       register: ethtool
       changed_when: false
 

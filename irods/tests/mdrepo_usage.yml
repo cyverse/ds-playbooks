@@ -1,49 +1,57 @@
 ---
-- name: test configure iRODS for MD Repo
+- name: Test configure iRODS for MD Repo
   hosts: irods_catalog
   become: true
   become_user: irods
   run_once: true
   tasks:
-    - name: test create project collection
-      shell: ils /testing/home/shared/md-repo &> /dev/null
+    - name: Test create project collection
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/home/shared/md-repo &> /dev/null
       changed_when: false
 
-    - name: test create landing collection
-      shell: ils /testing/home/shared/md-repo/path/to/landing &> /dev/null
+    - name: Test create landing collection
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/home/shared/md-repo/path/to/landing &> /dev/null
       changed_when: false
 
-    - name: test assign owner to collections
-      shell: |
-        set -o pipefail
-        ils -A '{{ item }}' | sed --quiet 2p | grep --quiet 'md_mgr#testing:own'
+    - name: Test assign owner to collections
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A '{{ item }}' | sed --quiet 2p | grep --quiet 'md_mgr#testing:own'
       changed_when: false
       with_items:
         - /testing/home/shared/md-repo
         - /testing/home/shared/md-repo/path/to/landing
 
-    - name: retrieve MD Repo service user information
-      command: iadmin lu md_svc
+    - name: Retrieve MD Repo service user information
+      ansible.builtin.command: iadmin lu md_svc
       register: user_info
       changed_when: false
 
-    - name: verify user information
-      assert:
+    - name: Verify user information
+      ansible.builtin.assert:
         that:
           - user_info.stdout != 'No rows found'
           - 'user_info.stdout is search("user_type_name: ds-service")'
           - 'user_info.stdout is search("user_info: MD Repo service")'
 
     - name: test give service account write access to landing collection
-      shell: |
-        set -o pipefail
-        ils -A /testing/home/shared/md-repo/path/to/landing \
-          | sed --quiet 2p \
-          | grep --quiet 'md_svc#testing:modify object'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A /testing/home/shared/md-repo/path/to/landing \
+            | sed --quiet 2p \
+            | grep --quiet 'md_svc#testing:modify object'
       changed_when: false
 
 
-- name: test mdrepo-env default expansion
+- name: Test mdrepo-env default expansion
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -51,14 +59,14 @@
   vars:
     mdrepo_env: "{{ lookup('template', '../templates/rule-bases/mdrepo-env.re.j2') }}"
   tasks:
-    - name: verify constants expand correctly on mdrepo-env.re.j2
-      assert:
+    - name: Verify constants expand correctly on mdrepo-env.re.j2
+      ansible.builtin.assert:
         that:
           - mdrepo_env is search("mdrepo_LANDING_COLL = ''")
           - mdrepo_env is search("mdrepo_SVC_ACCOUNT = ''")
 
 
-- name: test mdrepo-env custom collection
+- name: Test mdrepo-env custom collection
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -67,14 +75,14 @@
     mdrepo_collection: /custom
     mdrepo_env: "{{ lookup('template', '../templates/rule-bases/mdrepo-env.re.j2') }}"
   tasks:
-    - name: verify constants expand correctly on mdrepo-env.re.j2
-      assert:
+    - name: Verify constants expand correctly on mdrepo-env.re.j2
+      ansible.builtin.assert:
         that:
           - mdrepo_env is search("mdrepo_LANDING_COLL = '/custom'")
           - mdrepo_env is search("mdrepo_SVC_ACCOUNT = 'md-svc'")
 
 
-- name: test mdrepo-env custom expansion
+- name: Test mdrepo-env custom expansion
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -85,30 +93,33 @@
     mdrepo_svc_account: mdrepo
     mdrepo_env: "{{ lookup('template', '../templates/rule-bases/mdrepo-env.re.j2') }}"
   tasks:
-    - name: verify constants expand correctly on mdrepo-env.re.j2
-      assert:
+    - name: Verify constants expand correctly on mdrepo-env.re.j2
+      ansible.builtin.assert:
         that:
           - mdrepo_env is search("mdrepo_LANDING_COLL = '/custom/landing'")
           - mdrepo_env is search("mdrepo_SVC_ACCOUNT = 'mdrepo'")
 
 
-- name: test add MD Repo rule logic
+- name: Test add MD Repo rule logic
   hosts: irods
   become: true
   become_user: irods
   tasks:
-    - name: test install command script
-      stat:
-        path: /var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
+    - name: Test install command script
+      ansible.builtin.stat:
+        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
       register: response
       failed_when: >-
         not response.stat.exists or
         response.stat.pw_name != 'irods' or
         not response.stat.rusr or
         not response.stat.xusr
+      with_items:
+        - md-repo-mkdir
+        - md-repo-touch-obj
 
-    - name: test install of rule bases
-      stat:
+    - name: Test install of rule bases
+      ansible.builtin.stat:
         path: /etc/irods/mdrepo-env.re
       register: response
       failed_when: >-
@@ -125,23 +136,25 @@
   run_once: true
   gather_facts: false
   tasks:
-    - name: retrieve MD Repo CLI user information
-      command: iadmin lu md_cli
+    - name: Retrieve MD Repo CLI user information
+      ansible.builtin.command: iadmin lu md_cli
       register: user_info
       changed_when: false
 
-    - name: verify user information
-      assert:
+    - name: Verify user information
+      ansible.builtin.assert:
         that:
           - user_info.stdout != 'No rows found'
           - 'user_info.stdout is search("user_type_name: ds-service")'
           - 'user_info.stdout is search("user_info: MD Repo command line interface")'
 
-    - name: verify user has empty password
+    - name: Verify user has empty password
       environment:
         IRODS_USER_NAME: md_cli
         IRODS_AUTHENTICATION_FILE: /dev/null
-      shell: |
-        ils /cyverse.dev <<< '' &> /dev/null
-        (( $? == 4 ))
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          ils /cyverse.dev <<< '' &> /dev/null
+          (( $? == 4 ))
       changed_when: false

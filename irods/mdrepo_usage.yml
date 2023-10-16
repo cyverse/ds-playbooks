@@ -9,9 +9,10 @@
       {{ _mdrepo_collection  }}{{
       '/' ~ _mdrepo_landing_collection if _mdrepo_landing_collection != '' else '' }}
   tasks:
-    - when: _mdrepo_collection|length > 0
+    - name: Configure
+      when: _mdrepo_collection | length > 0
       block:
-        - name: create project collection
+        - name: Create project collection
           delegate_to: localhost
           become: false
           irods_collection:
@@ -24,7 +25,7 @@
             admin_password: "{{ _irods_clerver_password }}"
             zone: "{{ _irods_zone_name }}"
 
-        - name: create landing collection
+        - name: Create landing collection
           delegate_to: localhost
           become: false
           irods_collection:
@@ -37,7 +38,7 @@
             admin_password: "{{ _irods_clerver_password }}"
             zone: "{{ _irods_zone_name }}"
 
-        - name: assign owner to project collection
+        - name: Assign owner to project collection
           delegate_to: localhost
           become: false
           irods_permission:
@@ -51,7 +52,7 @@
             admin_password: "{{ _irods_clerver_password }}"
             zone: "{{ _irods_zone_name }}"
 
-        - name: create service account
+        - name: Create service account
           delegate_to: localhost
           become: false
           irods_user:
@@ -66,7 +67,7 @@
             admin_password: "{{ _irods_clerver_password }}"
             zone: "{{ _irods_zone_name }}"
 
-        - name: give service account write access to landing collection
+        - name: Give service account write access to landing collection
           delegate_to: localhost
           become: false
           irods_permission:
@@ -81,36 +82,40 @@
             zone: "{{ _irods_zone_name }}"
 
 
-- name: add MD Repo rule logic
+- name: Add MD Repo rule logic
   hosts: irods
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
-    - when: _mdrepo_collection|length > 0
+    - name: Add logic
+      when: _mdrepo_collection | length > 0
       block:
-        - name: install command script
-          copy:
-            src: files/mdrepo/var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
-            dest: /var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
+        - name: Install command scripts
+          ansible.builtin.copy:
+            src: files/mdrepo/var/lib/irods/msiExecCmd_bin/{{ item }}
+            dest: /var/lib/irods/msiExecCmd_bin/{{ item }}
             mode: u+rx
+          with_items:
+            - md-repo-mkdir
+            - md-repo-touch-obj
 
-        - name: install mdrepo-env.re
-          template:
+        - name: Install mdrepo-env.re
+          ansible.builtin.template:
             src: templates/rule-bases/mdrepo-env.re.j2
             dest: /etc/irods/mdrepo-env.re
             mode: u+r
-          notify: reload rules
+          notify: Reload rules
 
-        - name: install mdrepo.re
-          copy:
+        - name: Install mdrepo.re
+          ansible.builtin.copy:
             src: files/rule-bases/mdrepo.re
             dest: /etc/irods/mdrepo.re
             mode: u+r
-          notify: reload rules
+          notify: Reload rules
 
   handlers:
-    - name: reload rules
-      file:
+    - name: Reload rules
+      ansible.builtin.file:
         path: /etc/irods/core.re
         state: touch
         mode: u+r
@@ -123,8 +128,8 @@
   run_once: true
   gather_facts: false
   tasks:
-    - name: create MD Repo CLI account
-      when: _mdrepo_collection|length > 0
+    - name: Create MD Repo CLI account
+      when: _mdrepo_collection | length > 0
       delegate_to: localhost
       become: false
       irods_user:

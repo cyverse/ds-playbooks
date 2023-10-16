@@ -107,13 +107,16 @@
   tasks:
     - name: Test install command script
       ansible.builtin.stat:
-        path: /var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
+        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
       register: response
       failed_when: >-
         not response.stat.exists or
         response.stat.pw_name != 'irods' or
         not response.stat.rusr or
         not response.stat.xusr
+      with_items:
+        - md-repo-mkdir
+        - md-repo-touch-obj
 
     - name: Test install of rule bases
       ansible.builtin.stat:

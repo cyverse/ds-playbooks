@@ -90,11 +90,14 @@
     - name: Add logic
       when: _mdrepo_collection | length > 0
       block:
-        - name: Install command script
+        - name: Install command scripts
           ansible.builtin.copy:
-            src: files/mdrepo/var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
-            dest: /var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
+            src: files/mdrepo/var/lib/irods/msiExecCmd_bin/{{ item }}
+            dest: /var/lib/irods/msiExecCmd_bin/{{ item }}
             mode: u+rx
+          with_items:
+            - md-repo-mkdir
+            - md-repo-touch-obj
 
         - name: Install mdrepo-env.re
           ansible.builtin.template:

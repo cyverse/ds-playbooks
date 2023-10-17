@@ -69,7 +69,7 @@ mdrepo_api_coll_create_pre(*Instance, *Comm, *CollCreateInp) {
 		if (*err != 0) {
 			*_ = errorcode(msiGetStderrInExecCmdOut(*out, *cmdErr));
 			_mdrepo_logMsg(
-				'failed to create collection ' ++ *CollCreateInp.coll_name ': ' ++ *msg
+				'failed to create collection ' ++ *CollCreateInp.coll_name ++ ': ' ++ *msg
 				++ ' (' ++ *cmdErr ++ ')' );
 			*err;
 		}

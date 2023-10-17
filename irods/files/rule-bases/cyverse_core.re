@@ -384,7 +384,7 @@ acPostProcForDataCopyReceived(*LeafResource) {
 # This rule sets the post-processing policy for deleting a data object.
 #
 acPostProcForDelete {
-	err = errormsg(ipc_acPostProcForDelete, *msg);
+	*err = errormsg(ipc_acPostProcForDelete, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}

@@ -54,12 +54,12 @@
         that: haproxy is search('\nbackend irods_throttled\n(  [^\n]*\n)*  server .* maxconn 500\n')
 
     - name: Verify haproxy config irods_direct backend
-      ansible.builtin.debug:
-        msg: TODO verify {{ item }}
-      with_items:
-        - server
+      ansible.builtin.assert:
+        that: >-
+          haproxy
+          is search('\nbackend irods_direct\n(..[^\n]*\n)*  server .* 127.0.0.1 * maxconn 500\n' )
 
-    - name: Verify WEBDAV section
+    - name: Verify haproxy config webdav listner
       ansible.builtin.debug:
         msg: TODO implement
 

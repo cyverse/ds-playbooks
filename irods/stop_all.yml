@@ -1,11 +1,13 @@
 ---
-- name: stop iRODS resource servers
+- name: Stop all | stop iRODS catalog consumers
   hosts: irods_resource:!irods_catalog
   tasks:
-    - import_tasks: tasks/stop_irods.yml
+    - name: Stop
+      ansible.builtin.import_tasks: tasks/stop_irods.yml
 
 
-- name: stop catalog service providers
+- name: Stop all | stop iRODS catalog providers
   hosts: irods_catalog
   tasks:
-    - import_tasks: tasks/stop_irods.yml
+    - name: Stop
+      ansible.builtin.import_tasks: tasks/stop_irods.yml

@@ -13,6 +13,13 @@ _mdrepo_getValue(*KVMap, *Key) = if errorcode(*KVMap.'*Key') == 0 then *KVMap.'*
 
 _mdrepo_forMDRepo(*Path) = mdrepo_LANDING_COLL != '' && *Path like mdrepo_LANDING_COLL ++ '/*'
 
+_mdrepo_collExists(*Coll) =
+	let *exists = false in
+	let *_ = foreach(*rec in SELECT COLL_ID WHERE COLL_NAME = *Coll) {
+			*exists = true
+		} in
+	*exists
+
 _mdrepo_obj_exists(*DataPath) =
 	let *exists = false in
 	let *collPath = '' in
@@ -25,10 +32,10 @@ _mdrepo_obj_exists(*DataPath) =
 
 _mdrepo_usingTicket() = _mdrepo_getValue(temporaryStorage, 'mdrepo_ticket') != ''
 
+_mdrepo_needEnsureExists(*Entity) = _mdrepo_forMDRepo(*Entity) && _mdrepo_usingTicket()
+
 _mdrepo_needEnsureObjExists(*DataObj) =
-	_mdrepo_forMDRepo(*DataObj) &&
-	_mdrepo_usingTicket() &&
-	! _mdrepo_obj_exists(*DataObj)
+	_mdrepo_needEnsureExists(*DataObj) && ! _mdrepo_obj_exists(*DataObj)
 
 _mdrepo_logMsg(*Msg) {
 	writeLine('serverLog', 'MD REPO: *Msg');
@@ -48,15 +55,36 @@ _mdrepo_touchDataObj(*DataObj) {
 	}
 }
 
+mdrepo_api_coll_create_pre(*Instance, *Comm, *CollCreateInp) {
+	if (
+		_mdrepo_needEnsureExists(*CollCreateInp.coll_name)
+		&& ! _mdrepo_collExists(*CollCreateInp.coll_name)
+	) {
+		_mdrepo_logMsg('creating collection ' ++ *CollCreateInp.coll_name);
+		*svcAcntArg = execCmdArg(mdrepo_SVC_ACCOUNT);
+		*collArg = execCmdArg(*CollCreateInp.coll_name);
+		*args = "*svcAcntArg *collArg";
+		*err = errormsg(msiExecCmd('md-repo-mkdir', "*args", cyverse_RE_HOST, "", "", *out), *msg);
+
+		if (*err != 0) {
+			*_ = errorcode(msiGetStderrInExecCmdOut(*out, *cmdErr));
+			_mdrepo_logMsg(
+				'failed to create collection ' ++ *CollCreateInp.coll_name ++ ': ' ++ *msg
+				++ ' (' ++ *cmdErr ++ ')' );
+			*err;
+		}
+	}
+}
+
 mdrepo_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp) {
 	if (_mdrepo_needEnsureObjExists(*DataObjInp.obj_path)) {
-		_mdrepo_touchDataObj(*DataObjInp.obj_path)
+		_mdrepo_touchDataObj(*DataObjInp.obj_path);
 	}
 }
 
 mdrepo_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PortalOprOut) {
 	if (_mdrepo_needEnsureObjExists(*DataObjInp.obj_path)) {
-		_mdrepo_touchDataObj(*DataObjInp.obj_path)
+		_mdrepo_touchDataObj(*DataObjInp.obj_path);
 	}
 }
 

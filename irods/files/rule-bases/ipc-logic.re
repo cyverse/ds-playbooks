@@ -271,10 +271,12 @@ sendMsg(*Topic, *Msg) {
 	*argStr = '*exchangeArg *topicArg *msgArg';
 
 	*status = errormsg(
-		msiExecCmd('amqptopicsend.py', *argStr, cyverse_RE_HOST, 'null', 'null', *out), *errMsg );
+		msiExecCmd('amqptopicsend.py', *argStr, cyverse_RE_HOST, 'null', 'null', *out), *msg );
 
 	if (*status < 0) {
-		writeLine("serverLog", "Failed to send AMQP message: *errMsg");
+		msiGetStderrInExecCmdOut(*out, *err);
+		writeLine("serverLog", "Failed to send AMQP message: *msg");
+		writeLine("serverLog", *err);
 	}
 
 	0;

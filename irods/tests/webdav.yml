@@ -196,7 +196,8 @@
       ansible.builtin.debug:
         msg: TODO implement
 
-    - include_tasks: tasks/test_pkg_installed.yml
+    - name: Test package installation
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       with_items:
         - davrods
         - mod_proxy_html
@@ -302,7 +303,8 @@
       register: response
       failed_when: not response.stat.exists
 
-    - include_tasks: tasks/test_pkg_installed.yml
+    - name: Test varnish package installation
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: varnish
         version: "6.5.1"

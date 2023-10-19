@@ -144,7 +144,7 @@
               - server_config.environment_variables.IRODS_DATABASE_USER_PASSWORD_SALT == 'salt'
               - >-
                 server_config.environment_variables.IRODS_AMQP_URI
-                == "amqp://amqp_admin:password@dstesting-amqp-1.dstesting_default:5672/%2F"
+                == "amqp://amqp_admin:password@dstesting-amqp_ubuntu-1.dstesting_default:5672/%2F"
               - server_config.federation | length == 2
               - server_config.federation[0].catalog_provider_hosts | length == 2
               - server_config.federation[0].catalog_provider_hosts[0] == '128.196.65.155'

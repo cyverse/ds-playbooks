@@ -2,10 +2,13 @@
 version: "3.0"
 
 services:
-  amqp:
+  amqp_centos:
     image: test-env-base:centos7
     privileged: true
 
+  amqp_ubuntu:
+    image: test-env-base:ubuntu2204
+    privileged: true
 
   apache:
     build:
@@ -54,7 +57,7 @@ services:
     privileged: true
     tty: true
     depends_on:
-      - amqp
+      - amqp_ubuntu
       - dbms_configured
 
   provider_unconfigured:
@@ -68,7 +71,7 @@ services:
     privileged: true
     tty: true
     depends_on:
-      - amqp
+      - amqp_ubuntu
       - dbms_configured
 
   consumer_configured_centos:

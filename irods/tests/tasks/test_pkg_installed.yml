@@ -4,18 +4,18 @@
 # pkg  The name of the package
 # ver  (optional) The package version that should be installed
 
-- name: determine which packages are installed
-  package_facts:
+- name: Determine which packages are installed
+  ansible.builtin.package_facts:
     strategy: all
 
-- name: check correct {{ pkg }} package installed
-  assert:
+- name: Check correct package installed {{ pkg }}
+  ansible.builtin.assert:
     that:
       - pkg in ansible_facts.packages
       - ansible_facts.packages[pkg]|length == 1
 
-- name: check {{ pkg }} package has correct version
-  assert:
+- name: Check package has correct version {{ pkg }}
+  ansible.builtin.assert:
     that:
       - ansible_facts.packages[pkg][0].version is version(ver, '==')
   when: ver | default(false) | bool

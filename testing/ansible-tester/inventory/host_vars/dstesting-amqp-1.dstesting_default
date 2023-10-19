@@ -1,2 +1,4 @@
 ---
 ansible_python_interpreter: /usr/bin/python
+
+rabbitmq_has_systemd: false

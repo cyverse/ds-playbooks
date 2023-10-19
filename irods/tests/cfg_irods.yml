@@ -1,14 +1,15 @@
 ---
-- import_playbook: rule_templates.yml
+- name: Test rule template expansion
+  ansible.builtin.import_playbook: rule_templates.yml
 
 
-- name: test common file deposition
+- name: Test common file deposition
   hosts: irods
   become: true
   become_user: irods
   tasks:
-    - name: check common configuration files in place
-      stat:
+    - name: Check common configuration files in place
+      ansible.builtin.stat:
         path: /etc/irods/{{ item }}
       register: response
       failed_when: >-
@@ -48,13 +49,13 @@
         - terraref-env.re
 
     - name: Verify irods_environment.json is in place
-      stat:
+      ansible.builtin.stat:
         path: /var/lib/irods/.irods/irods_environment.json
       register: response
       failed_when: not response.stat.exists
 
     - name: Verify common command scripts are in place
-      stat:
+      ansible.builtin.stat:
         path: /var/lib/irods/msiExecCmd_bin/{{ item }}
       register: response
       failed_when: >-
@@ -72,28 +73,28 @@
         - imeta-exec
 
     - name: Verify database_config.json does not exist
-      stat:
+      ansible.builtin.stat:
         path: /etc/irods/database_config.json
       register: response
       failed_when: response.stat.exists
 
     - name: Verify .pgpass does not exist
-      stat:
+      ansible.builtin.stat:
         path: /var/lib/irods/.pgpass
       register: response
       failed_when: response.stat.exists
 
-    - name: retrieve encoded irods_environment.json
-      slurp:
+    - name: Retrieve encoded irods_environment.json
+      ansible.builtin.slurp:
         src: /var/lib/irods/.irods/irods_environment.json
       register: ie_encoded
 
-    - name: decode irods_environment.json
-      set_fact:
+    - name: Decode irods_environment.json
+      ansible.builtin.set_fact:
         irods_environment: "{{ ie_encoded.content | b64decode }}"
 
-    - name: verify irods_environment.json has correct contents
-      assert:
+    - name: Verify irods_environment.json has correct contents
+      ansible.builtin.assert:
         that:
           - irods_environment.irods_host == inventory_hostname
           - irods_environment.irods_port == 1247
@@ -110,19 +111,20 @@
           - irods_environment.irods_default_hash_scheme == 'MD5'
           - irods_environment.irods_default_resource == 'ingestRes'
 
-    - when: inventory_hostname in groups['irods_catalog']
+    - name: Test catalog provider specific configuration
+      when: inventory_hostname in groups['irods_catalog']
       block:
-        - name: retrieve encoded server_config.json
-          slurp:
+        - name: Retrieve encoded server_config.json
+          ansible.builtin.slurp:
             src: /etc/irods/server_config.json
           register: sc_encoded
 
-        - name: decode server_config.json
-          set_fact:
+        - name: Decode server_config.json
+          ansible.builtin.set_fact:
             server_config: "{{ sc_encoded.content | b64decode }}"
 
-        - name: verify server_config.json has correct contents
-          assert:
+        - name: Verify server_config.json has correct contents
+          ansible.builtin.assert:
             that:
               - server_config.advanced_settings.default_number_of_transfer_threads == 4
               - >-
@@ -178,19 +180,20 @@
               - server_config.zone_port == 1247
               - server_config.zone_user == 'rods'
 
-    - when: inventory_hostname in groups['irods_resource']
+    - name: Test resource server specific configuration
+      when: inventory_hostname in groups['irods_resource']
       block:
-        - name: retrieve encoded server_config.json
-          slurp:
+        - name: Retrieve encoded server_config.json
+          ansible.builtin.slurp:
             src: /etc/irods/server_config.json
           register: sc_encoded
 
-        - name: decode server_config.json
-          set_fact:
+        - name: Decode server_config.json
+          ansible.builtin.set_fact:
             server_config: "{{ sc_encoded.content | b64decode }}"
 
-        - name: verify server_config.json has correct contents
-          assert:
+        - name: Verify server_config.json has correct contents
+          ansible.builtin.assert:
             that:
               - server_config.advanced_settings.default_number_of_transfer_threads == 4
               - >-
@@ -235,26 +238,27 @@
                     inventory_hostname == 'dstesting-consumer_unconfigured-1.dstesting_default' else
                   'rods' )
 
-        - name: verify consumer_configured_ubuntu_1 specific server_config.json
+        - name: Verify consumer_configured_ubuntu_1 specific server_config.json
           when: inventory_hostname == 'dstesting-consumer_configured_ubuntu-1.dstesting_default'
-          assert:
+          ansible.builtin.assert:
             that:
               - server_config.default_dir_mode == '0770'
               - server_config.default_file_mode == '0660'
 
-    - when: inventory_hostname == 'dstesting-consumer_configured_ubuntu-1.dstesting_default'
+    - name: Test consumer host specific configuration
+      when: inventory_hostname == 'dstesting-consumer_configured_ubuntu-1.dstesting_default'
       block:
-        - name: retrieve encoded hosts_config.json
-          slurp:
+        - name: Retrieve encoded hosts_config.json
+          ansible.builtin.slurp:
             src: /etc/irods/hosts_config.json
           register: hc_encoded
 
-        - name: decode hosts_config.json
-          set_fact:
+        - name: Decode hosts_config.json
+          ansible.builtin.set_fact:
             hosts_config: "{{ hc_encoded.content | b64decode }}"
 
-        - name: verify hosts_config.json contents
-          assert:
+        - name: Verify hosts_config.json contents
+          ansible.builtin.assert:
             that:
               - hosts_config.host_entries[0].address_type == 'local'
               - >-
@@ -263,8 +267,8 @@
               - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
               - hosts_config.host_entries[0].addresses[2].address == 'alias-2'
 
-    - name: test ensure rule file is gone
-      stat:
+    - name: Test ensure rule file is gone
+      ansible.builtin.stat:
         path: /etc/irods/{{ item }}
       register: response
       failed_when: response.stat.exists

@@ -38,7 +38,7 @@
         that:
           - >-
             purgeman_conf
-            is search('PURGEMAN_AMQP_HOST=dstesting-amqp-1.dstesting_default' | regex_escape)
+            is search('PURGEMAN_AMQP_HOST=dstesting-amqp_ubuntu-1.dstesting_default' | regex_escape)
           - purgeman_conf is search('PURGEMAN_AMQP_PORT=5672')
           - purgeman_conf is search('PURGEMAN_AMQP_VHOST=/')
           - purgeman_conf is search('PURGEMAN_AMQP_EXCHANGE=irods')
@@ -196,7 +196,8 @@
       ansible.builtin.debug:
         msg: TODO implement
 
-    - include_tasks: tasks/test_pkg_installed.yml
+    - name: Test package installation
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       with_items:
         - davrods
         - mod_proxy_html
@@ -302,7 +303,8 @@
       register: response
       failed_when: not response.stat.exists
 
-    - include_tasks: tasks/test_pkg_installed.yml
+    - name: Test varnish package installation
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: varnish
         version: "6.5.1"

@@ -39,10 +39,8 @@ _mdrepo_dataObjExists(*DataPath) =
 
 _mdrepo_getTicketOwner(*Ticket) =
 	let *owner = '' in
-	let *_ = foreach( *rec in
-			SELECT TICKET_OWNER_NAME, TICKET_OWNER_ZONE where TICKET_STRING = *Ticket
-		) {
-			*owner = *rec.TICKET_OWNER_NAME ++ '#' ++ *rec.TICKET_OWNER_ZONE;
+	let *_ = foreach(*rec in SELECT TICKET_OWNER_NAME where TICKET_STRING = *Ticket) {
+			*owner = *rec.TICKET_OWNER_NAME;
 		} in
 	*owner
 

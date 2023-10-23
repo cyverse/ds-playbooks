@@ -124,10 +124,11 @@ _ipc_UUID_ATTR = 'ipc_UUID'
 
 # Looks up the UUID of a collection from its path.
 _ipc_retrieveCollectionUUID(*Coll) =
+	let *coll = str(*Coll) in
 	let *uuid = '' in
 	let *attr = _ipc_UUID_ATTR in
 	let *_ = foreach ( *record in
-			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == *attr
+			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *coll AND META_COLL_ATTR_NAME == *attr
 		) { *uuid = *record.META_COLL_ATTR_VALUE; } in
 	*uuid
 

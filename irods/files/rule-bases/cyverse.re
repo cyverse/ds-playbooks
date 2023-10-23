@@ -228,7 +228,7 @@ cyverse_ensureAccessOnMv(*SvcUser, *SvcColl, *Perm, *OldPath, *NewPath) {
 cyverse_setProtectedAVU(*Entity, *Attr, *Val, *Unit) {
 	*cmdArg = execCmdArg('set');
 	*typeArg = execCmdArg(cyverse_getEntityType(*Entity));
-	*entityArg = execCmdArg(*Entity);
+	*entityArg = execCmdArg(str(*Entity));
 	*attrArg = execCmdArg(*Attr);
 	*valArg = execCmdArg(*Val);
 	*unitArg = execCmdArg(*Unit);

@@ -26,6 +26,7 @@ irods_calliope_project_coll: /testing/home/shared/calliope
 
 irods_clerver_password: password
 
+irods_default_number_of_transfer_threads: 4
 irods_default_repl_resource: replRes
 
 irods_federation:
@@ -40,6 +41,8 @@ irods_federation:
     negotiation_key: FAKE___32_byte_negotiation_key_2
     zone_key: FAKE_zone_key_2
     zone_name: cyverse
+
+irods_parallel_transfer_buffer_size: 4
 
 irods_resource_hierarchies:
   - name: ingestRes

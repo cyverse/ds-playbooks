@@ -1,94 +1,11 @@
 ---
-- name: Configure iRODS for MD Repo
-  hosts: irods_catalog
-  become: "{{ _become_svc_acnt }}"
-  become_user: "{{ _irods_service_account_name }}"
-  run_once: true
-  vars:
-    landing_path: >-
-      {{ _mdrepo_collection  }}{{
-      '/' ~ _mdrepo_landing_collection if _mdrepo_landing_collection != '' else '' }}
-  tasks:
-    - name: Configure
-      when: _mdrepo_collection | length > 0
-      block:
-        - name: Create project collection
-          delegate_to: localhost
-          become: false
-          irods_collection:
-            path: "{{ _mdrepo_collection }}"
-            parents: true
-            state: present
-            host: "{{ groups['irods_catalog'][0] }}"
-            port: "{{ _irods_zone_port }}"
-            admin_user: "{{ _irods_clerver_user }}"
-            admin_password: "{{ _irods_clerver_password }}"
-            zone: "{{ _irods_zone_name }}"
-
-        - name: Create landing collection
-          delegate_to: localhost
-          become: false
-          irods_collection:
-            path: "{{ landing_path }}"
-            parents: true
-            state: present
-            host: "{{ groups['irods_catalog'][0] }}"
-            port: "{{ _irods_zone_port }}"
-            admin_user: "{{ _irods_clerver_user }}"
-            admin_password: "{{ _irods_clerver_password }}"
-            zone: "{{ _irods_zone_name }}"
-
-        - name: Assign owner to project collection
-          delegate_to: localhost
-          become: false
-          irods_permission:
-            subject: "{{ _mdrepo_manager }}"
-            permission: own
-            object: "{{ _mdrepo_collection }}"
-            recursive: true
-            host: "{{ groups['irods_catalog'][0] }}"
-            port: "{{ _irods_zone_port }}"
-            admin_user: "{{ _irods_clerver_user }}"
-            admin_password: "{{ _irods_clerver_password }}"
-            zone: "{{ _irods_zone_name }}"
-
-        - name: Create service account
-          delegate_to: localhost
-          become: false
-          irods_user:
-            name: "{{ _mdrepo_svc_account }}"
-            type: ds-service
-            info: MD Repo service
-            password: "{{ _mdrepo_svc_password }}"
-            state: present
-            host: "{{ groups['irods_catalog'][0] }}"
-            port: "{{ _irods_zone_port }}"
-            admin_user: "{{ _irods_clerver_user }}"
-            admin_password: "{{ _irods_clerver_password }}"
-            zone: "{{ _irods_zone_name }}"
-
-        - name: Give service account write access to landing collection
-          delegate_to: localhost
-          become: false
-          irods_permission:
-            subject: "{{ _mdrepo_svc_account }}"
-            permission: write
-            object: "{{ landing_path }}"
-            recursive: false
-            host: "{{ groups['irods_catalog'][0] }}"
-            port: "{{ _irods_zone_port }}"
-            admin_user: "{{ _irods_clerver_user }}"
-            admin_password: "{{ _irods_clerver_password }}"
-            zone: "{{ _irods_zone_name }}"
-
-
 - name: Add MD Repo rule logic
   hosts: irods
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
     - name: Add logic
-      when: _mdrepo_collection | length > 0
+      when: _mdrepo_landing_colls | length > 0
       block:
         - name: Install command scripts
           ansible.builtin.copy:
@@ -129,7 +46,7 @@
   gather_facts: false
   tasks:
     - name: Create MD Repo CLI account
-      when: _mdrepo_collection | length > 0
+      when: _mdrepo_cli_account | length > 0
       delegate_to: localhost
       become: false
       irods_user:

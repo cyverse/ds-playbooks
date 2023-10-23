@@ -1,12 +1,14 @@
 ---
 # Stops iRODS. The variable stop_irods_result holds the change value
 - name: Check if svc acnt exists
-  ansible.builtin.shell: |
-    if id --user {{ _irods_service_account_name }} > /dev/null 2>&1; then
-      printf exists
-    else
-      printf missing
-    fi
+  ansible.builtin.shell:
+    executable: /bin/bash
+    cmd: |
+      if id --user {{ _irods_service_account_name }} > /dev/null 2>&1; then
+        printf exists
+      else
+        printf missing
+      fi
   register: id_result
   changed_when: false
 

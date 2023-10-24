@@ -167,21 +167,21 @@ de_acPreProcForObjRename(*SourceObject, *DestObject) {
 }
 
 
-exclusive_acCreateCollByAdmin(*ParColl, *ChildColl) {
+cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl) {
   on (cyverse_inStaging(/*ParColl/*ChildColl)) {
     _de_createArchiveCollFor("*ParColl/*ChildColl");
   }
 }
 
 
-exclusive_acPostProcForCollCreate {
+cyverse_core_acPostProcForCollCreate_exclusive {
   on (cyverse_inStaging(/$collName)) {
     _de_createArchiveCollFor($collName);
   }
 }
 
 
-exclusive_acPostProcForCopy {
+cyverse_core_acPostProcForCopy_exclusive {
   on (_de_inStagedJob(/$objPath)) {
     _de_archiveData($objPath);
   }

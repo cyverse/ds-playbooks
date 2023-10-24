@@ -9,12 +9,9 @@
       block:
         - name: Install command scripts
           ansible.builtin.copy:
-            src: files/mdrepo/var/lib/irods/msiExecCmd_bin/{{ item }}
-            dest: /var/lib/irods/msiExecCmd_bin/{{ item }}
+            src: files/mdrepo/var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
+            dest: /var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
             mode: u+rx
-          with_items:
-            - md-repo-mkdir
-            - md-repo-touch-obj
 
         - name: Install mdrepo-env.re
           ansible.builtin.template:
@@ -29,6 +26,12 @@
             dest: /etc/irods/mdrepo.re
             mode: u+r
           notify: Reload rules
+
+  post_tasks:
+    - name: Remove collection creation script
+      ansible.builtin.file:
+        path: /var/lib/irods/msiExecCmd_bin/md-repo-mkdir
+        state: absent
 
   handlers:
     - name: Reload rules

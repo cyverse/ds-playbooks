@@ -26,6 +26,7 @@ irods_calliope_project_coll: /testing/home/shared/calliope
 
 irods_clerver_password: password
 
+irods_default_number_of_transfer_threads: 4
 irods_default_repl_resource: replRes
 
 irods_federation:
@@ -41,18 +42,18 @@ irods_federation:
     zone_key: FAKE_zone_key_2
     zone_name: cyverse
 
+irods_parallel_transfer_buffer_size: 4
+
 irods_resource_hierarchies:
   - name: ingestRes
   - name: replRes
 
 irods_server_port_range_end: 20009
 
-mdrepo_cli_account: md_cli
-mdrepo_collection: /testing/home/shared/md-repo
-mdrepo_landing_collection: path/to/landing
-mdrepo_manager: md_mgr
-mdrepo_svc_account: md_svc
-mdrepo_svc_password: md_svc_pass
+mdrepo_cli_account: md-cli
+mdrepo_landing_colls:
+  - /testing/home/md-cli/landing
+  - /testing/home/shared/mdrepo/landing
 
 pire_manager: pire_mgr
 pire_resource_hierarchy:

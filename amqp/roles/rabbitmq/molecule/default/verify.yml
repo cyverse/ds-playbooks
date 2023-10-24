@@ -1,0 +1,145 @@
+---
+- name: Verify | test rabbitmq.conf template expansion
+  hosts: localhost
+  gather_facts: false
+  vars:
+    rabbitmq_broker_port: 1
+    rabbitmq_mgmt_port: 2
+    rabbitmq_conf: "{{ lookup('template', '../../templates/rabbitmq.conf.j2') }}"
+  tasks:
+    - name: Verify listeners.tcp.1 set correctly
+      ansible.builtin.assert:
+        that:
+          - rabbitmq_conf is search("listeners.tcp.1 = :::1" | regex_escape)
+          - rabbitmq_conf is search("management.tcp.port = 2" | regex_escape)
+
+
+- name: Verify | test CentOS installation
+  hosts: centos
+  tasks:
+    - name: Retrieve facts about distro packages
+      ansible.builtin.package_facts:
+
+    - name: Verify correct packages installed
+      ansible.builtin.assert:
+        that:
+          - "'epel-release' in ansible_facts.packages"
+          - "'erlang-erts' not in ansible_facts.packages"
+          - "'erlang' in ansible_facts.packages"
+          - ansible_facts.packages['erlang'] | length == 1
+          - ansible_facts.packages['erlang'][0].version is version('23.2.7', '>=')
+          - "'rabbitmq-server' in ansible_facts.packages"
+          - ansible_facts.packages['rabbitmq-server'] | length == 1
+          - ansible_facts.packages['rabbitmq-server'][0].version is version('3.8.14', '>=')
+
+
+- name: Verify | test Ubuntu installation
+  hosts: ubuntu
+  tasks:
+    - name: Retrieve facts about distro packages
+      ansible.builtin.package_facts:
+
+    - name: Test install CA certificates for get_url
+      ansible.builtin.assert:
+        that: "'ca-certificates' in ansible_facts.packages"
+
+    - name: Test install Erlang
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.packages[item] | length == 1
+          - ansible_facts.packages[item][0].version is version('1:25.2', '<')
+      with_items:
+        - erlang-base
+        - erlang-asn1
+        - erlang-crypto
+        - erlang-eldap
+        - erlang-ftp
+        - erlang-inets
+        - erlang-mnesia
+        - erlang-os-mon
+        - erlang-parsetools
+        - erlang-public-key
+        - erlang-runtime-tools
+        - erlang-snmp
+        - erlang-ssl
+        - erlang-syntax-tools
+        - erlang-tftp
+        - erlang-tools
+        - erlang-xmerl
+
+    - name: Test install RabbitMQ
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.packages['rabbitmq-server'] | length == 1
+          - ansible_facts.packages['rabbitmq-server'][0].version is version('3.12', '<')
+
+    - name: Test install repositories
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      with_items:
+        - /etc/apt/preferences.d/erlang
+        - /etc/apt/preferences.d/rabbitmq
+        - /etc/apt/sources.list.d/rabbitmq.list
+        - /usr/share/keyrings/com.rabbitmq.team.asc
+        - /usr/share/keyrings/rabbitmq.9F4587F226208342.asc
+        - /usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.asc
+      register: resp
+      failed_when: not resp.stat.exists or not resp.stat.rusr
+
+
+- name: Verify | test configuration
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Test rabbitmq config file placement
+      ansible.builtin.stat:
+        path: /etc/rabbitmq/rabbitmq.conf
+      register: resp
+      failed_when: >-
+        not resp.stat.exists
+        or resp.stat.pw_name != 'rabbitmq'
+        or resp.stat.gr_name != 'rabbitmq'
+        or not resp.stat.rusr
+
+
+- name: Verify | test runtime configuration
+  hosts: ubuntu
+  tasks:
+    - name: Retrieve service information
+      ansible.builtin.service_facts:
+
+    - name: Verify rabbitmq is running and enabled
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['rabbitmq-server.service'].state == 'running'
+          - ansible_facts.services['rabbitmq-server.service'].status == 'enabled'
+
+    - name: Test enable management plugin
+      ansible.builtin.command: rabbitmq-plugins --silent list -Em
+      register: resp
+      failed_when: resp.stdout != 'rabbitmq_management'
+      changed_when: false
+
+    - name: Verify correct users
+      ansible.builtin.command: rabbitmqctl --silent list_users
+      register: resp
+      failed_when: >-
+        resp.stdout is not search('^' ~ admin_user ~ '[\s]+' ~ ('[administrator]'|regex_escape))
+      changed_when: false
+
+    - name: Verify correct admin password
+      ansible.builtin.uri:
+        url: http://localhost:{{ mgmt_port }}/api/vhosts
+        url_username: "{{ admin_user }}"
+        url_password: "{{ admin_passwd }}"
+
+    - name: Verify correct permissions
+      ansible.builtin.command: rabbitmqctl --silent list_user_permissions {{ admin_user }}
+      register: resp
+      failed_when: >-
+        resp.stdout is not search(
+          '^/[\s]+'
+          ~ ('.*'|regex_escape) ~ '[\s]+'
+          ~ ('.*'|regex_escape) ~ '[\s]+'
+          ~ ('.*'|regex_escape) )
+      changed_when: false

@@ -1,12 +1,4 @@
 # Environment specific MD Repo rule customizations belong in this file.
 
-mdrepo_LANDING_COLL : string
-{% if _mdrepo_collection == '' %}
-mdrepo_LANDING_COLL = ''
-{% else %}
-{% set landing_ext = "/" ~ _mdrepo_landing_collection if _mdrepo_landing_collection != "" else "" %}
-mdrepo_LANDING_COLL = '{{ _mdrepo_collection }}{{ landing_ext }}'
-{% endif %}
-
-mdrepo_SVC_ACCOUNT : string
-mdrepo_SVC_ACCOUNT = '{{ _mdrepo_svc_account }}'
+mdrepo_LANDING_COLLS : list string
+mdrepo_LANDING_COLLS = list({{ _mdrepo_landing_colls | map('to_json') | join(', ') }})

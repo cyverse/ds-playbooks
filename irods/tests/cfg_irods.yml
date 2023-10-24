@@ -28,12 +28,12 @@
         - core.dvm
         - core.fnm
         - core.re
+        - cyverse.re
         - cyverse-env.re
         - cyverse_core.re
+        - cyverse_de.re
         - cyverse_housekeeping.re
         - cyverse_json.re
-        - cyverse.re
-        - de.re
         - host_access_control_config.json
         - hosts_config.json
         - ipc-logic.re
@@ -274,6 +274,7 @@
       register: response
       failed_when: response.stat.exists
       with_items:
+        - de.re
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re

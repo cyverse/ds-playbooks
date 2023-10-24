@@ -29,7 +29,7 @@
 @include 'calliope'
 @include 'captcn'
 @include 'coge'
-@include 'de'
+@include 'cyverse_de'
 @include 'mdrepo'
 @include 'pire'
 @include 'sciapps'

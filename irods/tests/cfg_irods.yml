@@ -30,7 +30,6 @@
         - cyverse.re
         - cyverse-env.re
         - cyverse_core.re
-        - cyverse_de.re
         - cyverse_housekeeping.re
         - cyverse_json.re
         - host_access_control_config.json
@@ -268,7 +267,6 @@
       register: response
       failed_when: response.stat.exists
       with_items:
-        - de.re
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re
@@ -290,6 +288,7 @@
       register: response
       failed_when: response.stat.exists
       with_items:
+        - /etc/irods/cyverse_de.re
         - /etc/irods/de.re
         - /var/lib/irods/msiExecCmd_bin/de-archive-data
         - /var/lib/irods/msiExecCmd_bin/de-create-collection

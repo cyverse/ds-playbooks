@@ -1,5 +1,5 @@
 ---
-- name: Restart iRODS | stop catalog service consumers
+- name: Restart iRODS | stop iRODS on catalog service consumers
   when: inventory_hostname in groups['irods_resource'] | difference(groups['irods_catalog'])
   ansible.builtin.include_tasks: stop_irods.yml
 
@@ -8,6 +8,6 @@
   irods_ctl:
     state: restarted
 
-- name: Restart iRODS | start catalog service consumers
+- name: Restart iRODS | start iRODS on catalog service consumers
   when: inventory_hostname in groups['irods_resource'] | difference(groups['irods_catalog'])
   irods_ctl:

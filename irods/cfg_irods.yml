@@ -103,7 +103,7 @@
         irods_cfg_zone_password: "{{ _irods_clerver_password }}"
 
     - name: Restart iRODS
-      when: _restart_irods and irods_cfg_made_changes
+      when: Restart_irods and irods_cfg_made_changes
       ansible.builtin.import_tasks: tasks/restart_irods.yml
 
   post_tasks:

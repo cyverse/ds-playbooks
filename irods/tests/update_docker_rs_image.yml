@@ -1,17 +1,17 @@
 ---
-- name: test build image
+- name: Test build image
   hosts: localhost
   run_once: true
   gather_facts: false
   tasks:
-    - name: test create command scripts staging directory
-      stat:
+    - name: Test create command scripts staging directory
+      ansible.builtin.stat:
         path: /tmp/var/lib/irods/msiExecCmd_bin
       register: response
       failed_when: not (response.stat.exists and response.stat.isdir)
 
-    - name: test add command scripts
-      stat:
+    - name: Test add command scripts
+      ansible.builtin.stat:
         path: /tmp/var/lib/irods/msiExecCmd_bin/{{ item }}
       register: response
       failed_when: not response.stat.exists
@@ -25,23 +25,23 @@
         - imeta-exec
         - sparcd-ingest
 
-    - name: verify deposition of server_config.json
-      stat:
+    - name: Verify deposition of server_config.json
+      ansible.builtin.stat:
         path: /tmp/etc/irods/server_config.json
       register: response
       failed_when: not response.stat.exists
 
-    - name: retrieve encoded server_config.json
-      slurp:
+    - name: Retrieve encoded server_config.json
+      ansible.builtin.slurp:
         src: /tmp/etc/irods/server_config.json
       register: sc_encoded
 
-    - name: decode server_config.json
-      set_fact:
+    - name: Decode server_config.json
+      ansible.builtin.set_fact:
         server_config: "{{ sc_encoded.content | b64decode }}"
 
-    - name: verify server_config.json
-      assert:
+    - name: Verify server_config.json
+      ansible.builtin.assert:
         that:
           - server_config.advanced_settings.default_number_of_transfer_threads == 4
           - >-
@@ -63,74 +63,74 @@
           - server_config.default_resource_name == '_IRODS_DEFAULT_RESOURCE_'
           - server_config.negotiation_key == '__IRODS_NEGOTIATION_KEY__'
 
-    - name: verfiy server_config.plugin_configuration.rule_engines rule language instance_name
-      debug:
+    - name: Verify server_config.plugin_configuration.rule_engines rule language instance_name
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verfiy server_config.plugin_configuration.rule_engines rule language plugin_name
-      debug:
+    - name: Verify server_config.plugin_configuration.rule_engines rule language plugin_name
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verfiy server_config.plugin_configuration.rule_engines rule language plugin_specific_configuration
-      debug:
+    - name: Verify server_config.plugin_configuration.rule_engines rule language plugin_specific_configuration
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verfiy server_config.plugin_configuration.rule_engines rule language shared_memory_instance
-      debug:
+    - name: Verify server_config.plugin_configuration.rule_engines rule language shared_memory_instance
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verfiy server_config.plugin_configuration.rule_engines CPP default policy
-      debug:
+    - name: Verify server_config.plugin_configuration.rule_engines CPP default policy
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verify server_config.schema_validation_base_uri
-      debug:
+    - name: Verify server_config.schema_validation_base_uri
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verify server_config.server_control_plane_key
-      debug:
+    - name: Verify server_config.server_control_plane_key
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verify server_config.server_port_range_end
-      debug:
+    - name: Verify server_config.server_port_range_end
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verfiy server_config.server_port_range_start
-      debug:
+    - name: Verify server_config.server_port_range_start
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verify server_config.zone_key
-      debug:
+    - name: Verify server_config.zone_key
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verify server_config.zone_name
-      debug:
+    - name: Verify server_config.zone_name
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verify server_config.zone_user
-      debug:
+    - name: Verify server_config.zone_user
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verfiy hosts_config.json
-      debug:
+    - name: Verify hosts_config.json
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: verify irods_environment.json
-      debug:
+    - name: Verify irods_environment.json
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: test stage dynamic rule bases
-      debug:
+    - name: Test stage dynamic rule bases
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: test stage static rule bases
-      debug:
+    - name: Test stage ansible.builtin.static rule bases
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: test copy .dockerignore
-      debug:
+    - name: Test copy .dockerignore
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: test copy resource server docker scripts
-      debug:
+    - name: Test copy resource server docker scripts
+      ansible.builtin.debug:
         msg: TODO implement

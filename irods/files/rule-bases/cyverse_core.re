@@ -770,10 +770,6 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # 		if (*err < 0) {
 # 			writeLine('serverLog', *msg);
 # 		}
-# 		*err = errormsg(sciapps_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-# 		}
 # 		*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) {
 #			writeLine('serverLog', *msg);

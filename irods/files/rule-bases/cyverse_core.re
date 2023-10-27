@@ -36,7 +36,6 @@
 @include 'de'
 @include 'mdrepo'
 @include 'pire'
-@include 'sciapps'
 @include 'sernec'
 @include 'sparcd'
 @include 'terraref'
@@ -81,10 +80,6 @@ _cyverse_core_acPostProcForCollCreate_exclusive {
 		writeLine('serverLog', *msg);
 	}
 	*err = errormsg(coge_acPostProcForCollCreate, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-	*err = errormsg(sciapps_acPostProcForCollCreate, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
@@ -511,10 +506,6 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
-	*err = errormsg(sciapps_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
 	*err = errormsg(sernec_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
@@ -792,10 +783,6 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # 		if (*err < 0) {
 # 			writeLine('serverLog', *msg);
 # 		}
-# 		*err = errormsg(sciapps_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-# 		}
 # 		*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) {
 #			writeLine('serverLog', *msg);
@@ -830,10 +817,6 @@ _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 				writeLine('serverLog', *msg);
 			}
 			*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) {
-				writeLine('serverLog', *msg);
-			}
-			*err = errormsg(sciapps_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 			if (*err < 0) {
 				writeLine('serverLog', *msg);
 			}

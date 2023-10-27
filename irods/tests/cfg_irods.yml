@@ -284,3 +284,9 @@
       with_items:
         - /etc/irods/calliope.re
         - /var/lib/irods/msiExecCmd_bin/calliope-ingest
+
+    - name: Test ensure sciapps gone
+      ansible.builtin.stat:
+        path: /etc/irods/sciapps.re
+      register: response
+      failed_when: response.stat.exists

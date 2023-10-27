@@ -124,6 +124,11 @@
         - /etc/irods/calliope.re
         - /var/lib/irods/msiExecCmd_bin/calliope-ingest
 
+    - name: Ensure sciapps gone
+      ansible.builtin.file:
+        path: /etc/irods/sciapps.re
+        state: absent
+
   handlers:
     - name: Reload rules
       ansible.builtin.file:

@@ -21,7 +21,6 @@
         - avra-env.re
         - bisque.re
         - bisque-env.re
-        - calliope.re
         - captcn.re
         - captcn-env.re
         - coge.re
@@ -64,7 +63,6 @@
         or not response.stat.xusr
       with_items:
         - amqptopicsend.py
-        - calliope-ingest
         - correct-size
         - de-archive-data
         - de-create-collection
@@ -277,3 +275,12 @@
         - ipc-env.re
         - ipc-housekeeping.re
         - ipc-json.re
+
+    - name: Test ensure calliope gone
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: response
+      failed_when: response.stat.exists
+      with_items:
+        - /etc/irods/calliope.re
+        - /var/lib/irods/msiExecCmd_bin/calliope-ingest

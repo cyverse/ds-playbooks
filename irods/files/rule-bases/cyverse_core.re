@@ -31,7 +31,6 @@
 
 @include 'avra'
 @include 'bisque'
-@include 'calliope'
 @include 'captcn'
 @include 'coge'
 @include 'de'
@@ -789,10 +788,6 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # 		if (*err < 0) {
 # 			writeLine('serverLog', *msg);
 # 		}
-# 		*err = errormsg(calliope_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-# 		}
 # 		*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) {
 # 			writeLine('serverLog', *msg);
@@ -844,10 +839,6 @@ _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 			}
 		}
 		if (*Step != 'START') {
-			*err = errormsg(calliope_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) {
-				writeLine('serverLog', *msg);
-			}
 			*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 			if (*err < 0) {
 				writeLine('serverLog', *msg);

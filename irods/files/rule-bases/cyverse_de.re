@@ -62,7 +62,7 @@ _de_createArchiveColl(*ArchiveColl, *StageColl, *Creator, *AppId, *JobId) {
 
 
 _de_archiveData(*StagingPath) {
-  *stagingRelPath = triml(*StagingPath, str(cyverse_STAGING_BASE) ++ '/');
+  *stagingRelPath = triml(str(*StagingPath), str(cyverse_STAGING_BASE) ++ '/');
   *jobInfo = _de_getJobInfo(*stagingRelPath);
 
   if (*jobInfo.creator != '' && *jobInfo.archiveBase != '') {

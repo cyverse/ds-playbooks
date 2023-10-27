@@ -75,7 +75,7 @@ _de_archiveData(*StagingPath) {
 
     *archiveObj = *jobInfo.archiveBase ++ '/' ++ triml(*stagingRelPath, *jobInfo.id ++ '/');
     *clientArg = execCmdArg(*jobInfo.creator);
-    *stageArg = execCmdArg(*StagingPath);
+    *stageArg = execCmdArg(str(*StagingPath));
     *archiveArg = execCmdArg(*archiveObj);
     *execArg = execCmdArg(*jobInfo.id);
     *appArg = execCmdArg(*jobInfo.appId);
@@ -92,7 +92,8 @@ _de_archiveData(*StagingPath) {
       _de_scheduleRmStagedDataCopy(*StagingPath);
     }
   } else {
-    writeLine('serverLog', 'DE: Missing required metadata - skipping archive of *StagingPath');
+    writeLine(
+      'serverLog', 'DE: Missing required metadata - skipping archive of ' ++ str(*StagingPath) );
   }
 }
 

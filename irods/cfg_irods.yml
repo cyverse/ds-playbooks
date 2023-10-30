@@ -1,54 +1,55 @@
 ---
-- name: configure iRODS
+- name: Configure iRODS
   hosts: irods
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
+  vars:
+    amqp_user_info: "{{ _amqp_user }}:{{ _amqp_password }}"
+    amqp_authority: "{{ amqp_user_info }}@{{ _amqp_host }}:{{ _amqp_port }}"
+    amqp_path: /{{ _amqp_vhost | replace('/', '%2F') }}
+    amqp_uri: amqp://{{ amqp_authority }}{{ amqp_path }}
+    provider: "{{ inventory_hostname in groups['irods_catalog'] }}"
   tasks:
-    - name: initialize flag
-      set_fact:
+    - name: Initialize flag
+      ansible.builtin.set_fact:
         irods_cfg_made_changes: false
 
-    - name: add common command scripts
-      copy:
+    - name: Add common command scripts
+      ansible.builtin.copy:
         src: "{{ item }}"
         dest: /var/lib/irods/msiExecCmd_bin
         mode: u=rx
       with_fileglob:
         - "files/cmd-common/*"
 
-    - name: place dynamic rule bases in /etc/irods
-      template:
+    - name: Place dynamic rule bases in /etc/irods
+      ansible.builtin.template:
         src: "{{ item }}"
         dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
         mode: u+r
       with_fileglob:
         - "templates/rule-bases/*"
       notify:
-        - reload rules
+        - Reload rules
 
-    - name: place static config in /etc/irods
-      copy:
+    - name: Place static config in /etc/irods
+      ansible.builtin.copy:
         src: "{{ item }}"
         dest: /etc/irods/{{ item | basename }}
         mode: u+r
       with_fileglob:
         - "files/rule-bases/*"
       notify:
-        - reload rules
+        - Reload rules
 
-    - name: configure iRODS service
-      import_role:
+    - name: Configure iRODS service
+      ansible.builtin.import_role:
         name: cyverse.irods_cfg
         tasks_from: setup_irods.yml
       vars:
-        amqp_user_info: "{{ _amqp_user }}:{{ _amqp_password }}"
-        amqp_authority: "{{ amqp_user_info }}@{{ _amqp_host }}:{{ _amqp_port }}"
-        amqp_path: /{{ _amqp_vhost | replace('/', '%2F') }}
-        amqp_uri: amqp://{{ amqp_authority }}{{ amqp_path }}
-        provider: "{{ inventory_hostname in groups['irods_catalog'] }}"
         irods_cfg_catalog_provider_hosts: >-
-          {{ [ inventory_hostname ] if provider|bool else groups['irods_catalog'] }}
-        irods_cfg_catalog_service_role: "{{ 'provider' if provider|bool else 'consumer' }}"
+          {{ [inventory_hostname] if provider | bool else groups['irods_catalog'] }}
+        irods_cfg_catalog_service_role: "{{ 'provider' if provider | bool else 'consumer' }}"
         irods_cfg_client_server_policy: "{{ _irods_client_server_policy }}"
         irods_cfg_database_user_password_salt: "{{ _irods_user_password_salt }}"
         irods_cfg_default_dir_mode: "{{ _irods_default_dir_mode }}"
@@ -59,20 +60,20 @@
         irods_cfg_default_resource_directory: "{{ _irods_default_vault }}"
         irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
         irods_cfg_environment_variables: >-
-          {{ { 'IRODS_AMQP_URI': amqp_uri } if provider|bool else {} }}
+          {{ {'IRODS_AMQP_URI': amqp_uri} if provider | bool else {} }}
         irods_cfg_federation: "{{ _irods_federation }}"
         irods_cfg_host_entries: >-
           {{
-            [] if _irods_host_aliases|count == 0 else
+            [] if _irods_host_aliases | count == 0 else
             [
               {
                 'address_type': 'local',
-                'addresses': [ inventory_hostname ] + _irods_host_aliases
+                'addresses': [inventory_hostname] + _irods_host_aliases
               }
             ] }}
         irods_cfg_icat: >-
           {{
-            None if not provider|bool else
+            None if not provider | bool else
             {
               'db_host': _irods_dbms_host,
               'db_password': _irods_db_password,
@@ -100,12 +101,13 @@
         irods_cfg_zone_user: "{{ _irods_clerver_user }}"
         irods_cfg_zone_password: "{{ _irods_clerver_password }}"
 
-    - when: _restart_irods and irods_cfg_made_changes
-      import_tasks: tasks/restart_irods.yml
+    - name: Restart irods
+      when: _restart_irods and irods_cfg_made_changes
+      ansible.builtin.import_tasks: tasks/restart_irods.yml
 
   post_tasks:
-    - name: ensure the rule file is gone
-      file:
+    - name: Ensure the rule file is gone
+      ansible.builtin.file:
         path: /etc/irods/{{ item }}
         state: absent
       with_items:
@@ -115,8 +117,8 @@
         - ipc-json.re
 
   handlers:
-    - name: reload rules
-      file:
+    - name: Reload rules
+      ansible.builtin.file:
         path: /etc/irods/core.re
         mode: u+r
         state: touch

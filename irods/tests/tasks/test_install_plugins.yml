@@ -32,9 +32,8 @@
 #     - irods-netcdf-server_modules
 # # XXX - ^^^
 
-
-- name: test ensure msiSetAVU microservice is absent
-  stat:
+- name: Test install plugins | ensure msiSetAVU microservice is absent
+  ansible.builtin.stat:
     path: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
   register: response
   failed_when: response.stat.exists

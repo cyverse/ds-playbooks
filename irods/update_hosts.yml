@@ -5,8 +5,8 @@
   tags:
     - no_testing
   tasks:
-    - name: update /etc/hosts
-      blockinfile:
+    - name: Update /etc/hosts
+      ansible.builtin.blockinfile:
         create: true
         path: /etc/hosts
         mode: u+r

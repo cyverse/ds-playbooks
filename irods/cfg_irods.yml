@@ -68,7 +68,7 @@
             [
               {
                 'address_type': 'local',
-                'addresses': [ inventory_hostname ] + _irods_host_aliases
+                'addresses': [inventory_hostname] + _irods_host_aliases
               }
             ] }}
         irods_cfg_icat: >-

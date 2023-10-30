@@ -2,10 +2,14 @@
 # vars:
 #   dir  the directory to verify irods ownership
 
-- name: test account owns /var/lib/irods
-  shell: 'test -z "$(find {{ dir }} -not -user irods -print -quit)"'
+- name: Test iRODS ownership | irods owns {{ dir }}
+  ansible.builtin.shell:
+    executable: /bin/bash
+    cmd: 'test -z "$(find {{ dir }} -not -user irods -print -quit)"'
   changed_when: false
 
-- name: test correct account group for /var/libs/irods
-  shell: 'test -z "$(find {{ dir }} -not -group irods -print -quit)"'
+- name: Test iRODS ownership | correct account group for {{ dir }}
+  ansible.builtin.shell:
+    executable: /bin/bash
+    cmd: 'test -z "$(find {{ dir }} -not -group irods -print -quit)"'
   changed_when: false

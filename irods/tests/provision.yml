@@ -1,47 +1,54 @@
 ---
-- name: test provision for iRODS
+- name: Test provision for iRODS
   hosts: irods:!unmanaged_systems
   become: true
   vars:
     group_name: >-
       {{ 'irods_provider' if inventory_hostname in groups['irods_catalog'] else 'irods' }}
   tasks:
-    - when: ansible_distribution == 'CentOS'
+    - name: Test CentOS provisionsing
+      when: ansible_distribution == 'CentOS'
       block:
         - name: CentOS | test install iRODS package repository signing key
-          shell: |
-            set -o pipefail
-            rpm --query --queryformat='%{SUMMARY}\n' gpg-pubkey | grep --quiet 'iRODS Consortium'
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              set -o pipefail
+              rpm --query --queryformat='%{SUMMARY}\n' gpg-pubkey | grep --quiet 'iRODS Consortium'
           changed_when: false
 
         - name: CentOS | test install iRODS repository
-          stat:
+          ansible.builtin.stat:
             path: /etc/yum.repos.d/renci-irods.yum.repo
           register: resp
           failed_when: not resp.stat.exists
 
         - name: CentOS | test lock irods package to required version
-          shell: |
-            if ! yum versionlock status | grep --quiet '{{ item }}'; then
-              printf '{{ item }} not locked\n' >&2
-              exit 1
-            elif info="$(yum --quiet list installed '{{ item }}' | tail --lines=+2)"; then
-              readarray -t versions <<< "$info"
-              for version in "${versions[@]}"; do
-                read _ verNum _ <<< "$version"
-                if ! [[ "$verNum" =~ 4\.2\.8 ]]; then
-                  printf 'found version %s\n' "$verNum" >&2
-                  exit 1
-                fi
-              done
-            fi
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              set -o pipefail
+              if ! yum versionlock status | grep --quiet '{{ item }}'; then
+                printf '{{ item }} not locked\n' >&2
+                exit 1
+              elif info="$(yum --quiet list installed '{{ item }}' | tail --lines=+2)"; then
+                readarray -t versions <<< "$info"
+                for version in "${versions[@]}"; do
+                  read _ verNum _ <<< "$version"
+                  if ! [[ "$verNum" =~ 4\.2\.8 ]]; then
+                    printf 'found version %s\n' "$verNum" >&2
+                    exit 1
+                  fi
+                done
+              fi
           changed_when: false
           with_items:
             - irods-icommands
             - irods-runtime
             - irods-server
 
-        - include_tasks: tasks/test_pkg_installed.yml
+        - name: CentOS | verify correct packages installed
+          ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
           with_items:
             - unixODBC
             - uuidd
@@ -49,31 +56,41 @@
           loop_control:
             loop_var: pkg
 
-    - when: ansible_distribution == 'Ubuntu'
+    - name: Test Ubuntu provisioning
+      when: ansible_distribution == 'Ubuntu'
       block:
         - name: Ubuntu | test install iRODS package repository signing key
-          shell: apt-key list | grep --quiet 'iRODS Consortium'
+          ansible.builtin.command: apt-key list
+          register: resp
           changed_when: false
+          failed_when: resp.stdout is not regex('iRODS Consortium')
 
         - name: Ubuntu | test install iRODS repository
-          stat:
+          ansible.builtin.stat:
             path: /etc/apt/sources.list.d/renci-irods.list
           register: resp
           failed_when: not resp.stat.exists
 
         - name: Ubuntu | test update apt cache
-          shell: apt-cache policy | grep --quiet packages.irods.org
+          ansible.builtin.command: apt-cache policy
+          register: resp
           changed_when: false
+          failed_when: resp.stdout is not regex('packages.irods.org' | regex_escape)
 
         - name: Ubuntu | test lock iRODS packages to required version
-          shell: apt-cache policy | grep --quiet '{{ item }} -> 4.2.8 with priority 1001'
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              set -o pipefail
+              apt-cache policy | grep --quiet '{{ item }} -> 4.2.8 with priority 1001'
           changed_when: false
           with_items:
             - irods-icommands
             - irods-runtime
             - irods-server
 
-        - include_tasks: tasks/test_pkg_installed.yml
+        - name: Ubuntu | verify correct packages installed
+          ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
           with_items:
             - debianutils
             - unixodbc
@@ -81,49 +98,52 @@
           loop_control:
             loop_var: pkg
 
-    - include_tasks: tasks/test_pkg_installed.yml
+    - name: Verify iRODS server installed
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: irods-server
         version: 4.2.8
 
-    - name: test create service group
-      command:
+    - name: Test create service group
+      ansible.builtin.command:
         cmd: sed --quiet 's/^{{ group_name }}:x:\([0-9]\+\):.*/\1/p' /etc/group
       register: gid_resp
       changed_when: false
-      failed_when: gid_resp.stdout|length == 0
+      failed_when: gid_resp.stdout | length == 0
+      tags: skip_ansible_lint
 
-    - name: verify that the system user has correct comment
-      command:
+    - name: Verify that the system user has correct comment
+      ansible.builtin.command:
         cmd: >
           grep --quiet --regexp
             '^irods:x:[0-9]*:{{ gid_resp.stdout }}:iRODS Administrator:/var/lib/irods:/bin/bash'
             /etc/passwd
       changed_when: false
 
-    - name: verify that system user belongs to tty group
-      command:
+    - name: Verify that system user belongs to tty group
+      ansible.builtin.command:
         cmd: grep --quiet --regexp '^tty:x:[0-9]*:\(.\+,\)\?irods\(,.\+\)\?$' /etc/group
       changed_when: false
 
-    - include_tasks: tasks/test_irods_ownership.yml
-      vars:
-        dir: /etc/irods
+    - name: Verify iRODS ownership
+      ansible.builtin.include_tasks: tasks/test_irods_ownership.yml
+      with_items:
+        - /etc/irods
+        - /var/lib/irods
+      loop_control:
+        loop_var: dir
 
-    - include_tasks: tasks/test_irods_ownership.yml
-      vars:
-        dir: /var/lib/irods
-
-    - name: verify default policy files are up-to-date
-      command: cmp --quiet /var/lib/irods/packaging/{{ item }}.template /etc/irods/{{ item }}
+    - name: Verify default policy files are up-to-date
+      ansible.builtin.command:
+        cmd: cmp --quiet /var/lib/irods/packaging/{{ item }}.template /etc/irods/{{ item }}
       changed_when: false
       with_items:
         - core.dvm
         - core.fnm
         - core.re
 
-    - name: verify default policy files ownership and permission
-      stat:
+    - name: Verify default policy files ownership and permission
+      ansible.builtin.stat:
         path: /etc/irods/{{ item }}
       register: resp
       failed_when: >-

@@ -1,5 +1,5 @@
 ---
-- name: allow catalog service providers to talk to DBMS
+- name: Allow catalog service providers to talk to DBMS
   hosts: dbms
   become: true
   tasks:
@@ -15,7 +15,7 @@
         marker: "# {mark} DS IRODS MANAGED BLOCK"
         block: |
           {% for i in groups['irods_catalog'] %}
-          {% set addr = i if i | ansible.utils.ipaddr else lookup('dig', i) %}
+          {%   set addr = i if i | ansible.utils.ipaddr else lookup('dig', i) %}
           {{ '%-7s %-15s %-15s %-23s %s'
             | format('host', 'ICAT', hostvars[i]._irods_db_user, addr ~ '/32', 'md5') }}
           {% endfor %}
@@ -32,15 +32,13 @@
         state: reloaded
 
 
-- import_playbook: provision.yml
+- name: Provision catalog service provider
+  ansible.builtin.import_playbook: provision.yml
 
 
-- name: provision additional for catalog service providers
+- name: Provision additional for catalog service providers
   hosts: irods_catalog
   become: true
-  collections:
-    - ansible.posix
-    - community.general
   vars:
     odbc_description: >-
       {{ lookup('ini', 'Description file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}
@@ -50,7 +48,7 @@
       {{ lookup('ini', 'Setup file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}
   tasks:
     - name: Configure linux kernel
-      sysctl:
+      ansible.posix.sysctl:
         name: kernel.{{ item.name }}
         value: "{{ item.value }}"
       with_items: "{{ _sysctl_kernel }}"
@@ -75,7 +73,8 @@
       block:
         - name: Ensure PostgreSQL 12 repo is installed
           ansible.builtin.yum:
-            name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+            name: >-
+              https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 
         - name: Ensure PostgreSQL 12 clients are installed
           ansible.builtin.package:
@@ -93,22 +92,24 @@
             - "files/profile.d/*"
 
         - name: Define PostgreSQL 12 ODBC Driver
-          ansible.builtin.shell: |
-            if driverDef="$(odbcinst -q -d -n PostgreSQL)"; then
-              description="$(sed --quiet 's/^Description=//p' <<< "$driverDef")"
-              driver="$(sed --quiet 's/^Driver=//p' <<< "$driverDef")"
-              setup="$(sed --quiet 's/^Setup=//p' <<< "$driverDef")"
-              if [[ "$description" == 'PostgreSQL 12 ODBC Driver' \
-                && "$driver" == '/usr/pgsql-12/lib/psqlodbc.so' \
-                && "$setup" == '/usr/pgsql-12/lib/psqlodbcw.so' ]]
-              then
-                exit 0
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              if driverDef="$(odbcinst -q -d -n PostgreSQL)"; then
+                description="$(sed --quiet 's/^Description=//p' <<< "$driverDef")"
+                driver="$(sed --quiet 's/^Driver=//p' <<< "$driverDef")"
+                setup="$(sed --quiet 's/^Setup=//p' <<< "$driverDef")"
+                if [[ "$description" == 'PostgreSQL 12 ODBC Driver' \
+                  && "$driver" == '/usr/pgsql-12/lib/psqlodbc.so' \
+                  && "$setup" == '/usr/pgsql-12/lib/psqlodbcw.so' ]]
+                then
+                  exit 0
+                fi
               fi
-            fi
-            if ! odbcinst -i -d -r -v; then
-              exit 1
-            fi
-            echo changed
+              if ! odbcinst -i -d -r -v; then
+                exit 1
+              fi
+              echo changed
           args:
             stdin: "{{ lookup('file', 'files/postgresql-odbc-tmpl.ini') }}"
           register: result
@@ -128,7 +129,7 @@
         state: present
 
     - name: Lock irods-database-plugin-postgres to required version
-      yum_versionlock:
+      community.general.yum_versionlock:
         name:
           - irods-database-plugin-postgres-{{ _irods_version }}
         state: present
@@ -143,15 +144,18 @@
           - irods-database-plugin-postgres
         state: present
 
-    - import_tasks: tasks/install_plugins.yml
+    - name: Install plugins
+      ansible.builtin.import_tasks: tasks/install_plugins.yml
 
-    - import_tasks: tasks/ensure_irods_ownership.yml
+    - name: Ensure iRODS ownership
+      ansible.builtin.import_tasks: tasks/ensure_irods_ownership.yml
 
 
-- import_playbook: cfg_irods.yml
+- name: Configure catalog service providers
+  ansible.builtin.import_playbook: cfg_irods.yml
 
 
-- name: start iRODS on catalog service providers
+- name: Start iRODS on catalog service providers
   hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
@@ -167,4 +171,5 @@
         password: "{{ _irods_clerver_password }}"
 
 
-- import_playbook: irods_runtime_init.yml
+- name: Perform run-time configuration
+  ansible.builtin.import_playbook: irods_runtime_init.yml

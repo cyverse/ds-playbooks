@@ -1,5 +1,5 @@
 ---
-- name: "test the default variables populate SPARC'd environment rules correctly"
+- name: "Test the default variables populate SPARC'd environment rules correctly"
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -7,18 +7,18 @@
   vars:
     sparcd_env: "{{ lookup('template', '../templates/rule-bases/sparcd-env.re.j2') }}"
   tasks:
-    - name: verify constants expand correctly in sparcd-env.re.j2
-      assert:
+    - name: Verify constants expand correctly in sparcd-env.re.j2
+      ansible.builtin.assert:
         that:
           - sparcd_env is search("sparcd_ADMIN = ''")
           - sparcd_env is search("sparcd_BASE_COLL = ''")
           - sparcd_env is search("sparcd_REPORT_EMAIL_ADDR = ''")
-          - >- 
-            sparcd_env 
+          - >-
+            sparcd_env
             is search("sparcd_WEBDAV_HOST = '" ~ _canonical_hostname ~ "'" | regex_escape)
 
 
-- name: "test SPARC'd defaults when admin"
+- name: "Test SPARC'd defaults when admin"
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -27,21 +27,21 @@
     sparcd_admin: admin
     sparcd_env: "{{ lookup('template', '../templates/rule-bases/sparcd-env.re.j2') }}"
   tasks:
-    - name: verify params
-      assert:
+    - name: Verify params
+      ansible.builtin.assert:
         that:
           - sparcd_env is search("sparcd_ADMIN = 'admin'")
           - >-
-            sparcd_env 
+            sparcd_env
             is search(
-              "sparcd_BASE_COLL = '/testing/home/" + _sparcd_admin + "/Sparcd/Collections'" 
+              "sparcd_BASE_COLL = '/testing/home/" + _sparcd_admin + "/Sparcd/Collections'"
                 | regex_escape )
           - >-
-            sparcd_env 
+            sparcd_env
             is search("sparcd_REPORT_EMAIL_ADDR = '" + _report_email_addr + "'" | regex_escape)
 
 
-- name: "test SPARC'd all custom"
+- name: "Test SPARC'd all custom"
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -52,39 +52,38 @@
     sparcd_report_email_addr: susan@cyverse.rocks
     sparcd_env: "{{ lookup('template', '../templates/rule-bases/sparcd-env.re.j2') }}"
   tasks:
-    - name: verify params
-      assert:
-        that: 
+    - name: Verify params
+      ansible.builtin.assert:
+        that:
           - sparcd_env is search("sparcd_ADMIN = 'susan'")
           - sparcd_env is search("sparcd_BASE_COLL = '/testing/base'" | regex_escape)
           - sparcd_env is search("sparcd_REPORT_EMAIL_ADDR = 'susan@cyverse.rocks'" | regex_escape)
 
 
-- name: "test SPARC'd integration"
+- name: "Test SPARC'd integration"
   hosts: irods
   become: true
   become_user: irods
   tasks:
-    - name: "test add SPARC'd cmd" 
-      stat:
+    - name: "Test add SPARC'd cmd"
+      ansible.builtin.stat:
         path: /var/lib/irods/msiExecCmd_bin/sparcd-ingest
       register: response
       failed_when: >
-        not response.stat.exists or 
-        response.stat.pw_name != 'irods' or 
+        not response.stat.exists or
+        response.stat.pw_name != 'irods' or
         not response.stat.xusr or response.stat.xgrp or response.stat.xoth
 
-    - name: "test add SPARC'd environment rule base"
-      stat:
+    - name: "Test add SPARC'd environment rule base"
+      ansible.builtin.stat:
         path: /etc/irods/sparcd-env.re
       register: response
       failed_when: >
         not response.stat.exists or response.stat.pw_name != 'irods' or not response.stat.rusr
-    
-    - name: "test add SPARC'd logic rule base"
-      stat:
+
+    - name: "Test add SPARC'd logic rule base"
+      ansible.builtin.stat:
         path: /etc/irods/sparcd.re
       register: response
       failed_when: >
         not response.stat.exists or response.stat.pw_name != 'irods' or not response.stat.rusr
-    

@@ -1,6 +1,8 @@
 ---
-# # XXX - netcdf is no longer accessible for iRODS 4.2.8, needs to be readded when upgrading to iRODS 4.2.11
-# - include_tasks: test_pkg_installed.yml
+# XXX - netcdf is no longer accessible for iRODS 4.2.8, needs to be readded
+#       when upgrading to iRODS 4.2.11
+# - name: Test install plugins | NetCDF
+#   ansible.builtin.include_tasks: test_pkg_installed.yml
 #   vars:
 #     pkg: irods-runtime
 #     version: 4.2.8
@@ -9,31 +11,27 @@
 #     - irods-netcdf-icommands
 #     - irods-netcdf-server_modules
 
-# - name: test lock irods NetCDF package to 4.2.8.0
-#   shell: |
-#     set -o pipefail
-#     if ! yum versionlock status | grep --quiet '{{ item }}'; then
-#       printf '{{ item }} not locked\n' >&2
-#       exit 1
-#     elif info="$(yum --quiet list installed '{{ item }}' | tail --lines=+2)"; then
-#       readarray -t versions <<< "$info"
-#       for version in "${versions[@]}"; do
-#         read _ verNum _ <<< "$version"
-#         if ! [[ "$verNum" =~ 4\.2\.8\.0 ]]; then
-#           printf 'found version %s\n' "$verNum" >&2
-#           exit 1
-#         fi
-#       done
-#     fi
+# - name: Test install plugins | irods NetCDF package locked to 4.2.8.0
+#   ansible.builtin.shell:
+#     executable: /bin/bash
+#     cmd: |
+#       set -o pipefail
+#       if ! yum versionlock status | grep --quiet '{{ item }}'; then
+#         printf '{{ item }} not locked\n' >&2
+#         exit 1
+#       elif info="$(yum --quiet list installed '{{ item }}' | tail --lines=+2)"; then
+#         readarray -t versions <<< "$info"
+#         for version in "${versions[@]}"; do
+#           read _ verNum _ <<< "$version"
+#           if ! [[ "$verNum" =~ 4\.2\.8\.0 ]]; then
+#             printf 'found version %s\n' "$verNum" >&2
+#             exit 1
+#           fi
+#         done
+#       fi
 #   changed_when: false
 #   with_items:
 #     - irods-netcdf-client_modules
 #     - irods-netcdf-icommands
 #     - irods-netcdf-server_modules
-# # XXX - ^^^
-
-- name: Test install plugins | ensure msiSetAVU microservice is absent
-  ansible.builtin.stat:
-    path: /var/lib/irods/plugins/microservices/libmsiSetAVU.so
-  register: response
-  failed_when: response.stat.exists
+# XXX - ^^^

@@ -1095,6 +1095,7 @@ pep_database_reg_data_obj_post(*Instance, *Context, *OUT, *DataObjInfo) {
 # 	temporaryStorage.'*pathVar' = 'CREATE *DataObjInfo';
 	temporaryStorage.'*pathVar'
 		= 'CREATE ' ++ *Context.user_user_name ++ ' ' ++ *Context.user_rods_zone ++ ' *DataObjInfo';
+# XXX - ^^^
 # XXX - Because of https://github.com/irods/irods/issues/5540,
 # _cyverse_core_dataObjCreated needs to be called here for data objects created when
 # registering a file already on a resource server.

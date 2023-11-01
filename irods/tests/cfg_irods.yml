@@ -1,5 +1,5 @@
 ---
-- name: Test rule template expansion
+- name: Verify rule template expansion
   ansible.builtin.import_playbook: rule_templates.yml
 
 
@@ -28,12 +28,12 @@
         - core.dvm
         - core.fnm
         - core.re
+        - cyverse.re
         - cyverse-env.re
         - cyverse_core.re
+        - cyverse_de.re
         - cyverse_housekeeping.re
         - cyverse_json.re
-        - cyverse.re
-        - de.re
         - host_access_control_config.json
         - hosts_config.json
         - ipc-logic.re
@@ -112,7 +112,7 @@
           - irods_environment.irods_default_hash_scheme == 'MD5'
           - irods_environment.irods_default_resource == 'ingestRes'
 
-    - name: Test catalog provider specific configuration
+    - name: Verify CSP specific configuration
       when: inventory_hostname in groups['irods_catalog']
       block:
         - name: Retrieve encoded server_config.json
@@ -246,7 +246,7 @@
               - server_config.default_dir_mode == '0770'
               - server_config.default_file_mode == '0660'
 
-    - name: Test consumer host specific configuration
+    - name: Verify consumer_configured_ubuntu_1 configuration
       when: inventory_hostname == 'dstesting-consumer_configured_ubuntu-1.dstesting_default'
       block:
         - name: Retrieve encoded hosts_config.json
@@ -274,6 +274,7 @@
       register: response
       failed_when: response.stat.exists
       with_items:
+        - de.re
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re

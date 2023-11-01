@@ -62,7 +62,7 @@ _de_createArchiveColl(*ArchiveColl, *StageColl, *Creator, *AppId, *JobId) {
 
 
 _de_archiveData(*StagingPath) {
-  *stagingRelPath = triml(*StagingPath, str(cyverse_STAGING_BASE) ++ '/');
+  *stagingRelPath = triml(str(*StagingPath), str(cyverse_STAGING_BASE) ++ '/');
   *jobInfo = _de_getJobInfo(*stagingRelPath);
 
   if (*jobInfo.creator != '' && *jobInfo.archiveBase != '') {
@@ -75,7 +75,7 @@ _de_archiveData(*StagingPath) {
 
     *archiveObj = *jobInfo.archiveBase ++ '/' ++ triml(*stagingRelPath, *jobInfo.id ++ '/');
     *clientArg = execCmdArg(*jobInfo.creator);
-    *stageArg = execCmdArg(*StagingPath);
+    *stageArg = execCmdArg(str(*StagingPath));
     *archiveArg = execCmdArg(*archiveObj);
     *execArg = execCmdArg(*jobInfo.id);
     *appArg = execCmdArg(*jobInfo.appId);
@@ -92,7 +92,8 @@ _de_archiveData(*StagingPath) {
       _de_scheduleRmStagedDataCopy(*StagingPath);
     }
   } else {
-    writeLine('serverLog', 'DE: Missing required metadata - skipping archive of *StagingPath');
+    writeLine(
+      'serverLog', 'DE: Missing required metadata - skipping archive of ' ++ str(*StagingPath) );
   }
 }
 
@@ -167,21 +168,21 @@ de_acPreProcForObjRename(*SourceObject, *DestObject) {
 }
 
 
-exclusive_acCreateCollByAdmin(*ParColl, *ChildColl) {
+cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl) {
   on (cyverse_inStaging(/*ParColl/*ChildColl)) {
     _de_createArchiveCollFor("*ParColl/*ChildColl");
   }
 }
 
 
-exclusive_acPostProcForCollCreate {
+cyverse_core_acPostProcForCollCreate_exclusive {
   on (cyverse_inStaging(/$collName)) {
     _de_createArchiveCollFor($collName);
   }
 }
 
 
-exclusive_acPostProcForCopy {
+cyverse_core_acPostProcForCopy_exclusive {
   on (_de_inStagedJob(/$objPath)) {
     _de_archiveData($objPath);
   }

@@ -29,7 +29,7 @@
 @include 'calliope'
 @include 'captcn'
 @include 'coge'
-@include 'de'
+@include 'cyverse_de'
 @include 'mdrepo'
 @include 'pire'
 @include 'sciapps'
@@ -56,14 +56,14 @@
 #  ParColl    the absolute path to the parent of the collection being created
 #  ChildColl  the name of the collection being created
 #
-_cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl) {
+cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl) {
 	ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl);
 }
 
 # This rule applies the project specific collection creation policies to a newly
 # created collection that wasn't created administratively.
 #
-_cyverse_core_acPostProcForCollCreate_exclusive {
+cyverse_core_acPostProcForCollCreate_exclusive {
 	*err = errormsg(ipc_archive_acPostProcForCollCreate, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
@@ -97,7 +97,7 @@ _cyverse_core_acPostProcForCollCreate_exclusive {
 # This rule applies the project specific policies to a data object created
 # through copying another data object.
 #
-_cyverse_core_acPostProcForCopy_exclusive {
+cyverse_core_acPostProcForCopy_exclusive {
 	*err = errormsg(captcn_acPostProcForCopy, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
@@ -129,7 +129,7 @@ acCreateCollByAdmin(*ParColl, *ChildColl) {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
-	_cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl);
+	cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl);
 }
 
 # This rule handles the creation of a ds-service type user.
@@ -355,14 +355,14 @@ acPostProcForCollCreate {
 	*err = errormsg(ipc_acPostProcForCollCreate, *msg);
 	if (*err < 0) { writeLine('serverLog', *msg); }
 
-	_cyverse_core_acPostProcForCollCreate_exclusive;
+	cyverse_core_acPostProcForCollCreate_exclusive;
 }
 
 # This rule sets the post-processing policy for a data object created or
 # modified by copying another data object.
 #
 acPostProcForCopy {
-	_cyverse_core_acPostProcForCopy_exclusive;
+	cyverse_core_acPostProcForCopy_exclusive;
 }
 
 # This rule sets the post-processing policy for when a data object's replica is
@@ -1095,6 +1095,7 @@ pep_database_reg_data_obj_post(*Instance, *Context, *OUT, *DataObjInfo) {
 # 	temporaryStorage.'*pathVar' = 'CREATE *DataObjInfo';
 	temporaryStorage.'*pathVar'
 		= 'CREATE ' ++ *Context.user_user_name ++ ' ' ++ *Context.user_rods_zone ++ ' *DataObjInfo';
+# XXX - ^^^
 # XXX - Because of https://github.com/irods/irods/issues/5540,
 # _cyverse_core_dataObjCreated needs to be called here for data objects created when
 # registering a file already on a resource server.

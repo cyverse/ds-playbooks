@@ -950,12 +950,24 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 	if (*Step != 'FINISH') {
 		*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
-		_ipc_ensureUUID(
-			cyverse_DATA_OBJ,
-			*DATA_OBJ_INFO.logical_path,
-			*uuid,
-			*DATA_OBJ_INFO.data_owner_name,
-			*DATA_OBJ_INFO.data_owner_zone );
+# XXX - Due to a bug in iRODS 4.2.8, msiExecCmd cannot be call from within the
+#       pep_database_reg_data_obj_post before the data object's replic has been fully written to
+#       storage. This means that the _ipc_ensureUUID cannot be called when *Step is START.
+# 		_ipc_ensureUUID(
+# 			cyverse_DATA_OBJ,
+# 			*DATA_OBJ_INFO.logical_path,
+# 			*uuid,
+# 			*DATA_OBJ_INFO.data_owner_name,
+# 			*DATA_OBJ_INFO.data_owner_zone );
+		if (*Step != 'START') {
+			_ipc_ensureUUID(
+				cyverse_DATA_OBJ,
+				*DATA_OBJ_INFO.logical_path,
+				*uuid,
+				*DATA_OBJ_INFO.data_owner_name,
+				*DATA_OBJ_INFO.data_owner_zone );
+		}
+# XXX - ^^^
 	}
 
 	if (*Step != 'START') {

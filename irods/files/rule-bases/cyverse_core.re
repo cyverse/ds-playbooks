@@ -743,42 +743,9 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # XXX - Because of https://github.com/irods/irods/issues/5540
 # _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo) {
 # 	*path = *DataObjInfo.logical_path;
-<<<<<<< HEAD
 # 	*err = errormsg(ipc_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 	if (*err < 0) {
 # 		writeLine('serverLog', *msg);
-=======
-# 	if (cyverse_inStaging(/*path)) {
-# 		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-#		}
-# 		*err = errormsg(de_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-# 		}
-# 	} else {
-# 		*err = errormsg(ipc_dataObjCreated_default(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-# 		}
-# 		*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-# 		}
-# 		*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-# 		}
-# 		*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-#			writeLine('serverLog', *msg);
-# 		}
-# 		*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-#		}
->>>>>>> a04d18bb (DS-649: Removed calliope)
 # 	}
 # 	*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 	if (*err < 0) {

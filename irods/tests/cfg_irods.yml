@@ -44,8 +44,6 @@
         - sernec-env.re
         - server_config.json
         - service_account.config
-        - terraref.re
-        - terraref-env.re
 
     - name: Verify irods_environment.json is in place
       ansible.builtin.stat:
@@ -290,3 +288,12 @@
         path: /etc/irods/sciapps.re
       register: response
       failed_when: response.stat.exists
+
+    - name: Test ensure terraref gone
+      ansible.builtin.stat:
+        path: /etc/irods/{{ item }}
+      register: response
+      failed_when: response.stat.exists
+      with_items:
+        - terraref.re
+        - terraref-env.re

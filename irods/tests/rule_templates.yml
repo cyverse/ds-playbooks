@@ -12,7 +12,6 @@
     cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
     pire_env: "{{ lookup('template', '../templates/rule-bases/pire-env.re.j2') }}"
     sernec_env: "{{ lookup('template', '../templates/rule-bases/sernec-env.re.j2') }}"
-    terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
   tasks:
     - name: Verify constants expand correctly in cyverse-env.re.j2
       ansible.builtin.assert:
@@ -55,12 +54,6 @@
           - sernec_env is search('sernec_OWNERS = list()' | regex_escape)
           - sernec_env is search('sernec_WRITERS = list()' | regex_escape)
           - sernec_env is search('sernec_READERS = list()' | regex_escape)
-
-    - name: Verify constants expand correctly in terraref-env.re.j2
-      ansible.builtin.assert:
-        that:
-          - terraref_env is search("terraref_BASE_COLL = ''")
-          - terraref_env is search("terraref_RESC = 'demoResc'")
 
 
 - name: Test that custom AMQP exchange set correctly in cyverse-env.re
@@ -219,19 +212,3 @@
           - sernec_env is search('sernec_OWNERS = list("own1", "own2")' | regex_escape)
           - sernec_env is search('sernec_WRITERS = list("write1", "write2")' | regex_escape)
           - sernec_env is search('sernec_READERS = list("read1", "read2")' | regex_escape)
-
-
-- name: Test TerraREF params are set correctly
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    terraref_base_collection: base
-    terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
-  tasks:
-    - name: Verify params
-      ansible.builtin.assert:
-        that:
-          - terraref_env is search("terraref_BASE_COLL = 'base'")
-          - terraref_env is search("terraref_RESC = 'demoResc'")

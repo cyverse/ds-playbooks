@@ -85,9 +85,6 @@ Variable                                   | Required | Default                 
 `sernec_owners`                            | no       | []                                   |         | A list of users who get ownership of sernec collections
 `sernec_readers`                           | no       | []                                   |         | A list of users who get read access to sernec collections
 `sernec_writers`                           | no       | []                                   |         | A list of users who get write access to sernec collections
-`sparcd_admin`                             | no       | null                                 |         | The user name of the Sparc'd administrator. If this isn't set, no sparcd rules will fire.
-`sparcd_base_collection`                   | no       | _see description_                    |         | The base iRODS collection used by Sparc'd. If `sparcd_admin` is `null`, the default is `null`, otherwise it is `/{{ irods_zone_name }}/home/{{ sparcd_admin }}/Sparcd/Collections`.
-`sparcd_report_email_addr`                 | no       | _see description_                    |         | The email address where SPARC'd notifications are sent. If `sparcd_admin` is `null`, the default is `null`, otherwise it is `report_email_addr`.
 `sysctl_kernel`                            | no       | []                                   |         | A list of sysctl kernel parameters to set on the iRODS catalog service provider, _see_below_
 `terraref_base_collection`                 | no       |                                      |         | The base collection for the TerraREF project. If it isn't present no TerraREF rules will fire.
 `terraref_manager`                         | no       | `irods_clerver_user`                 |         | The iRODS user who is responsible for TerraREF data.

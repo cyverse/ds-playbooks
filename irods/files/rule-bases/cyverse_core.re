@@ -37,7 +37,6 @@
 @include 'mdrepo'
 @include 'pire'
 @include 'sernec'
-@include 'sparcd'
 @include 'terraref'
 
 
@@ -84,10 +83,6 @@ _cyverse_core_acPostProcForCollCreate_exclusive {
 		writeLine('serverLog', *msg);
 	}
 	*err = errormsg(sernec_acPostProcForCollCreate, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-	*err = errormsg(sparcd_acPostProcForCollCreate, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
@@ -783,10 +778,6 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # 		if (*err < 0) {
 # 			writeLine('serverLog', *msg);
 # 		}
-# 		*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-#			writeLine('serverLog', *msg);
-# 		}
 # 		*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 		if (*err < 0) {
 # 			writeLine('serverLog', *msg);
@@ -822,10 +813,6 @@ _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 			}
 		}
 		if (*Step != 'START') {
-			*err = errormsg(sparcd_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) {
-				writeLine('serverLog', *msg);
-			}
 			*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 			if (*err < 0) {
 				writeLine('serverLog', *msg);

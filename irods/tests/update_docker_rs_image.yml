@@ -22,7 +22,6 @@
         - delete-scheduled-rule
         - generateuuid
         - imeta-exec
-        - sparcd-ingest
 
     - name: Verify deposition of server_config.json
       ansible.builtin.stat:
@@ -64,7 +63,11 @@
 
     - name: Verify server_config.plugin_configuration.rule_engines rule language plugin_specific_configuration
       ansible.builtin.debug:
-        msg: TODO implement
+        msg: TODO implement for {{ item }}
+      with_items:
+        - re_function_name_mapping_set
+        - re_rulebase_set
+        - regexes_for_supported_peps
 
     - name: Verify server_config.plugin_configuration.rule_engines rule language shared_memory_instance
       ansible.builtin.debug:

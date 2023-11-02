@@ -48,7 +48,6 @@ Variable                                   | Required | Default                 
 `irods_db_user`                            | no       | irods                                |         | The user iRODS uses when connecting to the ICAT DB.
 `irods_dbms_host`                          | no       | `group_vars['irods_catalog'][0]`     |         | The host of the DBMS that provides the ICAT DB.
 `irods_dbms_pg_hba`                        | no       | /etc/postgresql/12/main/pg_hba.conf  |         | The absolute path to the pg_hba.conf file on the DBMS hosting the ICAT DB
-`irods_dbms_pg_version`                    | no       | 12                                   | 9.3, 12 | The version of the PostgreSQL client to install.
 `irods_dbms_port`                          | no       | 5432                                 |         | The TCP port the DBMS listens on.
 `irods_default_dir_mode`                   | no       | 0750                                 |         | The default permissions assigned to newly created directories in the vault
 `irods_default_file_mode`                  | no       | 0600                                 |         | The default permissions assigned to newly created files in the vault

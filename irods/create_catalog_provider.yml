@@ -55,65 +55,47 @@
       tags:
         - no_testing
 
-    - name: Verify PostgreSQL client version is 9.3 or 12
-      when: _irods_dbms_pg_version != '9.3' and _irods_dbms_pg_version != '12'
-      ansible.builtin.fail:
-        msg: Only PostgreSQL client versions 9.3 and 12 are supported
-
-    - name: Ensure PostgreSQL 9.3 clients are installed
-      when: _irods_dbms_pg_version == '9.3'
+    - name: Ensure PostgreSQL 12 repo is installed
       ansible.builtin.yum:
+        name: >-
+          https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+    - name: Ensure PostgreSQL 12 clients are installed
+      ansible.builtin.package:
         name:
-          - https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/postgresql93-libs-9.3.25-1PGDG.rhel7.x86_64.rpm
-          - https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/postgresql93-9.3.25-1PGDG.rhel7.x86_64.rpm
-          - https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/postgresql93-odbc-10.03.0000-1PGDG.rhel7.x86_64.rpm
+          - postgresql12
+          - postgresql12-odbc
+        state: present
 
-    - name: Handle PostgreSQL 12
-      when: _irods_dbms_pg_version == '12'
-      block:
-        - name: Ensure PostgreSQL 12 repo is installed
-          ansible.builtin.yum:
-            name: >-
-              https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    - name: Add postgres 12 clients to path
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: /etc/profile.d
+        mode: a+r
+      with_fileglob:
+        - "files/profile.d/*"
 
-        - name: Ensure PostgreSQL 12 clients are installed
-          ansible.builtin.package:
-            name:
-              - postgresql12
-              - postgresql12-odbc
-            state: present
-
-        - name: Add postgres 12 clients to path
-          ansible.builtin.copy:
-            src: "{{ item }}"
-            dest: /etc/profile.d
-            mode: a+r
-          with_fileglob:
-            - "files/profile.d/*"
-
-        - name: Define PostgreSQL 12 ODBC Driver
-          ansible.builtin.shell:
-            executable: /bin/bash
-            cmd: |
-              if driverDef="$(odbcinst -q -d -n PostgreSQL)"; then
-                description="$(sed --quiet 's/^Description=//p' <<< "$driverDef")"
-                driver="$(sed --quiet 's/^Driver=//p' <<< "$driverDef")"
-                setup="$(sed --quiet 's/^Setup=//p' <<< "$driverDef")"
-                if [[ "$description" == 'PostgreSQL 12 ODBC Driver' \
-                  && "$driver" == '/usr/pgsql-12/lib/psqlodbc.so' \
-                  && "$setup" == '/usr/pgsql-12/lib/psqlodbcw.so' ]]
-                then
-                  exit 0
-                fi
-              fi
-              if ! odbcinst -i -d -r -v; then
-                exit 1
-              fi
-              echo changed
-          args:
-            stdin: "{{ lookup('file', 'files/postgresql-odbc-tmpl.ini') }}"
-          register: result
-          changed_when: result.stdout == 'changed'
+    - name: Define PostgreSQL 12 ODBC Driver
+      ansible.builtin.shell: |
+        if driverDef="$(odbcinst -q -d -n PostgreSQL)"; then
+          description="$(sed --quiet 's/^Description=//p' <<< "$driverDef")"
+          driver="$(sed --quiet 's/^Driver=//p' <<< "$driverDef")"
+          setup="$(sed --quiet 's/^Setup=//p' <<< "$driverDef")"
+          if [[ "$description" == 'PostgreSQL 12 ODBC Driver' \
+            && "$driver" == '/usr/pgsql-12/lib/psqlodbc.so' \
+            && "$setup" == '/usr/pgsql-12/lib/psqlodbcw.so' ]]
+          then
+            exit 0
+          fi
+        fi
+        if ! odbcinst -i -d -r -v; then
+          exit 1
+        fi
+        echo changed
+      args:
+        stdin: "{{ lookup('file', 'files/postgresql-odbc-tmpl.ini') }}"
+      register: result
+      changed_when: result.stdout == 'changed'
 
     - name: Ensure required packages are installed
       ansible.builtin.package:

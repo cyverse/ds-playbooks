@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This script creates the service.sh script for an catalog service provider.
 #
@@ -33,11 +33,11 @@ escape()
 expand_tmpl()
 {
   cat <<EOF | sed --file - /tmp/service.sh.template
-s/\$DBMS_HOST/$(escape $DBMS_HOST)/g
-s/\$DBMS_PORT/$(escape $DBMS_PORT)/g
-s/\$IRODS_SYSTEM_GROUP/$(escape $IRODS_SYSTEM_GROUP)/g
-s/\$IRODS_SYSTEM_USER/$(escape $IRODS_SYSTEM_USER)/g
-s/\$IRODS_ZONE_PASSWORD/$(escape $IRODS_ZONE_PASSWORD)/g
+s/\$DBMS_HOST/$(escape "$DBMS_HOST")/g
+s/\$DBMS_PORT/$(escape "$DBMS_PORT")/g
+s/\$IRODS_SYSTEM_GROUP/$(escape "$IRODS_SYSTEM_GROUP")/g
+s/\$IRODS_SYSTEM_USER/$(escape "$IRODS_SYSTEM_USER")/g
+s/\$IRODS_ZONE_PASSWORD/$(escape "$IRODS_ZONE_PASSWORD")/g
 EOF
 }
 

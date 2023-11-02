@@ -40,7 +40,7 @@ Variable                                   | Required | Default                 
 `irods_amqp_password`                      | no       | guest                                |         | The password iRODS uses to connect to the AMQP vhost
 `irods_amqp_port`                          | no       | 5672                                 |         | The TCP port the RabbitMQ broker listens on
 `irods_amqp_user`                          | no       | guest                                |         | The user iRODS uses to connect to the AMQP vhost
-`irods_ampq_vhost`                         | no       | /                                    |         | The AMQP vhost iRODS connects to
+`irods_amqp_vhost`                         | no       | /                                    |         | The AMQP vhost iRODS connects to
 `irods_allowed_clients`                    | no       | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
 `irods_clerver_password`                   | no       | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | no       | rods                                 |         | the rodsadmin user to be used by the server being configured
@@ -104,7 +104,7 @@ Variable                                   | Required | Default                 
 `webdav_tls_cert`                          | no       |                                      |         | The TLS certificate file contents
 `webdav_tls_cert_file`                     | no       | /etc/ssl/certs/dummy.crt             |         | The TLS certificate file used for encrypted communication
 `webdav_tls_chain`                         | no       |                                      |         | The TLS certificate chain file contents
-`weddav_tls_chain_file`                    | no       | /etc/ssl/certs/dummy-chain.crt       |         | The TLS certificate chain file used for encrypted communication
+`webdav_tls_chain_file`                    | no       | /etc/ssl/certs/dummy-chain.crt       |         | The TLS certificate chain file used for encrypted communication
 `webdav_tls_key`                           | no       |                                      |         | The TLS key
 `webdav_tls_key_file`                      | no       | /etc/ssl/certs/dummy.key             |         | The TLS key file used for encrypted communication
 `webdav_varnish_service_port`              | no       | 6081                                 |         | The service port number for varnish-cache
@@ -117,7 +117,7 @@ Variable                                   | Required | Default                 
 `sftpgo_irods_proxy_username`              | no       | sftp                                 |         | The irods user who provides proxy access to SFTPGo
 `sftpgo_irods_proxy_password`              | yes      |                                      |         | The password of the SFTPGo irods proxy user
 
-`irods_federatation` entry fields
+`irods_federation` entry fields
 
 All of them are required.
 

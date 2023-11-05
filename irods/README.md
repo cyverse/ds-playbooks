@@ -59,6 +59,7 @@ Variable                                   | Required | Default                 
 `irods_host_aliases`                       | no       | []                                   |         | A list of other names and addresses used to refer to the host being configured.
 `irods_max_num_re_procs`                   | no       | 4                                    |         | The maximum number of rule engine processes to run
 `irods_negotiation_key`                    | no       | TEMPORARY_32byte_negotiation_key     |         | The negotiation key
+`irods_odbc_driver`                        | no       | PostgreSQL                           |         | The name of the ODBC driver iRODS uses to communicate with the DBMS
 `irods_other_host_entries`                 | no       | []                                   |         | A list of other FQDNs to add to /etc/hosts
 `irods_parallel_transfer_buffer_size`      | no       | 100                                  |         | The transfer buffer size in MiB for each stream during parallel transfer
 `irods_publish_rs_image`                   | no       | false                                |         | Whether or not to publish a freshly build resource server docker image to dockerhub.

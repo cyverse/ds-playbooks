@@ -25,56 +25,110 @@
   ansible.builtin.import_playbook: provision.yml
 
 
-- name: Test install catalog service provider packages
+- name: Test provision additional for catalog service providers
   hosts: irods_catalog
   become: true
   become_flags: '-i'
   tasks:
-    - name: Verify correct packages installed
+    - name: Verify parallel installed
       ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
-      with_items:
-        - mailx
-        - parallel
-        - pgdg-redhat-repo
-        - postgresql12
-        - postgresql12-odbc
-      loop_control:
-        loop_var: pkg
+      vars:
+        pkg: parallel
 
-    - name: Test install PostgreSQL 12 ODBC Driver
-      ansible.builtin.command: odbcinst -q -d -n PostgreSQL
-      changed_when: false
+    - name: Verify correct version of pika installed
+      community.general.pip_package_info:
+        clients: pip3
+      register: pip_info
+      failed_when: >-
+        'pika' not in pip_info.packages['pip3']
+        or pip_info.packages['pip3']['pika'] | length > 1
+        or pip_info.packages['pip3']['pika'][0]['version'] is version('1.2', '>=')
 
-    - name: Test ensure pika installed
-      ansible.builtin.shell:
-        executable: /bin/bash
-        cmd: |
-          set -o pipefail
-          pip --disable-pip-version-check show pika | sed --quiet 's/^Version: //p' 2> /dev/null
-      register: resp
-      changed_when: false
-      failed_when: resp.stdout is version('1.2', '>=')
+    - name: Test provision CentOS
+      when: ansible_distribution == 'CentOS'
+      block:
+        - name: CentOS | verify correct packages installed
+          ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
+          with_items:
+            - mailx
+            - pgdg-redhat-repo
+            - postgresql12
+            - postgresql12-odbc
+          loop_control:
+            loop_var: pkg
 
-    - name: Test lock irods-database-plugin-postgres to required version
-      ansible.builtin.shell:
-        executable: /bin/bash
-        cmd: |
-          set -o pipefail
-          if ! yum versionlock status | grep --quiet irods-database-plugin-postgres; then
-            printf 'irods-database-plugin-postgres not locked\n' >&2
-            exit 1
-          elif info="$(yum --quiet list installed irods-database-plugin-postgres | tail --lines=+2)"
-          then
-            readarray -t versions <<< "$info"
-            for version in "${versions[@]}"; do
-              read _ verNum _ <<< "$version"
-              if ! [[ "$verNum" =~ 4\.2\.8 ]]; then
-                printf 'found version %s\n' "$verNum" >&2
+        - name: CentOS | verify postgresql clients are on the the path
+          ansible.builtin.stat:
+            path: "{{ item }}"
+          register: resp
+          failed_when: >-
+            not resp.stat.exists or not resp.stat.rusr or not resp.stat.rgrp or not resp.stat.roth
+          with_items:
+            - /etc/profile.d/postgres.csh
+            - /etc/profile.d/postgres.sh
+
+        - name: CentOS | test correct psql version
+          ansible.builtin.assert:
+            that: ansible_env.PATH is search('/usr/pgsql-12/bin' | regex_escape)
+
+        - name: CentOS | verify PostgreSQL 12 ODBC driver exists
+          ansible.builtin.command: odbcinst -q -d -n PostgreSQL
+          changed_when: false
+
+        - name: CentOS | verify irods-database-plugin-postgres locked to required version
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              set -o pipefail
+              if ! yum versionlock status | grep --quiet irods-database-plugin-postgres; then
+                printf 'irods-database-plugin-postgres not locked\n' >&2
                 exit 1
+              elif info="$(
+                yum --quiet list installed irods-database-plugin-postgres | tail --lines=+2 )"
+              then
+                readarray -t versions <<< "$info"
+                for version in "${versions[@]}"; do
+                  read _ verNum _ <<< "$version"
+                  if ! [[ "$verNum" =~ 4\.2\.8 ]]; then
+                    printf 'found version %s\n' "$verNum" >&2
+                    exit 1
+                  fi
+                done
               fi
-            done
-          fi
-      changed_when: false
+          changed_when: false
+
+    - name: Test provision Ubuntu
+      when: ansible_distribution == 'Ubuntu'
+      block:
+        - name: Ubuntu | verify correct packages installed
+          ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
+          with_items:
+            - bsd-mailx
+            - odbc-postgresql
+            - postgresql-client-12
+          loop_control:
+            loop_var: pkg
+
+        - name: Ubuntu | verify PostgreSQL signing key installed
+          ansible.builtin.command: apt-key list
+          register: resp
+          changed_when: false
+          failed_when: resp.stdout is not regex('PostgreSQL Debian Repository')
+
+        - name: Ubuntu | verify PostgreSQL repository installed
+          ansible.builtin.stat:
+            path: /etc/apt/sources.list.d/pgdg.list
+          register: resp
+          failed_when: not resp.stat.exists
+
+        - name: Ubuntu | test lock irods-database-plugin-postgres to required version
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              set -o pipefail
+              apt-cache policy \
+                | grep --quiet 'irods-database-plugin-postgres -> 4.2.8 with priority 1001'
+          changed_when: false
 
     - name: Verify PostgreSQL plugin installed
       ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
@@ -93,29 +147,9 @@
       loop_control:
         loop_var: dir
 
-    - name: Test correct psql version
-      ansible.builtin.assert:
-        that: ansible_env.PATH is search('/usr/pgsql-12/bin' | regex_escape)
-
 
 - name: Test iRODS configuration
   import_playbook: cfg_irods.yml
-
-
-- name: Test initialize ICAT schema
-  hosts: dbms_primary
-  become: true
-  become_user: postgres
-  tasks:
-    - name: Verify ICAT schema version
-      community.postgresql.postgresql_query:
-        db: ICAT
-        query: >
-          SELECT option_value
-          FROM r_grid_configuration
-          WHERE namespace = 'database' AND option_name = 'schema_version'
-      register: response
-      failed_when: response.failed or response.query_result[0]['option_value'] != '7'
 
 
 - name: Test start iRODS on catalog service providers

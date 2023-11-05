@@ -78,7 +78,8 @@
               'db_host': _irods_dbms_host,
               'db_password': _irods_db_password,
               'db_port': _irods_dbms_port,
-              'db_username': _irods_db_user
+              'db_username': _irods_db_user,
+              'odbc_driver': _irods_odbc_driver
             } }}
         irods_cfg_maximum_number_of_concurrent_rule_engine_server_processes: >-
           {{ _irods_max_num_re_procs }}

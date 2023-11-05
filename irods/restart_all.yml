@@ -1,9 +1,10 @@
 ---
-- name: restart iRODS service
+- name: Restart iRODS service
   hosts: irods
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
-    - import_tasks: tasks/restart_irods.yml
+    - name: Restart
+      ansible.builtin.import_tasks: tasks/restart_irods.yml
   tags:
     - non_idempotent

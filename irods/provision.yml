@@ -141,7 +141,3 @@
 
 - name: Update /etc/hosts
   ansible.builtin.import_playbook: update_hosts.yml
-
-
-- name: Update firewall rules
-  ansible.builtin.import_playbook: firewall.yml

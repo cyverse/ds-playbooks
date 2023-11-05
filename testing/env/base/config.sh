@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #
 # Usage:
 #  config.sh OS VERSION
@@ -81,10 +81,10 @@ install_centos_packages() {
 		jq \
 		libselinux-python \
 		openssh-server \
-		python-dns \
-		python-pip \
-		python-requests \
-		python-virtualenv \
+		python3-dns \
+		python3-pip \
+		python3-requests \
+		python3-virtualenv \
 		python3 \
 		sudo
 }

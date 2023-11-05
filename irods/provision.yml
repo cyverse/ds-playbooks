@@ -1,9 +1,7 @@
 ---
-- name: provision for iRODS
+- name: Provision for iRODS
   hosts: irods:!unmanaged_systems
   become: true
-  collections:
-    - community.general
   tasks:
     - name: Provision CentOS
       when: ansible_distribution == 'CentOS'
@@ -19,18 +17,20 @@
             mode: u+r
 
         - name: CentOS | force import of GPG key
-          ansible.builtin.shell: |
-            if ! resp="$(yum --assumeyes updateinfo)"; then
-              exit 1
-            fi
-            if [[ "$resp" =~ irods-signing-key ]]; then
-              echo changed
-            fi
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              if ! resp="$(yum --assumeyes updateinfo)"; then
+                exit 1
+              fi
+              if [[ "$resp" =~ irods-signing-key ]]; then
+                echo changed
+              fi
           register: response
           changed_when: response.stdout == 'changed'
 
         - name: CentOS | lock irods packages to required version
-          yum_versionlock:
+          community.general.yum_versionlock:
             name:
               - irods-icommands-{{ _irods_version }}
               - irods-runtime-{{ _irods_version }}
@@ -122,7 +122,8 @@
         shell: /bin/bash
         comment: iRODS Administrator
 
-    - import_tasks: tasks/ensure_irods_ownership.yml
+    - name: Ensure iRODS ownership
+      ansible.builtin.import_tasks: tasks/ensure_irods_ownership.yml
 
     - name: Ensure default policy files are up-to-date
       ansible.builtin.copy:
@@ -138,7 +139,9 @@
         - core.re
 
 
-- import_playbook: update_hosts.yml
+- name: Update /etc/hosts
+  ansible.builtin.import_playbook: update_hosts.yml
 
 
-- import_playbook: firewall.yml
+- name: Update firewall rules
+  ansible.builtin.import_playbook: firewall.yml

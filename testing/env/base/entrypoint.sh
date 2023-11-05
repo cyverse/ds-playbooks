@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #
 # Usage:
 #  entrypoint [SVC-SCRIPT]
@@ -25,10 +25,10 @@
 
 main()
 {
-  local svc="$1"
+  Svc="$1"
 
-  start "$svc"
-  trap "kill \${!}; stop '$svc'; exit \$?" SIGTERM
+  start "$Svc"
+  trap 'kill ${!}; stop "$Svc"; exit $?' SIGTERM
 
   while true
   do
@@ -57,7 +57,7 @@ stop()
 {
   local svc="$1"
 
-  kill -SIGTERM $(cat /var/run/sshd.pid)
+  kill -SIGTERM "$(cat /var/run/sshd.pid)"
 
   if [ -n "$svc" ]
   then

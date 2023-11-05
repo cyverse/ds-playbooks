@@ -1,4 +1,4 @@
-FROM test-env-base:centos7
+FROM test-env-base:ubuntu1804
 
 ARG DBMS_HOST=dbms_configured
 ARG DBMS_PORT=5432

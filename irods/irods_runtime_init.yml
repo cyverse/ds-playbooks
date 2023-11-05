@@ -47,12 +47,6 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: Force initialize perms when not testing
-      ansible.builtin.set_fact:
-        init_rodsadmin_perms_default: true
-      tags:
-        - no_testing
-
     - name: Initialize rodsadmin perms
       ansible.builtin.script: >-
         scripts/init-rodsadmin-perms.sh \
@@ -69,7 +63,7 @@
       changed_when: response.stdout == 'true'
       delegate_to: localhost
       become: false
-      when: init_rodsadmin_perms | d(init_rodsadmin_perms_default | d(false))
+      when: init_rodsadmin_perms | d(false)
 
     - name: Ensure anonymous user exists
       delegate_to: localhost

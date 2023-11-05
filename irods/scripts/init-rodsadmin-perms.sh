@@ -25,7 +25,8 @@
 shopt -s lastpipe
 set -o errexit -o nounset -o pipefail
 
-readonly CHANGES=$(mktemp)
+CHANGES="$(mktemp)"
+readonly CHANGES
 
 
 main()
@@ -87,6 +88,7 @@ gather_changes()
   local dbmsSvcUser="$4"
   local zone="$5"
 
+  # shellcheck disable=SC2087
   ssh -q -p "$sshDbmsPort" "$sshDbmsUser"@"$dbmsHost" \
       "sudo --login --user='$dbmsSvcUser' \\
         psql --no-align --quiet --record-separator-zero --tuples-only ICAT" \
@@ -140,7 +142,7 @@ set_permissions()
     | extract_path \
     | ssh -q -p "$sshIrodsPort" "$sshIrodsUser"@"$irodsHost" \
       "sudo --login --user '$irodsSvcUser' \\
-        xargs --no-run-if-empty --null ichmod -M "$perm" rodsadmin"
+        xargs --no-run-if-empty --null ichmod -M '$perm' rodsadmin"
 }
 
 

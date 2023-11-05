@@ -161,3 +161,7 @@ Field    | Comments
 -------- | --------
 `name`   | The parameter name to modify
 `value`  | The new value to set
+
+### Command line variables
+
+Initializing rodsadmin group permissions when a lot of data objects exist, can take a very long time. By default this is skipped, but if `init_rodsadmin_perms=true` is set on the command line,the `irods_runtime_init` playbook will ensure rodsadmin group permissions are set correctly.

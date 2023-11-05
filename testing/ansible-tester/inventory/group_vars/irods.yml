@@ -1,4 +1,6 @@
 ---
+init_rodsadmin_perms: true
+
 avra_base_collection: /testing/home/shared/avra
 avra_manager: avra_mgr
 avra_resource_hierarchy:

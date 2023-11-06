@@ -1,4 +1,4 @@
-FROM test-env-base:ubuntu2004
+FROM test-env-base:ubuntu2204
 
 ARG DEBIAN_FRONTEND=noninteractive
 

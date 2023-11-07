@@ -1,34 +1,38 @@
 ---
-- name: reboot servers
+- name: Reboot servers
   hosts: all:!unmanaged_systems:!localhost
   become: true
   vars:
     _port: "{{ ansible_port | default(22) }}"
+  tags:
+    - no_testing
   tasks:
-    - when: _rebootable
+    - name: Reboot if allowed
+      when: _rebootable
       block:
-        - name: reboot
-          shell: |
-            sleep 1
-            reboot
+        - name: Reboot
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              sleep 1
+              reboot
           async: 1000000000
           poll: 0
-          ignore_errors: true
+          changed_when: true
+          failed_when: false
 
-        - name: wait for server to stop
-          wait_for:
+        - name: Wait for server to stop
+          ansible.builtin.wait_for:
             host: "{{ inventory_hostname }}"
             port: "{{ _port }}"
             state: stopped
           delegate_to: localhost
           become: false
 
-        - name: verify server up
-          wait_for:
+        - name: Verify server up
+          ansible.builtin.wait_for:
             host: "{{ inventory_hostname }}"
             port: "{{ _port }}"
             state: started
           delegate_to: localhost
           become: false
-  tags:
-    - no_testing

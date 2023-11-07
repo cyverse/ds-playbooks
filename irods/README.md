@@ -48,7 +48,6 @@ Variable                                   | Required | Default                 
 `irods_db_user`                            | no       | irods                                |         | The user iRODS uses when connecting to the ICAT DB.
 `irods_dbms_host`                          | no       | `group_vars['irods_catalog'][0]`     |         | The host of the DBMS that provides the ICAT DB.
 `irods_dbms_pg_hba`                        | no       | /etc/postgresql/12/main/pg_hba.conf  |         | The absolute path to the pg_hba.conf file on the DBMS hosting the ICAT DB
-`irods_dbms_pg_version`                    | no       | 12                                   | 9.3, 12 | The version of the PostgreSQL client to install.
 `irods_dbms_port`                          | no       | 5432                                 |         | The TCP port the DBMS listens on.
 `irods_default_dir_mode`                   | no       | 0750                                 |         | The default permissions assigned to newly created directories in the vault
 `irods_default_file_mode`                  | no       | 0600                                 |         | The default permissions assigned to newly created files in the vault
@@ -60,6 +59,7 @@ Variable                                   | Required | Default                 
 `irods_host_aliases`                       | no       | []                                   |         | A list of other names and addresses used to refer to the host being configured.
 `irods_max_num_re_procs`                   | no       | 4                                    |         | The maximum number of rule engine processes to run
 `irods_negotiation_key`                    | no       | TEMPORARY_32byte_negotiation_key     |         | The negotiation key
+`irods_odbc_driver`                        | no       | PostgreSQL                           |         | The name of the ODBC driver iRODS uses to communicate with the DBMS
 `irods_other_host_entries`                 | no       | []                                   |         | A list of other FQDNs to add to /etc/hosts
 `irods_parallel_transfer_buffer_size`      | no       | 100                                  |         | The transfer buffer size in MiB for each stream during parallel transfer
 `irods_publish_rs_image`                   | no       | false                                |         | Whether or not to publish a freshly build resource server docker image to dockerhub.
@@ -161,3 +161,7 @@ Field    | Comments
 -------- | --------
 `name`   | The parameter name to modify
 `value`  | The new value to set
+
+### Command line variables
+
+Initializing rodsadmin group permissions when a lot of data objects exist, can take a very long time. By default this is skipped, but if `init_rodsadmin_perms=true` is set on the command line,the `irods_runtime_init` playbook will ensure rodsadmin group permissions are set correctly.

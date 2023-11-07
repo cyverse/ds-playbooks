@@ -1,16 +1,16 @@
 ---
-- name: run-time initialization
+- name: Run-time initialization
   hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - name: ensure service user type exists
+    - name: Ensure service user type exists
       irods_user_type:
         type: ds-service
         description: a Data Store service
 
-    - name: ensure public group's home is correct
+    - name: Ensure public group's home is correct
       become: false
       delegate_to: localhost
       irods_move:
@@ -22,7 +22,7 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: ensure public group's trash is correct
+    - name: Ensure public group's trash is correct
       become: false
       delegate_to: localhost
       irods_move:
@@ -34,7 +34,7 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: ensure CyVerse curated collection base collection exists
+    - name: Ensure CyVerse curated collection base collection exists
       become: false
       delegate_to: localhost
       irods_collection:
@@ -47,33 +47,25 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: force initialize perms when not testing
-      set_fact:
-        init_rodsadmin_perms_default: false
-      tags:
-        - no_testing
-
-    - name: initialize rodsadmin perms
-      script: >
+    - name: Initialize rodsadmin perms
+      ansible.builtin.script: >-
         scripts/init-rodsadmin-perms.sh \
           '{{ groups["dbms_primary"][0] }}' \
           postgres \
-          '{{ hostvars[groups["dbms_primary"][0]]["ansible_port"]|d(22) }}' \
-          '{{ hostvars[groups["dbms_primary"][0]]["ansible_user"]|d("root") }}' \
+          '{{ hostvars[groups["dbms_primary"][0]]["ansible_port"] | d(22) }}' \
+          '{{ hostvars[groups["dbms_primary"][0]]["ansible_user"] | d("root") }}' \
           '{{ groups["irods_catalog"][0] }}' \
           '{{ hostvars[groups["irods_catalog"][0]]["_irods_service_account_name"] }}' \
-          '{{ hostvars[groups["irods_catalog"][0]]["ansible_port"]|default(22) }}' \
-          '{{ hostvars[groups["irods_catalog"][0]]["ansible_user"]|default("root") }}' \
+          '{{ hostvars[groups["irods_catalog"][0]]["ansible_port"] | d(22) }}' \
+          '{{ hostvars[groups["irods_catalog"][0]]["ansible_user"] | d("root") }}' \
           '{{ _irods_zone_name }}'
       register: response
       changed_when: response.stdout == 'true'
       delegate_to: localhost
       become: false
-      when: >-
-        (init_rodsadmin_perms is not defined and (init_rodsadmin_perms_default|default(true)))
-        or init_rodsadmin_perms
+      when: init_rodsadmin_perms | d(false)
 
-    - name: ensure anonymous user exists
+    - name: Ensure anonymous user exists
       delegate_to: localhost
       become: false
       irods_user:
@@ -86,7 +78,7 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: ensure anonymous user has read access to required collections
+    - name: Ensure anonymous user has read access to required collections
       delegate_to: localhost
       become: false
       no_log: true
@@ -105,18 +97,20 @@
         - /{{ _irods_zone_name }}/home/shared
         - /{{ _irods_zone_name }}/home/shared/commons_repo/curated
 
-    - name: remove _ipc_* rules
-      shell: |
-        set -o errexit
-        res="$(iquest '%s' "select RULE_EXEC_ID where RULE_EXEC_NAME = '{{ item }}'")"
-        if [[ -z "$res" ]]; then
-          exit 1
-        elif [[ "$res" =~ CAT_NO_ROWS_FOUND: ]]; then
-          exit 0
-        fi
-        readarray -t ids <<< "$res"
-        iqdel "${ids[@]}"
-        echo changed
+    - name: Remove _ipc_* rules
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit
+          res="$(iquest '%s' "select RULE_EXEC_ID where RULE_EXEC_NAME = '{{ item }}'")"
+          if [[ -z "$res" ]]; then
+            exit 1
+          elif [[ "$res" =~ CAT_NO_ROWS_FOUND: ]]; then
+            exit 0
+          fi
+          readarray -t ids <<< "$res"
+          iqdel "${ids[@]}"
+          echo changed
       register: response
       changed_when: response.stdout == 'changed'
       with_items:
@@ -124,22 +118,22 @@
         - _ipc_rmTrash
         - _ipc_updateQuotaUsage
 
-    - name: start quota usage computation
-      command: >
+    - name: Start quota usage computation
+      ansible.builtin.command: >
         irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
           cyverse_housekeeping_rescheduleQuotaUsageUpdate null ruleExecOut
       register: results
       changed_when: results.stdout == 'scheduled quota usage updates'
 
-    - name: start storage free space determination
-      command: >
+    - name: Start storage free space determination
+      ansible.builtin.command: >
         irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
           cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination null ruleExecOut
       register: results
       changed_when: results.stdout == 'scheduled storage determination'
 
-    - name: start trash removal
-      command: >
+    - name: Start trash removal
+      ansible.builtin.command: >
         irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
           cyverse_housekeeping_rescheduleTrashRemoval null ruleExecOut
       register: results

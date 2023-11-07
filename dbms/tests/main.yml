@@ -73,13 +73,13 @@
           - cyverse_conf is search('effective_io_concurrency = 2')
           - cyverse_conf is search('max_worker_processes = 7')
           - cyverse_conf is search('max_parallel_maintenance_workers = 3')
+          - cyverse_conf is search('max_parallel_workers_per_gather = 4')
+          - cyverse_conf is search('max_parallel_workers = 6')
 
     - name: Test cyverse.conf expansion, no downstream or upstream nodes
       ansible.builtin.debug:
         msg: TODO implement for {{ item }}
       with_items:
-        - max_parallel_workers_per_gather
-        - max_parallel_workers
         - wal_buffers
         - checkpoint_timeout
         - max_wal_size

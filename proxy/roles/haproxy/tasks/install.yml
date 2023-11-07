@@ -1,37 +1,37 @@
 ---
-- name: install | prepare if testing
+- name: Install | prepare if testing
   ansible.builtin.import_tasks: _testing.yml
 
-- name: install | determine os
+- name: Install | determine os
   when: ansible_distribution is not defined
   ansible.builtin.setup:
     gather_subset: pkg_mgr
     filter: ansible_pkg_mgr
 
-- name: install | update apt cache
+- name: Install | update apt cache
   when: ansible_pkg_mgr == 'apt'
   ansible.builtin.apt:
     update_cache: true
 
-- name: install | install haproxy
+- name: Install | install haproxy
   ansible.builtin.package:
     name: haproxy
     state: present
 
-- name: install | install socat
+- name: Install | install socat
   ansible.builtin.package:
     name: socat
     state: present
 
-- name: install | ensure haproxy starts on reboot
+- name: Install | ensure haproxy starts on reboot
   ansible.builtin.service:
     name: haproxy
     enabled: true
   tags:
     - no_testing
 
-- name: install | ensure nonlocal binding allowed
-  ansible.builtin.sysctl:
+- name: Install | ensure nonlocal binding allowed
+  ansible.posix.sysctl:
     name: net.ipv4.ip_nonlocal_bind
     value: '1'
     sysctl_set: true
@@ -39,12 +39,12 @@
     reload: true
     state: present
   notify:
-    - restart haproxy
+    - Restart haproxy
   tags:
     - no_testing
 
-- name: install | ensure IP forwarding allowed
-  ansible.builtin.sysctl:
+- name: Install | ensure IP forwarding allowed
+  ansible.posix.sysctl:
     name: net.ipv4.ip_forward
     value: '1'
     sysctl_set: true

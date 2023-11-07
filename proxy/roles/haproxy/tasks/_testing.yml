@@ -1,6 +1,6 @@
 ---
-- name: disable testing
-  set_fact:
+- name: Testing | disable
+  ansible.builtin.set_fact:
     _full_os: true
   run_once: true
   tags:

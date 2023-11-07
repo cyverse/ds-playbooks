@@ -16,4 +16,6 @@ postgres12_work_mem: 8MB
 postgres12_maintenance_work_mem: 16MB
 
 postgres12_max_worker_processes: 7
+postgres12_max_parallel_workers: 6
 postgres12_max_parallel_maintenance_workers: 3
+postgres12_max_parallel_workers_per_gather: 4

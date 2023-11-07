@@ -1,23 +1,19 @@
 ---
-- name: reload haproxy
+- name: Reload haproxy
   when: _full_os | bool
-  service:
+  ansible.builtin.service:
     name: haproxy
     state: reloaded
 
-- name: restart haproxy
+- name: Restart haproxy
   when: _full_os | bool
-  service:
+  ansible.builtin.service:
     name: haproxy
     state: restarted
 
-- name: restart rsyslog
+- name: Restart rsyslog
   when: _full_os | bool
-  service:
+  ansible.builtin.service:
     name: rsyslog
     state: restarted
-  notify: reload haproxy
-
-- name: reboot
-  debug:
-    msg: REBOOT REQUIRED FOR SETTINGS TO TAKE
+  notify: Reload haproxy

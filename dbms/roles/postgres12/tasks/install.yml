@@ -1,7 +1,7 @@
 ---
 
-- name: install | apt install postgres12 and postgres12 client
-  apt:
+- name: Install | apt install postgres12 and postgres12 client
+  ansible.builtin.apt:
     update_cache: true
     pkg:
       - postgresql
@@ -9,7 +9,7 @@
       - python3-psycopg2
     state: present
 
-- name: install | create en_US.UTF-8
-  locale_gen:
+- name: Install | create en_US.UTF-8
+  community.general.locale_gen:
     name: en_US.UTF-8
     state: present

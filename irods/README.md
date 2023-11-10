@@ -86,6 +86,17 @@ Variable                                   | Required | Default                 
 `sernec_owners`                            | no       | []                                   |         | A list of users who get ownership of sernec collections
 `sernec_readers`                           | no       | []                                   |         | A list of users who get read access to sernec collections
 `sernec_writers`                           | no       | []                                   |         | A list of users who get write access to sernec collections
+`sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
+`sftp_proxy_allowed`                       | no       | `[]`                                 |         | A list of network/masks for the proxy servers allowed access to the SFTP servers
+`sftpgo_admin_ui_port`                     | no       | 18023                                |         | The SFTPGo admin UI service port number
+`sftpgo_admin_username`                    | no       | admin                                |         | The SFTPGo admin account name
+`sftpgo_admin_password`                    | yes      |                                      |         | The password of the SFTPGo admin user
+`sftpgo_irods_proxy_username`              | no       | sftp                                 |         | The irods user who provides proxy access to SFTPGo
+`sftpgo_irods_proxy_password`              | yes      |                                      |         | The password of the SFTPGo irods proxy user
+`sftpgo_vault_dir`                         | no       | /sftpgo_vault                        |         | The directory SFTPGo will use for saving state
+`sparcd_admin`                             | no       | null                                 |         | The user name of the Sparc'd administrator. If this isn't set, no sparcd rules will fire.
+`sparcd_base_collection`                   | no       | _see description_                    |         | The base iRODS collection used by Sparc'd. If `sparcd_admin` is `null`, the default is `null`, otherwise it is `/{{ irods_zone_name }}/home/{{ sparcd_admin }}/Sparcd/Collections`.
+`sparcd_report_email_addr`                 | no       | _see description_                    |         | The email address where SPARC'd notifications are sent. If `sparcd_admin` is `null`, the default is `null`, otherwise it is `report_email_addr`.
 `sysctl_kernel`                            | no       | []                                   |         | A list of sysctl kernel parameters to set on the iRODS catalog service provider, _see_below_
 `webdav_access_limit`                      | no       |                                      |         | If defined, the upper limit on the number of simultaneous requests that will be served by webdav
 `webdav_allowed_src`                       | no       | `[ "0.0.0.0/0" ]`                    |         | A list of network/masks for the clients allowed direct access to the WebDAV servers

@@ -63,7 +63,7 @@ Variable                                   | Required | Default                 
 `irods_other_host_entries`                 | no       | []                                   |         | A list of other FQDNs to add to /etc/hosts
 `irods_parallel_transfer_buffer_size`      | no       | 100                                  |         | The transfer buffer size in MiB for each stream during parallel transfer
 `irods_publish_rs_image`                   | no       | false                                |         | Whether or not to publish a freshly build resource server docker image to dockerhub.
-`irods_re_host`                            | no       | `group_vars['irods_catalog'][0]`     |         | The FQDN or IP address of the iRODS rule engine host
+`irods_re_host`                            | no       | `groups['irods_catalog'][0]`         |         | The FQDN or IP address of the iRODS rule engine host
 `irods_resource_hierarchies`               | no       | `[ { "name": "demoResc" } ]`         |         | The list of resource hierarchies that need to exist, _see below_
 `irods_rs_image`                           | no       | ds-irods-rs-onbuild                  |         | The name of the unpublished RS image to be generated
 `irods_server_control_plane_key`           | no       | TEMPORARY__32byte_ctrl_plane_key     |         | The server control plane key

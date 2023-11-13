@@ -40,7 +40,7 @@ Variable                                   | Required | Default                 
 `irods_amqp_password`                      | no       | guest                                |         | The password iRODS uses to connect to the AMQP vhost
 `irods_amqp_port`                          | no       | 5672                                 |         | The TCP port the RabbitMQ broker listens on
 `irods_amqp_user`                          | no       | guest                                |         | The user iRODS uses to connect to the AMQP vhost
-`irods_ampq_vhost`                         | no       | /                                    |         | The AMQP vhost iRODS connects to
+`irods_amqp_vhost`                         | no       | /                                    |         | The AMQP vhost iRODS connects to
 `irods_allowed_clients`                    | no       | 0.0.0.0/0                            |         | The network/mask for the clients allowed to access iRODS.
 `irods_clerver_password`                   | no       | rods                                 |         | The password used to authenticate the clerver
 `irods_clerver_user`                       | no       | rods                                 |         | the rodsadmin user to be used by the server being configured
@@ -63,7 +63,7 @@ Variable                                   | Required | Default                 
 `irods_other_host_entries`                 | no       | []                                   |         | A list of other FQDNs to add to /etc/hosts
 `irods_parallel_transfer_buffer_size`      | no       | 100                                  |         | The transfer buffer size in MiB for each stream during parallel transfer
 `irods_publish_rs_image`                   | no       | false                                |         | Whether or not to publish a freshly build resource server docker image to dockerhub.
-`irods_re_host`                            | no       | `group_vars['irods_catalog'][0]`     |         | The FQDN or IP address of the iRODS rule engine host
+`irods_re_host`                            | no       | `groups['irods_catalog'][0]`         |         | The FQDN or IP address of the iRODS rule engine host
 `irods_resource_hierarchies`               | no       | `[ { "name": "demoResc" } ]`         |         | The list of resource hierarchies that need to exist, _see below_
 `irods_rs_image`                           | no       | ds-irods-rs-onbuild                  |         | The name of the unpublished RS image to be generated
 `irods_server_control_plane_key`           | no       | TEMPORARY__32byte_ctrl_plane_key     |         | The server control plane key
@@ -85,6 +85,14 @@ Variable                                   | Required | Default                 
 `sernec_owners`                            | no       | []                                   |         | A list of users who get ownership of sernec collections
 `sernec_readers`                           | no       | []                                   |         | A list of users who get read access to sernec collections
 `sernec_writers`                           | no       | []                                   |         | A list of users who get write access to sernec collections
+`sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
+`sftp_proxy_allowed`                       | no       | `[]`                                 |         | A list of network/masks for the proxy servers allowed access to the SFTP servers
+`sftpgo_admin_ui_port`                     | no       | 18023                                |         | The SFTPGo admin UI service port number
+`sftpgo_admin_username`                    | no       | admin                                |         | The SFTPGo admin account name
+`sftpgo_admin_password`                    | yes      |                                      |         | The password of the SFTPGo admin user
+`sftpgo_irods_proxy_username`              | no       | sftp                                 |         | The irods user who provides proxy access to SFTPGo
+`sftpgo_irods_proxy_password`              | yes      |                                      |         | The password of the SFTPGo irods proxy user
+`sftpgo_vault_dir`                         | no       | /sftpgo_vault                        |         | The directory SFTPGo will use for saving state
 `sparcd_admin`                             | no       | null                                 |         | The user name of the Sparc'd administrator. If this isn't set, no sparcd rules will fire.
 `sparcd_base_collection`                   | no       | _see description_                    |         | The base iRODS collection used by Sparc'd. If `sparcd_admin` is `null`, the default is `null`, otherwise it is `/{{ irods_zone_name }}/home/{{ sparcd_admin }}/Sparcd/Collections`.
 `sparcd_report_email_addr`                 | no       | _see description_                    |         | The email address where SPARC'd notifications are sent. If `sparcd_admin` is `null`, the default is `null`, otherwise it is `report_email_addr`.
@@ -110,20 +118,12 @@ Variable                                   | Required | Default                 
 `webdav_tls_cert`                          | no       |                                      |         | The TLS certificate file contents
 `webdav_tls_cert_file`                     | no       | /etc/ssl/certs/dummy.crt             |         | The TLS certificate file used for encrypted communication
 `webdav_tls_chain`                         | no       |                                      |         | The TLS certificate chain file contents
-`weddav_tls_chain_file`                    | no       | /etc/ssl/certs/dummy-chain.crt       |         | The TLS certificate chain file used for encrypted communication
+`webdav_tls_chain_file`                    | no       | /etc/ssl/certs/dummy-chain.crt       |         | The TLS certificate chain file used for encrypted communication
 `webdav_tls_key`                           | no       |                                      |         | The TLS key
 `webdav_tls_key_file`                      | no       | /etc/ssl/certs/dummy.key             |         | The TLS key file used for encrypted communication
 `webdav_varnish_service_port`              | no       | 6081                                 |         | The service port number for varnish-cache
-`sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
-`sftp_proxy_allowed`                       | no       | `[]`                                 |         | A list of network/masks for the proxy servers allowed access to the SFTP servers
-`sftpgo_admin_ui_port`                     | no       | 18023                                |         | The SFTPGo admin UI service port number
-`sftpgo_vault_dir`                         | no       | /sftpgo_vault                        |         | The directory SFTPGo will use for saving state
-`sftpgo_admin_username`                    | no       | admin                                |         | The SFTPGo admin account name
-`sftpgo_admin_password`                    | yes      |                                      |         | The password of the SFTPGo admin user
-`sftpgo_irods_proxy_username`              | no       | sftp                                 |         | The irods user who provides proxy access to SFTPGo
-`sftpgo_irods_proxy_password`              | yes      |                                      |         | The password of the SFTPGo irods proxy user
 
-`irods_federatation` entry fields
+`irods_federation` entry fields
 
 All of them are required.
 

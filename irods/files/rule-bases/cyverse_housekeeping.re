@@ -144,7 +144,7 @@ _cyverse_housekeeping_rmTrashColl(*CutOffTimestamp, *SUCCEEDED) {
 			AND META_COLL_ATTR_NAME = 'ipc::trash_timestamp'
 			AND META_COLL_ATTR_VALUE <= *CutOffTimestamp
 	) {
-		*ts = *Row.META_COLL_ATTR_VALUE;
+		*ts = *row.META_COLL_ATTR_VALUE;
 		*rowCollName = *row.COLL_NAME;
 		*status = errorcode(msiRmColl(*rowCollName, *rmOpts, *_));
 		if (*status == 0) {
@@ -168,7 +168,7 @@ _cyverse_housekeeping_rmTrashData(*CutOffTimestamp, *SUCCEEDED) {
 			AND META_DATA_ATTR_NAME = 'ipc::trash_timestamp'
 			AND META_DATA_ATTR_VALUE <= *CutOffTimestamp
 	) {
-		*ts = *Row.META_DATA_ATTR_VALUE;
+		*ts = *row.META_DATA_ATTR_VALUE;
 		*rowCollName = *row.COLL_NAME;
 		*rowDataName = *row.DATA_NAME;
 		*absDataPath = *rowCollName ++ "/" ++ *rowDataName;
@@ -226,7 +226,7 @@ cyverse_housekeeping_rmTrash {
 	writeLine('serverLog', 'DS: completed trash removal');
 }
 
-# This rule shedules the weekly trash removal. If it reschedules the removal,
+# This rule schedules the weekly trash removal. If it reschedules the removal,
 # it writes 'scheduled trash removal' to standard output. If it doesn't error
 # out, but it doesn't reschedule the removal, it writes 'trash removal already
 # scheduled'.

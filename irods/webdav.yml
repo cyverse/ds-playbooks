@@ -5,7 +5,6 @@
   roles:
     - role: geerlingguy.apache
       vars:
-        apache_ssl_cipher_suite: "HIGH:3DES:!aNULL:!MD5:!SEED:!IDEA"
         apache_global_vhost_settings: |
           <IfModule !log_forensic_module>
             LoadModule log_forensic_module modules/mod_log_forensic.so

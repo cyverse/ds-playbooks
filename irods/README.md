@@ -46,7 +46,7 @@ Variable                                   | Required | Default                 
 `irods_clerver_user`                       | no       | rods                                 |         | the rodsadmin user to be used by the server being configured
 `irods_db_password`                        | no       | testpassword                         |         | The password iRODS uses when connecting to the ICAT DB.
 `irods_db_user`                            | no       | irods                                |         | The user iRODS uses when connecting to the ICAT DB.
-`irods_dbms_host`                          | no       | `group_vars['irods_catalog'][0]`     |         | The host of the DBMS that provides the ICAT DB.
+`irods_dbms_host`                          | no       | `groups['irods_catalog'][0]`         |         | The host of the DBMS that provides the ICAT DB.
 `irods_dbms_pg_hba`                        | no       | /etc/postgresql/12/main/pg_hba.conf  |         | The absolute path to the pg_hba.conf file on the DBMS hosting the ICAT DB
 `irods_dbms_port`                          | no       | 5432                                 |         | The TCP port the DBMS listens on.
 `irods_default_dir_mode`                   | no       | 0750                                 |         | The default permissions assigned to newly created directories in the vault
@@ -82,9 +82,6 @@ Variable                                   | Required | Default                 
 `pire_resource_hierarchy`                  | no       | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
 `report_email_addr`                        | no       | root@localhost                       |         | The address where reports are to be emailed.
 `restart_irods`                            | no       | false                                |         | iRODS can be restarted on the servers having config file changes, _see below_
-`sernec_owners`                            | no       | []                                   |         | A list of users who get ownership of sernec collections
-`sernec_readers`                           | no       | []                                   |         | A list of users who get read access to sernec collections
-`sernec_writers`                           | no       | []                                   |         | A list of users who get write access to sernec collections
 `sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
 `sftp_proxy_allowed`                       | no       | `[]`                                 |         | A list of network/masks for the proxy servers allowed access to the SFTP servers
 `sftpgo_admin_ui_port`                     | no       | 18023                                |         | The SFTPGo admin UI service port number
@@ -93,13 +90,7 @@ Variable                                   | Required | Default                 
 `sftpgo_irods_proxy_username`              | no       | sftp                                 |         | The irods user who provides proxy access to SFTPGo
 `sftpgo_irods_proxy_password`              | yes      |                                      |         | The password of the SFTPGo irods proxy user
 `sftpgo_vault_dir`                         | no       | /sftpgo_vault                        |         | The directory SFTPGo will use for saving state
-`sparcd_admin`                             | no       | null                                 |         | The user name of the Sparc'd administrator. If this isn't set, no sparcd rules will fire.
-`sparcd_base_collection`                   | no       | _see description_                    |         | The base iRODS collection used by Sparc'd. If `sparcd_admin` is `null`, the default is `null`, otherwise it is `/{{ irods_zone_name }}/home/{{ sparcd_admin }}/Sparcd/Collections`.
-`sparcd_report_email_addr`                 | no       | _see description_                    |         | The email address where SPARC'd notifications are sent. If `sparcd_admin` is `null`, the default is `null`, otherwise it is `report_email_addr`.
 `sysctl_kernel`                            | no       | []                                   |         | A list of sysctl kernel parameters to set on the iRODS catalog service provider, _see_below_
-`terraref_base_collection`                 | no       |                                      |         | The base collection for the TerraREF project. If it isn't present no TerraREF rules will fire.
-`terraref_manager`                         | no       | `irods_clerver_user`                 |         | The iRODS user who is responsible for TerraREF data.
-`terraref_resource_hierarchy`              | no       | `irods_resource_hierarchies[0]`      |         | The resource used by the TerraREF project.
 `webdav_access_limit`                      | no       |                                      |         | If defined, the upper limit on the number of simultaneous requests that will be served by webdav
 `webdav_allowed_src`                       | no       | `[ "0.0.0.0/0" ]`                    |         | A list of network/masks for the clients allowed direct access to the WebDAV servers
 `webdav_auth_name`                         | no       | CyVerse                              |         | Authorization realm to use for the Data Store

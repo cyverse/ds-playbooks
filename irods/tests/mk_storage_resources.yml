@@ -1,10 +1,9 @@
 ---
-- name: test mk_storage_resources
+- name: Test mk_storage_resources
   hosts: irods_resource
   become: true
   become_user: irods
-  collections:
-    - community.general
+  strategy: linear
   vars:
     expected_resources: "{{
       groups['irods_resource']
@@ -13,8 +12,8 @@
         | map(attribute='name')
         | union(['bundleResc']) }}"
   tasks:
-    - name: test create vault directory
-      stat:
+    - name: Test create vault directory
+      ansible.builtin.stat:
         path: "{{ item.vault }}"
       register: response
       failed_when: >-
@@ -26,47 +25,57 @@
         or not response.stat.xusr
       with_items: "{{ irods_storage_resources }}"
 
-    - name: determine installed pip packages
-      pip_package_info:
+    - name: Determine installed pip packages
+      community.general.pip_package_info:
         clients: pip3
       register: pip_info
 
-    - name: verify python modules for irods_unixfilesystem_resource installed
+    - name: Verify python modules for irods_unixfilesystem_resource installed
       when: "'python-irodsclient' not in pip_info.packages['pip3']"
-      fail:
+      ansible.builtin.fail:
 
-    - name: test define storage resource
+    - name: Test define storage resource  # noqa: run-once[task]
       run_once: true
-      command: iquest '%s' "select RESC_NAME where RESC_TYPE_NAME = 'unixfilesystem'"
+      ansible.builtin.command:
+        cmd: iquest '%s' "select RESC_NAME where RESC_TYPE_NAME = 'unixfilesystem'"
       register: response
       changed_when: false
-      failed_when: response.stdout_lines|symmetric_difference(expected_resources)|list|length > 0
+      failed_when: >-
+        response.stdout_lines | symmetric_difference(expected_resources) | list | length > 0
 
-    - name: verify context is correct
-      shell: |
-        if ! context="$(iquest '%s' "select RESC_CONTEXT where RESC_NAME = '{{ item.name }}'")"
-        then
-          exit 1
-        fi
-        test "$context" = '{{ item.context }}'
+    - name: Verify context is correct
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          if ! context="$(iquest '%s' "select RESC_CONTEXT where RESC_NAME = '{{ item.name }}'")"
+          then
+            exit 1
+          fi
+          test "$context" = '{{ item.context }}'
       changed_when: false
       with_items: "{{ irods_storage_resources }}"
 
-    - name: verify status has been initialized
-      shell: |
-        if ! status="$(iquest '%s' "select RESC_STATUS where RESC_NAME = '{{ item.name }}'")"; then
-          exit 1
-        fi
-        test -n "$status"
+    - name: Verify status has been initialized
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          if ! status="$(iquest '%s' "select RESC_STATUS where RESC_NAME = '{{ item.name }}'")"
+          then
+            exit 1
+          fi
+          test -n "$status"
       changed_when: false
       with_items: "{{ irods_storage_resources }}"
 
-    - name: verify free space is initialized
-      shell: |
-        if ! freeSpace="$(iquest '%s' "select RESC_FREE_SPACE where RESC_NAME = '{{ item.name }}'")"
-        then
-          exit 1
-        fi
-        test -n "$freeSpace"
+    - name: Verify free space is initialized
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          if ! \
+            freeSpace="$(iquest '%s' "select RESC_FREE_SPACE where RESC_NAME = '{{ item.name }}'")"
+          then
+            exit 1
+          fi
+          test -n "$freeSpace"
       changed_when: false
       with_items: "{{ irods_storage_resources }}"

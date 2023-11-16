@@ -1,6 +1,6 @@
 ---
 # Stops iRODS. The variable stop_irods_result holds the change value
-- name: Stop iRODS | Check if svc acnt exists
+- name: Stop iRODS | check if svc acnt exists
   ansible.builtin.shell:
     executable: /bin/bash
     cmd: |

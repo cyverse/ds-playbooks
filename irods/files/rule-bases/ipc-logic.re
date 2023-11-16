@@ -602,9 +602,9 @@ ipc_acSetNumThreads { msiSetNumThreads('default', 'default', 'default'); }
 # Set maximum number of rule engine processes
 ipc_acSetReServerNumProc { msiSetReServerNumProc(str(cyverse_MAX_NUM_RE_PROCS)); }
 
-# This rule sets the rodsadin group permission of a collection when a collection
-# is created by an administrative means, i.e. iadmin mkuser. It also pushes a
-# collection.add message into the irods exchange.
+# This rule sets the rodsadmin group permission of a collection when a
+# collection is created by an administrative means, i.e. iadmin mkuser. It also
+# pushes a collection.add message into the irods exchange.
 ipc_acCreateCollByAdmin(*ParColl, *ChildColl) {
 	*coll = '*ParColl/*ChildColl';
 	*perm = resolveAdminPerm(*coll);
@@ -843,11 +843,11 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValu
 ipc_acPostProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
 ) {
-	if (!(ipc_isFileSystemType(*TargetItemType) && ipc_inStaging(/*TargetItemName))) {
+	if (!ipc_isFileSystemType(*TargetItemType)) {
 		*target = _ipc_resolve_msg_entity_id(
 			*TargetItemType, *TargetItemName, $userNameClient, $rodsZoneClient );
 
-		if (!(ipc_isFileSystemType(*SourceItemType) && ipc_inStaging(/*SourceItemName))) {
+		if (!ipc_isFileSystemType(*SourceItemType)) {
 			*source = _ipc_resolve_msg_entity_id(
 				*SourceItemType, *SourceItemName, $userNameClient, $rodsZoneClient );
 
@@ -908,8 +908,8 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 #
 
 # XXX - Because of https://github.com/irods/irods/issues/5540
-# ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO) {
-# 	*me = 'ipc_dataObjCreated_default';
+# ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO) {
+# 	*me = 'ipc_dataObjCreated';
 # 	*id = int(*DATA_OBJ_INFO.data_id);
 # 	_ipc_registerAction(*id, *me);
 # 	*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
@@ -943,8 +943,8 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 #
 # 	_ipc_unregisterAction(*id, *me);
 # }
-ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
-	*me = 'ipc_dataObjCreated_default';
+ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO, *Step) {
+	*me = 'ipc_dataObjCreated';
 	*id = int(*DATA_OBJ_INFO.data_id);
 	_ipc_registerAction(*id, *me);
 
@@ -994,41 +994,8 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 }
 # XXX - ^^^
 
-# XXX - Because of https://github.com/irods/irods/issues/5540
-# ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO) {
-# 	*me = 'ipc_dataObjCreated_staging';
-# 	*id = int(*DATA_OBJ_INFO.data_id);
-# 	_ipc_registerAction(*id, *me);
-#
-# 	*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
-# 	if (*err < 0) { writeLine('serverLog', *msg); }
-#
-# 	*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
-# 	if (*err < 0) { writeLine('serverLog', *msg); }
-#
-#	_ipc_unregisterAction(*id, *me);
-# }
-ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO, *Step) {
-	*me = 'ipc_dataObjCreated_staging';
-	*id = int(*DATA_OBJ_INFO.data_id);
-	_ipc_registerAction(*id, *me);
-
-	if (*Step != 'FINISH') {
-		*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
-		if (*err < 0) { writeLine('serverLog', *msg); }
-	}
-
-	if (*Step != 'START') {
-		*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
-		if (*err < 0) { writeLine('serverLog', *msg); }
-	}
-
-	_ipc_unregisterAction(*id, *me);
-}
-# XXX - ^^^
-
-ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO) {
-	*me = 'ipc_dataObjModified_default';
+ipc_dataObjModified(*User, *Zone, *DATA_OBJ_INFO) {
+	*me = 'ipc_dataObjModified';
 	*id = int(*DATA_OBJ_INFO.data_id);
 	_ipc_registerAction(*id, *me);
 
@@ -1063,7 +1030,7 @@ ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 	if (*id >= 0) {
 		_ipc_registerAction(*id, *me);
 
-		if (_ipc_isCurrentAction(*id, *me) && ! ipc_inStaging(/*Object)) {
+		if (_ipc_isCurrentAction(*id, *me)) {
 			*uuid = '';
 			_ipc_ensureUUID(ipc_DATA_OBJECT, *Object, *uuid, *User, *Zone);
 			_ipc_sendDataObjectMetadataModified(*uuid, *User, *Zone);

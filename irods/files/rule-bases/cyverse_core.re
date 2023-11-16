@@ -33,7 +33,6 @@
 @include 'bisque'
 @include 'captcn'
 @include 'coge'
-@include 'de'
 @include 'mdrepo'
 @include 'pire'
 @include 'sernec'
@@ -315,19 +314,6 @@ acPreProcForModifyAVUMetadata(
 		*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName );
 }
 
-# This rule sets the preprocessing policy for moving or renaming a collection or
-# data object.
-#
-# Parameters:
-#  SourceObject  (string) the absolute path to the collection or data object
-#                before it is moved
-#  DestObject    (string) the absolute path to the collection or data object
-#                after it is moved
-#
-acPreProcForObjRename(*SourceObject, *DestObject) {
-	de_acPreProcForObjRename(*SourceObject, *DestObject);
-}
-
 # This rule sets the preprocessing policy for deleting a collection.
 #
 acPreprocForRmColl {
@@ -400,9 +386,7 @@ acPostProcForDelete {
 #                  was altered
 #
 acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
-	if (!ipc_inStaging(/*Path)) {
-		ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
-	}
+	ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
 }
 
 # This rule sets the post-processing policy for manipulating AVUs other than
@@ -516,11 +500,9 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
 #  objPath
 #
 acPostProcForOpen {
-	if (!ipc_inStaging(/$objPath)) {
-		*err = errormsg(ipc_acPostProcForOpen, *msg);
-		if (*err < 0) {
-			writeLine('serverLog', *msg);
-		}
+	*err = errormsg(ipc_acPostProcForOpen, *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
 	}
 }
 
@@ -755,67 +737,43 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # XXX - Because of https://github.com/irods/irods/issues/5540
 # _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo) {
 # 	*path = *DataObjInfo.logical_path;
-# 	if (ipc_inStaging(/*path)) {
-# 		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-#		}
-# 		*err = errormsg(de_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-# 		}
-# 	} else {
-# 		*err = errormsg(ipc_dataObjCreated_default(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-# 		}
-# 		*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-# 		}
-# 		*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-# 		}
-# 		*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 		if (*err < 0) {
-# 			writeLine('serverLog', *msg);
-#		}
+# 	*err = errormsg(ipc_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+# 	if (*err < 0) {
+# 		writeLine('serverLog', *msg);
 # 	}
+# 	*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+# 	if (*err < 0) {
+# 		writeLine('serverLog', *msg);
+# 	}
+# 	*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+# 	if (*err < 0) {
+# 		writeLine('serverLog', *msg);
+# 	}
+# 	*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+# 	if (*err < 0) {
+# 		writeLine('serverLog', *msg);
+#	}
 # }
 _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 	*path = *DataObjInfo.logical_path;
-	if (ipc_inStaging(/*path)) {
-		*err = errormsg(ipc_dataObjCreated_staging(*User, *Zone, *DataObjInfo, *Step), *msg);
+	*err = errormsg(ipc_dataObjCreated(*User, *Zone, *DataObjInfo, *Step), *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
+	if (*Step != 'FINISH') {
+		*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 		if (*err < 0) {
 			writeLine('serverLog', *msg);
 		}
-		if (*Step != 'START') {
-			*err = errormsg(de_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) {
-				writeLine('serverLog', *msg);
-			}
-		}
-	} else {
-		*err = errormsg(ipc_dataObjCreated_default(*User, *Zone, *DataObjInfo, *Step), *msg);
+		*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 		if (*err < 0) {
 			writeLine('serverLog', *msg);
 		}
-		if (*Step != 'FINISH') {
-			*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) {
-				writeLine('serverLog', *msg);
-			}
-			*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) {
-				writeLine('serverLog', *msg);
-			}
-		}
-		if (*Step != 'START') {
-			*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-			if (*err < 0) {
-				writeLine('serverLog', *msg);
-			}
+	}
+	if (*Step != 'START') {
+		*err = errormsg(ipcRepl_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+		if (*err < 0) {
+			writeLine('serverLog', *msg);
 		}
 	}
 }
@@ -823,15 +781,13 @@ _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 
 _cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
 	*path = *DataObjInfo.logical_path;
-	if (! ipc_inStaging(/*path)) {
-		*err = errormsg(ipc_dataObjModified_default(*User, *Zone, *DataObjInfo), *msg);
-		if (*err < 0) {
-			writeLine('serverLog', *msg);
-		}
-		*err = errormsg(ipcRepl_dataObjModified(*User, *Zone, *DataObjInfo), *msg);
-		if (*err < 0) {
-			writeLine('serverLog', *msg);
-		}
+	*err = errormsg(ipc_dataObjModified(*User, *Zone, *DataObjInfo), *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
+	}
+	*err = errormsg(ipcRepl_dataObjModified(*User, *Zone, *DataObjInfo), *msg);
+	if (*err < 0) {
+		writeLine('serverLog', *msg);
 	}
 }
 

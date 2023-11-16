@@ -91,21 +91,6 @@ ipc_getEntityType(*Entity) =
     else if ipc_isUser(*type) then ipc_USER
     else *type
 
-# The base collection for staging
-ipc_STAGING_BASE: path
-ipc_STAGING_BASE = let *zone = cyverse_ZONE in /*zone/jobs
-
-# This function checks to see if a collection or data object is in the staging
-# collection.
-#
-# PARAMETERS:
-#  Path  the absolute path to the entity
-#
-# RETURNS:
-#  It returns true if then entity is inside staging, otherwise false
-ipc_inStaging: path -> boolean
-ipc_inStaging(*Path) = str(*Path) like str(ipc_STAGING_BASE) ++ '/*'
-
 
 # This function checks to see if a collection or data object is inside a user
 # collection managed by a service.

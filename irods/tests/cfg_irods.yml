@@ -31,7 +31,6 @@
         - cyverse_core.re
         - cyverse_housekeeping.re
         - cyverse_json.re
-        - de.re
         - host_access_control_config.json
         - hosts_config.json
         - ipc-logic.re
@@ -269,6 +268,7 @@
       register: response
       failed_when: response.stat.exists
       with_items:
+        - de.re
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re

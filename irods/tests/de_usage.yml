@@ -12,47 +12,13 @@
 
     - name: Verify user information
       ansible.builtin.assert:
-        that:
-          - user_info.stdout != 'No rows found'
-          - 'user_info.stdout is search("user_type_name: ds-service")'
-          - 'user_info.stdout is search("user_info: DE job")'
+        that: user_info.stdout == 'No rows found'
 
-    - name: Verify user has empty password
-      environment:
-        IRODS_USER_NAME: de_job
-        IRODS_AUTHENTICATION_FILE: /dev/null
-      ansible.builtin.shell:
-        executable: /bin/bash
-        cmd: |
-          ils /cyverse.dev <<< '' &> /dev/null
-          (( $? == 4 ))
+    - name: Register /testing/jobs info
+      ansible.builtin.command: iquest "select COLL_ID where COLL_NAME = '/testing/jobs'"
       changed_when: false
+      register: coll_info
 
-    - name: Verify user has no home or trash collections
-      ansible.builtin.shell:
-        executable: /bin/bash
-        cmd: |
-          if ! ownerCnt="$(iquest '%s' "select count(COLL_ID) where COLL_OWNER_NAME = 'de_job'")"
-          then
-            exit 1
-          fi
-          if (( $ownerCnt > 0 )); then
-            printf 'de_job user has a home and/or trash collection\n' >&2
-            exit 1
-          fi
-      changed_when: false
-
-    - name: Verify user doesn't belong to public
-      ansible.builtin.shell:
-        executable: /bin/bash
-        cmd: |
-          set -o pipefail
-          if (iadmin lg public | grep --quiet de_job); then
-            printf 'de_job belongs to public group' >&2
-            exit 1
-          fi
-      changed_when: false
-
-    - name: Verify that /testing/jobs exists
-      ansible.builtin.command: ils /testing/jobs
-      changed_when: false
+    - name: Verify /test/job does not exist
+      ansible.builtin.assert:
+        that: coll_info.stdout is search('CAT_NO_ROWS_FOUND')

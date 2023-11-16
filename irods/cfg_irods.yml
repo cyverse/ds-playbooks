@@ -111,6 +111,7 @@
         path: /etc/irods/{{ item }}
         state: absent
       with_items:
+        - de.re
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re

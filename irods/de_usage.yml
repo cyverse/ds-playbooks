@@ -5,16 +5,13 @@
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - name: Create user for DE jobs
+    - name: Delete user for DE jobs
       delegate_to: localhost
       become: false
       when: _de_job_irods_user is defined
       irods_user:
         name: "{{ _de_job_irods_user }}"
-        type: ds-service
-        info: DE job
-        password: ''
-        state: present
+        state: absent
         host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"
         admin_user: "{{ _irods_clerver_user }}"
@@ -26,7 +23,7 @@
       become: false
       irods_collection:
         path: /{{ _irods_zone_name }}/jobs
-        state: present
+        state: absent
         host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"
         admin_user: "{{ _irods_clerver_user }}"

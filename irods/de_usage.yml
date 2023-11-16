@@ -20,7 +20,6 @@
     - name: Delete user for DE jobs
       delegate_to: localhost
       become: false
-      when: _de_job_irods_user is defined
       irods_user:
         name: "{{ _de_job_irods_user }}"
         state: absent

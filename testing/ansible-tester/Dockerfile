@@ -77,21 +77,16 @@ RUN echo '{}' > /root/.irods/irods_environment.json
 # XXX - ^^^
 
 ### Configure testing infrastructure
-RUN mkdir --parents /inventory/group_vars /inventory/host_vars /playbooks-under-test
-
 COPY ansible.cfg /root/.ansible.cfg
-COPY requirements.yml /requirements.yml
 
+COPY requirements.yml /requirements.yml
 RUN ansible-galaxy collection install --requirements-file=/requirements.yml
 
-COPY inventory/* /inventory/
-COPY inventory/host_vars/* /inventory/host_vars/
-COPY inventory/group_vars/* /inventory/group_vars/
+COPY inventory /inventory
 COPY wait-for-ready.yml /
+COPY --chmod=100 test-playbook.sh /test-playbook
 
+RUN mkdir /playbooks-under-test
 VOLUME /playbooks-under-test
-
-COPY test-playbook.sh /test-playbook
-RUN chmod u+x /test-playbook
 
 ENTRYPOINT [ "/test-playbook" ]

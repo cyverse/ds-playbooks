@@ -178,15 +178,37 @@
       ansible.builtin.stat:
         path: /etc/pki/tls/certs/testing.crt
       register: resp
-      failed_when: not resp.stat.exists
+      failed_when: >-
+        not resp.stat.exists or not resp.stat.rusr or not resp.stat.rgrp or not resp.stat.roth
 
-    - name: Verify TLS certificate chain file has correct permissions
-      ansible.builtin.debug:
-        msg: TODO implement
+    - name: Retrieve TLS certificate chain file contents
+      ansible.builtin.slurp:
+        src: /etc/pki/tls/certs/testing.crt
+      register: chain_encoded
 
-    - name: Verify TLS certificat chain file has correct content
-      ansible.builtin.debug:
-        msg: TODO implement
+    - name: Decode TLS certificate chain
+      ansible.builtin.set_fact:
+        chain: "{{ chain_encoded.content | b64decode }}"
+
+    - name: Verify TLS certificate chain is correct
+      ansible.builtin.assert:
+        that: |
+          chain ==
+          '-----BEGIN CERTIFICATE-----
+          MIICNDCCAZ2gAwIBAgIUWGE+psDj4r/CqQtKQXEDqBUxRz4wDQYJKoZIhvcNAQEL
+          BQAwJDEiMCAGA1UEAwwZY29udHJvbC5kc3Rlc3RpbmdfZGVmYXVsdDAeFw0yMDA2
+          MTkyMTAyMzJaFw00NzExMDUyMTAyMzJaMCQxIjAgBgNVBAMMGWNvbnRyb2wuZHN0
+          ZXN0aW5nX2RlZmF1bHQwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBALVL2YsE
+          2hVK7b0sLK6xS8O50C/lpxf2acPVuJd+tTCwc4IdzDduDvfBFE5dwpGyRgW+mrPJ
+          l+DYAjz2iNC/Q3UWr9l2KmeQGu8lMQIeIKopTim3oeGXAyJn6GYI0DPcSTAXjqGj
+          BXJltXhZ80JhwMFyP/eweMaSv2INQCoc4vtbAgMBAAGjYzBhMB0GA1UdDgQWBBQZ
+          gBFZDf4amV0KMYpQ5bLK66M2TjAfBgNVHSMEGDAWgBQZgBFZDf4amV0KMYpQ5bLK
+          66M2TjAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBhjANBgkqhkiG9w0B
+          AQsFAAOBgQCmv4qSx68vwlxbGVq+2FN4KJTOVYBrny5A+ob7yrzOIduvX+QdXZhx
+          T3A8IzpYKB4IhZlgCtAX4QCSiuFEyo4Yh/5Ed99tqrOfINwpxov/WXRclze0MNJl
+          +j0XBSAzw0+xe4g3T4gSkJoRGKq5ijH/Yc/bgYt0I0DqlnFT3/QWhw==
+          -----END CERTIFICATE-----
+          '
 
     - name: Test place TLS certificate file
       ansible.builtin.debug:

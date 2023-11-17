@@ -19,6 +19,7 @@
           - cyverse_env is search("cyverse_AMQP_EXCHANGE = 'irods'")
           - cyverse_env is search("cyverse_DEFAULT_REPL_RESC = 'demoResc'")
           - cyverse_env is search("cyverse_DEFAULT_RESC = 'demoResc'")
+          - cyverse_env is search("cyverse_INIT_REPL_DELAY = 0")
           - cyverse_env is search("cyverse_MAX_NUM_RE_PROCS = 4")
           - >-
             cyverse_env
@@ -100,6 +101,20 @@
         that:
           - cyverse_env is search("cyverse_DEFAULT_REPL_RESC = 'custom'")
           - cyverse_env is search("cyverse_DEFAULT_RESC = 'demoResc'")
+
+
+- name: Test that cyverse_INIT_REPL_DELAY is set correctly in cyverse-env.re
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  vars:
+    irods_init_repl_delay: 1
+    cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
+  tasks:
+    - name: Verify cyverse_INIT_REPL_DELAY
+      ansible.builtin.assert:
+        that: cyverse_env is search("cyverse_INIT_REPL_DELAY = 1")
 
 
 - name: Test that cyverse_MAX_NUM_RE_PROCS set correctly in cyverse-env.re

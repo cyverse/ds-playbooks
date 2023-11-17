@@ -57,6 +57,7 @@ _irods_default_resource: >-
 _irods_default_vault: "{{ irods_default_vault | default(None) }}"
 _irods_federation: "{{ irods_federation | default([]) }}"
 _irods_host_aliases: "{{ irods_host_aliases | default([]) }}"
+_irods_init_repl_delay: "{{ irods_init_repl_delay | d(0) }}"
 _irods_max_num_re_procs: "{{ irods_max_num_re_procs | default(4) }}"
 _irods_negotiation_key: "{{ irods_negotiation_key | default(None) }}"
 _irods_odbc_driver: "{{ irods_odbc_driver| d('PostgreSQL') }}"

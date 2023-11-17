@@ -293,12 +293,11 @@ _defaultReplResc = (cyverse_DEFAULT_REPL_RESC, true)
 
 
 _delayTime : int
-_delayTime = if (errorcode(temporaryStorage.repl_delayTime) < 0) {
-               temporaryStorage.repl_delayTime = '1';
-               1;
-             } else {
-               int(temporaryStorage.repl_delayTime);
-             }
+_delayTime =
+  let *_ = if (errorcode(temporaryStorage.repl_delayTime) < 0) {
+      temporaryStorage.repl_delayTime = str(cyverse_INIT_REPL_DELAY);
+    } in
+  int(temporaryStorage.repl_delayTime);
 
 
 _incDelayTime {

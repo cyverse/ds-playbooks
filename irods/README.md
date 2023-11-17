@@ -57,6 +57,7 @@ Variable                                   | Required | Default                 
 `irods_default_vault`                      | no       |                                      |         | The default path to the vault on the server being configured
 `irods_federation`                         | no       | []                                   |         | A list of other iRODS zones to federate with, _see below_
 `irods_host_aliases`                       | no       | []                                   |         | A list of other names and addresses used to refer to the host being configured.
+`irods_init_repl_delay`                    | no       | 0                                    |         | the initial number of seconds iRODS waits before attempting to replicate a new or modified data object
 `irods_max_num_re_procs`                   | no       | 4                                    |         | The maximum number of rule engine processes to run
 `irods_negotiation_key`                    | no       | TEMPORARY_32byte_negotiation_key     |         | The negotiation key
 `irods_odbc_driver`                        | no       | PostgreSQL                           |         | The name of the ODBC driver iRODS uses to communicate with the DBMS

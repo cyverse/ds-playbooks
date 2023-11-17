@@ -16,6 +16,11 @@ cyverse_DEFAULT_REPL_RESC = '{{ _irods_default_repl_resource }}'
 cyverse_DEFAULT_RESC: string
 cyverse_DEFAULT_RESC = '{{ _irods_default_resource }}'
 
+# the initial number of seconds iRODS waits before attempting to replicate a new
+# or modified data object
+cyverse_INIT_REPL_DELAY: integer
+cyverse_INIT_REPL_DELAY = {{ _irods_init_repl_delay }}
+
 # the maximum number of concurrent rule engine workers
 cyverse_MAX_NUM_RE_PROCS: integer
 cyverse_MAX_NUM_RE_PROCS = {{ _irods_max_num_re_procs }}

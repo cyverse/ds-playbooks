@@ -46,7 +46,7 @@ Variable                                   | Required | Default                 
 `irods_clerver_user`                       | no       | rods                                 |         | the rodsadmin user to be used by the server being configured
 `irods_db_password`                        | no       | testpassword                         |         | The password iRODS uses when connecting to the ICAT DB.
 `irods_db_user`                            | no       | irods                                |         | The user iRODS uses when connecting to the ICAT DB.
-`irods_dbms_host`                          | no       | `group_vars['irods_catalog'][0]`     |         | The host of the DBMS that provides the ICAT DB.
+`irods_dbms_host`                          | no       | `groups['irods_catalog'][0]`         |         | The host of the DBMS that provides the ICAT DB.
 `irods_dbms_pg_hba`                        | no       | /etc/postgresql/12/main/pg_hba.conf  |         | The absolute path to the pg_hba.conf file on the DBMS hosting the ICAT DB
 `irods_dbms_port`                          | no       | 5432                                 |         | The TCP port the DBMS listens on.
 `irods_default_dir_mode`                   | no       | 0750                                 |         | The default permissions assigned to newly created directories in the vault
@@ -57,6 +57,7 @@ Variable                                   | Required | Default                 
 `irods_default_vault`                      | no       |                                      |         | The default path to the vault on the server being configured
 `irods_federation`                         | no       | []                                   |         | A list of other iRODS zones to federate with, _see below_
 `irods_host_aliases`                       | no       | []                                   |         | A list of other names and addresses used to refer to the host being configured.
+`irods_init_repl_delay`                    | no       | 0                                    |         | the initial number of seconds iRODS waits before attempting to replicate a new or modified data object
 `irods_max_num_re_procs`                   | no       | 4                                    |         | The maximum number of rule engine processes to run
 `irods_negotiation_key`                    | no       | TEMPORARY_32byte_negotiation_key     |         | The negotiation key
 `irods_odbc_driver`                        | no       | PostgreSQL                           |         | The name of the ODBC driver iRODS uses to communicate with the DBMS

@@ -29,7 +29,7 @@ description:
 options:
     subject:
         description:
-            - recipent of the permission
+            - recipient of the permission
         required: true
         type: str
     permission:
@@ -58,7 +58,7 @@ options:
         type: bool
     subject_zone:
         description:
-            - zone of the recipent of the permission
+            - zone of the recipient of the permission
             - default to the value of zone field
         required: false
         type: str
@@ -176,24 +176,48 @@ class IRODSPermissionModule:
         Initialize the module
         """
         # define argument
-        self.module_args = dict(
-            subject=dict(type="str", required=True),
-            permission=dict(
-                type="str",
-                required=True,
-                choices=["null", "read", "write", "own"]),
-            object=dict(type="str", required=True),
-            recursive=dict(type="bool", required=False, default=False),
-            subject_zone=dict(type="str", required=False),
-            host=dict(type="str", required=True),
-            port=dict(type="int", required=True),
-            admin_user=dict(type="str", no_log=True, required=True),
-            admin_password=dict(type="str", no_log=True, required=True),
-            zone=dict(type="str", required=True),
-        )
+        self.module_args = {
+            "subject": {
+                "type": "str",
+                "required": True},
+            "permission": {
+                "type": "str",
+                "required": True,
+                "choices": ["null", "read", "write", "own"] },
+            "object": {
+                "type": "str",
+                "required": True },
+            "recursive": {
+                "type": "bool",
+                "required": False,
+                "default": False },
+            "subject_zone": {
+                "type": "str",
+                "required": False },
+            "host": {
+                "type": "str",
+                "required": True },
+            "port": {
+                "type": "int",
+                "required": True },
+            "admin_user": {
+                "type": "str",
+                "no_log": True,
+                "required": True },
+            "admin_password": {
+                "type": "str",
+                "no_log": True,
+                "required": True },
+            "zone": {
+                "type": "str",
+                "required": True } }
         # result
-        self.result = dict(
-            changed=False, exc="", exc_msg="", perm_before=[], perm_after=[])
+        self.result = {
+            "changed": False,
+            "exc": "",
+            "exc_msg": "",
+            "perm_before": [],
+            "perm_after": [] }
 
         # init module
         self.module = AnsibleModule(
@@ -452,7 +476,7 @@ class IRODSPermissionModule:
 
         Args:
             coll_path (str): path to the collection
-            perm_subject (str): name of the recipent of the permission
+            perm_subject (str): name of the recipient of the permission
 
         Returns:
             bool: True if subject's permission on the collection are absent,
@@ -488,7 +512,7 @@ class IRODSPermissionModule:
 
         Args:
             coll_path (str): path to the collection
-            perm_subject (str): name of the recipent of the permission
+            perm_subject (str): name of the recipient of the permission
             permission (str): target permission, "read" | "write" | "own",
                 cannot be "null"
 

@@ -1,80 +1,93 @@
 ---
-- name: testing irods_permission module
+- name: Testing irods_permission module
   hosts: localhost
   vars:
     zone: testing
     test_coll: /{{ zone }}/home/rods/test_coll1
     test_sub_coll: "{{ test_coll }}/sub_coll1"
     test_data: /{{ zone }}/home/rods/test_obj1
+    password: password
   pre_tasks:
     - name: Initialized iRODS session
-      shell: |
-        set -o errexit
-        if ! [[ -f "$HOME"/.irods/.irodsA ]]; then
-          iinit rods > /dev/null
-          echo changed
-        fi
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit
+          if ! [[ -f "$HOME"/.irods/.irodsA ]]; then
+            iinit '{{ password }}' > /dev/null
+            echo changed
+          fi
       register: response
       changed_when: response.stdout == 'changed'
 
     - name: Create remote zone
-      shell: |
-        set -o errexit
-        if ! res="$(iadmin lz other_zone)"; then
-          exit 1
-        fi
-        if [[ "$res" == 'No rows found' ]]; then
-          iadmin mkzone other_zone remote
-          echo changed
-        fi
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit
+          if ! res="$(iadmin lz other_zone)"; then
+            exit 1
+          fi
+          if [[ "$res" == 'No rows found' ]]; then
+            iadmin mkzone other_zone remote
+            echo changed
+          fi
       register: response
       changed_when: response.stdout == 'changed'
 
     - name: Create test users
-      shell: |
-        set -o errexit
-        for user in forbidden reader writer owner 'remote_user#other_zone'; do
-          if ! res="$(iadmin lu "$user")"; then
-            exit 1
-          fi
-          if [[ "$res" == 'No rows found' ]]; then
-            iadmin mkuser "$user" rodsuser
-            echo changed
-          fi
-        done
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit
+          for user in forbidden reader writer owner 'remote_user#other_zone'; do
+            if ! res="$(iadmin lu "$user")"; then
+              exit 1
+            fi
+            if [[ "$res" == 'No rows found' ]]; then
+              iadmin mkuser "$user" rodsuser
+              echo changed
+            fi
+          done
       register: response
       changed_when:
         - response.stdout_lines | length > 0
         - response.stdout_lines[0] == 'changed'
 
     - name: Create collections
-      shell: |
-        if ! ils '{{ test_sub_coll }}' &> /dev/null; then
-          imkdir -p '{{ test_sub_coll }}'
-          echo changed
-        fi
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          if ! ils '{{ test_sub_coll }}' &> /dev/null; then
+            imkdir -p '{{ test_sub_coll }}'
+            echo changed
+          fi
       register: response
       changed_when: response.stdout == 'changed'
 
     - name: Create data objects
-      shell: |
-        set -o errexit
-        if ! ils '{{ test_data }}' &> /dev/null; then
-          file1=/tmp/"$(basename '{{ test_data }}')"
-          echo data_object_1 > "$file1"
-          iput -R ingestRes "$file1" '{{ test_data }}' >&2
-          echo changed
-        fi
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit
+          if ! ils '{{ test_data }}' &> /dev/null; then
+            file1=/tmp/"$(basename '{{ test_data }}')"
+            echo data_object_1 > "$file1"
+            iput -R ingestRes "$file1" '{{ test_data }}' >&2
+            echo changed
+          fi
       register: response
       changed_when: response.stdout == 'changed'
 
     - name: Grant forbidden read permission on everything
-      shell: |
-        set -o errexit
-        if ! clientUserName=forbidden ils -A '{{ test_coll }}'; then
-          ichmod -M read forbidden '{{ test_coll }}' '{{ test_sub_coll }}' '{{ test_data }}'
-          echo changed
-        fi
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit
+          if ! clientUserName=forbidden ils -A '{{ test_coll }}'; then
+            ichmod -M read forbidden '{{ test_coll }}' '{{ test_sub_coll }}' '{{ test_data }}'
+            echo changed
+          fi
       register: response
       changed_when: response.stdout == 'changed'
       tags: non_idempotent
@@ -88,20 +101,24 @@
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: "{{ zone }}"
       register: perm_call
 
     - name: Check read permission on test_coll1
-      shell: |
-        set -o pipefail
-        ils -A '{{ test_coll }}' | grep --quiet 'reader#{{ zone }}:read object'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A '{{ test_coll }}' | grep --quiet 'reader#{{ zone }}:read object'
       changed_when: false
 
     - name: Check no read permission on test_coll1/sub_coll1
-      shell: |
-        set -o pipefail
-        ils -A '{{ test_sub_coll }}' | grep --quiet 'reader#{{ zone }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A '{{ test_sub_coll }}' | grep --quiet 'reader#{{ zone }}'
       register: result
       failed_when: not (result is failed)
       changed_when: false
@@ -109,9 +126,11 @@
       tags: skip_ansible_lint
 
     - name: Check read permission on test_coll1
-      shell: |
-        set -o pipefail
-        ils -A '{{ test_coll }}' | grep --quiet 'reader#{{ zone }}:read object'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A '{{ test_coll }}' | grep --quiet 'reader#{{ zone }}:read object'
       changed_when: false
 
     - name: Grant reader read permission on test_coll1 (recursive)
@@ -123,14 +142,17 @@
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: "{{ zone }}"
 
     - name: Check read permission on test_coll1 & test_coll1/sub_coll1
-      shell: |
-        set -o errexit -o pipefail
-        ils -A '{{ test_coll }}' | grep --quiet 'reader#{{ zone }}:read object'
-        ils -A '{{ test_sub_coll }}' | sed --quiet 2p | grep --quiet 'reader#{{ zone }}:read object'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit -o pipefail
+          ils -A '{{ test_coll }}' | grep --quiet 'reader#{{ zone }}:read object'
+          ils -A '{{ test_sub_coll }}' \
+            | sed --quiet 2p | grep --quiet 'reader#{{ zone }}:read object'
       changed_when: false
 
     - name: Grant writer write permission on test_coll1
@@ -141,13 +163,15 @@
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: "{{ zone }}"
 
     - name: Check write permission on test_coll1
-      shell: |
-        set -o pipefail
-        ils -A '{{ test_coll }}' | grep --quiet 'writer#{{ zone }}:modify object'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A '{{ test_coll }}' | grep --quiet 'writer#{{ zone }}:modify object'
       changed_when: false
 
     - name: Grant owner ownership permission on test_coll1
@@ -158,13 +182,15 @@
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: "{{ zone }}"
 
     - name: Check ownership permission on test_coll1
-      shell: |
-        set -o pipefail
-        ils -A '{{ test_coll }}' | grep --quiet 'owner#{{ zone }}:own'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A '{{ test_coll }}' | grep --quiet 'owner#{{ zone }}:own'
       changed_when: false
 
     - name: Remove forbidden permission on test_coll1
@@ -175,11 +201,11 @@
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: "{{ zone }}"
 
     - name: Check null/no permission on test_coll1
-      command: ils -A '{{ test_coll }}'
+      ansible.builtin.command: ils -A '{{ test_coll }}'
       register: result
       failed_when: result.failed or 'forbidden#' ~ zone ~ ':' in result.stdout
       changed_when: false
@@ -193,11 +219,11 @@
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: "{{ zone }}"
 
     - name: Check null/no permission on test_sub_coll
-      command: ils -A '{{ test_sub_coll }}'
+      ansible.builtin.command: ils -A '{{ test_sub_coll }}'
       register: result
       failed_when: result.failed or 'forbidden#' ~ zone ~ ':' in result.stdout
       changed_when: false
@@ -210,13 +236,15 @@
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: "{{ zone }}"
 
     - name: Check read permission on test_obj1
-      shell: |
-        set -o pipefail
-        ils -A '{{ test_data }}' | grep --quiet 'reader#{{ zone }}:read object'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A '{{ test_data }}' | grep --quiet 'reader#{{ zone }}:read object'
       changed_when: false
 
     - name: Grant writer write permission on test_obj1
@@ -227,13 +255,15 @@
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: "{{ zone }}"
 
     - name: Check write permission on test_obj1
-      shell: |
-        set -o pipefail
-        ils -A '{{ test_data }}' | grep --quiet 'writer#{{ zone }}:modify object'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A '{{ test_data }}' | grep --quiet 'writer#{{ zone }}:modify object'
       changed_when: false
 
     - name: Grant owner ownership permission on test_obj1
@@ -244,13 +274,15 @@
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: "{{ zone }}"
 
     - name: Check ownership permission on test_obj1
-      shell: |
-        set -o pipefail
-        ils -A '{{ test_data }}' | grep --quiet 'owner#{{ zone }}:own'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A '{{ test_data }}' | grep --quiet 'owner#{{ zone }}:own'
       changed_when: false
 
     - name: Remove forbidden permission on test_obj1
@@ -261,11 +293,11 @@
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: "{{ zone }}"
 
     - name: Check null/no permission on test_obj1
-      command: ils -A '{{ test_data }}'
+      ansible.builtin.command: ils -A '{{ test_data }}'
       register: result
       failed_when: result.failed or 'forbidden#' ~ zone ~ ':' in result.stdout
       changed_when: false
@@ -279,11 +311,13 @@
         host: "{{ groups['irods_catalog'][0] }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: "{{ zone }}"
 
     - name: Check permission on test_obj1
-      shell: |
-        set -o pipefail
-        ils -A '{{ test_data }}' | grep --quiet 'remote_user#other_zone:read'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A '{{ test_data }}' | grep --quiet 'remote_user#other_zone:read'
       changed_when: false

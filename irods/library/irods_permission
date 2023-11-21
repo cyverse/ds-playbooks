@@ -158,7 +158,7 @@ try:
     USE_IRODS_CLIENT = True
     from irods.session import iRODSSession
     from irods.models import DataObject, DataAccess, User
-    from irods.models import Collection, CollectionAccess
+    from irods.models import Collection, CollectionAccess, CollectionUser
     from irods.access import iRODSAccess
     from irods.exception import DataObjectDoesNotExist
     from irods.column import Like
@@ -440,19 +440,9 @@ class IRODSPermissionModule:
                 empty list if no permission
         """
         if obj_type == Collection:
-            # XXX - in iRODS < 4.2, CollectionUser.name isn't supported.
-            #            query = self.session.query(Collection, CollectionAccess).filter(  # noqa
-            #                CollectionUser.name == username, Collection.name == path)  # noqa
-            #            result = [self.perm_str_mapping[row[CollectionAccess.name]] for row in query  # noqa # pylint: disable=line-too-long
-            query = self.session.query(User.id).filter(User.name == username)
-            for row in query:
-                uid = row[User.id]
             query = self.session.query(Collection, CollectionAccess).filter(
-                CollectionAccess.user_id == uid, Collection.name == path)
-            result = [
-                self.perm_str_mapping[row[CollectionAccess.name]]
-                for row in query]
-            # XXX - ^^^
+                CollectionUser.name == username, Collection.name == path)
+            result = [self.perm_str_mapping[row[CollectionAccess.name]] for row in query]
             return result
         if obj_type == DataObject:
             conditions = [

@@ -785,12 +785,8 @@ _cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
-	*err = errormsg(ipcRepl_dataObjModified(*User, *Zone, *DataObjInfo), *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-}
-
+	*err = errormsg(ipcRepl_dataObjModified(*User, *Zone, *DataObjInf
+[Thu 02/15 15:46:50] tedgin@clotho ~/r/c/d/playbooks (DS-649|REBASE-i 1/79|●2✖5⚑1)
 _cyverse_core_dataObjMetadataModified(*User, *Zone, *Object) {
 	ipc_dataObjMetadataModified(*User, *Zone, *Object);
 }

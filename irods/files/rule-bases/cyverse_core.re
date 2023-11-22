@@ -24,10 +24,10 @@
 # SERVICE SPECIFIC RULES
 #
 # Rule logic specific to supporting a service that uses the Data Store goes in
-# its own file, and the file should be included in this section. Service specfic
-# rule logic should be implemented in a rule prefixed with the name of the rule
-# file and suffixed with the name of the rule hook that will call the service's
-# rule.
+# its own file, and the file should be included in this section. Service
+# specific rule logic should be implemented in a rule prefixed with the name of
+# the rule file and suffixed with the name of the rule hook that will call the
+# service's rule.
 
 @include 'avra'
 @include 'bisque'
@@ -158,7 +158,7 @@ acDataDeletePolicy {
 # This rule applies the collection delete policies for a collection being
 # administratively deleted.
 #
-# Parametrs:
+# Parameters:
 #  ParColl    (string) the absolute path to the parent collection of the
 #              collection being deleted
 #  ChildColl  (string) the name of collection being deleted
@@ -219,7 +219,7 @@ acSetRescSchemeForRepl {
 	ipcRepl_acSetRescSchemeForRepl;
 }
 
-# This rule sets the default resource selection schemae for replication of an
+# This rule sets the default resource selection schema for replication of an
 # existing data object.
 #
 acSetReServerNumProc {
@@ -239,7 +239,7 @@ acSetReServerNumProc {
 # This rule sets the preprocessing policy for access control modification.
 #
 # Parameters:
-#  RecursiveFlag  (string) indicates if the permision change applies recursively
+#  RecursiveFlag  (string) indicates if the permission change applies recursively
 #                 to the contents of a *Path, "1" indicates the flag is present,
 #                 and "0" indicates the opposite.
 #  AccessLevel    (string) the permission being granted to *UserName, if the
@@ -397,14 +397,14 @@ acPostProcForDelete {
 # This rule sets the post-processing policy for an ACL change.
 #
 # Parameters:
-#  RecursiveFlag  (string) indicates if the permision change applied recursively
+#  RecursiveFlag  (string) indicates if the permission change applied recursively
 #                 to the contents of a *Path, "1" indicates the flag was
 #                 present, and "0" indicates the opposite.
 #  AccessLevel    (string) the permission granted to *UserName, if the value was
 #                 "null", "read", "write", or "own", enabled inheritance if the
 #                 value was "inherit", or disabled inheritance if the value was
 #                 "noinherit"
-#  UserName       (string) the account or group ggiven *AccessLevel, ignored if
+#  UserName       (string) the account or group given *AccessLevel, ignored if
 #                 *AccessLevel was "inherit" or "noinherit"
 #  Zone           (string) the zone where *UserName belongs, ignored if
 #                 *AccessLevel in "inherit" or "noinherit"
@@ -570,7 +570,7 @@ acPostProcForRmColl {
 # API using a COLL_CREATE request.
 #
 #  Instance       (string) unknown
-#  Comm           (`KeyValuePair_PI`) user connnection and auth information
+#  Comm           (`KeyValuePair_PI`) user connection and auth information
 #  CollCreateInp  (`KeyValuePair_PI`) information related to the new collection
 #
 pep_api_coll_create_post(*Instance, *Comm, *CollCreateInp) {
@@ -584,7 +584,7 @@ pep_api_coll_create_post(*Instance, *Comm, *CollCreateInp) {
 # API using a DATA_OBJ_COPY request.
 #
 #  Instance        (string) unknown
-#  Comm            (`KeyValuePair_PI`) user connnection and auth information
+#  Comm            (`KeyValuePair_PI`) user connection and auth information
 #  DataObjCopyInp  (`KeyValuePair_PI`) information related to copy operation
 #  TransStat       unknown
 #
@@ -599,7 +599,7 @@ pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
 # API using a DATA_OBJ_CREATE request.
 #
 #  Instance    (string) unknown
-#  Comm        (`KeyValuePair_PI`) user connnection and auth information
+#  Comm        (`KeyValuePair_PI`) user connection and auth information
 #  DataObjInp  (`KeyValuePair_PI`) information related to the created data
 #              object
 #
@@ -614,7 +614,7 @@ pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
 # object through the API using a DATA_OBJ_OPEN request.
 #
 #  Instance    (string) unknown
-#  Comm        (`KeyValuePair_PI`) user connnection and auth information
+#  Comm        (`KeyValuePair_PI`) user connection and auth information
 #  DataObjInp  (`KeyValuePair_PI`) information related to the data object
 #
 pep_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp) {
@@ -628,7 +628,7 @@ pep_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp) {
 # object through the API using a DATA_OBJ_PUT request.
 #
 #  Instance        (string) unknown
-#  Comm            (`KeyValuePair_PI`) user connnection and auth information
+#  Comm            (`KeyValuePair_PI`) user connection and auth information
 #  DataObjInp      (`KeyValuePair_PI`) information related to the data object
 #  DataObjInpBBuf  (unknown) may contain the contents of the file being uploaded
 #  PORTAL_OPR_OUT  unknown
@@ -641,7 +641,7 @@ pep_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL
 # the API using a DATA_OBJ_PUT request.
 #
 #  Instance        (string) unknown
-#  Comm            (`KeyValuePair_PI`) user connnection and auth information
+#  Comm            (`KeyValuePair_PI`) user connection and auth information
 #  DataObjInp      (`KeyValuePair_PI`) information related to the data object
 #  DataObjInpBBuf  (unknown) may contain the contents of the file being uploaded
 #  PORTAL_OPR_OUT  unknown
@@ -657,7 +657,7 @@ pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTA
 # object through the API using a DATA_OBJ_RENAME request.
 #
 #  Instance          (string) unknown
-#  Comm              (`KeyValuePair_PI`) user connnection and auth information
+#  Comm              (`KeyValuePair_PI`) user connection and auth information
 #  DataObjRenameInp  (`KeyValuePair_PI`) information about the data object and
 #                    its new path
 #
@@ -669,7 +669,7 @@ pep_api_data_obj_rename_pre(*Instance, *Comm, *DataObjRenameInp) {
 # the API using a DATA_OBJ_RENAME request.
 #
 #  Instance          (string) unknown
-#  Comm              (`KeyValuePair_PI`) user connnection and auth information
+#  Comm              (`KeyValuePair_PI`) user connection and auth information
 #  DataObjRenameInp  (`KeyValuePair_PI`) information about the data object and
 #                    its old path
 #
@@ -684,7 +684,7 @@ pep_api_data_obj_rename_post(*Instance, *Comm, *DataObjRenameInp) {
 # object through the API using a DATA_OBJ_UNLINK request.
 #
 #  Instance          (string) unknown
-#  Comm              (`KeyValuePair_PI`) user connnection and auth information
+#  Comm              (`KeyValuePair_PI`) user connection and auth information
 #  DataObjUnlinkInp  (`KeyValuePair_PI`) information about the data object being
 #                    deleted
 #
@@ -696,7 +696,7 @@ pep_api_data_obj_unlink_pre(*Instance, *Comm, *DataObjUnlinkInp) {
 # the API using a DATA_OBJ_UNLINK request.
 #
 #  Instance          (string) unknown
-#  Comm              (`KeyValuePair_PI`) user connnection and auth information
+#  Comm              (`KeyValuePair_PI`) user connection and auth information
 #  DataObjUnlinkInp  (`KeyValuePair_PI`) information about the data object being
 #                    deleted
 #
@@ -707,7 +707,7 @@ pep_api_data_obj_unlink_post(*Instance, *Comm, *DataObjUnlinkInp) {
 # This is the exception logic for when an API DATA_OBJ_UNLINK request fails.
 #
 #  Instance          (string) unknown
-#  Comm              (`KeyValuePair_PI`) user connnection and auth information
+#  Comm              (`KeyValuePair_PI`) user connection and auth information
 #  DataObjUnlinkInp  (`KeyValuePair_PI`) information about the data object being
 #                    deleted
 #
@@ -722,7 +722,7 @@ pep_api_data_obj_unlink_except(*Instance, *Comm, *DataObjUnlinkInp) {
 # collection through the API using a RM_COLL request.
 #
 #  Instance     (string) unknown
-#  Comm         (`KeyValuePair_PI`) user connnection and auth information
+#  Comm         (`KeyValuePair_PI`) user connection and auth information
 #  RmCollInp    (`KeyValuePair_PI`) information about the collection being
 #               deleted
 #  CollOprStat  unknown
@@ -734,7 +734,7 @@ pep_api_rm_coll_pre(*Instance, *Comm, *RmCollInp, *CollOprStat) {
 # This is the exception logic for when an API RM_COLL request fails.
 #
 #  Instance     (string) unknown
-#  Comm         (`KeyValuePair_PI`) user connnection and auth information
+#  Comm         (`KeyValuePair_PI`) user connection and auth information
 #  RmCollInp    (`KeyValuePair_PI`) information about the collection being
 #               deleted
 #  CollOprStat  unknown
@@ -1132,7 +1132,7 @@ pep_database_reg_data_obj_post(*Instance, *Context, *OUT, *DataObjInfo) {
 #  Instance  (string) the resource being considered
 #  Context   (`KeyValuePair_PI`) the resource plugin context
 #  OUT       (`KeyValuePair_PI`) unused
-#  Op        (string) the operation of the replicat that will be performed,
+#  Op        (string) the operation on the replica that will be performed,
 #            "CREATE" for creating the replica, "OPEN" for reading the replica,
 #            and "WRITE" for overwriting an existing replica.
 #  Host      (string) the host executing this policy

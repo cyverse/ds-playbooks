@@ -1,6 +1,7 @@
 ---
 - name: Testing irods_permission module
   hosts: localhost
+  strategy: debug
   vars:
     zone: testing
     test_coll: /{{ zone }}/home/rods/test_coll1

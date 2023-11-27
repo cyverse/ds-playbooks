@@ -491,14 +491,14 @@ class _PermOp:
             self.object_path,
             self.subject_name,
             self._subject_zone )
-        self._session.permissions.set(access, recursive=recursive)
+        self._session.permissions.set(access, recursive=recursive, admin=True)
         if self.recursion == _Recursion.EXCLUSIVE:
             access = iRODSAccess(
                 str(self.current_permission),
                 self.object_path,
                 self.subject_name,
                 self._subject_zone )
-            self._session.permissions.set(access, recursive=False)
+            self._session.permissions.set(access, recursive=False, admin=True)
         else:
             self._current_permission.clear()
 

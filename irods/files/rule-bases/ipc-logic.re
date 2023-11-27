@@ -576,7 +576,8 @@ _ipc_cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) {
 # RODSADMIN GROUP PERMISSIONS
 #
 
-resolveAdminPerm(*Item) = if *Item like regex '^/[^/]*(/[^/]*)?$' then 'write' else 'own'
+resolveAdminPerm(*Item) =
+	if *Item like regex '/' ++ cyverse_ZONE ++ '(/trash)?/home/.*' then 'own' else 'write'
 
 setAdminGroupPerm(*Item) {
 	msiSetACL('default', resolveAdminPerm(*Item), 'rodsadmin', *Item);

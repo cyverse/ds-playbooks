@@ -6,14 +6,14 @@
 
 """Provides an ansible module for creating and removing iRODS collection."""
 
-from enum import Enum
-from functools import cached_property
+from enum import Enum, auto
 import ssl
 from os.path import basename, dirname
 import traceback
 from typing import Optional, Union
+from ansible.module_utils.basic import AnsibleModule
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 
 DOCUMENTATION = r'''
@@ -62,15 +62,21 @@ options:
             - It can be a collection or data object.
         required: true
         type: str
-    recursive:
+    recursion:
         description:
             - >
-                This indicates if the permission should be assigned
-                recursively to everything in a collection as well.
+                This indicates if the permission should be assigned to only a
+                collection (none), a collection and all of its contents
+                (inclusive), or only the contents of a collection, excluding the
+                collection (exclusive).
             - This is ignored for a data object.
         required: false
-        default: false
-        type: bool
+        choices:
+          - none
+          - inclusive
+          - exclusive
+        default: none
+        type: str
     admin_user:
         description:
             - This is the iRODS username to authorize the change.
@@ -129,7 +135,7 @@ perm_before:
             The permission the user has on O(object) before the module changes
             anything.
         - >
-            Regardless of the value of O(recursive), only the permission of
+            Regardless of the value of O(recursion), only the permission of
             O(object) will be returned.
         - The possible values are V(null), V(read), V(write), and V(own).
     returned: success
@@ -140,14 +146,13 @@ perm_after:
             The permission the user has on O(object) after the module makes any
             changes.
         - >
-            Regardless of the value of O(recursive), only the permission of
+            Regardless of the value of O(recursion), only the permission of
             O(object) will be returned.
         - The possible values are V(null), V(read), V(write), and V(own).
     returned: changed
     type: str
 '''
 
-from ansible.module_utils.basic import AnsibleModule
 
 _IRODSCLIENT_PACK_ERR: Optional[Exception] = None
 
@@ -184,9 +189,10 @@ _ARG_SPEC = {
         "type": "str",
         "required": True,
     },
-    "recursive": {
-        "type": "bool",
-        "default": False,
+    "recursion": {
+        "type": "str",
+        "choices": [ "none", "inclusive", "exclusive" ],
+        "default": "none",
         "required": False,
     },
     "admin_user": {
@@ -212,20 +218,56 @@ _ARG_SPEC = {
 }
 
 
+class _Memoize:
+    class _NotEvaluated:
+        pass
+
+    def __init__(self, generator):
+        self._generator = generator
+        self._result = _Memoize._NotEvaluated
+
+    def get(self):
+        """Retrieves the value, generating it if necessary"""
+        if self._result == _Memoize._NotEvaluated:
+            self._result = self._generator()
+        return self._result
+
+    def clear(self):
+        """Removes the cached result, forcing recomputation"""
+        self._result = _Memoize._NotEvaluated
+
+
 class _Permission(Enum):
-    null = 1000
-    read = 1050
-    write = 1120
-    own = 1200
+    NULL = 1000
+    READ = 1050
+    WRITE = 1120
+    DELETE_OBJECT = 1130  # Not officially supported in iRODS 4.2.8, but does show up
+    OWN = 1200
 
     @classmethod
     def _missing_(cls, value):
         if value is None:
-            return cls.null
-        if type(value) != str:
+            return cls.NULL
+        if not isinstance(value, str):
             return None
         for member in cls:
-            if member.name == value.lower():
+            if member.name == value.upper():
+                return member
+        return None
+
+    def __str__(self):
+        return self.name.lower()
+
+
+class _Recursion(Enum):
+    NONE = auto()
+    INCLUSIVE = auto()
+    EXCLUSIVE = auto()
+
+    @classmethod
+    def _missing_(cls, value):
+        for member in cls:
+            if member.name == value.upper():
                 return member
         return None
 
@@ -314,11 +356,18 @@ class _PermOp:
         self._subject_name = params["subject"]
         self._target_perm = _Permission(params["permission"])
         self._object_path = params["object"]
-        self._recursive = params["recursive"]
+        self._recursion = _Recursion(params["recursion"])
+        self._result = _Memoize(self._generate_result)
+        self._object_type = _Memoize(self._generate_object_type)
+        self._subject_id = _Memoize(self._generate_subject_id)
+        self._current_permission = _Memoize(self._generate_current_permission)
 
-    @cached_property
+    @property
     def result(self) -> _Result:
         """This is the result of the operation."""
+        return self._result.get()
+
+    def _generate_result(self):
         result = _Result()
         if not self.subject_exists:
             return result.as_failure(f"user {self.subject_name}#{self.subject_zone} does not exist")
@@ -341,16 +390,18 @@ class _PermOp:
         This method is abstract and needs to be implemented by its derived
         classes.
         """
-        pass
 
     @property
     def object_path(self) -> str:
         """This is the path to the object receiving the permission."""
         return self._object_path
 
-    @cached_property
+    @property
     def object_type(self) -> Union[Collection, DataObject, None]:
         """This is the type of the object receiving the permission."""
+        return self._object_type.get()
+
+    def _generate_object_type(self):
         query = self._session.query(Collection).filter(Collection.name == self.object_path)
         if query.first():
             return Collection
@@ -377,12 +428,15 @@ class _PermOp:
         """The user receiving permission belongs to this zone."""
         return self._subject_zone
 
-    @cached_property
+    @property
     def subject_id(self) -> Optional[int]:
         """
         This is the ICAT DB Id of the subject receiving permission on the
         object.
         """
+        return self._subject_id.get()
+
+    def _generate_subject_id(self):
         cond = [ User.name == self.subject_name, User.zone == self.subject_zone ]
         query = self._session.query(User.id).filter(*cond)
         return query.first()[User.id] if query.first() else None
@@ -397,9 +451,12 @@ class _PermOp:
         """This is the permission that will be set on the object."""
         return self._target_perm
 
-    @cached_property
+    @property
     def current_permission(self) -> _Permission:
         """This is the current permission of the object."""
+        return self._current_permission.get()
+
+    def _generate_current_permission(self):
         if self.object_type == Collection:
             conditions = [
                 Collection.name == self.object_path,
@@ -425,108 +482,134 @@ class _PermOp:
             query = self._session.query(DataAccess.type).filter(*conditions)
             if query.first():
                 return _Permission(query.first()[DataAccess.type])
-        return _Permission.null
+        return _Permission.NULL
 
     def _update_permission(self):
+        recursive = self.recursion != _Recursion.NONE
         access = iRODSAccess(
-            self.target_permission.name, self.object_path, self.subject_name, self._subject_zone)
-        self._session.permissions.set(access, recursive=self.recursive)
-        self.current_permission = self.target_permission
+            str(self.target_permission),
+            self.object_path,
+            self.subject_name,
+            self._subject_zone )
+        self._session.permissions.set(access, recursive=recursive)
+        if self.recursion == _Recursion.EXCLUSIVE:
+            access = iRODSAccess(
+                str(self.current_permission),
+                self.object_path,
+                self.subject_name,
+                self._subject_zone )
+            self._session.permissions.set(access, recursive=False)
+        else:
+            self._current_permission.clear()
 
     @property
-    def recursive(self) -> bool:
-        """
-        Indicates if all members of the object will receive the permission as
-        well.
-        """
-        return self._recursive and self.object_type == Collection
+    def recursion(self) -> _Recursion:
+        """Indicates the type of recursion for the permission assignment."""
+        if self.object_type != Collection:
+            return _Recursion.NONE
+        return self._recursion
 
 
 class _PermAbsent(_PermOp):
 
     def needs_changes(self):
-        if not self.recursive:
-            return self.current_permission != _Permission.null
-        return self._count_coll_perms() > 0 or self._count_data_perms() > 0
+        if self.recursion == _Recursion.NONE:
+            return self.current_permission != _Permission.NULL
+        if self.recursion == _Recursion.INCLUSIVE:
+            return self.current_permission != _Permission.NULL or self._has_accessible_members()
+        return self._has_accessible_members()
 
-    def _count_coll_perms(self):
-        cond = [
-            Like(Collection.name, f"{self.object_path}%"),
-            CollectionAccess.user_id == self.subject_id,
-        ]
-        query = self._session.query().count(CollectionAccess.access_id).filter(*cond)
-        return query.first()[CollectionAccess.access_id]
+    def _has_accessible_members(self):
+        return (
+            self._count_base_data_perms() > 0
+            or self._count_sub_coll_perms() > 0
+            or self._count_sub_data_perms() > 0 )
 
-    def _count_data_perms(self):
+    def _count_base_data_perms(self):
         cond = [
-            Like(Collection.name, f"{self.object_path}%"),
+            Collection.name == self.object_path,
             DataAccess.user_id == self.subject_id,
         ]
         query = self._session.query().count(DataAccess.data_id).filter(*cond)
         return query.first()[DataAccess.data_id]
 
+    def _count_sub_data_perms(self):
+        cond = [
+            Like(Collection.name, f"{self.object_path}/%"),
+            DataAccess.user_id == self.subject_id,
+        ]
+        query = self._session.query().count(DataAccess.data_id).filter(*cond)
+        return query.first()[DataAccess.data_id]
+
+    def _count_sub_coll_perms(self):
+        cond = [
+            Like(Collection.name, f"{self.object_path}/%"),
+            CollectionAccess.user_id == self.subject_id,
+        ]
+        query = self._session.query().count(CollectionAccess.access_id).filter(*cond)
+        return query.first()[CollectionAccess.access_id]
+
 
 class _PermPresent(_PermOp):
 
     def needs_changes(self):
-        if not self.recursive:
+        if self.recursion == _Recursion.NONE:
             return self.current_permission != self.target_permission
-        if self._count_colls_with_tgt_perm() != self._count_all_colls():
-            return True
-        if self._count_data_with_tgt_perm() != self._count_all_data():
-            return True
-        return False
+        if self.recursion == _Recursion.INCLUSIVE:
+            return self.current_permission != self.target_permission or self._sub_needs_changes()
+        return self._sub_needs_changes()
 
-    def _count_all_colls(self):
+    def _sub_needs_changes(self):
+        return (
+            self._count_base_data_with_tgt_perm() != self._count_base_data()
+            or self._count_sub_colls_with_tgt_perm() != self._count_sub_colls()
+            or self._count_sub_data_with_tgt_perm() != self._count_sub_data() )
+
+    def _count_sub_colls(self):
         query = (
             self._session.query()
             .count(Collection.id)
             .filter(Like(Collection.name, f"{self.object_path}/%")) )
+        return query.first()[Collection.id]
 
-        # 1 parent collection + subcollections
-        return 1 + query.first()[Collection.id]
-
-    def _count_colls_with_tgt_perm(self):
-        acl_cond = [
+    def _count_sub_colls_with_tgt_perm(self):
+        cond = [
+            Like(Collection.name, f"{self.object_path}/%"),
             CollectionAccess.type == self.target_permission.value,
             CollectionAccess.user_id == self.subject_id,
         ]
-        base_query = (
-            self._session.query()
-            .count(Collection.id)
-            .filter(Collection.name == self.object_path)
-            .filter(*acl_cond) )
-        sub_query = (
-            self._session.query()
-            .count(Collection.id)
-            .filter(Like(Collection.name, f"{self.object_path}/%"))
-            .filter(*acl_cond) )
-        return base_query.first()[Collection.id] + sub_query.first()[Collection.id]
+        query = self._session.query().count(Collection.id).filter(*cond)
+        return query.first()[Collection.id]
 
-    def _count_all_data(self):
-        base_query = (
+    def _count_base_data(self):
+        query = (
             self._session.query().count(DataObject.id).filter(Collection.name == self.object_path) )
-        sub_query = (
+        return query.first()[DataObject.id]
+
+    def _count_sub_data(self):
+        query = (
             self._session.query()
             .count(DataObject.id)
             .filter(Like(Collection.name, f"{self.object_path}/%")) )
-        return base_query.first()[DataObject.id] + sub_query.first()[DataObject.id]
+        return query.first()[DataObject.id]
 
-    def _count_data_with_tgt_perm(self):
-        acl_cond = [
+    def _count_base_data_with_tgt_perm(self):
+        cond = [
+            Collection.name == self.object_path,
             DataAccess.type == self.target_permission.value,
             DataAccess.user_id == self.subject_id,
         ]
-        base_query = (
-            self._session.query()
-            .count(DataAccess.data_id)
-            .filter(Collection.name == self.object_path) )
-        sub_query = (
-            self._session.query()
-            .count(DataAccess.data_id)
-            .filter(Like(Collection.name, f"{self.object_path}/%"))
-            .filter(*acl_cond) )
-        return base_query.first()[DataAccess.data_id] + sub_query.first()[DataAccess.data_id]
+        query = self._session.query().count(DataAccess.data_id).filter(*cond)
+        return query.first()[DataAccess.data_id]
+
+    def _count_sub_data_with_tgt_perm(self):
+        cond = [
+            Like(Collection.name, f"{self.object_path}/%"),
+            DataAccess.type == self.target_permission.value,
+            DataAccess.user_id == self.subject_id,
+        ]
+        query = self._session.query().count(DataAccess.data_id).filter(*cond)
+        return query.first()[DataAccess.data_id]
 
 
 class IrodsPermission(AnsibleModule):
@@ -549,8 +632,8 @@ class IrodsPermission(AnsibleModule):
                 if result.success:
                     resp = {
                         "changed": result.changed,
-                        "perm_before": result.initial_permission.name,
-                        "perm_after": result.final_permission.name }
+                        "perm_before": str(result.initial_permission),
+                        "perm_after": str(result.final_permission) }
                     self.exit_json(**resp)
                 else:
                     self.fail_json(msg=result.failure_reason)
@@ -580,6 +663,7 @@ class IrodsPermission(AnsibleModule):
 
 
 def main() -> None:
+    """The entrypoint."""
     module = IrodsPermission()
     if _IRODSCLIENT_PACK_ERR:
         module.fail_json(msg=f"python-irodsclient not installed\n{_IRODSCLIENT_PACK_ERR}")

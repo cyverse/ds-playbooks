@@ -57,44 +57,50 @@
           ils -A /testing | grep --quiet 'g:rodsadmin#testing:modify object'
       changed_when: false
 
-    - name: Verify that rodsadmin has write permission on zone coll members
+    - name: Verify that rodsadmin has write permission on static collections
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
-          id="$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")"
-          totColls="$(iquest '%s' "select count(COLL_ID) where COLL_PARENT_NAME = '/testing'")"
-          totCollsWrite="$(iquest \
-            '%s' \
-            "select count(COLL_ID)
-              where COLL_PARENT_NAME = '/testing'
-                and COLL_ACCESS_USER_ID = '$id' and COLL_ACCESS_NAME = 'modify object'" )"
-          (( totColls > 0 && totColls == totCollsWrite ))
+          groupId="$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")"
+          iquest '%s' \
+            "select COLL_ACCESS_NAME
+              where COLL_NAME = '{{ item }}' and COLL_ACCESS_USER_ID = '$groupId'"
+      register: result
+      failed_when:
+        result.stdout != 'modify object'
       changed_when: false
+      with_items:
+        - /
+        - /testing
+        - /testing/home
+        - /testing/trash
+        - /testing/trash/home
 
     - name: Verify that rodsadmin has own permission on all other collections
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
-          id="$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")"
-          totColls="$(iquest '%s' "select count(COLL_ID) where COLL_PARENT_NAME like '/testing/%'")"
-          totCollsOwn="$(iquest \
-            '%s' \
+          groupId="$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")"
+          totColls="$(iquest '%s' "select count(COLL_ID) where COLL_NAME like '{{ item }}/%'")"
+          totCollsOwn="$(iquest '%s' \
             "select count(COLL_ID)
-              where COLL_PARENT_NAME like '/testing/%'
-                and COLL_ACCESS_USER_ID = '$id' and COLL_ACCESS_NAME = 'own'" )"
+              where COLL_NAME like '{{ item }}/%'
+                and COLL_ACCESS_USER_ID = '$groupId' and COLL_ACCESS_NAME = 'own'" )"
           (( totColls > 0 && totColls == totCollsOwn ))
       changed_when: false
+      with_items:
+        - /testing/home
+        - /testing/trash/home
 
     - name: Verify that rodsadmin has own permission on all data objects
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
-          id="$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")"
+          groupId="$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")"
           totObjs="$(iquest '%s' "select count(DATA_ID)")"
-          totObjsOwn="$(iquest \
-            '%s' \
+          totObjsOwn="$(iquest '%s' \
             "select count(DATA_ID)
-              where DATA_ACCESS_USER_ID = '$id' and DATA_ACCESS_NAME = 'own'" )"
+              where DATA_ACCESS_USER_ID = '$groupId' and DATA_ACCESS_NAME = 'own'" )"
           (( totObjs == totObjsOwn ))
       changed_when: false
 

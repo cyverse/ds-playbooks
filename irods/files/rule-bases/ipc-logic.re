@@ -576,7 +576,8 @@ _ipc_cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) {
 # RODSADMIN GROUP PERMISSIONS
 #
 
-resolveAdminPerm(*Item) = if *Item like regex '^/[^/]*(/[^/]*)?$' then 'write' else 'own'
+resolveAdminPerm(*Item) =
+	if *Item like regex '/' ++ cyverse_ZONE ++ '(/trash)?/home/.*' then 'own' else 'write'
 
 setAdminGroupPerm(*Item) {
 	msiSetACL('default', resolveAdminPerm(*Item), 'rodsadmin', *Item);
@@ -602,9 +603,9 @@ ipc_acSetNumThreads { msiSetNumThreads('default', 'default', 'default'); }
 # Set maximum number of rule engine processes
 ipc_acSetReServerNumProc { msiSetReServerNumProc(str(cyverse_MAX_NUM_RE_PROCS)); }
 
-# This rule sets the rodsadin group permission of a collection when a collection
-# is created by an administrative means, i.e. iadmin mkuser. It also pushes a
-# collection.add message into the irods exchange.
+# This rule sets the rodsadmin group permission of a collection when a
+# collection is created by an administrative means, i.e. iadmin mkuser. It also
+# pushes a collection.add message into the irods exchange.
 ipc_acCreateCollByAdmin(*ParColl, *ChildColl) {
 	*coll = '*ParColl/*ChildColl';
 	*perm = resolveAdminPerm(*coll);

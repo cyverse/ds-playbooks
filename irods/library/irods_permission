@@ -1,101 +1,110 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Provides an ansible module for creating and removing iRODS collection.
-"""
 
-import itertools
+# © 2023 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
+
+"""Provides an ansible module for creating and removing iRODS collection."""
+
+from enum import Enum, auto
 import ssl
 from os.path import basename, dirname
+import traceback
+from typing import Optional, Union
 from ansible.module_utils.basic import AnsibleModule
 
-ANSIBLE_METADATA = {
-    "metadata_version": "1.1",
-    "status": ["preview"],
-    "supported_by": "community"}
+__metaclass__ = type  # pylint: disable=invalid-name
 
-DOCUMENTATION = """
+
+DOCUMENTATION = r'''
 ---
 module: irods_permission
 
-short_description: Set/Remove iRODS ACL
+short_description: This module modifies iRODS ACLs.
 
-version_added: "2.9"
+description: >
+    This module is able to add or remove a permission to collection or data
+    object's ACL. For a collection, it is able to add or remove a permission
+    recursively to the ACLs of all of the collection's members.
 
-description:
-    - Set iRODS ACL
-    - Remove iRODS ACL
+version_added: "2.9.0"
+
+author:
+    - John Xu
+    - Tony Edgin
 
 options:
-    subject:
-        description:
-            - recipent of the permission
+    zone:
+        description: This is the iRODS zone where the change is being made.
         required: true
         type: str
+    subject:
+        description: This is the username of the user receiving the permission.
+        required: true
+        type: str
+    subject_zone:
+        description: This is the iRODS zone the subject belongs to.
+        required: false
+        default: O(zone)
+        type: str
     permission:
-        description:
-            - type of permission to apply
+        description: This is the type of permission being assigned.
+        required: true
         choices:
             - null
             - read
             - write
             - own
-        required: true
         type: str
     object:
         description:
-            - target of the permission
-            - object could be an iRODS collection or a data object
+            - This is the object receiving the permission.
+            - It can be a collection or data object.
         required: true
         type: str
-    recursive:
-        description: >
-          whether or not the subject should be granted the same permission on
-          everything in the collection.
-
-          object must be a collection
+    recursion:
+        description:
+            - >
+                This indicates if the permission should be assigned to only a
+                collection (none), a collection and all of its contents
+                (inclusive), or only the contents of a collection, excluding the
+                collection (exclusive).
+            - This is ignored for a data object.
         required: false
-        type: bool
-    subject_zone:
-        description:
-            - zone of the recipent of the permission
-            - default to the value of zone field
-        required: false
+        choices:
+          - none
+          - inclusive
+          - exclusive
+        default: none
         type: str
-    host:
-        description:
-            - Hostname of the iRODS server
-        required: true
-        type: str
-    port:
-        description:
-            - Port of the iRODS server
-        required: true
-        type: int
     admin_user:
         description:
-            - Username of the admin user
+            - This is the iRODS username to authorize the change.
+            - This should be a rodsadmin type user.
+        required: false
+        default: rods
+        type: str
+    admin_password: This is the password used to authenticate O(admin_user).
         required: true
         type: str
-    admin_password:
-        description:
-            - Password of the admin user
-        required: true
+    host:
+        description: >
+            This is the name of the iRODS server to connect to when making the
+            change.
+        required: false
+        default: localhost
         type: str
-    zone:
-        description:
-            - Zone of the admin user
-        required: true
-        type: str
+    port:
+        description: This is the TCP port to connect to on the iRODS server.
+        required: false
+        default: 1247
+        type: int
 
 requirements:
     - python-irodsclient>=0.8.2
+'''
 
-author:
-    - John Xu
-"""
-
-EXAMPLES = """
+EXAMPLES = r'''
 - name: ensure anonymous user has read access to required collections
   irods_permission:
     subject: anonymous
@@ -117,490 +126,548 @@ EXAMPLES = """
     admin_user: rods
     admin_password: 1234
     zone: tempZone
-"""
+'''
 
-RETURN = """
+RETURN = r'''
 perm_before:
-  description: >
-    permission user(subject) has on the object before the module has run.
-
-    null if user has no permission
-
-    only shows permission of the object itself not its members even with
-    recursive option
-  type: str
-  returned: always
+    description:
+        - >
+            The permission the user has on O(object) before the module changes
+            anything.
+        - >
+            Regardless of the value of O(recursion), only the permission of
+            O(object) will be returned.
+        - The possible values are V(null), V(read), V(write), and V(own).
+    returned: success
+    type: str
 perm_after:
-  description: >
-    permission user(subject) has on the object after the module has run
-
-    null if user has no permission
-
-    only shows permission of the object itself not its members even with
-    recursive option
-  type: str
-  returned: always
-exc:
     description:
-        - type of last iRODS exception thrown
-        - empty string when none is thrown
+        - >
+            The permission the user has on O(object) after the module makes any
+            changes.
+        - >
+            Regardless of the value of O(recursion), only the permission of
+            O(object) will be returned.
+        - The possible values are V(null), V(read), V(write), and V(own).
+    returned: changed
     type: str
-    returned: always
-exc_msg:
-    description:
-        - message of the last iRODS exception thrown
-        - empty string when none is thrown
-    type: str
-    returned: always
-"""
+'''
+
+
+_IRODSCLIENT_PACK_ERR: Optional[Exception] = None
 
 try:
-    USE_IRODS_CLIENT = True
     from irods.session import iRODSSession
-    from irods.models import DataObject, DataAccess, User
-    from irods.models import Collection, CollectionAccess
+    from irods.models import Collection, CollectionAccess, CollectionUser, DataObject, DataAccess, \
+        User
     from irods.access import iRODSAccess
     from irods.exception import DataObjectDoesNotExist
     from irods.column import Like
-except ImportError:
-    USE_IRODS_CLIENT = False
+except ImportError as e:
+    _IRODSCLIENT_PACK_ERR = e
 
 
-class IRODSPermissionModule:
-    """
-    Module class
-    """
+_ARG_SPEC = {
+    "zone": {
+        "type": "str",
+        "required": True,
+    },
+    "subject": {
+        "type": "str",
+        "required": True,
+    },
+    "subject_zone": {
+        "type": "str",
+        "required": False,
+    },
+    "permission": {
+        "type": "str",
+        "choices": [ "null", "read", "write", "own" ],
+        "required": True,
+    },
+    "object": {
+        "type": "str",
+        "required": True,
+    },
+    "recursion": {
+        "type": "str",
+        "choices": [ "none", "inclusive", "exclusive" ],
+        "default": "none",
+        "required": False,
+    },
+    "admin_user": {
+        "type": "str",
+        "default": "rods",
+        "required": False,
+    },
+    "admin_password": {
+        "type": "str",
+        "required": True,
+        "no_log": True,
+    },
+    "host": {
+        "type": "str",
+        "default": "localhost",
+        "required": False,
+    },
+    "port": {
+        "type": "int",
+        "default": 1247,
+        "required": False,
+    },
+}
+
+
+class _Memoize:
+    class _NotEvaluated:
+        pass
+
+    def __init__(self, generator):
+        self._generator = generator
+        self._result = _Memoize._NotEvaluated
+
+    def get(self):
+        """Retrieves the value, generating it if necessary"""
+        if self._result == _Memoize._NotEvaluated:
+            self._result = self._generator()
+        return self._result
+
+    def clear(self):
+        """Removes the cached result, forcing recomputation"""
+        self._result = _Memoize._NotEvaluated
+
+
+class _Permission(Enum):
+    NULL = 1000
+    READ = 1050
+    WRITE = 1120
+    DELETE_OBJECT = 1130  # Not officially supported in iRODS 4.2.8, but does show up
+    OWN = 1200
+
+    @classmethod
+    def _missing_(cls, value):
+        if value is None:
+            return cls.NULL
+        if not isinstance(value, str):
+            return None
+        for member in cls:
+            if member.name == value.upper():
+                return member
+        return None
+
+    def __str__(self):
+        return self.name.lower()
+
+
+class _Recursion(Enum):
+    NONE = auto()
+    INCLUSIVE = auto()
+    EXCLUSIVE = auto()
+
+    @classmethod
+    def _missing_(cls, value):
+        for member in cls:
+            if member.name == value.upper():
+                return member
+        return None
+
+
+class _Result:
+    def __init__(self):
+        self._success = False
+        self._changed = False
+        self._failure_reason = ""
+        self._init_perm = None
+        self._final_perm = None
+
+    def as_failure(self, reason: str = ""):
+        """
+        Makes this result into a failed result
+
+        Args:
+            msg  a message describing the failure
+
+        Returns:
+            the updated _Result object
+        """
+        self._success = False
+        self._failure_reason = reason
+        return self
+
+    def as_success(self):
+        """
+        Makes this result into a success result
+
+        Returns:
+            the updated _Result object
+        """
+        self._success = True
+        return self
+
+    def made_changes(self):
+        """
+        Modifies the result to indicate that changes where made.
+
+        Returns:
+            the updated _Result object
+        """
+        self._changed = True
+        return self
+
+    @property
+    def changed(self) -> bool:
+        """Indicates whether or not a change was made"""
+        return self._changed
+
+    @property
+    def success(self) -> bool:
+        """Indicates if the operation was successful"""
+        return self._success
+
+    @property
+    def failure_reason(self) -> str:
+        """This may provide a reason why on operation failed"""
+        return self._failure_reason
+
+    @property
+    def initial_permission(self) -> Optional[_Permission]:
+        """the initial permission, if it was determined"""
+        return self._init_perm
+
+    @initial_permission.setter
+    def initial_permission(self, perm: _Permission):
+        self._init_perm = perm
+
+    @property
+    def final_permission(self) -> Optional[_Permission]:
+        """the final permission, if it was determined"""
+        return self._final_perm
+
+    @final_permission.setter
+    def final_permission(self, perm: _Permission):
+        self._final_perm = perm
+
+
+class _PermOp:
+
+    def __init__(self, params, session):
+        self._session = session
+        self._subject_zone = params["subject_zone"]
+        self._subject_name = params["subject"]
+        self._target_perm = _Permission(params["permission"])
+        self._object_path = params["object"]
+        self._recursion = _Recursion(params["recursion"])
+        self._result = _Memoize(self._generate_result)
+        self._object_type = _Memoize(self._generate_object_type)
+        self._subject_id = _Memoize(self._generate_subject_id)
+        self._current_permission = _Memoize(self._generate_current_permission)
+
+    @property
+    def result(self) -> _Result:
+        """This is the result of the operation."""
+        return self._result.get()
+
+    def _generate_result(self):
+        result = _Result()
+        if not self.subject_exists:
+            return result.as_failure(f"user {self.subject_name}#{self.subject_zone} does not exist")
+        if not self.object_exists:
+            return result.as_failure(f"object {self.object_path} does not exist")
+        result.initial_permission = self.current_permission
+        if self.needs_changes():
+            self._update_permission()
+            result.made_changes()
+        result.final_permission = self.current_permission
+        return result.as_success()
+
+    def needs_changes(self) -> bool:
+        """
+        This method indicates whether or not an operation needs to make changes.
+
+        Returns:
+            True is changes need to be made, otherwise False
+
+        This method is abstract and needs to be implemented by its derived
+        classes.
+        """
+
+    @property
+    def object_path(self) -> str:
+        """This is the path to the object receiving the permission."""
+        return self._object_path
+
+    @property
+    def object_type(self) -> Union[Collection, DataObject, None]:
+        """This is the type of the object receiving the permission."""
+        return self._object_type.get()
+
+    def _generate_object_type(self):
+        query = self._session.query(Collection).filter(Collection.name == self.object_path)
+        if query.first():
+            return Collection
+        try:
+            self._session.data_objects.get(self.object_path)
+            return DataObject
+        except DataObjectDoesNotExist:
+            return None
+
+    @property
+    def object_exists(self) -> bool:
+        """Indicates whether or not this object exists in the iRODS zone"""
+        return self.object_type is not None
+
+    @property
+    def subject_name(self) -> str:
+        """
+        This is the username of the user receiving permission on the object.
+        """
+        return self._subject_name
+
+    @property
+    def subject_zone(self) -> str:
+        """The user receiving permission belongs to this zone."""
+        return self._subject_zone
+
+    @property
+    def subject_id(self) -> Optional[int]:
+        """
+        This is the ICAT DB Id of the subject receiving permission on the
+        object.
+        """
+        return self._subject_id.get()
+
+    def _generate_subject_id(self):
+        cond = [ User.name == self.subject_name, User.zone == self.subject_zone ]
+        query = self._session.query(User.id).filter(*cond)
+        return query.first()[User.id] if query.first() else None
+
+    @property
+    def subject_exists(self) -> bool:
+        """Indicates whether or no the subject exists in the iRODS zone."""
+        return self.subject_id is not None
+
+    @property
+    def target_permission(self) -> _Permission:
+        """This is the permission that will be set on the object."""
+        return self._target_perm
+
+    @property
+    def current_permission(self) -> _Permission:
+        """This is the current permission of the object."""
+        return self._current_permission.get()
+
+    def _generate_current_permission(self):
+        if self.object_type == Collection:
+            conditions = [
+                Collection.name == self.object_path,
+# XXX - User.id doesn't condition correctly in this case in iRODS 4.2.8
+#                 User.id == self.subject_id,
+                CollectionUser.name == self.subject_name,
+                CollectionUser.zone == self.subject_zone,
+# XXX - ^^^
+            ]
+            query = self._session.query(CollectionAccess.type).filter(*conditions)
+            if query.first():
+                return _Permission(query.first()[CollectionAccess.type])
+        if self.object_type == DataObject:
+            conditions = [
+                Collection.name == dirname(self.object_path),
+                DataObject.name == basename(self.object_path),
+# XXX - User.id doesn't condition correctly in this case in iRODS 4.2.8
+#                 User.id == self.subject_id,
+                User.name == self.subject_name,
+                User.zone == self.subject_zone,
+# XXX - ^^^
+            ]
+            query = self._session.query(DataAccess.type).filter(*conditions)
+            if query.first():
+                return _Permission(query.first()[DataAccess.type])
+        return _Permission.NULL
+
+    def _update_permission(self):
+        recursive = self.recursion != _Recursion.NONE
+        access = iRODSAccess(
+            str(self.target_permission),
+            self.object_path,
+            self.subject_name,
+            self._subject_zone )
+        self._session.permissions.set(access, recursive=recursive, admin=True)
+        if self.recursion == _Recursion.EXCLUSIVE:
+            access = iRODSAccess(
+                str(self.current_permission),
+                self.object_path,
+                self.subject_name,
+                self._subject_zone )
+            self._session.permissions.set(access, recursive=False, admin=True)
+        else:
+            self._current_permission.clear()
+
+    @property
+    def recursion(self) -> _Recursion:
+        """Indicates the type of recursion for the permission assignment."""
+        if self.object_type != Collection:
+            return _Recursion.NONE
+        return self._recursion
+
+
+class _PermAbsent(_PermOp):
+
+    def needs_changes(self):
+        if self.recursion == _Recursion.NONE:
+            return self.current_permission != _Permission.NULL
+        if self.recursion == _Recursion.INCLUSIVE:
+            return self.current_permission != _Permission.NULL or self._has_accessible_members()
+        return self._has_accessible_members()
+
+    def _has_accessible_members(self):
+        return (
+            self._count_base_data_perms() > 0
+            or self._count_sub_coll_perms() > 0
+            or self._count_sub_data_perms() > 0 )
+
+    def _count_base_data_perms(self):
+        cond = [
+            Collection.name == self.object_path,
+            DataAccess.user_id == self.subject_id,
+        ]
+        query = self._session.query().count(DataAccess.data_id).filter(*cond)
+        return query.first()[DataAccess.data_id]
+
+    def _count_sub_data_perms(self):
+        cond = [
+            Like(Collection.name, f"{self.object_path}/%"),
+            DataAccess.user_id == self.subject_id,
+        ]
+        query = self._session.query().count(DataAccess.data_id).filter(*cond)
+        return query.first()[DataAccess.data_id]
+
+    def _count_sub_coll_perms(self):
+        cond = [
+            Like(Collection.name, f"{self.object_path}/%"),
+            CollectionAccess.user_id == self.subject_id,
+        ]
+        query = self._session.query().count(CollectionAccess.access_id).filter(*cond)
+        return query.first()[CollectionAccess.access_id]
+
+
+class _PermPresent(_PermOp):
+
+    def needs_changes(self):
+        if self.recursion == _Recursion.NONE:
+            return self.current_permission != self.target_permission
+        if self.recursion == _Recursion.INCLUSIVE:
+            return self.current_permission != self.target_permission or self._sub_needs_changes()
+        return self._sub_needs_changes()
+
+    def _sub_needs_changes(self):
+        return (
+            self._count_base_data_with_tgt_perm() != self._count_base_data()
+            or self._count_sub_colls_with_tgt_perm() != self._count_sub_colls()
+            or self._count_sub_data_with_tgt_perm() != self._count_sub_data() )
+
+    def _count_sub_colls(self):
+        query = (
+            self._session.query()
+            .count(Collection.id)
+            .filter(Like(Collection.name, f"{self.object_path}/%")) )
+        return query.first()[Collection.id]
+
+    def _count_sub_colls_with_tgt_perm(self):
+        cond = [
+            Like(Collection.name, f"{self.object_path}/%"),
+            CollectionAccess.type == self.target_permission.value,
+            CollectionAccess.user_id == self.subject_id,
+        ]
+        query = self._session.query().count(Collection.id).filter(*cond)
+        return query.first()[Collection.id]
+
+    def _count_base_data(self):
+        query = (
+            self._session.query().count(DataObject.id).filter(Collection.name == self.object_path) )
+        return query.first()[DataObject.id]
+
+    def _count_sub_data(self):
+        query = (
+            self._session.query()
+            .count(DataObject.id)
+            .filter(Like(Collection.name, f"{self.object_path}/%")) )
+        return query.first()[DataObject.id]
+
+    def _count_base_data_with_tgt_perm(self):
+        cond = [
+            Collection.name == self.object_path,
+            DataAccess.type == self.target_permission.value,
+            DataAccess.user_id == self.subject_id,
+        ]
+        query = self._session.query().count(DataAccess.data_id).filter(*cond)
+        return query.first()[DataAccess.data_id]
+
+    def _count_sub_data_with_tgt_perm(self):
+        cond = [
+            Like(Collection.name, f"{self.object_path}/%"),
+            DataAccess.type == self.target_permission.value,
+            DataAccess.user_id == self.subject_id,
+        ]
+        query = self._session.query().count(DataAccess.data_id).filter(*cond)
+        return query.first()[DataAccess.data_id]
+
+
+class IrodsPermission(AnsibleModule):
+    """Module class"""
 
     def __init__(self):
-        """
-        Initialize the module
-        """
-        # define argument
-        self.module_args = dict(
-            subject=dict(type="str", required=True),
-            permission=dict(
-                type="str",
-                required=True,
-                choices=["null", "read", "write", "own"]),
-            object=dict(type="str", required=True),
-            recursive=dict(type="bool", required=False, default=False),
-            subject_zone=dict(type="str", required=False),
-            host=dict(type="str", required=True),
-            port=dict(type="int", required=True),
-            admin_user=dict(type="str", no_log=True, required=True),
-            admin_password=dict(type="str", no_log=True, required=True),
-            zone=dict(type="str", required=True),
-        )
-        # result
-        self.result = dict(
-            changed=False, exc="", exc_msg="", perm_before=[], perm_after=[])
+        super().__init__(argument_spec=_ARG_SPEC, supports_check_mode=True)
+        if not self.params["subject_zone"]:
+            self.params["subject_zone"] = self.params["zone"]
 
-        # init module
-        self.module = AnsibleModule(
-            argument_spec=self.module_args, supports_check_mode=True)
-
-        self.session = None
-
-        self.perm_str_mapping = {
-            "read object": "read",
-            "modify object": "write",
-            "own": "own"}
-        self.perm_str_reverse_map = {
-            "read": "read object",
-            "write": "modify object",
-            "own": "own"}
-
-    def run(self):
-        """
-        Entry point for module class, method to be called to run the module
-        """
-        # check param and env
-        self.sanity_check()
-
-        # only-check mode
-        if self.module.check_mode:
-            self.module.exit_json(**self.result)
+    def run(self) -> None:
+        """performs the business logic of the module"""
+        if self.check_mode:
+            self.exit_json(**self._result)
             return
+        try:
+            with self._init_session() as session:
+                action = self._select_action(session)
+                result = action.result
+                if result.success:
+                    resp = {
+                        "changed": result.changed,
+                        "perm_before": str(result.initial_permission),
+                        "perm_after": str(result.final_permission) }
+                    self.exit_json(**resp)
+                else:
+                    self.fail_json(msg=result.failure_reason)
+        except Exception:  # pylint: disable=broad-exception-caught
+            tmpl = "An unexpected exception occurred:\n{0}"
+            self.fail_json(msg=tmpl.format(traceback.format_exc()))
 
-        self.init_session()
-
-        action = self._select_action()
-        action()
-
-    def _fail(self, msg, err=None):
-        """
-        Failure routine, called when the operation failed
-        """
-        if self.session:
-            self.session.cleanup()
-
-        if err:
-            self.module.fail_json(msg=msg + "\n" + str(err), **self.result)
-        else:
-            self.module.fail_json(msg=msg, **self.result)
-
-    def _success(self, msg=""):
-        """
-        Success routine, called when the operation succeeds
-        """
-        if msg:
-            self.result["message"] = msg
-        self.module.exit_json(**self.result)
-
-    def sanity_check(self):
-        """
-        Check if python-irodsclient is installed
-        """
-        # python-irodsclient is required at this point
-        if not USE_IRODS_CLIENT:
-            self._fail("python-irodsclient not installed")
-
-    def init_session(self):
-        """
-        Initialize the iRODS session with iRODS server
-        """
+    def _init_session(self):
         ssl_context = ssl.create_default_context(
             purpose=ssl.Purpose.SERVER_AUTH,
             cafile=None,
             capath=None,
             cadata=None)
         ssl_settings = {"ssl_context": ssl_context}
-        self.session = iRODSSession(
-            host=self.module.params["host"],
-            port=self.module.params["port"],
-            user=self.module.params["admin_user"],
-            password=self.module.params["admin_password"],
-            zone=self.module.params["zone"],
+        return iRODSSession(
+            host=self.params["host"],
+            port=self.params["port"],
+            user=self.params["admin_user"],
+            password=self.params["admin_password"],
+            zone=self.params["zone"],
             **ssl_settings)
 
-    def _select_action(self):
-        """
-        Dispatch action according to the argument passed to the module
-        """
-        if self.module.params["permission"] == "null":
-            return self.permission_absent
-        if self.module.params["recursive"]:
-            return self.permission_present_recursive
-        return self.permission_present
-
-    # TODO convert this to class
-    def permission_absent(self):
-        """
-        Ensure the permission on the object with given subject is absent
-        """
-        # fetch object at the path
-        path = self.module.params["object"]
-        username = self.module.params["subject"]
-        recursive = self.module.params["recursive"]
-        subject_zone = self.module.params["subject_zone"]
-        if not subject_zone:
-            subject_zone = self.module.params["zone"]
-
-        # get existing permission of the object
-        obj_type = self._object_type(path)
-        if not obj_type:
-            self._fail("Object does not exist")
-        permission = self._get_permission(obj_type, path, username)
-        self.result["perm_before"] = permission
-
-        if recursive and obj_type != Collection:
-            self._fail("recursive option can only be used on collection")
-
-        # remove permission if exists
-        if (
-            recursive
-            and not self._check_null_permission_recursive(path, username)
-        ):
-            self._set_permission(
-                path, "null", username, recursive=True, user_zone=subject_zone)
-            self.result["changed"] = True
-        elif not recursive and permission:
-            self._set_permission(
-                path, "null", username, user_zone=subject_zone)
-            self.result["changed"] = True
-        self.result["perm_after"] = self._get_permission(
-            obj_type, path, username)
-        self._success("permission is absent")
-
-    # TODO convert this to class
-    def permission_present(self):
-        """
-        Ensure the specified permission on the object with given subject is
-        present
-        """
-        # fetch object at the path
-        path = self.module.params["object"]
-        target_perm = self.module.params["permission"]
-        username = self.module.params["subject"]
-        subject_zone = self.module.params["subject_zone"]
-        if not subject_zone:
-            subject_zone = self.module.params["zone"]
-
-        # get existing permission of the object
-        obj_type = self._object_type(path)
-        if not obj_type:
-            self._fail("Object does not exist")
-        permission = self._get_permission(obj_type, path, username)
-        self.result["perm_before"] = permission
-
-        # set permission if different
-        # or if recursive option is set
-        if _permission_diff(permission, [target_perm]):
-            self._set_permission(
-                path, target_perm, username, user_zone=subject_zone)
-            self.result["changed"] = True
-        self.result["perm_after"] = self._get_permission(
-            obj_type, path, username)
-        self._success("permission is present")
-
-    # TODO convert this to class
-    def permission_present_recursive(self):
-        """
-        Ensure the target permission on the collection and its members is
-        present
-        """
-        # fetch object at the path
-        path = self.module.params["object"]
-        target_perm = self.module.params["permission"]
-        username = self.module.params["subject"]
-        recursive = self.module.params["recursive"]
-        subject_zone = self.module.params["subject_zone"]
-        if not subject_zone:
-            subject_zone = self.module.params["zone"]
-
-        # get existing permission of the object
-        obj_type = self._object_type(path)
-        if not obj_type:
-            self._fail("Object does not exist")
-        permission = self._get_permission(obj_type, path, username)
-        self.result["perm_before"] = permission
-
-        if not recursive or obj_type != Collection:
-            self._fail("recursive option can only be used on collection")
-
-        if not self._check_permission_recursive(path, username, target_perm):
-            self._set_permission(
-                path, target_perm, username,
-                recursive=recursive, user_zone=subject_zone)
-            self.result["changed"] = True
-            if (
-                not self._check_permission_recursive(
-                    path, username, target_perm)
-            ):
-                self._fail("permission changed after setting permission")
-        self.result["perm_after"] = self._get_permission(
-            obj_type, path, username)
-        self._success("permission is present")
-
-    def _set_permission(
-        self, path, perm_str, user, recursive=False, user_zone=""
-    ):
-        """
-        Set permission
-        """
-        self.session.permissions.set(
-            iRODSAccess(perm_str, path, user, user_zone=user_zone),
-            recursive=recursive)
-
-    def _get_permission(self, obj_type, path, username):
-        """
-        Get all permission on the given object for the given user
-
-        Args:
-            obj (iRODSCollection|iRODSDataObject): a iRODS object, either a
-                collection or a data object
-            username (str): username to look up permission for
-
-        Returns:
-            list(str): list of permission string ('read' | 'write' | 'own'),
-                empty list if no permission
-        """
-        if obj_type == Collection:
-            # XXX - in iRODS < 4.2, CollectionUser.name isn't supported.
-            #            query = self.session.query(Collection, CollectionAccess).filter(  # noqa
-            #                CollectionUser.name == username, Collection.name == path)  # noqa
-            #            result = [self.perm_str_mapping[row[CollectionAccess.name]] for row in query  # noqa # pylint: disable=line-too-long
-            query = self.session.query(User.id).filter(User.name == username)
-            for row in query:
-                uid = row[User.id]
-            query = self.session.query(Collection, CollectionAccess).filter(
-                CollectionAccess.user_id == uid, Collection.name == path)
-            result = [
-                self.perm_str_mapping[row[CollectionAccess.name]]
-                for row in query]
-            # XXX - ^^^
-            return result
-        if obj_type == DataObject:
-            conditions = [
-                Collection.name == dirname(path),
-                DataObject.name == basename(path),
-                User.name == username]
-            query = (
-                self.session.query(DataObject.name, DataAccess.name)
-                .filter(*conditions)
-                .all())
-            result = [
-                self.perm_str_mapping[row[DataAccess.name]] for row in query]
-            return result
-        self._fail("Unsupported Object type")
-        return None
-
-    def _check_null_permission_recursive(self, coll_path, perm_subject):
-        """
-        Recursively check permission for a collection and its member on a
-        given subject are absent(null)
-
-        Args:
-            coll_path (str): path to the collection
-            perm_subject (str): name of the recipent of the permission
-
-        Returns:
-            bool: True if subject's permission on the collection are absent,
-                False otherwise
-        """
-        query = self.session.query(User.id).filter(User.name == perm_subject)
-        perm_subj_id = query.first()[User.id]
-
-        # check the number of related collections that subject has access to
-        coll_obj_query = self.session.query(CollectionAccess.access_id).filter(
-            Like(Collection.name, f"{coll_path}%"))
-        coll_obj_query = coll_obj_query.filter(
-            CollectionAccess.user_id == perm_subj_id)
-        colls_count = len(
-            [row[CollectionAccess.access_id] for row in coll_obj_query])
-        if colls_count > 0:
-            return False
-
-        # check the number of related data objects that subject has access to
-        data_obj_query = (
-            self.session.query(DataAccess.data_id)
-            .filter(Like(Collection.name, f"{coll_path}%"))
-            .filter(DataAccess.user_id == perm_subj_id))
-        data_obj_count = len(data_obj_query.execute())
-        if data_obj_count > 0:
-            return False
-        return True
-
-    def _check_permission_recursive(self, coll_path, perm_subject, permission):
-        """
-        Recursively check permission for a collection and its member on a given
-        subject are consistent with the target permission
-
-        Args:
-            coll_path (str): path to the collection
-            perm_subject (str): name of the recipent of the permission
-            permission (str): target permission, "read" | "write" | "own",
-                cannot be "null"
-
-        Returns:
-            bool: True if permission are consistent with target, False
-                otherwise
-        """
-        if permission == "null":
-            raise ValueError(
-                "permission cannot be null, use other functions instead")
-        query = self.session.query(User.id).filter(User.name == perm_subject)
-        perm_subj_id = query.first()[User.id]
-
-        # Count all collections
-        sub_colls = self.session.query().count(Collection.id).filter(
-            Like(Collection.name, f"{coll_path}/%"))
-        # 1 parent collection + subcollections
-        coll_count = 1 + sub_colls.execute()[0][Collection.id]
-
-        # Count all collections that have correct permission
-        base_coll_access = (
-            self.session.query().count(Collection.id)
-            .filter(Collection.name == coll_path)
-            .filter(
-                CollectionAccess.name == self.perm_str_reverse_map[permission])
-            .filter(CollectionAccess.user_id == perm_subj_id))
-        sub_coll_access = (
-            self.session.query().count(Collection.id)
-            .filter(Like(Collection.name, f"{coll_path}/%"))
-            .filter(
-                CollectionAccess.name == self.perm_str_reverse_map[permission])
-            .filter(CollectionAccess.user_id == perm_subj_id))
-        coll_access_count = (
-            base_coll_access.execute()[0][Collection.id]
-            + sub_coll_access.execute()[0][Collection.id])
-
-        if coll_access_count != coll_count:
-            return False
-
-        # find all related data objects
-        base_data = self.session.query(DataObject.id).filter(
-            Collection.name == coll_path)
-        sub_data = self.session.query(DataObject.id).filter(
-            Like(Collection.name, f"{coll_path}/%"))
-        data_count = 0
-        for _ in itertools.chain(base_data, sub_data):
-            data_count = data_count + 1
-
-        # find all related data objects that have correct permission
-        base_data_access = (
-            self.session.query(DataAccess.data_id)
-            .filter(Collection.name == coll_path)
-            .filter(DataAccess.name == self.perm_str_reverse_map[permission])
-            .filter(DataAccess.user_id == perm_subj_id))
-        sub_data_access = (
-            self.session.query(DataAccess.data_id)
-            .filter(Like(Collection.name, f"{coll_path}/%"))
-            .filter(DataAccess.name == self.perm_str_reverse_map[permission])
-            .filter(DataAccess.user_id == perm_subj_id))
-        data_access_count = 0
-        for _ in itertools.chain(base_data_access, sub_data_access):
-            data_access_count = data_access_count + 1
-
-        if data_access_count != data_count:
-            return False
-
-        return True
-
-    def _object_type(self, path):
-        """
-        Return the object type at given path.
-        Object could be type Collection or type DataObject if exists.
-
-        Args:
-            path (str): path of the iRODS object
-
-        Returns:
-            None|Collection|DataObject: return None if no object found,
-                otherwise return type of object
-        """
-        query = self.session.query(Collection).filter(Collection.name == path)
-        if query.first():
-            return Collection
-        try:
-            self.session.data_objects.get(path)
-            return DataObject
-        except DataObjectDoesNotExist:
-            return None
+    def _select_action(self, session):
+        if self.params["permission"] == "null":
+            return _PermAbsent(self.params, session)
+        return _PermPresent(self.params, session)
 
 
-def _permission_diff(perm1, perm2):
-    """
-    Difference in permission
-
-    Args:
-        perm1 ([str]): list of permission string
-        perm2 ([str]): list of permission string
-
-    Returns:
-        set(str): a set of difference between the two list of permission
-            strings
-    """
-    perm_set1 = set(perm1)
-    perm_set2 = set(perm2)
-    return perm_set1.symmetric_difference(perm_set2)
-
-
-def main():
-    """
-    Entrypoint of the Ansible module
-    """
-    module = IRODSPermissionModule()
+def main() -> None:
+    """The entrypoint."""
+    module = IrodsPermission()
+    if _IRODSCLIENT_PACK_ERR:
+        module.fail_json(msg=f"python-irodsclient not installed\n{_IRODSCLIENT_PACK_ERR}")
+        return
     module.run()
 
 

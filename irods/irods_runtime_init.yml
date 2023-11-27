@@ -48,22 +48,41 @@
         zone: "{{ _irods_zone_name }}"
 
     - name: Initialize rodsadmin perms
-      ansible.builtin.script: >-
-        scripts/init-rodsadmin-perms.sh \
-          '{{ groups["dbms_primary"][0] }}' \
-          postgres \
-          '{{ hostvars[groups["dbms_primary"][0]]["ansible_port"] | d(22) }}' \
-          '{{ hostvars[groups["dbms_primary"][0]]["ansible_user"] | d("root") }}' \
-          '{{ groups["irods_catalog"][0] }}' \
-          '{{ hostvars[groups["irods_catalog"][0]]["_irods_service_account_name"] }}' \
-          '{{ hostvars[groups["irods_catalog"][0]]["ansible_port"] | d(22) }}' \
-          '{{ hostvars[groups["irods_catalog"][0]]["ansible_user"] | d("root") }}' \
-          '{{ _irods_zone_name }}'
-      register: response
-      changed_when: response.stdout == 'true'
+      when: init_rodsadmin_perms | d(false)
       delegate_to: localhost
       become: false
-      when: init_rodsadmin_perms | d(false)
+      block:
+        - name: Give rodsadmin group write permission on top-level static collections
+          irods_permission:
+            zone: "{{ _irods_zone_name }}"
+            subject: rodsadmin
+            permission: write
+            object: "{{ item }}"
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            admin_user: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+          with_items:
+            - /
+            - /{{ _irods_zone_name }}
+            - /{{ _irods_zone_name }}/home
+            - /{{ _irods_zone_name }}/trash
+            - /{{ _irods_zone_name }}/trash/home
+
+        - name: Give rodsadmin group own permission on home collections
+          irods_permission:
+            zone: "{{ _irods_zone_name }}"
+            subject: rodsadmin
+            permission: own
+            object: "{{ item }}"
+            recursion: exclusive
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            admin_user: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+          with_items:
+            - /{{ _irods_zone_name }}/home
+            - /{{ _irods_zone_name }}/trash/home
 
     - name: Ensure anonymous user exists
       delegate_to: localhost

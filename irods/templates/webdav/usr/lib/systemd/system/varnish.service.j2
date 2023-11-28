@@ -21,6 +21,8 @@ TasksMax=infinity
 # Maximum size of the corefile.
 LimitCORE=infinity
 
+# Delete cache file before we start the service if exists
+ExecStartPre=-/bin/rm {{ _webdav_cache_dir }}/varnish_cache.bin
 ExecStart=/usr/sbin/varnishd \
 	  -a :{{ _webdav_varnish_service_port }},HTTP \
 	  -p feature=+http2 \

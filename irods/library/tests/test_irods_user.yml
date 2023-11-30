@@ -1,297 +1,122 @@
 ---
 - name: Test irods_user module
-  hosts: localhost
+  hosts: irods_catalog
+  run_once: true
+  become: true
+  become_user: irods
+  vars:
+    admin_password: password
+    existing_user: existing
+    former_user: former
+  pre_tasks:
+    - name: Create test users
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: iadmin mkuser '{{ item }}' rodsuser
+      changed_when: true
+      with_items:
+        - "{{ existing_user }}"
+        - "{{ former_user }}"
+      tags: non_idempotent
+
   tasks:
-    - name: Create test user
+    - name: Create user
+      become: false
+      delegate_to: localhost
       irods_user:
         name: test_user1
         type: rodsuser
         info: foo_bar
         state: present
         password: rods123
+        admin_password: "{{ admin_password }}"
+        zone: testing
         host: "dstesting-provider_configured-1.dstesting_default"
         port: 1247
-        admin_user: rods
-        admin_password: rods
-        zone: testing
-      register: response
-      failed_when: >-
-        not response.changed
-        or response.exc != ''
-        or response.exc_msg != ''
-        or response.user != 'test_user1'
-      tags:
-        - non_idempotent
 
-    - name: Check user exist and is correct type via iadmin
+    - name: Check user exists and is correct type
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
-          set -o pipefail
-          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsuser"
-          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "zone_name: testing"
-          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_info: foo_bar"
-      environment:
-        IRODS_HOST: dstesting-provider_configured-1.dstesting_default
-        IRODS_PORT: '1247'
-        IRODS_USER_NAME: rods
-        IRODS_PASSWORD: rods
-        IRODS_ZONE_NAME: testing
+          set -o errexit -o pipefail
+          iadmin lu test_user1 | grep --quiet "user_type_name: rodsuser"
+          iadmin lu test_user1 | grep --quiet "zone_name: testing"
+          iadmin lu test_user1 | grep --quiet "user_info: foo_bar"
       changed_when: false
 
-    - name: Check user exist and password is consistent with given value
-      irods_user:
-        name: test_user1
-        type: rodsuser
-        state: present
-        password: rods123
-        host: "dstesting-provider_configured-1.dstesting_default"
-        port: 1247
-        admin_user: test_user1
-        admin_password: rods123
-        zone: testing
+    - name: Verify user has correct password
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: iinit rods123
+      environment:
+        IRODS_USER_NAME: test_user1
+        IRODS_AUTHENTICATION_FILE: /tmp/.a-test_user1
+      changed_when: false
 
     - name: Update password
       irods_user:
-        name: test_user1
-        type: rodsuser
+        name: "{{ existing_user }}"
         state: present
-        password: rods321  # different password
-        host: "dstesting-provider_configured-1.dstesting_default"
-        port: 1247
+        password: rods321
         admin_user: rods
-        admin_password: rods
-        zone: testing
-      register: response
-      tags:
-        - non_idempotent
-
-      # should thrown exception for different password
-    - name: Check returned result
-      ansible.builtin.assert:
-        that:
-          - response.changed
-          - response.exc == "CAT_INVALID_AUTHENTICATION"
-          - response.exc_msg == "None"
-          - response.user == "test_user1"
-
-    - name: Check user exist and password is consistent with given value
-      irods_user:
-        name: test_user1
-        type: rodsuser
-        state: present
-        password: rods321
-        host: "dstesting-provider_configured-1.dstesting_default"
-        port: 1247
-        admin_user: test_user1
-        admin_password: rods321
+        admin_password: "{{ admin_password }}"
         zone: testing
 
-    - name: Update password again
-      irods_user:
-        name: test_user1
-        type: rodsuser
-        state: present
-        password: rods321
-        host: "dstesting-provider_configured-1.dstesting_default"
-        port: 1247
-        admin_user: rods
-        admin_password: rods
-        zone: testing
-      register: response
-
-    - name: Check returned result
-      ansible.builtin.assert:
-        that:
-          - not response.changed
-          - response.exc == ""
-          - response.exc_msg == ""
-          - response.user == ""
-
-    - name: Check user exist and password is consistent with given value
-      irods_user:
-        name: test_user1
-        type: rodsuser
-        state: present
-        password: rods321
-        host: "dstesting-provider_configured-1.dstesting_default"
-        port: 1247
-        admin_user: test_user1
-        admin_password: rods321
-        zone: testing
+    - name: Check user has new password
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: iinit rods321
+      environment:
+        IRODS_USER_NAME: "{{ existing_user }}"
+        IRODS_AUTHENTICATION_FILE: /tmp/.a-existing_user
+      changed_when: false
 
     - name: Update type
       irods_user:
-        name: test_user1
+        name: "{{ existing_user }}"
         type: rodsadmin
         state: present
-        host: "dstesting-provider_configured-1.dstesting_default"
-        port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ admin_password }}"
         zone: testing
-      register: response
-      tags:
-        - non_idempotent
 
-    - name: Check returned result
-      ansible.builtin.assert:
-        that:
-          - response.changed
-          - response.exc == ""
-          - response.exc_msg == ""
-          - response.user == "test_user1"
-
-    - name: Check user exist and is correct type via iadmin
+    - name: Check user has new type
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
           set -o pipefail
-          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsadmin"
-      environment:
-        IRODS_HOST: dstesting-provider_configured-1.dstesting_default
-        IRODS_PORT: '1247'
-        IRODS_USER_NAME: rods
-        IRODS_PASSWORD: rods
-        IRODS_ZONE_NAME: testing
-      changed_when: false
-
-    - name: Update type again
-      irods_user:
-        name: test_user1
-        type: rodsadmin
-        state: present
-        host: "dstesting-provider_configured-1.dstesting_default"
-        port: 1247
-        admin_user: rods
-        admin_password: rods
-        zone: testing
-      register: response
-
-    - name: Check returned result
-      ansible.builtin.assert:
-        that:
-          - not response.changed
-          - response.exc == ""
-          - response.exc_msg == ""
-          - response.user == ""
-
-    - name: Check user exist and is correct type via iadmin
-      ansible.builtin.shell:
-        executable: /bin/bash
-        cmd: |
-          set -o pipefail
-          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsadmin"
-      environment:
-        IRODS_HOST: dstesting-provider_configured-1.dstesting_default
-        IRODS_PORT: '1247'
-        IRODS_USER_NAME: rods
-        IRODS_PASSWORD: rods
-        IRODS_ZONE_NAME: testing
-      changed_when: false
-
-    - name: Update type back
-      irods_user:
-        name: test_user1
-        type: rodsuser
-        state: present
-        host: "dstesting-provider_configured-1.dstesting_default"
-        port: 1247
-        admin_user: rods
-        admin_password: rods
-        zone: testing
-      register: response
-
-    - name: Check returned result
-      ansible.builtin.assert:
-        that:
-          - response.changed
-          - response.exc == ""
-          - response.exc_msg == ""
-          - response.user == "test_user1"
-
-    - name: Check user exist and is correct type via iadmin
-      ansible.builtin.shell:
-        executable: /bin/bash
-        cmd: |
-          set -o pipefail
-          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_type_name: rodsuser"
-      environment:
-        IRODS_HOST: dstesting-provider_configured-1.dstesting_default
-        IRODS_PORT: '1247'
-        IRODS_USER_NAME: rods
-        IRODS_PASSWORD: rods
-        IRODS_ZONE_NAME: testing
+          iadmin lu '{{ existing_user }}' | grep "user_type_name: rodsadmin"
       changed_when: false
 
     - name: Update user's info
       irods_user:
-        name: test_user1
-        type: rodsuser
+        name: "{{ existing_user }}"
         info: bar_foo
         state: present
-        host: "dstesting-provider_configured-1.dstesting_default"
-        port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ admin_password }}"
         zone: testing
-      register: response
-      tags:
-        - non_idempotent
-
-    - name: Check returned result
-      ansible.builtin.assert:
-        that:
-          - response.changed
-          - response.exc == ""
-          - response.exc_msg == ""
-          - response.user == "test_user1"
 
     - name: Check user exist and has correct info via iadmin
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
           set -o pipefail
-          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "user_info: bar_foo"
-      environment:
-        IRODS_HOST: dstesting-provider_configured-1.dstesting_default
-        IRODS_PORT: '1247'
-        IRODS_USER_NAME: rods
-        IRODS_PASSWORD: rods
-        IRODS_ZONE_NAME: testing
+          iadmin lu '{{ existing_user }}' | grep "user_info: bar_foo"
       changed_when: false
 
     - name: Remove user
       irods_user:
-        name: test_user1
+        name: '{{ former_user }}'
         state: absent
-        host: "dstesting-provider_configured-1.dstesting_default"
-        port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ admin_password }}"
         zone: testing
-      register: response
-      tags:
-        - non_idempotent
 
-    - name: Check returned result
-      ansible.builtin.assert:
-        that:
-          - response.changed
-          - response.exc == ""
-          - response.exc_msg == ""
-          - response.user == "test_user1"
-
-    - name: Check if user removed via iadmin
+    - name: Check if user removed
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
           set -o pipefail
-          iadmin lu test_user1 <<< $IRODS_PASSWORD | grep "No rows found"
-      environment:
-        IRODS_HOST: dstesting-provider_configured-1.dstesting_default
-        IRODS_PORT: '1247'
-        IRODS_USER_NAME: rods
-        IRODS_PASSWORD: rods
-        IRODS_ZONE_NAME: testing
+          iadmin lu '{{ former_user }}' | grep "No rows found"
       changed_when: false

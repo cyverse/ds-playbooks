@@ -15,7 +15,6 @@ from ansible.module_utils.basic import AnsibleModule
 
 __metaclass__ = type  # pylint: disable=invalid-name
 
-
 DOCUMENTATION = r'''
 ---
 module: irods_permission
@@ -105,7 +104,7 @@ requirements:
 '''
 
 EXAMPLES = r'''
-- name: ensure anonymous user has read access to required collections
+- name: Ensure anonymous user has read access to required collections
   irods_permission:
     subject: anonymous
     permission: read
@@ -116,7 +115,7 @@ EXAMPLES = r'''
     admin_password: 1234
     zone: tempZone
 
-- name: give ownership of a collection to a user
+- name: Give ownership of a collection to a user
   irods_permission:
     subject: test_user123
     permission: own

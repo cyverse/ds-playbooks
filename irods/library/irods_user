@@ -1,526 +1,488 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+
+# © 2023 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
+
 """
 Provides an ansible module for creating, updating and removing iRODS users.
 """
 
+import enum
+from enum import Enum
+from ssl import Purpose
 import ssl
 import traceback
-
+from typing import Optional
 from ansible.module_utils.basic import AnsibleModule
 
-ANSIBLE_METADATA = {
-    "metadata_version": "1.1",
-    "status": ["preview"],
-    "supported_by": "community"
-}
+__metaclass__ = type  # pylint: disable=invalid-name
 
-DOCUMENTATION = """
+DOCUMENTATION = r'''
 ---
 module: irods_user
 
-short_description: Create/Update/Remove iRODS user
+short_description: This module manages iRODS users.
+
+description: >
+    This module can create or remove an iRODS user, and it can modify certain
+    properties of an existing user.
 
 version_added: "2.4"
 
-description:
-    - Create iRODS user.
-    - Update iRODS user's type or password or info.
-    - Remove iRODS user.
+author:
+    - John Xu
+    - Tony Edgin
 
 options:
-    name:
+    zone:
         description:
-            - Username of user
+            - This is the iRODS zone where the change is being made.
+            - This is also the zone of the user being managed.
+        required: true
+        type: str
+    name:
+        description: This is the username being managed.
         required: true
         type: str
     state:
-        description:
-            - Desired state to achieve
-            - Either present or absent
-        default: present
+        description: This indicates whether or not the user should exist.
+        required: false
         choices:
             - present
             - absent
-        type: str
-    type:
-        description:
-            - User's type
-            - Only meaningful when state is 'present'
-            - Type to change into if user exist with a different type
-        required: false
-        default: rodsuser
+        default: present
         type: str
     info:
         description:
-            - User's info
-            - Only meaningful when state is 'present'
+            - This is information to set about the user.
+            - It is only meaningful when O(state) is V(present).
         required: false
         type: str
     password:
         description:
-            - User's password
-            - Only meaningful when state is 'present'
+            - This is the user's password.
+            - It is only meaningful when O(state) is V(present).
         required: false
         type: str
-    host:
+    type:
         description:
-            - Hostname of the iRODS server
-        required: true
+            - This is the type of user, e.g., V(rodsadmin) and V(rodsuser).
+            - It is only meaningful when O(state) is V(present).
+            - >
+                *The default when creating a user is V(rodsuser), otherwise
+                there is no default.
+        required: false
+        default: rodsuser*
         type: str
-    port:
-        description:
-            - Port of the iRODS server
-        required: true
-        type: int
     admin_user:
         description:
-            - Username of the admin user
+            - This is the iRODS username to authorize the change.
+            - This should be a rodsadmin type user.
+        required: false
+        default: rods
+        type: str
+    admin_password: This is the password used to authenticate O(admin_user).
         required: true
         type: str
-    admin_password:
-        description:
-            - Password of the admin user
-        required: true
+    host:
+        description: >
+            This is the name of the iRODS server to connect to when making the
+            change.
+        required: false
+        default: localhost
         type: str
-    zone:
-        description:
-            - Zone of the admin user
-            - Zone of the user that the module operate on
-        required: true
-        type: str
+    port:
+        description: This is the TCP port to connect to on the iRODS server.
+        required: false
+        default: 1247
+        type: int
 
 requirements:
     - python-irodsclient>=0.8.2
+'''
 
-author:
-    - John Xu
-
-
-"""
-
-EXAMPLES = '''
+EXAMPLES = r'''
 # Create iRODS user of type rodsuser
-- name: create user
+- name: Create user
   irods_user:
+    zone: tempZone
     name: test_user1
     state: present
-    host: cyverse.org
-    port: 1247
+    password: fun
     admin_user: rods
     admin_password: 1234
-    zone: tempZone
+    host: cyverse.org
+    port: 1247
 
 # Update password of test_user1
-- name: update password
+- name: Update password
   irods_user:
+    zone: tempZone
     name: test_user1
     password: foo
-    state: present
-    host: cyverse.org
-    port: 1247
     admin_user: rods
     admin_password: 1234
-    zone: tempZone
 
 # Update info of test_user1
-- name: update info
+- name: Update info
   irods_user:
+    zone: tempZone
     name: test_user1
     info: some information
-    state: present
-    host: cyverse.org
-    port: 1247
-    admin_user: rods
     admin_password: 1234
-    zone: tempZone
 
 # Update type of test_user1
-- name: update user type
+- name: Update user type
   irods_user:
+    zone: tempZone
     name: test_user1
     type: other_type
-    state: present
-    host: cyverse.org
-    port: 1247
     admin_user: rods
     admin_password: 1234
-    zone: tempZone
 
 # Remove iRODS user
-- name: remove user
+- name: Remove user
   irods_user:
+    zone: tempZone
     name: test_user1
-    type: other_type
     state: absent
-    host: cyverse.org
-    port: 1247
     admin_user: rods
     admin_password: 1234
-    zone: tempZone
 '''
 
-RETURN = '''
+RETURN = r'''
 user:
-    description: user that has been changed
-    type: str
-    returned: always
-exc:
-    description:
-        - type of last iRODS exception thrown
-        - empty string when none is thrown
-    type: str
-    returned: always
-exc_msg:
-    description:
-        - message of the last iRODS exception thrown
-        - empty string when none is thrown
+    description: This is the username of the user that was managed.
     type: str
     returned: always
 '''
+
+
+_IRODSCLIENT_PACK_ERR: Optional[Exception] = None
 
 try:
-    USE_IRODS_CLIENT = True
+    from irods.exception import CAT_INVALID_USER, UserDoesNotExist
     from irods.session import iRODSSession
-    from irods.models import User
-except ImportError:
-    USE_IRODS_CLIENT = False
+    from irods.user import iRODSUser
+except ImportError as e:
+    _IRODSCLIENT_PACK_ERR = e
 
 
-class IRODSUserModule:
+_ARG_SPEC = {
+    "zone": {
+        "type": "str",
+        "required": True,
+    },
+    "name": {
+        "type": "str",
+        "required": True,
+    },
+    "state": {
+        "type": "str",
+        "choices": ["present", "absent"],
+        "default": "present",
+        "required": False
+    },
+    "info": {
+        "type": "str",
+        "required": False,
+    },
+    "password": {
+        "type": "str",
+        "required": False,
+        "no_log": True,
+    },
+    "type": {
+        "type": "str",
+        "required": False,
+    },
+    "admin_user": {
+        "type": "str",
+        "default": "rods",
+        "required": False,
+    },
+    "admin_password": {
+        "type": "str",
+        "required": True,
+        "no_log": True,
+    },
+    "host": {
+        "type": "str",
+        "default": "localhost",
+        "required": False,
+    },
+    "port": {
+        "type": "int",
+        "default": 1247,
+        "required": False,
+    },
+}
+
+
+class _State(Enum):
+    ABSENT = enum.auto()
+    PRESENT = enum.auto()
+
+    def from_param(param: str):
+        """Creats a _State from its corresponding state parameter value"""
+        if param.lower() == 'absent':
+            return _State.ABSENT
+        return _State.PRESENT
+
+
+class Request:
+    """This class encapsulates the parameters passed into this module. """
+
+    def __init__(self, module_params: dict):
+        self._zone = module_params['zone']
+        self._admin_username = module_params['admin_user']
+        self._admin_password = module_params['admin_password']
+        self._host = module_params['host']
+        self._port = module_params['port']
+        self._username = module_params['name']
+        self._state = _State.from_param(module_params['state'])
+        self._user_info = module_params.get('info')
+        self._password = module_params.get('password')
+        self._user_type = module_params.get('type')
+
+    @property
+    def zone(self) -> str:
+        """
+        This is the iRODS zone that will be used. It is also the zone the user
+        belongs to.
+        """
+        return self._zone
+
+    @property
+    def admin_username(self) -> str:
+        """This is the rodsadmin account that authorizes the user changes."""
+        return self._admin_username
+
+    @property
+    def admin_password(self) -> str:
+        """
+        This is the password that authenticates the rodsadmin account making the
+        changes.
+        """
+        return self._admin_password
+
+    @property
+    def host(self) -> str:
+        """
+        This is the domain name or IP address of the iRODS server to connect to.
+        """
+        return self._host
+
+    @property
+    def port(self) -> int:
+        """
+        This is the TCP port iRODS uses on the server that will be connected to.
+        """
+        return self._port
+
+    @property
+    def username(self) -> str:
+        """This is the user account that is being managed."""
+        return self._username
+
+    @property
+    def state(self) -> _State:
+        """The state of the user account after this module finishes."""
+        return self._state
+
+    @property
+    def password(self) -> Optional[str]:
+        """This is the password used to authenticate the user account."""
+        return self._password if self.state == _State.PRESENT else None
+
+    @property
+    def user_info(self) -> Optional[str]:
+        """This is information to attach to the user account."""
+        return self._user_info if self.state == _State.PRESENT else None
+
+    @property
+    def user_type(self) -> Optional[str]:
+        """This is the type of user account being managed."""
+        return self._user_type if self.state == _State.PRESENT else None
+
+
+class Irods:
     """
-    Module class
+    This is the interface to an object that provides requried iRODS requests.
+
+    This interface has been separated from the _IrodsImpl class so that it can
+    be mocked for testing.
     """
 
-    def __init__(self):
+    def check_password(self, user: iRODSUser, password: str) -> bool:
         """
-        Initialize the module
+        This verifies that a given password belongs to a given user.
+
+        Args:
+            user  the iRODS user object representing the user whose password is
+                being checked.
+            password  the password to check
+
+        Returns:
+            It returns True if the password belongs to the user, otherwise it
+            returns False.
         """
-        # define argument
-        self.module_args = dict(
-            name=dict(type="str", required=True),
-            state=dict(type="str", choices=["present", "absent"],
-                       default="present"),
-            type=dict(type="str", default="rodsuser", required=False),
-            info=dict(type="str", required=False),
-            password=dict(type="str", no_log=True, required=False),
+        pass
 
-            host=dict(type="str", required=True),
-            port=dict(type="int", required=True),
-            admin_user=dict(type="str", no_log=True, required=True),
-            admin_password=dict(type="str", no_log=True, required=True),
-            zone=dict(type="str", required=True),
-        )
-        # result
-        self.result = dict(
-            changed=False,
-            user="",
-            exc="",
-            exc_msg=""
-        )
-
-        # init module
-        self.module = AnsibleModule(
-            argument_spec=self.module_args,
-            supports_check_mode=True
-        )
-
-        self.session = None
-
-    def run(self):
+    def create_user(self, username: str, password: Optional[str], info: Optional[str],
+        type: Optional[str] = 'rodsuser'
+    ) -> None:
         """
-        Entry point for module class, method to be called to run the module
+        This creates a new user account.
+
+        Args:
+            username  the username of the account
+            password  an optional password that would be used to authenticate
+                the account
+            info  optional information to attach to the account
+            type  the type of iRODS account to create
         """
-        # check param and env
-        self.sanity_check()
+        pass
 
-        # only-check mode
-        if self.module.check_mode:
-            self.module.exit_json(**self.result)
-
-        self.init_session()
-
-        action = self.select_action()
-        action()
-
-    def _fail(self, msg, err=None):
+    def get_user(self, username: str) -> Optional[iRODSUser]:
         """
-        Failure routine, called when the operation failed
-        """
-        if self.session:
-            self.session.cleanup()
+        This retrieves an iRODS user object for a given account.
 
-        if err:
-            desc = traceback.format_exc().splitlines()
-            self.module.fail_json(msg=msg + "\n" + '\n'.join(desc), **self.result)
-        else:
-            self.module.fail_json(msg=msg, **self.result)
+        Args:
+            username  the name of the account to retrieve
 
-    def _success(self, msg=""):
+        Returns:
+            If there is an account associated with the given username, it
+            returns a iRODS user object for it, otherwise it returns None.
         """
-        Success routine, called when the operation succeeds
-        """
-        if msg:
-            self.result["message"] = msg
-        self.module.exit_json(**self.result)
+        pass
 
-    def sanity_check(self):
-        """
-        Check if python-irodsclient is installed
-        """
-        # python-irodsclient is required at this point
-        if not USE_IRODS_CLIENT:
-            self._fail("python-irodsclient not installed")
 
-    def init_session(self):
-        """
-        Initialize the iRODS session with iRODS server
-        """
-        ssl_context = ssl.create_default_context(
-            purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None,
-            cadata=None)
-        ssl_settings = {"ssl_context": ssl_context}
-        self.session = iRODSSession(
-            host=self.module.params["host"],
-            port=self.module.params["port"],
-            user=self.module.params["admin_user"],
-            password=self.module.params["admin_password"],
-            zone=self.module.params["zone"],
-            **ssl_settings)
+class _IrodsImpl(Irods):
 
-    def select_action(self):
-        """
-        Dispatch action according to the argument passed to the module
-        """
-        if self.module.params["state"] == "present":
-            return self.user_present
-        return self.user_absent
+    def __init__(self, request):
+        self._ssl_context = ssl.create_default_context(Purpose.SERVER_AUTH)
+        self._session = iRODSSession(
+            host=request.host,
+            port=request.port,
+            zone=request.zone,
+            user=request.admin_username,
+            password=request.admin_password,
+            ssl_context=self._ssl_context)
 
-    def user_present(self):
-        """
-        Ensure user specified in the parameter are present
-        """
-        # get username
-        username = self.module.params["name"]
-        if not username:
-            self._success("empty username")
-        user_type = self.module.params["type"]
-        info = self.module.params["info"]
-        password = self.module.params["password"]
+    def __enter__(self):
+        return self
 
-        # check if user exist
-        if not self._user_exist(username):
-            # create user
-            self._create_user(username, user_type)
-            self.result["user"] = username
-            if password is not None:
-                self._update_user_password(username, password)
-                if not self._check_password(username, password):
-                    self._fail("inconsistent password after updating password")
-            if info is not None:
-                self._update_user_info(username, info)
-        else:
-            if user_type and self._user_type(username) != user_type:
-                # update user_type
-                self._update_user_type(username, user_type)
-                self.result["user"] = username
+    def __exit__(self, exn_type, _exn_value, _traceback):
+        self._session.cleanup()
 
-            if info and self._user_info(username) != info:
-                # update info
-                self._update_user_info(username, info)
-                self.result["user"] = username
-
-            # check if password is consistent
-            if password is not None and not self._check_password(username, password):
-                self._update_user_password(username, password)
-                self.result["user"] = username
-                if not self._check_password(username, password):
-                    self._fail("inconsistent password after updating password")
-
-        # check if user is present
-        if not self._user_exist(username):
-            self._fail("user disappear after creation, {}".format(username))
-        self._success()
-
-    def user_absent(self):
-        """
-        Ensure user specified in the parameter are absent
-        """
-        # get username
-        username = self.module.params["name"]
-
-        # check if user exist
-        if not self._user_exist(username):
-            self._success("user already absent")
-
-        # remove user
-        self._remove_user(username)
-        self.result["user"] = username
-
-        # check if user have been removed
-        if self._user_exist(username):
-            self._fail("user still exist after removal, {}".format(username))
-        self._success()
-
-    def _create_user(self, username, user_type):
-        """
-        Create an iRODS user with the given username
-        """
+    def check_password(self, user, password):
         try:
-            self.session.users.create(username, user_type, user_zone=self.module.params["zone"])
-            self.result["changed"] = True
-        except Exception as exc:
-            # A broad catch on all exception type that could be raised by the
-            # call to irods module, since the possible exception types are
-            # not well documented.
-            self.result["exc"] = type(exc).__name__
-            self.result["exc_msg"] = str(exc)
-            self._fail("Unable to create user {}".format(username), exc)
-
-    def _update_user_type(self, username, user_type):
-        """
-        Update user's type
-        """
-        self._update_user_attribute(username, "type", user_type)
-
-    def _update_user_info(self, username, info):
-        """
-        Update user's info
-        """
-        self._update_user_attribute(username, "info", info)
-
-    def _update_user_attribute(self, username, attirbute, value):
-        """
-        Update an attribute of user, attirbute must exist
-        """
-        try:
-            self.session.users.modify(username, attirbute, value,
-                                      user_zone=self.module.params["zone"])
-            self.result["changed"] = True
-        except Exception as exc:
-            # A broad catch on all exception type that could be raised by the
-            # call to irods module, since the possible exception types are
-            # not well documented.
-            self.result["exc"] = type(exc).__name__
-            self.result["exc_msg"] = str(exc)
-            self._fail("Unable to update user's {} for {}".format(attirbute, username), exc)
-
-    def _update_user_password(self, username, password):
-        """
-        Update user's password
-        """
-        try:
-            self.session.users.modify(username, "password", password,
-                                      user_zone=self.module.params["zone"])
-            self.result["changed"] = True
-        except Exception as exc:
-            # A broad catch on all exception type that could be raised by the
-            # call to irods module, since the possible exception types are
-            # not well documented.
-            self.result["exc"] = type(exc).__name__
-            self.result["exc_msg"] = str(exc)
-            self._fail("Unable to update passowrd for user {}".format(username), exc)
-
-    def _remove_user(self, username):
-        """
-        Remove the iRODS user with the given username
-        """
-        try:
-            self.session.users.remove(username, user_zone=self.module.params["zone"])
-            self.result["changed"] = True
-        except Exception as exc:
-            # A broad catch on all exception type that could be raised by the
-            # call to irods module, since the possible exception types are
-            # not well documented.
-            self.result["exc"] = type(exc).__name__
-            self.result["exc_msg"] = str(exc)
-            self._fail("Unable to remove user {}".format(username), exc)
-
-    def _check_password(self, username, password):
-        """
-        Check if able to login as user with given password
-        """
-        try:
-            ssl_context = ssl.create_default_context(
-                purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None,
-                cadata=None)
-            ssl_settings = {"ssl_context": ssl_context}
-            user_session = iRODSSession(
-                host=self.module.params["host"],
-                port=self.module.params["port"],
-                user=username,
+            with iRODSSession(
+                host=self._session.host,
+                port=self._session.port,
+                user=user.name,
                 password=password,
-                zone=self.module.params["zone"],
-                **ssl_settings)
-
-            # fetch self to test if credential is correct
-            user_session.users.get(username)
-
+                zone=self._session.zone,
+                ssl_context=self._ssl_context
+            ) as user_session:
+                # do something to force connection
+                user_session.users.get(user.name)
             return True
-        except Exception as exc:
-            # A broad catch on all exception type that could be raised by the
-            # call to irods module, since the possible exception types are
-            # not well documented.
-            self.result["exc"] = type(exc).__name__
-            self.result["exc_msg"] = str(exc)
+        except CAT_INVALID_USER:
             return False
 
-    def _user_info(self, username):
-        """
-        Get user's info
-        """
-        query = self.session.query(User.name, User.info) \
-            .filter(User.name == username,
-                    User.zone == self.module.params["zone"])
-        for result in query:
-            return result[User.info]
-        return None
+    def create_user(self, username, password, info, type = 'rodsuser'):
+        if type is None:
+            type = 'rodsuser'
+        user = self._session.users.create(username, type)
+        if password is not None:
+            user.modify('password', password)
+        if info is not None:
+            user.modify('info', info)
 
-    def _user_type(self, username):
-        """
-        Get the type of the user, None if user not exists
-        """
+    def get_user(self, username):
         try:
-            user = self.session.users.get(username, user_zone=self.module.params["zone"])
-            if not user:
-                return None
-            return user.type
-        except Exception as exc:
-            # A broad catch on all exception type that could be raised by the
-            # call to irods module, since the possible exception types are
-            # not well documented.
-            self.result["exc"] = type(exc).__name__
-            self.result["exc_msg"] = str(exc)
-            self._fail("Unable to query user's type for {}".format(username), exc)
-
-    def _user_exist(self, username):
-        """
-        Check if there exist an iRODS user with the given username
-        """
-        try:
-            query = self.session.query(User.name) \
-                .filter(User.name == username,
-                        User.zone == self.module.params["zone"])
-
-            for result in query:
-                if username == result[User.name]:
-                    return True
-            return False
-        except Exception as exc:
-            # A broad catch on all exception type that could be raised by the
-            # call to irods module, since the possible exception types are
-            # not well documented.
-            self.result["exc"] = type(exc).__name__
-            self.result["exc_msg"] = str(exc)
-            self._fail("Unable to query irods user {}".format(username), exc)
+            return self._session.users.get(username, self._session.zone)
+        except UserDoesNotExist:
+            return None
 
 
-def main():
+def _create_user(irods, name, type, password, info):
+    irods.create_user(username=name, type=type, password=password, info=info)
+    return True
+
+
+def _ensure_user_removed(user):
+    if not user:
+        return False
+    user.remove()
+    return True
+
+
+def _update_user(irods, user, type, password, info):
+    updated = False
+    if type is not None and type != user.type:
+        user.modify('type', type)
+        updated = True
+    if info is not None and info != user.info:
+        user.modify('info', info)
+        updated = True
+    if password is not None and not irods.check_password(user, password):
+        user.modify('password', password)
+        updated = True
+    return updated
+
+
+def irods_user(request: Request, irods: Irods) -> bool:
     """
-    Entrypoint of the Ansible module
+    This performs the business logic of the module.
+
+    Args:
+        request  the parameters passed into the module
+        irods  the object managing the interaction with iRODS
+
+    Returns:
+        It returns True, if it made any changes to iRODS, otherwise it returns
+        False.
     """
-    module = IRODSUserModule()
-    module.run()
+    user = irods.get_user(request.username)
+    if request.state == _State.ABSENT:
+        return _ensure_user_removed(user)
+    if not user:
+        return _create_user(
+            irods=irods,
+            name=request.username,
+            type=request.user_type,
+            password=request.password,
+            info=request.user_info)
+    return _update_user(
+        irods=irods,
+        user=user,
+        type=request.user_type,
+        password=request.password,
+        info=request.user_info)
+
+
+def main() -> None:
+    """Entrypoint of the Ansible module"""
+    ansible = AnsibleModule(argument_spec=_ARG_SPEC, supports_check_mode=True)
+    if _IRODSCLIENT_PACK_ERR:
+        err_msg = "python-irodsclient issue: %s" % (str(_IRODSCLIENT_PACK_ERR))
+        ansible.fail_json(msg=err_msg)
+        return
+    result = dict(user=ansible.params['name'], changed=False, params=dict(**ansible.params))
+    try:
+        if ansible.check_mode:
+            ansible.exit_json(**result)
+        request = Request(ansible.params)
+        with _IrodsImpl(request) as irods:
+            result['changed'] = irods_user(request, irods)
+        ansible.exit_json(**result)
+    except Exception:
+        tmpl = "An unexpected exception occurred:\n{0}"
+        ansible.fail_json(msg=tmpl.format(traceback.format_exc()), **result)
 
 
 if __name__ == '__main__':

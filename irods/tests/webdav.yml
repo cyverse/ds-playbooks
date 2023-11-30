@@ -174,16 +174,25 @@
   hosts: webdav
   become: true
   tasks:
-    - name: Test place TLS certificate chain file
+    - name: Test chain file directory creation
       ansible.builtin.stat:
-        path: /etc/pki/tls/certs/testing.crt
+        path: /etc/httpd
       register: resp
       failed_when: >-
-        not resp.stat.exists or not resp.stat.rusr or not resp.stat.rgrp or not resp.stat.roth
+        not resp.stat.isdir
+        or not resp.stat.rusr or not resp.stat.xusr
+        or not resp.stat.rgrp or not resp.stat.xgrp
+        or not resp.stat.roth or not resp.stat.xoth
+
+    - name: Test place TLS certificate chain file
+      ansible.builtin.stat:
+        path: /etc/httpd/testing.crt
+      register: resp
+      failed_when: not resp.stat.rusr or not resp.stat.rgrp or not resp.stat.roth
 
     - name: Retrieve TLS certificate chain file contents
       ansible.builtin.slurp:
-        src: /etc/pki/tls/certs/testing.crt
+        src: /etc/httpd/testing.crt
       register: chain_encoded
 
     - name: Decode TLS certificate chain
@@ -210,7 +219,11 @@
           -----END CERTIFICATE-----
           '
 
-    - name: Test place TLS certificate file
+    - name: Test TLS certificate file directory creation
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test TLS certificate file creation
       ansible.builtin.debug:
         msg: TODO implement
 
@@ -308,7 +321,7 @@
       ansible.builtin.stat:
         path: /var/www/html/dav/testing/commons
       register: response
-      failed_when: not (response.stat.exists and response.stat.isdir)
+      failed_when: not response.stat.isdir
 
     - name: Test add web pages
       ansible.builtin.stat:
@@ -335,17 +348,13 @@
       ansible.builtin.stat:
         path: /var/lib/varnish
       register: response
-      failed_when: >-
-        not response.stat.exists or
-        not response.stat.isdir or
-        response.stat.mode != '0777'
+      failed_when: not response.stat.isdir or response.stat.mode != '0777'
 
     - name: Test create directory for cache
       ansible.builtin.stat:
         path: /cache_vol
       register: response
       failed_when: >-
-        not response.stat.exists or
         not response.stat.isdir or
         response.stat.pw_name != 'varnish' or
         response.stat.gr_name != 'varnish' or
@@ -356,7 +365,6 @@
         path: /var/log/varnish
       register: response
       failed_when: >-
-        not response.stat.exists or
         not response.stat.isdir or
         response.stat.pw_name != 'varnishlog' or
         response.stat.gr_name != 'varnish' or
@@ -382,31 +390,25 @@
       ansible.builtin.stat:
         path: /etc/systemd/system/httpd.service.requires
       register: response
-      failed_when: not response.stat.exists or not response.stat.isdir
+      failed_when: not response.stat.isdir
 
     - name: Test ensure varnish runs when apache run
       ansible.builtin.stat:
         path: /etc/systemd/system/httpd.service.requires/varnish.service
       register: response
-      failed_when: >-
-        not response.stat.exists or
-        not response.stat.islnk or
-        response.stat.lnk_source != '/usr/lib/systemd/system/varnish.service'
+      failed_when: response.stat.lnk_source != '/usr/lib/systemd/system/varnish.service'
 
     - name: Test create varnish systemd service dependencies directory
       ansible.builtin.stat:
         path: /etc/systemd/system/varnish.service.requires
       register: response
-      failed_when: not response.stat.exists or not response.stat.isdir
+      failed_when: not response.stat.isdir
 
     - name: Test ensure varnishncsa runs when varnish run
       ansible.builtin.stat:
         path: /etc/systemd/system/varnish.service.requires/varnishncsa.service
       register: response
-      failed_when: >
-        not response.stat.exists or
-        not response.stat.islnk or
-        response.stat.lnk_source != '/usr/lib/systemd/system/varnishncsa.service'
+      failed_when: response.stat.lnk_source != '/usr/lib/systemd/system/varnishncsa.service'
 
     - name: Test purgeman installed
       ansible.builtin.stat:
@@ -430,10 +432,7 @@
       ansible.builtin.stat:
         path: /etc/systemd/system/varnish.service.requires/purgeman.service
       register: response
-      failed_when: >
-        not response.stat.exists or
-        not response.stat.islnk or
-        response.stat.lnk_source != '/usr/lib/systemd/system/purgeman.service'
+      failed_when: response.stat.lnk_source != '/usr/lib/systemd/system/purgeman.service'
 
     - name: Test open HTTP connection in firewall
       ansible.builtin.script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables

@@ -467,7 +467,8 @@ def irods_user(request: Request, irods: Irods) -> bool:
         password=request.password,
         info=request.user_info)
 
-
+-
+        (not sftpgo_auth_irods_resp.stat.ex
 def main() -> None:
     """Entrypoint of the Ansible module"""
     ansible = AnsibleModule(argument_spec=_ARG_SPEC, supports_check_mode=True)

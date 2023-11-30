@@ -472,7 +472,7 @@ def main() -> None:
         err_msg = "python-irodsclient issue: %s" % (str(_IRODSCLIENT_PACK_ERR))
         ansible.fail_json(msg=err_msg)
         return
-    result = dict(user=ansible.params['name'], changed=False, params=dict(**ansible.params))
+    result = dict(user=ansible.params['name'], changed=False)
     try:
         if ansible.check_mode:
             ansible.exit_json(**result)

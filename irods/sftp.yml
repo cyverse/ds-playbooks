@@ -1,15 +1,16 @@
 ---
 - name: Install and configure sftpgo
   hosts: sftp
+  strategy: linear
   become: true
   tasks:
-    - name: enable notifcations when not testing
-      set_fact:
+    - name: Enable notifcations when not testing
+      ansible.builtin.set_fact:
         notifications_enabled: true
       tags:
         - no_testing
 
-    - name: ensure iRODS user for SFTPGo exists
+    - name: Ensure iRODS user for SFTPGo exists  # noqa: run-once[task]
       delegate_to: localhost
       become: false
       run_once: true
@@ -24,105 +25,68 @@
         admin_password: "{{ _irods_admin_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    # Install SFTPGo
-    - name: check if sftpgo is already installed
-      stat:
+    - name: Check if sftpgo is already installed
+      ansible.builtin.stat:
         path: /usr/bin/sftpgo
       register: sftpgo_resp
 
-    - name: check sftpgo version
-      shell: |
-        set -o pipefail
-        /usr/bin/sftpgo -v | tr '-' ' ' | awk '{print $2}'
-      args:
+    - name: Check sftpgo version
+      ansible.builtin.shell:
         executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          /usr/bin/sftpgo -v | tr '-' ' ' | awk '{print $2}'
       register: sftpgo_version
       when: sftpgo_resp.stat.exists
       changed_when: false
 
-    - name: check sftpgo service account
-      command: id sftpgo
+    - name: Check sftpgo service account
+      ansible.builtin.command: id sftpgo
       register: sftpgo_account
       failed_when: false
       changed_when: false
 
-    - when: >-
+    - name: Ensure sftpgo is up-to-date
+      when: >-
         (not sftpgo_resp.stat.exists)
         or (sftpgo_account.rc != 0)
         or (sftpgo_version.stdout != '2.4.5')
       block:
-        - name: check if sftpgo service exists
-          stat:
+        - name: Check if sftpgo service exists
+          ansible.builtin.stat:
             path: /usr/lib/systemd/system/sftpgo.service
           register: service_resp
           tags:
             - no_testing
 
-        - name: stop sftpgo service if running
-          service:
+        - name: Stop sftpgo service if running
+          ansible.builtin.service:
             name: sftpgo
             state: stopped
           when: service_resp.stat.exists
           tags:
             - no_testing
 
-        - name: create download dir for sftpgo package
-          file:
+        - name: Create download dir for sftpgo package
+          ansible.builtin.file:
             path: /tmp/sftpgo_setup
             state: directory
             mode: u+rwx
 
-        - name: download sftpgo package from github and uncompress
-          unarchive:
-            src: >-
-              https://github.com/cyverse/sftpgo/releases/download/v2.4.5i/sftpgo_amd64_linux_v2.4.5i.tar
+        - name: Download sftpgo package from github and uncompress
+          ansible.builtin.unarchive:
+            src: https://github.com/cyverse/sftpgo/releases/download/v2.4.5i/sftpgo_amd64_linux_v2.4.5i.tar
             dest: /tmp/sftpgo_setup
             remote_src: true
-          register: unarchive_resp
+          notify: Install sftpgo
 
-        - name: install sftpgo binary
-          when: unarchive_resp is changed
-          copy:
-            src: /tmp/sftpgo_setup/sftpgo
-            dest: /usr/bin/sftpgo
-            owner: root
-            group: root
-            mode: '0755'
-            remote_src: true
-
-        - name: install sftpgo config file
-          when: unarchive_resp is changed
-          copy:
-            src: /tmp/sftpgo_setup/etc/sftpgo
-            dest: /etc
-            owner: root
-            group: root
-            mode: '0660'
-            remote_src: true
-
-        - name: remove old sftpgo template, openapi, static files
-          when: unarchive_resp is changed
-          file:
-            path: /usr/share/sftpgo
-            state: absent
-
-        - name: install sftpgo template, openapi, static files
-          when: unarchive_resp is changed
-          copy:
-            src: /tmp/sftpgo_setup/usr/share/sftpgo
-            dest: /usr/share
-            owner: root
-            group: root
-            mode: '0755'
-            remote_src: true
-
-        - name: create sftpgo group for a service account
-          group:
+        - name: Create sftpgo group for a service account
+          ansible.builtin.group:
             name: sftpgo
             system: true
 
-        - name: create sftpgo user for a service account
-          user:
+        - name: Create sftpgo user for a service account
+          ansible.builtin.user:
             name: sftpgo
             shell: /bin/bash
             home: /var/lib/sftpgo
@@ -130,69 +94,47 @@
             system: true
             group: sftpgo
 
-        - name: delete download dir for sftpgo package
-          file:
-            path: /tmp/sftpgo_setup
-            state: absent
-
-    # Install SFTPGo External Authentication Module for iRODS
-    - name: check if sftpgo-auth-irods is already installed
-      stat:
+    - name: Check if sftpgo-auth-irods is already installed
+      ansible.builtin.stat:
         path: /usr/bin/sftpgo-auth-irods
       register: sftpgo_auth_irods_resp
 
-    - name: check sftpgo-auth-irods version
-      shell: |
-        set -o pipefail
-        /usr/bin/sftpgo-auth-irods -v | grep releaseVersion | tr -d '",' | awk '{print $2}'
-      args:
-        executable: bash
+    - name: Check sftpgo-auth-irods version
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          /usr/bin/sftpgo-auth-irods -v | grep releaseVersion | tr -d '",' | awk '{print $2}'
       register: sftpgo_auth_irods_version
       when: sftpgo_auth_irods_resp.stat.exists
       changed_when: false
 
-    - when: >-
+    - name: Install SFTPGo iRODS Auth plugin
+      when: >-
         (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.7')
       block:
-        - name: create download dir for sftpgo-auth-irods package
-          file:
+        - name: Create download dir for sftpgo-auth-irods package
+          ansible.builtin.file:
             path: /tmp/sftpgo_auth_irods_setup
             state: directory
             mode: u+rwx
 
-        - name: download sftpgo-auth-irods package from github and uncompress
-          unarchive:
-            src: >-
-              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.7/sftpgo-auth-irods-v0.1.7-linux-amd64.tar.gz
+        - name: Download sftpgo-auth-irods package from github and uncompress
+          ansible.builtin.unarchive:
+            src: https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.7/sftpgo-auth-irods-v0.1.7-linux-amd64.tar.gz
             dest: /tmp/sftpgo_auth_irods_setup
             remote_src: true
-          register: unarchive_resp
+          notify: Install sftpgo-auth-irods
 
-        - name: install sftpgo-auth-irods binary
-          when: unarchive_resp is changed
-          copy:
-            src: /tmp/sftpgo_auth_irods_setup/sftpgo-auth-irods
-            dest: /usr/bin/sftpgo-auth-irods
-            owner: root
-            group: root
-            mode: '0755'
-            remote_src: true
-
-        - name: delete download dir for sftpgo-auth-irods package
-          file:
-            path: /tmp/sftpgo_auth_irods_setup
-            state: absent
-
-    # SFTPGo Dirs
-    - name: create a vault dir
-      file:
+    - name: Create a vault dir
+      ansible.builtin.file:
         path: "{{ _sftpgo_vault_dir }}"
         state: directory
         owner: sftpgo
         mode: '0700'
 
-    - name: create a vault data, backup dir
-      file:
+    - name: Create a vault data, backup dir
+      ansible.builtin.file:
         path: "{{ _sftpgo_vault_dir }}/{{ item }}"
         state: directory
         owner: sftpgo
@@ -201,36 +143,35 @@
         - "data"
         - "backups"
 
-    - name: create a log dir
-      file:
+    - name: Create a log dir
+      ansible.builtin.file:
         path: /var/log/sftpgo
         state: directory
         owner: sftpgo
         mode: '0755'
 
-    - name: create a work dir
-      file:
+    - name: Create a work dir
+      ansible.builtin.file:
         path: /var/lib/sftpgo
         state: directory
         owner: sftpgo
         mode: '0750'
 
     # remove old db file, we don't need old db because we recreate it dynamically
-    - name: remove an old sftpgo.db file
-      file:
+    - name: Remove an old sftpgo.db file
+      ansible.builtin.file:
         path: /var/lib/sftpgo/sftpgo.db
         state: absent
 
-    - name: create a config dir
-      file:
+    - name: Create a config dir
+      ansible.builtin.file:
         path: /etc/sftpgo
         state: directory
         owner: root
         mode: '0755'
 
-    # SFTPGo Config
-    - name: configure sftpgo
-      template:
+    - name: Configure sftpgo
+      ansible.builtin.template:
         src: templates/sftp/etc/sftpgo/{{ item }}.j2
         dest: /etc/sftpgo/{{ item }}
         owner: sftpgo
@@ -239,32 +180,32 @@
         - "sftpgo.json"
         - "sftpgo.conf"
       notify:
-        - restart sftpgo
+        - Restart sftpgo
 
-    - name: configure sftpgo black lists
-      copy:
+    - name: Configure sftpgo black lists
+      ansible.builtin.copy:
         src: files/sftp/etc/sftpgo/blacklist.json
         dest: /etc/sftpgo/blacklist.json
         owner: sftpgo
         mode: '0664'
       notify:
-        - restart sftpgo
+        - Restart sftpgo
 
-    # SSH Host Keys
-    - name: check if there are ssh host_keys on the host
-      stat:
+    - name: Check if there are ssh host_keys on the host
+      ansible.builtin.stat:
         path: /etc/ssh
       register: ssh_host_keys_resp
 
-    - when: ssh_host_keys_resp.stat.exists
+    - name: SSH host keys
+      when: ssh_host_keys_resp.stat.exists
       block:
-        - name: checking ecdsa private key
-          stat:
+        - name: Checking ecdsa private key
+          ansible.builtin.stat:
             path: /etc/ssh/ssh_host_ecdsa_key
           register: ssh_host_keys_ecdsa_priv_resp
 
-        - name: configure host_keys - ecdsa private key
-          copy:
+        - name: Configure host_keys - ecdsa private key
+          ansible.builtin.copy:
             src: /etc/ssh/ssh_host_ecdsa_key
             dest: /var/lib/sftpgo/id_ecdsa
             owner: sftpgo
@@ -272,13 +213,13 @@
             remote_src: true
           when: ssh_host_keys_ecdsa_priv_resp.stat.exists
 
-        - name: checking ecdsa public key
-          stat:
+        - name: Checking ecdsa public key
+          ansible.builtin.stat:
             path: /etc/ssh/ssh_host_ecdsa_key.pub
           register: ssh_host_keys_ecdsa_pub_resp
 
-        - name: configure host_keys - ecdsa public key
-          copy:
+        - name: Configure host_keys - ecdsa public key
+          ansible.builtin.copy:
             src: /etc/ssh/ssh_host_ecdsa_key.pub
             dest: /var/lib/sftpgo/id_ecdsa.pub
             owner: sftpgo
@@ -286,13 +227,13 @@
             remote_src: true
           when: ssh_host_keys_ecdsa_pub_resp.stat.exists
 
-        - name: checking ed25519 private key
-          stat:
+        - name: Checking ed25519 private key
+          ansible.builtin.stat:
             path: /etc/ssh/ssh_host_ed25519_key
           register: ssh_host_keys_ed25519_priv_resp
 
-        - name: configure host_keys - ed25519 private key
-          copy:
+        - name: Configure host_keys - ed25519 private key
+          ansible.builtin.copy:
             src: /etc/ssh/ssh_host_ed25519_key
             dest: /var/lib/sftpgo/id_ed25519
             owner: sftpgo
@@ -300,13 +241,13 @@
             remote_src: true
           when: ssh_host_keys_ed25519_priv_resp.stat.exists
 
-        - name: checking ed25519 public key
-          stat:
+        - name: Checking ed25519 public key
+          ansible.builtin.stat:
             path: /etc/ssh/ssh_host_ed25519_key.pub
           register: ssh_host_keys_ed25519_pub_resp
 
-        - name: configure host_keys - ed25519 public key
-          copy:
+        - name: Configure host_keys - ed25519 public key
+          ansible.builtin.copy:
             src: /etc/ssh/ssh_host_ed25519_key.pub
             dest: /var/lib/sftpgo/id_ed25519.pub
             owner: sftpgo
@@ -314,13 +255,13 @@
             remote_src: true
           when: ssh_host_keys_ed25519_pub_resp.stat.exists
 
-        - name: checking rsa private key
-          stat:
+        - name: Checking rsa private key
+          ansible.builtin.stat:
             path: /etc/ssh/ssh_host_rsa_key
           register: ssh_host_keys_rsa_priv_resp
 
-        - name: configure host_keys - rsa private key
-          copy:
+        - name: Configure host_keys - rsa private key
+          ansible.builtin.copy:
             src: /etc/ssh/ssh_host_rsa_key
             dest: /var/lib/sftpgo/id_rsa
             owner: sftpgo
@@ -328,13 +269,13 @@
             remote_src: true
           when: ssh_host_keys_rsa_priv_resp.stat.exists
 
-        - name: checking rsa public key
-          stat:
+        - name: Checking rsa public key
+          ansible.builtin.stat:
             path: /etc/ssh/ssh_host_rsa_key.pub
           register: ssh_host_keys_rsa_pub_resp
 
-        - name: configure host_keys - rsa public key
-          copy:
+        - name: Configure host_keys - rsa public key
+          ansible.builtin.copy:
             src: /etc/ssh/ssh_host_rsa_key.pub
             dest: /var/lib/sftpgo/id_rsa.pub
             owner: sftpgo
@@ -342,33 +283,43 @@
             remote_src: true
           when: ssh_host_keys_rsa_pub_resp.stat.exists
 
-    # SFTPGo System Service
-    - name: setup sftpgo service
-      copy:
+    - name: Setup sftpgo service
+      ansible.builtin.copy:
         src: files/sftp/usr/lib/systemd/system/sftpgo.service
         dest: /usr/lib/systemd/system
         mode: u+r
       notify:
-        - reload systemd
-        - restart sftpgo
+        - Reload systemd
+        - Restart sftpgo
 
-    # update MOTD
-    # it updates MOTD by installing a shell script
-    # the shell script generates a message for SFTPGo
-    - name: update message of the day
-      copy:
+    # It updates MOTD by installing a shell script the shell script generates a
+    # message for SFTPGo
+    - name: Update message of the day
+      ansible.builtin.copy:
         src: files/sftp/etc/update-motd.d/99-sftpgo
         dest: /etc/update-motd.d
         mode: '0755'
 
   handlers:
-    - name: reload systemd
+    - name: Install sftpgo
+      ansible.builtin.include_tasks: tasks/sftp_install_sftpgo.yml
+
+    - name: Install sftpgo-auth-irods
+      ansible.builtin.copy:
+        src: /tmp/sftpgo_auth_irods_setup/sftpgo-auth-irods
+        dest: /usr/bin/sftpgo-auth-irods
+        owner: root
+        group: root
+        mode: '0755'
+        remote_src: true
+
+    - name: Reload systemd
       when: notifications_enabled | default(false)
-      systemd:
+      ansible.builtin.systemd:
         daemon_reload: true
 
-    - name: restart sftpgo
+    - name: Restart sftpgo
       when: notifications_enabled | default(false)
-      service:
+      ansible.builtin.service:
         name: sftpgo
         state: restarted

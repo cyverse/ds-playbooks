@@ -1,7 +1,6 @@
 ---
-- name: test sftp playbook
-  hosts: sftp
-  run_once: true
+- name: Test template expansion
+  hosts: localhost
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
@@ -10,124 +9,126 @@
     sftpgo_conf: "{{ lookup('template', '../templates/sftp/etc/sftpgo/sftpgo.conf.j2') }}"
     sftpgo_json: "{{ lookup('template', '../templates/sftp/etc/sftpgo/sftpgo.json.j2') }}"
   tasks:
-    - name: verify sftpgo.conf expands correctly
-      assert:
+    - name: Verify sftpgo.conf expands correctly
+      ansible.builtin.assert:
         that:
           - sftpgo_conf is search('SFTPGO_DEFAULT_ADMIN_USERNAME=admin')
           - sftpgo_conf is search('SFTPGO_DEFAULT_ADMIN_PASSWORD=sftpgo_pass')
           - sftpgo_conf is search('SFTPGO_HOME_PATH=/sftpgo_vault/data')
 
-    - name: retrieve sftpgo.json
-      slurp:
-        src: /etc/sftpgo/sftpgo.json
-      register: ie_encoded
-
-    - name: load sftpgo.json
-      set_fact:
-        sftpgo_json_config: "{{ ie_encoded.content | b64decode }}"
-
-    - name: test sftpgo.json contents
-      assert:
+    - name: Test sftpgo.json contents
+      ansible.builtin.assert:
         that:
-          - sftpgo_json_config.sftpd.bindings[0].port == 2022
-          - sftpgo_json_config.data_provider.users_base_dir == '/sftpgo_vault/data'
-          - sftpgo_json_config.data_provider.backups_path == '/sftpgo_vault/backups'
-          - sftpgo_json_config.httpd.bindings[0].port == 18023
-          - sftpgo_json_config.command.commands[0].env[0] == 'IRODS_PROXY_USER=sftp'
-          - sftpgo_json_config.command.commands[0].env[1] == 'IRODS_PROXY_PASSWORD=sftp'
-          - sftpgo_json_config.command.commands[0].env[2] == 'IRODS_HOST=dstesting-provider_configured-1.dstesting_default'
-          - sftpgo_json_config.command.commands[0].env[3] == 'IRODS_PORT=1247'
-          - sftpgo_json_config.command.commands[0].env[4] == 'IRODS_ZONE=testing'
-          - sftpgo_json_config.command.commands[0].env[5] == 'IRODS_SHARED=/testing/home/shared'
+          - sftpgo_json.sftpd.bindings[0].port == 2022
+          - sftpgo_json.data_provider.users_base_dir == '/sftpgo_vault/data'
+          - sftpgo_json.data_provider.backups_path == '/sftpgo_vault/backups'
+          - sftpgo_json.httpd.bindings[0].port == 18023
+          - sftpgo_json.command.commands[0].env[0] == 'IRODS_PROXY_USER=sftp'
+          - sftpgo_json.command.commands[0].env[1] == 'IRODS_PROXY_PASSWORD=sftpgo_irods_pass'
+          - >-
+            sftpgo_json.command.commands[0].env[2]
+            == 'IRODS_HOST=dstesting-provider_configured-1.dstesting_default'
+          - sftpgo_json.command.commands[0].env[3] == 'IRODS_PORT=1247'
+          - sftpgo_json.command.commands[0].env[4] == 'IRODS_ZONE=testing'
+          - sftpgo_json.command.commands[0].env[5] == 'IRODS_SHARED=/testing/home/shared'
 
-    - delegate_to: localhost
+
+- name: Test sftp playbook
+  hosts: sftp
+  strategy: linear
+  tasks:
+    - name: Verify sftpgo user information  # noqa: run-once[task]
+      delegate_to: localhost
       run_once: true
       block:
-        - name: retrieve SFTPGo iRODS user information
-          shell: |
-            iinit '{{ _irods_admin_password }}'
-            iadmin lu sftp
+        - name: Retrieve sftpgo iRODS user information
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              iinit password
+              iadmin lu sftp
           register: user_info
           changed_when: false
 
-        - name: verify user information
-          assert:
+        - name: Verify user information
+          ansible.builtin.assert:
             that: "user_info.stdout is search('user_type_name: rodsadmin')"
 
-    - name: test sftpgo installed
-      stat:
+    - name: Test sftpgo installed
+      ansible.builtin.stat:
         path: "{{ item }}"
       register: response
       failed_when: not response.stat.exists
       with_items:
+        - /etc/sftpgo/sftpgo.conf
+        - /etc/sftpgo/sftpgo.json
         - /usr/bin/sftpgo
-        - /etc/sftpgo
         - /usr/share/sftpgo
 
-    - name: test sftpgo-auth-irods installed
-      stat:
+    - name: Test sftpgo-auth-irods installed
+      ansible.builtin.stat:
         path: /usr/bin/sftpgo-auth-irods
       register: response
       failed_when: not response.stat.exists
 
-    - name: test sftpgo.json deployed
-      stat:
+    - name: Test sftpgo.json deployed
+      ansible.builtin.stat:
         path: /etc/sftpgo/sftpgo.json
       register: response
       failed_when: not response.stat.exists
 
-    - name: test sftpgo.conf deployed
-      stat:
+    - name: Test sftpgo.conf deployed
+      ansible.builtin.stat:
         path: /etc/sftpgo/sftpgo.conf
       register: response
       failed_when: not response.stat.exists
 
-    - name: test blacklist.json deployed
-      stat:
+    - name: Test blacklist.json deployed
+      ansible.builtin.stat:
         path: /etc/sftpgo/blacklist.json
       register: response
       failed_when: not response.stat.exists
 
-    - name: test sftpgo system group exists
-      getent:
+    - name: Test sftpgo system group exists
+      ansible.builtin.getent:
         database: group
         key: sftpgo
 
-    - name: test sftpgo service account exists
-      getent:
+    - name: Test sftpgo service account exists
+      ansible.builtin.getent:
         database: passwd
         key: sftpgo
 
-    - name: test create vault dir
-      debug:
+    - name: Test create vault dir
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: test create a vault data, backup dir
-      debug:
+    - name: Test create a vault data, backup dir
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: test create a log dir
-      debug:
+    - name: Test create a log dir
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: test create a work dir
-      debug:
+    - name: Test create a work dir
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: test create a config dir
-      debug:
+    - name: Test create a config dir
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: test SSH Host Keys
-      debug:
+    - name: Test SSH Host Keys
+      ansible.builtin.debug:
         msg: TODO implement
 
-    - name: test sftpgo.service deployed
-      stat:
+    - name: Test sftpgo.service deployed
+      ansible.builtin.stat:
         path: /usr/lib/systemd/system/sftpgo.service
       register: response
       failed_when: not response.stat.exists
 
-    - name: test update message of the day
-      debug:
+    - name: Test update message of the day
+      ansible.builtin.debug:
         msg: TODO implement

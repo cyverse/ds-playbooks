@@ -197,32 +197,56 @@
         - no_testing
 
     - name: Place TLS certificate chain file
-      ansible.builtin.copy:
-        dest: "{{ _webdav_tls_chain_file }}"
-        content: "{{ _webdav_tls_chain }}"
-        mode: a+r
       when: _webdav_tls_chain | length > 0
-      notify:
-        - Restart httpd
+      block:
+        - name: Create parent directory
+          ansible.builtin.file:
+            path: "{{ _webdav_tls_chain_file | dirname }}"
+            state: directory
+            mode: a+rx
+
+        - name: Create file
+          ansible.builtin.copy:
+            dest: "{{ _webdav_tls_chain_file }}"
+            content: "{{ _webdav_tls_chain }}"
+            mode: a+r
+          notify:
+            - Restart httpd
 
     - name: Place TLS certificate file
-      ansible.builtin.copy:
-        dest: "{{ _webdav_tls_cert_file }}"
-        content: "{{ _webdav_tls_cert }}"
-        mode: a+r
       when: _webdav_tls_cert | length > 0
-      notify:
-        - Restart httpd
+      block:
+        - name: Create parent directory
+          ansible.builtin.file:
+            path: "{{ _webdav_tls_cert_file | dirname }}"
+            state: directory
+            mode: a+rx
+
+        - name: Create file
+          ansible.builtin.copy:
+            dest: "{{ _webdav_tls_cert_file }}"
+            content: "{{ _webdav_tls_cert }}"
+            mode: a+r
+          notify:
+            - Restart httpd
 
     - name: Place TLS key file
-      ansible.builtin.copy:
-        dest: "{{ _webdav_tls_key_file }}"
-        content: "{{ _webdav_tls_key }}"
-        mode: a+r
-      no_log: true
       when: _webdav_tls_key | length > 0
-      notify:
-        - Restart httpd
+      block:
+        - name: Create parent directory
+          ansible.builtin.file:
+            path: "{{ _webdav_tls_key_file | dirname }}"
+            state: directory
+            mode: ug+rx
+
+        - name:  Create file
+          ansible.builtin.copy:
+            dest: "{{ _webdav_tls_key_file }}"
+            content: "{{ _webdav_tls_key }}"
+            mode: ug+r
+          no_log: true
+          notify:
+            - Restart httpd
 
     - name: Install yum versionlock
       ansible.builtin.package:

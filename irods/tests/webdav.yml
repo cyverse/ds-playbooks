@@ -174,15 +174,18 @@
   hosts: webdav
   become: true
   tasks:
-    - name: Test chain file directory creation
+    - name: Test TLS file directory creation
       ansible.builtin.stat:
-        path: /etc/httpd
+        path: "{{ item }}"
       register: resp
       failed_when: >-
         not resp.stat.isdir
         or not resp.stat.rusr or not resp.stat.xusr
         or not resp.stat.rgrp or not resp.stat.xgrp
         or not resp.stat.roth or not resp.stat.xoth
+      with_items:
+        - /etc/httpd
+        - /tmp/cert
 
     - name: Test place TLS certificate chain file
       ansible.builtin.stat:
@@ -219,15 +222,15 @@
           -----END CERTIFICATE-----
           '
 
-    - name: Test TLS certificate file directory creation
+    - name: Test place TLS certificate file
       ansible.builtin.debug:
         msg: TODO implement
 
-    - name: Test TLS certificate file creation
+    - name: Verify TLS certificate is correct
       ansible.builtin.debug:
         msg: TODO implement
 
-    - name: Test place TLS key file
+    - name: Test place TLS key
       ansible.builtin.debug:
         msg: TODO implement
 

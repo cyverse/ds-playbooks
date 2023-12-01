@@ -408,6 +408,19 @@
           https://packagecloud.io/varnishcache/varnish65/packages/el/7/varnish-6.5.1-0.0.el7.x86_64.rpm/download.rpm
         state: present
 
+    - name: Configure selinux for varnish
+      when: ansible_selinux.status == 'enabled'
+      block:
+        - name: Install prerequisites for selinux_permissive
+          ansible.builtin.yum:
+            name: policycoreutils-python
+            state: present
+
+        - name: Allow varnishd to do its thing
+          community.general.selinux_permissive:
+            domain: varnishd_t
+            permissive: true
+
     - name: Create varnish shared memory mount point
       ansible.builtin.file:
         path: /var/lib/varnish

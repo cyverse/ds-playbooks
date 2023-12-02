@@ -196,6 +196,12 @@
       tags:
         - no_testing
 
+    - name: Install prerequisites for selinux_permissive
+      when: ansible_selinux.status == 'enabled'
+      ansible.builtin.yum:
+        name: policycoreutils-python
+        state: present
+
     - name: Place TLS certificate chain file
       when: _webdav_tls_chain | length > 0
       block:
@@ -410,16 +416,9 @@
 
     - name: Configure selinux for varnish
       when: ansible_selinux.status == 'enabled'
-      block:
-        - name: Install prerequisites for selinux_permissive
-          ansible.builtin.yum:
-            name: policycoreutils-python
-            state: present
-
-        - name: Allow varnishd to do its thing
-          community.general.selinux_permissive:
-            domain: varnishd_t
-            permissive: true
+      community.general.selinux_permissive:
+        domain: varnishd_t
+        permissive: true
 
     - name: Create varnish shared memory mount point
       ansible.builtin.file:
@@ -480,6 +479,12 @@
         - Reload systemd
         - Restart varnish
         - Restart varnishncsa
+
+    - name: Configure selinux for varnish
+      when: ansible_selinux.status == 'enabled'
+      community.general.selinux_permissive:
+        domain: httpd_t
+        permissive: true
 
   post_tasks:
     - name: Configure apache log rotation

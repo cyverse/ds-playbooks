@@ -174,21 +174,27 @@
   hosts: webdav
   become: true
   tasks:
-    - name: Test chain file directory creation
+    - name: Test TLS file directory creation
       ansible.builtin.stat:
-        path: /etc/httpd
+        path: "{{ item }}"
       register: resp
       failed_when: >-
         not resp.stat.isdir
         or not resp.stat.rusr or not resp.stat.xusr
         or not resp.stat.rgrp or not resp.stat.xgrp
         or not resp.stat.roth or not resp.stat.xoth
+      with_items:
+        - /etc/httpd
+        - /tmp/cert
 
-    - name: Test place TLS certificate chain file
+    - name: Test place TLS certificate files
       ansible.builtin.stat:
         path: /etc/httpd/testing.crt
       register: resp
       failed_when: not resp.stat.rusr or not resp.stat.rgrp or not resp.stat.roth
+      with_items:
+        - /etc/httpd/testing.crt
+        - /tmp/cert/testing.crt
 
     - name: Retrieve TLS certificate chain file contents
       ansible.builtin.slurp:
@@ -219,15 +225,39 @@
           -----END CERTIFICATE-----
           '
 
-    - name: Test TLS certificate file directory creation
-      ansible.builtin.debug:
-        msg: TODO implement
+    - name: Retrieve TLS certificate file contents
+      ansible.builtin.slurp:
+        src: /tmp/cert/testing.crt
+      register: cert_encoded
 
-    - name: Test TLS certificate file creation
-      ansible.builtin.debug:
-        msg: TODO implement
+    - name: Decode TLS certificate
+      ansible.builtin.set_fact:
+        cert: "{{ cert_encoded.content | b64decode }}"
 
-    - name: Test place TLS key file
+    - name: Verify TLS certificate is correct
+      ansible.builtin.assert:
+        that: |
+          cert ==
+          '-----BEGIN CERTIFICATE-----
+          MIICszCCAhygAwIBAgICEAAwDQYJKoZIhvcNAQELBQAwJDEiMCAGA1UEAwwZY29u
+          dHJvbC5kc3Rlc3RpbmdfZGVmYXVsdDAeFw0yMDA2MTkyMTAyMzJaFw00NzExMDUy
+          MTAyMzJaMBwxGjAYBgNVBAMMEWRzdGVzdGluZ19kZWZhdWx0MIGfMA0GCSqGSIb3
+          DQEBAQUAA4GNADCBiQKBgQC/O1MFcsMTudpp8SSCPI6UxPmdprTZJB7SFNT7ye9C
+          GeTagn0Dj7YRURMLQkjaAGbY7xVTO3sdmrPo/0wicIUPOMdNncD8ev8JXGpELcrZ
+          vjKlXPhNakif4H/GCi+nBrGcWwq0H7Ot7q7n4MlhuwKt5bSuQyqJyee0mkQ0VUbN
+          xQIDAQABo4H7MIH4MAkGA1UdEwQCMAAwEQYJYIZIAYb4QgEBBAQDAgZAMDMGCWCG
+          SAGG+EIBDQQmFiRPcGVuU1NMIEdlbmVyYXRlZCBTZXJ2ZXIgQ2VydGlmaWNhdGUw
+          HQYDVR0OBBYEFK2jK4HLODaXdtVVIrLQfVtNKZ/QMF8GA1UdIwRYMFaAFBmAEVkN
+          /hqZXQoxilDlssrrozZOoSikJjAkMSIwIAYDVQQDDBljb250cm9sLmRzdGVzdGlu
+          Z19kZWZhdWx0ghRYYT6mwOPiv8KpC0pBcQOoFTFHPjAOBgNVHQ8BAf8EBAMCBaAw
+          EwYDVR0lBAwwCgYIKwYBBQUHAwEwDQYJKoZIhvcNAQELBQADgYEAaxfRGMsnd+nH
+          I8SXZdgi9fG+0uOM1uEKSteLykuyjPLWwlQbrQZ48wdwAOB4I6XYxaC75xNl3TjH
+          JezEyNagnjk1N+fZkB5FAghZStf/0YY8H9iGb5UEbnflMT+ufIyVpUjxYLior94c
+          lbBR3ft+a6IYctLVre5Vr35fAo6H2ZE=
+          -----END CERTIFICATE-----
+          '
+
+    - name: Test place TLS key
       ansible.builtin.debug:
         msg: TODO implement
 
@@ -243,9 +273,11 @@
         loop_var: pkg
 
     - name: Test install iRODS package repository signing key
-      ansible.builtin.shell: |
-        set -o pipefail
-        rpm --query --queryformat='%{SUMMARY}\n' gpg-pubkey | grep --quiet 'iRODS Consortium'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          rpm --query --queryformat='%{SUMMARY}\n' gpg-pubkey | grep --quiet 'iRODS Consortium'
       changed_when: false
 
     - name: Test install iRODS repository
@@ -255,21 +287,23 @@
       failed_when: not resp.stat.exists
 
     - name: Test lock irods-runtime to version 4.2.8
-      ansible.builtin.shell: |
-        set -o pipefail
-        if ! yum versionlock status | grep --quiet irods-runtime; then
-          printf 'irods-runtime not locked\n' >&2
-          exit 1
-        elif info="$(yum --quiet list installed irods-runtime | tail --lines=+2)"; then
-          readarray -t versions <<< "$info"
-          for version in "${versions[@]}"; do
-            read _ verNum _ <<< "$version"
-            if ! [[ "$verNum" =~ 4\.2\.8 ]]; then
-              printf 'found version %s\n' "$verNum" >&2
-              exit 1
-            fi
-          done
-        fi
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          if ! yum versionlock status | grep --quiet irods-runtime; then
+            printf 'irods-runtime not locked\n' >&2
+            exit 1
+          elif info="$(yum --quiet list installed irods-runtime | tail --lines=+2)"; then
+            readarray -t versions <<< "$info"
+            for version in "${versions[@]}"; do
+              read _ verNum _ <<< "$version"
+              if ! [[ "$verNum" =~ 4\.2\.8 ]]; then
+                printf 'found version %s\n' "$verNum" >&2
+                exit 1
+              fi
+            done
+          fi
       changed_when: false
 
     - name: Test ssl.conf is gone

@@ -56,7 +56,6 @@
           - sernec_env is search('sernec_WRITERS = list()' | regex_escape)
           - sernec_env is search('sernec_READERS = list()' | regex_escape)
 
-
 - name: Test that custom AMQP exchange set correctly in cyverse-env.re
   hosts: localhost
   gather_facts: false

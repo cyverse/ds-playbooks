@@ -1,8 +1,9 @@
 # DE project policy
 
-_de_inStagedJob(*Path) = str(*Path) like regex '^' ++ str(cyverse_STAGING_BASE) ++ '/[^/]+/.+'
+_cyverse_de_inStagedJob(*Path) =
+  str(*Path) like regex '^' ++ str(cyverse_STAGING_BASE) ++ '/[^/]+/.+'
 
-_de_rmStagedDataCopy(*StagingPath) {
+_cyverse_de_rmStagedDataCopy(*StagingPath) {
    *opts='';
    msiAddKeyValToMspStr('objPath', *StagingPath, *opts);
    msiAddKeyValToMspStr('forceFlag', '', *opts);
@@ -13,15 +14,15 @@ _de_rmStagedDataCopy(*StagingPath) {
    }
 }
 
-_de_scheduleRmStagedDataCopy(*StagingPath) {
+_cyverse_de_scheduleRmStagedDataCopy(*StagingPath) {
   delay(
     '<INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>' ++
     '<PLUSET>0s</PLUSET>' ++
     '<EF>0s REPEAT 0 TIMES</EF>'
-  ) {_de_rmStagedDataCopy(*StagingPath)}
+  ) {_cyverse_de_rmStagedDataCopy(*StagingPath)}
 }
 
-_de_getJobInfo(*StagingRelPath) =
+_cyverse_de_getJobInfo(*StagingRelPath) =
   let *info.id = elem(split(*StagingRelPath, '/'), 0) in
   let *info.creator = '' in
   let *info.appId = '' in
@@ -40,7 +41,7 @@ _de_getJobInfo(*StagingRelPath) =
   *info
 
 
-_de_createArchiveColl(*ArchiveColl, *StageColl, *Creator, *AppId, *JobId) {
+_cyverse_de_createArchiveColl(*ArchiveColl, *StageColl, *Creator, *AppId, *JobId) {
   *clientArg = execCmdArg(*Creator);
   *stageArg = execCmdArg(*StageColl);
   *archiveArg = execCmdArg(*ArchiveColl);
@@ -61,15 +62,15 @@ _de_createArchiveColl(*ArchiveColl, *StageColl, *Creator, *AppId, *JobId) {
 }
 
 
-_de_archiveData(*StagingPath) {
-  *stagingRelPath = triml(str(*StagingPath), str(cyverse_STAGING_BASE) ++ '/');
-  *jobInfo = _de_getJobInfo(*stagingRelPath);
+_cyverse_de_archiveData(*StagingPath) {
+  *stagingRelPath = triml(*StagingPath, str(cyverse_STAGING_BASE) ++ '/');
+  *jobInfo = _cyverse_de_getJobInfo(*stagingRelPath);
 
   if (*jobInfo.creator != '' && *jobInfo.archiveBase != '') {
     if (*stagingRelPath like regex '^' ++ *jobInfo.id ++ '/[^/]+') {
       *jobStagingBase = str(cyverse_STAGING_BASE) ++ '/' ++ *jobInfo.id;
 
-      _de_createArchiveColl(*jobInfo.archiveBase, *jobStagingBase, *jobInfo.creator,
+      _cyverse_de_createArchiveColl(*jobInfo.archiveBase, *jobStagingBase, *jobInfo.creator,
                             *jobInfo.appId, *jobInfo.id);
     }
 
@@ -89,7 +90,7 @@ _de_archiveData(*StagingPath) {
       cut;
       failmsg(*status, *errMsg);
     } else {
-      _de_scheduleRmStagedDataCopy(*StagingPath);
+      _cyverse_de_scheduleRmStagedDataCopy(*StagingPath);
     }
   } else {
     writeLine(
@@ -98,22 +99,22 @@ _de_archiveData(*StagingPath) {
 }
 
 
-_de_createArchiveCollFor(*StagingColl) {
-  if (_de_inStagedJob(*StagingColl)) {
+_cyverse_de_createArchiveCollFor(*StagingColl) {
+  if (_cyverse_de_inStagedJob(*StagingColl)) {
     *stagingRelPath = triml(*StagingColl, str(cyverse_STAGING_BASE) ++ '/');
-    *jobInfo = _de_getJobInfo(*stagingRelPath);
+    *jobInfo = _cyverse_de_getJobInfo(*stagingRelPath);
 
     if (*jobInfo.creator != '' && *jobInfo.archiveBase != '') {
       if (*stagingRelPath like regex '^' ++ *jobInfo.id ++ '/[^/]+') {
         *jobStagingBase = str(cyverse_STAGING_BASE) ++ '/' ++ *jobInfo.id;
 
-        _de_createArchiveColl(*jobInfo.archiveBase, *jobStagingBase, *jobInfo.creator,
+        _cyverse_de_createArchiveColl(*jobInfo.archiveBase, *jobStagingBase, *jobInfo.creator,
                               *jobInfo.appId, *jobInfo.id);
       }
 
       *archiveColl = *jobInfo.archiveBase ++ '/' ++ triml(*stagingRelPath, *jobInfo.id ++ '/');
 
-      _de_createArchiveColl(*archiveColl, *StagingColl, *jobInfo.creator, *jobInfo.appId,
+      _cyverse_de_createArchiveColl(*archiveColl, *StagingColl, *jobInfo.creator, *jobInfo.appId,
                             *jobInfo.id);
     } else {
       writeLine('serverLog', 'DE: Missing required metadata - skipping archive of *StagingColl');
@@ -170,29 +171,28 @@ de_acPreProcForObjRename(*SourceObject, *DestObject) {
 
 cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl) {
   on (cyverse_inStaging(/*ParColl/*ChildColl)) {
-    _de_createArchiveCollFor("*ParColl/*ChildColl");
+    _cyverse_de_createArchiveCollFor("*ParColl/*ChildColl");
   }
 }
 
 
 cyverse_core_acPostProcForCollCreate_exclusive {
   on (cyverse_inStaging(/$collName)) {
-    _de_createArchiveCollFor($collName);
+    _cyverse_de_createArchiveCollFor($collName);
   }
 }
 
 
 cyverse_core_acPostProcForCopy_exclusive {
-  on (_de_inStagedJob(/$objPath)) {
-    _de_archiveData($objPath);
+  on (_cyverse_de_inStagedJob(/$objPath)) {
+    _cyverse_de_archiveData($objPath);
   }
 }
 
 
-
 de_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
-  if (_de_inStagedJob(*DATA_OBJ_INFO.logical_path)) {
-    _de_archiveData(*DATA_OBJ_INFO.logical_path);
+  if (_cyverse_de_inStagedJob(*DATA_OBJ_INFO.logical_path)) {
+    _cyverse_de_archiveData(*DATA_OBJ_INFO.logical_path);
   }
 }
 

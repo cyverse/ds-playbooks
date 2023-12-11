@@ -7,7 +7,8 @@ webdav_purgeman_irods_user: rods
 webdav_purgeman_irods_password: password
 
 webdav_tls_chain: "{{ tls_root_cert }}"
-webdav_tls_chain_file: /etc/httpd/testing.crt
-webdav_tls_key_file: "{{ webdav_tls_cert_file }}"
+webdav_tls_chain_file: /etc/pki/tls/certs/testing-chain.crt
+webdav_tls_key: "{{ tls_key_default }}"
+webdav_tls_key_file: /etc/pki/tls/private/testing.key
 webdav_tls_cert: "{{ tls_cert_default }}"
-webdav_tls_cert_file: /tmp/cert/testing.crt
+webdav_tls_cert_file: /etc/pki/tls/certs/testing.crt

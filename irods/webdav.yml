@@ -577,7 +577,6 @@
           community.general.make:
             chdir: /tmp/purgeman_setup
             target: install_centos
-          tags: skip_ansible_lint
 
         - name: Purgeman | delete build dir for purgeman package
           ansible.builtin.file:

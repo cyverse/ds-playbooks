@@ -24,10 +24,10 @@ LimitCORE=infinity
 # Delete cache file before we start the service if exists
 ExecStartPre=-/bin/rm {{ _webdav_cache_dir }}/varnish_cache.bin
 ExecStart=/usr/sbin/varnishd \
-	  -a :{{ _webdav_varnish_service_port }},HTTP \
-	  -p feature=+http2 \
-	  -f /etc/varnish/default.vcl \
-	  -s file,{{ _webdav_cache_dir }}/varnish_cache.bin,{{ _webdav_cache_size }}M
+	-a :{{ _webdav_varnish_service_port }},HTTP \
+	-p feature=+http2 \
+	-f /etc/varnish/default.vcl \
+	-s file,{{ _webdav_cache_dir }}/varnish_cache.bin,{{ _webdav_cache_size }}M
 ExecReload=/usr/sbin/varnishreload
 
 [Install]

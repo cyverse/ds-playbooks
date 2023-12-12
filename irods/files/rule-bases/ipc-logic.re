@@ -42,7 +42,8 @@ _ipc_removePrefix(*Orig, *Prefixes) =
 
 _ipc_getCollectionId(*Path) =
 	let *id = -1 in
-	let *_ = foreach (*rec in SELECT COLL_ID WHERE COLL_NAME = *Path) { *id = int(*rec.COLL_ID) } in
+	let *path = str(*Path) in
+	let *_ = foreach (*rec in SELECT COLL_ID WHERE COLL_NAME = *path) { *id = int(*rec.COLL_ID) } in
 	*id
 
 _ipc_getDataId(*Path) =
@@ -252,7 +253,7 @@ _ipc_resolve_msg_entity_id(*EntityType, *EntityName, *ClientName, *ClientZone) =
 	let *id = '' in
 	let *_ =
 		if cyverse_isFSType(*EntityType)
-		then _ipc_ensureUUID(*EntityType, *EntityName, *id, *ClientName, *ClientZone)
+		then _ipc_ensureUUID(*EntityType, str(*EntityName), *id, *ClientName, *ClientZone)
 		else *id = *EntityName in
 	*id
 

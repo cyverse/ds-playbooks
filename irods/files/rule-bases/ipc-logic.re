@@ -42,7 +42,8 @@ _ipc_removePrefix(*Orig, *Prefixes) =
 
 _ipc_getCollectionId(*Path) =
 	let *id = -1 in
-	let *_ = foreach (*rec in SELECT COLL_ID WHERE COLL_NAME = *Path) { *id = int(*rec.COLL_ID) } in
+	let *path = str(*Path) in
+	let *_ = foreach (*rec in SELECT COLL_ID WHERE COLL_NAME = *path) { *id = int(*rec.COLL_ID) } in
 	*id
 
 _ipc_getDataId(*Path) =
@@ -251,7 +252,7 @@ _ipc_resolve_msg_entity_id(*EntityType, *EntityName, *ClientName, *ClientZone) =
 	let *id = '' in
 	let *_ =
 		if cyverse_isFSType(*EntityType)
-		then _ipc_ensureUUID(*EntityType, *EntityName, *id, *ClientName, *ClientZone)
+		then _ipc_ensureUUID(*EntityType, str(*EntityName), *id, *ClientName, *ClientZone)
 		else *id = *EntityName in
 	*id
 
@@ -599,9 +600,9 @@ ipc_acSetNumThreads { msiSetNumThreads('default', 'default', 'default'); }
 # Set maximum number of rule engine processes
 ipc_acSetReServerNumProc { msiSetReServerNumProc(str(cyverse_MAX_NUM_RE_PROCS)); }
 
-# This rule sets the rodsadin group permission of a collection when a collection
-# is created by an administrative means, i.e. iadmin mkuser. It also pushes a
-# collection.add message into the irods exchange.
+# This rule sets the rodsadmin group permission of a collection when a
+# collection is created by an administrative means, i.e. iadmin mkuser. It also
+# pushes a collection.add message into the irods exchange.
 ipc_acCreateCollByAdmin(*ParColl, *ChildColl) {
 	*coll = '*ParColl/*ChildColl';
 	*perm = resolveAdminPerm(*coll);
@@ -951,7 +952,7 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 		*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 # XXX - Due to a bug in iRODS 4.2.8, msiExecCmd cannot be call from within the
-#       pep_database_reg_data_obj_post before the data object's replic has been fully written to
+#       pep_database_reg_data_obj_post before the data object's replica has been fully written to
 #       storage. This means that the _ipc_ensureUUID cannot be called when *Step is START.
 # 		_ipc_ensureUUID(
 # 			cyverse_DATA_OBJ,

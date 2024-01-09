@@ -62,7 +62,7 @@
 
     - name: Ensure pika installed
       ansible.builtin.pip:
-        name: pika<1.2
+        name: pika
         state: present
 
     - name: Provision CentOS

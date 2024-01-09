@@ -271,11 +271,15 @@ sendMsg(*Topic, *Msg) {
 	*msgArg = execCmdArg(*Msg);
 	*argStr = '*exchangeArg *topicArg *msgArg';
 
-	*status = errormsg(
-		msiExecCmd('amqptopicsend.py', *argStr, cyverse_RE_HOST, 'null', 'null', *out), *msg );
+	*status = errormsg(msiExecCmd('amqptopicsend.py', *argStr, cyverse_RE_HOST, '', 0, *out), *msg);
 
-	if (*status < 0) {
-		msiGetStderrInExecCmdOut(*out, *err);
+# XXX - msiExecCmd aborts its process when amqptopicsend.py fails in iRODS 4.2.8.
+# 	if (*status < 0) {
+# 		msiGetStderrInExecCmdOut(*out, *err);
+	msiGetStderrInExecCmdOut(*out, *err);
+
+	if (*status < 0 || *err != '') {
+# XXX - ^^^
 		writeLine("serverLog", "Failed to send AMQP message: *msg");
 		writeLine("serverLog", *err);
 	}

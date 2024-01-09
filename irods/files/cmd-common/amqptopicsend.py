@@ -21,7 +21,7 @@ def _publish(uri: str, exchange: str, routing_key: str, body:str) -> None:
             properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent))
 
 
-def _main(argv: List[str]) -> int:
+def main(argv: List[str]) -> int:
     try:
         exchange = argv[1]
         key = argv[2]
@@ -44,4 +44,4 @@ def _main(argv: List[str]) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(_main(sys.argv))
+    sys.exit(main(sys.argv))

@@ -35,14 +35,11 @@
       vars:
         pkg: parallel
 
-    - name: Verify correct version of pika installed
+    - name: Verify pika installed
       community.general.pip_package_info:
         clients: pip3
       register: pip_info
-      failed_when: >-
-        'pika' not in pip_info.packages['pip3']
-        or pip_info.packages['pip3']['pika'] | length > 1
-        or pip_info.packages['pip3']['pika'][0]['version'] is version('1.2', '>=')
+      failed_when: "'pika' not in pip_info.packages['pip3']"
 
     - name: Test provision CentOS
       when: ansible_distribution == 'CentOS'

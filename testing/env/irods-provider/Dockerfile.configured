@@ -20,7 +20,7 @@ RUN yum --assumeyes versionlock add \
   irods-netcdf-client_modules-4.2.8.0 irods-netcdf-icommands-4.2.8.0 irods-netcdf-server_modules
 
 ### Install libraries required by command scripts
-RUN pip3 --disable-pip-version-check install pika
+RUN pip3 --disable-pip-version-check install pika==1.1
 
 ARG DB_NAME=ICAT
 ARG DB_PASSWORD=testpassword

@@ -1,32 +1,50 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-# This always exits with 0 status, as a work around for iRODS msiExecCmd microservice. To detect
-# errors, monitor stderr.
 
-import logging
-import pika
+"""This publishes messages to a give RabbitMQ exchange."""
+
 import os
 import sys
+from sys import stderr
+from typing import List
 
-try:
-    logging.basicConfig(stream=sys.stdout)
+import pika
 
-    exchange = sys.argv[1]
-    key = sys.argv[2]
-    body = sys.argv[3]
+def _publish(uri: str, exchange: str, routing_key: str, body:str) -> None:
+    connParams = pika.URLParameters(uri)
 
-    connParams = pika.URLParameters(os.environ['IRODS_AMQP_URI'])
+    with pika.BlockingConnection(connParams) as conn:
+        conn.channel().basic_publish(
+            exchange=exchange,
+            routing_key=routing_key,
+            body=body,
+            properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent))
 
-    connection = pika.BlockingConnection(connParams)
-    channel = connection.channel()
 
-    channel.basic_publish(exchange=exchange,
-                          routing_key=key,
-                          body=body,
-                          properties=pika.BasicProperties(delivery_mode=2))
+def main(argv: List[str]) -> int:
+    try:
+        exchange = argv[1]
+        key = argv[2]
+        body = argv[3]
+    except IndexError:
+        stderr.write(
+            "The exchange, routing key, and message body are required as the first three "
+            "parameters, respectively\n")
+        return 1
 
-    connection.close()
-except BaseException as e:
-    sys.stderr.write('ERROR: %s\n' % e)
-    sys.exit(1)
+    try:
+        uri = os.environ['IRODS_AMQP_URI']
+        _publish(uri=uri, exchange=exchange, routing_key=key, body=body)
+    except BaseException as e:
+        stderr.write(f"Failed to publish message: {e}\n")
+        return 1
+
+    return 0
+
+
+if __name__ == '__main__':
+# XXX - msiExecCmd core dumps when this returns an error. This is present in iRODS 4.2.8.
+#     sys.exit(main(sys.argv))
+    main(sys.argv)
+    sys.exit(0)
+# XXX - ^^^

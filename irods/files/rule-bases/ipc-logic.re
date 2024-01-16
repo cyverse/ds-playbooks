@@ -273,13 +273,8 @@ sendMsg(*Topic, *Msg) {
 
 	*status = errormsg(msiExecCmd('amqptopicsend.py', *argStr, cyverse_RE_HOST, '', 0, *out), *msg);
 
-# XXX - msiExecCmd aborts its process when amqptopicsend.py fails in iRODS 4.2.8.
-# 	if (*status < 0) {
-# 		msiGetStderrInExecCmdOut(*out, *err);
-	msiGetStderrInExecCmdOut(*out, *err);
-
-	if (*status < 0 || *err != '') {
-# XXX - ^^^
+	if (*status < 0) {
+		msiGetStderrInExecCmdOut(*out, *err);
 		writeLine("serverLog", "Failed to send AMQP message: *msg");
 		writeLine("serverLog", *err);
 	}
@@ -380,17 +375,19 @@ _ipc_sendDataObjectMod(
 }
 
 _ipc_sendDataObjectOpen(*Id, *Path, *CreatorName, *CreatorZone, *Size) {
-	msiGetSystemTime(*timestamp, 'human');
+	if (*CreatorName != 'anonymous') {
+		msiGetSystemTime(*timestamp, 'human');
 
-	*msg = cyverse_json_document(
-		list(
-			_ipc_mkAuthorField(*CreatorName, *CreatorZone),
-			_ipc_mkEntityField(*Id),
-			_ipc_mkPathField(*Path),
-			cyverse_json_number('size', *Size),
-			cyverse_json_string('timestamp', *timestamp) ) );
+		*msg = cyverse_json_document(
+			list(
+				_ipc_mkAuthorField(*CreatorName, *CreatorZone),
+				_ipc_mkEntityField(*Id),
+				_ipc_mkPathField(*Path),
+				cyverse_json_number('size', *Size),
+				cyverse_json_string('timestamp', *timestamp) ) );
 
-	sendMsg(_ipc_DATA_MSG_TYPE ++ '.open', *msg);
+		sendMsg(_ipc_DATA_MSG_TYPE ++ '.open', *msg);
+	}
 }
 
 # Publish a data-object.sys-metadata.mod message to AMQP exchange

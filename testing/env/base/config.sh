@@ -11,7 +11,6 @@
 
 set -o errexit -o nounset -o pipefail
 
-
 main() {
 	if (( $# < 1 )); then
 		printf 'The OS name is required as the first argument\n' >&2
@@ -58,7 +57,6 @@ main() {
 	mkdir --mode 0700 /root/.ssh
 }
 
-
 # Install the required CentOS packages.
 #
 # Parameters:
@@ -89,7 +87,6 @@ install_centos_packages() {
 		sudo
 }
 
-
 install_ubuntu_packages() {
 	local version="$1"
 
@@ -110,8 +107,11 @@ install_ubuntu_packages() {
 		python3-selinux \
 		python3-virtualenv \
 		sudo
-}
 
+	if [[ "$version" != '18.04' ]]; then
+		apt install --yes --quiet=2 python-is-python3
+	fi
+}
 
 update_pam_sshd_config() {
 	cat <<'EOF' | sed --in-place --file - /etc/pam.d/sshd
@@ -123,7 +123,6 @@ update_pam_sshd_config() {
 }
 EOF
 }
-
 
 update_sshd_config() {
 	cat <<'EOF' | sed --in-place  --regexp-extended --file - /etc/ssh/sshd_config

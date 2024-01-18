@@ -25,7 +25,7 @@
 
 main()
 {
-  Svc="$1"
+  Svc="$*"
 
   start "$Svc"
   trap 'kill ${!}; stop "$Svc"; exit $?' SIGTERM
@@ -68,4 +68,4 @@ stop()
 
 set -e
 
-main "$*"
+main "$@"

@@ -1,0 +1,2 @@
+---
+rabbitmq_has_systemd: false

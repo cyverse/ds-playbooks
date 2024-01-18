@@ -956,7 +956,7 @@ ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 		*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 # XXX - Due to a bug in iRODS 4.2.8, msiExecCmd cannot be call from within the
-#       pep_database_reg_data_obj_post before the data object's replic has been fully written to
+#       pep_database_reg_data_obj_post before the data object's replica has been fully written to
 # 		_ipc_ensureUUID(
 # 			ipc_DATA_OBJECT,
 # 			*DATA_OBJ_INFO.logical_path,

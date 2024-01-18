@@ -3,7 +3,6 @@ FROM test-env-base:centos7
 ### Install PostgreSQL ODBC connector
 RUN yum --assumeyes install \
   https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 RUN yum --assumeyes install postgresql12-odbc
 
 ### Install iRODS

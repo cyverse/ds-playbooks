@@ -1044,7 +1044,7 @@ pep_database_reg_data_obj_post(*Instance, *Context, *OUT, *DataObjInfo) {
 #  Instance  (string) the resource being considered
 #  Context   (`KeyValuePair_PI`) the resource plugin context
 #  OUT       (`KeyValuePair_PI`) unused
-#  Op        (string) the operation on the replica that will be performed,
+#  Op        (string) the operation that will be performed on the replica,
 #            "CREATE" for creating the replica, "OPEN" for reading the replica,
 #            and "WRITE" for overwriting an existing replica.
 #  Host      (string) the host executing this policy

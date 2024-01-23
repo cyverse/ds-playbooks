@@ -841,11 +841,11 @@ ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValu
 ipc_acPostProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
 ) {
-	if (!(cyverse_isFSType(*TargetItemType) && cyverse_inStaging(/*TargetItemName))) {
+	if (cyverse_isFSType(*TargetItemType) && !cyverse_inStaging(/*TargetItemName)) {
 		*target = _ipc_resolve_msg_entity_id(
 			*TargetItemType, *TargetItemName, $userNameClient, $rodsZoneClient );
 
-		if (!(cyverse_isFSType(*SourceItemType) && cyverse_inStaging(/*SourceItemName))) {
+		if (cyverse_isFSType(*SourceItemType) && !cyverse_inStaging(/*SourceItemName)) {
 			*source = _ipc_resolve_msg_entity_id(
 				*SourceItemType, *SourceItemName, $userNameClient, $rodsZoneClient );
 

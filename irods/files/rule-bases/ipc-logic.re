@@ -862,38 +862,33 @@ ipc_acPostProcForModifyAVUMetadata(
 		} else {
 			*uuidAttr = _ipc_UUID_ATTR;
 
-			if (cyverse_isColl(*TargetItemType)) {
-
+			if (cyverse_isResc(*SourceItemType)) {
 				foreach( *rec in
-					SELECT META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE, META_COLL_ATTR_UNITS
-					WHERE COLL_NAME == *SourceItemName AND META_COLL_ATTR_NAME != *uuidAttr
+					SELECT META_RESC_ATTR_NAME, META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
+					WHERE RESC_NAME == *SourceItemName AND META_RESC_ATTR_NAME != *uuidAttr
 				) {
 					_ipc_sendAvuSet(
 						'add',
 						*TargetItemType,
 						*target,
-						*rec.META_COLL_ATTR_NAME,
-						*rec.META_COLL_ATTR_VALUE,
-						*rec.META_COLL_ATTR_UNITS,
+						*rec.META_RESC_ATTR_NAME,
+						*rec.META_RESC_ATTR_VALUE,
+						*rec.META_RESC_ATTR_UNITS,
 						$userNameClient,
 						$rodsZoneClient );
 				}
 			} else {
-				msiSplitPath(*SourceItemName, *srcCollPath, *srcDataName);
-
 				foreach( *rec in
-					SELECT META_DATA_ATTR_NAME, META_DATA_ATTR_VALUE, META_DATA_ATTR_UNITS
-					WHERE COLL_NAME == *srcCollPath
-						AND DATA_NAME == *srcDataName
-						AND META_DATA_ATTR_NAME != *uuidAttr
+					SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
+					WHERE USER_NAME == *SourceItemName AND META_USER_ATTR_NAME != *uuidAttr
 				) {
 					_ipc_sendAvuSet(
 						'add',
 						*TargetItemType,
 						*target,
-						*rec.META_DATA_ATTR_NAME,
-						*rec.META_DATA_ATTR_VALUE,
-						*rec.META_DATA_ATTR_UNITS,
+						*rec.META_USER_ATTR_NAME,
+						*rec.META_USER_ATTR_VALUE,
+						*rec.META_USER_ATTR_UNITS,
 						$userNameClient,
 						$rodsZoneClient );
 				}

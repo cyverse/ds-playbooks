@@ -72,6 +72,13 @@
 
               UseCanonicalName On
 
+              # XXX - Workaround for https://github.com/UtrechtUniversity/davrods/issues/19
+              <If "%{REQUEST_METHOD} == 'PROPFIND'">
+                SetOutputFilter Sed
+                OutputSed "s,\([^:]\)//,\1/,g"
+              </If>
+              # XXX - ^^^
+
               # Redirect dav-anon to dav
               <LocationMatch "/dav-anon/{{ _irods_zone_name }}/((commons/(community_released|cyverse_curated)|home|projects)(/.*)?)" >
                 Require expr %{REQUEST_URI} !~ m#^/dav-anon/{{ _irods_zone_name }}/home(/[^/]*/?)?$#

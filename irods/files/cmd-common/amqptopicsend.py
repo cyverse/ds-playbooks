@@ -11,9 +11,9 @@ from typing import List
 import pika
 
 def _publish(uri: str, exchange: str, routing_key: str, body:str) -> None:
-    connParams = pika.URLParameters(uri)
+    conn_params = pika.URLParameters(uri)
 
-    with pika.BlockingConnection(connParams) as conn:
+    with pika.BlockingConnection(conn_params) as conn:
         conn.channel().basic_publish(
             exchange=exchange,
             routing_key=routing_key,
@@ -21,7 +21,7 @@ def _publish(uri: str, exchange: str, routing_key: str, body:str) -> None:
             properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent))
 
 
-def main(argv: List[str]) -> int:
+def _main(argv: List[str]) -> int:
     try:
         exchange = argv[1]
         key = argv[2]
@@ -35,16 +35,13 @@ def main(argv: List[str]) -> int:
     try:
         uri = os.environ['IRODS_AMQP_URI']
         _publish(uri=uri, exchange=exchange, routing_key=key, body=body)
-    except BaseException as e:
-        stderr.write(f"Failed to publish message: {e}\n")
+    except BaseException as e:  # pylint: disable=broad-exception-caught
+        ex_type = type(e)
+        stderr.write(f"Failed to publish message: {e} ({ex_type})\n")
         return 1
 
     return 0
 
 
 if __name__ == '__main__':
-# XXX - msiExecCmd core dumps when this returns an error. This is present in iRODS 4.2.8.
-#     sys.exit(main(sys.argv))
-    main(sys.argv)
-    sys.exit(0)
-# XXX - ^^^
+    sys.exit(_main(sys.argv))

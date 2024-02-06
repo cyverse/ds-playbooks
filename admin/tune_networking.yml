@@ -60,25 +60,3 @@
         value: "{{ item.value }}"
       with_items: "{{ _sysctl_net }}"
       tags: no_testing
-
-    - name: Pace network traffic
-      when: _transfer_max_rate != ''
-      ansible.builtin.shell:
-        executable: /bin/bash
-        cmd: |
-          set -o errexit
-          if ! tcRep="$(tc qdisc show dev '{{ ansible_default_ipv4.alias }}')"; then
-            exit 1
-          fi
-          if ! maxrate="$(
-            sed --quiet 's/^qdisc fq .* root .* maxrate \([^ ]\+\) .*/\1/p' <<< "$tcRep" )"
-          then
-            exit 1
-          fi
-          newMaxrate='{{ _transfer_max_rate }}'Gbit
-          if [[ "$maxrate" != "$newMaxrate" ]]; then
-            tc qdisc add dev '{{ ansible_default_ipv4.alias }}' root fq maxrate "$newMaxrate"
-            echo changed
-          fi
-      register: resp
-      changed_when: resp.stdout == 'changed'

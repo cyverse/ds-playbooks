@@ -13,5 +13,3 @@ _proxied_ssh: "{{ proxied_ssh | d(false) }}"
 _rebootable: "{{ rebootable | default(true) }}"
 
 _sysctl_net: "{{ sysctl_net | default([]) }}"
-
-_transfer_max_rate: "{{ transfer_max_rate | d(None) }}"

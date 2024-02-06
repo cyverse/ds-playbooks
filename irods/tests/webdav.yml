@@ -186,6 +186,7 @@
       with_items:
         - /etc/httpd
         - /tmp/cert
+        - /tmp/key
 
     - name: Test place TLS certificate files
       ansible.builtin.stat:
@@ -195,6 +196,7 @@
       with_items:
         - /etc/httpd/testing.crt
         - /tmp/cert/testing.crt
+        - /tmp/key/testing.key
 
     - name: Retrieve TLS certificate chain file contents
       ansible.builtin.slurp:
@@ -257,7 +259,7 @@
           -----END CERTIFICATE-----
           '
 
-    - name: Test place TLS key
+    - name: Verify TLS key contents
       ansible.builtin.debug:
         msg: TODO implement
 

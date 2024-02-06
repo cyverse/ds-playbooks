@@ -1,6 +1,5 @@
 [amqp]
-dstesting-amqp_ubuntu-1.dstesting_default
-dstesting-amqp_centos-1.dstesting_default
+dstesting-amqp-1.dstesting_default
 
 [dbms:children]
 dbms_primary
@@ -31,4 +30,4 @@ dstesting-proxy-1.dstesting_default
 
 [unmanaged_systems]
 localhost
-dstesting-amqp_centos-1.dstesting_default
+dstesting-amqp-1.dstesting_default

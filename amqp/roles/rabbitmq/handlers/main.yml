@@ -3,4 +3,3 @@
   ansible.builtin.service:
     name: rabbitmq-server
     state: restarted
-  when: rabbitmq_has_systemd

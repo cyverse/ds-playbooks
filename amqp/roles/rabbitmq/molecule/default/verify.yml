@@ -14,27 +14,8 @@
           - rabbitmq_conf is search("management.tcp.port = 2" | regex_escape)
 
 
-- name: Verify | test CentOS installation
-  hosts: centos
-  tasks:
-    - name: Retrieve facts about distro packages
-      ansible.builtin.package_facts:
-
-    - name: Verify correct packages installed
-      ansible.builtin.assert:
-        that:
-          - "'epel-release' in ansible_facts.packages"
-          - "'erlang-erts' not in ansible_facts.packages"
-          - "'erlang' in ansible_facts.packages"
-          - ansible_facts.packages['erlang'] | length == 1
-          - ansible_facts.packages['erlang'][0].version is version('23.2.7', '>=')
-          - "'rabbitmq-server' in ansible_facts.packages"
-          - ansible_facts.packages['rabbitmq-server'] | length == 1
-          - ansible_facts.packages['rabbitmq-server'][0].version is version('3.8.14', '>=')
-
-
-- name: Verify | test Ubuntu installation
-  hosts: ubuntu
+- name: Verify | test installation
+  hosts: all
   tasks:
     - name: Retrieve facts about distro packages
       ansible.builtin.package_facts:
@@ -86,11 +67,6 @@
       register: resp
       failed_when: not resp.stat.exists or not resp.stat.rusr
 
-
-- name: Verify | test configuration
-  hosts: all
-  gather_facts: false
-  tasks:
     - name: Test rabbitmq config file placement
       ansible.builtin.stat:
         path: /etc/rabbitmq/rabbitmq.conf
@@ -104,6 +80,7 @@
 
 - name: Verify | test runtime configuration
   hosts: ubuntu
+  gather_facts: false
   tasks:
     - name: Retrieve service information
       ansible.builtin.service_facts:

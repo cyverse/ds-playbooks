@@ -4,9 +4,6 @@ dependency:
 driver:
   name: podman
 platforms:
-  - name: centos
-    image: centos:7
-    pre_build_image: true
   - name: ubuntu
     image: ubuntu-systemd
     pre_build_image: false
@@ -20,8 +17,5 @@ provisioner:
         mgmt_port: 2000
         admin_user: admin
         admin_passwd: password
-    host_vars:
-      centos:
-        rabbitmq_has_systemd: false
 verifier:
   name: ansible

@@ -19,7 +19,6 @@ Variable            | Required | Default | Choices | Comments
 `proxied_ssh`       | no       | false   |         | Whether or not the connection ansible uses to get to the managed node goes through a bastion host
 `rebootable`        | no       | true    |         | Whether or not the server being configured is rebootable
 `sysctl_net`        | no       | []      |         | a list of sysctl network parameters to set for the server being configured, __see below__
-`transfer_max_rate` | no       |         |         | Set the maximum per thread transfer rate in Gbit/s. This should be (90% of the NIC speed) / (hosted svc num threads per transfer)
 
 A `maintainer_key` is either a string or a maintainer_key mapping with the following fields.
 

@@ -1,4 +1,2 @@
 ---
-transfer_max_rate: 1
-
 irods_default_vault: /var/lib/irods/Vault

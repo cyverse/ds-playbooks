@@ -13,14 +13,12 @@
     name: rabbitmq-server
     enabled: true
     state: started
-  when: rabbitmq_has_systemd
 
 - name: Configure | enable management plugin
   community.rabbitmq.rabbitmq_plugin:
     names: rabbitmq_management
     state: enabled
   notify: Restart RabbitMQ
-  when: rabbitmq_has_systemd
 
 - name: Configure | create admin user
   community.rabbitmq.rabbitmq_user:
@@ -33,10 +31,9 @@
     tags: administrator
     state: present
   no_log: true
-  when: rabbitmq_has_systemd
 
 - name: Configure | remove guest user
-  when: rabbitmq_admin_username != 'guest' and rabbitmq_has_systemd
+  when: rabbitmq_admin_username != 'guest'
   community.rabbitmq.rabbitmq_user:
     user: guest
     state: absent

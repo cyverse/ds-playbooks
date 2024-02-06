@@ -2,11 +2,7 @@
 version: "3.0"
 
 services:
-  amqp_centos:
-    image: test-env-base:centos7
-    privileged: true
-
-  amqp_ubuntu:
+  amqp:
     image: test-env-base:ubuntu2204
     privileged: true
 
@@ -57,7 +53,7 @@ services:
     privileged: true
     tty: true
     depends_on:
-      - amqp_ubuntu
+      - amqp
       - dbms_configured
 
   provider_unconfigured:
@@ -70,9 +66,6 @@ services:
     hostname: "$IRODS_PROVIDER_UNCONF_HOST"
     privileged: true
     tty: true
-    depends_on:
-      - amqp_ubuntu
-      - dbms_configured
 
   consumer_configured_centos:
     build:
@@ -121,8 +114,6 @@ services:
     hostname: "${ENV_NAME}_consumer_configured_1.${DOMAIN}"
     privileged: true
     tty: true
-    depends_on:
-      - provider_configured
 
   proxy:
     build:
@@ -132,3 +123,4 @@ services:
     depends_on:
       - apache
       - provider_configured
+      - sftp

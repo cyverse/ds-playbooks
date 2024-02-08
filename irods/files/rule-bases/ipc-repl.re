@@ -421,11 +421,12 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
 
 
 _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
-  *type = cyverse_getEntityType(*Entity);
+  *entity = str(*Entity);
+  *type = cyverse_getEntityType(*entity);
 
   if (cyverse_isColl(*type)) {
     # if the entity is a collection
-    foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
+    foreach (*collPat in list(*entity, *entity ++ '/%')) {
       foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
         *dataId = *rec.DATA_ID;
         _repl_scheduleMv(*dataId, *IngestName, *ReplName);
@@ -433,7 +434,7 @@ _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
     }
   } else if (cyverse_isDataObj(*type)) {
     # if the entity is a data object
-    msiSplitPath(*Entity, *collPath, *dataName);
+    msiSplitPath(*entity, *collPath, *dataName);
 
     foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName') {
       *dataId = *rec.DATA_ID;

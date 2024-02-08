@@ -116,27 +116,6 @@
         - /{{ _irods_zone_name }}/home/shared
         - /{{ _irods_zone_name }}/home/shared/commons_repo/curated
 
-    - name: Remove _ipc_* rules
-      ansible.builtin.shell:
-        executable: /bin/bash
-        cmd: |
-          set -o errexit
-          res="$(iquest '%s' "select RULE_EXEC_ID where RULE_EXEC_NAME = '{{ item }}'")"
-          if [[ -z "$res" ]]; then
-            exit 1
-          elif [[ "$res" =~ CAT_NO_ROWS_FOUND: ]]; then
-            exit 0
-          fi
-          readarray -t ids <<< "$res"
-          iqdel "${ids[@]}"
-          echo changed
-      register: response
-      changed_when: response.stdout == 'changed'
-      with_items:
-        - _ipc_determineAllStorageFreeSpace
-        - _ipc_rmTrash
-        - _ipc_updateQuotaUsage
-
     - name: Start quota usage computation
       ansible.builtin.command: >
         irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance

@@ -390,6 +390,12 @@
           "IRODS_HOST={{ _canonical_hostname }}",
           "IRODS_PORT={{ _irods_zone_port }}",
           "IRODS_ZONE={{ _irods_zone_name }}",
+          "IRODS_AUTH_SCHEME={{ _sftpgo_irods_auth_scheme }}",
+          "IRODS_SSL_CA_CERT_PATH={{ _sftpgo_irods_ssl_ca_cert_path }}",
+          "IRODS_SSL_ALGORITHM={{ _sftpgo_irods_ssl_algorithm }}",
+          "IRODS_SSL_KEY_SIZE={{ _sftpgo_irods_ssl_key_size }}",
+          "IRODS_SSL_SALT_SIZE={{ _sftpgo_irods_ssl_salt_size }}",
+          "IRODS_SSL_HASH_ROUNDS={{ _sftpgo_irods_ssl_hash_rounds }}",
           "IRODS_SHARED=/{{ _irods_zone_name }}/home/shared",
           "SFTPGO_HOME_PATH={{ _sftpgo_vault_dir }}/data"
         ],

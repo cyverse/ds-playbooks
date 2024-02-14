@@ -225,7 +225,7 @@ class _State(Enum):
     PRESENT = enum.auto()
 
     def from_param(param: str):
-        """Creats a _State from its corresponding state parameter value"""
+        """Creates a _State from its corresponding state parameter value"""
         if param.lower() == 'absent':
             return _State.ABSENT
         return _State.PRESENT

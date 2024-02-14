@@ -30,7 +30,7 @@
             == 'IRODS_HOST=dstesting-provider_configured-1.dstesting_default'
           - sftpgo_json.command.commands[0].env[3] == 'IRODS_PORT=1247'
           - sftpgo_json.command.commands[0].env[4] == 'IRODS_ZONE=testing'
-          - sftpgo_json.command.commands[0].env[5] == 'IRODS_SHARED=/testing/home/shared'
+          - sftpgo_json.command.commands[0].env[5] == 'IRODS_AUTH_SCHEME=native'
 
 
 - name: Test sftp playbook

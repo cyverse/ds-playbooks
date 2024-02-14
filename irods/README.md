@@ -135,7 +135,6 @@ Variable                                   | Required | Default                 
 `sftpgo_irods_ssl_salt_size`               | no       |                                      |         | The SSL encryption salt size (required by PAM auth scheme)
 `sftpgo_irods_ssl_hash_rounds`             | no       |                                      |         | The SSL encryption hash rounds (required by PAM auth scheme)
 
-
 `irods_federation` entry fields
 
 All of them are required.

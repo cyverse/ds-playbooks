@@ -61,8 +61,6 @@
       with_items:
         - amqptopicsend.py
         - correct-size
-        - de-archive-data
-        - de-create-collection
         - delete-scheduled-rule
         - generateuuid
         - imeta-exec
@@ -268,7 +266,6 @@
       register: response
       failed_when: response.stat.exists
       with_items:
-        - de.re
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re
@@ -282,6 +279,16 @@
       with_items:
         - /etc/irods/calliope.re
         - /var/lib/irods/msiExecCmd_bin/calliope-ingest
+
+    - name: Test ensure DE staging gone
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: response
+      failed_when: response.stat.exists
+      with_items:
+        - /etc/irods/de.re
+        - /var/lib/irods/msiExecCmd_bin/de-archive-data
+        - /var/lib/irods/msiExecCmd_bin/de-create-collection
 
     - name: Test ensure sciapps gone
       ansible.builtin.stat:

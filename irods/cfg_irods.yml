@@ -103,7 +103,7 @@
         irods_cfg_zone_password: "{{ _irods_clerver_password }}"
 
     - name: Restart iRODS
-      when: Restart_irods and irods_cfg_made_changes
+      when: _restart_irods and irods_cfg_made_changes
       ansible.builtin.import_tasks: tasks/restart_irods.yml
 
   post_tasks:
@@ -112,7 +112,6 @@
         path: /etc/irods/{{ item }}
         state: absent
       with_items:
-        - de.re
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re
@@ -125,6 +124,15 @@
       with_items:
         - /etc/irods/calliope.re
         - /var/lib/irods/msiExecCmd_bin/calliope-ingest
+
+    - name: Ensure DE staging gone
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/irods/de.re
+        - /var/lib/irods/msiExecCmd_bin/de-archive-data
+        - /var/lib/irods/msiExecCmd_bin/de-create-collection
 
     - name: Ensure sciapps gone
       ansible.builtin.file:

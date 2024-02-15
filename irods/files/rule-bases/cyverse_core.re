@@ -527,6 +527,17 @@ acPostProcForRmColl {
 
 # COLL_CREATE
 
+# This is the preprocessing logic for when a collection is created through the
+# API using a COLL_CREATE request.
+#
+#  Instance       (string) unknown
+#  Comm           (`KeyValuePair_PI`) user connection and auth information
+#  CollCreateInp  (`KeyValuePair_PI`) information related to the new collection
+#
+pep_api_coll_create_pre(*Instance, *Comm, *CollCreateInp) {
+	mdrepo_api_coll_create_pre(*Instance, *Comm, *CollCreateInp);
+}
+
 # This is the post processing logic for when a collection is created through the
 # API using a COLL_CREATE request.
 #
@@ -1038,7 +1049,7 @@ pep_database_reg_data_obj_post(*Instance, *Context, *OUT, *DataObjInfo) {
 # This rule is provides the preprocessing logic for determine which  storage
 # resource to choose for a replica. It is meant for project specific
 # implementations where a project implementation is within an `on` block that
-# restricts the resource resolution to entities relevant to the project.
+# restricts the resource resolution to entities relevant to the project.post
 #
 # Parameters:
 #  Instance  (string) the resource being considered

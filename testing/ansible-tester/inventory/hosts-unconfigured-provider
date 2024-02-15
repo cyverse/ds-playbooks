@@ -1,5 +1,5 @@
 [amqp]
-dstesting-1.dstesting_default
+dstesting-amqp-1.dstesting_default
 
 [dbms:children]
 dbms_primary

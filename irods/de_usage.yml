@@ -5,12 +5,11 @@
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - name: Delete user for DE jobs
+    - name: Delete jobs staging collection
       delegate_to: localhost
       become: false
-      when: _de_job_irods_user is defined
-      irods_user:
-        name: "{{ _de_job_irods_user }}"
+      irods_collection:
+        path: /{{ _irods_zone_name }}/jobs
         state: absent
         host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"
@@ -18,11 +17,12 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: Create jobs staging collection
+    - name: Delete user for DE jobs
       delegate_to: localhost
       become: false
-      irods_collection:
-        path: /{{ _irods_zone_name }}/jobs
+      when: _de_job_irods_user is defined
+      irods_user:
+        name: "{{ _de_job_irods_user }}"
         state: absent
         host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"

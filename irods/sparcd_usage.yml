@@ -12,3 +12,7 @@
         - /etc/irods/sparcd.re
         - /etc/irods/sparcd-env.re
         - /var/lib/irods/msiExecCmd_bin/sparcd-ingest
+      notify: Reload iRODS rules
+
+  handlers:
+    - name: Reload iRODS rules

@@ -17,8 +17,6 @@
       failed_when: not response.stat.exists
       with_items:
         - amqptopicsend.py
-        - de-archive-data
-        - de-create-collection
         - delete-scheduled-rule
         - generateuuid
         - imeta-exec

@@ -13,7 +13,7 @@
         path: >-
           {{ '/etc/iptables/rules.v4' if ansible_distribution == 'Ubuntu' else
             '/etc/sysconfig/iptables' }}
-        insertbefore: "-A {{ _firewall_chain }} -j REJECT --reject-with icmp-host-prohibited"
+        insertbefore: "-A {{ _firewall_chain }} -j REJECT"
         marker: "# {mark} DS MANAGED BLOCK (irods)"
         block: |
           {% for i in groups['irods'] %}

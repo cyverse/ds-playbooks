@@ -16,3 +16,7 @@
 
   handlers:
     - name: Reload iRODS rules
+      ansible.builtin.file:
+        path: /etc/irods/core.re
+        mode: u+r
+        state: touch

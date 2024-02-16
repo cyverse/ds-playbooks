@@ -444,6 +444,7 @@ def irods_user(request: Request, irods: Irods) -> bool:
 
     Args:
         request  the parameters passed into the module
+        both modified:   irods/tests/tasks/test_install_plugins.yml
         irods  the object managing the interaction with iRODS
 
     Returns:

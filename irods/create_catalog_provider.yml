@@ -118,11 +118,10 @@
               then
                 exit 0
               fi
-            fi
-            if ! odbcinst -i -d -r -v; then
-              exit 1
-            fi
-            echo changed
+              if ! odbcinst -i -d -r -v; then
+                exit 1
+              fi
+              echo changed
           args:
             stdin: "{{ lookup('file', 'files/postgresql-odbc-tmpl.ini') }}"
           register: result

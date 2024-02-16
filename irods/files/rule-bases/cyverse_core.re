@@ -254,7 +254,9 @@ acPreProcForModifyAVUMetadata(
 #  New2      (string) either empty or holds an update to the name, value, or
 #            unit prefixed by 'n:', 'v:', or 'u:', respectively
 #  New3      (string) either empty or holds an update to the name, value, or
-#            unit prefixed by 'n:', 'v:', or 'u:', respectively
+#            unit prefixed by 'n:', 'v:', or 'u:', respectively        - de-archive-data
+        - de-create-collection
+
 #  New4      (string) either empty or holds an update to the name, value, or
 #            unit prefixed by 'n:', 'v:', or 'u:', respectively
 #
@@ -487,6 +489,17 @@ acPostProcForRmColl {
 ## API ##
 
 # COLL_CREATE
+
+# This is the preprocessing logic for when a collection is created through the
+# API using a COLL_CREATE request.
+#
+#  Instance       (string) unknown
+#  Comm           (`KeyValuePair_PI`) user connection and auth information
+#  CollCreateInp  (`KeyValuePair_PI`) information related to the new collection
+#
+pep_api_coll_create_pre(*Instance, *Comm, *CollCreateInp) {
+	mdrepo_api_coll_create_pre(*Instance, *Comm, *CollCreateInp);
+}
 
 # This is the post processing logic for when a collection is created through the
 # API using a COLL_CREATE request.
@@ -745,10 +758,6 @@ _cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
-}
-
-_cyverse_core_dataObjMetadataModified(*User, *Zone, *Object) {
-	ipc_dataObjMetadataModified(*User, *Zone, *Object);
 }
 
 

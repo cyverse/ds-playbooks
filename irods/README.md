@@ -83,9 +83,6 @@ Variable                                   | Required | Default                 
 `pire_resource_hierarchy`                  | no       | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
 `report_email_addr`                        | no       | root@localhost                       |         | The address where reports are to be emailed.
 `restart_irods`                            | no       | false                                |         | iRODS can be restarted on the servers having config file changes, _see below_
-`sernec_owners`                            | no       | []                                   |         | A list of users who get ownership of sernec collections
-`sernec_readers`                           | no       | []                                   |         | A list of users who get read access to sernec collections
-`sernec_writers`                           | no       | []                                   |         | A list of users who get write access to sernec collections
 `sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
 `sftp_proxy_allowed`                       | no       | `[]`                                 |         | A list of network/masks for the proxy servers allowed access to the SFTP servers
 `sftpgo_admin_ui_port`                     | no       | 18023                                |         | The SFTPGo admin UI service port number

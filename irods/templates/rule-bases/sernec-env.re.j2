@@ -1,7 +1,0 @@
-# VERSION: 1
-#
-# environment specific sernec rules
-
-sernec_OWNERS = list({{ _sernec_owners | map('to_json') | join(', ') }})
-sernec_WRITERS = list({{ _sernec_writers | map('to_json') | join(', ') }})
-sernec_READERS = list({{ _sernec_readers | map('to_json') | join(', ') }})

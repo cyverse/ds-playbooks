@@ -117,6 +117,14 @@
         - ipc-housekeeping.re
         - ipc-json.re
 
+    - name: Ensure sernec rule logic is gone
+      ansible.builtin.file:
+        path:  /etc/irods/{{ item }}
+        state: absent
+      with_items:
+        - sernec.re
+        - sernec-env.re
+
   handlers:
     - name: Reload rules
       ansible.builtin.file:

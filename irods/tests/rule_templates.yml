@@ -11,7 +11,6 @@
     captcn_env: "{{ lookup('template', '../templates/rule-bases/captcn-env.re.j2') }}"
     cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
     pire_env: "{{ lookup('template', '../templates/rule-bases/pire-env.re.j2') }}"
-    sernec_env: "{{ lookup('template', '../templates/rule-bases/sernec-env.re.j2') }}"
     terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
   tasks:
     - name: Verify constants expand correctly in cyverse-env.re.j2
@@ -49,13 +48,6 @@
     - name: Verify constants expand correctly in pire-env.re.j2
       ansible.builtin.assert:
         that: pire_env is search("pire_RESC = 'demoResc'")
-
-    - name: Verify constants expand correctly in sernec-env.re.j2
-      ansible.builtin.assert:
-        that:
-          - sernec_env is search('sernec_OWNERS = list()' | regex_escape)
-          - sernec_env is search('sernec_WRITERS = list()' | regex_escape)
-          - sernec_env is search('sernec_READERS = list()' | regex_escape)
 
     - name: Verify constants expand correctly in terraref-env.re.j2
       ansible.builtin.assert:
@@ -209,31 +201,6 @@
           - captcn_env is search('captcn_OWNERS = list("own1", "own2")' | regex_escape)
           - captcn_env is search('captcn_WRITERS = list("write1", "write2")' | regex_escape)
           - captcn_env is search('captcn_READERS = list("read1", "read2")' | regex_escape)
-
-
-- name: Test that sernec perm groups are generated correctly
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    sernec_owners:
-      - own1
-      - own2
-    sernec_readers:
-      - read1
-      - read2
-    sernec_writers:
-      - write1
-      - write2
-    sernec_env: "{{ lookup('template', '../templates/rule-bases/sernec-env.re.j2') }}"
-  tasks:
-    - name: Verify sernec_env
-      ansible.builtin.assert:
-        that:
-          - sernec_env is search('sernec_OWNERS = list("own1", "own2")' | regex_escape)
-          - sernec_env is search('sernec_WRITERS = list("write1", "write2")' | regex_escape)
-          - sernec_env is search('sernec_READERS = list("read1", "read2")' | regex_escape)
 
 
 - name: Test TerraREF params are set correctly

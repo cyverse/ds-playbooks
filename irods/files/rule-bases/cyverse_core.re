@@ -38,7 +38,6 @@
 @include 'mdrepo'
 @include 'pire'
 @include 'sciapps'
-@include 'sernec'
 @include 'sparcd'
 @include 'terraref'
 
@@ -89,10 +88,6 @@ _cyverse_core_acPostProcForCollCreate_exclusive {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
-	*err = errormsg(sernec_acPostProcForCollCreate, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
 	*err = errormsg(sparcd_acPostProcForCollCreate, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
@@ -104,10 +99,6 @@ _cyverse_core_acPostProcForCollCreate_exclusive {
 #
 _cyverse_core_acPostProcForCopy_exclusive {
 	*err = errormsg(captcn_acPostProcForCopy, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-	*err = errormsg(sernec_acPostProcForCopy, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
@@ -513,10 +504,6 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
 		writeLine('serverLog', *msg);
 	}
 	*err = errormsg(sciapps_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-	*err = errormsg(sernec_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}

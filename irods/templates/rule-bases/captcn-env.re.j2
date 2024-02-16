@@ -1,7 +1,0 @@
-# VERSION: 1
-#
-# environment specific CAP_TCN rules
-
-captcn_OWNERS = list({{ _captcn_owners | map('to_json') | join(', ') }})
-captcn_WRITERS = list({{ _captcn_writers | map('to_json') | join(', ') }})
-captcn_READERS = list({{ _captcn_readers | map('to_json') | join(', ') }})

@@ -24,10 +24,6 @@ _build_dir: "{{ build_dir | default('/tmp') }}"
 _canonical_hostname: "{{ canonical_hostname | default(groups['irods_catalog'][0]) }}"
 _canonical_irods_port: "{{ canonical_irods_port | default(_irods_zone_port) }}"
 
-_captcn_owners: "{{ captcn_owners | default([]) }}"
-_captcn_readers: "{{ captcn_readers | default([]) }}"
-_captcn_writers: "{{ captcn_writers | default([]) }}"
-
 _cereus_collections: "{{ cereus_collections | default([]) }}"
 _cereus_resource_hierarchy: >-
   {{ cereus_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}

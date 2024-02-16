@@ -117,6 +117,14 @@
         - ipc-housekeeping.re
         - ipc-json.re
 
+    - name: Ensure CAP-TCN rule logi is gone
+      ansible.builtin.file:
+        path:  /etc/irods/{{ item }}
+        state: absent
+      with_items:
+        - captcn.re
+        - captcn-env.re
+
     - name: Ensure sernec rule logic is gone
       ansible.builtin.file:
         path:  /etc/irods/{{ item }}

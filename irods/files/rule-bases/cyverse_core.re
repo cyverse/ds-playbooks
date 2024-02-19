@@ -255,8 +255,6 @@ acPreProcForModifyAVUMetadata(
 #            unit prefixed by 'n:', 'v:', or 'u:', respectively
 #  New3      (string) either empty or holds an update to the name, value, or
 #            unit prefixed by 'n:', 'v:', or 'u:', respectively        - de-archive-data
-        - de-create-collection
-
 #  New4      (string) either empty or holds an update to the name, value, or
 #            unit prefixed by 'n:', 'v:', or 'u:', respectively
 #
@@ -758,6 +756,10 @@ _cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
+}
+
+_cyverse_core_dataObjMetadataModified(*User, *Zone, *Object) {
+	ipc_dataObjMetadataModified(*User, *Zone, *Object);
 }
 
 

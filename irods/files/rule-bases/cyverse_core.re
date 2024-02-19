@@ -27,13 +27,11 @@
 @include 'avra'
 @include 'bisque'
 @include 'calliope'
-@include 'captcn'
 @include 'coge'
 @include 'cyverse_de'
 @include 'mdrepo'
 @include 'pire'
 @include 'sciapps'
-@include 'sernec'
 @include 'sparcd'
 @include 'terraref'
 
@@ -72,10 +70,6 @@ cyverse_core_acPostProcForCollCreate_exclusive {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
-	*err = errormsg(captcn_acPostProcForCollCreate, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
 	*err = errormsg(coge_acPostProcForCollCreate, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
@@ -84,25 +78,7 @@ cyverse_core_acPostProcForCollCreate_exclusive {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
-	*err = errormsg(sernec_acPostProcForCollCreate, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
 	*err = errormsg(sparcd_acPostProcForCollCreate, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-}
-
-# This rule applies the project specific policies to a data object created
-# through copying another data object.
-#
-cyverse_core_acPostProcForCopy_exclusive {
-	*err = errormsg(captcn_acPostProcForCopy, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-	*err = errormsg(sernec_acPostProcForCopy, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
@@ -358,13 +334,6 @@ acPostProcForCollCreate {
 	cyverse_core_acPostProcForCollCreate_exclusive;
 }
 
-# This rule sets the post-processing policy for a data object created or
-# modified by copying another data object.
-#
-acPostProcForCopy {
-	cyverse_core_acPostProcForCopy_exclusive;
-}
-
 # This rule sets the post-processing policy for when a data object's replica is
 # received due to a copy operation.
 #
@@ -499,19 +468,11 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
-	*err = errormsg(captcn_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
 	*err = errormsg(coge_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
 	*err = errormsg(sciapps_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-	*err = errormsg(sernec_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}

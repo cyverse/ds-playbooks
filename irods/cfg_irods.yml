@@ -119,6 +119,22 @@
         - ipc-json.re
         - ipc-services.re
 
+    - name: Ensure CAP-TCN rule logi is gone
+      ansible.builtin.file:
+        path:  /etc/irods/{{ item }}
+        state: absent
+      with_items:
+        - captcn.re
+        - captcn-env.re
+
+    - name: Ensure sernec rule logic is gone
+      ansible.builtin.file:
+        path:  /etc/irods/{{ item }}
+        state: absent
+      with_items:
+        - sernec.re
+        - sernec-env.re
+
   handlers:
     - name: Reload rules
       ansible.builtin.file:

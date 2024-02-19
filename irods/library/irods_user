@@ -224,11 +224,12 @@ class _State(Enum):
     ABSENT = enum.auto()
     PRESENT = enum.auto()
 
-    def from_param(param: str):
-        """Creats a _State from its corresponding state parameter value"""
+    @classmethod
+    def from_param(cls, param: str):
+        """Creates a _State from its corresponding state parameter value"""
         if param.lower() == 'absent':
-            return _State.ABSENT
-        return _State.PRESENT
+            return cls.ABSENT
+        return cls.PRESENT
 
 
 class Request:
@@ -309,7 +310,7 @@ class Request:
 
 class Irods:
     """
-    This is the interface to an object that provides requried iRODS requests.
+    This is the interface to an object that provides required iRODS requests.
 
     This interface has been separated from the _IrodsImpl class so that it can
     be mocked for testing.
@@ -328,10 +329,9 @@ class Irods:
             It returns True if the password belongs to the user, otherwise it
             returns False.
         """
-        pass
 
     def create_user(self, username: str, password: Optional[str], info: Optional[str],
-        type: Optional[str] = 'rodsuser'
+        user_type: Optional[str] = 'rodsuser'
     ) -> None:
         """
         This creates a new user account.
@@ -341,9 +341,8 @@ class Irods:
             password  an optional password that would be used to authenticate
                 the account
             info  optional information to attach to the account
-            type  the type of iRODS account to create
+            user_type  the type of iRODS account to create
         """
-        pass
 
     def get_user(self, username: str) -> Optional[iRODSUser]:
         """
@@ -356,7 +355,6 @@ class Irods:
             If there is an account associated with the given username, it
             returns a iRODS user object for it, otherwise it returns None.
         """
-        pass
 
 
 class _IrodsImpl(Irods):
@@ -393,10 +391,10 @@ class _IrodsImpl(Irods):
         except CAT_INVALID_USER:
             return False
 
-    def create_user(self, username, password, info, type = 'rodsuser'):
-        if type is None:
-            type = 'rodsuser'
-        user = self._session.users.create(username, type)
+    def create_user(self, username, password, info, user_type = 'rodsuser'):
+        if user_type is None:
+            user_type = 'rodsuser'
+        user = self._session.users.create(username, user_type)
         if password is not None:
             user.modify('password', password)
         if info is not None:
@@ -409,8 +407,8 @@ class _IrodsImpl(Irods):
             return None
 
 
-def _create_user(irods, name, type, password, info):
-    irods.create_user(username=name, type=type, password=password, info=info)
+def _create_user(irods, name, user_type, password, info):
+    irods.create_user(username=name, type=user_type, password=password, info=info)
     return True
 
 
@@ -421,10 +419,10 @@ def _ensure_user_removed(user):
     return True
 
 
-def _update_user(irods, user, type, password, info):
+def _update_user(irods, user, user_type, password, info):
     updated = False
-    if type is not None and type != user.type:
-        user.modify('type', type)
+    if user_type is not None and user_type != user.type:
+        user.modify('type', user_type)
         updated = True
     if info is not None and info != user.info:
         user.modify('info', info)
@@ -454,13 +452,13 @@ def irods_user(request: Request, irods: Irods) -> bool:
         return _create_user(
             irods=irods,
             name=request.username,
-            type=request.user_type,
+            user_type=request.user_type,
             password=request.password,
             info=request.user_info)
     return _update_user(
         irods=irods,
         user=user,
-        type=request.user_type,
+        user_type=request.user_type,
         password=request.password,
         info=request.user_info)
 
@@ -469,8 +467,7 @@ def main() -> None:
     """Entrypoint of the Ansible module"""
     ansible = AnsibleModule(argument_spec=_ARG_SPEC, supports_check_mode=True)
     if _IRODSCLIENT_PACK_ERR:
-        err_msg = "python-irodsclient issue: %s" % (str(_IRODSCLIENT_PACK_ERR))
-        ansible.fail_json(msg=err_msg)
+        ansible.fail_json(msg=f"python-irodsclient issue: {_IRODSCLIENT_PACK_ERR}")
         return
     result = dict(user=ansible.params['name'], changed=False)
     try:
@@ -480,7 +477,7 @@ def main() -> None:
         with _IrodsImpl(request) as irods:
             result['changed'] = irods_user(request, irods)
         ansible.exit_json(**result)
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         tmpl = "An unexpected exception occurred:\n{0}"
         ansible.fail_json(msg=tmpl.format(traceback.format_exc()), **result)
 

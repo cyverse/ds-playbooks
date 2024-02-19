@@ -77,11 +77,14 @@
         or resp.stat.gr_name != 'rabbitmq'
         or not resp.stat.rusr
 
+<<<<<<< HEAD
+=======
 
 - name: Verify | test runtime configuration
   hosts: ubuntu
   gather_facts: false
   tasks:
+>>>>>>> 1bb2b90b (DS-642: Removed the CentOS RabbitMQ deployment logic)
     - name: Retrieve service information
       ansible.builtin.service_facts:
 

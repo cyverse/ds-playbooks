@@ -394,21 +394,22 @@ _repl_mvReplicas_workaround(*Object, *IngestName, *ReplName) {
 
 # DEPRECATED
 _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
+  *entity = str(*Entity);
   (*ingestName, *ingestOptional) = *IngestResc;
   (*replName, *replOptional) = *ReplResc;
-  *type = ipc_getEntityType(*Entity);
+  *type = cyverse_getEntityType(*entity);
 
-  if (*type == '-C') {
+  if (cyverse_isColl(*type)) {
     # if the entity is a collection
-    foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
+    foreach (*collPat in list(*entity, *entity ++ '/%')) {
       foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
         *dataId = *rec.DATA_ID;
         _scheduleMv(*dataId, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
       }
     }
-  } else if (*type == '-d') {
+  } else if (cyverse_isDataObj(*type)) {
     # if the entity is a data object
-    msiSplitPath(*Entity, *collPath, *dataName);
+    msiSplitPath(*entity, *collPath, *dataName);
 
     foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName') {
       *dataId = *rec.DATA_ID;
@@ -419,19 +420,20 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
 
 
 _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
-  *type = ipc_getEntityType(*Entity);
+  *entity = str(*Entity);
+  *type = cyverse_getEntityType(*entity);
 
-  if (*type == '-C') {
+  if (cyverse_isColl(*type)) {
     # if the entity is a collection
-    foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
+    foreach (*collPat in list(*entity, *entity ++ '/%')) {
       foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
         *dataId = *rec.DATA_ID;
         _repl_scheduleMv(*dataId, *IngestName, *ReplName);
       }
     }
-  } else if (*type == '-d') {
+  } else if (cyverse_isDataObj(*type)) {
     # if the entity is a data object
-    msiSplitPath(*Entity, *collPath, *dataName);
+    msiSplitPath(*entity, *collPath, *dataName);
 
     foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName') {
       *dataId = *rec.DATA_ID;

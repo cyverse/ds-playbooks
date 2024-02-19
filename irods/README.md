@@ -89,10 +89,16 @@ Variable                                   | Required | Default                 
 `sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
 `sftp_proxy_allowed`                       | no       | `[]`                                 |         | A list of network/masks for the proxy servers allowed access to the SFTP servers
 `sftpgo_admin_ui_port`                     | no       | 18023                                |         | The SFTPGo admin UI service port number
-`sftpgo_admin_username`                    | no       | admin                                |         | The SFTPGo admin account name
 `sftpgo_admin_password`                    | yes      |                                      |         | The password of the SFTPGo admin user
-`sftpgo_irods_proxy_username`              | no       | sftp                                 |         | The irods user who provides proxy access to SFTPGo
+`sftpgo_admin_username`                    | no       | admin                                |         | The SFTPGo admin account name
+`sftpgo_irods_auth_scheme`                 | no       | native                               |         | The auth scheme of irods. 'pam' and 'pam_for_users' are also available.
 `sftpgo_irods_proxy_password`              | yes      |                                      |         | The password of the SFTPGo irods proxy user
+`sftpgo_irods_proxy_username`              | no       | sftp                                 |         | The irods user who provides proxy access to SFTPGo
+`sftpgo_irods_ssl_algorithm`               | no       |                                      |         | The SSL encryption algorithm (required by PAM auth scheme)
+`sftpgo_irods_ssl_ca_cert_path`            | no       |                                      |         | The SSL CA certificate file path (required by PAM auth scheme)
+`sftpgo_irods_ssl_hash_rounds`             | no       |                                      |         | The SSL encryption hash rounds (required by PAM auth scheme)
+`sftpgo_irods_ssl_key_size`                | no       |                                      |         | The SSL encryption key size (required by PAM auth scheme)
+`sftpgo_irods_ssl_salt_size`               | no       |                                      |         | The SSL encryption salt size (required by PAM auth scheme)
 `sftpgo_vault_dir`                         | no       | /sftpgo_vault                        |         | The directory SFTPGo will use for saving state
 `sparcd_admin`                             | no       | null                                 |         | The user name of the Sparc'd administrator. If this isn't set, no sparcd rules will fire.
 `sparcd_base_collection`                   | no       | _see description_                    |         | The base iRODS collection used by Sparc'd. If `sparcd_admin` is `null`, the default is `null`, otherwise it is `/{{ irods_zone_name }}/home/{{ sparcd_admin }}/Sparcd/Collections`.
@@ -123,20 +129,6 @@ Variable                                   | Required | Default                 
 `webdav_tls_key`                           | no       |                                      |         | The TLS key
 `webdav_tls_key_file`                      | no       | /etc/ssl/certs/dummy.key             |         | The TLS key file used for encrypted communication
 `webdav_varnish_service_port`              | no       | 6081                                 |         | The service port number for varnish-cache
-`sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
-`sftp_proxy_allowed`                       | no       | `[]`                                 |         | A list of network/masks for the proxy servers allowed access to the SFTP servers
-`sftpgo_admin_ui_port`                     | no       | 18023                                |         | The SFTPGo admin UI service port number
-`sftpgo_vault_dir`                         | no       | /sftpgo_vault                        |         | The directory SFTPGo will use for saving state
-`sftpgo_admin_username`                    | no       | admin                                |         | The SFTPGo admin account name
-`sftpgo_admin_password`                    | yes      |                                      |         | The password of the SFTPGo admin user
-`sftpgo_irods_proxy_username`              | no       | sftp                                 |         | The irods user who provides proxy access to SFTPGo
-`sftpgo_irods_proxy_password`              | yes      |                                      |         | The password of the SFTPGo irods proxy user
-`sftpgo_irods_auth_scheme`                 | no       | native                               |         | The auth scheme of irods. 'pam' and 'pam_for_users' are also available.
-`sftpgo_irods_ssl_ca_cert_path`            | no       |                                      |         | The SSL CA certificate file path (required by PAM auth scheme)
-`sftpgo_irods_ssl_algorithm`               | no       |                                      |         | The SSL encryption algorithm (required by PAM auth scheme)
-`sftpgo_irods_ssl_key_size`                | no       |                                      |         | The SSL encryption key size (required by PAM auth scheme)
-`sftpgo_irods_ssl_salt_size`               | no       |                                      |         | The SSL encryption salt size (required by PAM auth scheme)
-`sftpgo_irods_ssl_hash_rounds`             | no       |                                      |         | The SSL encryption hash rounds (required by PAM auth scheme)
 
 `irods_federation` entry fields
 

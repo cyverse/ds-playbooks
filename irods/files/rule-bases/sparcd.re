@@ -102,7 +102,7 @@ _sparcd_isForSparcd(*Path) =
 
 _sparcd_handle_new_object(*User, *Object) {
   if (_sparcd_isForSparcd(*Object)) {
-    ipc_giveAccessObj(sparcd_ADMIN, _sparcd_PERM, *Object);
+    cyverse_giveAccessDataObj(sparcd_ADMIN, _sparcd_PERM, *Object);
 
     if (*Object like regex '^' ++ str(sparcd_BASE_COLL) ++ '/[^/]*/Uploads/[^/]*\\.tar$') {
       _sparcd_logMsg('scheduling ingest of *Object for *User');
@@ -123,7 +123,7 @@ _sparcd_handle_new_object(*User, *Object) {
 
 sparcd_acPostProcForCollCreate {
   if (_sparcd_isForSparcd($collName)) {
-    ipc_giveAccessColl(sparcd_ADMIN, _sparcd_PERM, $collName);
+    cyverse_giveAccessColl(sparcd_ADMIN, _sparcd_PERM, $collName);
   }
 }
 

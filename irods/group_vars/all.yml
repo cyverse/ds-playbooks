@@ -24,10 +24,6 @@ _build_dir: "{{ build_dir | default('/tmp') }}"
 _canonical_hostname: "{{ canonical_hostname | default(groups['irods_catalog'][0]) }}"
 _canonical_irods_port: "{{ canonical_irods_port | default(_irods_zone_port) }}"
 
-_captcn_owners: "{{ captcn_owners | default([]) }}"
-_captcn_readers: "{{ captcn_readers | default([]) }}"
-_captcn_writers: "{{ captcn_writers | default([]) }}"
-
 _cereus_collections: "{{ cereus_collections | default([]) }}"
 _cereus_resource_hierarchy: >-
   {{ cereus_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}
@@ -91,10 +87,6 @@ _pire_resource_hierarchy: "{{ pire_resource_hierarchy | default(_irods_resource_
 _report_email_addr: "{{ report_email_addr | default('root@localhost') }}"
 
 _restart_irods: "{{ restart_irods | default(false) }}"
-
-_sernec_owners: "{{ sernec_owners if sernec_owners is defined else [] }}"
-_sernec_readers: "{{ sernec_readers if sernec_readers is defined else [] }}"
-_sernec_writers: "{{ sernec_writers if sernec_writers is defined else [] }}"
 
 _sparcd_admin: "{{ sparcd_admin | default(None) }}"
 _sparcd_base_collection: >-

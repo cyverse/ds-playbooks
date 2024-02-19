@@ -22,8 +22,6 @@
         - bisque.re
         - bisque-env.re
         - calliope.re
-        - captcn.re
-        - captcn-env.re
         - coge.re
         - core.dvm
         - core.fnm
@@ -42,8 +40,6 @@
         - mdrepo-env.re
         - pire.re
         - pire-env.re
-        - sernec.re
-        - sernec-env.re
         - server_config.json
         - service_account.config
         - terraref.re
@@ -280,3 +276,21 @@
         - ipc-housekeeping.re
         - ipc-json.re
         - ipc-services.re
+
+    - name: Test ensure CAP-TCN rule logic is gone
+      ansible.builtin.stat:
+        path: /etc/irods/{{ item }}
+      register: response
+      failed_when: response.stat.exists
+      with_items:
+        - captcn.re
+        - captcn-env.re
+
+    - name: Test ensure sernec rule logic is gone
+      ansible.builtin.stat:
+        path: /etc/irods/{{ item }}
+      register: response
+      failed_when: response.stat.exists
+      with_items:
+        - sernec.re
+        - sernec-env.re

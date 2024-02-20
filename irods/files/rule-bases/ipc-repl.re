@@ -42,7 +42,8 @@
 #
 #   Example:
 #     project_replBelongsTo : path -> boolean
-#     project_replBelongsTo(*Entity) = str(*Entity) like '/' ++ cyverse_ZONE ++ '/home/shared/project/*'
+#     project_replBelongsTo(*Entity) =
+#        str(*Entity) like '/' ++ cyverse_ZONE ++ '/home/shared/project/*'
 #
 # <file_name>_replIngestResc
 #   Returns the resource where newly ingested files for the project should be
@@ -623,23 +624,14 @@ _repl_findReplResc(*Resc) {
 
 # DEPRECATED
 _old_replEntityRename(*SourceObject, *DestObject) {
-  on (de_replBelongsTo(/*DestObject)) {}
   on (pire_replBelongsTo(/*DestObject)) {
     if (!pire_replBelongsTo(/*SourceObject)) {
       _scheduleMoves(*DestObject, pire_replIngestResc, pire_replReplResc);
     }
   }
-  on (terraref_replBelongsTo(/*DestObject)) {
-    if (!terraref_replBelongsTo(/*SourceObject)) {
-      _scheduleMoves(*DestObject, terraref_replIngestResc, terraref_replReplResc);
-    }
-  }
 }
 _old_replEntityRename(*SourceObject, *DestObject) {
   on (pire_replBelongsTo(/*SourceObject)) {
-    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
-  }
-  on (terraref_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
 }
@@ -674,14 +666,8 @@ replEntityRename(*SourceObject, *DestObject) {
 
 # DEPRECATED
 _ipcRepl_acSetRescSchemeForCreate {
-  on (de_replBelongsTo(/$objPath)) {
-    _setDefaultResc(de_replIngestResc);
-  }
   on (pire_replBelongsTo(/$objPath)) {
     _setDefaultResc(pire_replIngestResc);
-  }
-  on (terraref_replBelongsTo(/$objPath)) {
-    _setDefaultResc(terraref_replIngestResc);
   }
 }
 _ipcRepl_acSetRescSchemeForCreate {
@@ -704,14 +690,8 @@ ipcRepl_acSetRescSchemeForCreate {
 
 # DEPRECATED
 _ipcRepl_acSetRescSchemeForRepl {
-  on (de_replBelongsTo(/$objPath)) {
-    _setDefaultResc(de_replReplResc);
-  }
   on (pire_replBelongsTo(/$objPath)) {
     _setDefaultResc(pire_replReplResc);
-  }
-  on (terraref_replBelongsTo(/$objPath)) {
-    _setDefaultResc(terraref_replReplResc);
   }
 }
 _ipcRepl_acSetRescSchemeForRepl {
@@ -739,11 +719,7 @@ ipcRepl_acSetRescSchemeForRepl {
 
 # DEPRECATED
 _ipcRepl_put_old(*ObjPath, *DestResc, *New) {
-  on (de_replBelongsTo(/*ObjPath)) {
-    _ipcRepl_createOrOverwrite_old(*ObjPath, *DestResc, *New, de_replIngestResc, de_replReplResc);
-  }
   on (pire_replBelongsTo(/*ObjPath)) {}
-  on (terraref_replBelongsTo(/*ObjPath)) {}
 }
 _ipcRepl_put_old(*ObjPath, *DestResc, *New) {
   _ipcRepl_createOrOverwrite_old(*ObjPath, *DestResc, *New, _defaultIngestResc, _defaultReplResc);

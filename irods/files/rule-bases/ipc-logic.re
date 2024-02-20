@@ -906,8 +906,8 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 #
 
 # XXX - Because of https://github.com/irods/irods/issues/5540
-# ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO) {
-# 	*me = 'ipc_dataObjCreated_default';
+# ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO) {
+# 	*me = 'ipc_dataObjCreated';
 # 	*id = int(*DATA_OBJ_INFO.data_id);
 # 	_ipc_registerAction(*id, *me);
 # 	*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
@@ -941,8 +941,8 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 #
 # 	_ipc_unregisterAction(*id, *me);
 # }
-ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
-	*me = 'ipc_dataObjCreated_default';
+ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO, *Step) {
+	*me = 'ipc_dataObjCreated';
 	*id = int(*DATA_OBJ_INFO.data_id);
 	_ipc_registerAction(*id, *me);
 
@@ -1005,41 +1005,8 @@ ipc_dataObjCreated_default(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 }
 # XXX - ^^^
 
-# XXX - Because of https://github.com/irods/irods/issues/5540
-# ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO) {
-# 	*me = 'ipc_dataObjCreated_staging';
-# 	*id = int(*DATA_OBJ_INFO.data_id);
-# 	_ipc_registerAction(*id, *me);
-#
-# 	*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
-# 	if (*err < 0) { writeLine('serverLog', *msg); }
-#
-# 	*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
-# 	if (*err < 0) { writeLine('serverLog', *msg); }
-#
-#	_ipc_unregisterAction(*id, *me);
-# }
-ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO, *Step) {
-	*me = 'ipc_dataObjCreated_staging';
-	*id = int(*DATA_OBJ_INFO.data_id);
-	_ipc_registerAction(*id, *me);
-
-	if (*Step != 'FINISH') {
-		*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
-		if (*err < 0) { writeLine('serverLog', *msg); }
-	}
-
-	if (*Step != 'START') {
-		*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
-		if (*err < 0) { writeLine('serverLog', *msg); }
-	}
-
-	_ipc_unregisterAction(*id, *me);
-}
-# XXX - ^^^
-
-ipc_dataObjModified_default(*User, *Zone, *DATA_OBJ_INFO) {
-	*me = 'ipc_dataObjModified_default';
+ipc_dataObjModified(*User, *Zone, *DATA_OBJ_INFO) {
+	*me = 'ipc_dataObjModified';
 	*id = int(*DATA_OBJ_INFO.data_id);
 	_ipc_registerAction(*id, *me);
 
@@ -1074,7 +1041,7 @@ ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 	if (*id >= 0) {
 		_ipc_registerAction(*id, *me);
 
-		if (_ipc_isCurrentAction(*id, *me) && ! cyverse_inStaging(/*Object)) {
+		if (_ipc_isCurrentAction(*id, *me)) {
 			*uuid = '';
 			_ipc_ensureUUID(cyverse_DATA_OBJ, *Object, *uuid, *User, *Zone);
 			_ipc_sendDataObjectMetadataModified(*uuid, *User, *Zone);

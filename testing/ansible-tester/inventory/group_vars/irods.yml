@@ -24,8 +24,6 @@ irods_amqp_host: "{{ groups['amqp'][0] }}"
 irods_amqp_user: amqp_admin
 irods_amqp_password: password
 
-irods_calliope_project_coll: /testing/home/shared/calliope
-
 irods_clerver_password: password
 
 irods_default_number_of_transfer_threads: 4
@@ -63,11 +61,3 @@ pire_resource_hierarchy:
   type: passthru
   children:
     - name: pire
-
-terraref_base_collection: /testing/home/shared/terraref
-terraref_manager: terraref_mgr
-terraref_resource_hierarchy:
-  name: terrarefRes
-  type: passthru
-  children:
-    - name: terraref

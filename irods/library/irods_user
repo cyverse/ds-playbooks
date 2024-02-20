@@ -8,12 +8,13 @@
 Provides an ansible module for creating, updating and removing iRODS users.
 """
 
+from abc import ABC, abstractmethod
 import enum
 from enum import Enum
 from ssl import Purpose
 import ssl
-import traceback
 from typing import Optional
+
 from ansible.module_utils.basic import AnsibleModule
 
 __metaclass__ = type  # pylint: disable=invalid-name
@@ -236,11 +237,12 @@ class Request:
     """This class encapsulates the parameters passed into this module. """
 
     def __init__(self, module_params: dict):
-        self._zone = module_params['zone']
-        self._admin_username = module_params['admin_user']
-        self._admin_password = module_params['admin_password']
-        self._host = module_params['host']
-        self._port = module_params['port']
+        self._conn_info = {
+            'host': module_params['host'],
+            'port': module_params['port'],
+            'zone': module_params['zone'],
+            'admin_username': module_params['admin_user'],
+            'admin_password': module_params['admin_password'] }
         self._username = module_params['name']
         self._state = _State.from_param(module_params['state'])
         self._user_info = module_params.get('info')
@@ -253,12 +255,12 @@ class Request:
         This is the iRODS zone that will be used. It is also the zone the user
         belongs to.
         """
-        return self._zone
+        return self._conn_info['zone']
 
     @property
     def admin_username(self) -> str:
         """This is the rodsadmin account that authorizes the user changes."""
-        return self._admin_username
+        return self._conn_info['admin_username']
 
     @property
     def admin_password(self) -> str:
@@ -266,21 +268,21 @@ class Request:
         This is the password that authenticates the rodsadmin account making the
         changes.
         """
-        return self._admin_password
+        return self._conn_info['admin_password']
 
     @property
     def host(self) -> str:
         """
         This is the domain name or IP address of the iRODS server to connect to.
         """
-        return self._host
+        return self._conn_info['host']
 
     @property
     def port(self) -> int:
         """
         This is the TCP port iRODS uses on the server that will be connected to.
         """
-        return self._port
+        return self._conn_info['port']
 
     @property
     def username(self) -> str:
@@ -308,7 +310,7 @@ class Request:
         return self._user_type if self.state == _State.PRESENT else None
 
 
-class Irods:
+class Irods(ABC):
     """
     This is the interface to an object that provides required iRODS requests.
 
@@ -316,6 +318,7 @@ class Irods:
     be mocked for testing.
     """
 
+    @abstractmethod
     def check_password(self, user: iRODSUser, password: str) -> bool:
         """
         This verifies that a given password belongs to a given user.
@@ -330,6 +333,7 @@ class Irods:
             returns False.
         """
 
+    @abstractmethod
     def create_user(self, username: str, password: Optional[str], info: Optional[str],
         user_type: Optional[str] = 'rodsuser'
     ) -> None:
@@ -344,6 +348,7 @@ class Irods:
             user_type  the type of iRODS account to create
         """
 
+    @abstractmethod
     def get_user(self, username: str) -> Optional[iRODSUser]:
         """
         This retrieves an iRODS user object for a given account.
@@ -372,7 +377,7 @@ class _IrodsImpl(Irods):
     def __enter__(self):
         return self
 
-    def __exit__(self, exn_type, _exn_value, _traceback):
+    def __exit__(self, _exn_type, _exn_value, _traceback):
         self._session.cleanup()
 
     def check_password(self, user, password):
@@ -408,7 +413,7 @@ class _IrodsImpl(Irods):
 
 
 def _create_user(irods, name, user_type, password, info):
-    irods.create_user(username=name, type=user_type, password=password, info=info)
+    irods.create_user(username=name, user_type=user_type, password=password, info=info)
     return True
 
 
@@ -469,17 +474,15 @@ def main() -> None:
     if _IRODSCLIENT_PACK_ERR:
         ansible.fail_json(msg=f"python-irodsclient issue: {_IRODSCLIENT_PACK_ERR}")
         return
-    result = dict(user=ansible.params['name'], changed=False)
-    try:
-        if ansible.check_mode:
-            ansible.exit_json(**result)
-        request = Request(ansible.params)
-        with _IrodsImpl(request) as irods:
-            result['changed'] = irods_user(request, irods)
+    result = {
+        'user': ansible.params['name'],
+        'changed': False }
+    if ansible.check_mode:
         ansible.exit_json(**result)
-    except Exception:  # pylint: disable=broad-exception-caught
-        tmpl = "An unexpected exception occurred:\n{0}"
-        ansible.fail_json(msg=tmpl.format(traceback.format_exc()), **result)
+    request = Request(ansible.params)
+    with _IrodsImpl(request) as irods:
+        result['changed'] = irods_user(request, irods)
+    ansible.exit_json(**result)
 
 
 if __name__ == '__main__':

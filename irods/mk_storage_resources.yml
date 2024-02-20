@@ -1,10 +1,10 @@
 ---
-- name: create vaults
+- name: Create vaults
   hosts: irods_resource:!unmanaged_systems
   become: true
   tasks:
-    - name: create vault directory
-      file:
+    - name: Create vault directory
+      ansible.builtin.file:
         path: "{{ item.vault }}"
         follow: true
         owner: "{{ _irods_service_account_name }}"
@@ -13,18 +13,18 @@
         state: directory
       with_items: "{{ _irods_storage_resources }}"
 
-    - name: install python modules for irods_unixfilesystem_resource
-      pip:
+    - name: Install python modules for irods_unixfilesystem_resource
+      ansible.builtin.pip:
         name: python-irodsclient
         state: present
 
 
-- name: create storage resources
+- name: Create storage resources
   hosts: irods_resource
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
-    - name: define storage resource
+    - name: Define storage resource
       irods_unixfilesystem_resource:
         name: "{{ item.name }}"
         host: "{{ inventory_hostname }}"

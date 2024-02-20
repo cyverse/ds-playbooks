@@ -4,28 +4,19 @@
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
-    - name: "add SPARC'd cmd"
-      copy:
-        src: files/cmd-common/sparcd-ingest
-        dest: /var/lib/irods/msiExecCmd_bin
-        mode: u=rx,go-rwx
-
-    - name: "add SPARC'd environment rule base"
-      template:
-        src: templates/rule-bases/sparcd-env.re.j2
-        dest: /etc/irods/sparcd-env.re
-        mode: ug=r,o-rwx
-      notify: reload rules
-
-    - name: "add SPARC'd logic rule base"
-      copy:
-        src: files/rule-bases/sparcd.re
-        dest: /etc/irods
-        mode: ug=r,o-rwx
-      notify: reload rules
+    - name: "Remove SPARC'd files"
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/irods/sparcd.re
+        - /etc/irods/sparcd-env.re
+        - /var/lib/irods/msiExecCmd_bin/sparcd-ingest
+      notify: Reload iRODS rules
 
   handlers:
-    - name: reload rules
-      file:
+    - name: Reload iRODS rules
+      ansible.builtin.file:
         path: /etc/irods/core.re
+        mode: u+r
         state: touch

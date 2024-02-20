@@ -88,22 +88,7 @@ _report_email_addr: "{{ report_email_addr | default('root@localhost') }}"
 
 _restart_irods: "{{ restart_irods | default(false) }}"
 
-_sparcd_admin: "{{ sparcd_admin | default(None) }}"
-_sparcd_base_collection: >-
-  {{ sparcd_base_collection
-    | default(
-      '/' + _irods_zone_name + '/home/' + _sparcd_admin + '/Sparcd/Collections'
-        if _sparcd_admin else
-      None ) }}
-_sparcd_report_email_addr: >-
-  {{ sparcd_report_email_addr | default(_report_email_addr if _sparcd_admin else None) }}
-
 _sysctl_kernel: "{{ sysctl_kernel | default([]) }}"
-
-_terraref_base_collection: "{{ terraref_base_collection | default(None) }}"
-_terraref_manager: "{{ terraref_manager | default(_irods_clerver_user) }}"
-_terraref_resource_hierarchy: >-
-  {{ terraref_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}
 
 _webdav_access_limit: "{{ webdav_access_limit | default(None) }}"
 _webdav_allowed_src: "{{ webdav_allowed_src | default(['0.0.0.0/0']) }}"

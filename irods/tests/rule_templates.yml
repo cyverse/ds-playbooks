@@ -10,7 +10,6 @@
     bisque_env: "{{ lookup('template', '../templates/rule-bases/bisque-env.re.j2') }}"
     cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
     pire_env: "{{ lookup('template', '../templates/rule-bases/pire-env.re.j2') }}"
-    terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
   tasks:
     - name: Verify constants expand correctly in cyverse-env.re.j2
       ansible.builtin.assert:
@@ -40,12 +39,6 @@
     - name: Verify constants expand correctly in pire-env.re.j2
       ansible.builtin.assert:
         that: pire_env is search("pire_RESC = 'demoResc'")
-
-    - name: Verify constants expand correctly in terraref-env.re.j2
-      ansible.builtin.assert:
-        that:
-          - terraref_env is search("terraref_BASE_COLL = ''")
-          - terraref_env is search("terraref_RESC = 'demoResc'")
 
 
 - name: Test that custom AMQP exchange set correctly in cyverse-env.re
@@ -168,19 +161,3 @@
     - name: Verify params
       ansible.builtin.assert:
         that: pire_env is search("pire_RESC = 'pireRes'")
-
-
-- name: Test TerraREF params are set correctly
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    terraref_base_collection: base
-    terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
-  tasks:
-    - name: Verify params
-      ansible.builtin.assert:
-        that:
-          - terraref_env is search("terraref_BASE_COLL = 'base'")
-          - terraref_env is search("terraref_RESC = 'demoResc'")

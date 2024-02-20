@@ -21,7 +21,6 @@
         - avra-env.re
         - bisque.re
         - bisque-env.re
-        - calliope.re
         - coge.re
         - core.dvm
         - core.fnm
@@ -29,7 +28,6 @@
         - cyverse.re
         - cyverse-env.re
         - cyverse_core.re
-        - cyverse_de.re
         - cyverse_housekeeping.re
         - cyverse_json.re
         - host_access_control_config.json
@@ -42,8 +40,6 @@
         - pire-env.re
         - server_config.json
         - service_account.config
-        - terraref.re
-        - terraref-env.re
 
     - name: Verify irods_environment.json is in place
       ansible.builtin.stat:
@@ -61,10 +57,7 @@
         or not response.stat.xusr
       with_items:
         - amqptopicsend.py
-        - calliope-ingest
         - correct-size
-        - de-archive-data
-        - de-create-collection
         - delete-scheduled-rule
         - generateuuid
         - imeta-exec
@@ -270,12 +263,20 @@
       register: response
       failed_when: response.stat.exists
       with_items:
-        - de.re
         - ipc-custom.re
         - ipc-env.re
         - ipc-housekeeping.re
         - ipc-json.re
         - ipc-services.re
+
+    - name: Test ensure calliope gone
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: response
+      failed_when: response.stat.exists
+      with_items:
+        - /etc/irods/calliope.re
+        - /var/lib/irods/msiExecCmd_bin/calliope-ingest
 
     - name: Test ensure CAP-TCN rule logic is gone
       ansible.builtin.stat:
@@ -286,6 +287,23 @@
         - captcn.re
         - captcn-env.re
 
+    - name: Test ensure DE staging gone
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: response
+      failed_when: response.stat.exists
+      with_items:
+        - /etc/irods/cyverse_de.re
+        - /etc/irods/de.re
+        - /var/lib/irods/msiExecCmd_bin/de-archive-data
+        - /var/lib/irods/msiExecCmd_bin/de-create-collection
+
+    - name: Test ensure sciapps gone
+      ansible.builtin.stat:
+        path: /etc/irods/sciapps.re
+      register: response
+      failed_when: response.stat.exists
+
     - name: Test ensure sernec rule logic is gone
       ansible.builtin.stat:
         path: /etc/irods/{{ item }}
@@ -294,3 +312,12 @@
       with_items:
         - sernec.re
         - sernec-env.re
+
+    - name: Test ensure terraref gone
+      ansible.builtin.stat:
+        path: /etc/irods/{{ item }}
+      register: response
+      failed_when: response.stat.exists
+      with_items:
+        - terraref.re
+        - terraref-env.re

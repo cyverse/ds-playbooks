@@ -108,27 +108,31 @@ _ipc_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 # CHECKSUMS
 #
 
-# Compute the checksum of of a given replica of a given data object
-_ipc_chksumRepl(*Object, *ReplNum) {
-	*id = _ipc_getDataId(*Object)
-	*opt = '';
+# Compute the checksum of a given replica of a given data object
+_ipc_chksumRepl(*Id, *ReplNum) {
+  *opt = '';
 	msiAddKeyValToMspStr('forceChksum', '', *opts);
 	msiAddKeyValToMspStr('replNum', str(*ReplNum), *opts);
+
+  *dataPath = '';
+  foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Id') {
+    *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
+  }
+
+  if (*dataPath != '') {
+    msiDataObjChksum(*dataPath, *opts, *_);
+  }
+}
+
+# Schedule a task for computing the checksum of a given replica of a given data object
+_ipc_scheduleChksumRepl(*Object, *ReplNum) {
+	*id = _ipc_getDataId(*Object)
 
 	delay(
 		'<INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>' ++
 		'<PLUSET>0s</PLUSET>' ++
 		'<EF>0s REPEAT 0 TIMES</EF>'
-  	) {
-		*dataPath = '';
-		foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*id') {
-			*dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
-		}
-
-		if (*dataPath != '') {
-			msiDataObjChksum(*dataPath, *opts, *_);
-		}
-	}
+  	) {_ipc_chksumRepl(*id, *ReplNum)}
 }
 
 
@@ -925,7 +929,7 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 # 	*me = 'ipc_dataObjCreated';
 # 	*id = int(*DATA_OBJ_INFO.data_id);
 # 	_ipc_registerAction(*id, *me);
-# 	*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
+# 	*err = errormsg(_ipc_scheduleChksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
 # 	if (*err < 0) { writeLine('serverLog', *msg); }
 #
 # 	*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
@@ -988,7 +992,7 @@ ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 	}
 
 	if (*Step != 'START') {
-		*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
+		*err = errormsg(_ipc_scheduleChksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 
 		if (*uuid == '') {
@@ -1020,8 +1024,41 @@ ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 }
 # XXX - ^^^
 
+# XXX - Because of https://github.com/irods/irods/issues/5540
+# ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO) {
+# 	*me = 'ipc_dataObjCreated_staging';
+# 	*id = int(*DATA_OBJ_INFO.data_id);
+# 	_ipc_registerAction(*id, *me);
+#
+# 	*err = errormsg(_ipc_scheduleChksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
+# 	if (*err < 0) { writeLine('serverLog', *msg); }
+#
+# 	*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
+# 	if (*err < 0) { writeLine('serverLog', *msg); }
+#
+#	_ipc_unregisterAction(*id, *me);
+# }
+ipc_dataObjCreated_staging(*User, *Zone, *DATA_OBJ_INFO, *Step) {
+	*me = 'ipc_dataObjCreated_staging';
+	*id = int(*DATA_OBJ_INFO.data_id);
+	_ipc_registerAction(*id, *me);
+
+	if (*Step != 'FINISH') {
+		*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
+		if (*err < 0) { writeLine('serverLog', *msg); }
+	}
+
+	if (*Step != 'START') {
+		*err = errormsg(_ipc_scheduleChksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
+		if (*err < 0) { writeLine('serverLog', *msg); }
+	}
+
+	_ipc_unregisterAction(*id, *me);
+}
+# XXX - ^^^
+
 ipc_dataObjModified(*User, *Zone, *DATA_OBJ_INFO) {
-	*me = 'ipc_dataObjModified';
+	*me = 'ipc_dataObjModified_default';
 	*id = int(*DATA_OBJ_INFO.data_id);
 	_ipc_registerAction(*id, *me);
 

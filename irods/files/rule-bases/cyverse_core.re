@@ -6,12 +6,12 @@
 # For license information, see https://cyverse.org/license.
 
 # All Data Store specific, environment independent logic goes in the file
-# ipc-logic.re. These rules will be called by the hooks implemented here.
+# cyverse_logic.re. These rules will be called by the hooks implemented here.
 
 # The shared logic usable by the Data Store and other service rules.
 @include 'cyverse'
 
-@include 'ipc-logic'
+@include 'cyverse_logic'
 @include 'ipc-repl'
 @include 'ipc-trash'
 

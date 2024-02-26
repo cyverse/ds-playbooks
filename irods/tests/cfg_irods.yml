@@ -30,9 +30,9 @@
         - cyverse_core.re
         - cyverse_housekeeping.re
         - cyverse_json.re
+        - cyverse_logic.re
         - host_access_control_config.json
         - hosts_config.json
-        - ipc-logic.re
         - ipc-trash.re
         - mdrepo.re
         - mdrepo-env.re
@@ -267,6 +267,7 @@
         - ipc-env.re
         - ipc-housekeeping.re
         - ipc-json.re
+        - ipc-logic.re
         - ipc-services.re
 
     - name: Test ensure calliope gone

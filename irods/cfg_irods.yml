@@ -116,6 +116,7 @@
         - ipc-env.re
         - ipc-housekeeping.re
         - ipc-json.re
+        - ipc-logic.re
         - ipc-services.re
 
     - name: Ensure calliope gone

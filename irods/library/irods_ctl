@@ -45,13 +45,8 @@ def _call_irodsctl(arg):
     cmd = Popen(args=[_find_irodsctl(), arg], stdout=PIPE, stderr=PIPE)
     (resp, err) = cmd.communicate()
 
-    if cmd.returncode != 0 or err:
-        # NB: Due to a bug in irodsctl in iRODS 4.2.8, an error isn't always an
-        # error. See https://github.com/irods/irods/issues/5700
-        # raise Exception(err)
-        if not (_is_new() and "Success" in str(resp)):
-            raise Exception(err)
-
+    if cmd.returncode != 0:
+        raise Exception(err)
     return resp
 
 

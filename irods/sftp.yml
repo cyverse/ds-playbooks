@@ -185,12 +185,15 @@
       notify:
         - Restart sftpgo
 
-    - name: Configure sftpgo black lists
+    - name: Configure sftpgo black/white lists
       ansible.builtin.copy:
-        src: files/sftp/etc/sftpgo/blacklist.json
-        dest: /etc/sftpgo/blacklist.json
+        src: files/sftp/etc/sftpgo/{{ item }}
+        dest: /etc/sftpgo/{{ item }}
         owner: sftpgo
         mode: '0664'
+      with_items:
+        - "blacklist.json"
+        - "whitelist.json"
       notify:
         - Restart sftpgo
 

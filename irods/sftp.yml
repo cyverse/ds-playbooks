@@ -185,20 +185,6 @@
       notify:
         - Restart sftpgo
 
-    # do not overwrite existing black/white lists
-    - name: Configure sftpgo black/white lists
-      ansible.builtin.copy:
-        src: files/sftp/etc/sftpgo/{{ item }}
-        dest: /etc/sftpgo/{{ item }}
-        owner: sftpgo
-        mode: '0664'
-        force: false
-      with_items:
-        - "blacklist.json"
-        - "whitelist.json"
-      notify:
-        - Restart sftpgo
-
     - name: Check if there are ssh host_keys on the host
       ansible.builtin.stat:
         path: /etc/ssh

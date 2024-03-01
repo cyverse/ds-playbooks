@@ -51,7 +51,7 @@
         (not sftpgo_resp.stat.exists)
         or (sftpgo_account.rc != 0)
         or (sftpgo_version.stdout != '2.4.5')
-        or (sftpgo_resp.stat.checksum != '296a2f4aca242833560461c88d4367008ba1166e')
+        or (sftpgo_resp.stat.checksum != 'b5823a61f227e24fb8db2c0edd09afd039dee60c')
       block:
         - name: Check if sftpgo service exists
           ansible.builtin.stat:
@@ -77,7 +77,7 @@
         - name: Download sftpgo package from github and uncompress
           ansible.builtin.unarchive:
             src: >-
-              https://github.com/cyverse/sftpgo/releases/download/v2.4.5i3/sftpgo_amd64_linux_v2.4.5i3.tar
+              https://github.com/cyverse/sftpgo/releases/download/v2.4.5i4/sftpgo_amd64_linux_v2.4.5i4.tar
             dest: /tmp/sftpgo_setup
             remote_src: true
           notify: Install sftpgo

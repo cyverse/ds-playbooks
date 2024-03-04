@@ -83,6 +83,12 @@
       register: response
       failed_when: not response.stat.exists
 
+    - name: Test blacklist.json gone
+      ansible.builtin.stat:
+        path: /etc/sftpgo/blacklist.json
+      register: response
+      failed_when: response.stat.exists
+
     - name: Test sftpgo system group exists
       ansible.builtin.getent:
         database: group
@@ -93,22 +99,22 @@
         database: passwd
         key: sftpgo
 
-    - name: Test create vault dir
+    - name: Test create vault directories
       ansible.builtin.stat:
-        path: /sftp_vault
+        path: "{{ item }}"
       register: resp
       failed_when: >-
         not resp.stat.exists
         or not resp.stat.isdir
         or resp.stat.pw_name != 'sftpgo'
         or resp.stat.mode != '0700'
-
-    - name: Test create a vault data, backup dir
-      ansible.builtin.debug:
-        msg: TODO implement for {{ item }}
       with_items:
-       - data
-       - backup
+        - /sftp_vault
+        - /sftp_vault/data
+
+    - name: Test create a vault backup dir
+      ansible.builtin.debug:
+        msg: TODO implement
 
     - name: Test create a log dir
       ansible.builtin.debug:

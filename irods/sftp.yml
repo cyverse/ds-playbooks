@@ -173,6 +173,11 @@
         owner: root
         mode: '0755'
 
+    - name: Remove an old sftpgo blacklist file that we don't use anymore
+      ansible.builtin.file:
+        path: /etc/sftpgo/blacklist.json
+        state: absent
+
     - name: Configure sftpgo
       ansible.builtin.template:
         src: templates/sftp/etc/sftpgo/{{ item }}.j2

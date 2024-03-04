@@ -100,12 +100,21 @@
         key: sftpgo
 
     - name: Test create vault dir
-      ansible.builtin.debug:
-        msg: TODO implement
+      ansible.builtin.stat:
+        path: /sftp_vault
+      register: resp
+      failed_when: >-
+        not resp.stat.exists
+        or not resp.stat.isdir
+        or resp.stat.pw_name != 'sftpgo'
+        or resp.stat.mode != '0700'
 
     - name: Test create a vault data, backup dir
       ansible.builtin.debug:
-        msg: TODO implement
+        msg: TODO implement for {{ item }}
+      with_items:
+       - data
+       - backup
 
     - name: Test create a log dir
       ansible.builtin.debug:

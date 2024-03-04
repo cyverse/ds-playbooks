@@ -38,9 +38,19 @@
       "entries_soft_limit": 100,
       "entries_hard_limit": 150,
       "safelist_file": "",
-      "blocklist_file": "/etc/sftpgo/blacklist.json",
-      "safelist": [],
-      "blocklist": []
+      "blocklist_file": "",
+      "safelist": [
+{%- for host_allowed in _sftp_user_host_allowed %}
+{%    set ip = host_allowed if host_allowed|ansible.utils.ipaddr else lookup('dig', host_allowed) %}
+      "{{ ip }}"{% if not loop.last %},{% endif %}
+{% endfor +%}
+      ],
+      "blocklist": [
+{%- for host_rejected in _sftp_user_host_rejected %}
+{%    set ip = host_rejected if host_rejected|ansible.utils.ipaddr else lookup('dig', host_rejected) %}
+      "{{ ip }}"{% if not loop.last %},{% endif %}
+{% endfor +%}
+      ]
     },
     "rate_limiters": [
       {

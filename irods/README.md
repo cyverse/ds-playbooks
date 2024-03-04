@@ -82,6 +82,8 @@ Variable                                   | Required | Default                 
 `restart_irods`                            | no       | false                                |         | iRODS can be restarted on the servers having config file changes, _see below_
 `sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
 `sftp_proxy_allowed`                       | no       | `[]`                                 |         | A list of network/masks for the proxy servers allowed access to the SFTP servers
+`sftp_user_host_allowed`                   | no       | `[]`                                 |         | A list of ip addresses of the user hosts allowed (whitelisted) for access to the SFTP servers
+`sftp_user_host_rejected`                  | no       | `[]`                                 |         | A list of ip addresses of the user hosts rejected (blacklisted) for access to the SFTP servers
 `sftpgo_admin_ui_port`                     | no       | 18023                                |         | The SFTPGo admin UI service port number
 `sftpgo_admin_password`                    | yes      |                                      |         | The password of the SFTPGo admin user
 `sftpgo_admin_username`                    | no       | admin                                |         | The SFTPGo admin account name

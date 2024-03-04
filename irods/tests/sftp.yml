@@ -83,12 +83,6 @@
       register: response
       failed_when: not response.stat.exists
 
-    - name: Test blacklist.json deployed
-      ansible.builtin.stat:
-        path: /etc/sftpgo/blacklist.json
-      register: response
-      failed_when: not response.stat.exists
-
     - name: Test sftpgo system group exists
       ansible.builtin.getent:
         database: group

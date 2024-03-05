@@ -1,7 +1,16 @@
 ---
-- name: test irods_clerver_auth module
+- name: Test irods_clerver_auth module
   hosts: localhost
   gather_facts: false
   tasks:
-    - debug:
+    - name: Test missing default authentication file on local server
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test out-of-date custom authentication file on remote server
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test up-to-date authentication file
+      ansible.builtin.debug:
         msg: TODO implement

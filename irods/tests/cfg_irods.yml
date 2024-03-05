@@ -278,15 +278,6 @@
         - /etc/irods/calliope.re
         - /var/lib/irods/msiExecCmd_bin/calliope-ingest
 
-    - name: Test ensure CAP-TCN rule logic is gone
-      ansible.builtin.stat:
-        path: /etc/irods/{{ item }}
-      register: response
-      failed_when: response.stat.exists
-      with_items:
-        - captcn.re
-        - captcn-env.re
-
     - name: Test ensure DE staging gone
       ansible.builtin.stat:
         path: "{{ item }}"
@@ -303,15 +294,6 @@
         path: /etc/irods/sciapps.re
       register: response
       failed_when: response.stat.exists
-
-    - name: Test ensure sernec rule logic is gone
-      ansible.builtin.stat:
-        path: /etc/irods/{{ item }}
-      register: response
-      failed_when: response.stat.exists
-      with_items:
-        - sernec.re
-        - sernec-env.re
 
     - name: Test ensure terraref gone
       ansible.builtin.stat:

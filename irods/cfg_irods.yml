@@ -126,14 +126,6 @@
         - /etc/irods/calliope.re
         - /var/lib/irods/msiExecCmd_bin/calliope-ingest
 
-    - name: Ensure CAP-TCN rule logic is gone
-      ansible.builtin.file:
-        path:  /etc/irods/{{ item }}
-        state: absent
-      with_items:
-        - captcn.re
-        - captcn-env.re
-
     - name: Ensure DE staging gone
       ansible.builtin.file:
         path: "{{ item }}"
@@ -148,14 +140,6 @@
       ansible.builtin.file:
         path: /etc/irods/sciapps.re
         state: absent
-
-    - name: Ensure sernec rule logic is gone
-      ansible.builtin.file:
-        path:  /etc/irods/{{ item }}
-        state: absent
-      with_items:
-        - sernec.re
-        - sernec-env.re
 
     - name: Ensure TerraREF rule logic is gone
       ansible.builtin.file:

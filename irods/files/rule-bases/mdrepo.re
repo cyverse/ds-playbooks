@@ -66,27 +66,6 @@ _mdrepo_ensureMdRepoObjExists(*DataObj, *Ticket) {
 	}
 }
 
-mdrepo_api_coll_create_pre(*Instance, *Comm, *CollCreateInp) {
-	if (
-		*Ticket != ''
-		&& _mdrepo_forMDRepo(*DataObj)
-		&& ! _mdrepo_dataObjExists(*DataObj)
-	) {
-		_mdrepo_logMsg('creating empty data object *DataObj');
-		*svcAcntArg = execCmdArg(_mdrepo_getTicketOwner(*Ticket));
-		*dataObjArg = execCmdArg(*DataObj);
-		*args = "*svcAcntArg *dataObjArg";
-		*err = errormsg(
-			msiExecCmd('md-repo-touch-obj', "*args", cyverse_RE_HOST, "", "", *out), *msg );
-
-		if (*err != 0) {
-			*_ = errorcode(msiGetStderrInExecCmdOut(*out, *cmdErr));
-			_mdrepo_logMsg('failed to create data object *DataObj: *msg (*cmdErr)');
-			*err;
-		}
-	}
-}
-
 mdrepo_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp) {
 	_mdrepo_ensureMdRepoObjExists(
 		*DataObjInp.obj_path, _mdrepo_getValue(temporaryStorage, 'mdrepo_ticket') );

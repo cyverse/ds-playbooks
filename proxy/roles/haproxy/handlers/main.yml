@@ -1,18 +1,18 @@
 ---
 - name: Reload haproxy
-  when: _full_os | bool
+  when: _haproxy_full_os | bool
   ansible.builtin.service:
     name: haproxy
     state: reloaded
 
 - name: Restart haproxy
-  when: _full_os | bool
+  when: _haproxy_full_os | bool
   ansible.builtin.service:
     name: haproxy
     state: restarted
 
 - name: Restart rsyslog
-  when: _full_os | bool
+  when: _haproxy_full_os | bool
   ansible.builtin.service:
     name: rsyslog
     state: restarted

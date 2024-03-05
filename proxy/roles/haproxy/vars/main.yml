@@ -1,4 +1,4 @@
 ---
-_full_os: false
+_haproxy_full_os: false
 
-_default_stats_auth_username: ds
+_haproxy_default_stats_auth_username: ds

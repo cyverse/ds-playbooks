@@ -51,7 +51,7 @@
         (not sftpgo_resp.stat.exists)
         or (sftpgo_account.rc != 0)
         or (sftpgo_version.stdout != '2.4.5')
-        or (sftpgo_resp.stat.checksum != 'b5823a61f227e24fb8db2c0edd09afd039dee60c')
+        or (sftpgo_resp.stat.checksum != '7581ab60a727c4b148e089c33bf6e391f299d5f2')
       block:
         - name: Check if sftpgo service exists
           ansible.builtin.stat:
@@ -113,7 +113,7 @@
 
     - name: Install SFTPGo iRODS Auth plugin
       when: >-
-        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.12')
+        (not sftpgo_auth_irods_resp.stat.exists) or (sftpgo_auth_irods_version.stdout != 'v0.1.13')
       block:
         - name: Create download dir for sftpgo-auth-irods package
           ansible.builtin.file:
@@ -124,7 +124,7 @@
         - name: Download sftpgo-auth-irods package from github and uncompress
           ansible.builtin.unarchive:
             src: >-
-              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.12/sftpgo-auth-irods-v0.1.12-linux-amd64.tar.gz
+              https://github.com/cyverse/sftpgo-auth-irods/releases/download/v0.1.13/sftpgo-auth-irods-v0.1.13-linux-amd64.tar.gz
             dest: /tmp/sftpgo_auth_irods_setup
             remote_src: true
           notify: Install sftpgo-auth-irods

@@ -747,6 +747,9 @@ _cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
 	}
 }
 
+_cyverse_core_dataObjMetadataModified(*User, *Zone, *Object) {
+	ipc_dataObjMetadataModified(*User, *Zone, *Object);
+}
 
 # CLOSE
 

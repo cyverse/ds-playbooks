@@ -765,18 +765,18 @@ pep_database_close_post(*Instance, *Context, *OUT) {
 # XXX - Because of https://github.com/irods/irods/issues/5540,
 # nothing can be done here
 # 	foreach (*key in temporaryStorage) {
-# 		*vals = split(temporaryStorage.'*key', ' ');
+# 		*values = split(temporaryStorage.'*key', ' ');
 # # XXX - Because of https://github.com/irods/irods/issues/5538, the Context
 # # variables need to passed through temporaryStorage
 # # 		*user = *Context.user_user_name
 # # 		*zone = *Context.user_rods_zone
 # # 		*doiMspStr = triml(temporaryStorage.'*key', ' ');
-# 		*user = elem(*vals, 1);
-# 		*zone = elem(*vals, 2);
+# 		*user = elem(*values, 1);
+# 		*zone = elem(*values, 2);
 # 		*doiMspStr = triml(triml(triml(temporaryStorage.'*key', ' '), ' '), ' ');
 # # XXX - ^^^
 # 		*doiKvs = split(*doiMspStr, '++++');
-# 		*op = elem(*vals, 0);
+# 		*op = elem(*values, 0);
 # 		*doiStr = '';
 # 		foreach (*kv in *doiKvs) {
 # 			*doiStr = if *doiStr == '' then *kv else *doiStr ++ '%' ++ *kv;

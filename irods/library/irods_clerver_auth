@@ -33,7 +33,10 @@ main()
 
   if [ -e "$authFile" ]
   then
-    succeed false
+    if ils < /dev/null &>/dev/null
+    then
+      succeed false
+    fi
   fi
 
   if [ -n "$provider" ]

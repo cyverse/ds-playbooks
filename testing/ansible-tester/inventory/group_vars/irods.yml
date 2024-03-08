@@ -18,8 +18,6 @@ cereus_resource_hierarchy:
   children:
     - name: cereus
 
-de_job_irods_user: de_job
-
 irods_amqp_host: "{{ groups['amqp'][0] }}"
 irods_amqp_user: amqp_admin
 irods_amqp_password: password

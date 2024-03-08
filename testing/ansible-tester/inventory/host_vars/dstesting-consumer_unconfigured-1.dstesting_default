@@ -14,7 +14,3 @@ irods_storage_resources:
   - name: pire
     vault: /var/lib/irods/pire_vault
     context: minimum_free_space_for_create_in_bytes=1048576
-
-  - name: terraref
-    vault: "{{ irods_default_vault }}"
-    context: minimum_free_space_for_create_in_bytes=1048576

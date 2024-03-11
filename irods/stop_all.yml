@@ -1,4 +1,7 @@
 ---
+# The stop command results are stored in `stop_all_result` for inspection by a
+# parent playbook.
+
 - name: Stop all | stop iRODS catalog consumers
   hosts: irods_resource:!irods_catalog
   become: "{{ _become_svc_acnt }}"
@@ -7,6 +10,7 @@
     - name: Stop
       irods_ctl:
         state: stopped
+      register: stop_all_result
 
 
 - name: Stop all | stop iRODS catalog providers
@@ -17,3 +21,4 @@
     - name: Stop
       irods_ctl:
         state: stopped
+      register: stop_all_result

@@ -10,10 +10,10 @@
 # LISTS
 #
 
-_ipc_contains(*Item, *List) =
+_cyverse_logic_contains(*Item, *List) =
 	if size(*List) == 0 then false
 	else if *Item == hd(*List) then true
-	else _ipc_contains(*Item, tl(*List))
+	else _cyverse_logic_contains(*Item, tl(*List))
 
 
 #
@@ -22,31 +22,31 @@ _ipc_contains(*Item, *List) =
 
 # Determines whether or not the string in the first argument starts with the
 # string in the second argument.
-_ipc_startsWith(*Str, *Prefix) =
+_cyverse_logic_startsWith(*Str, *Prefix) =
 	if strlen(*Str) < strlen(*Prefix) then false
 	else if substr(*Str, 0, strlen(*Prefix)) != *Prefix then false
 	else true
 
 # Removes a prefix from a string.
-_ipc_removePrefix(*Orig, *Prefixes) =
+_cyverse_logic_rmPrefix(*Orig, *Prefixes) =
 	if size(*Prefixes) == 0 then *Orig
 	else
-		if _ipc_startsWith(*Orig, hd(*Prefixes))
+		if _cyverse_logic_startsWith(*Orig, hd(*Prefixes))
 		then substr(*Orig, strlen(hd(*Prefixes)), strlen(*Orig))
-		else _ipc_removePrefix(*Orig, tl(*Prefixes))
+		else _cyverse_logic_rmPrefix(*Orig, tl(*Prefixes))
 
 
 #
 # ICAT IDS
 #
 
-_ipc_getCollectionId(*Path) =
+_cyverse_logic_getCollId(*Path) =
 	let *id = -1 in
 	let *path = str(*Path) in
 	let *_ = foreach (*rec in SELECT COLL_ID WHERE COLL_NAME = *path) { *id = int(*rec.COLL_ID) } in
 	*id
 
-_ipc_getDataId(*Path) =
+_cyverse_logic_getDataObjId(*Path) =
 	let *collPath = '' in
 	let *dataName = '' in
 	let *_ = msiSplitPath(*Path, *collPath, *dataName) in
@@ -56,16 +56,16 @@ _ipc_getDataId(*Path) =
 		) { *id = int(*rec.DATA_ID) } in
 	*id
 
-_ipc_getEntityId(*Path) =
-	if cyverse_isColl(cyverse_getEntityType(*Path)) then _ipc_getCollectionId(*Path)
-	else _ipc_getDataId(*Path)
+_cyverse_logic_getId(*Path) =
+	if cyverse_isColl(cyverse_getEntityType(*Path)) then _cyverse_logic_getCollId(*Path)
+	else _cyverse_logic_getDataObjId(*Path)
 
 
 #
 # USER INFO
 #
 
-_ipc_isAdmin(*UserName, *UserZone) =
+_cyverse_logic_isAdm(*UserName, *UserZone) =
 	let *admin = false in
 	let *_ = foreach ( *rec in
 			SELECT USER_ID
@@ -85,7 +85,7 @@ _ipc_isAdmin(*UserName, *UserZone) =
 # others by the presence of a prefix in the value. The prefix is always a single
 # character followed by a colon.
 #
-_ipc_getOrigUnit(*Candidate) =
+_cyverse_logic_getOrigUnit(*Candidate) =
 	if strlen(*Candidate) < 2 then *Candidate
 	else if substr(*Candidate, 1, 1) != ':' then *Candidate
 	else ''
@@ -95,13 +95,13 @@ _ipc_getOrigUnit(*Candidate) =
 # prefix. This function looks for values matching the given prefix. If multiple
 # matching values are found then the last one wins.
 #
-_ipc_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
+_cyverse_logic_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 	if size(*Candidates) == 0 then *Orig
 	else
 		let *candidate = hd(*Candidates) in
-		if _ipc_startsWith(*candidate, *Prefix)
+		if _cyverse_logic_startsWith(*candidate, *Prefix)
 		then substr(*candidate, 2, strlen(*candidate))
-		else _ipc_getNewAVUSetting(*Orig, *Prefix, tl(*Candidates))
+		else _cyverse_logic_getNewAVUSetting(*Orig, *Prefix, tl(*Candidates))
 
 
 #
@@ -109,11 +109,11 @@ _ipc_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 #
 
 # Compute the checksum of of a given replica of a given data object
-_ipc_chksumRepl(*Object, *ReplNum) {
+_cyverse_logic_chksumRepl(*DataObj, *ReplNum) {
 	*opt = '';
 	msiAddKeyValToMspStr('forceChksum', '', *opts);
 	msiAddKeyValToMspStr('replNum', str(*ReplNum), *opts);
-	msiDataObjChksum(*Object, *opts, *_);
+	msiDataObjChksum(*DataObj, *opts, *_);
 }
 
 
@@ -121,38 +121,28 @@ _ipc_chksumRepl(*Object, *ReplNum) {
 # UUIDS
 #
 
-_ipc_UUID_ATTR = 'ipc_UUID'
+_cyverse_logic_UUID_ATTR = 'ipc_UUID'
 
-# Looks up the UUID of a collection from its path.
-_ipc_retrieveCollectionUUID(*Coll) =
-	let *coll = str(*Coll) in
-	let *uuid = '' in
-	let *attr = _ipc_UUID_ATTR in
-	let *_ = foreach ( *record in
-			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *coll AND META_COLL_ATTR_NAME == *attr
-		) { *uuid = *record.META_COLL_ATTR_VALUE; } in
-	*uuid
+# Assign a UUID to a given collection or data object.
+_cyverse_logic_assignUUID(*EntityType, *EntityPath, *Uuid, *ClientName, *ClientZone) {
+	*status = 0;
 
-# Looks up the UUID of a data object from its path.
-_ipc_retrieveDataUUID(*Data) =
-	let *parentColl = '' in
-	let *dataName = '' in
-	let *_ = msiSplitPath(*Data, *parentColl, *dataName) in
-	let *uuid = '' in
-	let *attr = _ipc_UUID_ATTR in
-	let *_ = foreach ( *record in
-			SELECT META_DATA_ATTR_VALUE
-			WHERE COLL_NAME == *parentColl AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *attr
-		) { *uuid = *record.META_DATA_ATTR_VALUE; } in
-	*uuid
+	if (_cyverse_logic_isAdm(*ClientName, *ClientZone)) {
+		*status = errormsg(
+			msiModAVUMetadata(*EntityType, *EntityPath, 'set', _cyverse_logic_UUID_ATTR, *Uuid, ''),
+			*msg );
 
-# Looks up the UUID for a given type of entity (collection or data object)
-_ipc_retrieveUUID(*EntityType, *EntityPath) =
-	if cyverse_isColl(*EntityType) then _ipc_retrieveCollectionUUID(*EntityPath)
-	else if cyverse_isDataObj(*EntityType) then _ipc_retrieveDataUUID(*EntityPath)
-	else ''
+		if (*status != 0) {
+			writeLine('serverLog', "DS: Failed to assign UUID to *EntityPath");
+			writeLine('serverLog', "DS: *msg");
+			fail;
+		}
+	} else {
+		cyverse_setProtectedAVU(*EntityName, _cyverse_logic_UUID_ATTR, *Uuid, '');
+	}
+}
 
-_ipc_generateUUID(*UUID) {
+_cyverse_logic_generateUUID(*UUID) {
 	*status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
 	if (*status == 0) {
 		msiGetStdoutInExecCmdOut(*out, *uuid);
@@ -164,29 +154,40 @@ _ipc_generateUUID(*UUID) {
 	}
 }
 
-# Assign a UUID to a given collection or data object.
-_ipc_assignUUID(*ItemType, *ItemName, *Uuid, *ClientName, *ClientZone) {
-	*status = 0;
+# Looks up the UUID of a collection from its path.
+_cyverse_logic_getCollUUID(*CollPath) =
+	let *coll = str(*CollPath) in
+	let *uuid = '' in
+	let *attr = _cyverse_logic_UUID_ATTR in
+	let *_ = foreach ( *record in
+			SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *coll AND META_COLL_ATTR_NAME == *attr
+		) { *uuid = *record.META_COLL_ATTR_VALUE; } in
+	*uuid
 
-	if (_ipc_isAdmin(*ClientName, *ClientZone)) {
-		*status = errormsg(
-			msiModAVUMetadata(*ItemType, *ItemName, 'set', _ipc_UUID_ATTR, *Uuid, ''), *msg );
+# Looks up the UUID of a data object from its path.
+_cyverse_logic_getDataObjUUID(*DataObjPath) =
+	let *parentColl = '' in
+	let *dataName = '' in
+	let *_ = msiSplitPath(*DataObjPath, *parentColl, *dataName) in
+	let *uuid = '' in
+	let *attr = _cyverse_logic_UUID_ATTR in
+	let *_ = foreach ( *record in
+			SELECT META_DATA_ATTR_VALUE
+			WHERE COLL_NAME == *parentColl AND DATA_NAME == *dataName AND META_DATA_ATTR_NAME == *attr
+		) { *uuid = *record.META_DATA_ATTR_VALUE; } in
+	*uuid
 
-		if (*status != 0) {
-			writeLine('serverLog', "DS: Failed to assign UUID to *ItemName");
-			writeLine('serverLog', "DS: *msg");
-			fail;
-		}
-	} else {
-		cyverse_setProtectedAVU(*ItemName, _ipc_UUID_ATTR, *Uuid, '');
-	}
-}
+# Looks up the UUID for a given type of entity (collection or data object)
+_cyverse_logic_getUUID(*EntityType, *EntityPath) =
+	if cyverse_isColl(*EntityType) then _cyverse_logic_getCollUUID(*EntityPath)
+	else if cyverse_isDataObj(*EntityType) then _cyverse_logic_getDataObjUUID(*EntityPath)
+	else ''
 
-_ipc_ensureUUID(*EntityType, *EntityPath, *UUID, *ClientName, *ClientZone) {
-	*uuid = _ipc_retrieveUUID(*EntityType, *EntityPath);
+_cyverse_logic_ensureUUID(*EntityType, *EntityPath, *ClientName, *ClientZone, *UUID) {
+	*uuid = _cyverse_logic_getUUID(*EntityType, *EntityPath);
 	if (*uuid == '') {
-		_ipc_generateUUID(*uuid);
-		_ipc_assignUUID(*EntityType, *EntityPath, *uuid, *ClientName, *ClientZone);
+		_cyverse_logic_generateUUID(*uuid);
+		_cyverse_logic_assignUUID(*EntityType, *EntityPath, *uuid, *ClientName, *ClientZone);
 	}
 	*UUID = *uuid;
 }
@@ -196,20 +197,20 @@ _ipc_ensureUUID(*EntityType, *EntityPath, *UUID, *ClientName, *ClientZone) {
 # ACTION TRACKING
 #
 
-_ipc_mkActionKey(*EntityId) = str(*EntityId) ++ '-ROOT_ACTION'
+_cyverse_logic_mkActionKey(*EntityId) = str(*EntityId) ++ '-ROOT_ACTION'
 
-_ipc_isCurrentAction(*EntityId, *Action) =
-	let *key = _ipc_mkActionKey(*EntityId) in temporaryStorage."*key" == *Action
+_cyverse_logic_isCurrentAction(*EntityId, *Action) =
+	let *key = _cyverse_logic_mkActionKey(*EntityId) in temporaryStorage."*key" == *Action
 
-_ipc_registerAction(*EntityId, *Action) {
-	*key = _ipc_mkActionKey(*EntityId);
+_cyverse_logic_registerAction(*EntityId, *Action) {
+	*key = _cyverse_logic_mkActionKey(*EntityId);
 	if (if errorcode(temporaryStorage."*key") != 0 then true else temporaryStorage."*key" == '') {
 		temporaryStorage."*key" = *Action;
 	}
 }
 
-_ipc_unregisterAction(*EntityId, *Action) {
-	*key = _ipc_mkActionKey(*EntityId);
+_cyverse_logic_unregisterAction(*EntityId, *Action) {
+	*key = _cyverse_logic_mkActionKey(*EntityId);
 	if (temporaryStorage."*key" == *Action) {
 		temporaryStorage."*key" = '';
 	}
@@ -220,19 +221,19 @@ _ipc_unregisterAction(*EntityId, *Action) {
 # MESSAGE PUBLISHING
 #
 
-_ipc_COLL_MSG_TYPE = 'collection'
-_ipc_DATA_MSG_TYPE = 'data-object'
-_ipc_RESC_MSG_TYPE = 'resource'
-_ipc_USER_MSG_TYPE = 'user'
+_cyverse_logic_COLL_MSG_TYPE = 'collection'
+_cyverse_logic_DATA_OBJ_MSG_TYPE = 'data-object'
+_cyverse_logic_RESC_MSG_TYPE = 'resource'
+_cyverse_logic_USER_MSG_TYPE = 'user'
 
-_ipc_getMsgType(*ItemType) =
-	if cyverse_isColl(*ItemType) then _ipc_COLL_MSG_TYPE
-	else if cyverse_isDataObj(*ItemType) then _ipc_DATA_MSG_TYPE
-	else if cyverse_isResc(*ItemType) then _ipc_RESC_MSG_TYPE
-	else if cyverse_isUser(*ItemType) then _ipc_USER_MSG_TYPE
+_cyverse_logic_getMsgType(*EntityType) =
+	if cyverse_isColl(*EntityType) then _cyverse_logic_COLL_MSG_TYPE
+	else if cyverse_isDataObj(*EntityType) then _cyverse_logic_DATA_OBJ_MSG_TYPE
+	else if cyverse_isResc(*EntityType) then _cyverse_logic_RESC_MSG_TYPE
+	else if cyverse_isUser(*EntityType) then _cyverse_logic_USER_MSG_TYPE
 	else ''
 
-_ipc_mkAVUObject(*Field, *Name, *Value, *Unit) =
+_cyverse_logic_mkAVUObject(*Field, *Name, *Value, *Unit) =
 	cyverse_json_object(
 		*Field,
 		list(
@@ -240,20 +241,20 @@ _ipc_mkAVUObject(*Field, *Name, *Value, *Unit) =
 			cyverse_json_string('value', *Value),
 			cyverse_json_string('unit', *Unit) ) )
 
-_ipc_mkEntityField(*Uuid) = cyverse_json_string('entity', *Uuid)
+_cyverse_logic_mkEntityField(*Uuid) = cyverse_json_string('entity', *Uuid)
 
-_ipc_mkPathField(*Path) = cyverse_json_string('path', "*Path")
+_cyverse_logic_mkPathField(*Path) = cyverse_json_string('path', "*Path")
 
-_ipc_mkUserObject(*Field, *Name, *Zone) = cyverse_json_object(
+_cyverse_logic_mkUserObj(*Field, *Name, *Zone) = cyverse_json_object(
 	*Field, list(cyverse_json_string('name', *Name), cyverse_json_string('zone', *Zone)) )
 
-_ipc_mkAuthorField(*Name, *Zone) = _ipc_mkUserObject('author', *Name, *Zone)
+_cyverse_logic_mkAuthorField(*Name, *Zone) = _cyverse_logic_mkUserObj('author', *Name, *Zone)
 
-_ipc_resolve_msg_entity_id(*EntityType, *EntityName, *ClientName, *ClientZone) =
+_cyverse_logic_resolveMsgEntityId(*EntityType, *EntityName, *ClientName, *ClientZone) =
 	let *id = '' in
 	let *_ =
 		if cyverse_isFSType(*EntityType)
-		then _ipc_ensureUUID(*EntityType, str(*EntityName), *id, *ClientName, *ClientZone)
+		then _cyverse_logic_ensureUUID(*EntityType, str(*EntityName), *ClientName, *ClientZone, *id)
 		else *id = *EntityName in
 	*id
 
@@ -266,7 +267,7 @@ _ipc_resolve_msg_entity_id(*EntityType, *EntityName, *ClientName, *ClientZone) =
 # Remote Execution:
 # It executes the amqptopicsend.py command script on the rule engine host
 #
-sendMsg(*Topic, *Msg) {
+_cyverse_logic_sendMsg(*Topic, *Msg) {
 	*exchangeArg = execCmdArg(cyverse_AMQP_EXCHANGE);
 	*topicArg = execCmdArg(*Topic);
 	*msgArg = execCmdArg(*Msg);
@@ -283,208 +284,213 @@ sendMsg(*Topic, *Msg) {
 	0;
 }
 
-_ipc_sendCollectionAclModified(
-	*Collection, *AccessLevel, *UserName, *UserZone, *Recursive, *AuthorName, *AuthorZone )
-{
-	*msg = cyverse_json_document(
-		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Collection),
-			cyverse_json_boolean('recursive', *Recursive),
-			cyverse_json_string('permission', *AccessLevel),
-			_ipc_mkUserObject('user', *UserName, *UserZone) ) );
-
-	sendMsg(_ipc_COLL_MSG_TYPE ++ '.acl.mod', *msg);
-}
-
-_ipc_sendCollectionInheritModified(*Collection, *Inherit, *Recursive, *AuthorName, *AuthorZone) {
-	*msg = cyverse_json_document(
-		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Collection),
-			cyverse_json_boolean('recursive', *Recursive),
-			cyverse_json_boolean('inherit', *Inherit) ) );
-
-	sendMsg(_ipc_COLL_MSG_TYPE ++ '.acl.mod', *msg);
-}
-
-_ipc_sendCollectionAccessModified(
-	*Collection, *AccessLevel, *UserName, *UserZone, *Recursive, *AuthorName, *AuthorZone )
-{
-	if (*AccessLevel == 'inherit') {
-		_ipc_sendCollectionInheritModified(*Collection, true, *Recursive, *AuthorName, *AuthorZone);
-	}
-	else if (*AccessLevel == 'noinherit') {
-		_ipc_sendCollectionInheritModified(*Collection, false, *Recursive, *AuthorName, *AuthorZone);
-	}
-	else {
-		_ipc_sendCollectionAclModified(
-			*Collection, *AccessLevel, *UserName, *UserZone, *Recursive, *AuthorName, *AuthorZone );
-	}
-}
-
-_ipc_sendCollectionAdd(*Id, *Path, *CreatorName, *CreatorZone) {
-	*msg = cyverse_json_document(
-		list(
-			_ipc_mkAuthorField(*CreatorName, *CreatorZone),
-			_ipc_mkEntityField(*Id),
-			_ipc_mkPathField(*Path) ) );
-
-	sendMsg(_ipc_COLL_MSG_TYPE ++ '.add', *msg);
-}
-
-_ipc_sendDataObjectAclModified(*Data, *AccessLevel, *UserName, *UserZone, *AuthorName, *AuthorZone)
-{
-	*msg = cyverse_json_document(
-		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Data),
-			cyverse_json_string('permission', *AccessLevel),
-			_ipc_mkUserObject('user', *UserName, *UserZone) ) );
-
-	sendMsg(_ipc_DATA_MSG_TYPE ++ '.acl.mod', *msg);
-}
-
-_ipc_sendDataObjectAdd(
-	*AuthorName, *AuthorZone, *Data, *Path, *OwnerName, *OwnerZone, *Size, *Type
+_cyverse_logic_sendCollACLMod(
+	*Coll, *AccessLvl, *UserName, *UserZone, *Recurse, *AuthorName, *AuthorZone
 ) {
 	*msg = cyverse_json_document(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Data),
-			_ipc_mkPathField(*Path),
-			_ipc_mkUserObject('creator', *OwnerName, *OwnerZone),
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Coll),
+			cyverse_json_boolean('recursive', *Recurse),
+			cyverse_json_string('permission', *AccessLvl),
+			_cyverse_logic_mkUserObj('user', *UserName, *UserZone) ) );
+
+	_cyverse_logic_sendMsg(_cyverse_logic_COLL_MSG_TYPE ++ '.acl.mod', *msg);
+}
+
+_cyverse_logic_sendCollInheritMod(*Coll, *Inherit, *Recurse, *AuthorName, *AuthorZone) {
+	*msg = cyverse_json_document(
+		list(
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Coll),
+			cyverse_json_boolean('recursive', *Recurse),
+			cyverse_json_boolean('inherit', *Inherit) ) );
+
+	_cyverse_logic_sendMsg(_cyverse_logic_COLL_MSG_TYPE ++ '.acl.mod', *msg);
+}
+
+_cyverse_logic_sendCollAccessMod(
+	*Coll, *AccessLvl, *UserName, *UserZone, *Recurse, *AuthorName, *AuthorZone
+) {
+	if (*AccessLvl == 'inherit') {
+		_cyverse_logic_sendCollInheritMod(*Coll, true, *Recurse, *AuthorName, *AuthorZone);
+	}
+	else if (*AccessLvl == 'noinherit') {
+		_cyverse_logic_sendCollInheritMod(*Coll, false, *Recurse, *AuthorName, *AuthorZone);
+	}
+	else {
+		_cyverse_logic_sendCollACLMod(
+			*Coll, *AccessLvl, *UserName, *UserZone, *Recurse, *AuthorName, *AuthorZone );
+	}
+}
+
+_cyverse_logic_sendCollAdd(*Id, *Path, *AuthorName, *AuthorZone) {
+	*msg = cyverse_json_document(
+		list(
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Id),
+			_cyverse_logic_mkPathField(*Path) ) );
+
+	_cyverse_logic_sendMsg(_cyverse_logic_COLL_MSG_TYPE ++ '.add', *msg);
+}
+
+_cyverse_logic_sendDataObjACLMod(*Id, *AccessLvl, *UserName, *UserZone, *AuthorName, *AuthorZone) {
+	*msg = cyverse_json_document(
+		list(
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Id),
+			cyverse_json_string('permission', *AccessLvl),
+			_cyverse_logic_mkUserObj('user', *UserName, *UserZone) ) );
+
+	_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.acl.mod', *msg);
+}
+
+_cyverse_logic_sendDataObjAdd(
+	*Id, *Path, *OwnerName, *OwnerZone, *Size, *Type, *AuthorName, *AuthorZone
+) {
+	*msg = cyverse_json_document(
+		list(
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Id),
+			_cyverse_logic_mkPathField(*Path),
+			_cyverse_logic_mkUserObj('creator', *OwnerName, *OwnerZone),
 			cyverse_json_number('size', *Size),
 			cyverse_json_string('type', *Type) ) );
 
-	sendMsg(_ipc_DATA_MSG_TYPE ++ '.add', *msg);
+	_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.add', *msg);
 }
 
 # Publish a data-object.mod message to AMQP exchange
-_ipc_sendDataObjectMod(
-	*AuthorName, *AuthorZone, *Object, *Path, *OwnerName, *OwnerZone, *Size, *Type
+_cyverse_logic_sendDataObjMod(
+	*Id, *Path, *OwnerName, *OwnerZone, *Size, *Type, *AuthorName, *AuthorZone
 ) {
 	*msg = cyverse_json_document(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Object),
-			_ipc_mkUserObject('creator', *OwnerName, *OwnerZone),
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Id),
+			_cyverse_logic_mkUserObj('creator', *OwnerName, *OwnerZone),
 			cyverse_json_number('size', *Size),
 			cyverse_json_string('type', *Type) ) );
 
-	sendMsg(_ipc_DATA_MSG_TYPE ++ '.mod', *msg);
+	_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.mod', *msg);
 }
 
-_ipc_sendDataObjectOpen(*Id, *Path, *CreatorName, *CreatorZone, *Size) {
-	if (*CreatorName != 'anonymous') {
+_cyverse_logic_sendDataObjOpen(*Id, *Path, *Size, *AuthorName, *AuthorZone) {
+	if (*AuthorName != 'anonymous') {
 		msiGetSystemTime(*timestamp, 'human');
 
 		*msg = cyverse_json_document(
 			list(
-				_ipc_mkAuthorField(*CreatorName, *CreatorZone),
-				_ipc_mkEntityField(*Id),
-				_ipc_mkPathField(*Path),
+				_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+				_cyverse_logic_mkEntityField(*Id),
+				_cyverse_logic_mkPathField(*Path),
 				cyverse_json_number('size', *Size),
 				cyverse_json_string('timestamp', *timestamp) ) );
 
-		sendMsg(_ipc_DATA_MSG_TYPE ++ '.open', *msg);
+		_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.open', *msg);
 	}
 }
 
 # Publish a data-object.sys-metadata.mod message to AMQP exchange
-_ipc_sendDataObjectMetadataModified(*Data, *AuthorName, *AuthorZone) {
+_cyverse_logic_sendDataObjMetadataMod(*Id, *AuthorName, *AuthorZone) {
 	*msg = cyverse_json_document(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Data) ) );
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Id) ) );
 
-	sendMsg(_ipc_DATA_MSG_TYPE ++ '.sys-metadata.mod', *msg);
+	_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.sys-metadata.mod', *msg);
 }
 
-_ipc_sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
+_cyverse_logic_sendAVUAddWildcard(
+	*DataObjPattern, *AttrName, *AttrVal, *AttrUnit, *AuthorName, *AuthorZone
+) {
 	*msg = cyverse_json_document(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			cyverse_json_string('pattern', *ItemName),
-			_ipc_mkAVUObject('metadatum', *AName, *AValue, *AUnit) ) );
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			cyverse_json_string('pattern', *DataObjPattern),
+			_cyverse_logic_mkAVUObject('metadatum', *AttrName, *AttrVal, *AttrUnit) ) );
 
-	sendMsg(_ipc_DATA_MSG_TYPE ++ '.metadata.addw', *msg);
+	_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.metadata.addw', *msg);
 }
 
-_ipc_sendAvuCopy(*SourceItemType, *Source, *TargetItemType, *Target, *AuthorName, *AuthorZone) {
+_cyverse_logic_sendAVUCp(*SourceType, *Source, *TargetType, *Target, *AuthorName, *AuthorZone) {
 	*msg = cyverse_json_document(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
 			cyverse_json_string('source', *Source),
-			cyverse_json_string('source-type', _ipc_getMsgType(*SourceItemType)),
+			cyverse_json_string('source-type', _cyverse_logic_getMsgType(*SourceType)),
 			cyverse_json_string('destination', *Target) ) );
 
-	sendMsg(_ipc_getMsgType(*TargetItemType) ++ '.metadata.cp', *msg);
+	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*TargetType) ++ '.metadata.cp', *msg);
 }
 
-_ipc_sendAvuMod(
-	*ItemType,
-	*Item,
+_cyverse_logic_sendAVUMod(
+	*EntityType,
+	*Entity,
 	*OldName,
-	*OldValue,
+	*OldVal,
 	*OldUnit,
 	*NewName,
-	*NewValue,
+	*NewVal,
 	*NewUnit,
 	*AuthorName,
-	*AuthorZone )
-{
+	*AuthorZone
+) {
 	*msg = cyverse_json_document(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Item),
-			_ipc_mkAVUObject('old-metadatum', *OldName, *OldValue, *OldUnit),
-			_ipc_mkAVUObject('new-metadatum', *NewName, *NewValue, *NewUnit) ) );
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Entity),
+			_cyverse_logic_mkAVUObject('old-metadatum', *OldName, *OldVal, *OldUnit),
+			_cyverse_logic_mkAVUObject('new-metadatum', *NewName, *NewVal, *NewUnit) ) );
 
-	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.mod', *msg);
+	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.mod', *msg);
 }
 
-_ipc_sendAvuMultiremove(*ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
+_cyverse_logic_sendAVURmWildcard(
+	*EntityType, *Entity, *AttrName, *AttrVal, *AttrUnit, *AuthorName, *AuthorZone
+) {
 	*msg = cyverse_json_document(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Item),
-			cyverse_json_string('attribute-pattern', *AName),
-			cyverse_json_string('value-pattern', *AValue),
-			cyverse_json_string('unit-pattern', *AUnit) ) );
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Entity),
+			cyverse_json_string('attribute-pattern', *AttrName),
+			cyverse_json_string('value-pattern', *AttrVal),
+			cyverse_json_string('unit-pattern', *AttrUnit) ) );
 
-	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.rmw', *msg);
+	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.rmw', *msg);
 }
 
-_ipc_sendAvuSet(*Option, *ItemType, *Item, *AName, *AValue, *AUnit, *AuthorName, *AuthorZone) {
+_cyverse_logic_sendAVUSet(
+	*Opt, *EntityType, *Entity, *AttrName, *AttrVal, *AttrUnit, *AuthorName, *AuthorZone
+) {
 	*msg = cyverse_json_document(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Item),
-			_ipc_mkAVUObject('metadatum', *AName, *AValue, *AUnit) ) );
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Entity),
+			_cyverse_logic_mkAVUObject('metadatum', *AttrName, *AttrVal, *AttrUnit) ) );
 
-	sendMsg(_ipc_getMsgType(*ItemType) ++ '.metadata.' ++ *Option, *msg);
+	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.' ++ *Opt, *msg);
 }
 
-_ipc_sendEntityMove(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {
+_cyverse_logic_sendEntityMv(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {
 	*msg = cyverse_json_document(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Id),
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Id),
 			cyverse_json_string('old-path', '*OldPath'),
 			cyverse_json_string('new-path', '*NewPath') ) );
 
-	sendMsg(_ipc_getMsgType(*Type) ++ '.mv', *msg);
+	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*Type) ++ '.mv', *msg);
 }
 
-_ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
+_cyverse_logic_sendEntityRm(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 	*msg = cyverse_json_document(
 		list(
-			_ipc_mkAuthorField(*AuthorName, *AuthorZone),
-			_ipc_mkEntityField(*Id),
-			_ipc_mkPathField(*Path) ) );
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Id),
+			_cyverse_logic_mkPathField(*Path) ) );
 
-	sendMsg(_ipc_getMsgType(*Type) ++ '.rm', *msg);
+	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*Type) ++ '.rm', *msg);
 }
 
 
@@ -493,31 +499,31 @@ _ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 #
 
 # Indicates whether or not an AVU is protected
-_ipc_avuProtected(*Attribute) = _ipc_startsWith(*Attribute, 'ipc')
+_cyverse_logic_isAVUProtected(*Attr) = _cyverse_logic_startsWith(*Attr, 'ipc')
 
 # Verifies that an attribute can be modified. If it can't it fails and sends an
 # error message to the caller.
-_ipc_ensureAVUEditable(*EditorName, *EditorZone, *A, *V, *U) {
-	if (_ipc_avuProtected(*A) && !_ipc_isAdmin(*EditorName, *EditorZone)) {
+_cyverse_logic_ensureAVUEditable(*EditorName, *EditorZone, *Attr, *Val, *Unit) {
+	if (_cyverse_logic_isAVUProtected(*Attr) && !_cyverse_logic_isAdm(*EditorName, *EditorZone)) {
 		cut;
-		failmsg(-830000, 'CYVERSE ERROR: attempt to alter protected AVU <*A, *V, *U>');
+		failmsg(-830000, 'CYVERSE ERROR: attempt to alter protected AVU <*Attr, *Val, *Unit>');
 	}
 }
 
 # If an AVU is not protected, it sets the AVU to the given item
-_ipc_setAVUIfUnprotected(*ItemType, *ItemName, *A, *V, *U) {
-	if (!_ipc_avuProtected(*A)) {
-		msiModAVUMetadata(*ItemType, *ItemName, 'set', *A, *V, *U);
+_cyverse_logic_setAVUIfUnprotected(*EntityType, *EntityName, *Attr, *Val, *Unit) {
+	if (!_cyverse_logic_isAVUProtected(*Attr)) {
+		msiModAVUMetadata(*EntityType, *EntityName, 'set', *Attr, *Val, *Unit);
 	}
 }
 
 # Copies the unprotected AVUs from a given collection to the given item.
-_ipc_cpUnprotectedCollAVUs(*Coll, *TargetType, *TargetName) {
+_cyverse_logic_cpUnprotectedCollAVUs(*CollPath, *TargetType, *TargetName) {
 	foreach (*avu in
 		SELECT META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE, META_COLL_ATTR_UNITS
-		WHERE COLL_NAME == *Coll
+		WHERE COLL_NAME == *CollPath
 	) {
-		_ipc_setAVUIfUnprotected(
+		_cyverse_logic_setAVUIfUnprotected(
 			*TargetType,
 			*TargetName,
 			*avu.META_COLL_ATTR_NAME,
@@ -527,14 +533,14 @@ _ipc_cpUnprotectedCollAVUs(*Coll, *TargetType, *TargetName) {
 }
 
 # Copies the unprotected AVUs from a given data object to the given item.
-_ipc_cpUnprotectedDataObjAVUs(*ObjPath, *TargetType, *TargetName) {
-	msiSplitPath(*ObjPath, *parentColl, *objName);
+_cyverse_logic_cpUnprotectedDataObjAVUs(*DataObjPath, *TargetType, *TargetName) {
+	msiSplitPath(*DataObjPath, *collPath, *dataObjName);
 
 	foreach (*avu in
 		SELECT META_DATA_ATTR_NAME, META_DATA_ATTR_VALUE, META_DATA_ATTR_UNITS
-		WHERE COLL_NAME == *parentColl AND DATA_NAME == *objName
+		WHERE COLL_NAME == *collPath AND DATA_NAME == *dataObjName
 	) {
-		_ipc_setAVUIfUnprotected(
+		_cyverse_logic_setAVUIfUnprotected(
 			*TargetType,
 			*TargetName,
 			*avu.META_DATA_ATTR_NAME,
@@ -544,12 +550,12 @@ _ipc_cpUnprotectedDataObjAVUs(*ObjPath, *TargetType, *TargetName) {
 }
 
 # Copies the unprotected AVUs from a given resource to the given item.
-_ipc_cpUnprotectedRescAVUs(*Resc, *TargetType, *TargetName) {
+_cyverse_logic_cpUnprotectedRescAVUs(*RescName, *TargetType, *TargetName) {
 	foreach (*avu in
 		SELECT META_RESC_ATTR_NAME, META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
-		WHERE RESC_NAME == *Resc
+		WHERE RESC_NAME == *RescName
 	) {
-		_ipc_setAVUIfUnprotected(
+		_cyverse_logic_setAVUIfUnprotected(
 			*TargetType,
 			*TargetName,
 			*avu.META_RESC_ATTR_NAME,
@@ -559,12 +565,12 @@ _ipc_cpUnprotectedRescAVUs(*Resc, *TargetType, *TargetName) {
 }
 
 # Copies the unprotected AVUs from a given user to the given item.
-_ipc_cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) {
+_cyverse_logic_cpUnprotectedUserAVUs(*Username, *TargetType, *TargetName) {
 	foreach (*avu in
 		SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
-		WHERE USER_NAME == *User
+		WHERE USER_NAME == *Username
 	) {
-		_ipc_setAVUIfUnprotected(
+		_cyverse_logic_setAVUIfUnprotected(
 			*TargetType,
 			*TargetName,
 			*avu.META_USER_ATTR_NAME,
@@ -578,11 +584,11 @@ _ipc_cpUnprotectedUserAVUs(*User, *TargetType, *TargetName) {
 # RODSADMIN GROUP PERMISSIONS
 #
 
-resolveAdminPerm(*Item) =
-	if *Item like regex '/' ++ cyverse_ZONE ++ '(/trash)?/home/.*' then 'own' else 'write'
+_cyverse_logic_resolveAdmPerm(*Path) =
+	if str(*Path) like regex '/' ++ cyverse_ZONE ++ '(/trash)?/home/.*' then 'own' else 'write'
 
-setAdminGroupPerm(*Item) {
-	msiSetACL('default', resolveAdminPerm(*Item), 'rodsadmin', *Item);
+_cyverse_logic_setAdmPerm(*Path) {
+	msiSetACL('default', _cyverse_logic_resolveAdmPerm(*Path), 'rodsadmin', *Path);
 }
 
 
@@ -610,24 +616,24 @@ ipc_acSetReServerNumProc { msiSetReServerNumProc(str(cyverse_MAX_NUM_RE_PROCS));
 # pushes a collection.add message into the irods exchange.
 ipc_acCreateCollByAdmin(*ParColl, *ChildColl) {
 	*coll = '*ParColl/*ChildColl';
-	*perm = resolveAdminPerm(*coll);
+	*perm = _cyverse_logic_resolveAdmPerm(*coll);
 	msiSetACL('default', 'admin:*perm', 'rodsadmin', *coll);
 }
 
 ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl) {
 	*path = *ParColl ++ '/' ++ *ChildColl;
 	*id = '';
-	_ipc_ensureUUID(cyverse_COLL, *path, *id, $userNameClient, $rodsZoneClient);
-	_ipc_sendCollectionAdd(*id, *path, $userNameClient, $rodsZoneClient);
+	_cyverse_logic_ensureUUID(cyverse_COLL, *path, $userNameClient, $rodsZoneClient, *id);
+	_cyverse_logic_sendCollAdd(*id, *path, $userNameClient, $rodsZoneClient);
 }
 
 # This rule pushes a collection.rm message into the irods exchange.
 ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
 	*path = '*ParColl/*ChildColl';
-	*uuid = _ipc_retrieveCollectionUUID(*path);
+	*uuid = _cyverse_logic_getCollUUID(*path);
 
 	if (*uuid != '') {
-		_ipc_sendEntityRemove(cyverse_COLL, *uuid, *path, $userNameClient, $rodsZoneClient);
+		_cyverse_logic_sendEntityRm(cyverse_COLL, *uuid, *path, $userNameClient, $rodsZoneClient);
 	}
 }
 
@@ -635,7 +641,9 @@ ipc_acDeleteCollByAdmin(*ParColl, *ChildColl) {
 # unless the user is of type rodsadmin.
 ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
 	if (*UserName == 'rodsadmin') {
-		if (!(*AccessLevel like 'admin:*') && *AccessLevel != resolveAdminPerm(*Path)) {
+		if (
+			!(*AccessLevel like 'admin:*') && *AccessLevel != _cyverse_logic_resolveAdmPerm(*Path)
+		) {
 			cut;
 			failmsg(-830000, 'CYVERSE ERROR: attempt to alter admin user permission.');
 		}
@@ -644,14 +652,14 @@ ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zo
 
 # This rule makes the admin owner of any created collection. This rule is not
 # applied to collections created when a TAR file is expanded. (i.e. ibun -x)
-ipc_acPostProcForCollCreate { setAdminGroupPerm($collName); }
+ipc_acPostProcForCollCreate { _cyverse_logic_setAdmPerm($collName); }
 
 # This rule ensures that archival collections are given a UUID and an AMQP
 # message is published indicating the collection is created.
 ipc_archive_acPostProcForCollCreate {
 	*id = '';
-	_ipc_ensureUUID(cyverse_COLL, $collName, *id, $userNameClient, $rodsZoneClient);
-	_ipc_sendCollectionAdd(*id, $collName, $userNameClient, $rodsZoneClient);
+	_cyverse_logic_ensureUUID(cyverse_COLL, $collName, $userNameClient, $rodsZoneClient, *id);
+	_cyverse_logic_sendCollAdd(*id, $collName, $userNameClient, $rodsZoneClient);
 }
 
 
@@ -665,37 +673,43 @@ ipc_acPostProcForDataCopyReceived(*leaf_resource) {
 
 ipc_acPostProcForOpen {
 	*me = 'ipc_acPostProcForOpen';
-	*id = _ipc_getDataId($objPath);
+	*id = _cyverse_logic_getDataObjId($objPath);
 
 	if (*id >= 0) {
-		_ipc_registerAction(*id, *me);
+		_cyverse_logic_registerAction(*id, *me);
 
-		if (_ipc_isCurrentAction(*id, *me)) {
+		if (_cyverse_logic_isCurrentAction(*id, *me)) {
 			*uuid = '';
-			_ipc_ensureUUID(cyverse_DATA_OBJ, $objPath, *uuid, $userNameClient, $rodsZoneClient);
-			_ipc_sendDataObjectOpen(*uuid, $objPath, $userNameClient, $rodsZoneClient, $dataSize);
-			_ipc_unregisterAction(*id, *me);
+
+			_cyverse_logic_ensureUUID(
+				cyverse_DATA_OBJ, $objPath, $userNameClient, $rodsZoneClient, *uuid );
+
+			_cyverse_logic_sendDataObjOpen(
+				*uuid, $objPath, $dataSize, $userNameClient, $rodsZoneClient );
+
+			_cyverse_logic_unregisterAction(*id, *me);
 		}
 	}
 }
 
-ipc_acPreprocForRmColl { temporaryStorage.'$collName' = 	_ipc_retrieveCollectionUUID($collName); }
+ipc_acPreprocForRmColl { temporaryStorage.'$collName' = _cyverse_logic_getCollUUID($collName); }
 
 ipc_acPostProcForRmColl {
 	*uuid = temporaryStorage.'$collName';
 
 	if (*uuid != '') {
-		_ipc_sendEntityRemove(cyverse_COLL, *uuid, $collName, $userNameClient, $rodsZoneClient);
+		_cyverse_logic_sendEntityRm(cyverse_COLL, *uuid, $collName, $userNameClient, $rodsZoneClient);
 	}
 }
 
-ipc_acDataDeletePolicy { temporaryStorage.'$objPath' = _ipc_retrieveDataUUID($objPath); }
+ipc_acDataDeletePolicy { temporaryStorage.'$objPath' = _cyverse_logic_getDataObjUUID($objPath); }
 
 ipc_acPostProcForDelete {
 	*uuid = temporaryStorage.'$objPath';
 
 	if (*uuid != '') {
-		_ipc_sendEntityRemove(cyverse_DATA_OBJ, *uuid, $objPath, $userNameClient, $rodsZoneClient);
+		_cyverse_logic_sendEntityRm(
+			cyverse_DATA_OBJ, *uuid, $objPath, $userNameClient, $rodsZoneClient );
 	}
 }
 
@@ -703,20 +717,20 @@ ipc_acPostProcForDelete {
 # updated object.
 ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *UserZone, *Path) {
 	*me = 'ipc_acPostProcForModifyAccessControl';
-	*entityId = _ipc_getEntityId(*Path);
+	*entityId = _cyverse_logic_getId(*Path);
 
 	if (*entityId >= 0) {
-		_ipc_registerAction(*entityId, *me);
+		_cyverse_logic_registerAction(*entityId, *me);
 
-		if (_ipc_isCurrentAction(*entityId, *me)) {
-			*level = _ipc_removePrefix(*AccessLevel, list('admin:'));
+		if (_cyverse_logic_isCurrentAction(*entityId, *me)) {
+			*level = _cyverse_logic_rmPrefix(*AccessLevel, list('admin:'));
 			*type = cyverse_getEntityType(*Path);
 			*userZone = if *UserZone == '' then cyverse_ZONE else *UserZone;
 			*uuid = '';
-			_ipc_ensureUUID(*type, *Path, *uuid, $userNameClient, $rodsZoneClient);
+			_cyverse_logic_ensureUUID(*type, *Path, $userNameClient, $rodsZoneClient, *uuid);
 
 			if (cyverse_isColl(*type)) {
-				_ipc_sendCollectionAccessModified(
+				_cyverse_logic_sendCollAccessMod(
 					*uuid,
 					*level,
 					*UserName,
@@ -725,11 +739,11 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
 					$userNameClient,
 					$rodsZoneClient );
 			} else if (cyverse_isDataObj(*type)) {
-				_ipc_sendDataObjectAclModified(
+				_cyverse_logic_sendDataObjACLMod(
 					*uuid, *level, *UserName, *userZone, $userNameClient, $rodsZoneClient );
 			}
 
-			_ipc_unregisterAction(*entityId, *me);
+			_cyverse_logic_unregisterAction(*entityId, *me);
 		}
 	}
 }
@@ -739,10 +753,11 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
 ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 	*type = cyverse_getEntityType(*DestEntity);
 	*uuid = '';
-	_ipc_ensureUUID(*type, *DestEntity, *uuid, $userNameClient, $rodsZoneClient);
+	_cyverse_logic_ensureUUID(*type, *DestEntity, $userNameClient, $rodsZoneClient, *uuid);
 
 	if (*uuid != '') {
-		_ipc_sendEntityMove(*type, *uuid, *SrcEntity, *DestEntity, $userNameClient, $rodsZoneClient);
+		_cyverse_logic_sendEntityMv(
+			*type, *uuid, *SrcEntity, *DestEntity, $userNameClient, $rodsZoneClient );
 	}
 }
 
@@ -753,20 +768,22 @@ ipc_acPreProcForModifyAVUMetadata(
 	*newArgs = list(*New1, *New2, *New3, *New4);
 
 	# Determine the original unit and the new AVU settings.
-	*origUnit = _ipc_getOrigUnit(*New1);
-	*newName = _ipc_getNewAVUSetting(*AName, 'n:', *newArgs);
-	*newValue = _ipc_getNewAVUSetting(*AValue, 'v:', *newArgs);
-	*newUnit = _ipc_getNewAVUSetting(*origUnit, 'u:', *newArgs);
+	*origUnit = _cyverse_logic_getOrigUnit(*New1);
+	*newName = _cyverse_logic_getNewAVUSetting(*AName, 'n:', *newArgs);
+	*newValue = _cyverse_logic_getNewAVUSetting(*AValue, 'v:', *newArgs);
+	*newUnit = _cyverse_logic_getNewAVUSetting(*origUnit, 'u:', *newArgs);
 
-	_ipc_ensureAVUEditable($userNameClient, $rodsZoneClient, *AName, *AValue, *origUnit);
-	_ipc_ensureAVUEditable($userNameClient, $rodsZoneClient, *newName, *newValue, *newUnit);
+	_cyverse_logic_ensureAVUEditable($userNameClient, $rodsZoneClient, *AName, *AValue, *origUnit);
+
+	_cyverse_logic_ensureAVUEditable(
+		$userNameClient, $rodsZoneClient, *newName, *newValue, *newUnit );
 }
 
 # This rule checks that AVU being added, set or removed isn't a protected one.
 # Only rodsadmin users are allowed to add, remove or update protected AVUs.
 ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
 	if (*Option != 'adda') {
-		_ipc_ensureAVUEditable($userNameClient, $rodsZoneClient, *AName, *AValue, *AUnit);
+		_cyverse_logic_ensureAVUEditable($userNameClient, $rodsZoneClient, *AName, *AValue, *AUnit);
 	}
 }
 
@@ -777,13 +794,13 @@ ipc_acPreProcForModifyAVUMetadata(
 ) {
 	if (!canModProtectedAVU($userNameClient, $rodsZoneClient)) {
 		if (cyverse_isColl(*SourceItemType)) {
-			cpUnprotectedCollAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
+			_cyverse_logic_cpUnprotectedCollAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
 		} else if (cyverse_isDataObj(*SourceItemType)) {
-			cpUnprotectedDataObjAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
+			_cyverse_logic_cpUnprotectedDataObjAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
 		} else if (cyverse_isResc(*SourceItemType)) {
-			cpUnprotectedRescAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
+			_cyverse_logic_cpUnprotectedRescAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
 		} else if (cyverse_isUser(*SourceItemType)) {
-			cpUnprotectedUserAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
+			_cyverse_logic_cpUnprotectedUserAVUs(*SourceItemName, *TargetItemType, *TargetItemName);
 		}
 
 		# fail to prevent iRODS from also copying the protected metadata
@@ -798,16 +815,16 @@ ipc_acPostProcForModifyAVUMetadata(
 ) {
 	*newArgs = list(*new1, *new2, *new3, *new4);
 	*uuid = '';
-	_ipc_ensureUUID(*ItemType, *ItemName, *uuid, $userNameClient, $rodsZoneClient);
+	_cyverse_logic_ensureUUID(*ItemType, *ItemName, $userNameClient, $rodsZoneClient, *uuid);
 
 	# Determine the original unit and the new AVU settings.
-	*origUnit = _ipc_getOrigUnit(*new1);
-	*newName = _ipc_getNewAVUSetting(*AName, 'n:', *newArgs);
-	*newValue = _ipc_getNewAVUSetting(*AValue, 'v:', *newArgs);
-	*newUnit = _ipc_getNewAVUSetting(*origUnit, 'u:', *newArgs);
+	*origUnit = _cyverse_logic_getOrigUnit(*new1);
+	*newName = _cyverse_logic_getNewAVUSetting(*AName, 'n:', *newArgs);
+	*newValue = _cyverse_logic_getNewAVUSetting(*AValue, 'v:', *newArgs);
+	*newUnit = _cyverse_logic_getNewAVUSetting(*origUnit, 'u:', *newArgs);
 
 	# Send AVU modified message.
-	_ipc_sendAvuMod(
+	_cyverse_logic_sendAVUMod(
 		*ItemType,
 		*uuid,
 		*AName,
@@ -823,20 +840,21 @@ ipc_acPostProcForModifyAVUMetadata(
 # This rule sends one of the AVU metadata set messages, depending on which
 # subcommand was used.
 ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
-	if (*AName != _ipc_UUID_ATTR) {
-		if (_ipc_contains(*Option, list('add', 'adda', 'rm', 'set'))) {
+	if (*AName != _cyverse_logic_UUID_ATTR) {
+		if (_cyverse_logic_contains(*Option, list('add', 'adda', 'rm', 'set'))) {
 			*uuid = '';
-			_ipc_ensureUUID(*ItemType, *ItemName, *uuid, $userNameClient, $rodsZoneClient);
+			_cyverse_logic_ensureUUID(*ItemType, *ItemName, $userNameClient, $rodsZoneClient, *uuid);
 
-			_ipc_sendAvuSet(
+			_cyverse_logic_sendAVUSet(
 				*Option, *ItemType, *uuid, *AName, *AValue, *AUnit, $userNameClient, $rodsZoneClient );
 		} else if (*Option == 'addw') {
-			_ipc_sendAvuMultiset(*ItemName, *AName, *AValue, *AUnit, $userNameClient, $rodsZoneClient);
+			_cyverse_logic_sendAVUAddWildcard(
+				*ItemName, *AName, *AValue, *AUnit, $userNameClient, $rodsZoneClient );
 		} else if (*Option == 'rmw') {
 			*uuid = '';
-			_ipc_ensureUUID(*ItemType, *ItemName, *uuid, $userNameClient, $rodsZoneClient);
+			_cyverse_logic_ensureUUID(*ItemType, *ItemName, $userNameClient, $rodsZoneClient, *uuid);
 
-			_ipc_sendAvuMultiremove(
+			_cyverse_logic_sendAVURmWildcard(
 				*ItemType, *uuid, *AName, *AValue, *AUnit, $userNameClient, $rodsZoneClient );
 		}
 	}
@@ -847,24 +865,24 @@ ipc_acPostProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
 ) {
 	if (cyverse_isFSType(*TargetItemType) && !cyverse_inStaging(/*TargetItemName)) {
-		*target = _ipc_resolve_msg_entity_id(
+		*target = _cyverse_logic_resolveMsgEntityId(
 			*TargetItemType, *TargetItemName, $userNameClient, $rodsZoneClient );
 
 		if (cyverse_isFSType(*SourceItemType) && !cyverse_inStaging(/*SourceItemName)) {
-			*source = _ipc_resolve_msg_entity_id(
+			*source = _cyverse_logic_resolveMsgEntityId(
 				*SourceItemType, *SourceItemName, $userNameClient, $rodsZoneClient );
 
-			_ipc_sendAvuCopy(
+			_cyverse_logic_sendAVUCp(
 				*SourceItemType, *source, *TargetItemType, *target, $userNameClient, $rodsZoneClient );
 		} else {
-			*uuidAttr = _ipc_UUID_ATTR;
+			*uuidAttr = _cyverse_logic_UUID_ATTR;
 
 			if (cyverse_isResc(*SourceItemType)) {
 				foreach( *rec in
 					SELECT META_RESC_ATTR_NAME, META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
 					WHERE RESC_NAME == *SourceItemName AND META_RESC_ATTR_NAME != *uuidAttr
 				) {
-					_ipc_sendAvuSet(
+					_cyverse_logic_sendAVUSet(
 						'add',
 						*TargetItemType,
 						*target,
@@ -879,7 +897,7 @@ ipc_acPostProcForModifyAVUMetadata(
 					SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
 					WHERE USER_NAME == *SourceItemName AND META_USER_ATTR_NAME != *uuidAttr
 				) {
-					_ipc_sendAvuSet(
+					_cyverse_logic_sendAVUSet(
 						'add',
 						*TargetItemType,
 						*target,
@@ -909,97 +927,97 @@ ipc_acPostProcForParallelTransferReceived(*LeafResource) {
 # ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO) {
 # 	*me = 'ipc_dataObjCreated';
 # 	*id = int(*DATA_OBJ_INFO.data_id);
-# 	_ipc_registerAction(*id, *me);
-# 	*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
+# 	_cyverse_logic_registerAction(*id, *me);
+# 	*err = errormsg(_cyverse_logic_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
 # 	if (*err < 0) { writeLine('serverLog', *msg); }
 #
-# 	*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
+# 	*err = errormsg(_cyverse_logic_setAdmPerm(*DATA_OBJ_INFO.logical_path), *msg);
 # 	if (*err < 0) { writeLine('serverLog', *msg); }
 #
 # 	*uuid = ''
-# 	_ipc_ensureUUID(
+# 	_cyverse_logic_ensureUUID(
 # 		cyverse_DATA_OBJ,
 # 		*DATA_OBJ_INFO.logical_path,
-# 		*uuid,
 # 		*DATA_OBJ_INFO.data_owner_name,
-# 		*DATA_OBJ_INFO.data_owner_zone );
+# 		*DATA_OBJ_INFO.data_owner_zone,
+# 		*uuid );
 #
-# 	if (_ipc_isCurrentAction(*id, *me)) {
+# 	if (_cyverse_logic_isCurrentAction(*id, *me)) {
 # 		*err = errormsg(
-# 			_ipc_sendDataObjectAdd(
-# 				*User,
-# 				*Zone,
+# 			_cyverse_logic_sendDataObjAdd(
 # 				*uuid,
 # 				*DATA_OBJ_INFO.logical_path,
 # 				*DATA_OBJ_INFO.data_owner_name,
 # 				*DATA_OBJ_INFO.data_owner_zone,
 # 				int(*DATA_OBJ_INFO.data_size),
-# 				*DATA_OBJ_INFO.data_type ),
+# 				*DATA_OBJ_INFO.data_type,
+# 				*User,
+# 				*Zone ),
 # 			*msg );
 # 		if (*err < 0) { writeLine('serverLog', *msg); }
 # 	}
 #
-# 	_ipc_unregisterAction(*id, *me);
+# 	_cyverse_logic_unregisterAction(*id, *me);
 # }
 ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 	*me = 'ipc_dataObjCreated';
 	*id = int(*DATA_OBJ_INFO.data_id);
-	_ipc_registerAction(*id, *me);
+	_cyverse_logic_registerAction(*id, *me);
 
 	*uuid = '';
 
 	if (*Step != 'FINISH') {
-		*err = errormsg(setAdminGroupPerm(*DATA_OBJ_INFO.logical_path), *msg);
+		*err = errormsg(_cyverse_logic_setAdmPerm(*DATA_OBJ_INFO.logical_path), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 # XXX - Due to a bug in iRODS 4.2.8, msiExecCmd cannot be call from within the
 #       pep_database_reg_data_obj_post before the data object's replica has been
-#       fully written to storage. This means that the _ipc_ensureUUID cannot be
-#       called when *Step is START.
-# 		_ipc_ensureUUID(
+#       fully written to storage. This means that the _cyverse_logic_ensureUUID
+#       cannot be called when *Step is START.
+# 		_cyverse_logic_ensureUUID(
 # 			cyverse_DATA_OBJ,
 # 			*DATA_OBJ_INFO.logical_path,
-# 			*uuid,
 # 			*DATA_OBJ_INFO.data_owner_name,
-# 			*DATA_OBJ_INFO.data_owner_zone );
+# 			*DATA_OBJ_INFO.data_owner_zone,
+# 			*uuid );
 		if (*Step != 'START') {
-			_ipc_ensureUUID(
+			_cyverse_logic_ensureUUID(
 				cyverse_DATA_OBJ,
 				*DATA_OBJ_INFO.logical_path,
-				*uuid,
 				*DATA_OBJ_INFO.data_owner_name,
-				*DATA_OBJ_INFO.data_owner_zone );
+				*DATA_OBJ_INFO.data_owner_zone,
+				*uuid );
 		}
 # XXX - ^^^
 	}
 
 	if (*Step != 'START') {
-		*err = errormsg(_ipc_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
+		*err = errormsg(_cyverse_logic_chksumRepl(*DATA_OBJ_INFO.logical_path, 0), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 
 		if (*uuid == '') {
-			_ipc_ensureUUID(
+			_cyverse_logic_ensureUUID(
 				cyverse_DATA_OBJ,
 				*DATA_OBJ_INFO.logical_path,
-				*uuid,
 				*DATA_OBJ_INFO.data_owner_name,
-				*DATA_OBJ_INFO.data_owner_zone );
+				*DATA_OBJ_INFO.data_owner_zone,
+				*uuid );
 		}
 
-		if (_ipc_isCurrentAction(*id, *me)) {
+		if (_cyverse_logic_isCurrentAction(*id, *me)) {
 			*err = errormsg(
-				_ipc_sendDataObjectAdd(
-					*User,
-					*Zone,
+				_cyverse_logic_sendDataObjAdd(
 					*uuid,
 					*DATA_OBJ_INFO.logical_path,
 					*DATA_OBJ_INFO.data_owner_name,
 					*DATA_OBJ_INFO.data_owner_zone,
 					int(*DATA_OBJ_INFO.data_size),
-					*DATA_OBJ_INFO.data_type ),
+					*DATA_OBJ_INFO.data_type,
+					*User,
+					*Zone ),
 				*msg );
 			if (*err < 0) { writeLine('serverLog', *msg); }
 
-			_ipc_unregisterAction(*id, *me);
+			_cyverse_logic_unregisterAction(*id, *me);
 		}
 	}
 }
@@ -1008,44 +1026,44 @@ ipc_dataObjCreated(*User, *Zone, *DATA_OBJ_INFO, *Step) {
 ipc_dataObjModified(*User, *Zone, *DATA_OBJ_INFO) {
 	*me = 'ipc_dataObjModified';
 	*id = int(*DATA_OBJ_INFO.data_id);
-	_ipc_registerAction(*id, *me);
+	_cyverse_logic_registerAction(*id, *me);
 
-	if (_ipc_isCurrentAction(*id, *me)) {
+	if (_cyverse_logic_isCurrentAction(*id, *me)) {
 		*uuid = '';
-		_ipc_ensureUUID(
+		_cyverse_logic_ensureUUID(
 			cyverse_DATA_OBJ,
 			*DATA_OBJ_INFO.logical_path,
-			*uuid,
 			*DATA_OBJ_INFO.data_owner_name,
-			*DATA_OBJ_INFO.data_owner_zone );
+			*DATA_OBJ_INFO.data_owner_zone,
+			*uuid );
 
-		_ipc_sendDataObjectMod(
-			*User,
-			*Zone,
+		_cyverse_logic_sendDataObjMod(
 			*uuid,
 			*DATA_OBJ_INFO.logical_path,
 			*DATA_OBJ_INFO.data_owner_name,
 			*DATA_OBJ_INFO.data_owner_zone,
 			int(*DATA_OBJ_INFO.data_size),
-			*DATA_OBJ_INFO.data_type );
+			*DATA_OBJ_INFO.data_type,
+			*User,
+			*Zone );
 
-		_ipc_unregisterAction(*id, *me);
+		_cyverse_logic_unregisterAction(*id, *me);
 	}
 }
 
 # This rule sends a system metadata modified status message.
 ipc_dataObjMetadataModified(*User, *Zone, *Object) {
 	*me = 'ipc_dataObjMetadataModified';
-	*id = _ipc_getDataId(*Object);
+	*id = _cyverse_logic_getDataObjId(*Object);
 
 	if (*id >= 0) {
-		_ipc_registerAction(*id, *me);
+		_cyverse_logic_registerAction(*id, *me);
 
-		if (_ipc_isCurrentAction(*id, *me)) {
+		if (_cyverse_logic_isCurrentAction(*id, *me)) {
 			*uuid = '';
-			_ipc_ensureUUID(cyverse_DATA_OBJ, *Object, *uuid, *User, *Zone);
-			_ipc_sendDataObjectMetadataModified(*uuid, *User, *Zone);
-			_ipc_unregisterAction(*id, *me);
+			_cyverse_logic_ensureUUID(cyverse_DATA_OBJ, *Object, *User, *Zone, *uuid);
+			_cyverse_logic_sendDataObjMetadataMod(*uuid, *User, *Zone);
+			_cyverse_logic_unregisterAction(*id, *me);
 		}
 	}
 }

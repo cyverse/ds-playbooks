@@ -78,18 +78,6 @@ _cyverse_logic_isAdm(*UserName, *UserZone) =
 # AVUS
 #
 
-# Gets the original unit for an AVU modification. The argument that is used for
-# the original unit in the AVU modification may contain the original unit or, if
-# the unit was empty in the original AVU then this argument may contain the
-# first of the new AVU settings instead. We can distinguish this case from the
-# others by the presence of a prefix in the value. The prefix is always a single
-# character followed by a colon.
-#
-_cyverse_logic_getOrigUnit(*Candidate) =
-	if strlen(*Candidate) < 2 then *Candidate
-	else if substr(*Candidate, 1, 1) != ':' then *Candidate
-	else ''
-
 # Gets the new AVU setting from a list of candidates. New AVU settings are
 # passed in an arbitrary order and the type of AVU setting is identified by a
 # prefix. This function looks for values matching the given prefix. If multiple
@@ -102,6 +90,18 @@ _cyverse_logic_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 		if _cyverse_logic_startsWith(*candidate, *Prefix)
 		then substr(*candidate, 2, strlen(*candidate))
 		else _cyverse_logic_getNewAVUSetting(*Orig, *Prefix, tl(*Candidates))
+
+# Gets the original unit for an AVU modification. The argument that is used for
+# the original unit in the AVU modification may contain the original unit or, if
+# the unit was empty in the original AVU then this argument may contain the
+# first of the new AVU settings instead. We can distinguish this case from the
+# others by the presence of a prefix in the value. The prefix is always a single
+# character followed by a colon.
+#
+_cyverse_logic_getOrigUnit(*Candidate) =
+	if strlen(*Candidate) < 2 then *Candidate
+	else if substr(*Candidate, 1, 1) != ':' then *Candidate
+	else ''
 
 
 #
@@ -233,22 +233,22 @@ _cyverse_logic_getMsgType(*EntityType) =
 	else if cyverse_isUser(*EntityType) then _cyverse_logic_USER_MSG_TYPE
 	else ''
 
-_cyverse_logic_mkAVUObject(*Field, *Name, *Value, *Unit) =
+_cyverse_logic_mkAVUObj(*Field, *Attr, *Val, *Unit) =
 	cyverse_json_object(
 		*Field,
 		list(
-			cyverse_json_string('attribute', *Name),
-			cyverse_json_string('value', *Value),
+			cyverse_json_string('attribute', *Attr),
+			cyverse_json_string('value', *Val),
 			cyverse_json_string('unit', *Unit) ) )
-
-_cyverse_logic_mkEntityField(*Uuid) = cyverse_json_string('entity', *Uuid)
-
-_cyverse_logic_mkPathField(*Path) = cyverse_json_string('path', "*Path")
 
 _cyverse_logic_mkUserObj(*Field, *Name, *Zone) = cyverse_json_object(
 	*Field, list(cyverse_json_string('name', *Name), cyverse_json_string('zone', *Zone)) )
 
 _cyverse_logic_mkAuthorField(*Name, *Zone) = _cyverse_logic_mkUserObj('author', *Name, *Zone)
+
+_cyverse_logic_mkEntityField(*Uuid) = cyverse_json_string('entity', *Uuid)
+
+_cyverse_logic_mkPathField(*Path) = cyverse_json_string('path', "*Path")
 
 _cyverse_logic_resolveMsgEntityId(*EntityType, *EntityName, *ClientName, *ClientZone) =
 	let *id = '' in
@@ -282,6 +282,77 @@ _cyverse_logic_sendMsg(*Topic, *Msg) {
 	}
 
 	0;
+}
+
+_cyverse_logic_sendAVUAddWildcard(
+	*DataObjPattern, *AttrName, *AttrVal, *AttrUnit, *AuthorName, *AuthorZone
+) {
+	*msg = cyverse_json_document(
+		list(
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			cyverse_json_string('pattern', *DataObjPattern),
+			_cyverse_logic_mkAVUObj('metadatum', *AttrName, *AttrVal, *AttrUnit) ) );
+
+	_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.metadata.addw', *msg);
+}
+
+_cyverse_logic_sendAVUCp(*SourceType, *Source, *TargetType, *Target, *AuthorName, *AuthorZone) {
+	*msg = cyverse_json_document(
+		list(
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			cyverse_json_string('source', *Source),
+			cyverse_json_string('source-type', _cyverse_logic_getMsgType(*SourceType)),
+			cyverse_json_string('destination', *Target) ) );
+
+	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*TargetType) ++ '.metadata.cp', *msg);
+}
+
+_cyverse_logic_sendAVUMod(
+	*EntityType,
+	*Entity,
+	*OldName,
+	*OldVal,
+	*OldUnit,
+	*NewName,
+	*NewVal,
+	*NewUnit,
+	*AuthorName,
+	*AuthorZone
+) {
+	*msg = cyverse_json_document(
+		list(
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Entity),
+			_cyverse_logic_mkAVUObj('old-metadatum', *OldName, *OldVal, *OldUnit),
+			_cyverse_logic_mkAVUObj('new-metadatum', *NewName, *NewVal, *NewUnit) ) );
+
+	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.mod', *msg);
+}
+
+_cyverse_logic_sendAVURmWildcard(
+	*EntityType, *Entity, *AttrName, *AttrVal, *AttrUnit, *AuthorName, *AuthorZone
+) {
+	*msg = cyverse_json_document(
+		list(
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Entity),
+			cyverse_json_string('attribute-pattern', *AttrName),
+			cyverse_json_string('value-pattern', *AttrVal),
+			cyverse_json_string('unit-pattern', *AttrUnit) ) );
+
+	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.rmw', *msg);
+}
+
+_cyverse_logic_sendAVUSet(
+	*Opt, *EntityType, *Entity, *AttrName, *AttrVal, *AttrUnit, *AuthorName, *AuthorZone
+) {
+	*msg = cyverse_json_document(
+		list(
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Entity),
+			_cyverse_logic_mkAVUObj('metadatum', *AttrName, *AttrVal, *AttrUnit) ) );
+
+	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.' ++ *Opt, *msg);
 }
 
 _cyverse_logic_sendCollACLMod(
@@ -360,6 +431,16 @@ _cyverse_logic_sendDataObjAdd(
 	_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.add', *msg);
 }
 
+# Publish a data-object.sys-metadata.mod message to AMQP exchange
+_cyverse_logic_sendDataObjMetadataMod(*Id, *AuthorName, *AuthorZone) {
+	*msg = cyverse_json_document(
+		list(
+			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+			_cyverse_logic_mkEntityField(*Id) ) );
+
+	_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.sys-metadata.mod', *msg);
+}
+
 # Publish a data-object.mod message to AMQP exchange
 _cyverse_logic_sendDataObjMod(
 	*Id, *Path, *OwnerName, *OwnerZone, *Size, *Type, *AuthorName, *AuthorZone
@@ -389,87 +470,6 @@ _cyverse_logic_sendDataObjOpen(*Id, *Path, *Size, *AuthorName, *AuthorZone) {
 
 		_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.open', *msg);
 	}
-}
-
-# Publish a data-object.sys-metadata.mod message to AMQP exchange
-_cyverse_logic_sendDataObjMetadataMod(*Id, *AuthorName, *AuthorZone) {
-	*msg = cyverse_json_document(
-		list(
-			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
-			_cyverse_logic_mkEntityField(*Id) ) );
-
-	_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.sys-metadata.mod', *msg);
-}
-
-_cyverse_logic_sendAVUAddWildcard(
-	*DataObjPattern, *AttrName, *AttrVal, *AttrUnit, *AuthorName, *AuthorZone
-) {
-	*msg = cyverse_json_document(
-		list(
-			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
-			cyverse_json_string('pattern', *DataObjPattern),
-			_cyverse_logic_mkAVUObject('metadatum', *AttrName, *AttrVal, *AttrUnit) ) );
-
-	_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.metadata.addw', *msg);
-}
-
-_cyverse_logic_sendAVUCp(*SourceType, *Source, *TargetType, *Target, *AuthorName, *AuthorZone) {
-	*msg = cyverse_json_document(
-		list(
-			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
-			cyverse_json_string('source', *Source),
-			cyverse_json_string('source-type', _cyverse_logic_getMsgType(*SourceType)),
-			cyverse_json_string('destination', *Target) ) );
-
-	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*TargetType) ++ '.metadata.cp', *msg);
-}
-
-_cyverse_logic_sendAVUMod(
-	*EntityType,
-	*Entity,
-	*OldName,
-	*OldVal,
-	*OldUnit,
-	*NewName,
-	*NewVal,
-	*NewUnit,
-	*AuthorName,
-	*AuthorZone
-) {
-	*msg = cyverse_json_document(
-		list(
-			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
-			_cyverse_logic_mkEntityField(*Entity),
-			_cyverse_logic_mkAVUObject('old-metadatum', *OldName, *OldVal, *OldUnit),
-			_cyverse_logic_mkAVUObject('new-metadatum', *NewName, *NewVal, *NewUnit) ) );
-
-	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.mod', *msg);
-}
-
-_cyverse_logic_sendAVURmWildcard(
-	*EntityType, *Entity, *AttrName, *AttrVal, *AttrUnit, *AuthorName, *AuthorZone
-) {
-	*msg = cyverse_json_document(
-		list(
-			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
-			_cyverse_logic_mkEntityField(*Entity),
-			cyverse_json_string('attribute-pattern', *AttrName),
-			cyverse_json_string('value-pattern', *AttrVal),
-			cyverse_json_string('unit-pattern', *AttrUnit) ) );
-
-	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.rmw', *msg);
-}
-
-_cyverse_logic_sendAVUSet(
-	*Opt, *EntityType, *Entity, *AttrName, *AttrVal, *AttrUnit, *AuthorName, *AuthorZone
-) {
-	*msg = cyverse_json_document(
-		list(
-			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
-			_cyverse_logic_mkEntityField(*Entity),
-			_cyverse_logic_mkAVUObject('metadatum', *AttrName, *AttrVal, *AttrUnit) ) );
-
-	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.' ++ *Opt, *msg);
 }
 
 _cyverse_logic_sendEntityMv(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {

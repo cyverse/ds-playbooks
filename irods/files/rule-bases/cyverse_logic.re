@@ -142,17 +142,15 @@ _cyverse_logic_assignUUID(*EntityType, *EntityPath, *Uuid, *ClientName, *ClientZ
 	}
 }
 
-_cyverse_logic_generateUUID(*UUID) {
-	*status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *out));
-	if (*status == 0) {
-		msiGetStdoutInExecCmdOut(*out, *uuid);
-		*UUID = trimr(*uuid, "\n");
-		writeLine('serverLog', 'UUID *UUID created');
-	} else {
-		writeLine("serverLog", "failed to generate UUID");
-		fail;
-	}
-}
+_cyverse_logic_genUUID() =
+	let *uuid = '' in
+	let *genResp = '' in
+	let *status = errorcode(msiExecCmd("generateuuid", "", "null", "null", "null", *genResp)) in
+	let *_ = if (*status == 0) {
+			msiGetStdoutInExecCmdOut(*genResp, *uuid);
+			*uuid = trimr(*uuid, "\n");
+		} in
+	*uuid
 
 # Looks up the UUID of a collection from its path.
 _cyverse_logic_getCollUUID(*CollPath) =
@@ -186,7 +184,11 @@ _cyverse_logic_getUUID(*EntityType, *EntityPath) =
 _cyverse_logic_ensureUUID(*EntityType, *EntityPath, *ClientName, *ClientZone, *UUID) {
 	*uuid = _cyverse_logic_getUUID(*EntityType, *EntityPath);
 	if (*uuid == '') {
-		_cyverse_logic_generateUUID(*uuid);
+		*uuid = _cyverse_logic_genUUID();
+		if (*uuid == '') {
+			writeLine('serverLog', 'Failed to generate UUID for ' ++ str(*EntityPath));
+			fail;
+		}
 		_cyverse_logic_assignUUID(*EntityType, *EntityPath, *uuid, *ClientName, *ClientZone);
 	}
 	*UUID = *uuid;

@@ -488,17 +488,6 @@ acPostProcForRmColl {
 
 # COLL_CREATE
 
-# This is the preprocessing logic for when a collection is created through the
-# API using a COLL_CREATE request.
-#
-#  Instance       (string) unknown
-#  Comm           (`KeyValuePair_PI`) user connection and auth information
-#  CollCreateInp  (`KeyValuePair_PI`) information related to the new collection
-#
-pep_api_coll_create_pre(*Instance, *Comm, *CollCreateInp) {
-	mdrepo_api_coll_create_pre(*Instance, *Comm, *CollCreateInp);
-}
-
 # This is the post processing logic for when a collection is created through the
 # API using a COLL_CREATE request.
 #
@@ -758,6 +747,9 @@ _cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
 	}
 }
 
+_cyverse_core_dataObjMetadataModified(*User, *Zone, *Object) {
+	ipc_dataObjMetadataModified(*User, *Zone, *Object);
+}
 
 # CLOSE
 
@@ -773,18 +765,18 @@ pep_database_close_post(*Instance, *Context, *OUT) {
 # XXX - Because of https://github.com/irods/irods/issues/5540,
 # nothing can be done here
 # 	foreach (*key in temporaryStorage) {
-# 		*vals = split(temporaryStorage.'*key', ' ');
+# 		*values = split(temporaryStorage.'*key', ' ');
 # # XXX - Because of https://github.com/irods/irods/issues/5538, the Context
 # # variables need to passed through temporaryStorage
 # # 		*user = *Context.user_user_name
 # # 		*zone = *Context.user_rods_zone
 # # 		*doiMspStr = triml(temporaryStorage.'*key', ' ');
-# 		*user = elem(*vals, 1);
-# 		*zone = elem(*vals, 2);
+# 		*user = elem(*values, 1);
+# 		*zone = elem(*values, 2);
 # 		*doiMspStr = triml(triml(triml(temporaryStorage.'*key', ' '), ' '), ' ');
 # # XXX - ^^^
 # 		*doiKvs = split(*doiMspStr, '++++');
-# 		*op = elem(*vals, 0);
+# 		*op = elem(*values, 0);
 # 		*doiStr = '';
 # 		foreach (*kv in *doiKvs) {
 # 			*doiStr = if *doiStr == '' then *kv else *doiStr ++ '%' ++ *kv;

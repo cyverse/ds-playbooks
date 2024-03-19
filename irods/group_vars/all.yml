@@ -30,8 +30,6 @@ _cereus_resource_hierarchy: >-
 
 _check_routes_timeout: "{{ check_routes_timeout | default(3) }}"
 
-_de_job_irods_user: "{{ de_job_irods_user | default(None) }}"
-
 _firewall_chain: "{{ firewall_chain | default('INPUT') }}"
 
 _irods_admin_password: "{{ irods_admin_password | default(_irods_clerver_password) }}"
@@ -115,6 +113,8 @@ _webdav_varnish_service_port: "{{ webdav_varnish_service_port | default(6081) }}
 
 _sftp_port: "{{ sftp_port | default(2022) }}"
 _sftp_proxy_allowed: "{{ sftp_proxy_allowed | default([]) }}"
+_sftp_user_host_allowed: "{{ sftp_user_host_allowed | default([]) }}"
+_sftp_user_host_rejected: "{{ sftp_user_host_rejected | default([]) }}"
 _sftpgo_admin_ui_port:  "{{ sftpgo_admin_ui_port | default(18023) }}"
 _sftpgo_vault_dir: "{{ sftpgo_vault_dir | default('/sftpgo_vault') }}"
 _sftpgo_admin_username: "{{ sftpgo_admin_username | default('admin') }}"

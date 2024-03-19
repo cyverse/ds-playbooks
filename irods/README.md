@@ -27,7 +27,6 @@ Variable                                   | Required | Default                 
 `cereus_collections`                       | no       | []                                   |         | A list of collections whose data belongs on the Cereus resource, each entry must be an absolute path
 `cereus_resource_hierarchy`                | no       | `irods_resource_hierarchies[0]`      |         | the Cereus resource used for hosting data for Cereus related projects
 `check_routes_timeout`                     | no       | 3                                    |         | The number of seconds the `check_route` playbook will wait for a response during a single port check
-`de_job_irods_user`                        | no       |                                      |         | The iRODS username used by the DE from running jobs. If undefined, it won't be created.
 `firewall_chain`                           | no       | INPUT                                |         | The iptables chain managing authorizing iRODS connections
 `irods_admin_password`                     | no       | `irods_clerver_password`             |         | The iRODS admin account password
 `irods_admin_username`                     | no       | `irods_clerver_user`                 |         | The iRODS admin account name
@@ -82,6 +81,8 @@ Variable                                   | Required | Default                 
 `restart_irods`                            | no       | false                                |         | iRODS can be restarted on the servers having config file changes, _see below_
 `sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
 `sftp_proxy_allowed`                       | no       | `[]`                                 |         | A list of network/masks for the proxy servers allowed access to the SFTP servers
+`sftp_user_host_allowed`                   | no       | `[]`                                 |         | A list of ip addresses of the user hosts allowed (whitelisted) for access to the SFTP servers
+`sftp_user_host_rejected`                  | no       | `[]`                                 |         | A list of ip addresses of the user hosts rejected (blacklisted) for access to the SFTP servers
 `sftpgo_admin_ui_port`                     | no       | 18023                                |         | The SFTPGo admin UI service port number
 `sftpgo_admin_password`                    | yes      |                                      |         | The password of the SFTPGo admin user
 `sftpgo_admin_username`                    | no       | admin                                |         | The SFTPGo admin account name

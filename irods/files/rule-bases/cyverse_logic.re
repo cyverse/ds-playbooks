@@ -109,11 +109,29 @@ _cyverse_logic_getOrigUnit(*Candidate) =
 #
 
 # Compute the checksum of of a given replica of a given data object
-_cyverse_logic_chksumRepl(*DataObjPath, *ReplNum) {
-	*opt = '';
-	msiAddKeyValToMspStr('forceChksum', '', *opts);
-	msiAddKeyValToMspStr('replNum', str(*ReplNum), *opts);
-	msiDataObjChksum(str(*DataObjPath), *opts, *_);
+_cyverse_logic_chksumRepl(*DataObjId, *ReplNum) {
+	*dataObjPath = '';
+	foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*DataObjId') {
+		*dataObjPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
+	}
+
+	if (*dataObjPath != '') {
+		*opts = '';
+		msiAddKeyValToMspStr('forceChksum', '', *opts);
+		msiAddKeyValToMspStr('replNum', str(*ReplNum), *opts);
+		msiDataObjChksum(*dataObjPath, *opts, *_);
+	}
+}
+
+# Schedule a task for computing the checksum of a given replica of a given data object
+_cyverse_logic_schedChksumRepl(*DataObjPath, *ReplNum) {
+	*dataObjId = _ipc_getDataId(*DataObjPath)
+
+	delay(
+		'<INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>' ++
+		'<PLUSET>0s</PLUSET>' ++
+		'<EF>0s REPEAT 0 TIMES</EF>'
+	) {_cyverse_logic_chksumRepl(*dataObjId, *ReplNum)}
 }
 
 
@@ -940,7 +958,7 @@ ipc_acPostProcForParallelTransferReceived(*StoreResc) {
 # 	*me = 'ipc_dataObjCreated';
 # 	*id = int(*DataObjInfo.data_id);
 # 	_cyverse_logic_registerAction(*id, *me);
-# 	*err = errormsg(_cyverse_logic_chksumRepl(*DataObjInfo.logical_path, 0), *msg);
+# 	*err = errormsg(_cyverse_logic_schedChksumRepl(*DataObjInfo.logical_path, 0), *msg);
 # 	if (*err < 0) { writeLine('serverLog', *msg); }
 #
 # 	*err = errormsg(_cyverse_logic_setAdmPerm(*DataObjInfo.logical_path), *msg);
@@ -1003,7 +1021,7 @@ ipc_dataObjCreated(*Username, *Zone, *DataObjInfo, *Step) {
 	}
 
 	if (*Step != 'START') {
-		*err = errormsg(_cyverse_logic_chksumRepl(*DataObjInfo.logical_path, 0), *msg);
+		*err = errormsg(_cyverse_logic_schedChksumRepl(*DataObjInfo.logical_path, 0), *msg);
 		if (*err < 0) { writeLine('serverLog', *msg); }
 
 		if (*uuid == '') {

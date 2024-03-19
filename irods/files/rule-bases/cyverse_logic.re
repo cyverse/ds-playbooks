@@ -620,36 +620,36 @@ _cyverse_logic_setAdmPerm(*Path) {
 #
 
 # Create a user for a Data Store service
-ipc_acCreateUser {
+cyverse_logic_acCreateUser {
 	msiCreateUser ::: msiRollback;
 	msiCommit;
 }
 
 # Refuse SSL connections
-ipc_acPreConnect(*OUT) {
+cyverse_logic_acPreConnect(*OUT) {
 	*OUT = 'CS_NEG_REFUSE';
 }
 
 # Use default threading setting
-ipc_acSetNumThreads {
+cyverse_logic_acSetNumThreads {
 	msiSetNumThreads('default', 'default', 'default');
 }
 
 # Set maximum number of rule engine processes
-ipc_acSetReServerNumProc {
+cyverse_logic_acSetReServerNumProc {
 	msiSetReServerNumProc(str(cyverse_MAX_NUM_RE_PROCS));
 }
 
 # This rule sets the rodsadmin group permission of a collection when a
 # collection is created by an administrative means, i.e. iadmin mkuser. It also
 # pushes a collection.add message into the irods exchange.
-ipc_acCreateCollByAdmin(*ParCollPath, *CollName) {
+cyverse_logic_acCreateCollByAdmin(*ParCollPath, *CollName) {
 	*coll = str(*ParCollPath) ++ '/' ++ *CollName;
 	*perm = _cyverse_logic_resolveAdmPerm(*coll);
 	msiSetACL('default', 'admin:*perm', 'rodsadmin', *coll);
 }
 
-ipc_archive_acCreateCollByAdmin(*ParCollPath, *CollName) {
+cyverse_logic_acCreateCollByAdminArchive(*ParCollPath, *CollName) {
 	*path = str(*ParCollPath) ++ '/' ++ *CollName;
 	*id = '';
 	_cyverse_logic_ensureUUID(cyverse_COLL, *path, $userNameClient, $rodsZoneClient, *id);
@@ -657,7 +657,7 @@ ipc_archive_acCreateCollByAdmin(*ParCollPath, *CollName) {
 }
 
 # This rule pushes a collection.rm message into the irods exchange.
-ipc_acDeleteCollByAdmin(*ParCollPath, *CollName) {
+cyverse_logic_acDeleteCollByAdmin(*ParCollPath, *CollName) {
 	*path = str(*ParCollPath) ++ '/' ++ *CollName;
 	*uuid = _cyverse_logic_getCollUUID(*path);
 
@@ -668,7 +668,7 @@ ipc_acDeleteCollByAdmin(*ParCollPath, *CollName) {
 
 # This rule prevents the user from removing rodsadmin's ownership from an ACL
 # unless the user is of type rodsadmin.
-ipc_acPreProcForModifyAccessControl(*RecurseFlag, *Perm, *Username, *Zone, *Path) {
+cyverse_logic_acPreProcForModifyAccessControl(*RecurseFlag, *Perm, *Username, *Zone, *Path) {
 	if (*Username == 'rodsadmin') {
 		if (!(*Perm like 'admin:*') && *Perm != _cyverse_logic_resolveAdmPerm(*Path)) {
 			cut;
@@ -679,13 +679,13 @@ ipc_acPreProcForModifyAccessControl(*RecurseFlag, *Perm, *Username, *Zone, *Path
 
 # This rule makes the admin owner of any created collection. This rule is not
 # applied to collections created when a TAR file is expanded. (i.e. ibun -x)
-ipc_acPostProcForCollCreate {
+cyverse_logic_acPostProcForCollCreate {
 	_cyverse_logic_setAdmPerm($collName);
 }
 
 # This rule ensures that archival collections are given a UUID and an AMQP
 # message is published indicating the collection is created.
-ipc_archive_acPostProcForCollCreate {
+cyverse_logic_acPostProcForCollCreateArchive {
 	*id = '';
 	_cyverse_logic_ensureUUID(cyverse_COLL, $collName, $userNameClient, $rodsZoneClient, *id);
 	_cyverse_logic_sendCollAdd(*id, $collName, $userNameClient, $rodsZoneClient);
@@ -695,12 +695,12 @@ ipc_archive_acPostProcForCollCreate {
 # This rule ensures that the storage resource free space is updated when a
 # data object is replicated to it.
 #
-ipc_acPostProcForDataCopyReceived(*StoreResc) {
+cyverse_logic_acPostProcForDataCopyReceived(*StoreResc) {
    msi_update_unixfilesystem_resource_free_space(*StoreResc);
 }
 
 
-ipc_acPostProcForOpen {
+cyverse_logic_acPostProcForOpen {
 	*me = 'ipc_acPostProcForOpen';
 	*id = _cyverse_logic_getDataObjId($objPath);
 
@@ -721,11 +721,11 @@ ipc_acPostProcForOpen {
 	}
 }
 
-ipc_acPreprocForRmColl {
+cyverse_logic_acPreprocForRmColl {
 	temporaryStorage.'$collName' = _cyverse_logic_getCollUUID($collName);
 }
 
-ipc_acPostProcForRmColl {
+cyverse_logic_acPostProcForRmColl {
 	*uuid = temporaryStorage.'$collName';
 
 	if (*uuid != '') {
@@ -733,11 +733,11 @@ ipc_acPostProcForRmColl {
 	}
 }
 
-ipc_acDataDeletePolicy {
+cyverse_logic_acDataDeletePolicy {
 	temporaryStorage.'$objPath' = _cyverse_logic_getDataObjUUID($objPath);
 }
 
-ipc_acPostProcForDelete {
+cyverse_logic_acPostProcForDelete {
 	*uuid = temporaryStorage.'$objPath';
 
 	if (*uuid != '') {
@@ -748,7 +748,7 @@ ipc_acPostProcForDelete {
 
 # This sends a collection or data-object ACL modification message for the
 # updated object.
-ipc_acPostProcForModifyAccessControl(*RecurseFlag, *Perm, *Username, *UserZone, *Path) {
+cyverse_logic_acPostProcForModifyAccessControl(*RecurseFlag, *Perm, *Username, *UserZone, *Path) {
 	*me = 'ipc_acPostProcForModifyAccessControl';
 	*entityId = _cyverse_logic_getId(*Path);
 
@@ -783,7 +783,7 @@ ipc_acPostProcForModifyAccessControl(*RecurseFlag, *Perm, *Username, *UserZone, 
 
 # This rule schedules a rename entry job for the data object or collection being
 # renamed.
-ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
+cyverse_logic_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 	*type = cyverse_getEntityType(*DestEntity);
 	*uuid = '';
 	_cyverse_logic_ensureUUID(*type, *DestEntity, $userNameClient, $rodsZoneClient, *uuid);
@@ -795,7 +795,7 @@ ipc_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 }
 
 # This rule checks that AVU being modified isn't a protected one.
-ipc_acPreProcForModifyAVUMetadata(
+cyverse_logic_acPreProcForModifyAVUMetadata(
 	*Opt, *EntityType, *EntityName, *Attr, *Val, *UnitOrNew1, *New2, *New3, *New4
 ) {
 	*newArgs = list(*UnitOrNew1, *New2, *New3, *New4);
@@ -812,7 +812,7 @@ ipc_acPreProcForModifyAVUMetadata(
 
 # This rule checks that AVU being added, set or removed isn't a protected one.
 # Only rodsadmin users are allowed to add, remove or update protected AVUs.
-ipc_acPreProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *Attr, *Val, *Unit) {
+cyverse_logic_acPreProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *Attr, *Val, *Unit) {
 	if (*Opt != 'adda') {
 		_cyverse_logic_ensureAVUEditable($userNameClient, $rodsZoneClient, *Attr, *Val, *Unit);
 	}
@@ -820,7 +820,7 @@ ipc_acPreProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *Attr, *Val, *
 
 # This rule ensures that only the non-protected AVUs are copied from one item to
 # another.
-ipc_acPreProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) {
+cyverse_logic_acPreProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) {
 	if (!canModProtectedAVU($userNameClient, $rodsZoneClient)) {
 		if (cyverse_isColl(*SrcType)) {
 			_cyverse_logic_cpUnprotectedCollAVUs(*SrcName, *TgtType, *TgtName);
@@ -839,7 +839,7 @@ ipc_acPreProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) 
 }
 
 # This rule sends a message indicating that an AVU was modified.
-ipc_acPostProcForModifyAVUMetadata(
+cyverse_logic_acPostProcForModifyAVUMetadata(
 	*Opt, *EntityType, *EntityName, *Attr, *Val, *UnitOrNew1, *New2, *New3, *New4
 ) {
 	*newArgs = list(*UnitOrNew1, *New2, *New3, *New4);
@@ -868,7 +868,7 @@ ipc_acPostProcForModifyAVUMetadata(
 
 # This rule sends one of the AVU metadata set messages, depending on which
 # subcommand was used.
-ipc_acPostProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *Attr, *Val, *Unit) {
+cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *Attr, *Val, *Unit) {
 	if (*Attr != _cyverse_logic_UUID_ATTR) {
 		if (_cyverse_logic_contains(*Opt, list('add', 'adda', 'rm', 'set'))) {
 			*uuid = '';
@@ -894,7 +894,7 @@ ipc_acPostProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *Attr, *Val, 
 }
 
 # This rules sends an AVU metadata copy message.
-ipc_acPostProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) {
+cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) {
 	if (cyverse_isFSType(*TgtType) && !cyverse_inStaging(/*TgtName)) {
 		*tgt = _cyverse_logic_resolveMsgEntityId(
 			*TgtType, *TgtName, $userNameClient, $rodsZoneClient );
@@ -944,7 +944,7 @@ ipc_acPostProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName)
 
 # Whenever a large file is uploaded, recheck the free space on the storage
 # resource server where the file was written.
-ipc_acPostProcForParallelTransferReceived(*StoreResc) {
+cyverse_logic_acPostProcForParallelTransferReceived(*StoreResc) {
 	msi_update_unixfilesystem_resource_free_space(*StoreResc);
 }
 
@@ -954,8 +954,8 @@ ipc_acPostProcForParallelTransferReceived(*StoreResc) {
 #
 
 # XXX - Because of https://github.com/irods/irods/issues/5540
-# ipc_dataObjCreated(*Username, *Zone, *DataObjInfo) {
-# 	*me = 'ipc_dataObjCreated';
+# cyverse_logic_dataObjCreated(*Username, *Zone, *DataObjInfo) {
+# 	*me = 'cyverse_logic_dataObjCreated';
 # 	*id = int(*DataObjInfo.data_id);
 # 	_cyverse_logic_registerAction(*id, *me);
 # 	*err = errormsg(_cyverse_logic_schedChksumRepl(*DataObjInfo.logical_path, 0), *msg);
@@ -989,8 +989,8 @@ ipc_acPostProcForParallelTransferReceived(*StoreResc) {
 #
 # 	_cyverse_logic_unregisterAction(*id, *me);
 # }
-ipc_dataObjCreated(*Username, *Zone, *DataObjInfo, *Step) {
-	*me = 'ipc_dataObjCreated';
+cyverse_logic_dataObjCreated(*Username, *Zone, *DataObjInfo, *Step) {
+	*me = 'cyverse_logic_dataObjCreated';
 	*id = int(*DataObjInfo.data_id);
 	_cyverse_logic_registerAction(*id, *me);
 
@@ -1053,8 +1053,8 @@ ipc_dataObjCreated(*Username, *Zone, *DataObjInfo, *Step) {
 }
 # XXX - ^^^
 
-ipc_dataObjModified(*Username, *Zone, *DataObjInfo) {
-	*me = 'ipc_dataObjModified';
+cyverse_logic_dataObjMod(*Username, *Zone, *DataObjInfo) {
+	*me = 'cyverse_logic_dataObjMod';
 	*id = int(*DataObjInfo.data_id);
 	_cyverse_logic_registerAction(*id, *me);
 
@@ -1082,16 +1082,16 @@ ipc_dataObjModified(*Username, *Zone, *DataObjInfo) {
 }
 
 # This rule sends a system metadata modified status message.
-ipc_dataObjMetadataModified(*Username, *Zone, *Object) {
-	*me = 'ipc_dataObjMetadataModified';
-	*id = _cyverse_logic_getDataObjId(*Object);
+cyverse_logic_dataObjMetadataMod(*Username, *Zone, *DataObjPath) {
+	*me = 'cyverse_logic_dataObjMetadataMod';
+	*id = _cyverse_logic_getDataObjId(*DataObjPath);
 
 	if (*id >= 0) {
 		_cyverse_logic_registerAction(*id, *me);
 
 		if (_cyverse_logic_isCurrentAction(*id, *me)) {
 			*uuid = '';
-			_cyverse_logic_ensureUUID(cyverse_DATA_OBJ, *Object, *Username, *Zone, *uuid);
+			_cyverse_logic_ensureUUID(cyverse_DATA_OBJ, *DataObjPath, *Username, *Zone, *uuid);
 			_cyverse_logic_sendDataObjMetadataMod(*uuid, *Username, *Zone);
 			_cyverse_logic_unregisterAction(*id, *me);
 		}

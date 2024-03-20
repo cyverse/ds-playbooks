@@ -619,53 +619,6 @@ _cyverse_logic_setAdmPerm(*Path) {
 # STATIC PEPS
 #
 
-# Create a user for a Data Store service
-cyverse_logic_acCreateUser {
-	msiCreateUser ::: msiRollback;
-	msiCommit;
-}
-
-# Refuse SSL connections
-cyverse_logic_acPreConnect(*OUT) {
-	*OUT = 'CS_NEG_REFUSE';
-}
-
-# Use default threading setting
-cyverse_logic_acSetNumThreads {
-	msiSetNumThreads('default', 'default', 'default');
-}
-
-# Set maximum number of rule engine processes
-cyverse_logic_acSetReServerNumProc {
-	msiSetReServerNumProc(str(cyverse_MAX_NUM_RE_PROCS));
-}
-
-# This rule sets the rodsadmin group permission of a collection when a
-# collection is created by an administrative means, i.e. iadmin mkuser. It also
-# pushes a collection.add message into the irods exchange.
-cyverse_logic_acCreateCollByAdmin(*ParCollPath, *CollName) {
-	*coll = str(*ParCollPath) ++ '/' ++ *CollName;
-	*perm = _cyverse_logic_resolveAdmPerm(*coll);
-	msiSetACL('default', 'admin:*perm', 'rodsadmin', *coll);
-}
-
-cyverse_logic_acCreateCollByAdminArchive(*ParCollPath, *CollName) {
-	*path = str(*ParCollPath) ++ '/' ++ *CollName;
-	*id = '';
-	_cyverse_logic_ensureUUID(cyverse_COLL, *path, $userNameClient, $rodsZoneClient, *id);
-	_cyverse_logic_sendCollAdd(*id, *path, $userNameClient, $rodsZoneClient);
-}
-
-# This rule pushes a collection.rm message into the irods exchange.
-cyverse_logic_acDeleteCollByAdmin(*ParCollPath, *CollName) {
-	*path = str(*ParCollPath) ++ '/' ++ *CollName;
-	*uuid = _cyverse_logic_getCollUUID(*path);
-
-	if (*uuid != '') {
-		_cyverse_logic_sendEntityRm(cyverse_COLL, *uuid, *path, $userNameClient, $rodsZoneClient);
-	}
-}
-
 # This rule prevents the user from removing rodsadmin's ownership from an ACL
 # unless the user is of type rodsadmin.
 cyverse_logic_acPreProcForModifyAccessControl(*RecurseFlag, *Perm, *Username, *Zone, *Path) {
@@ -674,75 +627,6 @@ cyverse_logic_acPreProcForModifyAccessControl(*RecurseFlag, *Perm, *Username, *Z
 			cut;
 			failmsg(-830000, 'CYVERSE ERROR: attempt to alter admin user permission.');
 		}
-	}
-}
-
-# This rule makes the admin owner of any created collection. This rule is not
-# applied to collections created when a TAR file is expanded. (i.e. ibun -x)
-cyverse_logic_acPostProcForCollCreate {
-	_cyverse_logic_setAdmPerm($collName);
-}
-
-# This rule ensures that archival collections are given a UUID and an AMQP
-# message is published indicating the collection is created.
-cyverse_logic_acPostProcForCollCreateArchive {
-	*id = '';
-	_cyverse_logic_ensureUUID(cyverse_COLL, $collName, $userNameClient, $rodsZoneClient, *id);
-	_cyverse_logic_sendCollAdd(*id, $collName, $userNameClient, $rodsZoneClient);
-}
-
-
-# This rule ensures that the storage resource free space is updated when a
-# data object is replicated to it.
-#
-cyverse_logic_acPostProcForDataCopyReceived(*StoreResc) {
-   msi_update_unixfilesystem_resource_free_space(*StoreResc);
-}
-
-
-cyverse_logic_acPostProcForOpen {
-	*me = 'ipc_acPostProcForOpen';
-	*id = _cyverse_logic_getDataObjId($objPath);
-
-	if (*id >= 0) {
-		_cyverse_logic_registerAction(*id, *me);
-
-		if (_cyverse_logic_isCurrentAction(*id, *me)) {
-			*uuid = '';
-
-			_cyverse_logic_ensureUUID(
-				cyverse_DATA_OBJ, $objPath, $userNameClient, $rodsZoneClient, *uuid );
-
-			_cyverse_logic_sendDataObjOpen(
-				*uuid, $objPath, $dataSize, $userNameClient, $rodsZoneClient );
-
-			_cyverse_logic_unregisterAction(*id, *me);
-		}
-	}
-}
-
-cyverse_logic_acPreprocForRmColl {
-	temporaryStorage.'$collName' = _cyverse_logic_getCollUUID($collName);
-}
-
-cyverse_logic_acPostProcForRmColl {
-	*uuid = temporaryStorage.'$collName';
-
-	if (*uuid != '') {
-		_cyverse_logic_sendEntityRm(cyverse_COLL, *uuid, $collName, $userNameClient, $rodsZoneClient);
-	}
-}
-
-cyverse_logic_acDataDeletePolicy {
-	temporaryStorage.'$objPath' = _cyverse_logic_getDataObjUUID($objPath);
-}
-
-cyverse_logic_acPostProcForDelete {
-	*uuid = temporaryStorage.'$objPath';
-
-	if (*uuid != '') {
-		_cyverse_logic_sendEntityRm(
-			cyverse_DATA_OBJ, *uuid, $objPath, $userNameClient, $rodsZoneClient );
 	}
 }
 
@@ -778,19 +662,6 @@ cyverse_logic_acPostProcForModifyAccessControl(*RecurseFlag, *Perm, *Username, *
 
 			_cyverse_logic_unregisterAction(*entityId, *me);
 		}
-	}
-}
-
-# This rule schedules a rename entry job for the data object or collection being
-# renamed.
-cyverse_logic_acPostProcForObjRename(*SrcEntity, *DestEntity) {
-	*type = cyverse_getEntityType(*DestEntity);
-	*uuid = '';
-	_cyverse_logic_ensureUUID(*type, *DestEntity, $userNameClient, $rodsZoneClient, *uuid);
-
-	if (*uuid != '') {
-		_cyverse_logic_sendEntityMv(
-			*type, *uuid, *SrcEntity, *DestEntity, $userNameClient, $rodsZoneClient );
 	}
 }
 
@@ -942,10 +813,137 @@ cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName,
 	}
 }
 
+# This rule sets the rodsadmin group permission of a collection when a
+# collection is created by an administrative means, i.e. iadmin mkuser. It also
+# pushes a collection.add message into the irods exchange.
+cyverse_logic_acCreateCollByAdmin(*ParCollPath, *CollName) {
+	*coll = str(*ParCollPath) ++ '/' ++ *CollName;
+	*perm = _cyverse_logic_resolveAdmPerm(*coll);
+	msiSetACL('default', 'admin:*perm', 'rodsadmin', *coll);
+}
+
+cyverse_logic_acCreateCollByAdminArchive(*ParCollPath, *CollName) {
+	*path = str(*ParCollPath) ++ '/' ++ *CollName;
+	*id = '';
+	_cyverse_logic_ensureUUID(cyverse_COLL, *path, $userNameClient, $rodsZoneClient, *id);
+	_cyverse_logic_sendCollAdd(*id, *path, $userNameClient, $rodsZoneClient);
+}
+
+# This rule makes the admin owner of any created collection. This rule is not
+# applied to collections created when a TAR file is expanded. (i.e. ibun -x)
+cyverse_logic_acPostProcForCollCreate {
+	_cyverse_logic_setAdmPerm($collName);
+}
+
+# This rule ensures that archival collections are given a UUID and an AMQP
+# message is published indicating the collection is created.
+cyverse_logic_acPostProcForCollCreateArchive {
+	*id = '';
+	_cyverse_logic_ensureUUID(cyverse_COLL, $collName, $userNameClient, $rodsZoneClient, *id);
+	_cyverse_logic_sendCollAdd(*id, $collName, $userNameClient, $rodsZoneClient);
+}
+
+# This rule pushes a collection.rm message into the irods exchange.
+cyverse_logic_acDeleteCollByAdmin(*ParCollPath, *CollName) {
+	*path = str(*ParCollPath) ++ '/' ++ *CollName;
+	*uuid = _cyverse_logic_getCollUUID(*path);
+
+	if (*uuid != '') {
+		_cyverse_logic_sendEntityRm(cyverse_COLL, *uuid, *path, $userNameClient, $rodsZoneClient);
+	}
+}
+
+cyverse_logic_acPreprocForRmColl {
+	temporaryStorage.'$collName' = _cyverse_logic_getCollUUID($collName);
+}
+
+cyverse_logic_acPostProcForRmColl {
+	*uuid = temporaryStorage.'$collName';
+
+	if (*uuid != '') {
+		_cyverse_logic_sendEntityRm(cyverse_COLL, *uuid, $collName, $userNameClient, $rodsZoneClient);
+	}
+}
+
+# Refuse SSL connections
+cyverse_logic_acPreConnect(*OUT) {
+	*OUT = 'CS_NEG_REFUSE';
+}
+
+# This rule ensures that the storage resource free space is updated when a
+# data object is replicated to it.
+#
+cyverse_logic_acPostProcForDataCopyReceived(*StoreResc) {
+	msi_update_unixfilesystem_resource_free_space(*StoreResc);
+}
+
+cyverse_logic_acDataDeletePolicy {
+	temporaryStorage.'$objPath' = _cyverse_logic_getDataObjUUID($objPath);
+}
+
+cyverse_logic_acPostProcForDelete {
+	*uuid = temporaryStorage.'$objPath';
+
+	if (*uuid != '') {
+		_cyverse_logic_sendEntityRm(
+			cyverse_DATA_OBJ, *uuid, $objPath, $userNameClient, $rodsZoneClient );
+	}
+}
+
+cyverse_logic_acPostProcForOpen {
+	*me = 'ipc_acPostProcForOpen';
+	*id = _cyverse_logic_getDataObjId($objPath);
+
+	if (*id >= 0) {
+		_cyverse_logic_registerAction(*id, *me);
+
+		if (_cyverse_logic_isCurrentAction(*id, *me)) {
+			*uuid = '';
+
+			_cyverse_logic_ensureUUID(
+				cyverse_DATA_OBJ, $objPath, $userNameClient, $rodsZoneClient, *uuid );
+
+			_cyverse_logic_sendDataObjOpen(
+				*uuid, $objPath, $dataSize, $userNameClient, $rodsZoneClient );
+
+			_cyverse_logic_unregisterAction(*id, *me);
+		}
+	}
+}
+
+# This rule schedules a rename entry job for the data object or collection being
+# renamed.
+cyverse_logic_acPostProcForObjRename(*SrcEntity, *DestEntity) {
+	*type = cyverse_getEntityType(*DestEntity);
+	*uuid = '';
+	_cyverse_logic_ensureUUID(*type, *DestEntity, $userNameClient, $rodsZoneClient, *uuid);
+
+	if (*uuid != '') {
+		_cyverse_logic_sendEntityMv(
+			*type, *uuid, *SrcEntity, *DestEntity, $userNameClient, $rodsZoneClient );
+	}
+}
+
+# Use default threading setting
+cyverse_logic_acSetNumThreads {
+	msiSetNumThreads('default', 'default', 'default');
+}
+
 # Whenever a large file is uploaded, recheck the free space on the storage
 # resource server where the file was written.
 cyverse_logic_acPostProcForParallelTransferReceived(*StoreResc) {
 	msi_update_unixfilesystem_resource_free_space(*StoreResc);
+}
+
+# Set maximum number of rule engine processes
+cyverse_logic_acSetReServerNumProc {
+	msiSetReServerNumProc(str(cyverse_MAX_NUM_RE_PROCS));
+}
+
+# Create a user for a Data Store service
+cyverse_logic_acCreateUser {
+	msiCreateUser ::: msiRollback;
+	msiCommit;
 }
 
 

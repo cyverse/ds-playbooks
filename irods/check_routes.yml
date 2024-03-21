@@ -150,7 +150,7 @@
   gather_facts: false
   tasks:
     - name: Restart
-      when: stop_irods_result is changed
+      when: stop_all_result is changed
       ansible.builtin.include_tasks: tasks/restart_irods.yml
       tags:
         - non_idempotent

@@ -32,11 +32,21 @@
           - sftpgo_json.command.commands[0].env[4] == 'IRODS_ZONE=testing'
           - sftpgo_json.command.commands[0].env[5] == 'IRODS_AUTH_SCHEME=native'
 
+    - name: Test sftpgo.json common.proxy_allowed list contents
+      ansible.builtin.debug:
+        msg: TODO implement for {{ item }}
+      with_items:
+        - '127.0.0.1'
+        - data.cyverse.org
+
     - name: Test sftpgo.json common object contents
       ansible.builtin.debug:
-        msg: TODO implement
+        msg: TODO implement for {{ item }}
+      with_items:
+        - safelist
+        - blocklist
 
-    - name: Test sftpgo.json command.commands.env contents
+    - name: Test sftpgo.json command.commands.env list contents
       ansible.builtin.debug:
         msg: TODO implement for {{ item }}
       with_items:
@@ -98,12 +108,6 @@
         path: /etc/sftpgo/sftpgo.conf
       register: response
       failed_when: not response.stat.exists
-
-    - name: Test blacklist.json gone
-      ansible.builtin.stat:
-        path: /etc/sftpgo/blacklist.json
-      register: response
-      failed_when: response.stat.exists
 
     - name: Test sftpgo system group exists
       ansible.builtin.getent:

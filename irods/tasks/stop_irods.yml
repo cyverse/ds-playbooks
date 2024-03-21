@@ -1,5 +1,4 @@
 ---
-# Stops iRODS. The variable stop_irods_result holds the change value
 - name: Stop iRODS | check if svc acnt exists
   ansible.builtin.shell:
     executable: /bin/bash
@@ -17,5 +16,4 @@
   become_user: "{{ _irods_service_account_name }}"
   irods_ctl:
     state: stopped
-  register: stop_irods_result
   when: id_result.stdout == 'exists'

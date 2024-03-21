@@ -161,18 +161,11 @@
 
               RewriteEngine On
 
-              BrowserMatch "MSIE [2-5]" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0
-
               <If "%{HTTP:Range} == 'bytes=0-'">
                 # Remove the range header if requesting the whole file so that the response will
                 # still be cached.
                 RequestHeader unset Range
               </If>
-              <Elseif "-n %{HTTP:Range}">
-                # To prevent davrods from crashing, tell it not to cache partial responses
-                # When varnish-cache is configured, this should be commented out for caching
-                # RequestHeader merge Cache-Control no-store
-              </Elseif>
 
               RequestHeader edit Destination ^https: http: early
 
@@ -195,14 +188,6 @@
               CacheDisable /
 
               ExpiresActive On
-
-              <Files ~ "\.(cgi|shtml|phtml|php3?)$">
-                SSLOptions +StdEnvVars
-              </Files>
-
-              <Directory "/var/www/cgi-bin">
-                SSLOptions +StdEnvVars
-              </Directory>
             comment: >-
               This proxy handles TLS, corrects requests, enables caching, and anonymous access for
               XMLHttpRequests

@@ -1,6 +1,4 @@
 ---
-version: "3.0"
-
 services:
   amqp:
     image: test-env-base:ubuntu2204

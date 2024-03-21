@@ -18,6 +18,10 @@
             LoadModule sed_module modules/mod_sed.so
           </IfModule>
 
+          <IfModule !rewrite_module>
+            LoadModule rewrite_module modules/mod_rewrite.so
+          </IfModule>
+
           <IfModule !unique_id_module>
             LoadModule unique_id_module modules/mod_unique_id.so
           </IfModule>
@@ -149,12 +153,13 @@
 
               {% if _webdav_access_limit %}
               QS_LocRequestLimit /dav {{ _webdav_access_limit }}
-
               {% endif -%}
 
               ErrorLog logs/https_error_log
               CustomLog logs/https_request_log {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %{SSL_PROTOCOL}x %{SSL_CIPHER}x %a \"%r\" %>s %L %{forensic-id}n"' }}
               LogLevel warn
+
+              RewriteEngine On
 
               BrowserMatch "MSIE [2-5]" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0
 
@@ -171,7 +176,16 @@
 
               RequestHeader edit Destination ^https: http: early
 
-              ProxyPass / http://127.0.0.1:{{ _webdav_varnish_service_port }}/ retry=0 timeout=300
+              <Proxy "http://127.0.0.1:{{ _webdav_varnish_service_port }}">
+                ProxySet retry=0 timeout=300
+              </Proxy>
+
+              RewriteCond %{REQUEST_METHOD} ^(GET|HEAD|PURGE)$
+              RewriteRule / http://127.0.0.1:{{ _webdav_varnish_service_port }}/ [P]
+
+              RewriteCond %{REQUEST_METHOD} !^(GET|HEAD|PURGE)$
+              RewriteRule / http://127.0.0.1:80/ [P]
+
               ProxyHTMLURLMap ^http: https: [R]
 
               Header edit Location ^http: https:

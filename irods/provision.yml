@@ -101,7 +101,7 @@
         name: irods-server
         state: present
 
-    - name: Ensure iRODS does not attempt to start on boot
+    - name: Ensure iRODS does attempts to start on boot
       ansible.builtin.service:
         name: irods
         enabled: true

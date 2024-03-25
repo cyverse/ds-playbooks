@@ -231,11 +231,9 @@ acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, 
 #  AValue    (string) the value of the attribute
 #  AUnit     (string) the unit of the attribute
 #
-acPreProcForModifyAVUMetadata(
-	*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit
-) {
+acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
 	cyverse_logic_acPreProcForModifyAVUMetadata(
-		*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit );
+		*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit );
 }
 
 # This rule sets the preprocessing policy for modifying AVUs.
@@ -259,9 +257,11 @@ acPreProcForModifyAVUMetadata(
 #  New4      (string) either empty or holds an update to the name, value, or
 #            unit prefixed by 'n:', 'v:', or 'u:', respectively
 #
-acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
+acPreProcForModifyAVUMetadata(
+	*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit
+) {
 	cyverse_logic_acPreProcForModifyAVUMetadata(
-		*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit );
+		*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit );
 }
 
 # This rule sets the preprocessing policy for copying AVUs between entities.

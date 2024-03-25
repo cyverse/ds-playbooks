@@ -174,10 +174,10 @@
               </Proxy>
 
               RewriteCond %{REQUEST_METHOD} ^(GET|HEAD|PURGE)$
-              RewriteRule / http://127.0.0.1:{{ _webdav_varnish_service_port }}/ [P]
+              RewriteRule ^(.*)$ http://127.0.0.1:{{ _webdav_varnish_service_port }}$1 [P]
 
               RewriteCond %{REQUEST_METHOD} !^(GET|HEAD|PURGE)$
-              RewriteRule / http://127.0.0.1:80/ [P]
+              RewriteRule ^(.*)$ http://127.0.0.1:80$1 [P]
 
               ProxyHTMLURLMap ^http: https: [R]
 

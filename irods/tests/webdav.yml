@@ -38,7 +38,7 @@
         that:
           - >-
             purgeman_conf
-            is search('PURGEMAN_AMQP_HOST=dstesting-amqp_ubuntu-1.dstesting_default' | regex_escape)
+            is search('PURGEMAN_AMQP_HOST=dstesting-amqp-1.dstesting_default' | regex_escape)
           - purgeman_conf is search('PURGEMAN_AMQP_PORT=5672')
           - purgeman_conf is search('PURGEMAN_AMQP_VHOST=/')
           - purgeman_conf is search('PURGEMAN_AMQP_EXCHANGE=irods')
@@ -259,9 +259,36 @@
           -----END CERTIFICATE-----
           '
 
+    - name: Retrieve TLS key file contents
+      ansible.builtin.slurp:
+        src: /tmp/key/testing.key
+      register: key_encoded
+
+    - name: Decode TLS key
+      ansible.builtin.set_fact:
+        key: "{{ key_encoded.content | b64decode }}"
+
     - name: Verify TLS key contents
-      ansible.builtin.debug:
-        msg: TODO implement
+      ansible.builtin.assert:
+        that: |
+          key ==
+          '-----BEGIN PRIVATE KEY-----
+          MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAL87UwVywxO52mnx
+          JII8jpTE+Z2mtNkkHtIU1PvJ70IZ5NqCfQOPthFREwtCSNoAZtjvFVM7ex2as+j/
+          TCJwhQ84x02dwPx6/wlcakQtytm+MqVc+E1qSJ/gf8YKL6cGsZxbCrQfs63urufg
+          yWG7Aq3ltK5DKonJ57SaRDRVRs3FAgMBAAECgYEAkLGem9y95ksWDFs9uJ2BdOel
+          x7e/1x0RhPvmO64LrwRQuVVKqksvA+NIeZhp7ymmqDYe+J9lBH1t67pgLR7eTdqV
+          sjXWdH59cPNkWdZIE5X0UvAKnu1iMVm9wuAKwx7PtVqeIY2NfEizj2XZsZlklgs+
+          De6xUNQRDFz2uv0UnwECQQDs94QCEA2ZhQzQZQ59QeBzPMcgJgGAyUPRYUsOMQgS
+          PBGr21HNdfWJm+zfZdiYHr4eljRzp+7CPmgN3Pm+4PcVAkEAzpdok1MLpD0iJYbi
+          6QDb5av/djiKcNU1dtlxmZFIXFXiWlYU4oIQFbIcLtWMTOw9q8xiqGxeKrHobRTl
+          nPIn8QJBAKAe8DhkmIvv96SpZI0HAp9bpkH27HUVipnk4E6KmyWXKWmzHSd0WaHO
+          ltStgRnpTBZm8LJl+1ONz8nuU2PDp7ECQBtj5aCKxSNcW5egH5uG2qDDwhX5fxlg
+          mzsLr00N/wsG9ADIIvK5Dcril2v6MiTMuYx6h6YO4BlHByrXN24siPECQHMrqrXX
+          M1z7vB6QhmgDeTzzm/rBn+SVRIteeJguhsRk34SZFHqWANCshRfD2vyqpm0i2Vv/
+          h8MNBRJYx33eXdc=
+          -----END PRIVATE KEY-----
+          '
 
     - name: Test package installation
       ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
@@ -406,19 +433,27 @@
         response.stat.gr_name != 'varnish' or
         response.stat.mode != '0755'
 
-    - name: Test default.vcl deployed
+    - name: Test varnish cfg files deployed
       ansible.builtin.stat:
         path: /etc/varnish/default.vcl
-      register: response
-      failed_when: not response.stat.exists
+      with_items:
+        - /etc/varnish/default.vcl
+        - /usr/lib/systemd/system/varnish.service
+      register: resp
+      failed_when: >-
+        not resp.stat.exists or not resp.stat.rusr or not resp.stat.rgrp or not resp.stat.roth
 
-    - name: Test varnish.service deployed
-      ansible.builtin.stat:
-        path: /usr/lib/systemd/system/varnish.service
-      register: response
-      failed_when: not response.stat.exists
+    - name: Test configure selinux for varnish
+      ansible.builtin.debug:
+        msg: TODO implement
 
     - name: Test configure apache log rotation
+      ansible.builtin.stat:
+        path: /etc/logrotate.d/httpd
+      register: response
+      failed_when: not response.stat.exists
+
+    - name: Test apache log rotation file has correct permissions
       ansible.builtin.debug:
         msg: TODO implement
 
@@ -427,6 +462,10 @@
         path: /etc/systemd/system/httpd.service.requires
       register: response
       failed_when: not response.stat.isdir
+
+    - name: Test apache service directory permissions
+      ansible.builtin.debug:
+        msg: TODO implement
 
     - name: Test ensure varnish runs when apache run
       ansible.builtin.stat:
@@ -439,6 +478,10 @@
         path: /etc/systemd/system/varnish.service.requires
       register: response
       failed_when: not response.stat.isdir
+
+    - name: Test varnish service directory permissions
+      ansible.builtin.debug:
+        msg: TODO implement
 
     - name: Test ensure varnishncsa runs when varnish run
       ansible.builtin.stat:
@@ -458,11 +501,19 @@
       register: response
       failed_when: not response.stat.exists
 
+    - name: Test purgeman.conf permissions
+      ansible.builtin.debug:
+        msg: TODO implement
+
     - name: Test purgeman.service deployed
       ansible.builtin.stat:
         path: /usr/lib/systemd/system/purgeman.service
       register: response
       failed_when: not response.stat.exists
+
+    - name: Test purgeman service permissions
+      ansible.builtin.debug:
+        msg: TODO implement
 
     - name: Test ensure purgeman runs when varnish run
       ansible.builtin.stat:

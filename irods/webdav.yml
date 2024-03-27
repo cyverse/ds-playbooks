@@ -161,12 +161,6 @@
 
               RewriteEngine On
 
-              <If "%{HTTP:Range} == 'bytes=0-'">
-                # Remove the range header if requesting the whole file so that the response will
-                # still be cached.
-                RequestHeader unset Range
-              </If>
-
               RequestHeader edit Destination ^https: http: early
 
               <Proxy "http://127.0.0.1:{{ _webdav_varnish_service_port }}">

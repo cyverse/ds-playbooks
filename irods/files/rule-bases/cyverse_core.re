@@ -42,25 +42,10 @@
 # For events occur that should belong to one and only one project,
 # the following rules may be extended with on conditions.
 
-# This rule applies the project specific collection creation policies to an
-# administratively created collection.
-#
-# Parameters:
-#  ParColl    the absolute path to the parent of the collection being created
-#  ChildColl  the name of the collection being created
-#
-cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl) {
-	cyverse_logic_acCreateCollByAdminArchive(*ParColl, *ChildColl);
-}
-
 # This rule applies the project specific collection creation policies to a newly
 # created collection that wasn't created administratively.
 #
 cyverse_core_acPostProcForCollCreate_exclusive {
-	*err = errormsg(cyverse_logic_acPostProcForCollCreateArchive, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
 	*err = errormsg(bisque_acPostProcForCollCreate, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
@@ -88,11 +73,7 @@ cyverse_core_acPostProcForCollCreate_exclusive {
 #
 acCreateCollByAdmin(*ParColl, *ChildColl) {
 	msiCreateCollByAdmin(*ParColl, *ChildColl);
-	*err = errormsg(cyverse_logic_acCreateCollByAdmin(*ParColl, *ChildColl), *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-	cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl);
+	cyverse_logic_acCreateCollByAdmin(*ParColl, *ChildColl);
 }
 
 # This rule handles the creation of a ds-service type user.

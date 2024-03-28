@@ -733,7 +733,7 @@ _cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
 }
 
 _cyverse_core_dataObjMetadataModified(*User, *Zone, *Object) {
-	cyverse_logic_dataObjMetadataMod(*User, *Zone, *Object);
+	cyverse_logic_dataObjMetaMod(*User, *Zone, *Object);
 }
 
 # CLOSE

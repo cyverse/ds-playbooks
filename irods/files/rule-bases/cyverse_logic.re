@@ -1347,7 +1347,7 @@ cyverse_logic_dataObjMod(*Username, *Zone, *DataObjInfo) {
 #  Zone      (string) the zone of the username who modified the data object
 #  Path      (path) the path to the modified data object
 #
-cyverse_logic_dataObjMetadataMod(*Username, *Zone, *Path) {
+cyverse_logic_dataObjMetaMod(*Username, *Zone, *Path) {
 	*me = 'cyverse_logic_dataObjMetadataMod';
 	*id = _cyverse_logic_getDataObjId(*Path);
 

@@ -619,8 +619,6 @@ _cyverse_logic_setAdmPerm(*Path) {
 # STATIC PEPS
 #
 
-TODO document usage of session variables.
-
 # This rule prevents the user from removing rodsadmin's ownership from an ACL
 # unless the user is of type rodsadmin.
 #

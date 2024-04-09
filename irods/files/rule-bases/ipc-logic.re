@@ -27,6 +27,14 @@ _ipc_startsWith(*Str, *Prefix) =
 	else if substr(*Str, 0, strlen(*Prefix)) != *Prefix then false
 	else true
 
+# Determines whether or not the string in the first argument ends with the 
+# string in the second argument.
+#
+_ipc_endsWith(*str, *suffix) =
+	if strlen(*str) < strlen(*suffix) then false
+	else if substr(*str, strlen(*str) - strlen(*suffix), strlen(*str)) != *suffix then false
+	else true;
+
 # Removes a prefix from a string.
 _ipc_removePrefix(*Orig, *Prefixes) =
 	if size(*Prefixes) == 0 then *Orig

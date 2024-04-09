@@ -497,10 +497,23 @@ acPostProcForRmColl {
 #
 pep_api_coll_create_post(*Instance, *Comm, *CollCreateInp) {
 	ipcTrash_api_coll_create_post(*Instance, *Comm, *CollCreateInp);
+	ipcEncryption_api_coll_create_post(*Instance, *Comm, *CollCreateInp);
 }
 
 
 # DATA_OBJ_COPY
+
+# This is the pre processing logic for when an attempt is made to copy a data
+# object through the API using a DATA_OBJ_COPY request.
+#
+#  Instance        (string) unknown
+#  Comm            (`KeyValuePair_PI`) user connection and auth information
+#  DataObjCopyInp  (`KeyValuePair_PI`) information related to copy operation
+#  TransStat       unknown
+#
+pep_api_data_obj_copy_pre(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
+	ipcEncryption_api_data_obj_copy_pre(*Instance, *Comm, *DataObjCopyInp)
+}
 
 # This is the post processing logic for when a data object is copied through the
 # API using a DATA_OBJ_COPY request.
@@ -516,6 +529,22 @@ pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
 
 
 # DATA_OBJ_CREATE
+
+# This is the pre processing logic for when an attempt is made to create a data
+# object through the API using a DATA_OBJ_CREATE request.
+#
+#  Instance    (string) unknown
+#  Comm        (`KeyValuePair_PI`) user connection and auth information
+#  DataObjInp  (`KeyValuePair_PI`) information related to the created data
+#              object
+#
+pep_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp) {
+  	ipcEncryption_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp)
+}
+
+pep_api_data_obj_create_and_stat_pre(*Instance, *Comm, *DataObjInp, *OpenStat) {
+  	ipcEncryption_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp)
+}
 
 # This is the post processing logic for when a data object is created through
 # API using a DATA_OBJ_CREATE request.
@@ -541,6 +570,11 @@ pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
 #
 pep_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp) {
 	mdrepo_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp);
+	ipcEncryption_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp)
+}
+
+pep_api_data_obj_open_and_stat_pre(*Instance, *Comm, *DataObjInp, *OpenStat) {
+	ipcEncryption_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp)
 }
 
 
@@ -556,6 +590,7 @@ pep_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp) {
 #  PORTAL_OPR_OUT  unknown
 #
 pep_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT) {
+	ipcEncryption_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp)
 	mdrepo_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT);
 }
 
@@ -584,6 +619,7 @@ pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTA
 #                    its new path
 #
 pep_api_data_obj_rename_pre(*Instance, *Comm, *DataObjRenameInp) {
+	ipcEncryption_api_data_obj_rename_pre(*Instance, *Comm, *DataObjRenameInp)
 	ipcTrash_api_data_obj_rename_pre(*Instance, *Comm, *DataObjRenameInp);
 }
 
@@ -663,6 +699,20 @@ pep_api_rm_coll_pre(*Instance, *Comm, *RmCollInp, *CollOprStat) {
 #
 pep_api_rm_coll_except(*Instance, *Comm, *RmCollInp, *CollOprStat) {
 	ipcTrash_api_rm_coll_except(*Instance, *Comm, *RmCollInp, *CollOprStat);
+}
+
+
+# STRUCT_FILE_EXT_AND_REG
+
+# This is the pre processing logic for when an attempt is made to delete a
+# collection through the API using a RM_COLL request.
+#
+#  Instance                  (string) unknown
+#  Comm                      (`KeyValuePair_PI`) user connection and auth information
+#  StructFileExtAndRegInp    (`KeyValuePair_PI`) information about the struct file
+#
+pep_api_struct_file_ext_and_reg_pre(*Instance, *Comm, *StructFileExtAndRegInp) {
+	ipcEncryption_api_struct_file_ext_and_reg_pre(*Instance, *Comm, *StructFileExtAndRegInp);
 }
 
 

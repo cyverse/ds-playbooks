@@ -24,7 +24,7 @@
       vars:
         dir: /etc/irods
 
-    - name: Testi iRODS ownership of /var/lib/irods
+    - name: Test iRODS ownership of /var/lib/irods
       ansible.builtin.include_tasks: tasks/test_irods_ownership.yml
       vars:
         dir: /var/lib/irods

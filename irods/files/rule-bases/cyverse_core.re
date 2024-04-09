@@ -14,7 +14,7 @@
 @include 'ipc-logic'
 @include 'ipc-repl'
 @include 'ipc-trash'
-
+@include 'ipc-encryption'
 
 # SERVICE SPECIFIC RULES
 #

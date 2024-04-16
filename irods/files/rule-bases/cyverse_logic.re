@@ -108,10 +108,18 @@ _cyverse_logic_getOrigUnit(*Candidate) =
 # CHECKSUMS
 #
 
-# Compute the checksum of of a given replica of a given data object
-_cyverse_logic_chksumRepl(*DataObjId, *ReplNum) {
+# This compute the checksum of of a given replica of a given data object. This
+# rule doesn't fail if the replica to checksum no longer exists.
+#
+# Parameters:
+#  DataObjId  the DB Id of the data object of interest
+#  ReplNum    the replica number that will be check summed
+#
+cyverse_logic_chksumRepl(*DataObjId, *ReplNum) {
 	*dataObjPath = '';
-	foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*DataObjId') {
+	foreach (*rec in
+		SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*DataObjId' AND DATA_REPL_NUM = '*ReplNum'
+	) {
 		*dataObjPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
 	}
 
@@ -125,13 +133,13 @@ _cyverse_logic_chksumRepl(*DataObjId, *ReplNum) {
 
 # Schedule a task for computing the checksum of a given replica of a given data object
 _cyverse_logic_schedChksumRepl(*DataObjPath, *ReplNum) {
-	*dataObjId = _ipc_getDataId(*DataObjPath)
+	*dataObjId = _ipc_getDataObjId(*DataObjPath)
 
 	delay(
 		'<INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>' ++
 		'<PLUSET>0s</PLUSET>' ++
 		'<EF>0s REPEAT 0 TIMES</EF>'
-	) {_cyverse_logic_chksumRepl(*dataObjId, *ReplNum)}
+	) {cyverse_logic_chksumRepl(*dataObjId, *ReplNum)}
 }
 
 

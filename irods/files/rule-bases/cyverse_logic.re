@@ -100,7 +100,7 @@ _cyverse_logic_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 #
 _cyverse_logic_getOrigUnit(*Candidate) =
 	if strlen(*Candidate) < 2 then *Candidate
-	else if substr(*Candidate, 1, 1) != ':' then *Candidate
+	else if substr(*Candidate, 1, 2) != ':' then *Candidate
 	else ''
 
 

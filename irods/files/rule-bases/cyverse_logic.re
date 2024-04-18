@@ -124,7 +124,6 @@ cyverse_logic_chksumRepl(*DataObjId, *ReplNum) {
 	}
 
 	if (*dataObjPath != '') {
-		*opts = '';
 		msiAddKeyValToMspStr('forceChksum', '', *opts);
 		msiAddKeyValToMspStr('replNum', str(*ReplNum), *opts);
 		msiDataObjChksum(*dataObjPath, *opts, *_);

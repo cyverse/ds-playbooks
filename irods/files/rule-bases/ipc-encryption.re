@@ -19,7 +19,7 @@ _ipcEncryptionCheckEncryptionRequiredForDataObj(*Path) {
     # check if parent coll has encryption.required avu
     if (_ipcIsEncryptionRequired(*parentColl)) {
         # all encrypted files will have ".enc" extension
-        if (!_ipc_endsWith(*objName, ".enc")) {
+        if (!cyverse_endsWith(*objName, ".enc")) {
             # fail to prevent iRODS from creating the file without encryption
             writeLine('serverLog', "Failed to create data object, encryption is required under *parentColl");
             cut;
@@ -33,7 +33,7 @@ _ipcEncryptionCheckEncryptionRequiredForCollInternal(*Coll) {
     *res = SELECT COLL_NAME, DATA_NAME WHERE COLL_NAME == *Coll;
     foreach (*record in *res) {
         # all encrypted files will have ".enc" extension
-        if (!_ipc_endsWith(*record.DATA_NAME, ".enc")) {
+        if (!cyverse_endsWith(*record.DATA_NAME, ".enc")) {
             # fail to prevent iRODS from creating the file without encryption
             writeLine('serverLog', "Failed to create data object, encryption is required under *Coll");
             cut;

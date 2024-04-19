@@ -705,8 +705,9 @@ pep_api_rm_coll_except(*Instance, *Comm, *RmCollInp, *CollOprStat) {
 
 # STRUCT_FILE_EXT_AND_REG
 
-# This is the pre processing logic for when an attempt is made to delete a
-# collection through the API using a RM_COLL request.
+# This is the pre processing logic for when an attempt is made to extract a
+# struct file and register files in it through the API using a 
+# STRUCT_FILE_EXT_AND_REG request.
 #
 #  Instance                  (string) unknown
 #  Comm                      (`KeyValuePair_PI`) user connection and auth information

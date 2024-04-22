@@ -60,11 +60,12 @@
           is search('\nbackend irods_direct\n(..[^\n]*\n)*  server .* 127.0.0.1 * maxconn 500\n' )
 
     - name: Verify haproxy config sftp listener
-      ansible.builtin.debug:
-        msg: TODO implement for {{ item }}
-      with_items:
-        - bind
-        - server
+      ansible.builtin.assert:
+        that:
+          - haproxy is search('\nlisten sftp\n(..[^\n]*\n)*  bind * :22\n')
+          - >-
+            haproxy
+            is search('\nlisten sftp\n(..[^\n]*\n)*  server * sftp 127.0.0.1:2022 send-proxy-v2\n')
 
     - name: Verify haproxy config webdav listener
       ansible.builtin.assert:

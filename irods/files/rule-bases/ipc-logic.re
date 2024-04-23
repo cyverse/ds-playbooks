@@ -17,26 +17,6 @@ _ipc_contains(*Item, *List) =
 
 
 #
-# STRINGS
-#
-
-# Determines whether or not the string in the first argument starts with the
-# string in the second argument.
-_ipc_startsWith(*Str, *Prefix) =
-	if strlen(*Str) < strlen(*Prefix) then false
-	else if substr(*Str, 0, strlen(*Prefix)) != *Prefix then false
-	else true
-
-# Removes a prefix from a string.
-_ipc_removePrefix(*Orig, *Prefixes) =
-	if size(*Prefixes) == 0 then *Orig
-	else
-		if _ipc_startsWith(*Orig, hd(*Prefixes))
-		then substr(*Orig, strlen(hd(*Prefixes)), strlen(*Orig))
-		else _ipc_removePrefix(*Orig, tl(*Prefixes))
-
-
-#
 # ICAT IDS
 #
 
@@ -99,7 +79,7 @@ _ipc_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 	if size(*Candidates) == 0 then *Orig
 	else
 		let *candidate = hd(*Candidates) in
-		if _ipc_startsWith(*candidate, *Prefix)
+		if cyverse_startsWith(*candidate, *Prefix)
 		then substr(*candidate, 2, strlen(*candidate))
 		else _ipc_getNewAVUSetting(*Orig, *Prefix, tl(*Candidates))
 
@@ -512,7 +492,7 @@ _ipc_sendEntityRemove(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 #
 
 # Indicates whether or not an AVU is protected
-_ipc_avuProtected(*Attribute) = _ipc_startsWith(*Attribute, 'ipc')
+_ipc_avuProtected(*Attribute) = cyverse_startsWith(*Attribute, 'ipc')
 
 # Verifies that an attribute can be modified. If it can't it fails and sends an
 # error message to the caller.
@@ -728,7 +708,7 @@ ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *U
 		_ipc_registerAction(*entityId, *me);
 
 		if (_ipc_isCurrentAction(*entityId, *me)) {
-			*level = _ipc_removePrefix(*AccessLevel, list('admin:'));
+			*level = cyverse_removePrefix(*AccessLevel, list('admin:'));
 			*type = cyverse_getEntityType(*Path);
 			*userZone = if *UserZone == '' then cyverse_ZONE else *UserZone;
 			*uuid = '';

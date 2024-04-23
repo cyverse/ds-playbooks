@@ -2,15 +2,12 @@
 
 
 # Checks if encryption is required for the collection entity
-_ipcIsEncryptionRequired(*Coll) {
-    *isRequired = false;
-    *res = SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == 'encryption.required';
-    foreach (*record in *res) {
-        *isRequired = bool(*record.META_COLL_ATTR_VALUE);
-        break;
-    }
-    *isRequired;
-}
+_ipcIsEncryptionRequired(*Coll) =
+    let *isRequired = false in
+    let *_ = foreach ( *rec in 
+            SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == 'encryption.required'
+        ) { *isRequired = bool(*rec.META_COLL_ATTR_VALUE) } in
+    *isRequired
 
 
 # This rule checks if encryption is required and reject creating non-encrypted files

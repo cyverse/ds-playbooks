@@ -5,7 +5,7 @@
 _ipcIsEncryptionRequired(*Coll) =
     let *isRequired = false in
     let *_ = foreach ( *rec in 
-            SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == 'encryption.required'
+            SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == 'encryption::required'
         ) { *isRequired = bool(*rec.META_COLL_ATTR_VALUE) } in
     *isRequired
 
@@ -13,7 +13,7 @@ _ipcIsEncryptionRequired(*Coll) =
 # This rule checks if encryption is required and reject creating non-encrypted files
 _ipcEncryptionCheckEncryptionRequiredForDataObj(*Path) {
     msiSplitPath(*Path, *parentColl, *objName);
-    # check if parent coll has encryption.required avu
+    # check if parent coll has encryption::required avu
     if (_ipcIsEncryptionRequired(*parentColl)) {
         # all encrypted files will have ".enc" extension
         if (!cyverse_endsWith(*objName, ".enc")) {
@@ -42,7 +42,7 @@ _ipcEncryptionCheckEncryptionRequiredForCollInternal(*Coll) {
 # This rule checks if encryption is required and reject creating collections containing non-encrypted files
 _ipcEncryptionCheckEncryptionRequiredForColl(*SrcColl, *DstColl) {
     msiSplitPath(*DstColl, *parentColl, *collName);
-    # check if parent coll has encryption.required avu
+    # check if parent coll has encryption::required avu
     if (_ipcIsEncryptionRequired(*parentColl)) {
         _ipcEncryptionCheckEncryptionRequiredForCollInternal(*SrcColl);
     }
@@ -63,11 +63,11 @@ _ipcEncryptionCopyAVUFromParentInternal(*Coll, *EncryptionMode) {
     *res = SELECT COLL_NAME WHERE COLL_NAME == *Coll || LIKE '*Coll/%';
     foreach (*record in *res) {
         # Add encryption require meta to the sub coll
-        *err = errormsg(msiModAVUMetadata(cyverse_COLL, *record.COLL_NAME, 'set', 'encryption.required', "true", ''), *msg);
+        *err = errormsg(msiModAVUMetadata(cyverse_COLL, *record.COLL_NAME, 'set', 'encryption::required', "true", ''), *msg);
         if (*err < 0) { writeLine('serverLog', *msg); }
 
         if (*EncryptionMode != '') {
-            *err = errormsg(msiModAVUMetadata(cyverse_COLL, *record.COLL_NAME, 'set', 'encryption.mode', *EncryptionMode, ''), *msg);
+            *err = errormsg(msiModAVUMetadata(cyverse_COLL, *record.COLL_NAME, 'set', 'encryption::mode', *EncryptionMode, ''), *msg);
             if (*err < 0) { writeLine('serverLog', *msg); }  
         }
     }
@@ -77,7 +77,7 @@ _ipcEncryptionCopyAVUFromParent(*Path) {
     msiSplitPath(*Path, *parentColl, *collName);
     if (_ipcIsEncryptionRequired(*parentColl)) {
         *mode = ''
-        *res = SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *parentColl AND META_COLL_ATTR_NAME == 'encryption.mode';
+        *res = SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *parentColl AND META_COLL_ATTR_NAME == 'encryption::mode';
         foreach (*record in *res) {
             *mode = *record.META_COLL_ATTR_VALUE;
             break;

@@ -27,7 +27,7 @@ _ipcEncryptionCheckEncryptionRequiredForDataObj(*Path) {
 
 _ipcEncryptionCheckEncryptionRequiredForCollInternal(*Coll) {
     # check if src coll has non-encrypted data objects
-    *res = SELECT COLL_NAME, DATA_NAME WHERE COLL_NAME == *Coll;
+    *res = SELECT COLL_NAME, DATA_NAME WHERE COLL_NAME == *Coll || LIKE '*Coll/%';
     foreach (*record in *res) {
         # all encrypted files will have ".enc" extension
         if (!cyverse_endsWith(*record.DATA_NAME, ".enc")) {
@@ -36,14 +36,6 @@ _ipcEncryptionCheckEncryptionRequiredForCollInternal(*Coll) {
             cut;
             failmsg(-815000, 'CYVERSE ERROR:  attempt to create unencrypted data object');
         }
-    }
-
-    *res = SELECT COLL_NAME WHERE COLL_PARENT_NAME == *Coll;
-    foreach (*record in *res) {
-        # run recursively
-        # this might be very expensive if the directory tree is very deep
-
-        _ipcEncryptionCheckEncryptionRequiredForCollInternal(*record.COLL_NAME);
     }
 }
 
@@ -68,21 +60,16 @@ _ipcEncryptionRejectBulkRegIfEncryptionRequired(*Path) {
 
 
 _ipcEncryptionCopyAVUFromParentInternal(*Coll, *EncryptionMode) {
-    # Add encryption require meta to the sub coll
-    *err = errormsg(msiModAVUMetadata("-C", *Coll, 'set', 'encryption.required', "true", ''), *msg);
-    if (*err < 0) { writeLine('serverLog', *msg); }
-
-    if (*EncryptionMode != '') {
-        *err = errormsg(msiModAVUMetadata("-C", *Coll, 'set', 'encryption.mode', *EncryptionMode, ''), *msg);
-        if (*err < 0) { writeLine('serverLog', *msg); }  
-    }
-
-    *res = SELECT COLL_NAME WHERE COLL_PARENT_NAME == *Coll;
+    *res = SELECT COLL_NAME WHERE COLL_NAME == *Coll || LIKE '*Coll/%';
     foreach (*record in *res) {
-        # run recursively
-        # this might be very expensive if the directory tree is very deep
+        # Add encryption require meta to the sub coll
+        *err = errormsg(msiModAVUMetadata(cyverse_COLL, *record.COLL_NAME, 'set', 'encryption.required', "true", ''), *msg);
+        if (*err < 0) { writeLine('serverLog', *msg); }
 
-        _ipcEncryptionCopyAVUFromParentInternal(*record.COLL_NAME, *EncryptionMode);
+        if (*EncryptionMode != '') {
+            *err = errormsg(msiModAVUMetadata(cyverse_COLL, *record.COLL_NAME, 'set', 'encryption.mode', *EncryptionMode, ''), *msg);
+            if (*err < 0) { writeLine('serverLog', *msg); }  
+        }
     }
 }
 

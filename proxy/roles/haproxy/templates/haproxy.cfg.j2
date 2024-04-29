@@ -87,14 +87,15 @@ frontend irods_main
   bind                       :{{ haproxy_irods_port }}
   stick-table                type ip size 100k store conn_cur
   acl                        is-conn        capture.req.hdr(0) -m str RODS_CONNECT
+  acl                        is-ping        capture.req.hdr(0) -m str HEARTBEAT
   acl                        vip-src        src -f /etc/haproxy/vip.lst
   acl                        throttle-conn  sc1_conn_cur gt 1
   acl                        block-conn     sc1_conn_cur gt 10
   tcp-request inspect-delay  5s
   tcp-request content        capture req.payload_lv(0,4),regsub(^\s*<MsgHeader_PI\s*>[\s\S]*<type\s*>,),regsub(</type\s*>[\s\S]*</MsgHeader_PI\s*>\s*$,) len 16
+  tcp-request content        reject if !is-conn !is-ping or block-conn
   tcp-request content        track-sc1 src if is-conn !vip-src
-  tcp-request content        reject if !is-conn or block-conn
-  use_backend                irods_throttled if throttle-conn
+  use_backend                irods_throttled if !is-ping throttle-conn
   default_backend            irods_direct
 
 frontend irods_reconn

@@ -34,6 +34,7 @@
         - hosts_config.json
         - ipc-logic.re
         - ipc-trash.re
+        - ipc-encryption.re
         - mdrepo.re
         - mdrepo-env.re
         - pire.re

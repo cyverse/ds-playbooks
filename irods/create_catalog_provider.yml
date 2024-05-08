@@ -107,23 +107,25 @@
             - "files/profile.d/*"
 
         - name: CentOS | define PostgreSQL 12 ODBC Driver
-          ansible.builtin.shell: |
-            if driverDef="$(odbcinst -q -d -n PostgreSQL)"; then
-              description="$(sed --quiet 's/^Description=//p' <<< "$driverDef")"
-              driver="$(sed --quiet 's/^Driver=//p' <<< "$driverDef")"
-              setup="$(sed --quiet 's/^Setup=//p' <<< "$driverDef")"
-              if [[ "$description" == 'PostgreSQL 12 ODBC Driver' \
-                && "$driver" == '/usr/pgsql-12/lib/psqlodbc.so' \
-                && "$setup" == '/usr/pgsql-12/lib/psqlodbcw.so' ]]
-              then
-                exit 0
-              fi
-              if ! odbcinst -i -d -r -v; then
-                exit 1
-              fi
-              echo changed
-          args:
+          ansible.builtin.shell:
+            executable: /bin/bash
             stdin: "{{ lookup('file', 'files/postgresql-odbc-tmpl.ini') }}"
+            cmd: |
+              if driverDef="$(odbcinst -q -d -n PostgreSQL)"; then
+                description="$(sed --quiet 's/^Description=//p' <<< "$driverDef")"
+                driver="$(sed --quiet 's/^Driver=//p' <<< "$driverDef")"
+                setup="$(sed --quiet 's/^Setup=//p' <<< "$driverDef")"
+                if [[ "$description" == 'PostgreSQL 12 ODBC Driver' \
+                  && "$driver" == '/usr/pgsql-12/lib/psqlodbc.so' \
+                  && "$setup" == '/usr/pgsql-12/lib/psqlodbcw.so' ]]
+                then
+                  exit 0
+                fi
+                if ! odbcinst -i -d -r -v; then
+                  exit 1
+                fi
+                echo changed
+              fi
           register: result
           changed_when: result.stdout == 'changed'
 

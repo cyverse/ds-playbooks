@@ -30,9 +30,9 @@
         - cyverse_core.re
         - cyverse_housekeeping.re
         - cyverse_json.re
+        - cyverse_logic.re
         - host_access_control_config.json
         - hosts_config.json
-        - ipc-logic.re
         - ipc-trash.re
         - ipc-encryption.re
         - mdrepo.re

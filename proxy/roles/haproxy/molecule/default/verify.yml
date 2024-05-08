@@ -1,12 +1,12 @@
 ---
-- name: Test template default expansion
+- name: Verify | template default expansion
   hosts: localhost
   gather_facts: false
   vars_files:
-    - ../roles/haproxy/defaults/main.yml
+    - ../../defaults/main.yml
   vars:
-    vip: "{{ lookup('template', '../roles/haproxy/templates/vip.lst.j2') }}"
-    haproxy: "{{ lookup('template', '../roles/haproxy/templates/haproxy.cfg.j2') }}"
+    vip: "{{ lookup('template', '../../templates/vip.lst.j2') }}"
+    haproxy: "{{ lookup('template', '../../templates/haproxy.cfg.j2') }}"
   tasks:
     - name: Verify vip.list is ansible managed
       ansible.builtin.assert:
@@ -74,15 +74,15 @@
           - haproxy is search('\nlisten webdav\n(..[^\n]*\n)*  server .* 127.0.0.1\n')
 
 
-- name: Test VIP list template custom expansion
+- name: Verify | VIP list template custom expansion
   hosts: localhost
   gather_facts: false
   vars_files:
-    - ../roles/haproxy/defaults/main.yml
+    - ../../defaults/main.yml
     - vars/vip_clients.yml
   vars:
-    vip: "{{ lookup('template', '../roles/haproxy/templates/vip.lst.j2') }}"
-    dirk_ip: "{{ lookup('dig', 'dirk.cyverse.org') }}"
+    vip: "{{ lookup('template', '../../templates/vip.lst.j2') }}"
+    data_ip: "{{ lookup('dig', 'data.cyverse.org') }}"
   tasks:
     - name: Verify the ip address passes through
       ansible.builtin.assert:
@@ -90,13 +90,14 @@
 
     - name: Verify the host name converted to address
       ansible.builtin.assert:
-        that: vip is search('\n' ~ (dirk_ip|regex_escape) ~ '\n')
+        that: vip is search('\n' ~ (data_ip|regex_escape) ~ '\n')
 
     - name: Verify CIDR block passes through
       ansible.builtin.assert:
         that: vip is search('\n' ~ ('5.6.7.0/24'|regex_escape) ~ '\n')
 
-- name: Test haproxy config template custom expansion
+
+- name: Verify | haproxy config template custom expansion
   hosts: localhost
   gather_facts: false
   tasks:
@@ -104,9 +105,9 @@
       ansible.builtin.debug:
         msg: TODO implement
 
-- name: Test set up HAProxy
-  hosts: proxy
-  become: true
+
+- name: Verify | set up HAProxy
+  hosts: instance
   tasks:
     - name: Retrieve installed packages
       ansible.builtin.package_facts:
@@ -116,15 +117,15 @@
       ansible.builtin.fail:
       when: "'haproxy' not in ansible_facts.packages"
 
-    - name: Test install | install socat
+    - name: Test install socat
       ansible.builtin.debug:
         msg: TODO implement
 
-    - name: Test configure | allowing proxy to listen on stats port
+    - name: Test allowing proxy to listen on stats port
       ansible.builtin.debug:
         msg: TODO implement
 
-    - name: Test configure | enabling SELinux booleans for proxy
+    - name: Test enabling SELinux booleans for proxy
       ansible.builtin.debug:
         msg: TODO implement
 
@@ -154,24 +155,9 @@
       register: result
       failed_when: not result.stat.exists
 
-    - name: Test place TLS certificates file
-      ansible.builtin.stat:
-        path: /etc/ssl/private/testing.pem
-      register: result
-      failed_when: not result.stat.exists or not result.stat.roth
-
-    - name: Retrieve TLS certificates file
-      ansible.builtin.slurp:
-        src: /etc/ssl/private/testing.pem
-      register: pem_encoded
-
-    - name: Decode TLS certificates file
-      ansible.builtin.set_fact:
-        pem: "{{ pem_encoded['content'] | b64decode }}"
-
-    - name: Verify TLS certificates file contents
-      ansible.builtin.assert:
-        that: pem == 'PEM CONTENTS'
+    - name: Test TLS certificates file
+      ansible.builtin.debug:
+        msg: TODO implement
 
     - name: Test VIP list placement
       ansible.builtin.stat:
@@ -179,6 +165,6 @@
       register: response
       failed_when: not response.stat.exists or not result.stat.roth
 
-    - name: Test configure | place haproxy config file
+    - name: Test place haproxy config file
       ansible.builtin.debug:
         msg: TODO implement

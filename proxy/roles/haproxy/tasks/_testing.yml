@@ -1,7 +1,0 @@
----
-- name: Testing | disable
-  ansible.builtin.set_fact:
-    _haproxy_full_os: true
-  run_once: true
-  tags:
-    - no_testing

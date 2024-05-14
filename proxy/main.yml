@@ -8,6 +8,7 @@
         # Reserve two CPUs for OS
         haproxy_num_threads: "{{ [ ansible_processor_vcpus - 2, 1 ] | max }}"
         haproxy_queue_timeout: 10m
+        haproxy_restart_allowed: "{{ proxy_restart_allowed }}"
         haproxy_rsyslog_conf: "{{ proxy_rsyslog_conf }}"
         haproxy_stats_tls_crt: "{{ proxy_stats_tls_crt }}"
         haproxy_stats_tls_crt_content: "{{ proxy_stats_tls_crt_content }}"

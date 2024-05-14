@@ -1,4 +1,6 @@
 ---
+proxy_restart_allowed: false
+
 proxy_rsyslog_conf: /etc/rsyslog.d/haproxy.conf
 
 proxy_stats_auth: null

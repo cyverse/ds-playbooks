@@ -5,6 +5,9 @@
     state: reloaded
 
 - name: Restart haproxy
+  when: >-
+    haproxy_restart_allowed
+    is warn_if_false(inventory_hostname + ' skipped, RESTART REQUIRED FOR SETTINGS TO TAKE')
   ansible.builtin.service:
     name: haproxy
     state: restarted

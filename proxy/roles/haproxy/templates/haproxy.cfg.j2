@@ -93,8 +93,8 @@ frontend irods_main
   acl                        block-conn     sc1_conn_cur gt 10
   tcp-request inspect-delay  5s
   tcp-request content        capture req.payload_lv(0,4),regsub(^\s*<MsgHeader_PI\s*>[\s\S]*<type\s*>,),regsub(</type\s*>[\s\S]*</MsgHeader_PI\s*>\s*$,) len 16
-  tcp-request content        reject if !is-conn !is-ping or block-conn
   tcp-request content        track-sc1 src if is-conn !vip-src
+  tcp-request content        reject if !is-conn !is-ping or block-conn
   use_backend                irods_throttled if !is-ping throttle-conn
   default_backend            irods_direct
 

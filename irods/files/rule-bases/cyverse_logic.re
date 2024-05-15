@@ -132,7 +132,7 @@ cyverse_logic_chksumRepl(*DataObjId, *ReplNum) {
 
 # Schedule a task for computing the checksum of a given replica of a given data object
 _cyverse_logic_schedChksumRepl(*DataObjPath, *ReplNum) {
-	*dataObjId = _cyverse_getDataObjId(*DataObjPath)
+	*dataObjId = _cyverse_logic_getDataObjId(*DataObjPath)
 
 	delay(
 		'<INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>' ++

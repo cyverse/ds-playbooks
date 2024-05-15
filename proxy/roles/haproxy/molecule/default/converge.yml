@@ -6,3 +6,5 @@
     - name: Create HAProxy instance
       ansible.builtin.include_role:
         name: haproxy
+      vars:
+        haproxy_restart_allowed: true

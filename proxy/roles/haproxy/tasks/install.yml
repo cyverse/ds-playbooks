@@ -1,7 +1,4 @@
 ---
-- name: Install | prepare if testing
-  ansible.builtin.import_tasks: _testing.yml
-
 - name: Install | determine os
   when: ansible_distribution is not defined
   ansible.builtin.setup:

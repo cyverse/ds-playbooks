@@ -19,6 +19,7 @@
           - cyverse_env is search("cyverse_DEFAULT_RESC = 'demoResc'")
           - cyverse_env is search("cyverse_INIT_REPL_DELAY = 0")
           - cyverse_env is search("cyverse_MAX_NUM_RE_PROCS = 4")
+          - cyverse_env is search("cyverse_ZONE = 'testing'")
           - >-
             cyverse_env
               is search("cyverse_RE_HOST = 'dstesting-provider_configured-1.dstesting_default'")

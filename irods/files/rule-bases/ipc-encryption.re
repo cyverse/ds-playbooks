@@ -48,8 +48,8 @@ _ipcEncryptionCheckEncryptionRequiredForColl(*SrcColl, *DstColl) {
     }
 }
 
-_ipcEncryptionRejectBulkRegIfEncryptionRequired(*Path) {
-    msiSplitPath(*Path, *parentColl, *objName);
+_ipcEncryptionRejectBulkRegIfEncryptionRequired(*Coll) {
+    msiSplitPath(*Coll, *parentColl, *collName);
     if (_ipcIsEncryptionRequired(*parentColl)) {
         # we don't allow bulk registering files
         writeLine('serverLog', "Failed to bulk register data objects in encryption required collection *parentColl");
@@ -121,7 +121,7 @@ ipcEncryption_api_data_obj_rename_post(*Instance, *Comm, *DataObjRenameInp) {
 }
 
 ipcEncryption_api_struct_file_ext_and_reg_pre(*Instance, *Comm, *StructFileExtAndRegInp) {
-    _ipcEncryptionRejectBulkRegIfEncryptionRequired(*StructFileExtAndRegInp.obj_path);
+    _ipcEncryptionRejectBulkRegIfEncryptionRequired(*StructFileExtAndRegInp.collection_path);
 }
 
 ipcEncryption_api_coll_create_post(*Instance, *Comm, *CollCreateInp) {

@@ -37,9 +37,9 @@ author:
 
 options:
     zone:
-        description:
-            - This is the iRODS zone where the change is being made.
-            - This is also the zone of the user being managed.
+        description: >
+            This is the iRODS zone where the change is being made. It is also the zone of the user
+            being managed.
         required: true
         type: str
     name:
@@ -55,31 +55,28 @@ options:
         default: present
         type: str
     info:
-        description:
-            - This is information to set about the user.
-            - It is only meaningful when O(state) is V(present).
+        description: >
+            This is information to set about the user. It is only meaningful when O(state) is
+            V(present).
         required: false
         type: str
     password:
-        description:
-            - This is the user's password.
-            - It is only meaningful when O(state) is V(present).
+        description: This is the user's password. It is only meaningful when O(state) is V(present).
         required: false
         type: str
     type:
         description:
-            - This is the type of user, e.g., V(rodsadmin) and V(rodsuser).
-            - It is only meaningful when O(state) is V(present).
             - >
-                *The default when creating a user is V(rodsuser), otherwise
-                there is no default.
+                This is the type of user, e.g., V(rodsadmin) and V(rodsuser). It is only meaningful
+                when O(state) is V(present).
+            - *The default when creating a user is V(rodsuser), otherwise there is no default.
         required: false
         default: rodsuser*
         type: str
     admin_user:
-        description:
-            - This is the iRODS username to authorize the change.
-            - This should be a rodsadmin type user.
+        description: >
+            This is the iRODS username to authorize the change. This should be a rodsadmin type
+            user.
         required: false
         default: rods
         type: str
@@ -242,7 +239,7 @@ class Request:
             'port': module_params['port'],
             'zone': module_params['zone'],
             'admin_username': module_params['admin_user'],
-            'admin_password': module_params['admin_password'] }
+            'admin_password': module_params['admin_password']}
         self._username = module_params['name']
         self._state = _State.from_param(module_params['state'])
         self._user_info = module_params.get('info')
@@ -252,8 +249,7 @@ class Request:
     @property
     def zone(self) -> str:
         """
-        This is the iRODS zone that will be used. It is also the zone the user
-        belongs to.
+        This is the iRODS zone that will be used. It is also the zone the user belongs to.
         """
         return self._conn_info['zone']
 
@@ -265,8 +261,7 @@ class Request:
     @property
     def admin_password(self) -> str:
         """
-        This is the password that authenticates the rodsadmin account making the
-        changes.
+        This is the password that authenticates the rodsadmin account making the changes.
         """
         return self._conn_info['admin_password']
 
@@ -314,8 +309,8 @@ class Irods(ABC):
     """
     This is the interface to an object that provides required iRODS requests.
 
-    This interface has been separated from the _IrodsImpl class so that it can
-    be mocked for testing.
+    This interface has been separated from the _IrodsImpl class so that it can be mocked for
+    testing.
     """
 
     @abstractmethod
@@ -324,8 +319,7 @@ class Irods(ABC):
         This verifies that a given password belongs to a given user.
 
         Args:
-            user  the iRODS user object representing the user whose password is
-                being checked.
+            user      the iRODS user object representing the user whose password is being checked.
             password  the password to check
 
         Returns:
@@ -334,17 +328,20 @@ class Irods(ABC):
         """
 
     @abstractmethod
-    def create_user(self, username: str, password: Optional[str], info: Optional[str],
+    def create_user(
+        self,
+        username: str,
+        password: Optional[str],
+        info: Optional[str],
         user_type: Optional[str] = 'rodsuser'
     ) -> None:
         """
         This creates a new user account.
 
         Args:
-            username  the username of the account
-            password  an optional password that would be used to authenticate
-                the account
-            info  optional information to attach to the account
+            username   the username of the account
+            password   an optional password that would be used to authenticate the account
+            info       optional information to attach to the account
             user_type  the type of iRODS account to create
         """
 
@@ -357,8 +354,8 @@ class Irods(ABC):
             username  the name of the account to retrieve
 
         Returns:
-            If there is an account associated with the given username, it
-            returns a iRODS user object for it, otherwise it returns None.
+            If there is an account associated with the given username, it returns a iRODS user
+            object for it, otherwise it returns None.
         """
 
 
@@ -396,7 +393,7 @@ class _IrodsImpl(Irods):
         except CAT_INVALID_USER:
             return False
 
-    def create_user(self, username, password, info, user_type = 'rodsuser'):
+    def create_user(self, username, password, info, user_type='rodsuser'):
         if user_type is None:
             user_type = 'rodsuser'
         user = self._session.users.create(username, user_type)
@@ -444,11 +441,10 @@ def irods_user(request: Request, irods: Irods) -> bool:
 
     Args:
         request  the parameters passed into the module
-        irods  the object managing the interaction with iRODS
+        irods    the object managing the interaction with iRODS
 
     Returns:
-        It returns True, if it made any changes to iRODS, otherwise it returns
-        False.
+        It returns True, if it made any changes to iRODS, otherwise it returns False.
     """
     user = irods.get_user(request.username)
     if request.state == _State.ABSENT:
@@ -476,7 +472,8 @@ def main() -> None:
         return
     result = {
         'user': ansible.params['name'],
-        'changed': False }
+        'changed': False
+    }
     if ansible.check_mode:
         ansible.exit_json(**result)
     request = Request(ansible.params)

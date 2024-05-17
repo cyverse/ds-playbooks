@@ -190,7 +190,7 @@
 
     - name: Test place TLS certificate files
       ansible.builtin.stat:
-        path: /etc/httpd/testing.crt
+        path: "{{ item }}"
       register: resp
       failed_when: not resp.stat.rusr or not resp.stat.rgrp or not resp.stat.roth
       with_items:

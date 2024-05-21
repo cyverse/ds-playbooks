@@ -217,7 +217,9 @@ _cyverse_logic_registerAction(*EntityId, *Action) {
 
 _cyverse_logic_unregisterAction(*EntityId, *Action) {
 	*key = _cyverse_logic_mkActionKey(*EntityId);
-	if (temporaryStorage."*key" == *Action) {
+	if (
+		if errorcode(temporaryStorage."*key") != 0 then false else temporaryStorage."*key" == *Action
+	) {
 		temporaryStorage."*key" = '';
 	}
 }

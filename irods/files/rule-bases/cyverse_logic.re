@@ -205,7 +205,8 @@ _cyverse_logic_ensureUUID(*EntityType, *EntityPath, *ClientName, *ClientZone, *U
 _cyverse_logic_mkActionKey(*EntityId) = str(*EntityId) ++ '-ROOT_ACTION'
 
 _cyverse_logic_isCurrentAction(*EntityId, *Action) =
-	let *key = _cyverse_logic_mkActionKey(*EntityId) in temporaryStorage."*key" == *Action
+	let *key = _cyverse_logic_mkActionKey(*EntityId) in
+	if errorcode(temporaryStorage."*key") != 0 then false else temporaryStorage."*key" == *Action
 
 _cyverse_logic_registerAction(*EntityId, *Action) {
 	*key = _cyverse_logic_mkActionKey(*EntityId);

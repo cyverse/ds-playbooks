@@ -258,13 +258,13 @@ _cyverse_logic_mkEntityField(*Uuid) = cyverse_json_string('entity', *Uuid)
 
 _cyverse_logic_mkPathField(*Path) = cyverse_json_string('path', "*Path")
 
-_cyverse_logic_resolveMsgEntityId(*EntityType, *EntityName, *ClientName, *ClientZone) =
-	let *id = '' in
-	let *_ =
-		if cyverse_isFSType(*EntityType)
-		then _cyverse_logic_ensureUUID(*EntityType, str(*EntityName), *ClientName, *ClientZone, *id)
-		else *id = *EntityName in
-	*id
+_cyverse_logic_resolveMsgEntityId(*EntityType, *EntityName, *ClientName, *ClientZone, *ID) {
+	if (cyverse_isFSType(*EntityType)) {
+		_cyverse_logic_ensureUUID(*EntityType, str(*EntityName), *ClientName, *ClientZone, *ID);
+	} else {
+		*ID = *EntityName;
+	}
+}
 
 # sends a message to a given AMQP topic exchange
 #
@@ -304,15 +304,15 @@ _cyverse_logic_sendAVUAddWildcard(
 	_cyverse_logic_sendMsg(_cyverse_logic_DATA_OBJ_MSG_TYPE ++ '.metadata.addw', *msg);
 }
 
-_cyverse_logic_sendAVUCp(*SourceType, *Source, *TargetType, *Target, *AuthorName, *AuthorZone) {
+_cyverse_logic_sendAVUCp(*SrcType, *Src, *TgtType, *Tgt, *AuthorName, *AuthorZone) {
 	*msg = cyverse_json_document(
 		list(
 			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
-			cyverse_json_string('source', *Source),
-			cyverse_json_string('source-type', _cyverse_logic_getMsgType(*SourceType)),
-			cyverse_json_string('destination', *Target) ) );
+			cyverse_json_string('source', *Src),
+			cyverse_json_string('source-type', _cyverse_logic_getMsgType(*SrcType)),
+			cyverse_json_string('destination', *Tgt) ) );
 
-	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*TargetType) ++ '.metadata.cp', *msg);
+	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*TgtType) ++ '.metadata.cp', *msg);
 }
 
 _cyverse_logic_sendAVUMod(
@@ -902,12 +902,13 @@ cyverse_logic_acPostProcForModifyAVUMetadata(
 #
 cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) {
 	if (cyverse_isFSType(*TgtType) && !cyverse_inStaging(/*TgtName)) {
-		*tgt = _cyverse_logic_resolveMsgEntityId(
-			*TgtType, *TgtName, $userNameClient, $rodsZoneClient );
+		*tgt = '';
+		_cyverse_logic_resolveMsgEntityId(*TgtType, *TgtName, $userNameClient, $rodsZoneClient, *tgt);
 
 		if (cyverse_isFSType(*SrcType) && !cyverse_inStaging(/*SrcName)) {
-			*src = _cyverse_logic_resolveMsgEntityId(
-				*SrcType, *SrcName, $userNameClient, $rodsZoneClient );
+			*src = '';
+			_cyverse_logic_resolveMsgEntityId(
+				*SrcType, *SrcName, $userNameClient, $rodsZoneClient, *src );
 
 			_cyverse_logic_sendAVUCp(*SrcType, *src, *TgtType, *tgt, $userNameClient, $rodsZoneClient);
 		} else {

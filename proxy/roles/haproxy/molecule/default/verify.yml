@@ -101,9 +101,19 @@
   hosts: localhost
   gather_facts: false
   tasks:
-    - name: Test
+    - name: Verify global configuration
       ansible.builtin.debug:
         msg: TODO implement
+
+    - name: TODO implement
+      ansible.builtin.debug:
+        msg: "{{ item }} section tests"
+      with_items:
+        - DEFAULT
+        - STATS
+        - IRODS
+        - SFTP
+        - WEBDAV
 
 
 - name: Verify | set up HAProxy

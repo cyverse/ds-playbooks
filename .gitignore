@@ -1,4 +1,4 @@
-*.retry
+.venv
 .vscode
+*.retry
 **/.mypy_cache
-venv

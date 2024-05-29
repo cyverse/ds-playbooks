@@ -699,7 +699,10 @@ pep_api_rm_coll_except(*Instance, *Comm, *RmCollInp, *CollOprStat) {
 #  StructFileExtAndRegInp    (`KeyValuePair_PI`) information about the struct file
 #
 pep_api_struct_file_ext_and_reg_pre(*Instance, *Comm, *StructFileExtAndRegInp) {
-	ipcEncryption_api_struct_file_ext_and_reg_pre(*Instance, *Comm, *StructFileExtAndRegInp);
+	# we need to comment out this block
+	# StructFileExtAndRegInp variable is not properly serialized due to a bug in iRODS < v4.3
+	# Github issue: https://github.com/irods/irods/issues/7413
+	#ipcEncryption_api_struct_file_ext_and_reg_pre(*Instance, *Comm, *StructFileExtAndRegInp);
 }
 
 

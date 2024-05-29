@@ -4,7 +4,7 @@
 # Checks if encryption is required for the collection entity
 _ipcIsEncryptionRequired(*Coll) =
     let *isRequired = false in
-    let *_ = foreach ( *rec in 
+    let *_ = foreach ( *rec in
             SELECT META_COLL_ATTR_VALUE WHERE COLL_NAME == *Coll AND META_COLL_ATTR_NAME == 'encryption::required'
         ) { *isRequired = bool(*rec.META_COLL_ATTR_VALUE) } in
     *isRequired
@@ -48,13 +48,13 @@ _ipcEncryptionCheckEncryptionRequiredForColl(*SrcColl, *DstColl) {
     }
 }
 
-_ipcEncryptionRejectBulkRegIfEncryptionRequired(*Path) {
-    msiSplitPath(*Path, *parentColl, *objName);
+_ipcEncryptionRejectBulkRegIfEncryptionRequired(*Coll) {
+    msiSplitPath(*Coll, *parentColl, *collName);
     if (_ipcIsEncryptionRequired(*parentColl)) {
-        # we don't allow bulk registering files 
+        # we don't allow bulk registering files
         writeLine('serverLog', "Failed to bulk register data objects in encryption required collection *parentColl");
         cut;
-        failmsg(-815000, 'CYVERSE ERROR:  attempt to bulk registering data objects in encryption required collection'); 
+        failmsg(-815000, 'CYVERSE ERROR:  attempt to bulk registering data objects in encryption required collection');
     }
 }
 
@@ -68,7 +68,7 @@ _ipcEncryptionCopyAVUFromParentInternal(*Coll, *EncryptionMode) {
 
         if (*EncryptionMode != '') {
             *err = errormsg(msiModAVUMetadata(cyverse_COLL, *record.COLL_NAME, 'set', 'encryption::mode', *EncryptionMode, ''), *msg);
-            if (*err < 0) { writeLine('serverLog', *msg); }  
+            if (*err < 0) { writeLine('serverLog', *msg); }
         }
     }
 }
@@ -121,7 +121,7 @@ ipcEncryption_api_data_obj_rename_post(*Instance, *Comm, *DataObjRenameInp) {
 }
 
 ipcEncryption_api_struct_file_ext_and_reg_pre(*Instance, *Comm, *StructFileExtAndRegInp) {
-    _ipcEncryptionRejectBulkRegIfEncryptionRequired(StructFileExtAndRegInp.obj_path);
+    _ipcEncryptionRejectBulkRegIfEncryptionRequired(*StructFileExtAndRegInp.collection_path);
 }
 
 ipcEncryption_api_coll_create_post(*Instance, *Comm, *CollCreateInp) {

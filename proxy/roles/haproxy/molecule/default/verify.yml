@@ -100,10 +100,21 @@
 - name: Verify | haproxy config template custom expansion
   hosts: localhost
   gather_facts: false
+  vars_files:
+    - ../../defaults/main.yml
+    - vars/custom_haproxy_vars.yml
+  vars:
+      haproxy: "{{ lookup('template', '../../templates/haproxy.cfg.j2') }}"
   tasks:
-    - name: Verify global configuration
+    - name: Verify haproxy config global section
+      ansible.builtin.assert:
+        that: haproxy is search('\nglobal\n(  [^\n]*\n)*  cpu-map +1/1-2 0-1\n')
+
+    - name: Verify haproxy config global section
       ansible.builtin.debug:
-        msg: TODO implement
+        msg: TODO implement {{ item }} test
+      with_items:
+        - nbthread
 
     - name: TODO implement
       ansible.builtin.debug:

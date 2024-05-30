@@ -41,6 +41,11 @@
           tags: non_idempotent
 # XXX - ^^^
 
+        - name: CentOS | install iRODS server
+          ansible.builtin.package:
+            name: irods-server
+            state: present
+
         - name: CentOS | install OS specific required packages
           ansible.builtin.package:
             name:
@@ -83,6 +88,11 @@
               Pin: version {{ _irods_version }}
               Pin-Priority: 1001
 
+        - name: Ubuntu | install iRODS server
+          ansible.builtin.package:
+            name: irods-server={{ _irods_version }}
+            state: present
+
         - name: Ubuntu | install OS specific required packages
           ansible.builtin.package:
             name:
@@ -95,11 +105,6 @@
           ansible.builtin.package:
             name: unixodbc
             state: present
-
-    - name: Install iRODS server
-      ansible.builtin.package:
-        name: irods-server
-        state: present
 
     - name: Ensure iRODS does attempts to start on boot
       ansible.builtin.service:

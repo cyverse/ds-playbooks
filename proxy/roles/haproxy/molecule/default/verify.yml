@@ -108,19 +108,18 @@
   tasks:
     - name: Verify haproxy config global section
       ansible.builtin.assert:
-        that: haproxy is search('\nglobal\n(  [^\n]*\n)*  cpu-map +1/1-2 0-1\n')
+        that:
+          - haproxy is search('\nglobal\n(  [^\n]*\n)*  cpu-map +1/1-2 0-1\n')
+          - haproxy is search('\nglobal\n(  [^\n]*\n)*  nbthread +2\n')
 
-    - name: Verify haproxy config global section
+    - name: Verify haproxy config default section
       ansible.builtin.debug:
-        msg: TODO implement {{ item }} test
-      with_items:
-        - nbthread
+        msg: TODO implement
 
     - name: TODO implement
       ansible.builtin.debug:
         msg: "{{ item }} section tests"
       with_items:
-        - DEFAULT
         - STATS
         - IRODS
         - SFTP

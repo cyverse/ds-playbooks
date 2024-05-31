@@ -2,7 +2,7 @@
   daily
   rotate 10
   missingok
-  notifempty
+  ifempty
   sharedscripts
   postrotate
     systemctl restart rsyslog.service

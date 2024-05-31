@@ -14,11 +14,12 @@ _cyverse_json_encodeObject(*SerialFields) =
 	'{' ++ _cyverse_json_accumEncodedList('', *SerialFields) ++ '}'
 
 _cyverse_json_encodeString(*Str) =
+	let *str = str(*Str) in
 	let *escStr = '' in
-	let *len = strlen(*Str) in
+	let *len = strlen(*str) in
 	let *pos = 0 in
 	let *_ = while (*len > *pos) {
-		let *c = substr(*Str, *pos, *pos + 1) in
+		let *c = substr(*str, *pos, *pos + 1) in
 		let *escC =
 			if *c == '"' then '\\"'
 			else if *c == '\t' then '\\t'
@@ -74,5 +75,5 @@ cyverse_json_object(*Label, *SerialFields) =
 #   *Label - the name of the field
 #   *Val - the value of the field
 #
-cyverse_json_string: string * string -> string
+cyverse_json_string: forall V in {path string time}, string * V -> string
 cyverse_json_string(*Label, *Val) = _cyverse_json_mkField(*Label, _cyverse_json_encodeString(*Val))

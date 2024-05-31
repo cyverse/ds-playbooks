@@ -358,15 +358,15 @@ _cyverse_logic_sendAVUMod(
 }
 
 _cyverse_logic_sendAVURmWildcard(
-	*EntityType, *Entity, *AttrName, *AttrVal, *AttrUnit, *AuthorName, *AuthorZone
+	*EntityType, *Entity, *AttrPat, *ValPat, *UnitPat, *AuthorName, *AuthorZone
 ) {
 	*msg = cyverse_json_document(
 		list(
 			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
 			_cyverse_logic_mkEntityField(*Entity),
-			cyverse_json_string('attribute-pattern', *AttrName),
-			cyverse_json_string('value-pattern', *AttrVal),
-			cyverse_json_string('unit-pattern', *AttrUnit) ) );
+			cyverse_json_string('attribute-pattern', *AttrPat),
+			cyverse_json_string('value-pattern', *ValPat),
+			cyverse_json_string('unit-pattern', *UnitPat) ) );
 
 	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.rmw', *msg);
 }

@@ -351,8 +351,8 @@ _cyverse_logic_sendAVURmWildcard(
 	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.rmw', *msg);
 }
 
-_cyverse_logic_sendAVUSet(
-	*Opt, *EntityType, *Entity, *AttrName, *AttrVal, *AttrUnit, *AuthorName, *AuthorZone
+_cyverse_logic_sendAVUOp(
+	*Op, *EntityType, *Entity, *AttrName, *AttrVal, *AttrUnit, *AuthorName, *AuthorZone
 ) {
 	*msg = cyverse_json_document(
 		list(
@@ -360,7 +360,7 @@ _cyverse_logic_sendAVUSet(
 			_cyverse_logic_mkEntityField(*Entity),
 			_cyverse_logic_mkAVUObj('metadatum', *AttrName, *AttrVal, *AttrUnit) ) );
 
-	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.' ++ *Opt, *msg);
+	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*EntityType) ++ '.metadata.' ++ *Op, *msg);
 }
 
 _cyverse_logic_sendCollACLMod(
@@ -812,7 +812,7 @@ cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *At
 			_cyverse_logic_ensureUUID(
 				*EntityType, *EntityName, $userNameClient, $rodsZoneClient, *uuid );
 
-			_cyverse_logic_sendAVUSet(
+			_cyverse_logic_sendAVUOp(
 				*Opt, *EntityType, *uuid, *Attr, *Val, *Unit, $userNameClient, $rodsZoneClient );
 		} else if (*Opt == 'addw') {
 			_cyverse_logic_sendAVUAddWildcard(
@@ -919,7 +919,7 @@ cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName,
 					SELECT META_RESC_ATTR_NAME, META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
 					WHERE RESC_NAME == *SrcName AND META_RESC_ATTR_NAME != *uuidAttr
 				) {
-					_cyverse_logic_sendAVUSet(
+					_cyverse_logic_sendAVUOp(
 						'add',
 						*TgtType,
 						*tgt,
@@ -934,7 +934,7 @@ cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName,
 					SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
 					WHERE USER_NAME == *SrcName AND META_USER_ATTR_NAME != *uuidAttr
 				) {
-					_cyverse_logic_sendAVUSet(
+					_cyverse_logic_sendAVUOp(
 						'add',
 						*TgtType,
 						*tgt,

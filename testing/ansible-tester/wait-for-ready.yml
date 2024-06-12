@@ -9,4 +9,4 @@
       ansible.builtin.wait_for_connection:
         delay: 1
         connect_timeout: 10
-        timeout: 30
+        timeout: 100

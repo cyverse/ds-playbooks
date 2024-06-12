@@ -1,0 +1,9 @@
+ansible-core!=2.17.0
+ansible-lint
+dnspython
+docker
+molecule
+molecule-plugins[podman]
+netaddr
+python-irodsclient<2
+wheel

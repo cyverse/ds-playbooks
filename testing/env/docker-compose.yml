@@ -3,18 +3,21 @@ services:
   amqp:
     image: test-env-base:ubuntu2204
     privileged: true
+    tty: true
 
   apache:
     build:
       context: .
       dockerfile: apache/Dockerfile
     privileged: true
+    tty: true
 
   sftp:
     build:
       context: .
       dockerfile: sftp/Dockerfile
     privileged: true
+    tty: true
 
   dbms_configured:
     build:
@@ -51,7 +54,6 @@ services:
     privileged: true
     tty: true
     depends_on:
-      - amqp
       - dbms_configured
 
   provider_unconfigured:
@@ -118,7 +120,4 @@ services:
       context: .
       dockerfile: haproxy/Dockerfile
     privileged: true
-    depends_on:
-      - apache
-      - provider_configured
-      - sftp
+    tty: true

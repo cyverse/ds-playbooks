@@ -114,10 +114,3 @@ services:
     hostname: "${ENV_NAME}_consumer_configured_1.${DOMAIN}"
     privileged: true
     tty: true
-
-  proxy:
-    build:
-      context: .
-      dockerfile: haproxy/Dockerfile
-    privileged: true
-    tty: true

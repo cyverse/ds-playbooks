@@ -597,10 +597,17 @@ _cyverse_logic_cpUnprotectedRescAVUs(*RescName, *TargetType, *TargetName) {
 
 # Copies the unprotected AVUs from a given user to the given item.
 _cyverse_logic_cpUnprotectedUserAVUs(*Username, *TargetType, *TargetName) {
-	foreach (*avu in
-		SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
-		WHERE USER_NAME == *Username
-	) {
+	*nameParts = split(*Username, '#');
+	*query =
+		if size(*nameParts) == 2 then
+			let *name = elem(*nameParts, 0) in
+			let *zone = elem(*nameParts, 1) in
+			SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
+			WHERE USER_NAME == *name AMD ZONE_NAME == *zone
+		else
+			SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
+			WHERE USER_NAME == *Username;
+	foreach (*avu in *query) {
 		_cyverse_logic_setAVUIfUnprotected(
 			*TargetType,
 			*TargetName,

@@ -600,10 +600,11 @@ _cyverse_logic_cpUnprotectedUserAVUs(*Username, *TargetType, *TargetName) {
 	*nameParts = split(*Username, '#');
 	*query =
 		if size(*nameParts) == 2 then
+		   # A zone was provided.
 			let *name = elem(*nameParts, 0) in
 			let *zone = elem(*nameParts, 1) in
 			SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
-			WHERE USER_NAME == *name AMD ZONE_NAME == *zone
+			WHERE USER_NAME == *name AND USER_ZONE == *zone
 		else
 			SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
 			WHERE USER_NAME == *Username;

@@ -833,7 +833,7 @@ cyverse_logic_acPreProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, 
 #  rodsZoneClient
 #
 cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *Attr, *Val, *Unit) {
-	if (*Attr != _cyverse_logic_UUID_ATTR) {
+	if (cyverse_isFSType(*EntityType) && *Attr != _cyverse_logic_UUID_ATTR) {
 		if (_cyverse_logic_contains(*Opt, list('add', 'adda', 'rm', 'set'))) {
 			*uuid = '';
 

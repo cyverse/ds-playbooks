@@ -796,7 +796,7 @@ cyverse_logic_acPreProcForModifyAVUMetadata(
 #  rodsZoneClient
 #
 cyverse_logic_acPreProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) {
-	if (!canModProtectedAVU($userNameClient, $rodsZoneClient)) {
+	if (!_cyverse_logic_isAdm($userNameClient, $rodsZoneClient)) {
 		if (cyverse_isColl(*SrcType)) {
 			_cyverse_logic_cpUnprotectedCollAVUs(*SrcName, *TgtType, *TgtName);
 		} else if (cyverse_isDataObj(*SrcType)) {

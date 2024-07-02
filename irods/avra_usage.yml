@@ -1,5 +1,6 @@
 ---
-- import_playbook: mk_storage_resources.yml
+- name: Create storage resources
+  ansible.builtin.import_playbook: mk_storage_resources.yml
 
 
 - name: Configure iRODS for Avra
@@ -8,13 +9,14 @@
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - when: _avra_base_collection != ''
+    - name: Configured iRODS for Avra
+      when: _avra_base_collection != ''
       block:
-        - name: create avra resource
+        - name: Create avra resource
           irods_resource_hierarchy:
             hierarchy: "{{ _avra_resource_hierarchy }}"
 
-        - name: create project collection
+        - name: Create project collection
           delegate_to: localhost
           become: false
           irods_collection:
@@ -27,7 +29,7 @@
             admin_password: "{{ _irods_clerver_password }}"
             zone: "{{ _irods_zone_name }}"
 
-        - name: assign owner to project collection
+        - name: Assign owner to project collection
           delegate_to: localhost
           become: false
           irods_permission:
@@ -41,7 +43,7 @@
             admin_password: "{{ _irods_clerver_password }}"
             zone: "{{ _irods_zone_name }}"
 
-        - name: assign project collection to Avra resource
+        - name: Assign project collection to Avra resource
           delegate_to: localhost
           become: false
           irods_avu:

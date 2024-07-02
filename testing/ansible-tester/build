@@ -2,14 +2,9 @@
 #
 # This script builds the ansible-tester image.
 
-set -e
+set -o errexit -o nounset -o pipefail
 
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-  ExecName=$(greadlink -f "$0")
-else
-  ExecName=$(readlink --canonicalize "$0")
-fi
+ExecName=$(readlink --canonicalize "$0")
 readonly ExecName
 
 declare BaseDir
@@ -33,9 +28,12 @@ main()
   # shellcheck disable=SC1090
   . "$cfg"
 
-  cp --no-clobber "$BaseDir"/../../requirements.yml "$BaseDir"/requirements.yml
+  cp --no-clobber "$BaseDir"/../../requirements-ansible.yml "$BaseDir"/requirements.yml
   trap 'rm --force "$BaseDir"/requirements.yml' EXIT
-  docker build --build-arg IRODS_CLERVER_PASSWORD="$IRODS_CLERVER_PASSWORD" --tag ansible-tester \
+
+#  docker buildx build --no-cache \
+  docker buildx build \
+    --build-arg IRODS_CLERVER_PASSWORD="$IRODS_CLERVER_PASSWORD" --tag ansible-tester \
     "$BaseDir"
 }
 

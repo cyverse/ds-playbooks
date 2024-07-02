@@ -39,19 +39,16 @@ prompt> systemctl start docker
 prompt> usermod --append --groups docker DEVELOPER
 ```
 
-The following python packages need to be installed on the development machines and Ansible control nodes using `pip`.
+The file [requirements-python.txt](./requirements-python.txt) python packages need to be installed on the development machines and Ansible control nodes using `pip`.
 
-* ansible-core
+* ansible-core!=2.17.0
 * ansible-lint
 * dnspython
 * docker
-* Jinja2>=3
 * molecule
 * molecule-plugins\[podman\]
 * netaddr
-* python-irodsclient
-* requests
-* urllib3
+* python-irodsclient<2
 * wheel
 
 Finally, the required ansible collections and roles need to be installed. This can be done by running the `init-ansible` script.

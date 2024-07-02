@@ -25,6 +25,7 @@
         - core.dvm
         - core.fnm
         - core.re
+        - cve.re
         - cyverse.re
         - cyverse-env.re
         - cyverse_core.re
@@ -152,12 +153,15 @@
               - >-
                 server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set
                   | length
-                == 3
+                == 4
               - >-
                 server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[0]
-                == 'cyverse_core'
+                == 'cve'
               - >-
                 server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1]
+                == 'cyverse_core'
+              - >-
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[2]
                 == 'cyverse_housekeeping'
               - >-
                 server_config.schema_validation_base_uri
@@ -205,12 +209,15 @@
               - >-
                 server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set
                   | length
-                == 3
+                == 4
               - >-
                 server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[0]
-                == 'cyverse_core'
+                == 'cve'
               - >-
                 server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1]
+                == 'cyverse_core'
+              - >-
+                server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[2]
                 == 'cyverse_housekeeping'
               - >-
                 server_config.schema_validation_base_uri

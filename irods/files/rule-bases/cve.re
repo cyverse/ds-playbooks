@@ -9,7 +9,7 @@
 # - https://github.com/irods/irods/issues/7652
 # - authenticated user can escalate to service account (admin) and execute remote code
 #
-# This cane be removed after upgrading to 4.3.3.
+# This can be removed after upgrading to 4.3.3.
 msiServerMonPerf(*_1, *_2) {
 	writeLine('serverLog', 'intercepted msiServerMonPerf call');
 }

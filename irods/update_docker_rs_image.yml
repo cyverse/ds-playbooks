@@ -56,6 +56,7 @@
                   - rs
             irods_cfg_negotiation_key: __IRODS_NEGOTIATION_KEY__
             irods_cfg_re_additional_rulebases:
+              - cve
               - cyverse_core
               - cyverse_housekeeping
             irods_cfg_root_dir: "{{ _build_dir }}"

@@ -583,7 +583,7 @@ _cyverse_logic_cpUnprotectedUserAVUs(*Username, *TargetType, *TargetName) {
 			let *name = elem(*nameParts, 0) in
 			let *zone = elem(*nameParts, 1) in
 			SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
-			WHERE USER_NAME == *name AMD ZONE_NAME == *zone
+			WHERE USER_NAME == *name AND ZONE_NAME == *zone
 		else
 			SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
 			WHERE USER_NAME == *Username;

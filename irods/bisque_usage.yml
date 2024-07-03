@@ -1,15 +1,15 @@
 ---
-- name: prepare for bisque_paths
+- name: Prepare for bisque_paths
   hosts: irods_catalog
   become: true
   tasks:
-    - name: install urlencode
-      package:
+    - name: Install urlencode
+      ansible.builtin.package:
         name: gridsite-clients
         state: present
 
-    - name: ensure /var/log/bisque exists
-      file:
+    - name: Ensure /var/log/bisque exists
+      ansible.builtin.file:
         path: /var/log/bisque
         state: directory
         owner: "{{ _irods_service_account_name }}"
@@ -17,41 +17,41 @@
         mode: u=rwx
 
 
-- name: configure bisque client
+- name: Configure bisque client
   hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
-    - name: install bisque_paths.py
-      get_url:
+    - name: Install bisque_paths.py
+      ansible.builtin.get_url:
         validate_certs: false
         url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
         dest: /var/lib/irods/msiExecCmd_bin
         mode: u+rx
 
-    - name: place .bisque
-      when: _bisque_url|length > 0
-      template:
+    - name: Place .bisque
+      when: _bisque_url | length > 0
+      ansible.builtin.template:
         src: templates/bisque.j2
         dest: "{{ ansible_env.HOME }}/.bisque"
         mode: u=r
 
-    - name: install url-encode-path-segments command script
-      copy:
+    - name: Install url-encode-path-segments command script
+      ansible.builtin.copy:
         src: files/bisque/var/lib/irods/msiExecCmd_bin/url-encode-path-segments.sh
         dest: /var/lib/irods/msiExecCmd_bin
         mode: u+rx
 
-    - name: place BisQue rule logic
-      copy:
+    - name: Place BisQue rule logic
+      ansible.builtin.copy:
         src: files/rule-bases/bisque.re
         dest: /etc/irods/bisque.re
         mode: u+r
-      notify: reload rules
+      notify: Reload rules
 
   handlers:
-    - name: reload rules
-      file:
+    - name: Reload rules
+      ansible.builtin.file:
         path: /etc/irods/core.re
         state: touch
         mode: u+r

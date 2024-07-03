@@ -1,5 +1,6 @@
 ---
-- import_playbook: mk_storage_resources.yml
+- name: Make storage resources
+  ansible.builtin.import_playbook: mk_storage_resources.yml
 
 
 - name: Configure iRODS for Cereus
@@ -8,11 +9,11 @@
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - name: create cereus resource
+    - name: Create cereus resource
       irods_resource_hierarchy:
         hierarchy: "{{ _cereus_resource_hierarchy }}"
 
-    - name: assign collection to Cereus resource
+    - name: Assign collection to Cereus resource
       delegate_to: localhost
       become: false
       no_log: true

@@ -1,8 +1,0 @@
----
-proxy_stats_tls_crt: /etc/ssl/private/testing.pem
-proxy_stats_tls_crt_content: PEM CONTENTS
-
-proxy_irods_reconn_ports: >-
-  {{ irods_ephemeral_port_range_first }}-{{ irods_ephemeral_port_range_last }}
-
-proxy_sftp_port: 23

@@ -3,6 +3,7 @@
 # This script builds the Docker images that compose the testing environment and
 # the ansible-tester image.
 
+set -o errexit -o nounset -o pipefail
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -22,7 +23,5 @@ main()
   "$baseDir"/ansible-tester/build "$baseDir"/config.inc
 }
 
-
-set -e
 
 main

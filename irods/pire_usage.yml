@@ -1,5 +1,6 @@
 ---
-- import_playbook: mk_storage_resources.yml
+- name: Make storage resources
+  ansible.builtin.import_playbook: mk_storage_resources.yml
 
 
 - name: Configure iRODS for PIRE
@@ -8,11 +9,11 @@
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - name: make PIRE resource hierarchy
+    - name: Make PIRE resource hierarchy
       irods_resource_hierarchy:
         hierarchy: "{{ _pire_resource_hierarchy }}"
 
-    - name: create group for PIRE members
+    - name: Create group for PIRE members
       delegate_to: localhost
       become: false
       irods_group:
@@ -24,7 +25,7 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: create public collection
+    - name: Create public collection
       delegate_to: localhost
       become: false
       irods_collection:
@@ -37,11 +38,12 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - when: _pire_manager != ''
+    - name: Init PIRE manager
+      when: _pire_manager != ''
       delegate_to: localhost
       become: false
       block:
-        - name: add PIRE manager to group
+        - name: Add PIRE manager to group
           irods_group_member:
             group: pire
             users:
@@ -53,7 +55,7 @@
             admin_password: "{{ _irods_clerver_password }}"
             zone: "{{ _irods_zone_name }}"
 
-        - name: create project collection
+        - name: Create project collection
           irods_collection:
             path: /{{ _irods_zone_name }}/home/shared/bhpire
             parents: true
@@ -63,7 +65,7 @@
             admin_password: "{{ _irods_clerver_password }}"
             zone: "{{ _irods_zone_name }}"
 
-        - name: give PIRE manager own permission on project collection
+        - name: Give PIRE manager own permission on project collection
           irods_permission:
             subject: "{{ _pire_manager }}"
             permission: own

@@ -217,12 +217,22 @@ cyverse_housekeeping_rmTrash {
 		*subject = cyverse_ZONE ++ ' trash removal succeeded';
 		*body = 'SSIA';
 	} else {
-		*subject = ipc_ZONE ++ ' trash removal failed';
+		*subject = cyverse_ZONE ++ ' trash removal failed';
 		*body = 'View the irods logs for details';
 	}
-	if (0 != errorcode(msiSendMail(cyverse_REPORT_EMAIL_ADDR, *subject, *body))) {
+
+	*fromArg = execCmdArg(cyverse_EMAIL_FROM_ADDR);
+	*toArg = execCmdArg(cyverse_EMAIL_REPORT_ADDR);
+	*subjArg = execCmdArg(*subject);
+	*bodyArg = execCmdArg(*body);
+	*args = "*fromArg *toArg *subjArg *bodyArg";
+	*status = errorcode(msiExecCmd('send_mail.py', *args, 'null', 'null', 'null', *out));
+	if (*status < 0) {
+		msiGetStderrInExecCmdOut(*out, *resp);
 		writeLine('serverLog', 'DS: failed to mail trash removal report');
+		writeLine('serverLog',  *resp);
 	}
+
 	writeLine('serverLog', 'DS: completed trash removal');
 }
 

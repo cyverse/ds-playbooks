@@ -1,7 +1,7 @@
 # This rulebase contains the environment-specific constants for the core CyVerse
 # Data Store policies.
 #
-# © 2023 The Arizona Board of Regents on behalf of The University of Arizona.
+# © 2024 The Arizona Board of Regents on behalf of The University of Arizona.
 # For license information, see https://cyverse.org/license.
 
 # the name of the AMQP exchange where iRODS should publish messages
@@ -16,6 +16,14 @@ cyverse_DEFAULT_REPL_RESC = '{{ _irods_default_repl_resource }}'
 cyverse_DEFAULT_RESC: string
 cyverse_DEFAULT_RESC = '{{ _irods_default_resource }}'
 
+# the email address of the iRODS grid
+cyverse_EMAIL_FROM_ADDR: string
+cyverse_EMAIL_FROM_ADDR = '{{ _irods_service_account_name }}@{{ _canonical_hostname }}'
+
+# the email address where any notifications will be sent
+cyverse_EMAIL_REPORT_ADDR: string
+cyverse_EMAIL_REPORT_ADDR = '{{ _report_email_addr }}'
+
 # the initial number of seconds iRODS waits before attempting to replicate a new
 # or modified data object
 cyverse_INIT_REPL_DELAY: integer
@@ -28,10 +36,6 @@ cyverse_MAX_NUM_RE_PROCS = {{ _irods_max_num_re_procs }}
 # the rule engine host
 cyverse_RE_HOST: string
 cyverse_RE_HOST = '{{ _irods_re_host }}'
-
-# the email address where any notifications will be sent
-cyverse_REPORT_EMAIL_ADDR: string
-cyverse_REPORT_EMAIL_ADDR = '{{ _report_email_addr }}'
 
 # the local iRODS zone
 cyverse_ZONE: string

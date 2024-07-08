@@ -148,7 +148,7 @@
         executable: /bin/bash
         cmd: |
           set -o pipefail
-          iqstat -a | grep --quiet {{ item }}
+          iqstat -u rods | grep --quiet {{ item }}
       with_items:
         - cyverse_housekeeping_updateQuotaUsage
         - cyverse_housekeeping_determineAllStorageFreeSpace

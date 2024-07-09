@@ -10,6 +10,8 @@ _package_manager: "{{ package_manager | default('auto') }}"
 
 _proxied_ssh: "{{ proxied_ssh | d(false) }}"
 
+_reboot_on_pkg_change: "{{ reboot_on_pkg_change | d(false) }}"
+
 _rebootable: "{{ rebootable | default(true) }}"
 
 _sysctl_net: "{{ sysctl_net | default([]) }}"

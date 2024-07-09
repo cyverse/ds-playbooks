@@ -19,7 +19,7 @@ Variable               | Required | Default | Choices | Comments
 `nic_txqueuelen`       | no       | 1000    |         | The transmission queue length to set on the primary NIC
 `package_manager`      | no       | auto    |         | The packager manager to use
 `proxied_ssh`          | no       | false   |         | Whether or not the connection ansible uses to get to the managed node goes through a bastion host
-`reboot_on_pkg_change` | no       | false   |         | Whether or not to automatically reboot the host if a system package was upgrade
+`reboot_on_pkg_change` | no       | false   |         | Whether or not to automatically reboot the host if a system package was upgraded
 `rebootable`           | no       | true    |         | Whether or not the server being configured is rebootable
 `sysctl_net`           | no       | []      |         | a list of sysctl network parameters to set for the server being configured, __see below__
 

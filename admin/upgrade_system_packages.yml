@@ -1,18 +1,18 @@
 ---
-- name: upgrade system packages
+- name: Upgrade system packages
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - name: update apt cache on Ubuntu machines
+    - name: Update apt cache on Ubuntu machines
       when: ansible_distribution == 'Ubuntu'
-      apt:
+      ansible.builtin.apt:
         update_cache: true
       tags:
         - non_idempotent
 
-    - name: upgrade system packages
+    - name: Upgrade system packages
       when: _rebootable | bool
-      package:
+      ansible.builtin.package:
         name: '*'
         state: latest  # noqa package-latest
       tags:

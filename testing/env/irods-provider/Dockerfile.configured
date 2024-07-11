@@ -10,13 +10,7 @@ ADD https://packages.irods.org/renci-irods.yum.repo /etc/yum.repos.d/renci-irods
 
 RUN rpm --import https://packages.irods.org/irods-signing-key.asc
 RUN yum --assumeyes versionlock add irods-*-4.2.8
-RUN yum --assumeyes install \
-  irods-server irods-database-plugin-postgres \
-  http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-client_modules-4.2.8.0-centos-7-x86_64.rpm \
-  http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-icommands-4.2.8.0-centos-7-x86_64.rpm \
-  http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm
-RUN yum --assumeyes versionlock add \
-  irods-netcdf-client_modules-4.2.8.0 irods-netcdf-icommands-4.2.8.0 irods-netcdf-server_modules
+RUN yum --assumeyes install irods-server irods-database-plugin-postgres
 
 ### Install libraries required by command scripts
 RUN pip3 --disable-pip-version-check install pika==1.1

@@ -64,6 +64,8 @@ main() {
 install_centos_packages() {
 	local version="$1"
 
+	update_centos_repo
+
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
 
 	yum --assumeyes install yum-plugin-versionlock
@@ -113,6 +115,28 @@ install_ubuntu_packages() {
 	fi
 }
 
+update_centos_repo() {
+	cat <<'EOF' > /etc/yum.repos.d/CentOS-Base.repo
+[base]
+name=CentOS-$releasever - Base
+baseurl=http://vault.centos.org/7.9.2009/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+[updates]
+name=CentOS-$releasever - Updates
+baseurl=http://vault.centos.org/7.9.2009/updates/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+[extras]
+name=CentOS-$releasever - Extras
+baseurl=http://vault.centos.org/7.9.2009/extras/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+EOF
+}
+
 update_pam_sshd_config() {
 	cat <<'EOF' | sed --in-place --file - /etc/pam.d/sshd
 /@include common-auth/{
@@ -130,6 +154,5 @@ s/#?PermitRootLogin .*/PermitRootLogin yes/
 s/#?PermitEmptyPasswords no/PermitEmptyPasswords yes/
 EOF
 }
-
 
 main "$@"

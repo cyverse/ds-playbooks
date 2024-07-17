@@ -3,6 +3,11 @@
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
+    - name: Test Update CentOS base repo
+      when: ansible_distribution == 'CentOS'
+      ansible.builtin.command: grep --quiet '7.9.2009' /etc/yum.repos.d/CentOS-Base.repo
+      changed_when: false
+
     - name: Test install packages
       ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       with_items:

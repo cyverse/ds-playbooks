@@ -78,6 +78,19 @@
        name: python2-pip
        state: present
 
+    - name: Upgrade pip2 on CentOS machines
+      when: ansible_distribution == 'CentOS'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit -o pipefail
+          if ! [[ "$(pip --version)" =~ pip\ 20 ]]; then
+            curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python
+            echo changed
+          fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
     - name: Install yum-plugin-versionlock on CentOS machines
       when: ansible_distribution == 'CentOS'
       ansible.builtin.package:

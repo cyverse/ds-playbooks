@@ -46,6 +46,13 @@
       loop_control:
         loop_var: pkg
 
+    - name: Verify pip upgraded on CentOS 7
+      when: ansible_distribution == 'CentOS'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: '[[ "$(pip --version)" =~ pip\ 20 ]]'
+      changed_when: false
+
     - name: Test install packages on Ubuntu 22.04
       when: >-
         ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('22.04', '>=')

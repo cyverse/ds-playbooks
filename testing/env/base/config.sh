@@ -64,9 +64,8 @@ main() {
 install_centos_packages() {
 	local version="$1"
 
+	update_centos_repo
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
-
-	yum --assumeyes install yum-plugin-versionlock
 
 	yum --assumeyes install epel-release
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
@@ -84,7 +83,8 @@ install_centos_packages() {
 		python3-requests \
 		python3-virtualenv \
 		python3 \
-		sudo
+		sudo \
+		yum-plugin-versionlock
 }
 
 install_ubuntu_packages() {
@@ -111,6 +111,28 @@ install_ubuntu_packages() {
 	if [[ "$version" != '18.04' ]]; then
 		apt install --yes --quiet=2 python-is-python3
 	fi
+}
+
+update_centos_repo() {
+	cat <<'EOF' > /etc/yum.repos.d/CentOS-Base.repo
+[base]
+name=CentOS-$releasever - Base
+baseurl=http://vault.centos.org/7.9.2009/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+[updates]
+name=CentOS-$releasever - Updates
+baseurl=http://vault.centos.org/7.9.2009/updates/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+[extras]
+name=CentOS-$releasever - Extras
+baseurl=http://vault.centos.org/7.9.2009/extras/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+EOF
 }
 
 update_pam_sshd_config() {

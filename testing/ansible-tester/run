@@ -1,24 +1,24 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Usage:
 #  run INSPECT PRETTY VERBOSE INVENTORY PLAYBOOKS SETUP [PLAYBOOK]
 #
 # Parameters:
 #  HOSTS      the inventory hosts to test against
-#  INSPECT    if this is set to any value, a shell will be opened that allows 
+#  INSPECT    if this is set to any value, a shell will be opened that allows
 #             access to the volumes in the env containers.
 #  PLAYBOOK   (OPTIONAL) the name of the playbook being tested.
 #  PLAYBOOKS  the base directory for the set of playbooks containing PLAYBOOK.
-#  PRETTY     if this is set to any value, more info is dumped and newlines in 
+#  PRETTY     if this is set to any value, more info is dumped and newlines in
 #             ouput are expanded.
 #  SETUP      the name of a playbook that prepares the environment for testing
-#             PLAYBOOK 
+#             PLAYBOOK
 #  VERBOSE    if this is set to any value, ansible will generate verbose output
 #
 # Envinroment Variables:
 #  DBMS_HOST                 The hostname of the PostgreSQL server to connect to
 #  ENV_NAME                  The docker environment to join
-#  IRODS_PROVIDER_CONF_HOST  The host name of the iRODS catalog service provider 
+#  IRODS_PROVIDER_CONF_HOST  The host name of the iRODS catalog service provider
 #                            to connect to
 #  IRODS_ZONE_NAME           The name of the iRODS zone inside the testing
 #                            environment
@@ -30,7 +30,7 @@ main() {
 	local inspect="$1"
 	local pretty="$2"
 	local verbose="$3"
-   local hosts="$4"
+	local hosts="$4"
 	local playbooks="$5"
 	local setup="$6"
 
@@ -46,7 +46,7 @@ main() {
 		--env PGHOST="$DBMS_HOST" \
 		--network "$DOMAIN" \
 		--volume "$playbooks":/playbooks-under-test:ro \
-		ansible-tester "$inspect" "$pretty" "$verbose" "$hosts" "$setup" "$playbook" 
+		ansible-tester "$inspect" "$pretty" "$verbose" "$hosts" "$setup" "$playbook"
 }
 		#--entrypoint bash \
 

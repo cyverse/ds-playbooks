@@ -4,6 +4,35 @@
   become: true
   gather_facts: false
   tasks:
+    - name: Determine if CentOS 7
+      ansible.builtin.stat:
+        path: /etc/centos-release
+      register: centos7
+
+    - name: Update CentOS base repo
+      when: centos7.stat.exists
+      ansible.builtin.copy:
+        dest: /etc/yum.repos.d/CentOS-Base.repo
+        content: |
+          [base]
+          name=CentOS-$releasever - Base
+          baseurl=http://vault.centos.org/7.9.2009/os/$basearch/
+          gpgcheck=1
+          gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+          [updates]
+          name=CentOS-$releasever - Updates
+          baseurl=http://vault.centos.org/7.9.2009/updates/$basearch/
+          gpgcheck=1
+          gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+          [extras]
+          name=CentOS-$releasever - Extras
+          baseurl=http://vault.centos.org/7.9.2009/extras/$basearch/
+          gpgcheck=1
+          gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+        mode: a+r
+
     - name: Install dmidecode support
       ansible.builtin.package:
         name: dmidecode
@@ -48,6 +77,19 @@
       ansible.builtin.package:
        name: python2-pip
        state: present
+
+    - name: Upgrade pip2 on CentOS machines
+      when: ansible_distribution == 'CentOS'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit -o pipefail
+          if ! [[ "$(pip --version)" =~ pip\ 20 ]]; then
+            curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python
+            echo changed
+          fi
+      register: response
+      changed_when: response.stdout == 'changed'
 
     - name: Install yum-plugin-versionlock on CentOS machines
       when: ansible_distribution == 'CentOS'

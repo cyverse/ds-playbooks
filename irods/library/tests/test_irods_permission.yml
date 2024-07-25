@@ -16,6 +16,7 @@
     sub_data_inclusive: "{{ coll_inclusive }}/data"
     sub_coll_inclusive: "{{ coll_inclusive }}/coll"
     sub_sub_data_inclusive: "{{ sub_coll_inclusive }}/data"
+    coll_inclusive_empty: "/{{ zone }}/home/rods/coll_inclusive_empty"
     coll_exclusive: /{{ zone }}/home/rods/coll_exclusive
     sub_data_exclusive: "{{ coll_exclusive }}/data"
     sub_coll_exclusive: "{{ coll_exclusive }}/coll"
@@ -40,6 +41,7 @@
       ansible.builtin.command: imkdir -p '{{ item }}'
       changed_when: true
       with_items:
+        - "{{ coll_inclusive_empty }}"
         - "{{ sub_coll_no_recursion }}"
         - "{{ sub_coll_inclusive }}"
         - "{{ sub_coll_exclusive }}"
@@ -291,6 +293,32 @@
       with_items:
         - "{{ sub_data_inclusive }}"
         - "{{ sub_sub_data_inclusive }}"
+
+    - name: Grant rodsadmin and rods own permission on coll_inclusive_empty
+      irods_permission:
+        subject: "{{ item }}"
+        permission: own
+        object: "{{ coll_inclusive_empty }}"
+        admin_user: rods
+        admin_password: "{{ password }}"
+        zone: "{{ zone }}"
+      with_items:
+        - rods
+        - rodsadmin
+
+    - name: Grant owner own permission on coll_inclusive_empty
+      irods_permission:
+        subject: owner
+        permission: own
+        object: "{{ coll_inclusive_empty }}"
+        recursion: inclusive
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: "{{ password }}"
+        zone: "{{ zone }}"
+      become: false
+      delegate_to: localhost
 
     - name: Remove forbidden permission from coll_exclusive
       irods_permission:

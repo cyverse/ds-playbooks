@@ -4,15 +4,15 @@
 
 set -o errexit -o nounset -o pipefail
 
-ExecName=$(readlink --canonicalize "$0")
-readonly ExecName
+EXEC_NAME=$(readlink --canonicalize "$0")
+readonly EXEC_NAME
 
 declare BaseDir
 
 
 main()
 {
-  BaseDir="$(dirname "$ExecName")"
+  BaseDir="$(dirname "$EXEC_NAME")"
 
   local cfg="$1"
 
@@ -31,10 +31,12 @@ main()
   cp --no-clobber "$BaseDir"/../../requirements-ansible.yml "$BaseDir"/requirements.yml
   trap 'rm --force "$BaseDir"/requirements.yml' EXIT
 
-#  docker buildx build --no-cache \
-  docker buildx build \
-    --build-arg IRODS_CLERVER_PASSWORD="$IRODS_CLERVER_PASSWORD" --tag ansible-tester \
-    "$BaseDir"
+  local buildArgs=(
+#    --no-cache
+    --build-arg=IRODS_CLERVER_PASSWORD="$IRODS_CLERVER_PASSWORD"
+    --tag=ansible-tester )
+
+  docker buildx build "${buildArgs[@]}" "$BaseDir"
 }
 
 

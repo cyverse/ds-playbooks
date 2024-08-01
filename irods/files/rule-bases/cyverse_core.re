@@ -102,9 +102,12 @@ acDataDeletePolicy {
 #              collection being deleted
 #  ChildColl  (string) the name of collection being deleted
 #
+# XXX: `iadmin rmdir` does not trigger this PEP in iRODS 4.2.8
 acDeleteCollByAdmin(*ParColl, *ChildColl) {
+	*status = errormsg(cyverse_logic_acDeleteCollByAdmin(*ParColl, *ChildColl), *msg);
+	if (*status < 0) { writeLine('serverLog', *msg); }
+
 	msiDeleteCollByAdmin(*ParColl, *ChildColl);
-	cyverse_logic_acDeleteCollByAdmin(*ParColl, *ChildColl);
 }
 
 # This rule applies the collection delete polices for a home or trash collection
@@ -118,12 +121,11 @@ acDeleteCollByAdmin(*ParColl, *ChildColl) {
 #  ChildColl  (string) the name of collection being deleted
 #
 acDeleteCollByAdminIfPresent(*ParColl, *ChildColl) {
-	*status = errormsg(ipc_acDeleteCollByAdmin(*ParColl, *ChildColl), *msg);
-	if(*status < 0) {
-		writeLine('serverLog', *msg);
-	}
-	*status = errormsg(msiDeleteCollByAdmin(*ParColl, *ChildColl),*msg);
-	if(*status != 0 && *status != -808000) {
+	*status = errormsg(cyverse_logic_acDeleteCollByAdminIfPresent(*ParColl, *ChildColl), *msg);
+	if (*status < 0) { writeLine('serverLog', *msg); }
+
+	*status = errormsg(msiDeleteCollByAdmin(*ParColl, *ChildColl), *msg);
+	if (*status != 0 && *status != -808000) {
 		failmsg(*status, *msg);
 	}
 }
@@ -228,15 +230,16 @@ acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *A
 #            is an absolute path for a collection or data object
 #  AName     (string) the attribute name before modification
 #  AValue    (string) the attribute value before modification
-#  New1      (string) if a attribute has a unit before modification, this
-#            parameter holds that unit, otherwise, it holds an update to the
-#            name, value, or unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  New2      (string) either empty or holds an update to the name, value, or
+#  AUnit     (string) the attribute  unit before modification
+#  NAName    (string) either empty or holds an update to the name, value, or
 #            unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  New3      (string) either empty or holds an update to the name, value, or
+#  NAValue   (string) either empty or holds an update to the name, value, or
 #            unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  New4      (string) either empty or holds an update to the name, value, or
+#  NAUnit    (string) either empty or holds an update to the name, value, or
 #            unit prefixed by 'n:', 'v:', or 'u:', respectively
+#
+# XXX: Due to a bug in iRODS 4.2.8, when a unitless AVU is modified to have a new attribute name,
+#      value, and unit in a single call, *NAUnit will be empty.
 #
 acPreProcForModifyAVUMetadata(
 	*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit
@@ -368,15 +371,16 @@ acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *
 #            absolute path for a collection or data object
 #  AName     (string) the attribute name before modification
 #  AValue    (string) the attribute value before modification
-#  New1      (string) if a attribute has a unit before modification, this
-#            parameter holds that unit, otherwise, it holds the updated name,
-#            value, or unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  New2      (string) either empty or holds the updated name, value, or unit
+#  AUnit     (string) the attribute unit before modification
+#  NAName    (string) holds the updated name, value, or unit prefixed by 'n:',
+#            'v:', or 'u:', respectively
+#  NAValue   (string) either empty or holds the updated name, value, or unit
 #            prefixed by 'n:', 'v:', or 'u:', respectively
-#  New3      (string) either empty or holds the updated name, value, or unit
+#  NAUnit    (string) either empty or holds the updated name, value, or unit
 #            prefixed by 'n:', 'v:', or 'u:', respectively
-#  New4      (string) either empty or holds the updated name, value, or unit
-#            prefixed by 'n:', 'v:', or 'u:', respectively
+#
+# XXX: Due to a bug in iRODS 4.2.8, when a unitless AVU is modified to have a new attribute name,
+#      value, and unit in a single call, *NAUnit will be empty.
 #
 acPostProcForModifyAVUMetadata(
 	*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit

@@ -105,7 +105,9 @@
 
     - name: Restart iRODS
       when: _restart_irods and irods_cfg_made_changes
-      ansible.builtin.import_tasks: tasks/restart_irods.yml
+      ansible.builtin.include_tasks: tasks/restart_irods.yml
+      vars:
+        restart_op: if running
 
   handlers:
     - name: Reload rules

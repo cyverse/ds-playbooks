@@ -18,3 +18,5 @@ maintainer_keys:
     state: present
   - key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMNAkCWfBgthPFt3580sM8H0BXpCQVrEI8Y2Kpq9bO+3 disallowed
     state: absent
+
+restart_irods: true

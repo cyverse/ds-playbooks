@@ -35,7 +35,7 @@
 #           community.general.yum_versionlock:
 #             name:
 #               - irods-icommands-{{ _irods_version }}
-#               - irods-resource-plugin-s3-{{ _irods_version }}.1-1.el7
+#               - irods-resource-plugin-s3-{{ _irods_version }}.*
 #               - irods-runtime-{{ _irods_version }}
 #               - irods-server-{{ _irods_version }}
 #             state: present
@@ -48,7 +48,10 @@
           changed_when: 'resp.stdout is not regex("versionlock added: 0")'
           with_items:
             - irods-*-{{ _irods_version }}
-            - irods-*-{{ _irods_version }}.*
+   # XXX - yum versionlock on some CentOS 7 systems doesn't find irods-*-4.2.8.*
+   #          - irods-*-{{ _irods_version }}.*
+            - irods-resource-*-{{ _irods_version }}.*
+   # XXX - ^^^
           tags: skip_ansible_lint
 # XXX - ^^^
 

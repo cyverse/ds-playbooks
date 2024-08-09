@@ -5,6 +5,8 @@
   become_user: "{{ _irods_service_account_name }}"
   tasks:
     - name: Restart
-      ansible.builtin.import_tasks: tasks/restart_irods.yml
+      ansible.builtin.include_tasks: tasks/restart_irods.yml
+      vars:
+        restart_op: always
   tags:
     - non_idempotent

@@ -31,14 +31,18 @@ set -e
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
-  readonly ExecName=$(greadlink -f "$0")
+  ExecName=$(greadlink -f "$0")
 else
-  readonly ExecName=$(readlink --canonicalize "$0")
+  ExecName=$(readlink --canonicalize "$0")
 fi
+readonly ExecName
+
 
 main()
 {
-  local baseDir=$(dirname "$ExecName")
+  local baseDir
+  baseDir=$(dirname "$ExecName")
+
   local sqlData="$baseDir"/values.sql
 
   printf 'Preparing %s\n' "$sqlData"
@@ -91,7 +95,7 @@ exec_sql()
   local user="$3"
   local passwd="$4"
 
-  PGPASSWORD="$passwd" psql --port "$dbmsPort" --user "$user" "$name" > /dev/null
+  PGPASSWORD="$passwd" psql --port "$port" --user "$user" "$db" > /dev/null
 }
 
 
@@ -103,7 +107,8 @@ init_db()
   local passwd="$4"
   local sqlData="$5"
 
-  local sqlDir=$(dirname "$sqlData")
+  local sqlDir
+  sqlDir=$(dirname "$sqlData")
 
   printf '\tCreating %s database\n' "$name"
   psql --command "CREATE DATABASE \"$name"\" > /dev/null
@@ -128,7 +133,8 @@ mk_cfg_sql()
   local admPasswd="$4"
   local rescs="$5"
 
-  local nowTs=$(date '+%s');
+  local nowTs
+  nowTs=$(date '+%s');
 
   cat "$sqlDir"/sys-values.sql
   expand_template "$zone" "$admName" "$admPasswd" "$sqlDir"/config-values.sql.template
@@ -165,4 +171,4 @@ EOF
 }
 
 
-main
+main "$@"

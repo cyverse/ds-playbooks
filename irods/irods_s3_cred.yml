@@ -1,0 +1,23 @@
+---
+- name: Deploy S3 credentials
+  hosts: irods
+  become: true
+  tasks:
+    - name: Create S3 credentials folder
+      ansible.builtin.file:
+        path: /etc/irods/s3-credentials
+        owner: "{{ _irods_service_account_name }}"
+        group: "{{ _irods_service_group_name }}"
+        mode: u+rx
+        state: directory
+
+    - name: Create S3 credentials files
+      ansible.builtin.copy:
+        dest: /etc/irods/s3-credentials/{{ item.name }}
+        content: |
+          {{ item.access_key }}
+          {{ item.secret_key }}
+        owner: "{{ _irods_service_account_name }}"
+        group: "{{ _irods_service_group_name }}"
+        mode: u=r
+      with_items: "{{ _irods_s3_cred }}"

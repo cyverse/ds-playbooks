@@ -46,6 +46,14 @@ irods_resource_hierarchies:
   - name: ingestRes
   - name: replRes
 
+irods_s3_cred:
+  - name: cred-1
+    access_key: access-1
+    secret_key: secret-1
+  - name: cred-2
+    access_key: access-2
+    secret_key: secret-2
+
 irods_server_port_range_end: 20009
 
 mdrepo_cli_account: md-cli

@@ -1,0 +1,40 @@
+---
+- name: Test deploy S3 credentials
+  hosts: dstesting-consumer_configured_ubuntu-1.dstesting_default
+  become: true
+  tasks:
+    - name: Test create S3 credentials folder
+      ansible.builtin.stat:
+        path: /etc/irods/s3-credentials
+      register: resp
+      failed_when: >-
+        not resp.stat.isdir
+        or resp.stat.pw_name != 'irods'
+        or resp.stat.gr_name != 'irods'
+        or not resp.stat.rusr
+        or not resp.stat.xusr
+
+    - name: Verify placement
+      ansible.builtin.stat:
+        path: /etc/irods/s3-credentials/{{ item }}
+      register: resp
+      failed_when: >-
+        resp.stat.pw_name != 'irods'
+        or resp.stat.gr_name != 'irods'
+        or not resp.stat.mode != '0400'
+      with_items:
+        - cred-1
+        - cred-2
+
+    - name: Retrieve encoded contents
+      ansible.builtin.slurp:
+        src: /etc/irods/s3-credentials/cred-1
+      register: cred_encoded
+
+    - name: Decode contents
+      ansible.builtin.set_fact:
+        cred: "{{ cred_encoded.content | b64decode }}"
+
+    - name: Verify contents
+      ansible.builtin.assert:
+        that: cred is regex('^access-1\nsecret-1\n')

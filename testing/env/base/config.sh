@@ -27,7 +27,7 @@ main() {
 
 	# Install required packages
 	if [[ "$os" == centos ]]; then
-		install_centos_packages "$version"
+		install_centos_packages
 	else
 		install_ubuntu_packages "$version"
 	fi
@@ -62,14 +62,12 @@ main() {
 # Parameters:
 #  version  the CentOS major distribution version number
 install_centos_packages() {
-	local version="$1"
+	update_centos_repo
 
-	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
-
-	yum --assumeyes install yum-plugin-versionlock
+	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 	yum --assumeyes install epel-release
-	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
+	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
 
 	yum --assumeyes install \
 		ca-certificates \
@@ -79,21 +77,25 @@ install_centos_packages() {
 		jq \
 		libselinux-python \
 		openssh-server \
+		python3 \
 		python3-dns \
 		python3-pip \
 		python3-requests \
 		python3-virtualenv \
-		python3 \
-		sudo
+		sudo \
+		yum-plugin-versionlock
+
+	yum clean all
+	rm --force --recursive /var/cache/yum
 }
 
 install_ubuntu_packages() {
 	local version="$1"
 
-	apt-get update --quiet=2
-	apt-get install --yes --quiet=2 apt-utils 2> /dev/null
+	apt-get update
+	apt-get install --yes apt-utils 2> /dev/null
 
-	apt-get install --yes --quiet=2 \
+	apt-get install --yes \
 		ca-certificates \
 		dmidecode \
 		iproute2 \
@@ -109,8 +111,33 @@ install_ubuntu_packages() {
 		sudo
 
 	if [[ "$version" != '18.04' ]]; then
-		apt install --yes --quiet=2 python-is-python3
+		apt install --yes python-is-python3
 	fi
+
+	apt-get clean autoclean
+	rm --force --recursive /var/lib/apt/lists/*
+}
+
+update_centos_repo() {
+	cat <<'EOF' > /etc/yum.repos.d/CentOS-Base.repo
+[base]
+name=CentOS-$releasever - Base
+baseurl=http://vault.centos.org/7.9.2009/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+[updates]
+name=CentOS-$releasever - Updates
+baseurl=http://vault.centos.org/7.9.2009/updates/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+[extras]
+name=CentOS-$releasever - Extras
+baseurl=http://vault.centos.org/7.9.2009/extras/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+EOF
 }
 
 update_pam_sshd_config() {
@@ -130,6 +157,5 @@ s/#?PermitRootLogin .*/PermitRootLogin yes/
 s/#?PermitEmptyPasswords no/PermitEmptyPasswords yes/
 EOF
 }
-
 
 main "$@"

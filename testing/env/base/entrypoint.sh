@@ -20,7 +20,8 @@
 # When executed with 'stop', it should stop any services started by when the
 # 'start' option is passed in. It should not exit until these services have
 # stopped.
-#
+
+set -o errexit -o nounset -o pipefail
 
 
 main()
@@ -44,7 +45,10 @@ start()
 
   if [ -n "$svc" ]
   then
-    eval "$svc" start
+    if ! eval "$svc" start
+    then
+      printf '%s failed to start\n' "$svc"
+    fi
   fi
 
   /usr/sbin/sshd
@@ -65,7 +69,5 @@ stop()
   fi
 }
 
-
-set -e
 
 main "$@"

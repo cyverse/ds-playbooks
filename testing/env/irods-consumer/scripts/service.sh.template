@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #
 # Usage:
 #  service (start|stop)
@@ -6,8 +6,7 @@
 # This script starts or stops the resource server inside the container if there
 # is one.
 
-set -e
-
+set -o errexit -o nounset -o pipefail
 
 main()
 {
@@ -33,7 +32,6 @@ main()
   esac
 }
 
-
 start()
 {
   # Ensure that the correct user owns everything in /var/lib/irods and /etc/irods
@@ -51,14 +49,11 @@ start()
     exec 3<&-
     exec 3>&-
 
-    printf 'Authenticating clerver user\n'
-    su \
-      --command "IRODS_HOST='$IRODS_CATALOG_PROVIDER' iinit '$IRODS_ZONE_PASSWORD'" \
-      --login "$IRODS_SYSTEM_USER"
-
-    if ! su --command '/var/lib/irods/irodsctl start' --login "$IRODS_SYSTEM_USER"
+    printf 'Starting iRODS catalog consumer service\n'
+    if ! sudo --login --user "$IRODS_SYSTEM_USER" /var/lib/irods/irodsctl --test start
     then
-      cat /var/lib/irods/log/rodsLog* >&2
+      printf 'Failed to start service\n'
+      cat /var/lib/irods/log/control_log.txt
       return 1
     fi
 
@@ -66,15 +61,13 @@ start()
   fi
 }
 
-
 stop()
 {
-  if su --command imiscsvrinfo --login "$IRODS_SYSTEM_USER" >& /dev/null
+  if sudo --login --user  "$IRODS_SYSTEM_USER"  imiscsvrinfo >& /dev/null
   then
-    su --command '/var/lib/irods/irodsctl stop' --login "$IRODS_SYSTEM_USER"
+    sudo  --login --user  "$IRODS_SYSTEM_USER" /var/lib/irods/irodsctl stop
     rm --force /var/lock/subsys/irods
   fi
 }
-
 
 main "$@"

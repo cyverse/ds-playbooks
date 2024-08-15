@@ -5,5 +5,5 @@ docker
 molecule
 molecule-plugins[podman]
 netaddr
-python-irodsclient<2
+python-irodsclient
 wheel

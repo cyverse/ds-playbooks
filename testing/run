@@ -1,7 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-show_help()
-{
+show_help() {
   cat <<EOF
 
 $ExecName
@@ -12,7 +11,7 @@ Usage:
 test Data Store playbooks
 
 Parameters:
-  <playbook_folder>  the path to the root directory for a collection of 
+  <playbook_folder>  the path to the root directory for a collection of
                      playbooks
 
 Options:
@@ -21,20 +20,20 @@ $(printHelpText)
 Summary:
 This script runs a playbook with in the testing environment. If no inventory
 hosts file is provided, it will use 'hosts-all'. If no playbook is provided, no
-playbook will be run. When combined with -i, this allows the environment to be 
+playbook will be run. When combined with -i, this allows the environment to be
 started in interactive mode.
 EOF
 }
 
 
-printHelpText(){
+printHelpText() {
   if [[ "$OSTYPE" == "darwin"* ]]
   then
     cat <<EOF
   -I <hosts>     the name of the inventory hosts file to use
   -P <playbook>  the path to the playbook to test relative to <playbook_folder>.
   -S <setup>     the path relative to <playbook_folder> to a playbook that
-                 prepares the environment for testing <playbook> 
+                 prepares the environment for testing <playbook>
 
   -h             show help and exit
   -i             after running the playbook, open a shell that allows manual
@@ -45,22 +44,21 @@ EOF
   else
     cat <<EOF
   -I, --inventory-hosts <hosts>  the name of the inventory hosts file to use
-  -P, --playbook <playbook>      the path to the root directory for a collection 
-                                 of playbooks, default is current working 
+  -P, --playbook <playbook>      the path to the root directory for a collection
+                                 of playbooks, default is current working
                                  directory
-  -S, --setup <setup>            the path relative to <playbook_folder> to a 
-                                 playbook that prepares the environment for 
-                                 testing <playbook> 
+  -S, --setup <setup>            the path relative to <playbook_folder> to a
+                                 playbook that prepares the environment for
+                                 testing <playbook>
 
   -h, --help                     show help and exit
-  -i, --inspect                  after running the playbook, open a shell that 
-                                 allows manual inspection of the configuration 
+  -i, --inspect                  after running the playbook, open a shell that
+                                 allows manual inspection of the configuration
                                  files, vaults, and logs
-  -p, --pretty                   more information will be output and newlines 
+  -p, --pretty                   more information will be output and newlines
                                 will be expanded in that output.
 EOF
   fi
-
 }
 
 
@@ -68,12 +66,15 @@ set -o errexit -o nounset -o pipefail
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
-  readonly ExecName=$(greadlink -f "$0")
+  ExecName=$(greadlink -f "$0")
 else
-  readonly ExecName=$(readlink --canonicalize "$0")
+  ExecName=$(readlink --canonicalize "$0")
 fi
+readonly ExecName
 
-readonly BaseDir=$(dirname "$ExecName")
+BaseDir=$(dirname "$ExecName")
+readonly BaseDir
+
 readonly Cfg="$BaseDir"/config.inc
 readonly DefaultHosts=hosts-all
 
@@ -81,12 +82,11 @@ readonly DefaultHosts=hosts-all
 source "$Cfg"
 
 
-main()
-{
+main() {
   declare -A opts=(
     [help]=''
     [inspect]=''
-    [inventory-hosts]="$DefaultHosts" 
+    [inventory-hosts]="$DefaultHosts"
     [playbook]=''
     [playbook-folder]=''
     [pretty]=''
@@ -133,8 +133,7 @@ main()
 }
 
 
-resolve_opts() 
-{
+resolve_opts() {
   local optsVar="$1"
   shift
 
@@ -162,7 +161,7 @@ resolve_opts()
         shift 2
         ;;
       -p|--pretty)
-        eval "$optsVar"[pretty]=pretty
+        eval "$optsVar"'[pretty]=pretty'
         shift 1
         ;;
       -S|--setup)
@@ -183,8 +182,7 @@ resolve_opts()
 }
 
 
-do_run()
-{
+do_run() {
   local doInspect="$1"
   local pretty="$2"
   local hosts="$3"
@@ -194,7 +192,7 @@ do_run()
 
   "$BaseDir"/env/controller "$Cfg" start
 
-  local rc  
+  local rc
   if ! \
     "$BaseDir"/ansible-tester/run \
       "$doInspect" "$pretty" '' "$hosts" "$playbooks" "$setup" "$playbook"
@@ -207,15 +205,13 @@ do_run()
 }
 
 
-exit_with_help()
-{
+exit_with_help() {
   show_help >&2
   exit 1
 }
 
 
-parse_cmd_line()
-{
+parse_cmd_line() {
   local opts
   if [[ "$OSTYPE" == "darwin"* ]]
   then
@@ -242,8 +238,7 @@ parse_cmd_line()
 }
 
 
-resolve_playbook()
-{
+resolve_playbook() {
   local playbooks="$1"
   local playbook="$2"
 
@@ -262,8 +257,7 @@ resolve_playbook()
 }
 
 
-resolve_playbook_dir()
-{
+resolve_playbook_dir() {
   local playbooks="$1"
 
   if ! [[ "$playbooks" =~ ^/ ]]

@@ -7,8 +7,9 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 
 # Create service script
-COPY irods-consumer/scripts/service.sh.template /tmp/
-COPY irods-consumer/scripts/prep-svc-script.sh /tmp/prep-svc-script
-RUN /tmp/prep-svc-script
+RUN \
+	--mount=target=/tmp/service.sh.template,source=irods-provider/scripts/service.sh.template \
+	--mount=target=/tmp/prep-svc-script,source=irods-provider/scripts/prep-svc-script.sh \
+	/tmp/prep-svc-script
 
 CMD [ "/service.sh" ]

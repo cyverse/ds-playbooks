@@ -4,15 +4,15 @@
 
 set -o errexit -o nounset -o pipefail
 
-ExecName=$(readlink --canonicalize "$0")
-readonly ExecName
+EXEC_NAME="$(readlink --canonicalize "$0")"
+readonly EXEC_NAME
 
 declare BaseDir
 
 
 main()
 {
-  BaseDir="$(dirname "$ExecName")"
+  BaseDir="$(dirname "$EXEC_NAME")"
 
   local cfg="$1"
 
@@ -28,8 +28,9 @@ main()
   # shellcheck disable=SC1090
   . "$cfg"
 
+  trap 'rm --force "$BaseDir"/requirements.txt "$BaseDir"/requirements.yml' EXIT
+  cp --no-clobber "$BaseDir"/../../requirements-python.txt "$BaseDir"/requirements.txt
   cp --no-clobber "$BaseDir"/../../requirements-ansible.yml "$BaseDir"/requirements.yml
-  trap 'rm --force "$BaseDir"/requirements.yml' EXIT
 
 #  docker buildx build --no-cache \
   docker buildx build \

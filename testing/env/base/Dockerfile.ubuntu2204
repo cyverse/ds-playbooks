@@ -2,9 +2,7 @@ FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-COPY base/config.sh /tmp/config
-
-RUN /tmp/config ubuntu 22.04
+RUN --mount=target=/tmp/config,source=base/config.sh /tmp/config ubuntu 22.04
 
 COPY base/entrypoint.sh /entrypoint
 

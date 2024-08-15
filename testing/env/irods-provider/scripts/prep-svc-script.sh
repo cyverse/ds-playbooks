@@ -10,6 +10,8 @@
 # IRODS_SYSTEM_USER    The system user for the iRODS process
 # IRODS_ZONE_PASSWORD  The password used to authenticate the clever user.
 
+set -e
+
 
 main()
 {
@@ -42,5 +44,4 @@ EOF
 }
 
 
-set -e
-main
+main "$@"

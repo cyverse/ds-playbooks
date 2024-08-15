@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This script scripts the service.sh script for resource servers
 #
@@ -9,6 +9,8 @@
 # IRODS_SYSTEM_USER       the system user for the iRODS process
 # IRODS_ZONE_PASSWORD     the password used to authenticate the clever user
 # IRODS_ZONE_PORT         the main TCP port used by the zone for communication
+
+set -e
 
 
 main()
@@ -41,7 +43,5 @@ s/\$IRODS_ZONE_PORT/$(escape "$IRODS_ZONE_PORT")/g
 EOF
 }
 
-
-set -e
 
 main "$@"

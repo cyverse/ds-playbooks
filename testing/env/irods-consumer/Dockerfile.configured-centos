@@ -1,15 +1,5 @@
 FROM test-env-base:centos7
 
-### Install iRODS
-ADD https://packages.irods.org/renci-irods.yum.repo /etc/yum.repos.d/renci-irods.yum.repo
-RUN rpm --import https://packages.irods.org/irods-signing-key.asc
-RUN yum --assumeyes versionlock add irods-*-4.2.8
-### TODO removed this after upgrading to iRODS 4.2.9+
-RUN yum --assumeyes install unixODBC
-### ^^^
-RUN yum --assumeyes install irods-server
-RUN python3 -m pip install python-irodsclient
-
 ARG IRODS_CATALOG_PROVIDER=csp
 ARG IRODS_CONTROL_PLANE_KEY=TEMPORARY__32byte_ctrl_plane_key
 ARG IRODS_CONTROL_PLANE_PORT=1248
@@ -28,17 +18,38 @@ ARG IRODS_ZONE_PASSWORD=rods
 ARG IRODS_ZONE_PORT=1247
 ARG IRODS_ZONE_USER=rods
 
-### Configure iRODS
-COPY irods-consumer/scripts/config-irods.sh /tmp/config-irods
-RUN /tmp/config-irods
+ADD https://packages.irods.org/renci-irods.yum.repo /etc/yum.repos.d/renci-irods.yum.repo
 
-### Populate .ssh/authorized_keys
-RUN echo ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMNAkCWfBgthPFt3580sM8H0BXpCQVrEI8Y2Kpq9bO+3 disallowed \
-	> /root/.ssh/authorized_keys
+RUN \
+	--mount=target=/tmp/config-irods,source=irods-consumer/scripts/config-irods.sh \
+	--mount=target=/tmp/service.sh.template,source=irods-consumer/scripts/service.sh.template \
+	--mount=target=/tmp/prep-svc-script,source=irods-consumer/scripts/prep-svc-script.sh \
+<<EOF
+	set -o errexit
+
+### Install iRODS
+	rpm --import https://packages.irods.org/irods-signing-key.asc
+	yum --assumeyes versionlock add irods-*-4.3.1
+	yum --assumeyes install irods-server
+	python3 -m pip install python-irodsclient
+# XXX - irods-icommands required by irods-server but not installed by dependency resolution in
+#       CentOS 7
+	yum --assumeyes install irods-icommands
+# XXX - ^^^
+
+### Configure iRODS
+	/tmp/config-irods
 
 ### Create service script
-COPY irods-consumer/scripts/service.sh.template /tmp/
-COPY irods-consumer/scripts/prep-svc-script.sh /tmp/prep-svc-script
-RUN /tmp/prep-svc-script
+	/tmp/prep-svc-script
+
+### Populate .ssh/authorized_keys
+	echo ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMNAkCWfBgthPFt3580sM8H0BXpCQVrEI8Y2Kpq9bO+3 disallowed \
+		> /root/.ssh/authorized_keys
+
+### Clean yum cache
+	yum clean all
+	rm --force --recursive /var/cache/yum
+EOF
 
 CMD [ "/service.sh" ]

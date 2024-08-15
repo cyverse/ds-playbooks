@@ -1,4 +1,2 @@
 ---
-_haproxy_full_os: false
-
 _haproxy_default_stats_auth_username: ds

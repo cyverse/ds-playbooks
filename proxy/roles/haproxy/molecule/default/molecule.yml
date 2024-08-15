@@ -1,0 +1,9 @@
+---
+driver:
+  name: podman
+platforms:
+  - name: instance
+    image: ubuntu-systemd
+    pre_build_image: true
+    dockerfile: ubuntu.dockerfile
+    command: /lib/systemd/systemd

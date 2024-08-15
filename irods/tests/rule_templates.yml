@@ -17,8 +17,14 @@
           - cyverse_env is search("cyverse_AMQP_EXCHANGE = 'irods'")
           - cyverse_env is search("cyverse_DEFAULT_REPL_RESC = 'demoResc'")
           - cyverse_env is search("cyverse_DEFAULT_RESC = 'demoResc'")
+          - >-
+            cyverse_env
+            is search(
+              "cyverse_EMAIL_FROM_ADDR = 'irods@dstesting-provider_configured-1.dstesting_default'" )
+          - cyverse_env is search("cyverse_EMAIL_REPORT_ADDR = 'root@localhost'")
           - cyverse_env is search("cyverse_INIT_REPL_DELAY = 0")
           - cyverse_env is search("cyverse_MAX_NUM_RE_PROCS = 4")
+          - cyverse_env is search("cyverse_ZONE = 'testing'")
           - >-
             cyverse_env
               is search("cyverse_RE_HOST = 'dstesting-provider_configured-1.dstesting_default'")
@@ -41,18 +47,32 @@
         that: pire_env is search("pire_RESC = 'demoResc'")
 
 
-- name: Test that custom AMQP exchange set correctly in cyverse-env.re
+- name: Test non resource custom values set correctly in cyverse-env.re
   hosts: localhost
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
   vars:
+    canonical_hostname: local
     irods_amqp_exchange: exchange
+    irods_init_repl_delay: 1
+    irods_max_num_re_procs: 1
+    irods_re_host: other
+    irods_service_account_name: balloon
+    irods_zone_name: zoner
+    report_email_addr: bob@reports
     cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
   tasks:
-    - name: Verify resource constants
+    - name: Verify custon values
       ansible.builtin.assert:
-        that: cyverse_env is search("cyverse_AMQP_EXCHANGE = 'exchange'")
+        that:
+          - cyverse_env is search("cyverse_AMQP_EXCHANGE = 'exchange'")
+          - cyverse_env is search("cyverse_EMAIL_FROM_ADDR = 'balloon@local'")
+          - cyverse_env is search("cyverse_EMAIL_REPORT_ADDR = 'bob@reports'")
+          - cyverse_env is search("cyverse_INIT_REPL_DELAY = 1")
+          - cyverse_env is search("cyverse_MAX_NUM_RE_PROCS = 1")
+          - cyverse_env is search("cyverse_RE_HOST = 'other'")
+          - cyverse_env is search("cyverse_ZONE = 'zoner'")
 
 
 - name: Test that custom default resc set correctly in cyverse-env.re
@@ -85,34 +105,6 @@
         that:
           - cyverse_env is search("cyverse_DEFAULT_REPL_RESC = 'custom'")
           - cyverse_env is search("cyverse_DEFAULT_RESC = 'demoResc'")
-
-
-- name: Test that cyverse_INIT_REPL_DELAY is set correctly in cyverse-env.re
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    irods_init_repl_delay: 1
-    cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
-  tasks:
-    - name: Verify cyverse_INIT_REPL_DELAY
-      ansible.builtin.assert:
-        that: cyverse_env is search("cyverse_INIT_REPL_DELAY = 1")
-
-
-- name: Test that cyverse_MAX_NUM_RE_PROCS set correctly in cyverse-env.re
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    irods_max_num_re_procs: 1
-    cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
-  tasks:
-    - name: Verify cyverse_MAX_NUM_RE_PROCS
-      ansible.builtin.assert:
-        that: cyverse_env is search("cyverse_MAX_NUM_RE_PROCS = 1")
 
 
 - name: Test Avra params are set correctly

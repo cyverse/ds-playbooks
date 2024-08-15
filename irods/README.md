@@ -63,6 +63,7 @@ Variable                                   | Required | Default                 
 `irods_re_host`                            | no       | `groups['irods_catalog'][0]`         |         | The FQDN or IP address of the iRODS rule engine host
 `irods_resource_hierarchies`               | no       | `[ { "name": "demoResc" } ]`         |         | The list of resource hierarchies that need to exist, _see below_
 `irods_rs_image`                           | no       | ds-irods-rs-onbuild                  |         | The name of the unpublished RS image to be generated
+`irods_s3_cred`                            | no       | []                                   |         | The list of S3 credential pairs that allow iRODS to access managed S3 buckets, _see below_
 `irods_server_control_plane_key`           | no       | TEMPORARY__32byte_ctrl_plane_key     |         | The server control plane key
 `irods_server_port_range_end`              | no       | 20199                                |         | The last address in the range of auxillary TCP and UDP ports
 `irods_server_port_range_start`            | no       | 20000                                |         | The first address in the range of auxillary TCP and UDP ports
@@ -138,6 +139,16 @@ Field      | Required | Default | Comments
 `context`  | no       |         | A context to attach to this resource
 `name`     | yes      |         | The name of the resource
 `type`     | no       |         | For a coordinating resource, this is the type of resource. For a storage resource this should not be provided.
+
+`irods_s3_cred` entry fields
+
+All of them are required.
+
+Field        | Comments
+-------------|---------
+`name`       | the unique name identifying the file name holding the credentials
+`access_key` | the key used to authorize access
+`secret_key` | the key used to authenticate the access key
 
 `irods_storage_resources` entry fields
 

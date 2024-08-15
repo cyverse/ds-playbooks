@@ -18,6 +18,10 @@
             LoadModule sed_module modules/mod_sed.so
           </IfModule>
 
+          <IfModule !rewrite_module>
+            LoadModule rewrite_module modules/mod_rewrite.so
+          </IfModule>
+
           <IfModule !unique_id_module>
             LoadModule unique_id_module modules/mod_unique_id.so
           </IfModule>
@@ -149,29 +153,26 @@
 
               {% if _webdav_access_limit %}
               QS_LocRequestLimit /dav {{ _webdav_access_limit }}
-
               {% endif -%}
 
               ErrorLog logs/https_error_log
               CustomLog logs/https_request_log {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %{SSL_PROTOCOL}x %{SSL_CIPHER}x %a \"%r\" %>s %L %{forensic-id}n"' }}
               LogLevel warn
 
-              BrowserMatch "MSIE [2-5]" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0
-
-              <If "%{HTTP:Range} == 'bytes=0-'">
-                # Remove the range header if requesting the whole file so that the response will
-                # still be cached.
-                RequestHeader unset Range
-              </If>
-              <Elseif "-n %{HTTP:Range}">
-                # To prevent davrods from crashing, tell it not to cache partial responses
-                # When varnish-cache is configured, this should be commented out for caching
-                # RequestHeader merge Cache-Control no-store
-              </Elseif>
+              RewriteEngine On
 
               RequestHeader edit Destination ^https: http: early
 
-              ProxyPass / http://127.0.0.1:{{ _webdav_varnish_service_port }}/ retry=0 timeout=300
+              <Proxy "http://127.0.0.1:{{ _webdav_varnish_service_port }}">
+                ProxySet retry=0 timeout=300
+              </Proxy>
+
+              RewriteCond %{REQUEST_METHOD} ^(GET|HEAD|PURGE)$
+              RewriteRule ^(.*)$ http://127.0.0.1:{{ _webdav_varnish_service_port }}$1 [P]
+
+              RewriteCond %{REQUEST_METHOD} !^(GET|HEAD|PURGE)$
+              RewriteRule ^(.*)$ http://127.0.0.1:80$1 [P]
+
               ProxyHTMLURLMap ^http: https: [R]
 
               Header edit Location ^http: https:
@@ -181,14 +182,6 @@
               CacheDisable /
 
               ExpiresActive On
-
-              <Files ~ "\.(cgi|shtml|phtml|php3?)$">
-                SSLOptions +StdEnvVars
-              </Files>
-
-              <Directory "/var/www/cgi-bin">
-                SSLOptions +StdEnvVars
-              </Directory>
             comment: >-
               This proxy handles TLS, corrects requests, enables caching, and anonymous access for
               XMLHttpRequests

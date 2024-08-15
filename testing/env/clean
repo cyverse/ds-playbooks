@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #
 # Usage:
 #  clean INC_FILE
@@ -31,7 +31,7 @@ main()
   while read -r repository rest
   do
     docker rmi "$repository"
-  done < <(docker images --filter reference="$ENV_NAME"_* | tail --lines +2)
+  done < <(docker images --filter reference="$ENV_NAME"-* | tail --lines +2)
 
   local bases
   readarray -t bases < <(docker images --quiet --filter reference=test-env-base)

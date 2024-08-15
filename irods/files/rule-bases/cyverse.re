@@ -8,6 +8,51 @@
 _cyverse_HOME = '/' ++ cyverse_ZONE ++ '/home'
 
 #
+# These are string manipulation functions
+#
+
+# Determines whether or not the string in the first argument ends with the
+# string in the second argument.
+#
+# Parameters:
+#  Str     the string being tested
+#  Suffix  the suffix being matched
+#
+cyverse_endsWith: string * string -> boolean
+cyverse_endsWith(*Str, *Suffix) =
+	if strlen(*Str) < strlen(*Suffix) then false
+	else if substr(*Str, strlen(*Str) - strlen(*Suffix), strlen(*Str)) != *Suffix then false
+	else true
+
+# Determines whether or not the string in the first argument starts with the
+# string in the second argument.
+#
+# Parameters:
+#  Str     the string being tested
+#  Prefix  the prefix to be matched
+#
+cyverse_startsWith: string * string -> boolean
+cyverse_startsWith(*Str, *Prefix) =
+	if strlen(*Str) < strlen(*Prefix) then false
+	else if substr(*Str, 0, strlen(*Prefix)) != *Prefix then false
+	else true
+
+# Removes a prefix from a string.
+#
+# Parameters:
+#  Orig      the string with the unwanted prefix
+#  Prefixes  the set of prefixes to potentially remove
+#
+cyverse_rmPrefix: string * list string -> string
+cyverse_rmPrefix(*Orig, *Prefixes) =
+	if size(*Prefixes) == 0 then *Orig
+	else
+		if cyverse_startsWith(*Orig, hd(*Prefixes))
+		then substr(*Orig, strlen(hd(*Prefixes)), strlen(*Orig))
+		else cyverse_rmPrefix(*Orig, tl(*Prefixes))
+
+
+#
 # These are the constants used by iRODS to identity the type of an entity.
 #
 

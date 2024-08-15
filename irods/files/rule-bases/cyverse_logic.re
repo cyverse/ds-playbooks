@@ -17,26 +17,6 @@ _cyverse_logic_contains(*Item, *List) =
 
 
 #
-# STRINGS
-#
-
-# Determines whether or not the string in the first argument starts with the
-# string in the second argument.
-_cyverse_logic_startsWith(*Str, *Prefix) =
-	if strlen(*Str) < strlen(*Prefix) then false
-	else if substr(*Str, 0, strlen(*Prefix)) != *Prefix then false
-	else true
-
-# Removes a prefix from a string.
-_cyverse_logic_rmPrefix(*Orig, *Prefixes) =
-	if size(*Prefixes) == 0 then *Orig
-	else
-		if _cyverse_logic_startsWith(*Orig, hd(*Prefixes))
-		then substr(*Orig, strlen(hd(*Prefixes)), strlen(*Orig))
-		else _cyverse_logic_rmPrefix(*Orig, tl(*Prefixes))
-
-
-#
 # ICAT IDS
 #
 
@@ -87,7 +67,7 @@ _cyverse_logic_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 	if size(*Candidates) == 0 then *Orig
 	else
 		let *candidate = hd(*Candidates) in
-		if _cyverse_logic_startsWith(*candidate, *Prefix)
+		if cyverse_startsWith(*candidate, *Prefix)
 		then substr(*candidate, 2, strlen(*candidate))
 		else _cyverse_logic_getNewAVUSetting(*Orig, *Prefix, tl(*Candidates))
 
@@ -517,7 +497,7 @@ _cyverse_logic_sendEntityRm(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 #
 
 # Indicates whether or not an AVU is protected
-_cyverse_logic_isAVUProtected(*Attr) = _cyverse_logic_startsWith(*Attr, 'ipc')
+_cyverse_logic_isAVUProtected(*Attr) = cyverse_startsWith(*Attr, 'ipc')
 
 # Verifies that an attribute can be modified. If it can't it fails and sends an
 # error message to the caller.
@@ -679,7 +659,7 @@ cyverse_logic_acPostProcForModifyAccessControl(*RecurseFlag, *Perm, *Username, *
 		_cyverse_logic_registerAction(*entityId, *me);
 
 		if (_cyverse_logic_isCurrentAction(*entityId, *me)) {
-			*lvl = _cyverse_logic_rmPrefix(*Perm, list('admin:'));
+			*lvl = cyverse_rmPrefix(*Perm, list('admin:'));
 			*type = cyverse_getEntityType(*Path);
 			*userZone = if *UserZone == '' then cyverse_ZONE else *UserZone;
 			*uuid = '';

@@ -1,3 +1,6 @@
 ---
-package_manager: apt
 ansible_python_interpreter: /usr/bin/python3
+
+package_manager: apt
+
+reboot_on_pkg_change: true

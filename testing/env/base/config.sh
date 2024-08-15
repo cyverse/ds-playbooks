@@ -65,10 +65,7 @@ install_centos_packages() {
 	local version="$1"
 
 	update_centos_repo
-
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
-
-	yum --assumeyes install yum-plugin-versionlock
 
 	yum --assumeyes install epel-release
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
@@ -86,7 +83,8 @@ install_centos_packages() {
 		python3-requests \
 		python3-virtualenv \
 		python3 \
-		sudo
+		sudo \
+		yum-plugin-versionlock
 }
 
 install_ubuntu_packages() {

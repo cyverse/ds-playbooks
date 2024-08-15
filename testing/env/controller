@@ -9,21 +9,15 @@
 #
 # Starts or stops all of the containers.
 
-set -e
+set -o errexit -o nounset -o pipefail
 
-
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-  ExecName=$(greadlink -f "$0")
-else
-  ExecName=$(readlink --canonicalize "$0")
-fi
+ExecName=$(readlink --canonicalize "$0")
 readonly ExecName
 
 
 main()
 {
-  local baseDir 
+  local baseDir
   baseDir=$(dirname "$ExecName")
 
   if [ "$#" -lt 1 ]
@@ -70,7 +64,7 @@ main()
     docker compose "${composeArgs[@]}"
   else
     docker-compose "${composeArgs[@]}"
-  fi 
+  fi
 }
 
 

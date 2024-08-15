@@ -117,22 +117,37 @@
         - /{{ _irods_zone_name }}/home/shared/commons_repo/curated
 
     - name: Start quota usage computation
-      ansible.builtin.command: >
-        irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
-          cyverse_housekeeping_rescheduleQuotaUsageUpdate null ruleExecOut
+      delegate_to: localhost
+      become: false
+      no_log: true
+      ansible.builtin.command:
+        cmd: >
+          irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
+            cyverse_housekeeping_rescheduleQuotaUsageUpdate null ruleExecOut
+        stdin: "{{ _irods_admin_password }}"
       register: results
       changed_when: results.stdout == 'scheduled quota usage updates'
 
     - name: Start storage free space determination
-      ansible.builtin.command: >
-        irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
-          cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination null ruleExecOut
+      delegate_to: localhost
+      become: false
+      no_log: true
+      ansible.builtin.command:
+        cmd: >
+          irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
+            cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination null ruleExecOut
+        stdin: "{{ _irods_admin_password }}"
       register: results
       changed_when: results.stdout == 'scheduled storage determination'
 
     - name: Start trash removal
-      ansible.builtin.command: >
-        irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
-          cyverse_housekeeping_rescheduleTrashRemoval null ruleExecOut
+      delegate_to: localhost
+      become: false
+      no_log: true
+      ansible.builtin.command:
+        cmd: >
+          irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
+            cyverse_housekeeping_rescheduleTrashRemoval null ruleExecOut
+        stdin: "{{ _irods_admin_password }}"
       register: results
       changed_when: results.stdout == 'scheduled trash removal'

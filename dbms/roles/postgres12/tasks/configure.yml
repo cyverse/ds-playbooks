@@ -35,6 +35,14 @@
     group: postgres
     mode: "0770"
 
+- name: Configure | ensure config dir exists
+  ansible.builtin.file:
+    state: directory
+    path: "{{ postgres12_conf_path }}/conf.d"
+    owner: postgres
+    group: postgres
+    mode: u+rx
+
 - name: Configure | template configs
   ansible.builtin.template:
     src: cyverse.conf.j2
@@ -48,6 +56,8 @@
 - name: Configure | ensure block in pg_hba.conf exists
   ansible.builtin.blockinfile:
     path: "{{ postgres12_conf_path }}/pg_hba.conf"
+    create: true
+    mode: u+r
     insertafter: "{{ postgres12_hba_insertafter }}"
     marker: "# {mark} postgres12 MANAGED BLOCK2"
     block: |

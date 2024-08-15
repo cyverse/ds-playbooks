@@ -19,6 +19,7 @@ This is a collection of  playbooks for maintaining the Proxy for the Data Store.
 
 Variable                       | Default                     | Comments
 ------------------------------ | --------------------------- | --------
+`proxy_restart_allowed`        | false                       | Whether or not HAProxy can be restarted
 `proxy_rsyslog_conf`           | /etc/rsyslog.d/haproxy.conf | the path to the rsyslog configuration file for HAProxy
 `proxy_stats_auth`             | null                        | an object providing the authentication credentials for the HAProxy stats web interface _see below_
 `proxy_stats_tls_crt`          | null                        | the absolute path to the TLS certificate chain used for securing the HAProxy stats web interface

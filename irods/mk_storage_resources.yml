@@ -15,8 +15,7 @@
 
     - name: Install python modules for irods_unixfilesystem_resource
       ansible.builtin.pip:
-        name: python-irodsclient
-        state: present
+        name: 'python-irodsclient<2.0.0'
 
 
 - name: Create storage resources

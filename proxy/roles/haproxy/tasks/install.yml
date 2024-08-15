@@ -1,7 +1,4 @@
 ---
-- name: Install | prepare if testing
-  ansible.builtin.import_tasks: _testing.yml
-
 - name: Install | determine os
   when: ansible_distribution is not defined
   ansible.builtin.setup:
@@ -13,14 +10,11 @@
   ansible.builtin.apt:
     update_cache: true
 
-- name: Install | install haproxy
+- name: Install | install packages
   ansible.builtin.package:
-    name: haproxy
-    state: present
-
-- name: Install | install socat
-  ansible.builtin.package:
-    name: socat
+    name:
+      - haproxy
+      - socat
     state: present
 
 - name: Install | ensure haproxy starts on reboot

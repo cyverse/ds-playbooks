@@ -1,6 +1,6 @@
 ---
 - name: Stop iRODS
-  import_playbook: stop_all.yml
+  ansible.builtin.import_playbook: stop_all.yml
   tags:
     - non_idempotent
 
@@ -152,6 +152,8 @@
     - name: Restart
       when: stop_all_result is changed
       ansible.builtin.include_tasks: tasks/restart_irods.yml
+      vars:
+        restart_op: always
       tags:
         - non_idempotent
         - skip_ansible_lint

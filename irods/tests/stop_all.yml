@@ -1,26 +1,33 @@
 ---
-- name: test stop_all
+- name: Test stop_all
   hosts: irods
-  become_user: irods
+  become: true
+  gather_facts: false
   tasks:
-    - name: check if svc acnt exists
-      shell: |
-        if id --user irods > /dev/null 2>&1; then
-          printf exists
-        else
-          printf missing
-        fi
-      register: idResult
+    - name: Check if svc acnt exists
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          if id --user irods > /dev/null 2>&1; then
+            printf exists
+          else
+            printf missing
+          fi
+      register: resp
       changed_when: false
 
-    - name: verify that all servers are down
+    - name: Verify that all servers are down
+      when: resp.stdout == 'exists'
       become: true
-      shell: |
-        if ! status="$(/var/lib/irods/irodsctl status)"; then
-          exit 1
-        fi
-        if ! echo "$status" | grep --quiet 'No iRODS servers running'; then
-          exit 1
-        fi
+      become_user: irods
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          if ! status="$(/var/lib/irods/irodsctl status)"; then
+            exit 1
+          fi
+          if ! echo "$status" | grep --quiet 'No iRODS servers running'; then
+            exit 1
+          fi
       changed_when: false
-      when: idResult.stdout == 'exists'

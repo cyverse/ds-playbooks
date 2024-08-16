@@ -148,7 +148,7 @@
 
 
 - name: Test iRODS configuration
-  import_playbook: cfg_irods.yml
+  ansible.builtin.import_playbook: irods_cfg.yml
 
 
 - name: Test start iRODS on catalog service providers

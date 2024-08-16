@@ -31,7 +31,7 @@
 
 
 - name: Test iRODS configuration
-  ansible.builtin.import_playbook: cfg_irods.yml
+  ansible.builtin.import_playbook: irods_cfg.yml
 
 
 - name: Test bootstrap iRODS start

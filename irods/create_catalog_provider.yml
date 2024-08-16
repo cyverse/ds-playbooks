@@ -179,7 +179,7 @@
 
 
 - name: Configure catalog service providers
-  ansible.builtin.import_playbook: cfg_irods.yml
+  ansible.builtin.import_playbook: irods_cfg.yml
 
 
 - name: Start iRODS on catalog service providers

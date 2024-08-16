@@ -1,9 +1,9 @@
 ---
-- name: test set up mail for sending alerts
+- name: Test set up mail for sending alerts
   hosts: all:!unmanaged_systems:!localhost
   tasks:
-    - name: test install packages
-      include_tasks: tasks/test_pkg_installed.yml
+    - name: Test install packages
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: sendmail
 

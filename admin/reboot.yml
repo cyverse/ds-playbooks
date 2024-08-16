@@ -4,7 +4,7 @@
   become: true
   tasks:
     - name: Reboot if allowed
-      when: _rebootable
+      when: _reboot_rebootable
       ansible.builtin.reboot:
       tags:
         - no_testing

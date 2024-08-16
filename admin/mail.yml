@@ -3,6 +3,12 @@
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
+    - name: Update package repository
+      when: ansible_distribution == 'Ubuntu'
+      ansible.builtin.apt:
+        update_cache: true
+      tags: non_idempotent
+
     - name: Install sendmail
       ansible.builtin.package:
         name: sendmail
@@ -27,7 +33,7 @@
             marker: dnl {mark} DS MANAGED BLOCK
             block: |
               FEATURE(masquerade_envelope)dnl
-              MASQUERADE_AS({{ _domain_name }})dnl
+              MASQUERADE_AS({{ _mail_domain_name }})dnl
               MASQUERADE_DOMAIN({{ ansible_fqdn }})dnl
 
         - name: Rebuild sendmail config

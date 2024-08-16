@@ -3,9 +3,9 @@
   hosts: all:!unmanaged_systems
   tasks:
     - name: Install key
-      when: not _proxied_ssh
+      when: not _connectivity_proxied_ssh
       ansible.posix.authorized_key:
         user: "{{ ansible_user_id }}"
         state: "{{ item.state | d('present') if item is mapping else 'present' }}"
         key: "{{ item.key if item is mapping else item }}"
-      with_items: "{{ _maintainer_keys }}"
+      with_items: "{{ _connectivity_maintainer_keys }}"

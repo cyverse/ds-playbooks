@@ -37,7 +37,7 @@
   gather_facts: false
   roles:
     - role: cyverse.ip
-      ip_link_mtu: "{{ _nic_mtu }}"
+      ip_link_mtu: "{{ _network_mtu }}"
 
 
 - name: Tune txqueuelen
@@ -46,7 +46,7 @@
   gather_facts: false
   roles:
     - role: cyverse.ip
-      ip_link_txqueuelen: "{{ _nic_txqueuelen }}"
+      ip_link_txqueuelen: "{{ _network_txqueuelen }}"
 
 
 - name: Tune TCP
@@ -58,5 +58,5 @@
       ansible.posix.sysctl:
         name: net.{{ item.name }}
         value: "{{ item.value }}"
-      with_items: "{{ _sysctl_net }}"
+      with_items: "{{ _network_sysctl }}"
       tags: no_testing

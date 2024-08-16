@@ -8,7 +8,7 @@
       ansible.builtin.package:
         name: dmidecode
         state: present
-        use: "{{ _package_manager }}"
+        use: "{{ _ansible_support_package_manager }}"
 
 
 - name: Install required packages for ansible

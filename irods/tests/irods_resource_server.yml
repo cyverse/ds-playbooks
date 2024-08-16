@@ -96,4 +96,4 @@
 
 
 - name: Test storage resource creation
-  ansible.builtin.import_playbook: mk_storage_resources.yml
+  ansible.builtin.import_playbook: irods_storage_resources.yml

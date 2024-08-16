@@ -78,4 +78,4 @@
 
 
 - name: Create storage resources
-  ansible.builtin.import_playbook: mk_storage_resources.yml
+  ansible.builtin.import_playbook: irods_storage_resources.yml

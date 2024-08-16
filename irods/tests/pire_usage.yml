@@ -1,46 +1,61 @@
 ---
-- import_playbook: mk_storage_resources.yml
+- name: Test make storage resources
+  ansible.builtin.import_playbook: irods_storage_resources.yml
 
 
-- name: test Configure iRODS for PIRE
+- name: Test Configure iRODS for PIRE
   hosts: irods_catalog
   become: true
   become_user: irods
   run_once: true
   tasks:
-    - name: test make PIRE resource hierarchy
-      shell: |
-        printf -v expHier 'pireRes:passthru\n└── pire:unixfilesystem'
-        actHier="$(ilsresc pireRes)"
-        [[ "$actHier" == "$expHier" ]]
+    - name: Test make PIRE resource hierarchy
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          printf -v expHier 'pireRes:passthru\n└── pire:unixfilesystem'
+          actHier="$(ilsresc pireRes)"
+          [[ "$actHier" == "$expHier" ]]
       changed_when: false
 
-    - name: verify that pire group exists
-      shell: |
-        set -o pipefail
-        iadmin lg | grep --quiet --regexp='^pire$'
+    - name: Verify that pire group exists
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          iadmin lg | grep --quiet --regexp='^pire$'
       changed_when: false
 
-    - name: test create public collection
-      shell: ils /testing/home/shared/eht &> /dev/null
+    - name: Test create public collection
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/home/shared/eht &> /dev/null
       changed_when: false
 
-    - name: test create project collection
-      shell: ils /testing/home/shared/bhpire &> /dev/null
+    - name: Test create project collection
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/home/shared/bhpire &> /dev/null
       changed_when: false
 
-    - name: verify PIRE manager is in PIRE group
-      shell: |
-        set -o pipefail
-        iadmin lg pire | grep --quiet --regexp='^pire_mgr#testing$'
+    - name: Verify PIRE manager is in PIRE group
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          iadmin lg pire | grep --quiet --regexp='^pire_mgr#testing$'
       changed_when: false
 
-    - name: verify project collection exists
-      shell: ils /testing/home/shared/bhpire &> /dev/null
+    - name: Verify project collection exists
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/home/shared/bhpire &> /dev/null
       changed_when: false
 
-    - name: test give PIRE manager own permission on project collection
-      shell: |
-        set -o pipefail
-        ils -A /testing/home/shared/bhpire | sed --quiet 2p | grep --quiet pire_mgr#testing:own
+    - name: Test give PIRE manager own permission on project collection
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A /testing/home/shared/bhpire | sed --quiet 2p | grep --quiet pire_mgr#testing:own
       changed_when: false

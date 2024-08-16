@@ -1,5 +1,5 @@
 ---
-- name: Test mk_storage_resources
+- name: Test create storage resources
   hosts: irods_resource
   become: true
   become_user: irods

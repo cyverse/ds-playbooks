@@ -5,7 +5,7 @@
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - name: Create coordinate resource
+    - name: Create coordinating resource
       irods_resource_hierarchy:
         hierarchy: "{{ item }}"
       with_items: "{{ _irods_resource_hierarchies }}"

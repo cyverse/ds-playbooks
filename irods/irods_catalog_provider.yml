@@ -33,7 +33,7 @@
 
 
 - name: Provision catalog service provider
-  ansible.builtin.import_playbook: provision.yml
+  ansible.builtin.import_playbook: irods_provision.yml
 
 
 - name: Provision additional for catalog service providers

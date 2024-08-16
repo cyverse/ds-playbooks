@@ -1,6 +1,6 @@
 ---
 - name: Provision
-  ansible.builtin.import_playbook: provision.yml
+  ansible.builtin.import_playbook: irods_provision.yml
 
 - name: Resource server specific provisioning
   hosts: irods_resource:!unmanaged_systems

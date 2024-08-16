@@ -22,7 +22,7 @@
 
 
 - name: Test provisioning
-  ansible.builtin.import_playbook: provision.yml
+  ansible.builtin.import_playbook: irods_provision.yml
 
 
 - name: Test provision additional for catalog service providers

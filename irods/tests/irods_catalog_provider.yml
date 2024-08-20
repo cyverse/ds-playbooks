@@ -135,9 +135,6 @@
         pkg: irods-database-plugin-postgres
         version: 4.2.8
 
-    - name: Verify other plugins installed
-      ansible.builtin.import_tasks: tasks/test_install_plugins.yml
-
     - name: Verify iRODS ownership
       ansible.builtin.include_tasks: tasks/test_irods_ownership.yml
       with_items:

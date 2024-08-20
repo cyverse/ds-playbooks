@@ -1,6 +1,6 @@
 ---
 - name: Stop iRODS
-  ansible.builtin.import_playbook: stop_all.yml
+  ansible.builtin.import_playbook: irods_stop_all.yml
   tags:
     - non_idempotent
 

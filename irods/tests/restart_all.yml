@@ -1,7 +1,0 @@
----
-- name: test restart_all
-  hosts: irods
-  become: true
-  become_user: irods
-  tasks:
-    - import_tasks: tasks/test_irods_running.yml

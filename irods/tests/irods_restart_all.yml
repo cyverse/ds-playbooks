@@ -1,0 +1,8 @@
+---
+- name: Test restart iRODS service
+  hosts: irods
+  become: true
+  become_user: irods
+  tasks:
+    - name: Test iRODS running
+      ansible.builtin.import_tasks: tasks/test_irods_running.yml

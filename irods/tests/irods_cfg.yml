@@ -1,6 +1,6 @@
 ---
 - name: Test rule template expansion
-  ansible.builtin.import_playbook: rule_templates.yml
+  ansible.builtin.import_playbook: irods_rule_templates.yml
 
 
 - name: Test common file deposition

@@ -145,4 +145,4 @@
 
 
 - name: Update /etc/hosts
-  ansible.builtin.import_playbook: update_hosts.yml
+  ansible.builtin.import_playbook: irods_hosts.yml

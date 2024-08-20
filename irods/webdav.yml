@@ -480,7 +480,7 @@
         - Restart varnish
         - Restart varnishncsa
 
-    - name: Configure selinux for varnish
+    - name: Configure selinux for apache
       when: ansible_selinux.status == 'enabled'
       community.general.selinux_permissive:
         domain: httpd_t

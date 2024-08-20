@@ -443,19 +443,12 @@
       failed_when: >-
         not resp.stat.exists or not resp.stat.rusr or not resp.stat.rgrp or not resp.stat.roth
 
-    - name: Test configure selinux for varnish
-      ansible.builtin.debug:
-        msg: TODO implement
-
     - name: Test configure apache log rotation
       ansible.builtin.stat:
         path: /etc/logrotate.d/httpd
-      register: response
-      failed_when: not response.stat.exists
-
-    - name: Test apache log rotation file has correct permissions
-      ansible.builtin.debug:
-        msg: TODO implement
+      register: resp
+      failed_when: >-
+        not resp.stat.exists or not resp.stat.rusr or not resp.stat.rgrp or not resp.stat.roth
 
     - name: Test create apache systemd service dependencies directory
       ansible.builtin.stat:
@@ -522,5 +515,5 @@
       failed_when: response.stat.lnk_source != '/usr/lib/systemd/system/purgeman.service'
 
     - name: Test open HTTP connection in firewall
-      ansible.builtin.script: scripts/check-apache-iptables.awk /etc/sysconfig/iptables
+      ansible.builtin.script: scripts/webdav_check_iptables.awk /etc/sysconfig/iptables
       changed_when: false

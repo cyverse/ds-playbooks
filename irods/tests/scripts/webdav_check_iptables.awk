@@ -30,7 +30,7 @@ BEGIN {
   }
 
   if (newTable == "filter" && state != "BEFORE BLOCK") {
-    print "configuration block outside of filter tabke definition" > "/dev/stderr";
+    print "configuration block outside of filter table definition" > "/dev/stderr";
     exit 1;
   }
 

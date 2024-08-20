@@ -1,0 +1,8 @@
+---
+- name: Update resource free space
+  hosts: irods_resource
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tasks:
+    - name: Set resource free space
+      ansible.builtin.import_tasks: tasks/set_resc_free_space.yml

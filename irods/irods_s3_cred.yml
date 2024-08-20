@@ -21,3 +21,5 @@
         group: "{{ _irods_service_group_name }}"
         mode: u=r
       with_items: "{{ _irods_s3_cred }}"
+      loop_control:
+        label: "{{ item.name }}"

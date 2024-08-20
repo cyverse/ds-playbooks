@@ -153,5 +153,4 @@ s/#?PermitEmptyPasswords no/PermitEmptyPasswords yes/
 EOF
 }
 
-
 main "$@"

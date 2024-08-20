@@ -3,60 +3,80 @@ FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 
 ### Update system packages
-RUN apt-get --quiet --yes update
-RUN apt-get --quiet --yes upgrade
+RUN <<'EOF'
+	apt-get update
+	apt-get --yes upgrade
+	apt-get install --yes \
+		dmidecode gpg-agent python-is-python3 python3 python3-pip openssh-client rpm wget
 
-RUN apt-get install --quiet --yes \
-  dmidecode gpg-agent python-is-python3 python3 python3-pip openssh-client rpm wget
-
-# NB: ansible-core==2.17.0 has a bug in it that prevents ansible.builtin.wait_for_connection from
-# detecting CentOS 7 and Ubuntu 18.04 connection readiness.
-RUN python3 -m pip --disable-pip-version-check --quiet install \
-  'ansible-core<2.17' dnspython jinja2 netaddr 'python-irodsclient<2' requests urllib3 wheel
+	# NB: ansible-core==2.17.0 has a bug in it that prevents ansible.builtin.wait_for_connection from
+	# detecting CentOS 7 and Ubuntu 18.04 connection readiness.
+	python3 -m pip --disable-pip-version-check --quiet install \
+		'ansible-core<2.17' dnspython jinja2 netaddr 'python-irodsclient<2' requests urllib3 wheel
 
 ### Install inspection support
-RUN apt-get install --quiet --yes ca-certificates
+	apt-get install --yes ca-certificates
 
-RUN wget --quiet --directory-prefix=/etc/apt/trusted.gpg.d \
-  https://packages.irods.org/irods-signing-key.asc
-RUN echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" \
-  > /etc/apt/sources.list.d/renci-irods.list
-RUN apt-get --quiet --yes update
+	wget --quiet --directory-prefix=/etc/apt/trusted.gpg.d \
+		https://packages.irods.org/irods-signing-key.asc
+
+	echo 'deb [arch=amd64] https://packages.irods.org/apt/ bionic main' \
+		> /etc/apt/sources.list.d/renci-irods.list
+
+	apt-get update
+EOF
+
 COPY apt-preferences-irods /etc/apt/preferences.d/irods
 
-RUN echo "deb http://security.ubuntu.com/ubuntu focal-security main" \
-  > /etc/apt/sources.list.d/focal-security.list
-RUN apt-get --quiet --yes update
-RUN apt-get --quiet --yes install libssl1.1
+RUN <<'EOF'
+	echo deb http://security.ubuntu.com/ubuntu focal-security main \
+		> /etc/apt/sources.list.d/focal-security.list
 
-RUN mkdir irods-runtime
+	apt-get update
+	apt-get --yes install libssl1.1
+
+	mkdir irods-runtime
+EOF
+
 WORKDIR /irods-runtime
-RUN wget \
-  https://packages.irods.org/apt/pool/bionic/main/i/irods-runtime/irods-runtime_4.2.8_amd64.deb
-RUN ar x irods-runtime_4.2.8_amd64.deb
-RUN tar xzf control.tar.gz
-RUN sed --in-place '/^Depends:/s/ libssl1.0.0,/ libssl1.1,/' control
-RUN sed --in-place '/^Depends:/s/ python/ python3/g' control
-RUN tar c control md5sums | gzip -c > control.tar.gz
-RUN ar rcs irods-runtime_hack.deb debian-binary control.tar.gz data.tar.gz
-RUN apt-get install --quiet --yes ./irods-runtime_hack.deb
+
+RUN <<'EOF'
+	wget \
+		https://packages.irods.org/apt/pool/bionic/main/i/irods-runtime/irods-runtime_4.2.8_amd64.deb
+
+	ar x irods-runtime_4.2.8_amd64.deb
+	tar xzf control.tar.gz
+	sed --in-place '/^Depends:/s/ libssl1.0.0,/ libssl1.1,/' control
+	sed --in-place '/^Depends:/s/ python/ python3/g' control
+	tar c control md5sums | gzip -c > control.tar.gz
+	ar rcs irods-runtime_hack.deb debian-binary control.tar.gz data.tar.gz
+	apt-get install --yes ./irods-runtime_hack.deb
+EOF
+
 WORKDIR /
 
 RUN mkdir irods-icommands
 WORKDIR /irods-icommands
-RUN wget \
-  https://packages.irods.org/apt/pool/bionic/main/i/irods-icommands/irods-icommands_4.2.8_amd64.deb
-RUN ar x irods-icommands_4.2.8_amd64.deb
-RUN tar xzf control.tar.gz
-RUN sed --in-place '/^Depends:/s/ libssl1.0.0$/ libssl1.1/' control
-RUN tar c control md5sums | gzip -c > control.tar.gz
-RUN ar rcs irods-icommands_hack.deb debian-binary control.tar.gz data.tar.gz
-RUN apt-get install --quiet --yes ./irods-icommands_hack.deb
+
+RUN <<'EOF'
+	wget \
+		https://packages.irods.org/apt/pool/bionic/main/i/irods-icommands/irods-icommands_4.2.8_amd64.deb
+
+	ar x irods-icommands_4.2.8_amd64.deb
+	tar xzf control.tar.gz
+	sed --in-place '/^Depends:/s/ libssl1.0.0$/ libssl1.1/' control
+	tar c control md5sums | gzip -c > control.tar.gz
+	ar rcs irods-icommands_hack.deb debian-binary control.tar.gz data.tar.gz
+	apt-get install --yes ./irods-icommands_hack.deb
+EOF
+
 WORKDIR /
 
-RUN apt-get install --quiet --yes postgresql
+RUN <<'EOF'
+	apt-get install --yes postgresql
 
-RUN mkdir /root/.ssh
+	mkdir /root/.ssh
+EOF
 
 COPY ssh-config /root/.ssh/config
 RUN chmod --recursive go-rwx /root/.ssh
@@ -74,8 +94,10 @@ ENV PGUSER=irods
 
 # XXX - Due to a bug in iCommands 4.2.8, irods_environment.json needs to exist
 #       prior to `iinit` execution.
-RUN mkdir /root/.irods
-RUN echo '{}' > /root/.irods/irods_environment.json
+RUN <<'EOF'
+	mkdir /root/.irods
+	echo '{}' > /root/.irods/irods_environment.json
+EOF
 # XXX - ^^^
 
 ### Configure testing infrastructure

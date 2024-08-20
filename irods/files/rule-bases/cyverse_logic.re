@@ -71,18 +71,6 @@ _cyverse_logic_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 		then substr(*candidate, 2, strlen(*candidate))
 		else _cyverse_logic_getNewAVUSetting(*Orig, *Prefix, tl(*Candidates))
 
-# Gets the original unit for an AVU modification. The argument that is used for
-# the original unit in the AVU modification may contain the original unit or, if
-# the unit was empty in the original AVU then this argument may contain the
-# first of the new AVU settings instead. We can distinguish this case from the
-# others by the presence of a prefix in the value. The prefix is always a single
-# character followed by a colon.
-#
-_cyverse_logic_getOrigUnit(*Candidate) =
-	if strlen(*Candidate) < 2 then *Candidate
-	else if substr(*Candidate, 1, 2) != ':' then *Candidate
-	else ''
-
 
 #
 # CHECKSUMS
@@ -580,10 +568,11 @@ _cyverse_logic_cpUnprotectedUserAVUs(*Username, *TargetType, *TargetName) {
 	*nameParts = split(*Username, '#');
 	*query =
 		if size(*nameParts) == 2 then
+		   # A zone was provided.
 			let *name = elem(*nameParts, 0) in
 			let *zone = elem(*nameParts, 1) in
 			SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
-			WHERE USER_NAME == *name AND ZONE_NAME == *zone
+			WHERE USER_NAME == *name AND USER_ZONE == *zone
 		else
 			SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
 			WHERE USER_NAME == *Username;
@@ -670,7 +659,7 @@ cyverse_logic_acPostProcForModifyAccessControl(*RecurseFlag, *Perm, *Username, *
 		_cyverse_logic_registerAction(*entityId, *me);
 
 		if (_cyverse_logic_isCurrentAction(*entityId, *me)) {
-			*lvl = cyverse_removePrefix(*Perm, list('admin:'));
+			*lvl = cyverse_rmPrefix(*Perm, list('admin:'));
 			*type = cyverse_getEntityType(*Path);
 			*userZone = if *UserZone == '' then cyverse_ZONE else *UserZone;
 			*uuid = '';
@@ -725,33 +714,32 @@ cyverse_logic_acPreProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *Att
 #  EntityName  (unused)
 #  Attr        (string) the attribute name before modification
 #  Val         (string) the attribute value before modification
-#  UnitOrNew1  (string) if a attribute has a unit before modification, this
-#              parameter holds that unit, otherwise, it holds an update to the
-#              name, value, or unit prefixed by 'n:', 'v:', or 'u:',
-#              respectively
+#  Unit        (string) the attribute unit before modification
+#  New1        (string) holds an update to the name, value, or unit prefixed by
+#              'n:', 'v:', or 'u:', respectively
 #  New2        (string) either empty or holds an update to the name, value, or
 #              unit prefixed by 'n:', 'v:', or 'u:', respectively
 #  New3        (string) either empty or holds an update to the name, value, or
-#              unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  New4        (string) either empty or holds an update to the name, value, or
 #              unit prefixed by 'n:', 'v:', or 'u:', respectively
 #
 # Session Variables:
 #  userNameClient
 #  rodsZoneClient
 #
+# XXX: Due to a bug in iRODS 4.2.8, when a unitless AVU is modified to have a new attribute name,
+#      value, and unit in a single call, the new unit is not passed in.
+#
 cyverse_logic_acPreProcForModifyAVUMetadata(
-	*Opt, *EntityType, *EntityName, *Attr, *Val, *UnitOrNew1, *New2, *New3, *New4
+	*Opt, *EntityType, *EntityName, *Attr, *Val, *Unit, *New1, *New2, *New3
 ) {
-	*newArgs = list(*UnitOrNew1, *New2, *New3, *New4);
+	*newArgs = list(*New1, *New2, *New3);
 
-	# Determine the original unit and the new AVU settings.
-	*origUnit = _cyverse_logic_getOrigUnit(*UnitOrNew1);
+	# Determine the new AVU settings.
 	*newAttr = _cyverse_logic_getNewAVUSetting(*Attr, 'n:', *newArgs);
 	*newVal = _cyverse_logic_getNewAVUSetting(*Val, 'v:', *newArgs);
-	*newUnit = _cyverse_logic_getNewAVUSetting(*origUnit, 'u:', *newArgs);
+	*newUnit = _cyverse_logic_getNewAVUSetting(*Unit, 'u:', *newArgs);
 
-	_cyverse_logic_ensureAVUEditable($userNameClient, $rodsZoneClient, *Attr, *Val, *origUnit);
+	_cyverse_logic_ensureAVUEditable($userNameClient, $rodsZoneClient, *Attr, *Val, *Unit);
 	_cyverse_logic_ensureAVUEditable($userNameClient, $rodsZoneClient, *newAttr, *newVal, *newUnit);
 }
 
@@ -775,7 +763,7 @@ cyverse_logic_acPreProcForModifyAVUMetadata(
 #  rodsZoneClient
 #
 cyverse_logic_acPreProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) {
-	if (!canModProtectedAVU($userNameClient, $rodsZoneClient)) {
+	if (!_cyverse_logic_isAdm($userNameClient, $rodsZoneClient)) {
 		if (cyverse_isColl(*SrcType)) {
 			_cyverse_logic_cpUnprotectedCollAVUs(*SrcName, *TgtType, *TgtName);
 		} else if (cyverse_isDataObj(*SrcType)) {
@@ -812,7 +800,7 @@ cyverse_logic_acPreProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, 
 #  rodsZoneClient
 #
 cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *Attr, *Val, *Unit) {
-	if (*Attr != _cyverse_logic_UUID_ATTR) {
+	if (cyverse_isFSType(*EntityType) && *Attr != _cyverse_logic_UUID_ATTR) {
 		if (_cyverse_logic_contains(*Opt, list('add', 'adda', 'rm', 'set'))) {
 			*uuid = '';
 
@@ -847,32 +835,32 @@ cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *At
 #              an absolute path for a collection or data object
 #  Attr        (string) the attribute name before modification
 #  Val         (string) the attribute value before modification
-#  UnitOrNew1  (string) if a attribute has a unit before modification, this
-#              parameter holds that unit, otherwise, it holds the updated name,
-#              value, or unit prefixed by 'n:', 'v:', or 'u:', respectively
+#  Unit        (string) the attribute unit before modification
+#  New1        (string) holds the updated name, value, or unit prefixed by 'n:',
+#              'v:', or 'u:', respectively
 #  New2        (string) either empty or holds the updated name, value, or unit
 #              prefixed by 'n:', 'v:', or 'u:', respectively
 #  New3        (string) either empty or holds the updated name, value, or unit
-#              prefixed by 'n:', 'v:', or 'u:', respectively
-#  New4        (string) either empty or holds the updated name, value, or unit
 #              prefixed by 'n:', 'v:', or 'u:', respectively
 #
 # Session Variables:
 #  userNameClient
 #  rodsZoneClient
 #
+# XXX: Due to a bug in iRODS 4.2.8, when a unitless AVU is modified to have a new attribute name,
+#      value, and unit in a single call, the new unit is not passed in.
+#
 cyverse_logic_acPostProcForModifyAVUMetadata(
-	*Opt, *EntityType, *EntityName, *Attr, *Val, *UnitOrNew1, *New2, *New3, *New4
+	*Opt, *EntityType, *EntityName, *Attr, *Val, *Unit, *New1, *New2, *New3
 ) {
-	*newArgs = list(*UnitOrNew1, *New2, *New3, *New4);
+	*newArgs = list(*New1, *New2, *New3);
 	*uuid = '';
 	_cyverse_logic_ensureUUID(*EntityType, *EntityName, $userNameClient, $rodsZoneClient, *uuid);
 
-	# Determine the original unit and the new AVU settings.
-	*origUnit = _cyverse_logic_getOrigUnit(*UnitOrNew1);
+	# Determine the new AVU settings.
 	*newAttr = _cyverse_logic_getNewAVUSetting(*Attr, 'n:', *newArgs);
 	*newVal = _cyverse_logic_getNewAVUSetting(*Val, 'v:', *newArgs);
-	*newUnit = _cyverse_logic_getNewAVUSetting(*origUnit, 'u:', *newArgs);
+	*newUnit = _cyverse_logic_getNewAVUSetting(*Unit, 'u:', *newArgs);
 
 	# Send AVU modified message.
 	_cyverse_logic_sendAVUMod(
@@ -880,7 +868,7 @@ cyverse_logic_acPostProcForModifyAVUMetadata(
 		*uuid,
 		*Attr,
 		*Val,
-		*origUnit,
+		*Unit,
 		*newAttr,
 		*newVal,
 		*newUnit,
@@ -1006,6 +994,10 @@ cyverse_logic_acPostProcForCollCreate {
 #               collection being deleted
 #  CollName     (string) the name of collection being deleted
 #
+# Session Variables:
+#  rodsZoneClient
+#  userNameClient
+#
 cyverse_logic_acDeleteCollByAdmin(*ParCollPath, *CollName) {
 	*path = *ParCollPath ++ '/' ++ *CollName;
 	*uuid = _cyverse_logic_getCollUUID(*path);
@@ -1013,6 +1005,21 @@ cyverse_logic_acDeleteCollByAdmin(*ParCollPath, *CollName) {
 	if (*uuid != '') {
 		_cyverse_logic_sendEntityRm(cyverse_COLL, *uuid, *path, $userNameClient, $rodsZoneClient);
 	}
+}
+
+# This rule pushes a collection.rm message into the irods exchange.
+#
+# Parameters:
+#  ParCollPath  (string) the absolute path to the parent collection of the
+#               collection being deleted
+#  CollName     (string) the name of collection being deleted
+#
+# Session Variables:
+#  rodsZoneClient
+#  userNameClient
+#
+cyverse_logic_acDeleteCollByAdminIfPresent(*ParCollPath, *CollName) {
+	cyverse_logic_acDeleteCollByAdmin(*ParCollPath, *CollName);
 }
 
 # This rule stores the name UUID of a collection that is about to be deleted for
@@ -1151,6 +1158,11 @@ cyverse_logic_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 
 # Use default threading setting
 #
+# Session Variables:
+#  dataSize
+#  numThreads
+#  windowSize
+#
 cyverse_logic_acSetNumThreads {
 	msiSetNumThreads('default', 'default', 'default');
 }
@@ -1173,6 +1185,9 @@ cyverse_logic_acSetReServerNumProc {
 }
 
 # Create a user for a Data Store service
+#
+# Session Variables:
+#  authFlag
 #
 cyverse_logic_acCreateUser {
 	msiCreateUser ::: msiRollback;
@@ -1303,7 +1318,7 @@ cyverse_logic_dataObjCreated(*Username, *Zone, *DataObjInfo, *Step) {
 #  Username     (string) the iRODS account that modified the data object
 #  Zone         (string) the zone of the username who modified the data object
 #  DataObjInfo  (`KeyValuePair_PI`) the DATA_OBJ_INFO map for a data object
-#               metadata modification event
+#               modification event
 #
 cyverse_logic_dataObjMod(*Username, *Zone, *DataObjInfo) {
 	*me = 'cyverse_logic_dataObjMod';

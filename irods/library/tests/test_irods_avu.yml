@@ -7,9 +7,9 @@
         executable: /bin/bash
         cmd: |
           touch /tmp/object
-          iinit rods
+          iinit <<< password
           iadmin mkuser tester rodsuser
-          iadmin moduser tester password password
+          iadmin moduser tester password testit
           iput -f -R ingestRes /tmp/object add-object
           iput -f -R ingestRes /tmp/object set-object
           imeta add -d set-object set-a1 set-v1 set-u
@@ -19,10 +19,10 @@
           imeta add -R ingestRes rm-a1 rm-v1 rm-u
           imeta add -R ingestRes rm-a1 rm-v2
           imeta add -R ingestRes rm-a2 rm-v1
-      args:
-        warn: false
+      changed_when: true
       tags:
         - non_idempotent
+
 
 - name: Test irods_avu
   hosts: dstesting-provider_configured-1.dstesting_default
@@ -35,7 +35,7 @@
         value: v1
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
 
     - name: Explicit add explicit unitless <a1,v1> to data object
       irods_avu:
@@ -48,7 +48,7 @@
         port: 1247
         zone: testing
         username: rods
-        password: rods
+        password: password
         state: present
       register: results
       failed_when: results['changed'] or results['failed']
@@ -61,7 +61,7 @@
         entity_name: /testing/home/rods/add-object
         host: localhost
         zone: testing
-        password: rods
+        password: password
 
     - name: Add <a1,v2> to data object
       irods_avu:
@@ -69,7 +69,7 @@
         value: v2
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
 
     - name: Add <a2,v1> to data object
       irods_avu:
@@ -77,7 +77,7 @@
         value: v1
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
 
     - name: Set new <set-a3,set-v1> to data object
       irods_avu:
@@ -85,7 +85,7 @@
         value: set-v1
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
         state: set
 
     - name: Set existing <set-a1,set-v2> to data object
@@ -94,7 +94,7 @@
         value: set-v2
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
         state: set
 
     - name: Verify only one AVU with attribute set-a1
@@ -116,7 +116,7 @@
         units: set-u
         entity_name: /testing/home/rods/set-object
         zone: testing
-        password: rods
+        password: password
         state: set
 
     - name: Set existing <set-a2,set-v2,set-u> to data object
@@ -126,7 +126,7 @@
         units: set-u
         entity_name: /testing/home/rods/set-object
         zone: testing
-        password: rods
+        password: password
         state: set
 
     - name: Verify only one AVU with attribute set-a2
@@ -149,7 +149,7 @@
         entity_type: resource
         entity_name: ingestRes
         zone: testing
-        password: rods
+        password: password
         state: absent
 
     - name: Remove <rm-a,rm-v1,rm-u> from resource
@@ -160,7 +160,7 @@
         entity_type: resource
         entity_name: ingestRes
         zone: testing
-        password: rods
+        password: password
         state: absent
 
     - name: Remove <rm-a1,rm-v2> from resource
@@ -170,7 +170,7 @@
         entity_type: resource
         entity_name: ingestRes
         zone: testing
-        password: rods
+        password: password
         state: absent
 
     - name: Remove <rm-a1,rm-v2> from resource
@@ -180,7 +180,7 @@
         entity_type: resource
         entity_name: ingestRes
         zone: testing
-        password: rods
+        password: password
         state: absent
 
     - name: Remove <rm-a2,rm-v1> from resource
@@ -190,7 +190,7 @@
         entity_type: resource
         entity_name: ingestRes
         zone: testing
-        password: rods
+        password: password
         state: absent
 
     - name: Verify empty host fails
@@ -211,7 +211,7 @@
         entity_name: /testing/home/rods/add-object
         host: buz
         zone: testing
-        password: rods
+        password: password
       register: result
       failed_when: not result.failed or result.msg is not search('Could not connect')
 
@@ -223,7 +223,7 @@
         port: null
         zone: testing
         username: rods
-        password: rods
+        password: password
       register: result
       failed_when: not result.failed or result.msg is not search('port')
 
@@ -235,7 +235,7 @@
         port: 124
         zone: testing
         username: rods
-        password: rods
+        password: password
       register: result
       failed_when: not result.failed or result.msg is not search('Could not connect')
 
@@ -244,9 +244,9 @@
         attribute: a1
         value: v1
         entity_name: /testing/home/rods/add-object
-        zone: null
+        zone: unknown
         username: rods
-        password: rods
+        password: password
       register: result
       failed_when: not result.failed or result.msg is not search('cannot be authenticated')
 
@@ -256,8 +256,8 @@
         value: v1
         entity_name: /testing/home/rods/add-object
         zone: testing
-        username: null
-        password: rods
+        username: unknown
+        password: testit
       register: result
       failed_when: not result.failed or result.msg is not search('cannot be authenticated')
 
@@ -268,7 +268,7 @@
         entity_name: /testing/home/rods/add-object
         zone: testing
         username: tester
-        password: password
+        password: testit
       register: result
       failed_when: not result.failed or result.msg is not search('rodsadmin')
 
@@ -284,20 +284,20 @@
 
     - name: Verify adding <'',v1> to data object fails
       irods_avu:
-        attribute: null
+        attribute: ''
         value: v1
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
       register: result
       failed_when: not result.failed or result.msg is not search('attribute')
 
     - name: Verify adding <a1,''> to data object fails
       irods_avu:
         attribute: a1
-        value: null
+        value: ''
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
       register: result
       failed_when: not result.failed or result.msg is not search('value')

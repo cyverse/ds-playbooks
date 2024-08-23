@@ -1,4 +1,22 @@
 ---
+- name: Test up-to-date authentication file
+  hosts: irods_catalog
+  become: true
+  become_user: irods
+  tasks:
+    - name: Set password
+      irods_clerver_auth:
+        password: password
+      register: resp
+      failed_when: resp is changed
+
+    - name: Verify that clerver is authenticated
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils < /dev/null
+      changed_when: false
+
+
 - name: Test irods_clerver_auth module
   hosts: localhost
   gather_facts: false
@@ -8,9 +26,5 @@
         msg: TODO implement
 
     - name: Test out-of-date custom authentication file on remote server
-      ansible.builtin.debug:
-        msg: TODO implement
-
-    - name: Test up-to-date authentication file
       ansible.builtin.debug:
         msg: TODO implement

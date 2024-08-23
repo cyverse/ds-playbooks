@@ -12,7 +12,7 @@
   changed_when: false
 
 - name: Stop iRODS | stop server
-  become: "{{ _become_svc_acnt }}"
+  become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   irods_ctl:
     state: stopped

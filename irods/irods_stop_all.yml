@@ -4,7 +4,7 @@
 
 - name: Stop all | stop iRODS catalog consumers
   hosts: irods_resource:!irods_catalog
-  become: "{{ _become_svc_acnt }}"
+  become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
     - name: Stop
@@ -15,7 +15,7 @@
 
 - name: Stop all | stop iRODS catalog providers
   hosts: irods_catalog
-  become: "{{ _become_svc_acnt }}"
+  become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
     - name: Stop

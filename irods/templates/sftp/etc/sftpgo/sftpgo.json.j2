@@ -218,7 +218,7 @@
     "track_quota": 2,
     "delayed_quota_update": 0,
     "pool_size": 0,
-    "users_base_dir": "{{ _sftpgo_vault_dir }}/data",
+    "users_base_dir": "{{ _sftp_vault_dir }}/data",
     "actions": {
       "execute_on": [],
       "execute_for": [],
@@ -255,12 +255,12 @@
     "create_default_admin": true,
     "naming_rules": 0,
     "is_shared": 0,
-    "backups_path": "{{ _sftpgo_vault_dir }}/backups"
+    "backups_path": "{{ _sftp_vault_dir }}/backups"
   },
   "httpd": {
     "bindings": [
       {
-        "port": {{ _sftpgo_admin_ui_port }},
+        "port": {{ _sftp_admin_ui_port }},
         "address": "",
         "enable_web_admin": true,
         "enable_web_client": true,
@@ -395,19 +395,19 @@
         "path": "/usr/bin/sftpgo-auth-irods",
         "timeout": 30,
         "env": [
-          "IRODS_PROXY_USER={{ _sftpgo_irods_proxy_username }}",
-          "IRODS_PROXY_PASSWORD={{ _sftpgo_irods_proxy_password }}",
-          "IRODS_HOST={{ _canonical_hostname }}",
+          "IRODS_PROXY_USER={{ _sftp_irods_proxy_username }}",
+          "IRODS_PROXY_PASSWORD={{ _sftp_irods_proxy_password }}",
+          "IRODS_HOST={{ _irods_canonical_hostname }}",
           "IRODS_PORT={{ _irods_zone_port }}",
           "IRODS_ZONE={{ _irods_zone_name }}",
-          "IRODS_AUTH_SCHEME={{ _sftpgo_irods_auth_scheme }}",
-          "IRODS_SSL_CA_CERT_PATH={{ _sftpgo_irods_ssl_ca_cert_path }}",
-          "IRODS_SSL_ALGORITHM={{ _sftpgo_irods_ssl_algorithm }}",
-          "IRODS_SSL_KEY_SIZE={{ _sftpgo_irods_ssl_key_size }}",
-          "IRODS_SSL_SALT_SIZE={{ _sftpgo_irods_ssl_salt_size }}",
-          "IRODS_SSL_HASH_ROUNDS={{ _sftpgo_irods_ssl_hash_rounds }}",
+          "IRODS_AUTH_SCHEME={{ _sftp_irods_auth_scheme }}",
+          "IRODS_SSL_CA_CERT_PATH={{ _sftp_irods_ssl_ca_cert_path }}",
+          "IRODS_SSL_ALGORITHM={{ _sftp_irods_ssl_algorithm }}",
+          "IRODS_SSL_KEY_SIZE={{ _sftp_irods_ssl_key_size }}",
+          "IRODS_SSL_SALT_SIZE={{ _sftp_irods_ssl_salt_size }}",
+          "IRODS_SSL_HASH_ROUNDS={{ _sftp_irods_ssl_hash_rounds }}",
           "IRODS_SHARED=/{{ _irods_zone_name }}/home/shared",
-          "SFTPGO_HOME_PATH={{ _sftpgo_vault_dir }}/data"
+          "SFTPGO_HOME_PATH={{ _sftp_vault_dir }}/data"
         ],
         "args": [],
         "hook": ""

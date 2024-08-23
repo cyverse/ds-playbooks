@@ -1,7 +1,7 @@
 ---
 - name: Run-time initialization
   hosts: irods_catalog
-  become: "{{ _become_svc_acnt }}"
+  become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:

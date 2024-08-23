@@ -64,7 +64,7 @@
         tcp_ports:
           - "{{ hostvars[item]._irods_zone_port }}"
           - "{{ hostvars[item]._irods_server_control_plane_port }}"
-        timeout: "{{ _check_routes_timeout }}"
+        timeout: "{{ _irods_check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['irods_resource'] | difference([inventory_hostname]) }}"
       tags:
@@ -83,7 +83,7 @@
         destination: "{{ item }}"
         tcp_ports:
           - "{{ hostvars[item]._irods_zone_port }}"
-        timeout: "{{ _check_routes_timeout }}"
+        timeout: "{{ _irods_check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['irods_catalog'] | difference([inventory_hostname]) }}"
       tags:
@@ -104,7 +104,7 @@
               hostvars[item]._irods_server_port_range_start | int,
               hostvars[item]._irods_server_port_range_end | int + 1 )
             | list }}
-        timeout: "{{ _check_routes_timeout }}"
+        timeout: "{{ _irods_check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['irods_resource'] | difference([inventory_hostname]) }}"
       tags:
@@ -145,7 +145,7 @@
 
 - name: Restart previously stopped iRODS servers
   hosts: irods
-  become: "{{ _become_svc_acnt }}"
+  become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
   tasks:

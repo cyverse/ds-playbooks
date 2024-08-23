@@ -21,7 +21,7 @@
 
 - name: Create storage resources
   hosts: irods_resource
-  become: "{{ _become_svc_acnt }}"
+  become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
     - name: Define storage resource

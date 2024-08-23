@@ -1,7 +1,7 @@
 ---
 - name: Configure iRODS
   hosts: irods
-  become: "{{ _become_svc_acnt }}"
+  become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   vars:
     amqp_user_info: "{{ _amqp_user }}:{{ _amqp_password }}"
@@ -104,7 +104,7 @@
         irods_cfg_zone_password: "{{ _irods_clerver_password }}"
 
     - name: Restart iRODS
-      when: _restart_irods and irods_cfg_made_changes
+      when: _irods_restart and irods_cfg_made_changes
       ansible.builtin.import_tasks: tasks/restart_irods.yml
 
   handlers:

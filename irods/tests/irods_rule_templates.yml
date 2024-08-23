@@ -53,14 +53,14 @@
   vars_files:
     - ../group_vars/all.yml
   vars:
-    canonical_hostname: local
     irods_amqp_exchange: exchange
+    irods_canonical_hostname: local
     irods_init_repl_delay: 1
     irods_max_num_re_procs: 1
     irods_re_host: other
+    irods_report_email_addr: bob@reports
     irods_service_account_name: balloon
     irods_zone_name: zoner
-    report_email_addr: bob@reports
     cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
   tasks:
     - name: Verify custon values

@@ -1,8 +1,6 @@
 ---
 bisque_url: http://localhost.localdomain/
 
-check_routes_timeout: 5
-
 connectivity_maintainer_keys:
   - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMNAkCWfBgthPFt3580sM8H0BXpCQVrEI8Y2Kpq9bO+N allowed 1
   - key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMNAkCWfBgthPFt3580sM8H0BXpCQVrEI8Y2Kpq9bO+1 allowed 2
@@ -12,6 +10,7 @@ connectivity_maintainer_keys:
     state: absent
 
 irods_admin_password: password
+irods_check_routes_timeout: 5
 irods_ephemeral_port_range_first: 19990
 irods_ephemeral_port_range_last: 19999
 irods_icat_password: testpassword

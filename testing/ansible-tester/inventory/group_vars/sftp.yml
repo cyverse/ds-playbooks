@@ -1,11 +1,14 @@
 ---
-sftpgo_admin_username: admin
-sftpgo_admin_password: admin
-sftpgo_irods_proxy_username: sftp
-sftpgo_irods_proxy_password: sftp
-sftpgo_irods_auth_scheme: native
-sftpgo_vault_dir: /sftp_vault
+sftp_admin_username: admin
+sftp_admin_password: admin
 
 sftp_proxy_allowed: ['1.1.1.1', '2.2.2.2/32', 'data.cyverse.org']
+
+sftp_irods_auth_scheme: native
+sftp_irods_proxy_username: sftp
+sftp_irods_proxy_password: sftp
+
 sftp_user_host_allowed: []
 sftp_user_host_rejected: ['4.4.4.4']
+
+sftp_vault_dir: /sftp_vault

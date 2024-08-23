@@ -51,7 +51,7 @@
       ansible.posix.sysctl:
         name: kernel.{{ item.name }}
         value: "{{ item.value }}"
-      with_items: "{{ _sysctl_kernel }}"
+      with_items: "{{ _irods_sysctl_kernel }}"
       tags:
         - no_testing
 
@@ -184,7 +184,7 @@
 
 - name: Start iRODS on catalog service providers
   hosts: irods_catalog
-  become: "{{ _become_svc_acnt }}"
+  become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   become_flags: "-i"
   gather_facts: false

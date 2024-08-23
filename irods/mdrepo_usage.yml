@@ -1,7 +1,7 @@
 ---
 - name: Add MD Repo rule logic
   hosts: irods
-  become: "{{ _become_svc_acnt }}"
+  become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
     - name: Add logic
@@ -43,7 +43,7 @@
 
 - name: Configure for MD Repo CLI
   hosts: irods_catalog
-  become: "{{ _become_svc_acnt }}"
+  become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   gather_facts: false

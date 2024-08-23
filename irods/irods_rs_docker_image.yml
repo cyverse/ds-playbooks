@@ -20,14 +20,14 @@
 
         - name: Create command scripts staging directory
           ansible.builtin.file:
-            path: "{{ _build_dir }}/var/lib/irods/msiExecCmd_bin"
+            path: "{{ _irods_build_dir }}/var/lib/irods/msiExecCmd_bin"
             state: directory
             mode: u+rwx
 
         - name: Add common command scripts
           ansible.builtin.copy:
             src: "{{ item }}"
-            dest: "{{ _build_dir }}/var/lib/irods/msiExecCmd_bin"
+            dest: "{{ _irods_build_dir }}/var/lib/irods/msiExecCmd_bin"
             mode: u+rw
           with_fileglob:
             - "files/cmd-common/*"
@@ -59,7 +59,7 @@
               - cve
               - cyverse_core
               - cyverse_housekeeping
-            irods_cfg_root_dir: "{{ _build_dir }}"
+            irods_cfg_root_dir: "{{ _irods_build_dir }}"
             irods_cfg_schema_validation_base_uri: 'off'
             irods_cfg_server_control_plane_key: __IRODS_SERVER_CONTROL_PLANE_KEY__
             irods_cfg_server_port_range_end: 20009
@@ -76,7 +76,7 @@
         - name: Stage dynamic rule bases
           ansible.builtin.template:
             src: "{{ item }}"
-            dest: "{{ _build_dir }}/etc/irods/{{ item | basename | regex_replace('.j2$') }}"
+            dest: "{{ _irods_build_dir }}/etc/irods/{{ item | basename | regex_replace('.j2$') }}"
             mode: u+rw
           with_fileglob:
             - "templates/rule-bases/*"
@@ -84,7 +84,7 @@
         - name: Stage static rule bases
           ansible.builtin.copy:
             src: "{{ item }}"
-            dest: "{{ _build_dir }}/etc/irods"
+            dest: "{{ _irods_build_dir }}/etc/irods"
             mode: u+rw
           with_fileglob:
             - "files/rule-bases/*"
@@ -92,13 +92,13 @@
         - name: Copy .dockerignore
           ansible.builtin.copy:
             src: files/docker-rs/dockerignore
-            dest: "{{ _build_dir }}/.dockerignore"
+            dest: "{{ _irods_build_dir }}/.dockerignore"
             mode: u+rw
 
         - name: Copy resource server docker scripts
           ansible.builtin.copy:
             src: files/docker-rs/{{ item }}
-            dest: "{{ _build_dir }}"
+            dest: "{{ _irods_build_dir }}"
             mode: u+rw
           with_items:
             - on-build-instantiate.sh
@@ -143,7 +143,7 @@
             name: "{{ _irods_rs_image }}"
             source: build
             build:
-              path: "{{ _build_dir }}"
+              path: "{{ _irods_build_dir }}"
               pull: true
             tag: "{{ build_time }}"
             force_source: true

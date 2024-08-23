@@ -19,7 +19,7 @@
 
 - name: Configure bisque client
   hosts: irods_catalog
-  become: "{{ _become_svc_acnt }}"
+  become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
     - name: Install bisque_paths.py

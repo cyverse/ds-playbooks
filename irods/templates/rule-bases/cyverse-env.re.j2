@@ -18,11 +18,11 @@ cyverse_DEFAULT_RESC = '{{ _irods_default_resource }}'
 
 # the email address of the iRODS grid
 cyverse_EMAIL_FROM_ADDR: string
-cyverse_EMAIL_FROM_ADDR = '{{ _irods_service_account_name }}@{{ _canonical_hostname }}'
+cyverse_EMAIL_FROM_ADDR = '{{ _irods_service_account_name }}@{{ _irods_canonical_hostname }}'
 
 # the email address where any notifications will be sent
 cyverse_EMAIL_REPORT_ADDR: string
-cyverse_EMAIL_REPORT_ADDR = '{{ _report_email_addr }}'
+cyverse_EMAIL_REPORT_ADDR = '{{ _irods_report_email_addr }}'
 
 # the initial number of seconds iRODS waits before attempting to replicate a new
 # or modified data object

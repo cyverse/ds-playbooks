@@ -30,12 +30,7 @@
 
 set -o errexit -o nounset -o pipefail
 
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-  ExecName=$(greadlink -f "$0")
-else
-  ExecName=$(readlink --canonicalize "$0")
-fi
+ExecName=$(readlink --canonicalize "$0")
 readonly ExecName
 
 
@@ -95,10 +90,8 @@ s/ADMIN_NAME_TEMPLATE/$(escape_for_sed "$zoneUser")/g
 s/ADMIN_PASSWORD_TEMPLATE/$(escape_for_sed "$zonePasswd")/g
 s/DELAY_LEADER_TEMPLATE/$(escape_for_sed "$delayServer")/g
 s/DELAY_SUCCESSOR_TEMPLATE//g
-/CUSTOM_RESC_TEMPLATE/d
+s/CUSTOM_RESC_TEMPLATE/$(escape_for_sed "$rescs")/g
 EOF
-#s/CUSTOM_RESC_TEMPLATE/$(escape_for_sed "$rescs")/g
-#EOF
 }
 
 

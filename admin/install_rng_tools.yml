@@ -1,5 +1,5 @@
 - name: Ensure rng-tools is installed
-  hosts: all
+  hosts: all:!unmanaged_systems:!localhost
   become: yes
   tasks:
     - name: Install rng-tools package

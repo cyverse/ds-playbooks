@@ -12,7 +12,7 @@ _avra_isForAvra(*Path) =
 	let *_ = foreach( *rec in
 			SELECT META_RESC_ATTR_VALUE
 			WHERE RESC_NAME = *avraRes AND META_RESC_ATTR_NAME = 'ipc::hosted-collection'
-		) { *answer = *answer || (*Path like *rec.META_RESC_ATTR_VALUE ++ '/*'); } in
+		) { *answer = *answer || (str(*Path) like *rec.META_RESC_ATTR_VALUE ++ '/*'); } in
 	*answer
 
 

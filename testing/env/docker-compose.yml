@@ -111,6 +111,6 @@ services:
       dockerfile: irods-consumer/Dockerfile.unconfigured
       args:
         IRODS_CATALOG_PROVIDER: "$IRODS_PROVIDER_CONF_HOST"
-    hostname: "${ENV_NAME}_consumer_configured_1.${DOMAIN}"
+    hostname: "${ENV_NAME}-consumer_unconfigured-1.${DOMAIN}"
     privileged: true
     tty: true

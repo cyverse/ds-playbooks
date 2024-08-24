@@ -976,6 +976,11 @@ cyverse_logic_acCreateCollByAdmin(*ParCollPath, *CollName) {
 # is not applied to collections created when a TAR file is expanded. (i.e.
 # ibun -x)
 #
+# Session Variables:
+#  collName
+#  rodsZoneClient
+#  userNameClient
+#
 cyverse_logic_acPostProcForCollCreate {
 	*err = errormsg(_cyverse_logic_setAdmPerm($collName), *msg);
 	if (*err < 0) {

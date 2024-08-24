@@ -133,6 +133,22 @@ bisque_ln(*Perm, *Client, *Path) {
 	}
 }
 
+_bisque_schedLn(*Perm, *Client, *Path) {
+	if (*Client != '') {
+		_bisque_logMsg("scheduling linking of *Path for *Client with permission *Perm");
+	} else {
+		_bisque_logMsg("scheduling linking of *Path with permission *Perm");
+	}
+# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
+#       https://github.com/irods/irods/issues/5413.
+# 	delay('<PLUSET>1s</PLUSET>') {bisque_ln(*Perm, *Client, *Path)};
+	delay(
+		' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
+			<PLUSET>1s</PLUSET> '
+	) {bisque_ln(*Perm, *Client, *Path)};
+# XXX - ^^^
+}
+
 # Tells BisQue to change the path of a linked data object.
 #
 # bisque_paths.py (--alias user) mv /old/path/to/data.object /new/path/to/data.object
@@ -206,22 +222,6 @@ _bisque_rm(*Client, *Path) {
 	}
 }
 
-_bisque_schedLn(*Perm, *Client, *Path) {
-	if (*Client != '') {
-		_bisque_logMsg("scheduling linking of *Path for *Client with permission *Perm");
-	} else {
-		_bisque_logMsg("scheduling linking of *Path with permission *Perm");
-	}
-# XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
-#       https://github.com/irods/irods/issues/5413.
-# 	delay('<PLUSET>1s</PLUSET>') {bisque_ln(*Perm, *Client, *Path)};
-	delay(
-		' <INST_NAME>irods_rule_engine_plugin-irods_rule_language-instance</INST_NAME>
-			<PLUSET>1s</PLUSET> '
-	) {bisque_ln(*Perm, *Client, *Path)};
-# XXX - ^^^
-}
-
 _bisque_handleNewObj(*Client, *Path) {
 	cyverse_giveAccessDataObj(_bisque_USER, 'write', *Path);
 	*perm = if _bisque_isInProjs(bisque_PROJECTS, *Path) then 'published' else 'private';
@@ -233,6 +233,9 @@ _bisque_handleObjCreate(*CreatorName, *CreatorZone, *Path) {
 		_bisque_handleNewObj(_bisque_getClient(*CreatorName, *CreatorZone, *Path), *Path);
 	}
 }
+
+
+# STATIC PEPS
 
 # Add a call to this rule from inside the acPostProcForCollCreate PEP.
 bisque_acPostProcForCollCreate {
@@ -290,6 +293,9 @@ bisque_acPostProcForDelete {
 		_bisque_rm(_bisque_getClient($userNameClient, $rodsZoneClient, $objPath), $objPath);
 	}
 }
+
+
+# DYNAMIC PEPS
 
 bisque_dataObjCreated(*User, *Zone, *DataObjInfo) {
 	_bisque_handleObjCreate(*User, *Zone, *DataObjInfo.logical_path);

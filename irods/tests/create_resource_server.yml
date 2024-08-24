@@ -12,8 +12,7 @@
 
     - name: Test ensure NetCDF plugs not installed
       ansible.builtin.assert:
-        that:
-          - not "{{ item }}" in ansible_facts.packages
+        that: item not in ansible_facts.packages
       with_items:
         - irods-netcdf-client_modules
         - irods-netcdf-icommands

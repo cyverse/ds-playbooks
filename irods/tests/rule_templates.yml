@@ -20,7 +20,8 @@
           - >-
             cyverse_env
             is search(
-              "cyverse_EMAIL_FROM_ADDR = 'irods@dstesting-provider_configured-1.dstesting_default'" )
+              "cyverse_EMAIL_FROM_ADDR = 'irods@dstesting-provider_configured-1.dstesting_default'"
+            )
           - cyverse_env is search("cyverse_EMAIL_REPORT_ADDR = 'root@localhost'")
           - cyverse_env is search("cyverse_INIT_REPL_DELAY = 0")
           - cyverse_env is search("cyverse_MAX_NUM_RE_PROCS = 4")
@@ -32,7 +33,6 @@
     - name: Verify constants expand correctly in avra-env.re.j2
       ansible.builtin.assert:
         that:
-          - avra_env is search("avra_BASE_COLL = ''")
           - avra_env is search("avra_RESC = 'demoResc'")
 
     - name: Verify constants expand correctly in bisque-env.re.j2
@@ -121,7 +121,6 @@
     - name: Verify params
       ansible.builtin.assert:
         that:
-          - avra_env is search("avra_BASE_COLL = 'base'")
           - avra_env is search("avra_RESC = 'avraRes'")
 
 

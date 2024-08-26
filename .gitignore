@@ -2,3 +2,4 @@
 .vscode
 *.retry
 **/.mypy_cache
+myenv/

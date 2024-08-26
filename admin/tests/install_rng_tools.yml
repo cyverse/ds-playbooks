@@ -1,0 +1,21 @@
+# - name: Test install rng-tools ln Ubuntu
+#   hosts: all:!unmanaged_systems:!localhost
+#   become: true
+#   tasks:
+#     - name: Test install rng-tools package
+#       when: ansible_distribution == 'Ubuntu'
+#       ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
+#       with_items:
+#         - rng-tools
+#       loop_control:
+#         loop_var: pkg
+
+- name: Test install rng-tools or rng-tools-debian
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  tasks:
+    - name: Test install rng-tools or rng-tools-debian package
+      # when: ansible_distribution == 'Ubuntu'
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: "{{ 'rng-tools' if ansible_facts.packages['rng-tools'] is defined else 'rng-tools-debian' }}"

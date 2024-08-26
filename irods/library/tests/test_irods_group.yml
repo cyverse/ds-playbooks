@@ -1,85 +1,56 @@
 ---
-- name: testing irods_group module
-  hosts: irods_catalog[0]
+- name: Testing irods_group module
+  hosts: irods_catalog
+  become: true
+  become_user: irods
+  run_once: true
+  vars:
+    password: password
+    create_group: test_group1
+    rm_group: test_group2
   pre_tasks:
-    - name: group should be absent
-      become: true
-      become_user: irods
-      shell: |
-        iadmin lg | cut -d'#' -f 1 | grep test_group1
-      register: resp
-      changed_when: false
-      failed_when: resp.stdout != ""
+    - name: Create group to remove
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: iadmin mkgroup '{{ rm_group }}'
+      changed_when: true
+      tags: non_idempotent
 
   tasks:
-    - name: create group
+    - name: Create group
       delegate_to: localhost
+      become: false
       irods_group:
-        group: test_group1
+        group: "{{ create_group }}"
         state: present
-        host: "{{ groups['irods_catalog'][0] }}"
+        host: "{{ inventory_hostname }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: testing
-      register: resp
-      failed_when: not resp.changed
-      tags:
-        - non_idempotent
 
-    - name: check if group is created
-      become: true
-      become_user: irods
-      shell: |
-        iadmin lg | cut -d'#' -f 1 | grep test_group1
-      register: resp
+    - name: Check if group is created
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          iadmin lg | cut -d'#' -f 1 | grep --quiet '{{ create_group }}'
       changed_when: false
-      failed_when: resp.stdout == ""
 
-    - name: create group again (check idempotency)
-      delegate_to: localhost
+    - name: Remove group
       irods_group:
-        group: test_group1
-        state: present
-        host: "{{ groups['irods_catalog'][0] }}"
-        port: 1247
-        admin_user: rods
-        admin_password: rods
-        zone: testing
-      register: resp
-      failed_when: resp.changed
-
-    - name: remove group
-      delegate_to: localhost
-      irods_group:
-        group: test_group1
+        group: "{{ rm_group }}"
         state: absent
-        host: "{{ groups['irods_catalog'][0] }}"
+        host: "{{ ansible_hostname }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: testing
-      register: resp
-      failed_when: not resp.changed
 
-    - name: check if group is removed
-      become: true
-      become_user: irods
-      shell: |
-        iadmin lg | cut -d'#' -f 1 | grep test_group1
-      register: resp
+    - name: Check if group is removed
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          iadmin lg | cut -d'#' -f 1 | grep --invert --quiet '{{ rm_group }}'
       changed_when: false
-      failed_when: resp.stdout != ""
-
-    - name: remove group again (check idempotency)
-      delegate_to: localhost
-      irods_group:
-        group: test_group1
-        state: absent
-        host: "{{ groups['irods_catalog'][0] }}"
-        port: 1247
-        admin_user: rods
-        admin_password: rods
-        zone: testing
-      register: resp
-      failed_when: resp.changed

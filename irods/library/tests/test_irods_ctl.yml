@@ -8,7 +8,6 @@
       ansible.builtin.shell:
         executable:  /bin/bash
         cmd: /var/lib/irods/irodsctl stop
-      failed_when: false
       changed_when: true
       tags: non_idempotent
 
@@ -25,9 +24,20 @@
           /var/lib/irods/irodsctl status | grep --quiet irodsServer
       changed_when: false
 
-    - name: Test restarted state
-      ansible.builtin.debug:
-        msg: TODO implement
+    - name: Restart service
+      irods_ctl:
+        state: restarted
+      register: resp
+      failed_when: resp is not changed
+      tags: non_idempotent
+
+    - name: Verify service is started
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          /var/lib/irods/irodsctl status | grep --quiet irodsServer
+      changed_when: false
 
 
 - name: Test irods_ctl stop

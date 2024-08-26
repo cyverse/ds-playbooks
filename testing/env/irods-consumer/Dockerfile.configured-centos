@@ -31,11 +31,11 @@ RUN \
 	rpm --import https://packages.irods.org/irods-signing-key.asc
 	yum --assumeyes versionlock add irods-*-4.3.1
 	yum --assumeyes install irods-server
-	python3 -m pip install python-irodsclient
 # XXX - irods-icommands required by irods-server but not installed by dependency resolution in
 #       CentOS 7
 	yum --assumeyes install irods-icommands
 # XXX - ^^^
+	python3 -m pip install python-irodsclient
 
 ### Configure iRODS
 	/tmp/config-irods

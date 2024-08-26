@@ -12,7 +12,7 @@ import pika
 
 def _publish(uri: str, exchange: str, routing_key: str, body:str) -> None:
     conn_params = pika.URLParameters(uri)
-
+    conn_params.socket_timeout = 10
     with pika.BlockingConnection(conn_params) as conn:
         conn.channel().basic_publish(
             exchange=exchange,

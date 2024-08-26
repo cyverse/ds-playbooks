@@ -151,3 +151,18 @@
         stdin: "{{ _irods_admin_password }}"
       register: results
       changed_when: results.stdout == 'scheduled trash removal'
+  
+    - name: Ensure that the starting collections get UUIDs
+      delegate_to: localhost
+      become: false
+      command: "imeta ls -C {{ item }} | grep -q 'UUID' || imeta add -C {{ item }} UUID $(uuidgen)"
+      with_items:
+        - /{{ _irods_zone_name }}
+        - /{{ _irods_zone_name }}/home
+        - /{{ _irods_zone_name }}/home/{{ _irods_clerver_user }}
+        - /{{ _irods_zone_name }}/home/shared
+        - /{{ _irods_zone_name }}/trash
+        - /{{ _irods_zone_name }}/trash/home
+      args:
+        warn: false
+      ignore_errors: false

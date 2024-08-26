@@ -1,10 +1,10 @@
-# VERSION 12
-#
-# bisque.re
-#
 # BisQue related rules
+#
+# © 2024 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
 
 @include 'bisque-env'
+
 
 _bisque_COLL = 'bisque_data'
 
@@ -86,9 +86,17 @@ _bisque_mkIrodsUrl(*Path) =
 		let *_ = msiGetStdoutInExecCmdOut(*out, *encodedPath) in
 		bisque_IRODS_URL_BASE ++ *encodedPath
 
-# Tells BisQue to create a link for a given user to a data object.
+# This rule tells BisQue to create a link for a given user to a data object. It
+# is safe to be run asynchronously.
 #
-# bisque_paths.py (--alias user) ln -P permission /path/to/data.object
+# Here is the equivalent bisque_paths.py command.
+#
+#    bisque_paths.py (--alias *Client) ln -P *Perm *Path
+#
+# Parameter:
+#  Perm    (string) the permission (private or published) assigned to the link
+#  Client  (string) the BisQue account authorizing the linkage
+#  Path    (path) the iRODS path to the data object being linked
 #
 bisque_ln(*Perm, *Client, *Path) {
 	if (*Client != '') {
@@ -151,7 +159,7 @@ _bisque_schedLn(*Perm, *Client, *Path) {
 
 # Tells BisQue to change the path of a linked data object.
 #
-# bisque_paths.py (--alias user) mv /old/path/to/data.object /new/path/to/data.object
+# bisque_paths.py (--alias *Client) mv *OldPath *NewPath
 #
 _bisque_mv(*Client, *OldPath, *NewPath) {
 	if (*Client != '') {
@@ -189,7 +197,7 @@ _bisque_mv(*Client, *OldPath, *NewPath) {
 
 # Tells BisQue to remove a link to data object.
 #
-# bisque_paths.py (--alias user) rm /path/to/data.object
+# bisque_paths.py (--alias *Client) rm *Path
 #
 _bisque_rm(*Client, *Path) {
 	if (*Client != '') {
@@ -235,16 +243,34 @@ _bisque_handleObjCreate(*CreatorName, *CreatorZone, *Path) {
 }
 
 
-# STATIC PEPS
-
-# Add a call to this rule from inside the acPostProcForCollCreate PEP.
+# This rule gives BisQue write access to a collection when it is created in a
+# BisQue-aware collection.
+#
+# Session Variables:
+#  collName
+#  userNameClient
+#
 bisque_acPostProcForCollCreate {
 	if (_bisque_isForBisque($userNameClient, $collName)) {
 		cyverse_giveAccessColl(_bisque_USER, 'write', $collName);
 	}
 }
 
-# Add a call to this rule from inside the acPostProcForObjRename PEP.
+# This rule takes many actions depending on the type of entity and where it is
+# moved. For a collection, if it is moved into a BisQue-aware collection, BisQue
+# is given write access to it. For a data object, if it is linked with BisQue,
+# the link is updated to point to the object's new path. If the object isn't
+# linked, but its new path is in a BisQue-aware collection, the data object is
+# linked in BisQue.
+#
+# Parameters:
+#  SrcEntity   (string) the former absolute iRODS path of the moved entity
+#  DestEntity  (string) the new absolute iRODS path of the moved entity
+#
+# Session Variables:
+#  rodsZoneClient
+#  userNameClient
+#
 bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 	*client = _bisque_getClient($userNameClient, $rodsZoneClient, *SrcEntity);
 	*forBisque = _bisque_isForBisque($userNameClient, *DestEntity);
@@ -279,7 +305,16 @@ bisque_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 	}
 }
 
-# Add a call to this rule from inside the acDataDeletePolicy PEP.
+# This rule determines if a data object that is about to be deleted is linked
+# in BisQue. If it is, it adds the KV (bisque_$objPath, rm) to temporary
+# storage for use by bisque_acPostProcForDelete.
+#
+# Session Variables:
+#  objPath
+#
+# temporaryStorage:
+#  'bisque_$objPath'  writes 'rm' here, if applicable.
+#
 bisque_acDataDeletePolicy {
 	msiSplitPath($objPath, *collPath, *dataObjName);
 
@@ -287,7 +322,17 @@ bisque_acDataDeletePolicy {
 		if _bisque_isInBisque(*collPath, *dataObjName) then 'rm' else ''
 }
 
-# Add a call to this rule from inside the acPostProcForDelete PEP.
+# If a data object that BisQue is aware of is deleted, this rule tells BisQue
+# about the deletion.
+#
+# Session Variables:
+#  objPath
+#  rodsZoneClient
+#  userNameClient
+#
+# temporaryStorage:
+#  'bisque_$objPath'  checks this variable for the value 'rm'
+#
 bisque_acPostProcForDelete {
 	if (temporaryStorage."bisque_$objPath" == 'rm') {
 		_bisque_rm(_bisque_getClient($userNameClient, $rodsZoneClient, $objPath), $objPath);
@@ -297,6 +342,15 @@ bisque_acPostProcForDelete {
 
 # DYNAMIC PEPS
 
-bisque_dataObjCreated(*User, *Zone, *DataObjInfo) {
-	_bisque_handleObjCreate(*User, *Zone, *DataObjInfo.logical_path);
+# This rule notifies BisQue of a newly created data object if the object is in
+# BisQue-aware folder.
+#
+# Parameters:
+#  Username     (string) the iRODS account that created the data object
+#  Zone         (string) the zone of the username who created the data object
+#  DataObjInfo  (`KeyValuePair_PI`) the DATA_OBJ_INFO map for a data object
+#               metadata modification or registration event
+#
+bisque_dataObjCreated(*Username, *Zone, *DataObjInfo) {
+	_bisque_handleObjCreate(*Username, *Zone, *DataObjInfo.logical_path);
 }

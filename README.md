@@ -51,6 +51,9 @@ The file [requirements-python.txt](./requirements-python.txt) python packages ne
 * python-irodsclient<2
 * wheel
 
+
+All VMs (including the Ansible Control Node, if that is a VM) shall install `rng-tools` using the playbook in `admin` directory called `install_rng_tools.yml`. This ensures that ansible tasks have efficient entropy in generating random numbers, preventing unexpected pauses in deployment.
+
 Finally, the required ansible collections and roles need to be installed. This can be done by running the `init-ansible` script.
 
 __XXX - crun on Ubuntu 22.04:__ Due to a bug in the version of crun that ships with Ubuntu 22.04, podman can't start systemd containers. See <https://noobient.com/2023/11/15/fixing-ubuntu-containers-failing-to-start-with-systemd/> for the work around.

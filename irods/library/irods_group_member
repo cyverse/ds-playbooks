@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 """
 Provides an ansible module for adding and removing users from an iRODS group.
 """

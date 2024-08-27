@@ -1,125 +1,93 @@
 ---
-- name: testing irods_group_member module
-  hosts: irods_catalog[0]
+- name: Testing irods_group_member module
+  hosts: irods_catalog
+  become: true
+  become_user: irods
+  run_once: true
+  vars:
+    password: password
+    add_group: test_group1
+    rm_group: rm
+    user1: test_user1
+    user2: test_user2
+    user3: test_user3
   pre_tasks:
-    - name: group should be absent
-      become: true
-      become_user: irods
-      shell: |
-        iadmin lg | cut -d'#' -f 1 | grep test_group1
-      register: resp
-      changed_when: false
-      failed_when: resp.stdout != ""
-
-    - name: create a test group
-      become: true
-      become_user: irods
-      shell: |
-        iadmin mkgroup test_group1
-
-    - name: create some test users
-      become: true
-      become_user: irods
-      shell: |
-        iadmin mkuser test_user1 rodsuser
-        iadmin mkuser test_user2 rodsuser
-        iadmin mkuser test_user3 rodsuser
-        iadmin mkuser test_user4 rodsuser
-        iadmin mkuser test_user5 rodsuser
+    - name: Set up
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit
+          iadmin mkgroup '{{ add_group }}'
+          iadmin mkgroup '{{ rm_group }}'
+          for user in '{{ user1 }}' '{{ user2 }}' '{{ user3 }}'; do
+            iadmin mkuser "$user" rodsuser
+            iadmin atg '{{ rm_group }}' "$user"
+          done
+      changed_when: true
+      tags: non_idempotent
 
   tasks:
-    - name: add users to group
+    - name: Add users to group
       delegate_to: localhost
+      become: false
       irods_group_member:
-        group: test_group1
+        group: "{{ add_group }}"
         users:
-          - test_user1
-          - test_user2
-          - test_user3
+          - "{{ user1 }}"
+          - "{{ user2 }}"
         state: present
-        host: "{{ groups['irods_catalog'][0] }}"
+        host: "{{ inventory_hostname }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
-        zone: "testing"
-      register: resp
-      failed_when: not resp.changed
-
-    - name: check if users are present in group
-      become: true
-      become_user: irods
-      shell: |
-        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1| grep test_user1
-        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1| grep test_user2
-        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1| grep test_user3
-      register: resp
-      changed_when: false
-      failed_when: resp.stdout == ""
-
-    - name: add users to group again (check idempotency)
-      delegate_to: localhost
-      irods_group_member:
-        group: test_group1
-        users:
-          - test_user1
-          - test_user2
-          - test_user3
-        state: present
-        host: "{{ groups['irods_catalog'][0] }}"
-        port: 1247
-        admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: testing
-      register: resp
-      failed_when: resp.changed
 
-    - name: remove users from group
-      delegate_to: localhost
+    - name: Check if users are present in group
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit -o pipefail
+          for user in '{{ user1 }}' '{{ user2 }}'; do
+            iadmin lg '{{ add_group }}' \
+              | tail --lines=+2 \
+              | cut --delimiter=# --fields=1 \
+              | grep --quiet "$user"
+          done
+      changed_when: false
+
+    - name: Remove users from group
       irods_group_member:
-        group: test_group1
+        group: "{{ rm_group }}"
         users:
-          - test_user1
-          - test_user2
+          - "{{ user1 }}"
+          - "{{ user2 }}"
         state: absent
-        host: "{{ groups['irods_catalog'][0] }}"
+        host: "{{ ansible_hostname }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: testing
-      register: resp
-      failed_when: not resp.changed
 
-    - name: check if users are absent in group
-      become: true
-      become_user: irods
-      shell: |
-        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1 | grep test_user1
-        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1| grep test_user2
-      register: resp
+    - name: Check if users are absent in group
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit -o pipefail
+          for user in '{{ user1 }}' '{{ user2 }}'; do
+            iadmin lg '{{ rm_group }}' \
+              | tail --lines=+2 \
+              | cut --delimiter=# --fields=1 \
+              | grep --quiet --invert "$user"
+          done
       changed_when: false
-      failed_when: resp.stdout != ""
 
-    - name: check if some users still exist in group
-      become: true
-      become_user: irods
-      shell: |
-        iadmin lg test_group1 | cut -d'#' -f 1 | tail -n +1 | grep test_user3
-      register: resp
+    - name: Check if some users still exist in group
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          iadmin lg '{{ rm_group }}' \
+            | tail --lines=+2 \
+            | cut --delimiter=# --fields=1 \
+            | grep --quiet '{{ user3 }}'
       changed_when: false
-      failed_when: resp.stdout == ""
-
-    - name: remove users from group again (check idempotency)
-      delegate_to: localhost
-      irods_group_member:
-        group: test_group1
-        users:
-          - test_user1
-          - test_user2
-        state: absent
-        host: "{{ groups['irods_catalog'][0] }}"
-        port: 1247
-        admin_user: rods
-        admin_password: rods
-        zone: testing
-      register: resp
-      failed_when: resp.changed

@@ -48,6 +48,7 @@ The file [requirements-python.txt](./requirements-python.txt) python packages ne
 * molecule
 * molecule-plugins\[podman\]
 * netaddr
+* pika>1.2
 * python-irodsclient<2
 * wheel
 

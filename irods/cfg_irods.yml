@@ -109,6 +109,17 @@
       vars:
         restart_op: if running
 
+  post_tasks:
+    - name: Remove old rule files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - ipc-logic.re
+        - sernec.re
+        - sernec-env.re
+
+
   handlers:
     - name: Reload rules
       ansible.builtin.file:

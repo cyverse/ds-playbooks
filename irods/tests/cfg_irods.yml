@@ -264,3 +264,13 @@
                 == 'dstesting-consumer_configured_ubuntu-1.dstesting_default'
               - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
               - hosts_config.host_entries[0].addresses[2].address == 'alias-2'
+
+    - name: Verify old rule files removed
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: resp
+      failed_when: resp.stat.exists
+      with_items:
+        - ipc-logic.re
+        - sernec.re
+        - sernec-env.re

@@ -50,7 +50,7 @@
         - /{{ _irods_zone_name }}/trash/home/{{ _irods_clerver_user }}
         - /{{ _irods_zone_name }}/trash/home/shared
       # changed_when: "'UUID' not in cmd_result.stdout"
-      changed_when: true
+      changed_when: false
       register: cmd_result
       ignore_errors: false
 

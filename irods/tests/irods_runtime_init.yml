@@ -37,6 +37,22 @@
       ansible.builtin.command: ils /testing/trash/home/shared
       changed_when: false
 
+    - name: Verify that the starting collections have UUIDs
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          iquest '%s' "select META_DATA_ATTR_VALUE where META_DATA_ATTR_NAME = 'UUID' and COLL_NAME = '{{ item }}'" | grep --quiet .
+      changed_when: false
+      with_items:
+        - /
+        - /testing
+        - /testing/home
+        - /testing/home/shared
+        - /testing/trash
+        - /testing/trash/home
+        - /testing/trash/home/shared
+
     - name: Test ensure CyVerse curated collection base collection exists
       ansible.builtin.command: ils /testing/home/shared/commons_repo/curated
       changed_when: false

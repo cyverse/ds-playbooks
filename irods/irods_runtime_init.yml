@@ -35,7 +35,7 @@
         zone: "{{ _irods_zone_name }}"
 
     - name: Ensure that the starting collections get UUIDs
-      delegate_to: irods_catalog
+      delegate_to: localhost
       become: false
       ansible.builtin.command:
         cmd: "imeta ls -C {{ item }} | grep -q 'UUID' || imeta add -C {{ item }} UUID $(uuidgen -t)"
@@ -49,7 +49,8 @@
         - /{{ _irods_zone_name }}/trash/home
         - /{{ _irods_zone_name }}/trash/home/{{ _irods_clerver_user }}
         - /{{ _irods_zone_name }}/trash/home/shared
-      changed_when: "'UUID' not in cmd_result.stdout"
+      # changed_when: "'UUID' not in cmd_result.stdout"
+      changed_when: false
       register: cmd_result
       ignore_errors: false
 

@@ -3,6 +3,22 @@
   hosts: localhost
   gather_facts: false
   tasks:
-    - name: Test it
+    - name: Test hierarchy without name
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test hierarchy with name but no type
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test hierarchy with name and type only
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test hierarchy with name, type, and children
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test hieararchy with name, type, and context
       ansible.builtin.debug:
         msg: TODO implement

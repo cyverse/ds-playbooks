@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # An ansible module for creating the coordinating resource portion of a
 # resource hiearchy.

@@ -1,10 +1,9 @@
 ---
 - name: Testing irods_permission module
   hosts: irods_catalog
-  run_once: true
   become: true
   become_user: irods
-  strategy: debug
+  run_once: true
   vars:
     zone: testing
     password: password
@@ -21,12 +20,16 @@
     sub_coll_exclusive: "{{ coll_exclusive }}/coll"
   pre_tasks:
     - name: Create remote zone
-      ansible.builtin.command: iadmin mkzone other_zone remote
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: iadmin mkzone other_zone remote
       changed_when: true
       tags: non_idempotent
 
     - name: Create test users
-      ansible.builtin.command: iadmin mkuser '{{ item }}' rodsuser
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: iadmin mkuser '{{ item }}' rodsuser
       changed_when: true
       with_items:
         - forbidden
@@ -37,7 +40,9 @@
       tags: non_idempotent
 
     - name: Create collections
-      ansible.builtin.command: imkdir -p '{{ item }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: imkdir -p '{{ item }}'
       changed_when: true
       with_items:
         - "{{ sub_coll_no_recursion }}"
@@ -49,6 +54,7 @@
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
+          set -o errexit
           file="$(mktemp)"
           iput -R ingestRes "$file" '{{ item }}'
       changed_when: true
@@ -61,12 +67,16 @@
       tags: non_idempotent
 
     - name: Grant forbidden read permission on data
-      ansible.builtin.command: ichmod -M read forbidden '{{ data }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ichmod -M read forbidden '{{ data }}'
       changed_when: true
       tags: non_idempotent
 
     - name: Grant forbidden read permission on colls
-      ansible.builtin.command: ichmod -M -r read forbidden '{{ item }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ichmod -M -r read forbidden '{{ item }}'
       changed_when: true
       with_items:
         - "{{ coll_no_recursion }}"
@@ -85,7 +95,9 @@
         admin_password: "{{ password }}"
 
     - name: Check null/no permission on data
-      ansible.builtin.command: ils -A '{{ data }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils -A '{{ data }}'
       register: result
       failed_when:
         - result.rc != 0
@@ -93,6 +105,8 @@
       changed_when: false
 
     - name: Grant remote_user read permission on data
+      delegate_to: localhost
+      become: false
       irods_permission:
         zone: "{{ zone }}"
         subject: remote_user
@@ -100,17 +114,17 @@
         permission: read
         object: "{{ data }}"
         recursion: none
-        host: "{{ groups['irods_catalog'][0] }}"
+        host: "{{ inventory_hostname }}"
         port: 1247
         admin_user: rods
         admin_password: "{{ password }}"
-      become: false
-      delegate_to: localhost
 
     - name: Check read permission on data
-      ansible.builtin.command: ils -A '{{ data }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils -A '{{ data }}'
       register: result
-      failed_when: result.stdout is not regex('remote_user#other_zone:read object')
+      failed_when: result.stdout is not regex('remote_user#other_zone:read_object')
       changed_when: false
 
     - name: Grant writer write permission on data
@@ -124,9 +138,11 @@
         admin_password: "{{ password }}"
 
     - name: Check write permission on data
-      ansible.builtin.command: ils -A '{{ data }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils -A '{{ data }}'
       register: result
-      failed_when: result.stdout is not regex('writer#' ~ zone ~ ':modify object')
+      failed_when: result.stdout is not regex('writer#' ~ zone ~ ':modify_object')
       changed_when: false
 
     - name: Grant owner ownership permission on data
@@ -139,7 +155,9 @@
         admin_password: "{{ password }}"
 
     - name: Check ownership permission on data
-      ansible.builtin.command: ils -A '{{ data }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils -A '{{ data }}'
       register: result
       failed_when: result.stdout is not regex('owner#' ~ zone ~ ':own')
       changed_when: false
@@ -157,7 +175,7 @@
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
-          set -o pipefail
+          set -o errexit -o pipefail
           userId="$(iquest '%s' \
             "select USER_ID where USER_NAME = 'forbidden' and USER_ZONE = '{{ zone }}'" )"
           iquest '%s' \
@@ -171,22 +189,25 @@
       changed_when: false
 
     - name: Verify forbidden read permission on sub_data_no_recursion
-      ansible.builtin.command: ils -A '{{ sub_data_no_recursion }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils -A '{{ sub_data_no_recursion }}'
       register: result
-      failed_when: result.stdout is not regex('forbidden#' ~ zone ~ ':read object')
+      failed_when: result.stdout is not regex('forbidden#' ~ zone ~ ':read_object')
       changed_when: false
 
     - name: Verify forbidden read permission on sub_coll_no_recursion
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
+          set -o errexit
           userId="$(iquest '%s' \
             "select USER_ID where USER_NAME = 'forbidden' and USER_ZONE = '{{ zone }}'" )"
           iquest '%s' \
             "select COLL_ACCESS_NAME \
               where COLL_NAME = '{{ sub_coll_no_recursion }}' and COLL_ACCESS_USER_ID = '$userId'"
       register: result
-      failed_when: result.stdout != 'read object'
+      failed_when: result.stdout != 'read_object'
       changed_when: false
 
     - name: Grant reader read permission on coll_no_recursion (non-recursive)
@@ -202,17 +223,20 @@
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
+          set -o errexit
           userId="$(iquest '%s' \
             "select USER_ID where USER_NAME = 'reader' and USER_ZONE = '{{ zone }}'" )"
           iquest '%s' \
             "select COLL_ACCESS_NAME
               where COLL_NAME = '{{ coll_no_recursion }}' and COLL_ACCESS_USER_ID = '$userId'"
       register: result
-      failed_when: result.stdout != 'read object'
+      failed_when: result.stdout != 'read_object'
       changed_when: false
 
     - name: Verify no reader permission on sub_data_no_recursion
-      ansible.builtin.command: ils -A '{{ sub_data_no_recursion }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils -A '{{ sub_data_no_recursion }}'
       register: result
       failed_when:
         - result.rc != 0
@@ -223,7 +247,7 @@
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
-          set -o pipefail
+          set -o errexit -o pipefail
           userId="$(iquest '%s' \
             "select USER_ID where USER_NAME = 'reader' and USER_ZONE = '{{ zone }}'" )"
           iquest '%s' \
@@ -247,7 +271,9 @@
         admin_password: "{{ password }}"
 
     - name: Verify forbidden has no permissions on anything in coll_inclusive
-      ansible.builtin.command: ils -A '{{ item }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils -A '{{ item }}'
       register: result
       failed_when:
         - result.rc != 0
@@ -271,20 +297,23 @@
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
+          set -o errexit
           userId="$(iquest '%s' \
             "select USER_ID where USER_NAME = 'reader' and USER_ZONE = '{{ zone }}'" )"
           iquest '%s' \
             "select COLL_ACCESS_NAME
               where COLL_NAME = '{{ item }}' and COLL_ACCESS_USER_ID = '$userId'"
       register: result
-      failed_when: result.stdout != 'read object'
+      failed_when: result.stdout != 'read_object'
       changed_when: false
       with_items:
         - "{{ coll_inclusive }}"
         - "{{ sub_coll_inclusive }}"
 
     - name: Verify reader read permission on coll_inclusive data objects
-      ansible.builtin.command: ils -A '{{ item }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils -A '{{ item }}'
       register: result
       failed_when: result.stdout is not regex('reader#' ~ zone ~ ':')
       changed_when: false
@@ -306,17 +335,20 @@
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
+          set -o errexit
           userId="$(iquest '%s' \
             "select USER_ID where USER_NAME = 'forbidden' and USER_ZONE = '{{ zone }}'" )"
           iquest '%s' \
             "select COLL_ACCESS_NAME
               where COLL_NAME = '{{ coll_exclusive }}' and COLL_ACCESS_USER_ID = '$userId'"
       register: result
-      failed_when: result.stdout != 'read object'
+      failed_when: result.stdout != 'read_object'
       changed_when: false
 
     - name: Verify no forbidden permission on coll_exclusive members
-      ansible.builtin.command: ils -A '{{ item }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils -A '{{ item }}'
       register: response
       failed_when:
         - result.rc != 0
@@ -340,7 +372,7 @@
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
-          set -o pipefail
+          set -o errexit -o pipefail
           userId="$(iquest '%s' \
             "select USER_ID where USER_NAME = 'reader' and USER_ZONE = '{{ zone }}'" )"
           iquest '%s' \
@@ -354,7 +386,9 @@
       changed_when: false
 
     - name: Verify reader read permission on sub_data_exclusive
-      ansible.builtin.command: ils -A '{{ sub_data_exclusive }}'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils -A '{{ sub_data_exclusive }}'
       register: result
       failed_when: result.stdout is not regex('reader#' ~ zone ~ ':')
       changed_when: false
@@ -363,11 +397,12 @@
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
+          set -o errexit
           userId="$(iquest '%s' \
             "select USER_ID where USER_NAME = 'reader' and USER_ZONE = '{{ zone }}'" )"
           iquest '%s' \
             "select COLL_ACCESS_NAME
               where COLL_NAME = '{{ sub_coll_exclusive }}' and COLL_ACCESS_USER_ID = '$userId'"
       register: result
-      failed_when: result.stdout != 'read object'
+      failed_when: result.stdout != 'read_object'
       changed_when: false

@@ -1,61 +1,58 @@
 ---
 - name: Test play for irods_resource_up module
-  hosts: localhost
+  hosts: irods_catalog
+  become: true
+  become_user: irods
+  run_once: true
   vars:
-    test_rsc: ChildResc
-    missing_rsc: missingRes
+    password: password
+    parent_resc: parent
+    test_resc: ChildResc
+    missing_resc: missingRes
   pre_tasks:
-    - name: Initialize irods session
-      shell: |
-        set -o errexit
-        if ! [[ -e "$HOME/.irods/.irodsA" ]]; then
-          iinit "$IRODS_PASSWORD" > /dev/null
-          iadmin mkresc ChildResc passthru
-          iadmin mkresc ParentResc passthru
-          iadmin addchildtoresc ParentResc ChildResc
-          echo changed
-        fi
-      register: response
-      changed_when: response.stdout == 'changed'
+    - name: Create resources
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          iadmin mkresc '{{ parent_resc }}' passthru
+          iadmin modresc '{{ parent_resc }}' status down
+          iadmin mkresc '{{ test_resc }}' passthru
+          iadmin modresc '{{ test_resc }}' status down
+          iadmin addchildtoresc '{{ parent_resc }}' '{{ test_resc }}'
+      changed_when: true
+      tags: non_idempotent
 
   tasks:
-    - name: bring up resource
+    - name: Bring up resource
+      delegate_to: localhost
+      become: false
       irods_resource_up:
-        resource: "{{ test_rsc }}"
-        host: "{{ groups['irods_catalog'][0] }}"
+        resource: "{{ test_resc }}"
+        host: "{{ inventory_hostname }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: testing
 
-    - name: verify resource up
-      shell: test up = "$(iquest '%s' "select RESC_STATUS where RESC_NAME = '{{ test_rsc }}'")"
+    - name: Verify resource up
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: test up = "$(iquest '%s' "select RESC_STATUS where RESC_NAME = '{{ test_resc }}'")"
       changed_when: false
-      register: response
 
-    - name: verify resource parents up
-      shell: |
-        function verify_parent_status () {
-          next_rsc="$(iquest '%s' "SELECT RESC_PARENT WHERE RESC_NAME = $1")"
-          if [-n next_rsc]
-          then
-            status="$(iquest "SELECT RESC_STATUS WHERE RESC_NAME = '$next_rsc'")"
-            verify_parent_status next_resc
-          else
-            return 0
-          fi
-        }
-        verify_parent_status '{{ test_rsc }}'
+    - name: Verify resource parents up
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: test up = "$(iquest '%s' "select RESC_STATUS where RESC_NAME = '{{ parent_resc }}'")"
       changed_when: false
-      register: response
 
-    - name: test with non-existent resource
-      failed_when: response is success or response.msg != "Resource missingRes does not exist"
+    - name: Test with non-existent resource
       irods_resource_up:
-        resource: "{{ missing_rsc }}"
-        host: "{{ groups['irods_catalog'][0] }}"
+        resource: "{{ missing_resc }}"
+        host: "{{ ansible_hostname }}"
         port: 1247
         admin_user: rods
-        admin_password: rods
+        admin_password: "{{ password }}"
         zone: testing
       register: response
+      failed_when: response is success or response.msg != "The resource missingRes doesn't exist."

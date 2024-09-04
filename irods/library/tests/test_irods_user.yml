@@ -47,7 +47,8 @@
     - name: Verify user has correct password
       ansible.builtin.shell:
         executable: /bin/bash
-        cmd: iinit rods123
+        cmd: iinit
+        stdin: rods123
       environment:
         IRODS_USER_NAME: test_user1
         IRODS_AUTHENTICATION_FILE: /tmp/.a-test_user1
@@ -65,7 +66,8 @@
     - name: Check user has new password
       ansible.builtin.shell:
         executable: /bin/bash
-        cmd: iinit rods321
+        cmd: iinit
+        stdin: rods321
       environment:
         IRODS_USER_NAME: "{{ existing_user }}"
         IRODS_AUTHENTICATION_FILE: /tmp/.a-existing_user

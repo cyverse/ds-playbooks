@@ -1,7 +1,16 @@
 ---
-- name: test irods_user_type module
+- name: Test irods_user_type module
   hosts: localhost
   gather_facts: false
   tasks:
-    - debug:
+    - name: Test no description
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test with description
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test update with different description
+      ansible.builtin.debug:
         msg: TODO implement

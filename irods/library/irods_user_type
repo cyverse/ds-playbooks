@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # An ansible module for managing iRODS user types. At the moment, it can only
 # create them.

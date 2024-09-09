@@ -29,22 +29,29 @@ RUN \
 
 ### Install iRODS
 	rpm --import https://packages.irods.org/irods-signing-key.asc
-	yum --assumeyes versionlock add irods-*-4.3.1
+	yum --assumeyes versionlock add irods-icommands-4.2.8 irods-runtime-4.2.8 irods-server-4.2.8
 	yum --assumeyes install irods-server
 # XXX - irods-icommands required by irods-server but not installed by dependency resolution in
-#       CentOS 7
+#       CentOS 7, for iRODS 4.3.1.
 	yum --assumeyes install irods-icommands
 # XXX - ^^^
 	python3 -m pip install python-irodsclient
 
 ### Configure iRODS
+	# NOTE: For 4.2.8
+	yum --assumeyes install gcc python3-devel
+	python3 -m pip install psutil
+	# ^^^ 4.2.8
 	/tmp/config-irods
 
 ### Create service script
 	/tmp/prep-svc-script
 
 ### Populate .ssh/authorized_keys
-	echo ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMNAkCWfBgthPFt3580sM8H0BXpCQVrEI8Y2Kpq9bO+3 disallowed \
+	printf '%s %s %s\n' \
+			ssh-ed25519 \
+			AAAAC3NzaC1lZDI1NTE5AAAAIMNAkCWfBgthPFt3580sM8H0BXpCQVrEI8Y2Kpq9bO+3 \
+			disallowed \
 		> /root/.ssh/authorized_keys
 
 ### Clean yum cache

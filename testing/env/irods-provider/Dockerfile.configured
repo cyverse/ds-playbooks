@@ -40,14 +40,18 @@ RUN \
 
 ### Install iRODS
 	rpm --import https://packages.irods.org/irods-signing-key.asc
-	yum --assumeyes versionlock add irods-*-4.3.1
+	yum --assumeyes versionlock add \
+		irods-database-plugin-postgres-4.2.8 \
+		irods-icommands-4.2.8 \
+		irods-runtime-4.2.8 \
+		irods-server-4.2.8
 # XXX - python3-pyodbc required by irods-server but not available as system package in CentOS 7
 	yum --assumeyes install gcc gcc-c++ unixODBC-devel
 	pip3 install pyodbc
 	yum --assumeyes erase gcc gcc-c++ unixODBC-devel
 # XXX - ^^^
 # XXX - irods-icommands required by irods-server but not installed by dependency resolution in
-#       CentOS 7
+#       CentOS 7, 4.3.1
 	yum --assumeyes install irods-icommands
 # XXX - ^^^
 	yum --assumeyes install irods-server irods-database-plugin-postgres

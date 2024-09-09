@@ -72,7 +72,7 @@ Variable                                   | Required | Default                 
 `irods_storage_resources`                  | no       | []                                   |         | A list of storage resources hosted on the server being configured, _see below_
 `irods_sysctl_kernel`                      | no       | []                                   |         | A list of sysctl kernel parameters to set on the iRODS catalog service provider, _see_below_
 `irods_user_password_salt`                 | no       |                                      |         | The salt used when obfuscating user passwords stored in the catalog database
-`irods_version`                            | no       | 4.2.8                                |         | The version of iRODS to work with
+`irods_version`                            | no       | 4.3.1                                |         | The version of iRODS to work with
 `irods_zone_key`                           | no       | TEMPORARY_zone_key                   |         | The zone key
 `irods_zone_name`                          | no       | tempZone                             |         | The name of the zone
 `mdrepo_cli_account`                       | no       | null                                 |         | The iRODS account used my the MD Repo CLI

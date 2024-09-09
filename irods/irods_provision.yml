@@ -29,6 +29,24 @@
           register: response
           changed_when: response.stdout == 'changed'
 
+        - name: CentOS | update irods package lock version
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              set -o errexit -o pipefail
+              readarray irods_locks < <(yum versionlock list | sed --quiet '/^0:irods-/p')
+              for lock in "${irods_locks[@]}"; do
+                ver="$(sed 's/^0:irods-.*-\([0-9\.]\+\)-.*/\1/' <<< "$lock")"
+                if [[ "$ver" != '{{ _irods_version }}' ]]; then
+                  pkg="$(sed 's/0:\(irods-.*\)-[0-9\.]\+-.*/\1/' <<< "$lock")"
+                  yum versionlock delete "$pkg" > /dev/null
+                  yum versionlock add "$pkg"-'{{ _irods_version }}' > /dev/null
+                  echo changed
+                fi
+              done
+          register: resp
+          changed_when: resp.stdout is regex('^changed')
+
         - name: CentOS | lock irods packages to required version
           community.general.yum_versionlock:
             name:
@@ -36,14 +54,15 @@
               - irods-runtime-{{ _irods_version }}
               - irods-server-{{ _irods_version }}
             state: present
-# XXX - Due to https://github.com/ansible-collections/community.general/issues/4470, this isn't
-# idempotent.
+  # XXX - Due to https://github.com/ansible-collections/community.general/issues/4470, this isn't
+  # idempotent.
           tags: non_idempotent
+  # XXX - ^^^
 # XXX - ^^^
 
         - name: CentOS | install iRODS server
-          ansible.builtin.package:
-            name: irods-server
+          ansible.builtin.yum:
+            name: irods-server-{{ _irods_version }}
             state: present
 
         - name: CentOS | install OS specific required packages
@@ -51,12 +70,6 @@
             name:
               - uuidd
               - which
-            state: present
-
-          # TODO: When upgrading to iRODS 4.2.9, remove this task.
-        - name: CentOS | ensure unixODBC is installed (irods issue 5389)
-          ansible.builtin.package:
-            name: unixODBC
             state: present
 
     - name: Provision Ubuntu
@@ -89,8 +102,8 @@
               Pin-Priority: 1001
 
         - name: Ubuntu | install iRODS server
-          ansible.builtin.package:
-            name: irods-server={{ _irods_version }}
+          ansible.builtin.apt:
+            name: irods-server={{ _irods_version }}-0~bionic
             state: present
 
         - name: Ubuntu | install OS specific required packages
@@ -100,13 +113,7 @@
               - uuid-runtime
             state: present
 
-          # TODO: When upgrading to iRODS 4.2.9, remove this task.
-        - name: Ubuntu | ensure unixODBC is installed (irods issue 5389)
-          ansible.builtin.package:
-            name: unixodbc
-            state: present
-
-    - name: Ensure iRODS does attempts to start on boot
+    - name: Ensure iRODS attempts to start on boot
       ansible.builtin.service:
         name: irods
         enabled: true

@@ -4,6 +4,8 @@
 # Copyright: © 2021, The Arizona Board of Regents
 # Standard BSD License | CyVerse (see https://cyverse.org/license)
 
+"""ansible module for starting and stopping iRODS service"""
+
 ANSIBLE_METADATA = {
     "metadata_version": "1.1",
     "status": ["preview"],
@@ -20,29 +22,13 @@ ANSIBLE_METADATA = {
 #  state  The state irods-server should be in upon success. It should be one of
 #         'restarted', 'started', or 'stopped'. The default is 'started'.
 
-from os import path
 from subprocess import PIPE, Popen
 
 from ansible.module_utils.basic import AnsibleModule
 
-_irods_home = "/var/lib/irods"
-_irodsctl_old = _irods_home + "/iRODS/irodsctl"
-_irodsctl_new = _irods_home + "/irodsctl"
-
-
-def _is_new():
-    return path.isfile(_irodsctl_new)
-
-
-def _find_irodsctl():
-    if _is_new():
-        return _irodsctl_new
-    else:
-        return _irodsctl_old
-
 
 def _call_irodsctl(arg):
-    cmd = Popen(args=[_find_irodsctl(), arg], stdout=PIPE, stderr=PIPE)
+    cmd = Popen(args=["/var/lib/irods/irodsctl", arg], stdout=PIPE, stderr=PIPE)
     (resp, err) = cmd.communicate()
 
     if cmd.returncode != 0:
@@ -52,11 +38,7 @@ def _call_irodsctl(arg):
 
 def _is_running():
     status = str(_call_irodsctl("status"))
-
-    if _is_new():
-        return "No iRODS servers running" not in status
-    else:
-        return "No servers running" not in status
+    return "No iRODS servers running" not in status
 
 
 def _ensure_started():

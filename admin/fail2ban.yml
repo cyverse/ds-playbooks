@@ -1,0 +1,37 @@
+---
+- name: Whitelist CentOS 7 vault
+  hosts: all:!unmanaged_systems
+  become: true
+  tasks:
+    - name: Learn about services
+      ansible.builtin.service_facts:
+
+    - name: Determine if CentOS 7
+      ansible.builtin.stat:
+        path: /etc/centos-release
+      register: centos7
+
+    - name: Whitelist vault.centos.org
+      ansible.builtin.lineinfile:
+        path: /etc/fail2ban/jail.conf
+        insertafter: ^#ignoreip =
+        regexp: ^ignoreip =
+        line: ignoreip = 18.238.85.0/25
+      when:
+        - ansible_facts.services['fail2ban.service'] is defined
+        - ansible_facts.services['fail2ban.service'].state == 'running'
+        - centos7.stat.exists
+      notify:
+        - Reload fail2ban
+        - Restart iptables
+
+  handlers:
+    - name: Reload fail2ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: reloaded
+
+    - name: Restart iptables
+      ansible.builtin.service:
+        name: iptables
+        state: restarted

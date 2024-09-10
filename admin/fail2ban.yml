@@ -4,23 +4,18 @@
   become: true
   tasks:
     - name: Learn about services
+      when: ansible_distribution == 'CentOS'
       ansible.builtin.service_facts:
 
-    - name: Determine if CentOS 7
-      ansible.builtin.stat:
-        path: /etc/centos-release
-      register: centos7
-
     - name: Whitelist vault.centos.org
+      when:
+        - ansible_distribution == 'CentOS'
+        - ansible_facts.services['fail2ban.service'] is defined
       ansible.builtin.lineinfile:
         path: /etc/fail2ban/jail.conf
         insertafter: ^#ignoreip =
         regexp: ^ignoreip =
         line: ignoreip = 18.238.85.0/25
-      when:
-        - ansible_facts.services['fail2ban.service'] is defined
-        - ansible_facts.services['fail2ban.service'].state == 'running'
-        - centos7.stat.exists
       notify:
         - Reload fail2ban
         - Restart iptables

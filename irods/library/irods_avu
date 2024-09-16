@@ -67,13 +67,14 @@ options:
       attached with this attribute. "present" means that the AVU will be
       attached if there isn't already an AVU with the same attribute and
       value. Any others will be removed. "absent" means that an AVU with
-      the provided attribute and value will be removed.
+      the provided attribute and value will be removed. "add" means that an AVU will be added if it already exists, elase it will be set.
 
     default: present
     choices:
       - absent
       - present
       - set
+      - add
 
   host:
     description: This is the FQDN or IP address of the iRODS server to connect to.
@@ -190,6 +191,15 @@ class _IrodsAvuAuthenticationError(_IrodsAvuError):
         super(_IrodsAvuAuthenticationError, self).__init__(
             msgTmpl.format(user, zone))
 
+def _ensure_avu_present(
+    entity: _IrodsEntity, attribute: str, value: str, units: Optional[str]
+) -> bool:
+
+    if entity.metadata.get(attribute, value, units):
+        return False
+
+    entity.metadata.add(attribute, value, units)
+    return True
 
 def _ensure_avu_added(
     entity: _IrodsEntity, attribute: str, value: str, units: Optional[str]
@@ -281,10 +291,12 @@ def _irods_avu(
 
             if state == "absent":
                 return _ensure_avu_removed(entity, attribute, value, units)
-            elif state == "present":
+            elif state == "add":
                 return _ensure_avu_added(entity, attribute, value, units)
             elif state == "set":
                 return _ensure_avu_set(entity, attribute, value, units)
+            elif state == "present":
+                return __ensure_avu_present(entity, attribute, value, units)
             else:
                 raise _IrodsAvuError("state not implemented")
     except CAT_INVALID_AUTHENTICATION:
@@ -320,7 +332,7 @@ def _prep_module() -> AnsibleModule:
             default="data object"),
         state=dict(
             type='str',
-            choices=["absent", "present", "set"],
+            choices=["absent", "present", "add", "set"],
             default="present"),
         host=dict(type='str', default="localhost.localdomain"),
         port=dict(type='int', default=1247),

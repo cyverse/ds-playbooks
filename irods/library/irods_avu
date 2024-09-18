@@ -64,17 +64,18 @@ options:
   state:
     description: >
       This is the desired state to achieve. "set" means a single AVU is
-      attached with this attribute. "present" means that the AVU will be
-      attached if there isn't already an AVU with the same attribute and
-      value. Any others will be removed. "absent" means that an AVU with
-      the provided attribute and value will be removed. "add" means that an AVU will be added if it already exists, elase it will be set.
+      attached with this attribute. "present" means that an AVU will be added as long as there isn't already one with the same attribute.
+      "absent" means that an AVU with the provided attribute and value will be removed. 
+        "add" means that an AVU will be added if there isn't already one with the same attribute, value, and unit.
+
+
 
     default: present
     choices:
       - absent
+      - add
       - present
       - set
-      - add
 
   host:
     description: This is the FQDN or IP address of the iRODS server to connect to.
@@ -296,7 +297,7 @@ def _irods_avu(
             elif state == "set":
                 return _ensure_avu_set(entity, attribute, value, units)
             elif state == "present":
-                return __ensure_avu_present(entity, attribute, value, units)
+                return _ensure_avu_present(entity, attribute, value, units)
             else:
                 raise _IrodsAvuError("state not implemented")
     except CAT_INVALID_AUTHENTICATION:

@@ -69,6 +69,10 @@
       changed_when: false
       ignore_errors: true
 
+    - name: Call lookup plugin for uuid 
+      ansible.builtin.debug:
+        msg: "{{ lookup('uuid', 't') }}"
+
     - name: Store collections without ipc_UUID
       ansible.builtin.set_fact:
         collections_without_uuid: "{{ uuid_check.results | selectattr('stdout', 'search', 'UUID not found') | map(attribute='item') | list }}"

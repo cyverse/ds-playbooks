@@ -31,49 +31,44 @@ class LookupModule(LookupBase):
         Generate UUIDs based on the provided type parameter.
         
         Supported types:
-        - 't': Time-based UUID (UUID1)
-        - 'r': Random UUID (UUID4)
-        - 'n': Name-based UUID (UUID3 for MD5 or UUID5 for SHA1, based on optional hashing method parameter)
+        - 1: Time-based UUID (UUID1)
+        - 4: Random UUID (UUID4)
+        - 3: UUID3 (MD5 hash) 
+        - 5: UUID5 (SHA1 hash)
         
         For name-based UUIDs (type 'n'), you must provide a namespace and a name:
         - 'n', namespace, name, [optional: hash method ('md5' or 'sha1')]
         
         Example usage in a playbook:
-        - debug: msg="{{ lookup('uuid', 't') }}"  # Time-based UUID
-        - debug: msg="{{ lookup('uuid', 'n', '6ba7b810-9dad-11d1-80b4-00c04fd430c8', 'example', 'md5') }}"
+        - debug: msg="{{ lookup('uuid', 1)}}"  # Time-based UUID
+        - debug: msg="{{ lookup('uuid', 3, '6ba7b810-9dad-11d1-80b4-00c04fd430c8') }}"
         """
 
         # Ensure that at least one term is passed for the UUID type
         if len(terms) == 0:
             raise AnsibleError("You must specify a UUID type: 't' (time-based), 'r' (random), 'n' (name-based)")
 
-        # Get the UUID type
-        uuid_type = terms[0].lower()
+        uuid_type = int(terms[0])
 
         # Generate UUID based on the provided type
-        if uuid_type == 't':
+        if uuid_type == 1:
             # Time-based UUID (UUID1)
             return [str(uuid.uuid1())]
 
-        elif uuid_type == 'r':
+        elif uuid_type == 4:
             # Random UUID (UUID4)
             return [str(uuid.uuid4())]
 
-        elif uuid_type == 'n':
-            # Name-based UUID (UUID3 or UUID5, requires namespace and name)
+        elif uuid_type == 3:
+            # UUID3 (MD5 hash)
             if len(terms) < 3:
-                raise AnsibleError("Name-based UUID requires a namespace and a name")
-            
-            namespace = terms[1]
-            name = terms[2]
-            hash_method = terms[3].lower() if len(terms) >= 4 else 'sha1'
-
-            if hash_method == 'md5':
-                return [str(uuid.uuid3(uuid.UUID(namespace), name))]
-            elif hash_method == 'sha1':
-                return [str(uuid.uuid5(uuid.UUID(namespace), name))]
-            else:
-                raise AnsibleError("Invalid hash method for name-based UUID. Supported methods: 'md5', 'sha1'")
+                raise AnsibleError("You must provide a namespace and a name for a name-based UUID (type 'n')")
+            return [str(uuid.uuid3(uuid.UUID(terms[1]), terms[2]))]
+        elif uuid_type == 5:
+            # UUID5 (SHA1 hash)
+            if len(terms) < 3:
+                raise AnsibleError("You must provide a namespace and a name for a name-based UUID (type 'n')")
+            return [str(uuid.uuid5(uuid.UUID(terms[1]), terms[2]))]
 
         else:
             # If an unsupported UUID type is specified

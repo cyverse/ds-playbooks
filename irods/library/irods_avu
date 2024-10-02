@@ -163,6 +163,7 @@ _IRODSCLIENT_PACK_ERR: Optional[Exception] = None
 
 try:
     from irods.data_object import iRODSDataObject
+    from irods.collection import iRODSCollection
     from irods.exception import CAT_INVALID_AUTHENTICATION, \
         CAT_INVALID_CLIENT_USER, CAT_INVALID_USER, CollectionDoesNotExist, \
         DataObjectDoesNotExist, NetworkException
@@ -172,8 +173,10 @@ try:
 except Exception as e:
     _IRODSCLIENT_PACK_ERR = e
 
+# TEMPORARY
+from irods.models import Collection
 
-_IrodsEntity = Union[iRODSDataObject, iRODSResource]
+_IrodsEntity = Union[iRODSDataObject, iRODSResource, iRODSCollection]
 
 
 class _IrodsAvuError(Exception):
@@ -196,7 +199,7 @@ def _ensure_avu_present(
     entity: _IrodsEntity, attribute: str, value: str, units: Optional[str]
 ) -> bool:
 
-    if entity.metadata.get(attribute, value, units):
+    if len(entity.metadata.get_all(attribute)) > 0:
         return False
 
     entity.metadata.add(attribute, value, units)
@@ -243,14 +246,26 @@ def _get_entity(
     if entity_type == "data object":
         try:
             return session.data_objects.get(entity_name)
-        except CollectionDoesNotExist:
+        except CollectionDoesNotExist as e:
             raise _IrodsAvuError(
                 "The data object '{0}' does not exist".format(entity_name))
-        except DataObjectDoesNotExist:
+        except DataObjectDoesNotExist as e:
             raise _IrodsAvuError(
                 "The data object '{0}' does not exist".format(entity_name))
     elif entity_type == "resource":
-        return session.resources.get(entity_name)
+        try:
+            return session.resources.get(entity_name)
+        except Exception as e:
+            raise _IrodsAvuError(
+                "The resource '{0}' does not exist".format(entity_name))
+
+    elif entity_type == "collection":
+        try:
+            # return session.query(Collection).filter(Collection.name == entity_name)
+            return session.collections.get(entity_name)
+        except CollectionDoesNotExist as e:
+            raise _IrodsAvuError(
+                "The collection '{0}' does not exist".format(entity_name))
     else:
         raise _IrodsAvuError("entities of that type not supported")
 
@@ -329,7 +344,7 @@ def _prep_module() -> AnsibleModule:
         entity_name=dict(type='str', required=True),
         entity_type=dict(
             type='str',
-            choices=["data object", "resource"],
+            choices=["data object", "resource", "collection"],
             default="data object"),
         state=dict(
             type='str',

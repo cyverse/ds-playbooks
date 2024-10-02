@@ -47,16 +47,19 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: Check if collections have ipc_UUID using iquest and store missing ones
-      ansible.builtin.shell:
-        executable: /bin/bash
-        cmd: |
-          set -o pipefail
-          output=$(iquest '%s' "select META_COLL_ATTR_VALUE where META_COLL_ATTR_NAME = 'ipc_UUID' and COLL_NAME = '{{ item }}'")
-            if [[ "$output" == *"CAT_NO_ROWS_FOUND"* ]] || [[ -z "$output" ]]; then
-            echo "UUID not found for collection: {{ item }}: $output"
-          fi
-      with_items:
+    - name: Ensure predefined collections have UUIDs
+      become: false
+      delegate_to: localhost
+      irods_avu:
+        entity_type: collection
+        entity_name: "{{ item }}"
+        attribute: ipc_AVU
+        value: "{{ lookup('uuid', 1) }}" #  for time-based UUID
+        host: "{{ groups['irods_catalog'][0] }}"
+        zone: "{{ _irods_zone_name }}"
+        username: "{{ _irods_clerver_user }}"
+        password: "{{ _irods_clerver_password }}"
+      loop:
         - /{{ _irods_zone_name }}
         - /{{ _irods_zone_name }}/home
         - /{{ _irods_zone_name }}/home/{{ _irods_clerver_user }}
@@ -65,26 +68,7 @@
         - /{{ _irods_zone_name }}/trash/home
         - /{{ _irods_zone_name }}/trash/home/{{ _irods_clerver_user }}
         - /{{ _irods_zone_name }}/trash/home/shared
-      register: uuid_check
-      changed_when: false
-      ignore_errors: true
 
-    - name: Call lookup plugin for uuid 
-      ansible.builtin.debug:
-        msg: "{{ lookup('uuid', 't') }}"
-
-    - name: Store collections without ipc_UUID
-      ansible.builtin.set_fact:
-        collections_without_uuid: "{{ uuid_check.results | selectattr('stdout', 'search', 'UUID not found') | map(attribute='item') | list }}"
-
-    - name: Add UUID to collections without ipc_UUID
-      ansible.builtin.shell: |
-        uuid=$(uuidgen -t)
-        imeta set -C {{ item }} ipc_UUID $uuid
-      with_items: "{{ collections_without_uuid }}"
-      changed_when: true
-      register: cmd_result
-      ignore_errors: false
 
     - name: Initialize rodsadmin perms
       when: init_rodsadmin_perms | d(false)

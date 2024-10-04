@@ -1,75 +1,109 @@
+"""
+This lookup plugin generates UUIDs based on the provided type parameter.
+"""
+
 # Import the necessary Ansible libraries
 from __future__ import absolute_import, division, print_function
-__metaclass__ = type
+__metaclass__ = type #pylint: disable=invalid-name
 
 DOCUMENTATION = '''
 module: uuid
 
 short_description: Generate UUIDs based on the provided type parameter
 
-version: 0.1
+version_added: "1.0.0"
 
 description: >
-    This module generates UUIDs for the user based on the provided type parameter.
+    This lookup plugin generates UUIDs based on the provided type parameter.
     Supported types:
-    - 't': Time-based UUID (UUID1)
-    - 'r': Random UUID (UUID4)
-    - 'n': Name-based UUID (UUID3 for MD5 or UUID5 for SHA1, based on optional hashing method parameter)
+    - 1: Time-based UUID (UUID1)
+    - 4: Random UUID (UUID4)
+    - 3: Name-based UUID (UUID3 with MD5 hash)
+    - 5: Name-based UUID (UUID5 with SHA1 hash)
+
+options:
+    _terms:
+        description: The type of UUID to generate (1, 4, 3, or 5). For types 3 and 5, a namespace and name must also be provided.
+        required: True
+        type: list
+        elements: str
 '''
-EXAMPLES = ''''''
+EXAMPLES = '''
+- name: Generate a time-based UUID (UUID1)
+    debug:
+        msg: "{{ lookup('uuid', 1) }}"
+
+- name: Generate a random UUID (UUID4)
+    debug:
+        msg: "{{ lookup('uuid', 4) }}"
+
+- name: Generate a name-based UUID (UUID3 with MD5 hash)
+    debug:
+        msg: "{{ lookup('uuid', 3, '6ba7b810-9dad-11d1-80b4-00c04fd430c8', 'my_name') }}"
+'''
+
 # Import the UUID standard library
-import uuid
+import uuid #pylint: disable=import-self disable=wrong-import-position
 
 # Import base classes from Ansible
-from ansible.plugins.lookup import LookupBase
-from ansible.errors import AnsibleError
+from ansible.plugins.lookup import LookupBase #pylint: disable=wrong-import-position
+from ansible.errors import AnsibleError #pylint: disable=wrong-import-position
+
 
 class LookupModule(LookupBase):
-
-    def run(self, terms, variables=None, **kwargs):
+    """ Generate UUIDs based on the provided type parameter """
+    def run(self, terms, variables=None, **kwargs): #pylint: disable=unused-argument
         """
         Generate UUIDs based on the provided type parameter.
         
         Supported types:
         - 1: Time-based UUID (UUID1)
         - 4: Random UUID (UUID4)
-        - 3: UUID3 (MD5 hash) 
-        - 5: UUID5 (SHA1 hash)
+        - 3: Name-based UUID (UUID3 with MD5 hash)
+        - 5: Name-based UUID (UUID5 with SHA1 hash)
         
-        For name-based UUIDs (type 'n'), you must provide a namespace and a name:
-        - 'n', namespace, name, [optional: hash method ('md5' or 'sha1')]
-        
-        Example usage in a playbook:
-        - debug: msg="{{ lookup('uuid', 1)}}"  # Time-based UUID
-        - debug: msg="{{ lookup('uuid', 3, '6ba7b810-9dad-11d1-80b4-00c04fd430c8') }}"
+        For name-based UUIDs (types 3 and 5), you must provide a namespace and a name:
+        - 3, namespace, name
+        - 5, namespace, name
         """
 
         # Ensure that at least one term is passed for the UUID type
         if len(terms) == 0:
-            raise AnsibleError("You must specify a UUID type: 't' (time-based), 'r' (random), 'n' (name-based)")
+            raise AnsibleError(
+            "You must specify a UUID type: 1 (time-based), \
+             4 (random), 3 (name-based UUID3), 5 (name-based UUID5)"
+            ) #pylint: disable=trailing-whitespace
 
         uuid_type = int(terms[0])
 
-        # Generate UUID based on the provided type
-        if uuid_type == 1:
-            # Time-based UUID (UUID1)
-            return [str(uuid.uuid1())]
+        # Generate UUID based on the provided type using match statement
+        match uuid_type:
+            case 1:
+                # Time-based UUID (UUID1)
+                return [str(uuid.uuid1())]
 
-        elif uuid_type == 4:
-            # Random UUID (UUID4)
-            return [str(uuid.uuid4())]
+            case 4:
+                # Random UUID (UUID4)
+                return [str(uuid.uuid4())]
 
-        elif uuid_type == 3:
-            # UUID3 (MD5 hash)
-            if len(terms) < 3:
-                raise AnsibleError("You must provide a namespace and a name for a name-based UUID (type 'n')")
-            return [str(uuid.uuid3(uuid.UUID(terms[1]), terms[2]))]
-        elif uuid_type == 5:
-            # UUID5 (SHA1 hash)
-            if len(terms) < 3:
-                raise AnsibleError("You must provide a namespace and a name for a name-based UUID (type 'n')")
-            return [str(uuid.uuid5(uuid.UUID(terms[1]), terms[2]))]
+            case 3:
+                # UUID3 (MD5 hash)
+                if len(terms) < 3:
+                    raise AnsibleError(
+                    "You must provide a namespace and a name for a name-based UUID (type 3)"
+                    )
+                return [str(uuid.uuid3(uuid.UUID(terms[1]), terms[2]))]
 
-        else:
-            # If an unsupported UUID type is specified
-            raise AnsibleError(f"Unsupported UUID type '{uuid_type}'. Supported types: 't', 'r', 'n'")
+            case 5:
+                # UUID5 (SHA1 hash)
+                if len(terms) < 3:
+                    raise AnsibleError(
+                    "You must provide a namespace and a name for a name-based UUID (type 5)"
+                    )
+                return [str(uuid.uuid5(uuid.UUID(terms[1]), terms[2]))]
+
+            case _:
+                # If an unsupported UUID type is specified
+                raise AnsibleError(
+                    f"Unsupported UUID type '{uuid_type}'. Supported types: 1, 4, 3, 5"
+                )

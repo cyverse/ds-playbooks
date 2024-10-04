@@ -4,7 +4,16 @@ This lookup plugin generates UUIDs based on the provided type parameter.
 
 # Import the necessary Ansible libraries
 from __future__ import absolute_import, division, print_function
-__metaclass__ = type #pylint: disable=invalid-name
+
+# Import the UUID standard library
+import uuid #pylint: disable=import-self
+
+# Import base classes from Ansible
+from ansible.plugins.lookup import LookupBase
+from ansible.errors import AnsibleError
+
+# Set the metaclass to ensure that the plugin is compatible with Ansible
+__metaclass__ = type  #pylint: disable=invalid-name
 
 DOCUMENTATION = '''
 module: uuid
@@ -42,12 +51,6 @@ EXAMPLES = '''
         msg: "{{ lookup('uuid', 3, '6ba7b810-9dad-11d1-80b4-00c04fd430c8', 'my_name') }}"
 '''
 
-# Import the UUID standard library
-import uuid #pylint: disable=import-self disable=wrong-import-position
-
-# Import base classes from Ansible
-from ansible.plugins.lookup import LookupBase #pylint: disable=wrong-import-position
-from ansible.errors import AnsibleError #pylint: disable=wrong-import-position
 
 
 class LookupModule(LookupBase):
@@ -72,7 +75,7 @@ class LookupModule(LookupBase):
             raise AnsibleError(
             "You must specify a UUID type: 1 (time-based), \
              4 (random), 3 (name-based UUID3), 5 (name-based UUID5)"
-            ) #pylint: disable=trailing-whitespace
+            )
 
         uuid_type = int(terms[0])
 

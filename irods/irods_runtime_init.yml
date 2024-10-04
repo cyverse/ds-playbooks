@@ -53,7 +53,7 @@
       irods_avu:
         entity_type: collection
         entity_name: "{{ item }}"
-        attribute: ipc_AVU
+        attribute: ipc_UUID
         value: "{{ lookup('uuid', 1) }}" #  for time-based UUID
         host: "{{ groups['irods_catalog'][0] }}"
         zone: "{{ _irods_zone_name }}"

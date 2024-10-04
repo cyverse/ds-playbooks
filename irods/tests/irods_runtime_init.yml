@@ -48,7 +48,6 @@
             exit 1
           fi
       with_items:
-        - /
         - /testing
         - /testing/home
         - /testing/home/shared

@@ -260,7 +260,6 @@ def _get_entity(
 
     elif entity_type == "collection":
         try:
-            # return session.query(Collection).filter(Collection.name == entity_name)
             return session.collections.get(entity_name)
         except CollectionDoesNotExist as e:
             raise _IrodsAvuError(

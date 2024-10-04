@@ -1,4 +1,4 @@
-- name: Test lookup_uuid plugin
+- name: Test uuid lookup plugin
   hosts: localhost
   run_once: true
   gather_facts: no

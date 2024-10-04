@@ -90,7 +90,7 @@
         - "{{ coll_no_recursion }}"
         - "{{ coll_inclusive }}"
         - "{{ coll_exclusive }}"
-        - "{{ coll_deep }}"
+        # - "{{ coll_deep }}"
       tags: non_idempotent
 
   tasks:

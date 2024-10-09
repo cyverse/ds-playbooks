@@ -45,7 +45,7 @@ def main():
     if not dir_exist(module_dir):
         print(f"{module_dir} not a directory")
         return
-    if not module_exist(module_dir, module_name):
+    if not module_exist(module_dir, module_name) and not module_exist(module_dir, f"{module_name}.py"):
         print(f"module {args.module_name} not found")
         return
     if not playbook_exist(module_dir, playbook):
@@ -129,7 +129,7 @@ def run_tester(inspect, pretty, module_dir, playbook, hosts, verbose):
     """
     # create a empty dir that allows the overlapping volume mount to work
     # e.g. ds-playbooks/irods/library/tests/library
-    empty_dir = os.path.join(module_dir, "tests", "library")
+    empty_dir = os.path.join(module_dir, "tests", module_dir.split("/")[-1])
     if not os.path.isdir(empty_dir):
         os.mkdir(empty_dir)
 
@@ -142,11 +142,11 @@ def run_tester(inspect, pretty, module_dir, playbook, hosts, verbose):
             --env PGHOST="$DBMS_HOST" \
             --network "$DOMAIN" \
             --volume "{1}/tests":/playbooks-under-test:ro \
-            --volume "{1}":/playbooks-under-test/library:ro \
+            --volume "{1}":/playbooks-under-test/{7}:ro \
             ansible-tester "{2}" "{3}" "{4}" "{5}" '' "{6}";
-     rmdir {1}/tests/library)
+     rmdir {1}/tests/{7})
     """
-    cmd = cmd.format(CFG, module_dir, inspect, pretty, verbose, hosts, playbook)
+    cmd = cmd.format(CFG, module_dir, inspect, pretty, verbose, hosts, playbook, module_dir.split("/")[-1])
 
     proc = Popen(cmd, shell=True, executable="/bin/bash")
     return_code = proc.wait()

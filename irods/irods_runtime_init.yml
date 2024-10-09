@@ -47,6 +47,29 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
+    - name: Ensure predefined collections have UUIDs
+      become: false
+      delegate_to: localhost
+      irods_avu:
+        entity_type: collection
+        entity_name: "{{ item }}"
+        attribute: ipc_UUID
+        value: "{{ lookup('uuid', 1) }}" #  for time-based UUID
+        host: "{{ groups['irods_catalog'][0] }}"
+        zone: "{{ _irods_zone_name }}"
+        username: "{{ _irods_clerver_user }}"
+        password: "{{ _irods_clerver_password }}"
+      loop:
+        - /{{ _irods_zone_name }}
+        - /{{ _irods_zone_name }}/home
+        - /{{ _irods_zone_name }}/home/{{ _irods_clerver_user }}
+        - /{{ _irods_zone_name }}/home/shared
+        - /{{ _irods_zone_name }}/trash
+        - /{{ _irods_zone_name }}/trash/home
+        - /{{ _irods_zone_name }}/trash/home/{{ _irods_clerver_user }}
+        - /{{ _irods_zone_name }}/trash/home/shared
+
+
     - name: Initialize rodsadmin perms
       when: init_rodsadmin_perms | d(false)
       delegate_to: localhost
@@ -100,7 +123,6 @@
     - name: Ensure anonymous user has read access to required collections
       delegate_to: localhost
       become: false
-      no_log: true
       irods_permission:
         subject: anonymous
         permission: read

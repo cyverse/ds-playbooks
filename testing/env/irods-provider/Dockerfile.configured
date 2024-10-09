@@ -13,7 +13,7 @@ RUN yum --assumeyes versionlock add irods-*-4.2.8
 RUN yum --assumeyes install irods-server irods-database-plugin-postgres
 
 ### Install libraries required by command scripts
-RUN pip3 --disable-pip-version-check install pika==1.1
+RUN pip3 --disable-pip-version-check install pika
 
 ARG DB_NAME=ICAT
 ARG DB_PASSWORD=testpassword

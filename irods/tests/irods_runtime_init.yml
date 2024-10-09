@@ -18,23 +18,31 @@
       changed_when: false
 
     - name: Verify /zone/home/public doesn't exist
-      ansible.builtin.command: ils /testing/home/public
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/home/public
       register: response
       changed_when: false
       failed_when: response is succeeded
 
     - name: Verify /zone/home/shared does exist
-      ansible.builtin.command: ils /testing/home/shared
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/home/shared
       changed_when: false
 
     - name: Verify /zone/trash/home/public doesn't exist
-      ansible.builtin.command: ils /testing/trash/home/public
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/trash/home/public
       register: response
       changed_when: false
       failed_when: response is succeeded
 
     - name: Verify /zone/trash/home/shared does exist
-      ansible.builtin.command: ils /testing/trash/home/shared
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/trash/home/shared
       changed_when: false
 
     - name: Verify that the starting collections have UUIDs
@@ -57,7 +65,9 @@
       changed_when: false
 
     - name: Test ensure CyVerse curated collection base collection exists
-      ansible.builtin.command: ils /testing/home/shared/commons_repo/curated
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/home/shared/commons_repo/curated
       changed_when: false
 
     - name: Verify that rodsadmin has write permission on /
@@ -173,3 +183,9 @@
         - cyverse_housekeeping_determineAllStorageFreeSpace
         - cyverse_housekeeping_rmTrash
       changed_when: false
+
+    - name: Verify iRODS admin session exited
+      ansible.builtin.stat:
+        path: /var/lib/irods/.irods/.a-adm
+      register: resp
+      failed_when: resp.stat.exists

@@ -55,7 +55,7 @@ EXAMPLES = '''
 
 class LookupModule(LookupBase):
     """ Generate UUIDs based on the provided type parameter """
-    def run(self, terms, _variables=None, **_kwargs): #pylint: disable=unused-argument
+    def run(self, terms, _variables=None, **_kwargs):
         """
         Generate UUIDs based on the provided type parameter.
         

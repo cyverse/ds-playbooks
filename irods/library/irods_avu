@@ -65,10 +65,11 @@ options:
 
   state:
     description: >
-      This is the desired state to achieve. "set" means a single AVU is
-      attached with this attribute. "present" means that an AVU will be added as long as there isn't already one with the same attribute.
-      "absent" means that an AVU with the provided attribute and value will be removed. 
-        "add" means that an AVU will be added if there isn't already one with the same attribute, value, and unit.
+      This is the desired state to achieve. 
+        - "set" means a single AVU is attached with this attribute.
+        - "present" means that an AVU will be added as long as there isn't already one with the same attribute.
+        - "absent" means that an AVU with the provided attribute and value will be removed.
+        - "add" means that an AVU will be added if there isn't already one with the same attribute, value, and unit.
 
     default: present
     choices:

@@ -2,10 +2,10 @@
 - name: Set up for testing irods_avu
   hosts: localhost
   tasks:
-    - name: prepare for testing
-      shell: |
+    - name: Prepare for testing
+      ansible.builtin.shell: |
         touch /tmp/object
-        iinit rods
+        iinit password
         iadmin mkuser tester rodsuser
         iadmin moduser tester password password
         iput -f -R ingestRes /tmp/object add-object
@@ -17,25 +17,25 @@
         imeta add -R ingestRes rm-a1 rm-v1 rm-u
         imeta add -R ingestRes rm-a1 rm-v2
         imeta add -R ingestRes rm-a2 rm-v1
-      args:
-        warn: false
+      changed_when: true
       tags:
         - non_idempotent
 
-- name: test irods_avu
+- name: Test irods_avu
   hosts: dstesting-provider_configured-1.dstesting_default
   become: true
   become_user: irods
   tasks:
-    - name: add <a1,v1> to data object
+    - name: Add <a1,v1> to data object
       irods_avu:
         attribute: a1
         value: v1
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
+        state: add
 
-    - name: explicit add explicit unitless <a1,v1> to data object
+    - name: Explicit add explicit unitless <a1,v1> to data object
       irods_avu:
         attribute: a1
         value: v1
@@ -46,12 +46,12 @@
         port: 1247
         zone: testing
         username: rods
-        password: rods
-        state: present
+        password: password
+        state: add
       register: results
       failed_when: results['changed'] or results['failed']
 
-    - name: add <a1,v1,u> to data object
+    - name: Add <a1,v1,u> to data object
       irods_avu:
         attribute: a1
         value: v1
@@ -59,44 +59,47 @@
         entity_name: /testing/home/rods/add-object
         host: localhost
         zone: testing
-        password: rods
+        password: password
+        state: add
 
-    - name: add <a1,v2> to data object
+    - name: Add <a1,v2> to data object
       irods_avu:
         attribute: a1
         value: v2
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
+        state: add
 
-    - name: add <a2,v1> to data object
+    - name: Add <a2,v1> to data object
       irods_avu:
         attribute: a2
         value: v1
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
+        state: add
 
-    - name: set new <set-a3,set-v1> to data object
+    - name: Set new <set-a3,set-v1> to data object
       irods_avu:
         attribute: set-a3
         value: set-v1
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
         state: set
 
-    - name: set existing <set-a1,set-v2> to data object
+    - name: Set existing <set-a1,set-v2> to data object
       irods_avu:
         attribute: set-a1
         value: set-v2
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
         state: set
 
-    - name: verify only one AVU with attribute set-a1
-      shell: |
+    - name: Verify only one AVU with attribute set-a1
+      ansible.builtin.shell: |
         cnt="$(iquest '%s' \
           "select count(META_DATA_ATTR_VALUE)
            where COLL_NAME = '/testing/home/rods'
@@ -106,28 +109,28 @@
         [[ "$cnt" == 1 ]]
       changed_when: false
 
-    - name: set new <set-a4,set-v2,set-u> to data object
+    - name: Set new <set-a4,set-v2,set-u> to data object
       irods_avu:
         attribute: set-a4
         value: set-v2
         units: set-u
         entity_name: /testing/home/rods/set-object
         zone: testing
-        password: rods
+        password: password
         state: set
 
-    - name: set existing <set-a2,set-v2,set-u> to data object
+    - name: Set existing <set-a2,set-v2,set-u> to data object
       irods_avu:
         attribute: set-a2
         value: set-v2
         units: set-u
         entity_name: /testing/home/rods/set-object
         zone: testing
-        password: rods
+        password: password
         state: set
 
-    - name: verify only one AVU with attribute set-a2
-      shell: |
+    - name: Verify only one AVU with attribute set-a2
+      ansible.builtin.shell: |
         units="$(iquest '%s' \
           "select META_DATA_ATTR_UNITS
            where COLL_NAME = '/testing/home/rods'
@@ -138,17 +141,17 @@
         [[ "$units" == 'set-u' ]]
       changed_when: false
 
-    - name: remove <rm-a1,rm-v1> from resource
+    - name: Remove <rm-a1,rm-v1> from resource
       irods_avu:
         attribute: rm-a1
         value: rm-v1
         entity_type: resource
         entity_name: ingestRes
         zone: testing
-        password: rods
+        password: password
         state: absent
 
-    - name: remove <rm-a,rm-v1,rm-u> from resource
+    - name: Remove <rm-a,rm-v1,rm-u> from resource
       irods_avu:
         attribute: rm-a1
         value: rm-v1
@@ -156,62 +159,64 @@
         entity_type: resource
         entity_name: ingestRes
         zone: testing
-        password: rods
+        password: password
         state: absent
 
-    - name: remove <rm-a1,rm-v2> from resource
+    - name: Remove <rm-a1,rm-v2> from resource
       irods_avu:
         attribute: rm-a1
         value: rm-v2
         entity_type: resource
         entity_name: ingestRes
         zone: testing
-        password: rods
+        password: password
         state: absent
 
-    - name: remove <rm-a1,rm-v2> from resource
+    - name: Remove <rm-a1,rm-v2> from resource
       irods_avu:
         attribute: rm-a1
         value: rm-v2
         entity_type: resource
         entity_name: ingestRes
         zone: testing
-        password: rods
+        password: password
         state: absent
 
-    - name: remove <rm-a2,rm-v1> from resource
+    - name: Remove <rm-a2,rm-v1> from resource
       irods_avu:
         attribute: rm-a2
         value: rm-v1
         entity_type: resource
         entity_name: ingestRes
         zone: testing
-        password: rods
+        password: password
         state: absent
 
-    - name: verify empty host fails
+    - name: Verify empty host fails
       irods_avu:
         attribute: a1
         value: v1
         entity_name: /testing/home/rods/add-object
         host: null
         zone: testing
-        password: rods
+        password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('host')
 
-    - name: verify wrong host fails
+    - name: Verify wrong host fails
       irods_avu:
         attribute: a1
         value: v1
         entity_name: /testing/home/rods/add-object
         host: buz
         zone: testing
-        password: rods
+        password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('Could not connect')
 
-    - name: verify empty port fails
+    - name: Verify empty port fails
       irods_avu:
         attribute: a1
         value: v1
@@ -219,11 +224,12 @@
         port: null
         zone: testing
         username: rods
-        password: rods
+        password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('port')
 
-    - name: verify wrong port fails
+    - name: Verify wrong port fails
       irods_avu:
         attribute: a1
         value: v1
@@ -231,33 +237,36 @@
         port: 124
         zone: testing
         username: rods
-        password: rods
+        password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('Could not connect')
 
-    - name: verify unknown zone fails
+    - name: Verify unknown zone fails
       irods_avu:
         attribute: a1
         value: v1
         entity_name: /testing/home/rods/add-object
-        zone: null
+        zone: iamunknown
         username: rods
-        password: rods
+        password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('cannot be authenticated')
 
-    - name: verify incorrect user fails
+    - name: Verify incorrect user fails
       irods_avu:
         attribute: a1
         value: v1
         entity_name: /testing/home/rods/add-object
         zone: testing
-        username: null
-        password: rods
+        username: iamunknown
+        password: passwordincorrect
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('cannot be authenticated')
 
-    - name: verify normal user is denied
+    - name: Verify normal user is denied
       irods_avu:
         attribute: a1
         value: v1
@@ -265,35 +274,39 @@
         zone: testing
         username: tester
         password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('rodsadmin')
 
-    - name: verify incorrect password fails
+    - name: Verify incorrect password fails
       irods_avu:
         attribute: a1
         value: v1
         entity_name: /testing/home/rods/add-object
         zone: testing
         password: ods
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('cannot be authenticated')
 
-    - name: verify adding <'',v1> to data object fails
+    - name: Verify adding <'',v1> to data object fails
       irods_avu:
         attribute: null
         value: v1
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('attribute')
 
-    - name: verify adding <a1,''> to data object fails
+    - name: Verify adding <a1,''> to data object fails
       irods_avu:
         attribute: a1
         value: null
         entity_name: /testing/home/rods/add-object
         zone: testing
-        password: rods
+        password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('value')

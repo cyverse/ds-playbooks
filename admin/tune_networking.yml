@@ -31,6 +31,7 @@
       changed_when: false
 
 
+# TODO switch to netplan role (https://github.com/mrlesmithjr/ansible-netplan)
 - name: Tune MTU
   hosts: physical
   become: true

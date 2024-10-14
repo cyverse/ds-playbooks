@@ -26,6 +26,7 @@ The following actions need to be performed once for the admin host.
    * dmidecode
    * docker-ce
    * docker-compose-plugin
+   * git
    * jq
    * python3
    * python3-pip
@@ -33,7 +34,7 @@ The following actions need to be performed once for the admin host.
 
    ```console
    sudo apt install \
-      dmidecode docker-ce docker-compose-plugin jq python3 python3-is-python python3-pip rpm
+      dmidecode docker-ce docker-compose-plugin git jq python3 python3-is-python python3-pip rpm
    ```
 
 1. The docker service needs to be started.

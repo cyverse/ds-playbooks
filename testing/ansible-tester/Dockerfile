@@ -9,7 +9,7 @@ RUN <<'EOF'
 	apt-get install --yes \
 		dmidecode gpg-agent python-is-python3 python3 python3-pip openssh-client rpm wget
 
-	# NB: ansible-core==2.17.0 has a bug in it that prevents ansible.builtin.wait_for_connection from
+	# NB: ansible-core>=2.17.0 has a bug in it that prevents ansible.builtin.wait_for_connection from
 	# detecting CentOS 7 and Ubuntu 18.04 connection readiness.
 	python3 -m pip --disable-pip-version-check --quiet install \
 		'ansible-core<2.17' dnspython jinja2 netaddr 'python-irodsclient<2' requests urllib3 wheel

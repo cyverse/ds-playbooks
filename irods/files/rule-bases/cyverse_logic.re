@@ -896,11 +896,11 @@ cyverse_logic_acPostProcForModifyAVUMetadata(
 #  rodsZoneClient
 #
 cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) {
-	if (cyverse_isFSType(*TgtType) && !cyverse_inStaging(/*TgtName)) {
+	if (cyverse_isFSType(*TgtType)) {
 		*tgt = '';
 		_cyverse_logic_resolveMsgEntityId(*TgtType, *TgtName, $userNameClient, $rodsZoneClient, *tgt);
 
-		if (cyverse_isFSType(*SrcType) && !cyverse_inStaging(/*SrcName)) {
+		if (cyverse_isFSType(*SrcType)) {
 			*src = '';
 			_cyverse_logic_resolveMsgEntityId(
 				*SrcType, *SrcName, $userNameClient, $rodsZoneClient, *src );

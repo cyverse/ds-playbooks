@@ -1234,7 +1234,7 @@ cyverse_logic_acCreateUser {
 # 				*DataObjInfo.logical_path,
 # 				*DataObjInfo.data_owner_name,
 # 				*DataObjInfo.data_owner_zone,
-# 				int(*DataObjInfo.data_size),
+# 				*DataObjInfo.data_size,
 # 				*DataObjInfo.data_type,
 # 				*Username,
 # 				*Zone ),

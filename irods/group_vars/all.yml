@@ -85,7 +85,7 @@ _pire_resource_hierarchy: "{{ pire_resource_hierarchy | default(_irods_resource_
 
 _report_email_addr: "{{ report_email_addr | default('root@localhost') }}"
 
-_restart_irods: "{{ restart_irods | default(false) }}"
+_restart_allowed: "{{ restart_allowed | d(false) }}"
 
 _sysctl_kernel: "{{ sysctl_kernel | default([]) }}"
 

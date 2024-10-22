@@ -79,7 +79,7 @@ Variable                                   | Required | Default                 
 `pire_manager`                             | no       | null                                 |         | The username that owns the PIRE project collection, if `null`, the collection isn't created.
 `pire_resource_hierarchy`                  | no       | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
 `report_email_addr`                        | no       | root@localhost                       |         | The address where reports are to be emailed.
-`restart_irods`                            | no       | false                                |         | iRODS can be restarted on the servers having config file changes, _see below_
+`restart_allowed`                          | no       | false                                |         | The services can be restarted if needed
 `sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
 `sftp_proxy_allowed`                       | no       | `[]`                                 |         | A list of network/masks for the proxy servers allowed access to the SFTP servers
 `sftp_user_host_allowed`                   | no       | `[]`                                 |         | A list of ip addresses of the user hosts allowed (whitelisted) for access to the SFTP servers

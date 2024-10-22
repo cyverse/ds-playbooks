@@ -166,7 +166,7 @@
 
   handlers:
     - name: Restart iRODS if needed
-      when: _restart_irods
+      when: _restart_allowed
       ansible.builtin.include_tasks: tasks/restart_irods.yml
       vars:
         restart_op: if running

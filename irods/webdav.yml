@@ -634,25 +634,25 @@
         daemon_reload: true
 
     - name: Restart httpd
-      when: notifications_enabled | d(false)
+      when: _restart_allowed and notifications_enabled | d(false)
       ansible.builtin.service:
         name: httpd
         state: restarted
 
     - name: Restart varnish
-      when: notifications_enabled | d(false)
+      when: _restart_allowed and notifications_enabled | d(false)
       ansible.builtin.service:
         name: varnish
         state: restarted
 
     - name: Restart varnishncsa
-      when: notifications_enabled | d(false)
+      when: _restart_allowed and notifications_enabled | d(false)
       ansible.builtin.service:
         name: varnishncsa
         state: restarted
 
     - name: Restart purgeman
-      when: notifications_enabled | d(false)
+      when: _restart_allowed and notifications_enabled | d(false)
       ansible.builtin.service:
         name: purgeman
         state: restarted

@@ -6,7 +6,7 @@ This lookup plugin generates UUIDs based on the provided type parameter.
 from __future__ import absolute_import, division, print_function
 
 # Import the UUID standard library
-import uuid  # pylint: disable=import-self
+import uuid as impl  # pylint: disable=import-self
 
 # Import base classes from Ansible
 from ansible.plugins.lookup import LookupBase
@@ -87,25 +87,25 @@ class LookupModule(LookupBase):
         match uuid_type:
             case 1:
                 # Time-based UUID (UUID1)
-                return [str(uuid.uuid1())]  # pylint: disable=no-member
+                return [str(impl.uuid1())]  # pylint: disable=no-member
 
             case 4:
                 # Random UUID (UUID4)
-                return [str(uuid.uuid4())]  # pylint: disable=no-member
+                return [str(impl.uuid4())]  # pylint: disable=no-member
 
             case 3:
                 # UUID3 (MD5 hash)
                 if len(terms) < 3:
                     raise AnsibleError(
                         "You must provide a namespace and a name for a name-based UUID (type 3)")
-                return [str(uuid.uuid3(uuid.UUID(terms[1]), terms[2]))]  # pylint: disable=no-member
+                return [str(impl.uuid3(impl.UUID(terms[1]), terms[2]))]  # pylint: disable=no-member
 
             case 5:
                 # UUID5 (SHA1 hash)
                 if len(terms) < 3:
                     raise AnsibleError(
                         "You must provide a namespace and a name for a name-based UUID (type 5)")
-                return [str(uuid.uuid5(uuid.UUID(terms[1]), terms[2]))]  # pylint: disable=no-member
+                return [str(impl.uuid5(impl.UUID(terms[1]), terms[2]))]  # pylint: disable=no-member
 
             case _:
                 # If an unsupported UUID type is specified

@@ -91,6 +91,10 @@ ipcEncryption_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp) {
     _ipcEncryptionCheckEncryptionRequiredForDataObj(*DataObjInp.obj_path);
 }
 
+ipcEncryption_api_data_obj_create_and_stat_pre(*Instance, *Comm, *DataObjInp) {
+    _ipcEncryptionCheckEncryptionRequiredForDataObj(*DataObjInp.obj_path);
+}
+
 ipcEncryption_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp) {
     _ipcEncryptionCheckEncryptionRequiredForDataObj(*DataObjInp.obj_path);
 }

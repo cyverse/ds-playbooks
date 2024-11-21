@@ -51,7 +51,7 @@ _mdrepo_ensureMdRepoObjExists(*DataObj, *Ticket) {
 		&& _mdrepo_forMDRepo(*DataObj)
 		&& ! _mdrepo_dataObjExists(*DataObj)
 	) {
-		_mdrepo_logMsg('creating empty data object *DataObj');
+		_mdrepo_logMsg("using ticket '*Ticket' to create empty data object '*DataObj'");
 		*svcAcntArg = execCmdArg(_mdrepo_getTicketOwner(*Ticket));
 		*dataObjArg = execCmdArg(*DataObj);
 		*args = "*svcAcntArg *dataObjArg";
@@ -64,6 +64,11 @@ _mdrepo_ensureMdRepoObjExists(*DataObj, *Ticket) {
 			*err;
 		}
 	}
+}
+
+mdrepo_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp) {
+	_mdrepo_ensureMdRepoObjExists(
+		*DataObjInp.obj_path, _mdrepo_getValue(temporaryStorage, 'mdrepo_ticket') );
 }
 
 mdrepo_api_data_obj_open_pre(*Instance, *Comm, *DataObjInp) {

@@ -1,4 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# Updates the size of a replication in the ICAT DB. This is called by the
+# CyVerse replication logic as part of a workaround for the issue
+# https://github.com/irods/irods/issues/5160.
+#
+# Usage:
+#   correct-size ID REPL-NUM SIZE
+#
+# Arguments:
+#   ID        the DB Id of the data object to modify
+#   REPL-NUM  the data object's replica number whose size will be set
+#   SIZE      the new size of the replica
+#
+# © 2024 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
 
 set -o errexit -o nounset -o pipefail
 

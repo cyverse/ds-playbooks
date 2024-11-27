@@ -1,7 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""This publishes messages to a give RabbitMQ exchange."""
+"""RabbitMQ message publisher for CyVerse Data Store
+
+This script publishes a persistent  message on a given RabbitMQ
+exchange. It is intended to be used by the CyVerse Data Store as an
+iRODS command script.
+
+Args:
+    exchange: the RabbitMQ exchange receiving the message
+    key: the message's routing key
+    body: the body of the message
+
+Env Var:
+    IRODS_AMQP_URI: provides the RabbitMQ broker and credentials to be
+        used
+
+© 2024 The Arizona Board of Regents on behalf of The University of
+Arizona. For license information, see https://cyverse.org/license.
+"""
 
 import os
 import sys
@@ -9,17 +26,6 @@ from sys import stderr
 from typing import List
 
 import pika
-
-
-def _publish(uri: str, exchange: str, routing_key: str, body: str) -> None:
-    conn_params = pika.URLParameters(uri)
-    conn_params.socket_timeout = 10
-    with pika.BlockingConnection(conn_params) as conn:
-        conn.channel().basic_publish(
-            exchange=exchange,
-            routing_key=routing_key,
-            body=body,
-            properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent))
 
 
 def _main(argv: List[str]) -> int:
@@ -31,17 +37,29 @@ def _main(argv: List[str]) -> int:
         stderr.write(
             "The exchange, routing key, and message body are required as the first three "
             "parameters, respectively\n")
+
         return 1
 
     try:
         uri = os.environ['IRODS_AMQP_URI']
         _publish(uri=uri, exchange=exchange, routing_key=key, body=body)
     except BaseException as e:  # pylint: disable=broad-exception-caught
-        ex_type = type(e)
-        stderr.write(f"Failed to publish message: {e} ({ex_type})\n")
+        stderr.write(f"Failed to publish message: {e} ({type(e)})\n")
         return 1
 
     return 0
+
+
+def _publish(uri: str, exchange: str, routing_key: str, body: str) -> None:
+    conn_params = pika.URLParameters(uri)
+    conn_params.socket_timeout = 10
+
+    with pika.BlockingConnection(conn_params) as conn:
+        conn.channel().basic_publish(
+            exchange=exchange,
+            routing_key=routing_key,
+            body=body,
+            properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent))
 
 
 if __name__ == '__main__':

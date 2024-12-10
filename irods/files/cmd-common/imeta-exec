@@ -2,8 +2,18 @@
 #
 # Calls the imeta service with the given parameters
 #
-# USAGE:
-#  imeta <args>
+# Usage:
+#  imeta ARGS...
+#
+# Arguments:
+#  ARGS  a list of arguments to pass directly to imeta in the format received
+#
+# Returns:
+#  It writes any error message received from imeta to stderr. All other output
+#  is written directly to stdout in the format received.
+#
+# © 2024 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
 
 set -o errexit -o nounset -o pipefail
 

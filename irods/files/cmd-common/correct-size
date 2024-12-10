@@ -5,12 +5,12 @@
 # https://github.com/irods/irods/issues/5160.
 #
 # Usage:
-#   correct-size ID REPL-NUM SIZE
+#  correct-size ID REPL-NUM SIZE
 #
 # Arguments:
-#   ID        the DB Id of the data object to modify
-#   REPL-NUM  the data object's replica number whose size will be set
-#   SIZE      the new size of the replica
+#  ID        the DB Id of the data object to modify
+#  REPL-NUM  the data object's replica number whose size will be set
+#  SIZE      the new size of the replica
 #
 # © 2024 The Arizona Board of Regents on behalf of The University of Arizona.
 # For license information, see https://cyverse.org/license.

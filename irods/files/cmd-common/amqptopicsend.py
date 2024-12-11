@@ -7,10 +7,13 @@ This script publishes a persistent  message on a given RabbitMQ
 exchange. It is intended to be used by the CyVerse Data Store as an
 iRODS command script.
 
+Usage:
+    amqptopicsend.py EXCHANGE KEY BODY
+
 Args:
-    exchange: the RabbitMQ exchange receiving the message
-    key: the message's routing key
-    body: the body of the message
+    EXCHANGE: the RabbitMQ exchange receiving the message
+    KEY: the message's routing key
+    BODY: the body of the message
 
 Env Var:
     IRODS_AMQP_URI: provides the RabbitMQ broker and credentials to be

@@ -109,6 +109,16 @@
       vars:
         restart_op: if running
 
+  post_tasks:
+    - name: Remove defunct command scripts
+      ansible.builtin.file:
+        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
+        state: absent
+      loop:
+        - amqptopicsend.py
+        - generateuuid
+        - send_mail.py
+
   handlers:
     - name: Reload rules
       ansible.builtin.file:

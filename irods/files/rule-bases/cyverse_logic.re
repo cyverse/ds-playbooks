@@ -137,7 +137,7 @@ _cyverse_logic_assignUUID(*EntityType, *EntityPath, *Uuid, *ClientName, *ClientZ
 
 _cyverse_logic_genUUID() =
 	let *uuid = '' in
-	let *_ = if (errorcode(msiExecCmd('generateuuid', '', '', '', '', *genResp)) == 0) {
+	let *_ = if (errorcode(msiExecCmd('generate-uuid', '', '', '', '', *genResp)) == 0) {
 			msiGetStdoutInExecCmdOut(*genResp, *uuid);
 			*uuid = trimr(*uuid, "\n");
 		} in
@@ -261,7 +261,7 @@ _cyverse_logic_resolveMsgEntityId(*EntityType, *EntityName, *ClientName, *Client
 # *Msg (string) the message to send
 #
 # Remote Execution:
-# It executes the amqptopicsend.py command script on the rule engine host
+# It executes the amqp-topic-send command script on the rule engine host
 #
 _cyverse_logic_sendMsg(*Topic, *Msg) {
 	*exchangeArg = execCmdArg(cyverse_AMQP_EXCHANGE);
@@ -269,7 +269,7 @@ _cyverse_logic_sendMsg(*Topic, *Msg) {
 	*msgArg = execCmdArg(*Msg);
 	*argStr = '*exchangeArg *topicArg *msgArg';
 
-	*status = errormsg(msiExecCmd('amqptopicsend.py', *argStr, cyverse_RE_HOST, '', 0, *out), *msg);
+	*status = errormsg(msiExecCmd('amqp-topic-send', *argStr, cyverse_RE_HOST, '', 0, *out), *msg);
 
 	if (*status < 0) {
 		msiGetStderrInExecCmdOut(*out, *err);

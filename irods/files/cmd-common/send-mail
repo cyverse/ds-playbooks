@@ -1,23 +1,29 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# pylint: disable=invalid-name
 
-"""This sends an email message."""
+"""Sends an email message
+
+This script sends an email message to a provided recipient.
+
+Usage:
+    send-mail FROM-ADDR TO-ADDR SUBJECT BODY
+
+Args:
+    FROM-ADDR: the email will indicate that this is the address for the sender
+    TO-ADDR: the email will be sent to this address
+    SUBJECT: the subject of the email
+    BODY: the content of the email, the message
+
+© 2024 The Arizona Board of Regents on behalf of The University of
+Arizona. For license information, see https://cyverse.org/license.
+"""
 
 from email.message import EmailMessage
 from smtplib import SMTP
 import sys
 from sys import stderr
 from typing import List
-
-
-def _send_mail(from_addr: str, to_addr: str, subject: str, body: str) -> None:
-    msg = EmailMessage()
-    msg['From'] = from_addr
-    msg['To'] = to_addr
-    msg['Subject'] = subject
-    msg.set_content(body)
-    with SMTP("localhost") as smtp:
-        smtp.send_message(msg)
 
 
 def _main(argv: List[str]) -> int:
@@ -41,6 +47,16 @@ def _main(argv: List[str]) -> int:
         stderr.write(f"Failed to send the following message to {to_addr}: {body} ({exn})\n")
         return 1
     return 0
+
+
+def _send_mail(from_addr: str, to_addr: str, subject: str, body: str) -> None:
+    msg = EmailMessage()
+    msg['From'] = from_addr
+    msg['To'] = to_addr
+    msg['Subject'] = subject
+    msg.set_content(body)
+    with SMTP("localhost") as smtp:
+        smtp.send_message(msg)
 
 
 if __name__ == "__main__":

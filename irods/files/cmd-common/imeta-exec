@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Calls the imeta service with the given parameters
+# Calls imeta with the given parameters
 #
 # Usage:
 #  imeta ARGS...

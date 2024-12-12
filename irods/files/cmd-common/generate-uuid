@@ -4,7 +4,7 @@
 # UUID.
 #
 # Usage:
-#  generateuuid
+#  generate-uuid
 #
 # Return:
 #  A time-based UUID is written to stdout.

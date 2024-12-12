@@ -19,7 +19,7 @@
         - amqp-topic-send
         - correct-size
         - delete-scheduled-rule
-        - generateuuid
+        - generate-uuid
         - imeta-exec
         - send_mail.py
 

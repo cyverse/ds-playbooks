@@ -137,7 +137,7 @@ _cyverse_logic_assignUUID(*EntityType, *EntityPath, *Uuid, *ClientName, *ClientZ
 
 _cyverse_logic_genUUID() =
 	let *uuid = '' in
-	let *_ = if (errorcode(msiExecCmd('generateuuid', '', '', '', '', *genResp)) == 0) {
+	let *_ = if (errorcode(msiExecCmd('generate-uuid', '', '', '', '', *genResp)) == 0) {
 			msiGetStdoutInExecCmdOut(*genResp, *uuid);
 			*uuid = trimr(*uuid, "\n");
 		} in

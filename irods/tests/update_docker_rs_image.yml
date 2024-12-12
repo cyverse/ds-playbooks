@@ -16,10 +16,12 @@
       register: response
       failed_when: not response.stat.exists
       with_items:
-        - amqptopicsend.py
+        - amqp-topic-send
+        - correct-size
         - delete-scheduled-rule
         - generateuuid
         - imeta-exec
+        - send_mail.py
 
     - name: Verify deposition of server_config.json
       ansible.builtin.stat:

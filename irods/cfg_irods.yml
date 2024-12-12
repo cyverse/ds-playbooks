@@ -109,6 +109,12 @@
       vars:
         restart_op: if running
 
+  post_tasks:
+    - name: Remove amqptopicsend.py
+      ansible.builtin.file:
+        path: /var/lib/irods/msiExecCmd_bin/amqptopicsend.py
+        state: absent
+
   handlers:
     - name: Reload rules
       ansible.builtin.file:

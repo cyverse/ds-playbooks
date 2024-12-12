@@ -58,11 +58,18 @@
         or response.stat.pw_name != 'irods'
         or not response.stat.xusr
       with_items:
-        - amqptopicsend.py
+        - amqp-topic-send
         - correct-size
         - delete-scheduled-rule
         - generateuuid
         - imeta-exec
+        - send_mail.py
+
+    - name: Verify amqptopicsend.py is not present
+      ansible.builtin.stat:
+        path: /var/lib/irods/msiExecCmd_bin/amqptopicsend.py
+      register: resp
+      failed_when: resp.stat.exists
 
     - name: Verify database_config.json does not exist
       ansible.builtin.stat:

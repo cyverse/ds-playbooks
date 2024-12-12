@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# pylint: disable=invalid-name
 
 """RabbitMQ message publisher for CyVerse Data Store
 
@@ -8,7 +9,7 @@ exchange. It is intended to be used by the CyVerse Data Store as an
 iRODS command script.
 
 Usage:
-    amqptopicsend.py EXCHANGE KEY BODY
+    amqp-topic-send EXCHANGE KEY BODY
 
 Args:
     EXCHANGE: the RabbitMQ exchange receiving the message

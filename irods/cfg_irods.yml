@@ -117,6 +117,7 @@
       loop:
         - amqptopicsend.py
         - generateuuid
+        - send_mail.py
 
   handlers:
     - name: Reload rules

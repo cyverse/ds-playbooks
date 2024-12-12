@@ -21,7 +21,7 @@
         - delete-scheduled-rule
         - generate-uuid
         - imeta-exec
-        - send_mail.py
+        - send-mail
 
     - name: Verify deposition of server_config.json
       ansible.builtin.stat:

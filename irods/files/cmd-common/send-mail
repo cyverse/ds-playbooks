@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# pylint: disable=invalid-name
 
 """Sends an email message
 
 This script sends an email message to a provided recipient.
 
 Usage:
-    send_mail.py FROM-ADDR TO-ADDR SUBJECT BODY
+    send-mail FROM-ADDR TO-ADDR SUBJECT BODY
 
 Args:
     FROM-ADDR: the email will indicate that this is the address for the sender

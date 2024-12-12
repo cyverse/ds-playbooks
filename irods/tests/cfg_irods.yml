@@ -63,7 +63,7 @@
         - delete-scheduled-rule
         - generate-uuid
         - imeta-exec
-        - send_mail.py
+        - send-mail
 
     - name: Verify defunct command scripts absent
       ansible.builtin.stat:
@@ -73,6 +73,7 @@
       loop:
         - amqptopicsend.py
         - generateuuid
+        - send_mail.py
 
     - name: Verify database_config.json does not exist
       ansible.builtin.stat:

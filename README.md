@@ -10,7 +10,7 @@ The following actions need to be performed once for the admin host.
 
 1. The Docker package repository needs to be configured on development machines and Ansible control nodes. Do the following.
 
-   ```console
+   ```shell
    sudo apt install ca-certificates curl gnupg lsb-release
    sudo mkdir /etc/apt/keyrings
    curl --fail --location --silent --show-error https://download.docker.com/linux/ubuntu/gpg \
@@ -28,18 +28,19 @@ The following actions need to be performed once for the admin host.
    * docker-compose-plugin
    * git
    * jq
+   * python-is-python3
    * python3
    * python3-pip
    * rpm
 
-   ```console
+   ```shell
    sudo apt install \
-      dmidecode docker-ce docker-compose-plugin git jq python3 python3-is-python python3-pip rpm
+      dmidecode docker-ce docker-compose-plugin git jq python-is-python3 python3 python3-pip rpm
    ```
 
 1. The docker service needs to be started.
 
-   ```console
+   ```shell
    sudo systemctl enable docker
    sudo systemctl start docker
    ```
@@ -48,7 +49,7 @@ The following actions need to be performed for each person who will be developin
 
 1. The person needs to be added to the `docker` group. The following assumes the person's username is `DEVELOPER`.
 
-   ```console
+   ```shell
    sudo usermod --append --groups docker DEVELOPER
    ```
 
@@ -67,7 +68,7 @@ The following actions need to be performed for each person who will be developin
 
    This is encapsulated in the file [requirements-python.txt](./requirements-python.txt).
 
-   ```console
+   ```shell
    pip install --requirement requirements-python.txt
    ```
 
@@ -76,7 +77,7 @@ The following actions need to be performed for each person who will be developin
 
 1. Finally, the required ansible collections and roles need to be installed. This can be done by running the [init-ansible](./init-ansible) script.
 
-   ```console
+   ```shell
    ./init-ansible
    ```
 

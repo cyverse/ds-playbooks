@@ -1,5 +1,5 @@
 ---
-- name: test bisque template default expansion
+- name: Test bisque template default expansion
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -7,14 +7,14 @@
   vars:
     bisque: "{{ lookup('template', '../templates/bisque.j2') }}"
   tasks:
-    - name: test cfg values set correctly
-      assert:
+    - name: Test cfg values set correctly
+      ansible.builtin.assert:
         that:
           - bisque is search('\nbisque_admin_user = admin\n')
           - bisque is search('\nbisque_admin_pass = admin\n')
 
 
-- name: test bisque template custom expansion
+- name: Test bisque template custom expansion
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -23,24 +23,25 @@
   vars:
     bisque: "{{ lookup('template', '../templates/bisque.j2') }}"
   tasks:
-    - name: test .bisque generated correctly
-      assert:
+    - name: Test .bisque generated correctly
+      ansible.builtin.assert:
         that:
           - bisque is search('\nbisque_host = http://localhost.localdomain/\n')
           - bisque is search('\nbisque_admin_user = irods\n')
           - bisque is search('\nbisque_admin_pass = password\n')
 
 
-- name: test prepare for bisque_paths
+- name: Test prepare for bisque_paths
   hosts: irods_catalog
   become: true
   tasks:
-    - include_tasks: tasks/test_pkg_installed.yml
+    - name: Verify gridsite-clients installed
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: gridsite-clients
 
-    - name: test ensure /var/log/bisque exists
-      stat:
+    - name: Test ensure /var/log/bisque exists
+      ansible.builtin.stat:
         path: /var/log/bisque
       register: response
       failed_when: >-
@@ -50,17 +51,11 @@
         not response.stat.wusr
 
 
-- name: test bisque cmd script in place
+- name: Test BisQue command scripts are in place
   hosts: irods_catalog
   tasks:
-    - name: Verify that bisque_paths.py is in place
-      stat:
-        path: /var/lib/irods/msiExecCmd_bin/bisque_paths.py
-      register: response
-      failed_when: not response.stat.exists
-
-    - name: test place .bisque
-      stat:
+    - name: Test place .bisque
+      ansible.builtin.stat:
         path: /var/lib/irods/.bisque
       register: response
       failed_when: >-
@@ -68,10 +63,21 @@
         response.stat.pw_name != 'irods' or
         not response.stat.rusr
 
-    - name: test isntall url-encode-path-segments command script
-      debug:
-        msg: TODO implement
+    - name: Verify that command scripts are in place
+      ansible.builtin.stat:
+        path: /var/lib/irods/msiExecCmd_bin/bisque_paths.py
+      register: response
+      failed_when: not response.stat.exists or not response.stat.rusr or not response.stat.xusr
+      loop:
+        - bisque_paths.py
+        - url-encode-path-segments
 
-    - name: test place BisQue rule logic
-      debug:
+    - name: Test place BisQue rule logic
+      ansible.builtin.stat:
+        path: /etc/irods/bisque.re
+      register: resp
+      failed_when: not resp.stat.exists or not resp.stat.rusr
+
+    - name: Test remove url-encode-path-segments.sh command script
+      ansible.builtin.debug:
         msg: TODO implement

@@ -22,13 +22,6 @@
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   tasks:
-    - name: Install bisque_paths.py
-      ansible.builtin.get_url:
-        validate_certs: false
-        url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
-        dest: /var/lib/irods/msiExecCmd_bin
-        mode: u+rx
-
     - name: Place .bisque
       when: _bisque_url | length > 0
       ansible.builtin.template:
@@ -36,9 +29,16 @@
         dest: "{{ ansible_env.HOME }}/.bisque"
         mode: u=r
 
+    - name: Install bisque_paths.py
+      ansible.builtin.get_url:
+        validate_certs: false
+        url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
+        dest: /var/lib/irods/msiExecCmd_bin
+        mode: u+rx
+
     - name: Install url-encode-path-segments command script
       ansible.builtin.copy:
-        src: files/bisque/var/lib/irods/msiExecCmd_bin/url-encode-path-segments.sh
+        src: files/bisque/var/lib/irods/msiExecCmd_bin/url-encode-path-segments
         dest: /var/lib/irods/msiExecCmd_bin
         mode: u+rx
 
@@ -48,6 +48,12 @@
         dest: /etc/irods/bisque.re
         mode: u+r
       notify: Reload rules
+
+  post_tasks:
+    - name: Removed url-encode-path-segments.sh command script
+      ansible.builtin.file:
+        path: /var/lib/irods/msiExecCmd_bin/url-encode-path-segments.sh
+        state: absent
 
   handlers:
     - name: Reload rules

@@ -76,7 +76,7 @@ _bisque_logMsg(*Msg) {
 _bisque_mkIrodsUrl(*Path, *URL) {
   *pathArg = execCmdArg(*Path);
   *status = errorcode(
-    msiExecCmd('url-encode-path-segments.sh', *pathArg, cyverse_RE_HOST, "", "", *out) );
+    msiExecCmd('url-encode-path-segments', *pathArg, cyverse_RE_HOST, "", "", *out) );
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);

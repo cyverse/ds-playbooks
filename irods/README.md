@@ -16,11 +16,6 @@ Variable                                   | Required | Default                 
 `avra_manager`                             | no       | `irods_clerver_user`                 |         | The iRODS user who is responsible for Avra data.
 `avra_resource_hierarchy`                  | no       | `irods_resource_hierarchies[0]`      |         | The resource used by the Avra project
 `become_svc_acnt`                          | no       | true                                 |         | Whether or not to perform actions normally performed by the service account as the service account
-`bisque_irods_host`                        | no       | `canonical_hostname`                 |         | The iRODS host to report to BisQue.
-`bisque_password`                          | no       | admin                                |         | The password used to authenticate connections to BisQue
-`bisque_projects`                          | no       | []                                   |         | A list of projects that automatically publish to BisQue
-`bisque_url`                               | no       |                                      |         | The URL for the BisQue server to connect to
-`bisque_user`                              | no       | admin                                |         | The user to connect to BisQue as
 `build_dir`                                | no       | /tmp                                 |         | The directory used for building artifacts for deployment
 `canonical_hostname`                       | no       | `groups['irods_catalog'][0]`         |         | The external FQDN used to access the data store services
 `canonical_irods_port`                     | no       | 1247                                 |         | The port on the `canonical_hostname` host listening for connections to iRODS

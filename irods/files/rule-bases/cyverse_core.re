@@ -25,7 +25,6 @@
 # service's rule.
 
 @include 'avra'
-@include 'bisque'
 @include 'coge'
 @include 'mdrepo'
 @include 'pire'
@@ -46,10 +45,6 @@
 # created collection that wasn't created administratively.
 #
 cyverse_core_acPostProcForCollCreate_exclusive {
-	*err = errormsg(bisque_acPostProcForCollCreate, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
 	*err = errormsg(coge_acPostProcForCollCreate, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
@@ -90,7 +85,6 @@ acCreateUser {
 # This rule applies the project specific data delete policies.
 #
 acDataDeletePolicy {
-	bisque_acDataDeletePolicy;
 	cyverse_logic_acDataDeletePolicy;
 }
 
@@ -312,10 +306,6 @@ acPostProcForDelete {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
-	*err = errormsg(bisque_acPostProcForDelete, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
 }
 
 # This rule sets the post-processing policy for an ACL change.
@@ -422,10 +412,6 @@ acPostProcForModifyAVUMetadata(
 #
 acPostProcForObjRename(*SourceObject, *DestObject) {
 	*err = errormsg(cyverse_logic_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-	*err = errormsg(bisque_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
@@ -754,10 +740,6 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # 	if (*err < 0) {
 # 		writeLine('serverLog', *msg);
 # 	}
-# 	*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 	if (*err < 0) {
-# 		writeLine('serverLog', *msg);
-# 	}
 # 	*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 	if (*err < 0) {
 # 		writeLine('serverLog', *msg);
@@ -774,10 +756,6 @@ _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 		writeLine('serverLog', *msg);
 	}
 	if (*Step != 'FINISH') {
-		*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-		if (*err < 0) {
-			writeLine('serverLog', *msg);
-		}
 		*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 		if (*err < 0) {
 			writeLine('serverLog', *msg);

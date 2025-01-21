@@ -19,8 +19,6 @@
       with_items:
         - avra.re
         - avra-env.re
-        - bisque.re
-        - bisque-env.re
         - coge.re
         - core.dvm
         - core.fnm

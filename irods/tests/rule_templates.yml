@@ -5,9 +5,7 @@
   vars_files:
     - ../group_vars/all.yml
   vars:
-    expected_bisque_irods_url: irods://dstesting-provider_configured-1.dstesting_default
     avra_env: "{{ lookup('template', '../templates/rule-bases/avra-env.re.j2') }}"
-    bisque_env: "{{ lookup('template', '../templates/rule-bases/bisque-env.re.j2') }}"
     cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
     pire_env: "{{ lookup('template', '../templates/rule-bases/pire-env.re.j2') }}"
   tasks:
@@ -35,13 +33,6 @@
         that:
           - avra_env is search("avra_RESC = 'demoResc'")
 
-    - name: Verify constants expand correctly in bisque-env.re.j2
-      ansible.builtin.assert:
-        that: >-
-          bisque_env
-          is search(
-            "bisque_IRODS_URL_BASE = 'irods://dstesting-provider_configured-1.dstesting_default'" )
-
     - name: Verify constants expand correctly in pire-env.re.j2
       ansible.builtin.assert:
         that: pire_env is search("pire_RESC = 'demoResc'")
@@ -63,7 +54,7 @@
     report_email_addr: bob@reports
     cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
   tasks:
-    - name: Verify custon values
+    - name: Verify custom values
       ansible.builtin.assert:
         that:
           - cyverse_env is search("cyverse_AMQP_EXCHANGE = 'exchange'")
@@ -122,21 +113,6 @@
       ansible.builtin.assert:
         that:
           - avra_env is search("avra_RESC = 'avraRes'")
-
-
-- name: Test that bisque-env.re gets generated correctly with a bisque iRODS host is provided
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    bisque_irods_host: custom.irods.host
-    bisque_env: "{{ lookup('template', '../templates/rule-bases/bisque-env.re.j2') }}"
-  tasks:
-    - name: Verify bisque_env
-      ansible.builtin.assert:
-        that:
-          - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://custom.irods.host'")
 
 
 - name: Test PIRE params are set correctly

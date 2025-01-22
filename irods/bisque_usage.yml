@@ -23,6 +23,7 @@
         zone: "{{ _irods_zone_name }}"
         name: bisque
         state: absent
+        force: true
         host: "{{ groups['irods_catalog'][0] }}"
         port: "{{ _irods_zone_port }}"
         admin_user: "{{ _irods_clerver_user }}"

@@ -1,9 +1,7 @@
 ---
-- name: Verify BisQue support removed
-  hosts: irods_catalog
-  strategy: linear
+- name: Test remove BisQue files
+  hosts: irods
   become: true
-  become_user: irods
   tasks:
     - name: Verify bisque files removed
       ansible.builtin.stat:
@@ -17,8 +15,15 @@
       register: resp
       failed_when: resp.stat.exists
 
-    - name: Verify BisQue iRODS account removed  # noqa: run-once[task]
-      run_once: true
+
+- name: Test remove BisQue user
+  hosts: irods_catalog
+  run_once: true
+  gather_facts: false
+  become: true
+  become_user: irods
+  tasks:
+    - name: Verify BisQue iRODS account removed
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |

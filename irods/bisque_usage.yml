@@ -1,7 +1,6 @@
 ---
-- name: Remove BisQue support
-  hosts: irods_catalog
-  strategy: linear
+- name: Remove BisQue files
+  hosts: irods
   become: true
   tasks:
     - name: Remove bisque files
@@ -15,10 +14,14 @@
         - /var/lib/irods/msiExecCmd_bin/bisque_paths.py
         - /var/lib/irods/msiExecCmd_bin/url-encode-path-segments.sh
 
-    - name: Remove bisque user  # noqa: run-once[task]
-      run_once: true
+
+- name: Remove BisQue user
+  hosts: irods_catalog
+  run_once: true
+  gather_facts: false
+  tasks:
+    - name: Remove bisque user
       delegate_to: localhost
-      become: false
       irods_user:
         zone: "{{ _irods_zone_name }}"
         name: bisque

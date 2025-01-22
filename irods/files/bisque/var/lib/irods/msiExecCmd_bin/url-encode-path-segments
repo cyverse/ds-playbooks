@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 #
 # URL encodes the path segments of the provided absolute path
+#
+# Usage:
+#  url-encode-path-segments PATH
+#
+# Arguments:
+#  URL-PATH  the absolute path to encode
+#
+# Output:
+#  It writes the encoded path to stdout
+#
+# © 2025 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
 
 set -o errexit -o nounset -o pipefail
 
@@ -16,7 +28,7 @@ main() {
 	encodedPath="$(urlencode -m "$path")"
 
 	# Some URL decoders can't handle spaces encoded as '+', so change to ASCII
-   # form.
+	# form.
 	printf '%s' "${encodedPath//+/%20}"
 }
 

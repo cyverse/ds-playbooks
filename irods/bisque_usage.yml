@@ -1,5 +1,5 @@
 ---
-- name: Prepare for bisque_paths
+- name: Prepare for bisque-paths
   hosts: irods_catalog
   become: true
   tasks:
@@ -29,11 +29,11 @@
         dest: "{{ ansible_env.HOME }}/.bisque"
         mode: u=r
 
-    - name: Install bisque_paths.py
+    - name: Install bisque-paths
       ansible.builtin.get_url:
         validate_certs: false
         url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
-        dest: /var/lib/irods/msiExecCmd_bin
+        dest: /var/lib/irods/msiExecCmd_bin/bisque-paths
         mode: u+rx
 
     - name: Install url-encode-path-segments command script
@@ -50,10 +50,13 @@
       notify: Reload rules
 
   post_tasks:
-    - name: Removed url-encode-path-segments.sh command script
+    - name: Remove obsolete command scripts
       ansible.builtin.file:
-        path: /var/lib/irods/msiExecCmd_bin/url-encode-path-segments.sh
+        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
         state: absent
+      loop:
+        - bisque_paths.py
+        - url-encode-path-segments.sh
 
   handlers:
     - name: Reload rules

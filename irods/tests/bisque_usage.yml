@@ -31,7 +31,7 @@
           - bisque is search('\nbisque_admin_pass = password\n')
 
 
-- name: Test prepare for bisque_paths
+- name: Test prepare for bisque-paths
   hosts: irods_catalog
   become: true
   tasks:
@@ -65,11 +65,11 @@
 
     - name: Verify that command scripts are in place
       ansible.builtin.stat:
-        path: /var/lib/irods/msiExecCmd_bin/bisque_paths.py
+        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
       register: response
       failed_when: not response.stat.exists or not response.stat.rusr or not response.stat.xusr
       loop:
-        - bisque_paths.py
+        - bisque-paths
         - url-encode-path-segments
 
     - name: Test place BisQue rule logic
@@ -78,6 +78,11 @@
       register: resp
       failed_when: not resp.stat.exists or not resp.stat.rusr
 
-    - name: Test remove url-encode-path-segments.sh command script
-      ansible.builtin.debug:
-        msg: TODO implement
+    - name: Test remove obsolete command scripts
+      ansible.builtin.stat:
+        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
+      register: response
+      failed_when: response.stat.exists
+      loop:
+        - bisque_paths.py
+        - url-encode-path-segments.sh

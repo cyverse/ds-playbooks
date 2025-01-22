@@ -91,7 +91,7 @@ _bisque_mkIrodsUrl(*Path, *URL) {
 
 # Tells BisQue to create a link for a given user to a data object.
 #
-# bisque_paths.py (--alias user) ln -P permission /path/to/data.object
+# bisque-paths (--alias user) ln -P permission /path/to/data.object
 #
 _bisque_Ln(*Permission, *Client, *Path) {
   if (*Client != '') {
@@ -105,8 +105,7 @@ _bisque_Ln(*Permission, *Client, *Path) {
   *pArg = execCmdArg(*Permission);
   *pathArg = execCmdArg(*irodsUrl);
   *argStr = '*aliasOpt ln -P *pArg *pathArg';
-  *status = errorcode(
-    msiExecCmd("bisque_paths.py", *argStr, cyverse_RE_HOST, "null", "null", *out) );
+  *status = errorcode(msiExecCmd('bisque-paths', *argStr, cyverse_RE_HOST, "null", "null", *out));
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
@@ -140,7 +139,7 @@ _bisque_Ln(*Permission, *Client, *Path) {
 
 # Tells BisQue to change the path of a linked data object.
 #
-# bisque_paths.py (--alias user) mv /old/path/to/data.object /new/path/to/data.object
+# bisque-paths (--alias user) mv /old/path/to/data.object /new/path/to/data.object
 #
 _bisque_Mv(*Client, *OldPath, *NewPath) {
   if (*Client != '') {
@@ -155,8 +154,7 @@ _bisque_Mv(*Client, *OldPath, *NewPath) {
   *oldPathArg = execCmdArg(*oldUrl);
   *newPathArg = execCmdArg(*newUrl);
   *argStr = '*aliasOpt mv *oldPathArg *newPathArg';
-  *status = errorcode(
-    msiExecCmd('bisque_paths.py', *argStr, cyverse_RE_HOST, 'null', 'null', *out) );
+  *status = errorcode(msiExecCmd('bisque-paths', *argStr, cyverse_RE_HOST, 'null', 'null', *out));
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);
@@ -179,7 +177,7 @@ _bisque_Mv(*Client, *OldPath, *NewPath) {
 
 # Tells BisQue to remove a link to data object.
 #
-# bisque_paths.py (--alias user) rm /path/to/data.object
+# bisque-paths (--alias user) rm /path/to/data.object
 #
 _bisque_Rm(*Client, *Path) {
   if (*Client != '') {
@@ -192,8 +190,7 @@ _bisque_Rm(*Client, *Path) {
   *aliasOpt = if _bisque_isUser(*Client) then '--alias ' ++ execCmdArg(*Client) else '';
   *pathArg = execCmdArg(*irodsUrl);
   *argStr = '*aliasOpt rm *pathArg';
-  *status = errorcode(
-    msiExecCmd("bisque_paths.py", *argStr, cyverse_RE_HOST, "null", "null", *out) );
+  *status = errorcode(msiExecCmd('bisque-paths', *argStr, cyverse_RE_HOST, "null", "null", *out));
 
   if (*status != 0) {
     msiGetStderrInExecCmdOut(*out, *resp);

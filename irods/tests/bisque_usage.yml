@@ -1,6 +1,9 @@
 ---
 - name: Verify BisQue support removed
   hosts: irods_catalog
+  strategy: linear
+  become: true
+  become_user: irods
   tasks:
     - name: Verify bisque files removed
       ansible.builtin.stat:
@@ -14,6 +17,11 @@
       register: resp
       failed_when: resp.stat.exists
 
-    - name: Verify BisQue iRODS account removed
-      ansible.builtin.debug:
-        msg: TODO implement
+    - name: Verify BisQue iRODS account removed  # noqa: run-once[task]
+      run_once: true
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          iadmin lu bisque | grep --quiet 'No rows found'
+      changed_when: false

@@ -155,6 +155,6 @@
         executable: /bin/bash
         cmd: |
           set -o pipefail
-          iadmin lu '{{ former_user }}' | grep "No rows found"
-          iadmin lu '{{ former_user_data }}' | grep "No rows found"
+          iadmin lu '{{ former_user }}' | grep --quiet 'No rows found'
+          iadmin lu '{{ former_user_data }}' | grep --quiet 'No rows found'
       changed_when: false

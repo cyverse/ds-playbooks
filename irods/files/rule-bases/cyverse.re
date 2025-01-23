@@ -139,20 +139,6 @@ cyverse_getEntityType(*Entity) =
 		else if cyverse_isUser(*type) then cyverse_USER
 		else *type
 
-# The base collection for staging
-cyverse_STAGING_BASE: path
-cyverse_STAGING_BASE = let *zone = cyverse_ZONE in /*zone/jobs
-
-# This function checks to see if a collection or data object is in the staging
-# collection.
-#
-# PARAMETERS:
-#  Path  the absolute path to the entity
-#
-# RETURNS:
-#  It returns true if then entity is inside staging, otherwise false
-cyverse_inStaging: forall X in {path string}, X -> boolean
-cyverse_inStaging(*Path) = str(*Path) like str(cyverse_STAGING_BASE) ++ '/*'
 
 # This function checks to see if a collection or data object is inside a user
 # collection managed by a service.
@@ -260,6 +246,7 @@ cyverse_ensureAccessOnMv(*SvcUser, *SvcColl, *Perm, *OldPath, *NewPath) {
 		}
 	}
 }
+
 
 # This rule sets a protected AVU on an entity as a rodsadmin user.
 #

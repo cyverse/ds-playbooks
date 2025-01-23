@@ -104,7 +104,7 @@
         irods_cfg_zone_password: "{{ _irods_clerver_password }}"
 
     - name: Restart iRODS
-      when: _restart_irods and irods_cfg_made_changes
+      when: _restart_allowed and irods_cfg_made_changes
       ansible.builtin.include_tasks: tasks/restart_irods.yml
       vars:
         restart_op: if running
@@ -112,13 +112,21 @@
   post_tasks:
     - name: Remove old rule files
       ansible.builtin.file:
-        path: "{{ item }}"
+        path: /etc/irods/"{{ item }}"
         state: absent
       with_items:
         - ipc-logic.re
         - sernec.re
         - sernec-env.re
 
+    - name: Remove defunct command scripts
+      ansible.builtin.file:
+        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
+        state: absent
+      loop:
+        - amqptopicsend.py
+        - generateuuid
+        - send_mail.py
 
   handlers:
     - name: Reload rules

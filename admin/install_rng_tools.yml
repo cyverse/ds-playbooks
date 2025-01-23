@@ -1,0 +1,8 @@
+- name: Ensure rng-tools is installed
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  tasks:
+    - name: Install rng-tools package
+      ansible.builtin.package:
+        name: rng-tools
+        state: present

@@ -31,4 +31,5 @@
             zone: "{{ _irods_zone_name }}"
             username: "{{ _irods_clerver_user }}"
             password: "{{ _irods_clerver_password }}"
+            state: set
           with_items: "{{ _cereus_collections }}"

@@ -13,6 +13,7 @@
     sub_data_no_recursion: "{{ coll_no_recursion }}/data"
     sub_coll_no_recursion: "{{ coll_no_recursion }}/coll"
     coll_inclusive: /{{ zone }}/home/rods/coll_inclusive
+    # coll_deep: /{{ zone }}/home/rods/coll_deep # Used for testing large collections => takes a long time to run
     sub_data_inclusive: "{{ coll_inclusive }}/data"
     sub_coll_inclusive: "{{ coll_inclusive }}/coll"
     sub_sub_data_inclusive: "{{ sub_coll_inclusive }}/data"
@@ -62,6 +63,21 @@
         - "{{ sub_data_exclusive }}"
       tags: non_idempotent
 
+    # - name: Create a large, nested collection structure
+    #   ansible.builtin.shell:
+    #     executable: /bin/bash
+    #     cmd: |
+    #       for i in {1..100}; do  
+    #         mkdir -p "dir_deep/level_$i"  
+    #         for j in {1..100}; do  
+    #           touch dir_deep/level_"$i"/file_"$j"  
+    #         done  
+    #       done  
+    #       iput -b -I -r -R ingestRes dir_deep "{{ coll_deep }}"  
+    #   changed_when: true
+    #   tags: non_idempotent
+    # # NOTE - Has been tested. Takes a long time to run.
+
     - name: Grant forbidden read permission on data
       ansible.builtin.command: ichmod -M read forbidden '{{ data }}'
       changed_when: true
@@ -74,6 +90,7 @@
         - "{{ coll_no_recursion }}"
         - "{{ coll_inclusive }}"
         - "{{ coll_exclusive }}"
+        # - "{{ coll_deep }}"
       tags: non_idempotent
 
   tasks:
@@ -258,6 +275,29 @@
       with_items:
        - "{{ coll_exclusive }}"
        - "{{ sub_coll_exclusive }}"
+
+    # - name: Remove forbidden permission on coll_deep (recursive)
+    #   irods_permission:
+    #     zone: "{{ zone }}"
+    #     subject: forbidden
+    #     permission: "null"
+    #     object: "{{ coll_deep }}"
+    #     recursion: inclusive
+    #     admin_user: rods
+    #     admin_password: "{{ password }}"
+    # # NOTE - Has been tested. Takes a long time to run.
+
+    # - name: Verify forbidden has no permissions on anything in coll_deep
+    #   ansible.builtin.command: ils -A '{{ item }}'
+    #   register: result
+    #   failed_when:
+    #     - result.rc != 0
+    #     - result.stdout is regex('forbidden#' ~ zone ~ ':')
+    #   changed_when: false
+    #   with_items:
+    #    - "{{ coll_deep }}/level_1"
+    #    - "{{ coll_deep }}/level_1/file_1"
+    # # NOTE - Has been tested. Takes a long time to run.
 
     - name: Grant reader read permission on coll_inclusive (recursive)
       irods_permission:

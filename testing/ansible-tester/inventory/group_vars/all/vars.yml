@@ -1,6 +1,4 @@
 ---
-bisque_url: http://localhost.localdomain/
-
 check_routes_timeout: 5
 
 domain_name: testing_default
@@ -19,4 +17,4 @@ maintainer_keys:
   - key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMNAkCWfBgthPFt3580sM8H0BXpCQVrEI8Y2Kpq9bO+3 disallowed
     state: absent
 
-restart_irods: true
+restart_allowed: true

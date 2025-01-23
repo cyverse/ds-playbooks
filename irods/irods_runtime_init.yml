@@ -47,6 +47,29 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
+    - name: Ensure predefined collections have UUIDs
+      become: false
+      delegate_to: localhost
+      irods_avu:
+        entity_type: collection
+        entity_name: "{{ item }}"
+        attribute: ipc_UUID
+        value: "{{ lookup('uuid', 1) }}" #  for time-based UUID
+        host: "{{ groups['irods_catalog'][0] }}"
+        zone: "{{ _irods_zone_name }}"
+        username: "{{ _irods_clerver_user }}"
+        password: "{{ _irods_clerver_password }}"
+      loop:
+        - /{{ _irods_zone_name }}
+        - /{{ _irods_zone_name }}/home
+        - /{{ _irods_zone_name }}/home/{{ _irods_clerver_user }}
+        - /{{ _irods_zone_name }}/home/shared
+        - /{{ _irods_zone_name }}/trash
+        - /{{ _irods_zone_name }}/trash/home
+        - /{{ _irods_zone_name }}/trash/home/{{ _irods_clerver_user }}
+        - /{{ _irods_zone_name }}/trash/home/shared
+
+
     - name: Initialize rodsadmin perms
       when: init_rodsadmin_perms | d(false)
       delegate_to: localhost
@@ -100,7 +123,6 @@
     - name: Ensure anonymous user has read access to required collections
       delegate_to: localhost
       become: false
-      no_log: true
       irods_permission:
         subject: anonymous
         permission: read
@@ -116,38 +138,51 @@
         - /{{ _irods_zone_name }}/home/shared
         - /{{ _irods_zone_name }}/home/shared/commons_repo/curated
 
-    - name: Start quota usage computation
-      delegate_to: localhost
-      become: false
-      no_log: true
-      ansible.builtin.command:
-        cmd: >
-          irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
-            cyverse_housekeeping_rescheduleQuotaUsageUpdate null ruleExecOut
-        stdin: "{{ _irods_admin_password }}"
-      register: results
-      changed_when: results.stdout == 'scheduled quota usage updates'
+    - name: Start periodic policies
+      environment:
+        IRODS_AUTHENTICATION_FILE: /var/lib/irods/.irods/.a-adm
+        IRODS_USER_NAME: "{{ _irods_admin_username }}"
+      block:
+        - name: Initialize iRODS admin session
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: iinit
+            stdin: "{{ _irods_admin_password }}"
+          changed_when: false
 
-    - name: Start storage free space determination
-      delegate_to: localhost
-      become: false
-      no_log: true
-      ansible.builtin.command:
-        cmd: >
-          irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
-            cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination null ruleExecOut
-        stdin: "{{ _irods_admin_password }}"
-      register: results
-      changed_when: results.stdout == 'scheduled storage determination'
+        - name: Start quota usage computation
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              irule \
+                --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance \
+                cyverse_housekeeping_rescheduleQuotaUsageUpdate null ruleExecOut
+          register: results
+          changed_when: results.stdout == 'scheduled quota usage updates'
 
-    - name: Start trash removal
-      delegate_to: localhost
-      become: false
-      no_log: true
-      ansible.builtin.command:
-        cmd: >
-          irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
-            cyverse_housekeeping_rescheduleTrashRemoval null ruleExecOut
-        stdin: "{{ _irods_admin_password }}"
-      register: results
-      changed_when: results.stdout == 'scheduled trash removal'
+        - name: Start storage free space determination
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              irule \
+                --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance \
+                cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination null ruleExecOut
+          register: results
+          changed_when: results.stdout == 'scheduled storage determination'
+
+        - name: Start trash removal
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              irule \
+                --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance \
+                cyverse_housekeeping_rescheduleTrashRemoval null ruleExecOut
+          register: results
+          changed_when: results.stdout == 'scheduled trash removal'
+
+      always:
+        - name: Exit iRODS admin session
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: iexit full
+          changed_when: false

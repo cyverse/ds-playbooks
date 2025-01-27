@@ -32,6 +32,18 @@ from typing import List
 import pika
 
 
+def _publish(uri: str, exchange: str, routing_key: str, body: str) -> None:
+    conn_params = pika.URLParameters(uri)
+    conn_params.socket_timeout = 10
+
+    with pika.BlockingConnection(conn_params) as conn:
+        conn.channel().basic_publish(
+            exchange=exchange,
+            routing_key=routing_key,
+            body=body,
+            properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent))
+
+
 def _main(argv: List[str]) -> int:
     try:
         exchange = argv[1]
@@ -52,18 +64,6 @@ def _main(argv: List[str]) -> int:
         return 1
 
     return 0
-
-
-def _publish(uri: str, exchange: str, routing_key: str, body: str) -> None:
-    conn_params = pika.URLParameters(uri)
-    conn_params.socket_timeout = 10
-
-    with pika.BlockingConnection(conn_params) as conn:
-        conn.channel().basic_publish(
-            exchange=exchange,
-            routing_key=routing_key,
-            body=body,
-            properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent))
 
 
 if __name__ == '__main__':

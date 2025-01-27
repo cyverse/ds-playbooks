@@ -41,6 +41,12 @@
         - server_config.json
         - service_account.config
 
+    - name: Verify rule unit tests didn't get deployed
+      ansible.builtin.stat:
+        path: /etc/irods/tests
+      register: resp
+      failed_when: resp.stat.exists
+
     - name: Verify irods_environment.json is in place
       ansible.builtin.stat:
         path: /var/lib/irods/.irods/irods_environment.json

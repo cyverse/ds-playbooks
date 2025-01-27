@@ -30,21 +30,30 @@
           changed_when: response.stdout == 'changed'
 
         - name: CentOS | lock irods packages to required version
-          community.general.yum_versionlock:
-            name:
-              - irods-icommands-{{ _irods_version }}
-              - irods-runtime-{{ _irods_version }}
-              - irods-server-{{ _irods_version }}
-            state: present
-# XXX - Due to https://github.com/ansible-collections/community.general/issues/4470, this isn't
-# idempotent.
-          tags: non_idempotent
+# XXX - yum_versionlock version 9.2.0 will not lock packages that are not installed unlike the
+# `yum versionlock` command
+#           community.general.yum_versionlock:
+#             name:
+#               - irods-icommands-{{ _irods_version }}
+#               - irods-resource-plugin-s3-{{ _irods_version }}.*
+#               - irods-runtime-{{ _irods_version }}
+#               - irods-server-{{ _irods_version }}
+#             state: present
+# # XXX - Due to https://github.com/ansible-collections/community.general/issues/4470, this isn't
+# # idempotent.
+#           tags: non_idempotent
+# # XXX - ^^^
+          ansible.builtin.command: yum versionlock add {{ item }}
+          register: resp
+          changed_when: 'resp.stdout is not regex("versionlock added: 0")'
+          with_items:
+            - irods-*-{{ _irods_version }}
+   # XXX - yum versionlock on some CentOS 7 systems doesn't find irods-*-4.2.8.*
+   #          - irods-*-{{ _irods_version }}.*
+            - irods-resource-*-{{ _irods_version }}.*
+   # XXX - ^^^
+          tags: skip_ansible_lint
 # XXX - ^^^
-
-        - name: CentOS | install iRODS server
-          ansible.builtin.package:
-            name: irods-server
-            state: present
 
         - name: CentOS | install OS specific required packages
           ansible.builtin.package:
@@ -53,11 +62,12 @@
               - which
             state: present
 
-          # TODO: When upgrading to iRODS 4.2.9, remove this task.
+# XXX - iRODS 4.2.8 doesn't install the dependency unixODBC, see irods#5389. This is fixed in 4.2.9
         - name: CentOS | ensure unixODBC is installed (irods issue 5389)
           ansible.builtin.package:
             name: unixODBC
             state: present
+# XXX - ^^^
 
     - name: Provision Ubuntu
       when: ansible_distribution == 'Ubuntu'
@@ -84,14 +94,13 @@
             dest: /etc/apt/preferences.d/irods
             mode: u+rw
             content: |
+              Package: irods-resource-*
+              Pin: version {{ _irods_version }}.*
+              Pin-Priority: 1001
+
               Package: irods-*
               Pin: version {{ _irods_version }}
               Pin-Priority: 1001
-
-        - name: Ubuntu | install iRODS server
-          ansible.builtin.package:
-            name: irods-server={{ _irods_version }}
-            state: present
 
         - name: Ubuntu | install OS specific required packages
           ansible.builtin.package:
@@ -100,11 +109,23 @@
               - uuid-runtime
             state: present
 
-          # TODO: When upgrading to iRODS 4.2.9, remove this task.
+# XXX - iRODS 4.2.8 doesn't install the dependency unixODBC, see irods#5389. This is fixed in 4.2.9
         - name: Ubuntu | ensure unixODBC is installed (irods issue 5389)
           ansible.builtin.package:
             name: unixodbc
             state: present
+# XXX - ^^^
+
+    - name: Install iRODS server
+      ansible.builtin.package:
+        name: irods-server
+        state: present
+
+    - name: Install iRODS S3 resource plugin
+      ansible.builtin.package:
+        name: irods-resource-plugin-s3
+        state: present
+      notify: Restart iRODS if needed
 
     - name: Ensure iRODS does attempts to start on boot
       ansible.builtin.service:
@@ -142,6 +163,13 @@
         - core.dvm
         - core.fnm
         - core.re
+
+  handlers:
+    - name: Restart iRODS if needed
+      when: _restart_allowed
+      ansible.builtin.include_tasks: tasks/restart_irods.yml
+      vars:
+        restart_op: if running
 
 
 - name: Update /etc/hosts

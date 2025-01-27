@@ -32,10 +32,12 @@ main()
   cp --no-clobber "$BaseDir"/../../requirements-python.txt "$BaseDir"/requirements.txt
   cp --no-clobber "$BaseDir"/../../requirements-ansible.yml "$BaseDir"/requirements.yml
 
-#  docker buildx build --no-cache \
-  docker buildx build \
-    --build-arg IRODS_CLERVER_PASSWORD="$IRODS_CLERVER_PASSWORD" --tag ansible-tester \
-    "$BaseDir"
+  local buildArgs=(
+#    --no-cache
+    --build-arg=IRODS_CLERVER_PASSWORD="$IRODS_CLERVER_PASSWORD"
+    --tag=ansible-tester )
+
+  docker buildx build "${buildArgs[@]}" "$BaseDir"
 }
 
 

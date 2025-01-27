@@ -1,6 +1,4 @@
 ---
-bisque_url: http://localhost.localdomain/
-
 check_routes_timeout: 5
 
 connectivity_maintainer_keys:
@@ -18,3 +16,5 @@ irods_icat_password: testpassword
 irods_zone_name: testing
 
 mail_domain_name: testing_default
+
+restart_allowed: true

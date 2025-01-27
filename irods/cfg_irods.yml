@@ -28,7 +28,7 @@
         dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
         mode: u+r
       with_fileglob:
-        - "templates/rule-bases/*"
+        - templates/rule-bases/*.re.j2
       notify:
         - Reload rules
 
@@ -38,7 +38,7 @@
         dest: /etc/irods/{{ item | basename }}
         mode: u+r
       with_fileglob:
-        - "files/rule-bases/*"
+        - files/rule-bases/*.re
       notify:
         - Reload rules
 
@@ -104,8 +104,29 @@
         irods_cfg_zone_password: "{{ _irods_clerver_password }}"
 
     - name: Restart iRODS
-      when: _restart_irods and irods_cfg_made_changes
-      ansible.builtin.import_tasks: tasks/restart_irods.yml
+      when: _restart_allowed and irods_cfg_made_changes
+      ansible.builtin.include_tasks: tasks/restart_irods.yml
+      vars:
+        restart_op: if running
+
+  post_tasks:
+    - name: Remove old rule files
+      ansible.builtin.file:
+        path: /etc/irods/"{{ item }}"
+        state: absent
+      with_items:
+        - ipc-logic.re
+        - sernec.re
+        - sernec-env.re
+
+    - name: Remove defunct command scripts
+      ansible.builtin.file:
+        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
+        state: absent
+      loop:
+        - amqptopicsend.py
+        - generateuuid
+        - send_mail.py
 
   handlers:
     - name: Reload rules

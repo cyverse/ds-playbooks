@@ -1,57 +1,33 @@
 ---
-- name: Prepare for bisque_paths
-  hosts: irods_catalog
+- name: Remove BisQue files
+  hosts: irods
   become: true
   tasks:
-    - name: Install urlencode
-      ansible.builtin.package:
-        name: gridsite-clients
-        state: present
-
-    - name: Ensure /var/log/bisque exists
+    - name: Remove bisque files
       ansible.builtin.file:
-        path: /var/log/bisque
-        state: directory
-        owner: "{{ _irods_service_account_name }}"
-        group: "{{ _irods_service_group_name }}"
-        mode: u=rwx
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/irods/bisque.re
+        - /etc/irods/bisque-env.re
+        - /var/lib/irods/.bisque
+        - /var/lib/irods/msiExecCmd_bin/bisque_paths.py
+        - /var/lib/irods/msiExecCmd_bin/url-encode-path-segments.sh
 
 
-- name: Configure bisque client
+- name: Remove BisQue user
   hosts: irods_catalog
-  become: "{{ _become_svc_acnt }}"
-  become_user: "{{ _irods_service_account_name }}"
+  run_once: true
+  gather_facts: false
   tasks:
-    - name: Install bisque_paths.py
-      ansible.builtin.get_url:
-        validate_certs: false
-        url: https://gitlab.cyverse.org/ds/bisque_support/raw/master/bisque_paths/bisque_paths.py
-        dest: /var/lib/irods/msiExecCmd_bin
-        mode: u+rx
-
-    - name: Place .bisque
-      when: _bisque_url | length > 0
-      ansible.builtin.template:
-        src: templates/bisque.j2
-        dest: "{{ ansible_env.HOME }}/.bisque"
-        mode: u=r
-
-    - name: Install url-encode-path-segments command script
-      ansible.builtin.copy:
-        src: files/bisque/var/lib/irods/msiExecCmd_bin/url-encode-path-segments.sh
-        dest: /var/lib/irods/msiExecCmd_bin
-        mode: u+rx
-
-    - name: Place BisQue rule logic
-      ansible.builtin.copy:
-        src: files/rule-bases/bisque.re
-        dest: /etc/irods/bisque.re
-        mode: u+r
-      notify: Reload rules
-
-  handlers:
-    - name: Reload rules
-      ansible.builtin.file:
-        path: /etc/irods/core.re
-        state: touch
-        mode: u+r
+    - name: Remove bisque user
+      delegate_to: localhost
+      irods_user:
+        zone: "{{ _irods_zone_name }}"
+        name: bisque
+        state: absent
+        force: true
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"

@@ -1,12 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Removes a rule from the rule queue.
 #
-# USAGE:
-#  deleted-scheduled-rule ruleId
+# Usage:
+#  deleted-scheduled-rule RULE-ID
 #
-# PARAMETERS:
-#  ruleId  The Id of the rule to dequeue
+# Arguments:
+#  RULE-ID  The Id of the rule to dequeue
+#
+# © 2024 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
 
 
 main()

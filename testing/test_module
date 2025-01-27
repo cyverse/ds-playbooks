@@ -27,6 +27,10 @@ import sys
 from subprocess import Popen
 import argparse
 
+DEFAULT_HOSTS = "hosts-all"
+BASEDIR = os.path.dirname(sys.argv[0])
+CFG = BASEDIR + "/config.inc"
+
 
 def main():
     """
@@ -39,13 +43,13 @@ def main():
     playbook = os.path.join("test_" + args.module_name + ".yml")
 
     if not dir_exist(module_dir):
-        print("{} not a directory".format(module_dir))
+        print(f"{module_dir} not a directory")
         return
-    if not module_exist(module_dir, module_name):
-        print("module {} not found".format(args.module_name))
+    if not module_exist(module_dir, module_name) and not module_exist(module_dir, f"{module_name}.py"):
+        print(f"module {args.module_name} not found")
         return
     if not playbook_exist(module_dir, playbook):
-        print("{} not a file".format(playbook))
+        print(f"{playbook} not a file")
         return
 
     if controller("start") == 0:
@@ -125,7 +129,7 @@ def run_tester(inspect, pretty, module_dir, playbook, hosts, verbose):
     """
     # create a empty dir that allows the overlapping volume mount to work
     # e.g. ds-playbooks/irods/library/tests/library
-    empty_dir = os.path.join(module_dir, "tests", "library")
+    empty_dir = os.path.join(module_dir, "tests", module_dir.split("/")[-1])
     if not os.path.isdir(empty_dir):
         os.mkdir(empty_dir)
 
@@ -138,11 +142,11 @@ def run_tester(inspect, pretty, module_dir, playbook, hosts, verbose):
             --env PGHOST="$DBMS_HOST" \
             --network "$DOMAIN" \
             --volume "{1}/tests":/playbooks-under-test:ro \
-            --volume "{1}":/playbooks-under-test/library:ro \
+            --volume "{1}":/playbooks-under-test/{7}:ro \
             ansible-tester "{2}" "{3}" "{4}" "{5}" '' "{6}";
-     rmdir {1}/tests/library)
+     rmdir {1}/tests/{7})
     """
-    cmd = cmd.format(CFG, module_dir, inspect, pretty, verbose, hosts, playbook)
+    cmd = cmd.format(CFG, module_dir, inspect, pretty, verbose, hosts, playbook, module_dir.split("/")[-1])
 
     proc = Popen(cmd, shell=True, executable="/bin/bash")
     return_code = proc.wait()
@@ -150,9 +154,4 @@ def run_tester(inspect, pretty, module_dir, playbook, hosts, verbose):
 
 
 if __name__ == "__main__":
-    # some global variable
-    BASEDIR = os.path.dirname(sys.argv[0])
-    CFG = BASEDIR + "/config.inc"
-    DEFAULT_HOSTS = "hosts-all"
-
     main()

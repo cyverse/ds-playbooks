@@ -16,11 +16,6 @@ Variable                                   | Required | Default                 
 `avra_manager`                             | no       | `irods_clerver_user`                 |         | The iRODS user who is responsible for Avra data.
 `avra_resource_hierarchy`                  | no       | `irods_resource_hierarchies[0]`      |         | The resource used by the Avra project
 `become_svc_acnt`                          | no       | true                                 |         | Whether or not to perform actions normally performed by the service account as the service account
-`bisque_irods_host`                        | no       | `canonical_hostname`                 |         | The iRODS host to report to BisQue.
-`bisque_password`                          | no       | admin                                |         | The password used to authenticate connections to BisQue
-`bisque_projects`                          | no       | []                                   |         | A list of projects that automatically publish to BisQue
-`bisque_url`                               | no       |                                      |         | The URL for the BisQue server to connect to
-`bisque_user`                              | no       | admin                                |         | The user to connect to BisQue as
 `build_dir`                                | no       | /tmp                                 |         | The directory used for building artifacts for deployment
 `canonical_hostname`                       | no       | `groups['irods_catalog'][0]`         |         | The external FQDN used to access the data store services
 `canonical_irods_port`                     | no       | 1247                                 |         | The port on the `canonical_hostname` host listening for connections to iRODS
@@ -63,6 +58,7 @@ Variable                                   | Required | Default                 
 `irods_re_host`                            | no       | `groups['irods_catalog'][0]`         |         | The FQDN or IP address of the iRODS rule engine host
 `irods_resource_hierarchies`               | no       | `[ { "name": "demoResc" } ]`         |         | The list of resource hierarchies that need to exist, _see below_
 `irods_rs_image`                           | no       | ds-irods-rs-onbuild                  |         | The name of the unpublished RS image to be generated
+`irods_s3_cred`                            | no       | []                                   |         | The list of S3 credential pairs that allow iRODS to access managed S3 buckets, _see below_
 `irods_server_control_plane_key`           | no       | TEMPORARY__32byte_ctrl_plane_key     |         | The server control plane key
 `irods_server_port_range_end`              | no       | 20199                                |         | The last address in the range of auxillary TCP and UDP ports
 `irods_server_port_range_start`            | no       | 20000                                |         | The first address in the range of auxillary TCP and UDP ports
@@ -78,7 +74,7 @@ Variable                                   | Required | Default                 
 `pire_manager`                             | no       | null                                 |         | The username that owns the PIRE project collection, if `null`, the collection isn't created.
 `pire_resource_hierarchy`                  | no       | `irods_resource_hierarchies[0]`      |         | The resource used by the PIRE project
 `report_email_addr`                        | no       | root@localhost                       |         | The address where reports are to be emailed.
-`restart_irods`                            | no       | false                                |         | iRODS can be restarted on the servers having config file changes, _see below_
+`restart_allowed`                          | no       | false                                |         | The services can be restarted if needed
 `sftp_port`                                | no       | 2022                                 |         | The SFTP service port number
 `sftp_proxy_allowed`                       | no       | `[]`                                 |         | A list of network/masks for the proxy servers allowed access to the SFTP servers
 `sftp_user_host_allowed`                   | no       | `[]`                                 |         | A list of ip addresses of the user hosts allowed (whitelisted) for access to the SFTP servers
@@ -138,6 +134,16 @@ Field      | Required | Default | Comments
 `context`  | no       |         | A context to attach to this resource
 `name`     | yes      |         | The name of the resource
 `type`     | no       |         | For a coordinating resource, this is the type of resource. For a storage resource this should not be provided.
+
+`irods_s3_cred` entry fields
+
+All of them are required.
+
+Field        | Comments
+-------------|---------
+`name`       | the unique name identifying the file name holding the credentials
+`access_key` | the key used to authorize access
+`secret_key` | the key used to authenticate the access key
 
 `irods_storage_resources` entry fields
 

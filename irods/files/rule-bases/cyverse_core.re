@@ -6,12 +6,12 @@
 # For license information, see https://cyverse.org/license.
 
 # All Data Store specific, environment independent logic goes in the file
-# ipc-logic.re. These rules will be called by the hooks implemented here.
+# cyverse_logic.re. These rules will be called by the hooks implemented here.
 
 # The shared logic usable by the Data Store and other service rules.
 @include 'cyverse'
 
-@include 'ipc-logic'
+@include 'cyverse_logic'
 @include 'ipc-repl'
 @include 'ipc-trash'
 @include 'ipc-encryption'
@@ -25,7 +25,6 @@
 # service's rule.
 
 @include 'avra'
-@include 'bisque'
 @include 'coge'
 @include 'mdrepo'
 @include 'pire'
@@ -42,29 +41,10 @@
 # For events occur that should belong to one and only one project,
 # the following rules may be extended with on conditions.
 
-# This rule applies the project specific collection creation policies to an
-# administratively created collection.
-#
-# Parameters:
-#  ParColl    the absolute path to the parent of the collection being created
-#  ChildColl  the name of the collection being created
-#
-cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl) {
-	ipc_archive_acCreateCollByAdmin(*ParColl, *ChildColl);
-}
-
 # This rule applies the project specific collection creation policies to a newly
 # created collection that wasn't created administratively.
 #
 cyverse_core_acPostProcForCollCreate_exclusive {
-	*err = errormsg(ipc_archive_acPostProcForCollCreate, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-	*err = errormsg(bisque_acPostProcForCollCreate, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
 	*err = errormsg(coge_acPostProcForCollCreate, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
@@ -88,11 +68,7 @@ cyverse_core_acPostProcForCollCreate_exclusive {
 #
 acCreateCollByAdmin(*ParColl, *ChildColl) {
 	msiCreateCollByAdmin(*ParColl, *ChildColl);
-	*err = errormsg(ipc_acCreateCollByAdmin(*ParColl, *ChildColl), *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-	cyverse_core_acCreateCollByAdmin_exclusive(*ParColl, *ChildColl);
+	cyverse_logic_acCreateCollByAdmin(*ParColl, *ChildColl);
 }
 
 # This rule handles the creation of a ds-service type user.
@@ -102,15 +78,14 @@ acCreateCollByAdmin(*ParColl, *ChildColl) {
 #
 acCreateUser {
 	on ($otherUserType == 'ds-service') {
-		ipc_acCreateUser;
+		cyverse_logic_acCreateUser;
 	}
 }
 
 # This rule applies the project specific data delete policies.
 #
 acDataDeletePolicy {
-	bisque_acDataDeletePolicy;
-	ipc_acDataDeletePolicy;
+	cyverse_logic_acDataDeletePolicy;
 }
 
 # This rule applies the collection delete policies for a collection being
@@ -121,9 +96,12 @@ acDataDeletePolicy {
 #              collection being deleted
 #  ChildColl  (string) the name of collection being deleted
 #
+# XXX: `iadmin rmdir` does not trigger this PEP in iRODS 4.2.8
 acDeleteCollByAdmin(*ParColl, *ChildColl) {
+	*status = errormsg(cyverse_logic_acDeleteCollByAdmin(*ParColl, *ChildColl), *msg);
+	if (*status < 0) { writeLine('serverLog', *msg); }
+
 	msiDeleteCollByAdmin(*ParColl, *ChildColl);
-	ipc_acDeleteCollByAdmin(*ParColl, *ChildColl);
 }
 
 # This rule applies the collection delete polices for a home or trash collection
@@ -137,12 +115,11 @@ acDeleteCollByAdmin(*ParColl, *ChildColl) {
 #  ChildColl  (string) the name of collection being deleted
 #
 acDeleteCollByAdminIfPresent(*ParColl, *ChildColl) {
-	*status = errormsg(ipc_acDeleteCollByAdmin(*ParColl, *ChildColl), *msg);
-	if(*status < 0) {
-		writeLine('serverLog', *msg);
-	}
-	*status = errormsg(msiDeleteCollByAdmin(*ParColl, *ChildColl),*msg);
-	if(*status != 0 && *status != -808000) {
+	*status = errormsg(cyverse_logic_acDeleteCollByAdminIfPresent(*ParColl, *ChildColl), *msg);
+	if (*status < 0) { writeLine('serverLog', *msg); }
+
+	*status = errormsg(msiDeleteCollByAdmin(*ParColl, *ChildColl), *msg);
+	if (*status != 0 && *status != -808000) {
 		failmsg(*status, *msg);
 	}
 }
@@ -155,13 +132,13 @@ acDeleteCollByAdminIfPresent(*ParColl, *ChildColl) {
 #       "CS_NEG_DONT_CARE"
 #
 acPreConnect(*OUT) {
-	ipc_acPreConnect(*OUT);
+	cyverse_logic_acPreConnect(*OUT);
 }
 
 # This rule sets the default values for parameters related to parallel transfer.
 #
 acSetNumThreads {
-	ipc_acSetNumThreads;
+	cyverse_logic_acSetNumThreads;
 }
 
 # This rule sets the maximum number of deferred rule executors.
@@ -181,7 +158,7 @@ acSetRescSchemeForRepl {
 # existing data object.
 #
 acSetReServerNumProc {
-	ipc_acSetReServerNumProc;
+	cyverse_logic_acSetReServerNumProc;
 }
 
 
@@ -212,7 +189,8 @@ acSetReServerNumProc {
 #                 is being altered
 #
 acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
-	ipc_acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
+	cyverse_logic_acPreProcForModifyAccessControl(
+		*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path );
 }
 
 # This rule sets the preprocessing policy for manipulating AVUs other than
@@ -230,11 +208,9 @@ acPreProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, 
 #  AValue    (string) the value of the attribute
 #  AUnit     (string) the unit of the attribute
 #
-acPreProcForModifyAVUMetadata(
-	*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit
-) {
-	ipc_acPreProcForModifyAVUMetadata(
-		*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit );
+acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
+	cyverse_logic_acPreProcForModifyAVUMetadata(
+		*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit );
 }
 
 # This rule sets the preprocessing policy for modifying AVUs.
@@ -248,18 +224,22 @@ acPreProcForModifyAVUMetadata(
 #            is an absolute path for a collection or data object
 #  AName     (string) the attribute name before modification
 #  AValue    (string) the attribute value before modification
-#  New1      (string) if a attribute has a unit before modification, this
-#            parameter holds that unit, otherwise, it holds an update to the
-#            name, value, or unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  New2      (string) either empty or holds an update to the name, value, or
+#  AUnit     (string) the attribute  unit before modification
+#  NAName    (string) either empty or holds an update to the name, value, or
 #            unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  New3      (string) either empty or holds an update to the name, value, or
+#  NAValue   (string) either empty or holds an update to the name, value, or
 #            unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  New4      (string) either empty or holds an update to the name, value, or
+#  NAUnit    (string) either empty or holds an update to the name, value, or
 #            unit prefixed by 'n:', 'v:', or 'u:', respectively
 #
-acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
-	ipc_acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit);
+# XXX: Due to a bug in iRODS 4.2.8, when a unitless AVU is modified to have a new attribute name,
+#      value, and unit in a single call, *NAUnit will be empty.
+#
+acPreProcForModifyAVUMetadata(
+	*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit
+) {
+	cyverse_logic_acPreProcForModifyAVUMetadata(
+		*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit );
 }
 
 # This rule sets the preprocessing policy for copying AVUs between entities.
@@ -281,14 +261,14 @@ acPreProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *A
 acPreProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
 ) {
-	ipc_acPreProcForModifyAVUMetadata(
+	cyverse_logic_acPreProcForModifyAVUMetadata(
 		*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName );
 }
 
 # This rule sets the preprocessing policy for deleting a collection.
 #
 acPreprocForRmColl {
-	ipc_acPreprocForRmColl;
+	cyverse_logic_acPreprocForRmColl;
 }
 
 
@@ -302,7 +282,7 @@ acPreprocForRmColl {
 # This rule sets the post-processing policy for a newly created collection.
 #
 acPostProcForCollCreate {
-	*err = errormsg(ipc_acPostProcForCollCreate, *msg);
+	*err = errormsg(cyverse_logic_acPostProcForCollCreate, *msg);
 	if (*err < 0) { writeLine('serverLog', *msg); }
 
 	cyverse_core_acPostProcForCollCreate_exclusive;
@@ -316,17 +296,13 @@ acPostProcForCollCreate {
 #                stored
 #
 acPostProcForDataCopyReceived(*LeafResource) {
-	ipc_acPostProcForDataCopyReceived(*LeafResource);
+	cyverse_logic_acPostProcForDataCopyReceived(*LeafResource);
 }
 
 # This rule sets the post-processing policy for deleting a data object.
 #
 acPostProcForDelete {
-	*err = errormsg(ipc_acPostProcForDelete, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-	*err = errormsg(bisque_acPostProcForDelete, *msg);
+	*err = errormsg(cyverse_logic_acPostProcForDelete, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
@@ -350,7 +326,8 @@ acPostProcForDelete {
 #                  was altered
 #
 acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path) {
-	ipc_acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path);
+	cyverse_logic_acPostProcForModifyAccessControl(
+		*RecursiveFlag, *AccessLevel, *UserName, *Zone, *Path );
 }
 
 # This rule sets the post-processing policy for manipulating AVUs other than
@@ -369,7 +346,8 @@ acPostProcForModifyAccessControl(*RecursiveFlag, *AccessLevel, *UserName, *Zone,
 #  AUnit     (string) the unit of the attribute
 #
 acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit) {
-	ipc_acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit);
+	cyverse_logic_acPostProcForModifyAVUMetadata(
+		*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit );
 }
 
 # This rule sets the post-processing policy for modifying AVUs.
@@ -383,20 +361,21 @@ acPostProcForModifyAVUMetadata(*Option, *ItemType, *ItemName, *AName, *AValue, *
 #            absolute path for a collection or data object
 #  AName     (string) the attribute name before modification
 #  AValue    (string) the attribute value before modification
-#  New1      (string) if a attribute has a unit before modification, this
-#            parameter holds that unit, otherwise, it holds the updated name,
-#            value, or unit prefixed by 'n:', 'v:', or 'u:', respectively
-#  New2      (string) either empty or holds the updated name, value, or unit
+#  AUnit     (string) the attribute unit before modification
+#  NAName    (string) holds the updated name, value, or unit prefixed by 'n:',
+#            'v:', or 'u:', respectively
+#  NAValue   (string) either empty or holds the updated name, value, or unit
 #            prefixed by 'n:', 'v:', or 'u:', respectively
-#  New3      (string) either empty or holds the updated name, value, or unit
+#  NAUnit    (string) either empty or holds the updated name, value, or unit
 #            prefixed by 'n:', 'v:', or 'u:', respectively
-#  New4      (string) either empty or holds the updated name, value, or unit
-#            prefixed by 'n:', 'v:', or 'u:', respectively
+#
+# XXX: Due to a bug in iRODS 4.2.8, when a unitless AVU is modified to have a new attribute name,
+#      value, and unit in a single call, *NAUnit will be empty.
 #
 acPostProcForModifyAVUMetadata(
 	*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit
 ) {
-	ipc_acPostProcForModifyAVUMetadata(
+	cyverse_logic_acPostProcForModifyAVUMetadata(
 		*Option, *ItemType, *ItemName, *AName, *AValue, *AUnit, *NAName, *NAValue, *NAUnit );
 }
 
@@ -419,7 +398,7 @@ acPostProcForModifyAVUMetadata(
 acPostProcForModifyAVUMetadata(
 	*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName
 ) {
-	ipc_acPostProcForModifyAVUMetadata(
+	cyverse_logic_acPostProcForModifyAVUMetadata(
 		*Option, *SourceItemType, *TargetItemType, *SourceItemName, *TargetItemName );
 }
 
@@ -432,11 +411,7 @@ acPostProcForModifyAVUMetadata(
 #  DestObject    (string) the new path
 #
 acPostProcForObjRename(*SourceObject, *DestObject) {
-	*err = errormsg(ipc_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
-	*err = errormsg(bisque_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
+	*err = errormsg(cyverse_logic_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
@@ -456,7 +431,7 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
 #  objPath
 #
 acPostProcForOpen {
-	*err = errormsg(ipc_acPostProcForOpen, *msg);
+	*err = errormsg(cyverse_logic_acPostProcForOpen, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
@@ -470,13 +445,13 @@ acPostProcForOpen {
 #                stored
 #
 acPostProcForParallelTransferReceived(*LeafResource) {
-	ipc_acPostProcForParallelTransferReceived(*LeafResource);
+	cyverse_logic_acPostProcForParallelTransferReceived(*LeafResource);
 }
 
 # Ths rule sets the post-processing policy for when a collection is removed.
 #
 acPostProcForRmColl {
-	ipc_acPostProcForRmColl;
+	cyverse_logic_acPostProcForRmColl;
 }
 
 
@@ -539,11 +514,8 @@ pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
 #              object
 #
 pep_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp) {
-  	ipcEncryption_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp)
-}
-
-pep_api_data_obj_create_and_stat_pre(*Instance, *Comm, *DataObjInp, *OpenStat) {
-  	ipcEncryption_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp)
+	ipcEncryption_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp);
+	mdrepo_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp);
 }
 
 # This is the post processing logic for when a data object is created through
@@ -556,6 +528,22 @@ pep_api_data_obj_create_and_stat_pre(*Instance, *Comm, *DataObjInp, *OpenStat) {
 #
 pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
 	ipcTrash_api_data_obj_create_post(*Instance, *Comm, *DataObjInp);
+}
+
+
+# DATA_OBJ_CREATE_AND_STAT
+
+# This is the pre processing logic for when an attempt is made to create a data
+# object and stat its replica through the API using a DATA_OBJ_CREATE_AND_STAT
+# request.
+#
+#  Instance    (string) unknown
+#  Comm        (`KeyValuePair_PI`) user connection and auth information
+#  DataObjInp  (`KeyValuePair_PI`) information related to the created data
+#              object
+#
+pep_api_data_obj_create_and_stat_pre(*Instance, *Comm, *DataObjInp, *OpenStat) {
+	ipcEncryption_api_data_obj_create_and_stat_pre(*Instance, *Comm, *DataObjInp);
 }
 
 
@@ -706,7 +694,7 @@ pep_api_rm_coll_except(*Instance, *Comm, *RmCollInp, *CollOprStat) {
 # STRUCT_FILE_EXT_AND_REG
 
 # This is the pre processing logic for when an attempt is made to extract a
-# struct file and register files in it through the API using a 
+# struct file and register files in it through the API using a
 # STRUCT_FILE_EXT_AND_REG request.
 #
 #  Instance                  (string) unknown
@@ -748,11 +736,7 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # XXX - Because of https://github.com/irods/irods/issues/5540
 # _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo) {
 # 	*path = *DataObjInfo.logical_path;
-# 	*err = errormsg(ipc_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 	if (*err < 0) {
-# 		writeLine('serverLog', *msg);
-# 	}
-# 	*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
+# 	*err = errormsg(cyverse_logic_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 	if (*err < 0) {
 # 		writeLine('serverLog', *msg);
 # 	}
@@ -767,15 +751,11 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # }
 _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 	*path = *DataObjInfo.logical_path;
-	*err = errormsg(ipc_dataObjCreated(*User, *Zone, *DataObjInfo, *Step), *msg);
+	*err = errormsg(cyverse_logic_dataObjCreated(*User, *Zone, *DataObjInfo, *Step), *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
 	if (*Step != 'FINISH') {
-		*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-		if (*err < 0) {
-			writeLine('serverLog', *msg);
-		}
 		*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 		if (*err < 0) {
 			writeLine('serverLog', *msg);
@@ -792,7 +772,7 @@ _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 
 _cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
 	*path = *DataObjInfo.logical_path;
-	*err = errormsg(ipc_dataObjModified(*User, *Zone, *DataObjInfo), *msg);
+	*err = errormsg(cyverse_logic_dataObjMod(*User, *Zone, *DataObjInfo), *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
@@ -803,7 +783,7 @@ _cyverse_core_dataObjModified(*User, *Zone, *DataObjInfo) {
 }
 
 _cyverse_core_dataObjMetadataModified(*User, *Zone, *Object) {
-	ipc_dataObjMetadataModified(*User, *Zone, *Object);
+	cyverse_logic_dataObjMetaMod(*User, *Zone, *Object);
 }
 
 # CLOSE

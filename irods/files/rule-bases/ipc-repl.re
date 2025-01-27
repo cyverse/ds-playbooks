@@ -18,7 +18,7 @@
 #
 # DEPRECATED FUNCTIONALITY
 #
-# Unlike the logic in ipc-logic.re, the replication logic doesn't apply
+# Unlike the logic in cyverse_logic.re, the replication logic doesn't apply
 # globally. Different projects may have different replication policies.
 #
 # THIRD PARTY REPLICATION LOGIC

@@ -2,12 +2,15 @@
 _ansible_support_package_manager: "{{ ansible_support_package_manager | d('auto') }}"
 
 _connectivity_maintainer_keys: "{{ connectivity_maintainer_keys | d([]) }}"
-_connectivity_proxied_ssh: "{{ proxied_ssh | d(false) }}"
+_connectivity_proxied_ssh: "{{ connectivity_proxied_ssh | d(false) }}"
 
 _mail_domain_name: "{{ mail_domain_name | mandatory }}"
 
 _network_mtu: "{{ network_mtu | d(1500) }}"
-_network_sysctl: "{{ sysctl_net | d([]) }}"
+_network_sysctl: "{{ network_sysctl | d([]) }}"
 _network_txqueuelen: "{{ network_txqueuelen | d(1000) }}"
 
 _reboot_rebootable: "{{ reboot_rebootable | d(true) }}"
+
+_upgrade_system_packages_reboot_on_pkg_change: >
+  {{ _upgrade_system_packages_reboot_on_pkg_change | d(false) }}

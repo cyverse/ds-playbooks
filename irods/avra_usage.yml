@@ -1,22 +1,26 @@
 ---
-- import_playbook: mk_storage_resources.yml
+- name: Create storage resources
+  ansible.builtin.import_playbook: mk_storage_resources.yml
 
 
 - name: Configure iRODS for Avra
   hosts: irods_catalog
-  become: "{{ _become_svc_acnt }}"
-  become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - when: _avra_base_collection != ''
+    - name: Configure iRODS for Avra
+      when: _avra_base_collection != ''
+      delegate_to: localhost
       block:
-        - name: create avra resource
+        - name: Create avra resource
           irods_resource_hierarchy:
             hierarchy: "{{ _avra_resource_hierarchy }}"
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            zone: "{{ _irods_zone_name }}"
+            admin_username: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
 
-        - name: create project collection
-          delegate_to: localhost
-          become: false
+        - name: Create project collection
           irods_collection:
             path: "{{ _avra_base_collection }}"
             parents: true
@@ -27,23 +31,19 @@
             admin_password: "{{ _irods_clerver_password }}"
             zone: "{{ _irods_zone_name }}"
 
-        - name: assign owner to project collection
-          delegate_to: localhost
-          become: false
+        - name: Assign owner to project collection
           irods_permission:
             subject: "{{ _avra_manager }}"
             permission: own
             object: "{{ _avra_base_collection }}"
-            recursive: true
+            recursion: inclusive
             host: "{{ groups['irods_catalog'][0] }}"
             port: "{{ _irods_zone_port }}"
             admin_user: "{{ _irods_clerver_user }}"
             admin_password: "{{ _irods_clerver_password }}"
             zone: "{{ _irods_zone_name }}"
 
-        - name: assign project collection to Avra resource
-          delegate_to: localhost
-          become: false
+        - name: Assign project collection to Avra resource
           irods_avu:
             entity_type: resource
             entity_name: "{{ _avra_resource_hierarchy.name }}"
@@ -55,3 +55,4 @@
             zone: "{{ _irods_zone_name }}"
             username: "{{ _irods_clerver_user }}"
             password: "{{ _irods_clerver_password }}"
+            state: set

@@ -1,7 +1,19 @@
 ---
-- name: test install maintainer keys
-  hosts: all:!localhost
+- name: Test install maintainer keys
+  hosts: all:!unmanaged_systems
   tasks:
-    - name: test install key
-      shell: grep --quiet 'testing env maintainer' "$HOME"/.ssh/authorized_keys
+    - name: Test allowed keys installed
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: grep --quiet '{{ item }}' "$HOME"/.ssh/authorized_keys
+      with_items:
+        - allowed 1
+        - allowed 2
+        - allowed 3
+      changed_when: false
+
+    - name: Test disallowed keys not installed
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: grep --invert --quiet disallowed "$HOME"/.ssh/authorized_keys
       changed_when: false

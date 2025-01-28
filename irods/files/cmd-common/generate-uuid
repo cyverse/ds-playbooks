@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# This script generates a UUID. For Linux systems, this will be a time-based
+# UUID.
+#
+# Usage:
+#  generate-uuid
+#
+# Return:
+#  A time-based UUID is written to stdout.
+#
+# Dependency:
+#  uuidd    To guarantee uniqueness among concurrent executions of this script,
+#           the uuidd daemon should be running on the host where this script is
+#           run.
+#  uuidgen  uuidgen must be installed on the host where this script is run.
+#
+# © 2024 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
+
+
+if [ "$(uname)" == Linux ]
+then
+    uuidgen -t
+else
+    uuidgen | tr '[:upper:]' '[:lower:]'
+fi

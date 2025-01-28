@@ -1,13 +1,61 @@
 ---
-- name: test irods_resource_up module
-  hosts: dstesting-provider_configured-1.dstesting_default
-  become: true
-  become_user: irods
+- name: Test play for irods_resource_up module
+  hosts: localhost
+  vars:
+    test_rsc: ChildResc
+    missing_rsc: missingRes
+  pre_tasks:
+    - name: Initialize irods session
+      shell: |
+        set -o errexit
+        if ! [[ -e "$HOME/.irods/.irodsA" ]]; then
+          iinit "$IRODS_PASSWORD" > /dev/null
+          iadmin mkresc ChildResc passthru
+          iadmin mkresc ParentResc passthru
+          iadmin addchildtoresc ParentResc ChildResc
+          echo changed
+        fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
   tasks:
     - name: bring up resource
       irods_resource_up:
-        resource: ingestRes
+        resource: "{{ test_rsc }}"
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
 
     - name: verify resource up
-      shell: test up = "$(iquest '%s' "select RESC_STATUS where RESC_NAME = 'ingestRes'")"
+      shell: test up = "$(iquest '%s' "select RESC_STATUS where RESC_NAME = '{{ test_rsc }}'")"
       changed_when: false
+      register: response
+
+    - name: verify resource parents up
+      shell: |
+        function verify_parent_status () {
+          next_rsc="$(iquest '%s' "SELECT RESC_PARENT WHERE RESC_NAME = $1")"
+          if [-n next_rsc]
+          then
+            status="$(iquest "SELECT RESC_STATUS WHERE RESC_NAME = '$next_rsc'")"
+            verify_parent_status next_resc
+          else
+            return 0
+          fi
+        }
+        verify_parent_status '{{ test_rsc }}'
+      changed_when: false
+      register: response
+
+    - name: test with non-existent resource
+      failed_when: response is success or response.msg != "Resource missingRes does not exist"
+      irods_resource_up:
+        resource: "{{ missing_rsc }}"
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: 1247
+        admin_user: rods
+        admin_password: rods
+        zone: testing
+      register: response

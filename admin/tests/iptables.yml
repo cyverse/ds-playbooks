@@ -6,4 +6,5 @@
     - include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: >-
-          {{ 'iptables-persistent' if ansible_distribution == 'Ubuntu' else 'iptables-services' }}
+          {{ 'iptables-persistent' if ansible_distribution == 'Ubuntu' else
+            'iptables-services' }}

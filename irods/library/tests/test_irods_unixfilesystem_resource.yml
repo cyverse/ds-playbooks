@@ -1,7 +1,90 @@
 ---
-- name: test irods_resource_hierarchy module
-  hosts: localhost
-  gather_facts: false
+- name: test irods_unixfilesystem_resource module
+  hosts: dstesting-consumer_configured_centos-1.dstesting_default
+  become: true
+  become_user: irods
+  vars:
+    default_resc_vault: /var/lib/irods/test_vault
+    default_resc_name: defaultRes
+    options_resc_name: optionsRes
+    options_resc_vault: /var/lib/irods/test_vault2
+    options_resc_context: context_message_here
+    options_resc_status: up
+  pre_tasks:
+    - name: create vaults
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: ug=rwx
+      with_items:
+        - "{{ default_resc_vault }}"
+        - "{{ options_resc_vault }}"
+
   tasks:
-    - debug:
-        msg: TODO implement
+    - name: run script without optional vars
+      irods_unixfilesystem_resource:
+        name: "{{ default_resc_name }}"
+        host: "{{ inventory_hostname }}"
+        vault: "{{ default_resc_vault }}"
+
+    - name: run script with optional vars
+      irods_unixfilesystem_resource:
+        name: "{{ options_resc_name }}"
+        host: "{{ inventory_hostname }}"
+        vault: "{{ options_resc_vault }}"
+        context: "{{ options_resc_context }}"
+        status: "{{ options_resc_status }}"
+        init_free_space: true
+
+    - name: check resource names
+      shell: |
+        set -o errexit
+        test \
+          "$(iquest %s "SELECT RESC_NAME WHERE RESC_NAME = '{{ default_resc_name }}'")" \
+          = '{{ default_resc_name }}'
+        test \
+          "$(iquest %s "SELECT RESC_NAME WHERE RESC_NAME = '{{ options_resc_name }}'")" \
+          = '{{ options_resc_name }}'
+      changed_when: false
+
+    - name: check resource path
+      shell: |
+        set -o errexit
+        test \
+          "$(iquest %s "SELECT RESC_VAULT_PATH WHERE RESC_NAME = '{{ default_resc_name }}'")" \
+          = '{{ default_resc_vault }}'
+        test \
+          "$(iquest %s "SELECT RESC_VAULT_PATH WHERE RESC_NAME = '{{ options_resc_name }}'")" \
+          = '{{ options_resc_vault }}'
+      changed_when: false
+
+    - name: check resource host
+      shell: |
+        set -o errexit
+        test \
+          "$(iquest %s "SELECT RESC_LOC WHERE RESC_NAME = '{{ default_resc_name }}'")" \
+          = '{{ inventory_hostname }}'
+        test \
+          "$(iquest %s "SELECT RESC_LOC WHERE RESC_NAME = '{{ options_resc_name }}'")" \
+          = '{{ inventory_hostname }}'
+      changed_when: false
+
+    - name: check resource context
+      shell: |
+        test \
+          "$(iquest %s "SELECT RESC_CONTEXT WHERE RESC_NAME = '{{ options_resc_name }}'")" \
+          = '{{ options_resc_context }}'
+      changed_when: false
+
+    - name: check resource status
+      shell: |
+        test \
+          "$(iquest %s "SELECT RESC_STATUS WHERE RESC_NAME = '{{ options_resc_name }}'")" \
+          = '{{ options_resc_status }}'
+      changed_when: false
+
+    - name: check free space initialized
+      shell: |
+        test \
+          "$(iquest %s "SELECT RESC_FREE_SPACE WHERE RESC_NAME = '{{ options_resc_name }}'")" != ''
+      changed_when: false

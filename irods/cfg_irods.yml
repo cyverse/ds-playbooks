@@ -1,57 +1,55 @@
 ---
-- name: configure iRODS
+- name: Configure iRODS
   hosts: irods
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
-  pre_tasks:
-    - name: initialize flag
-      set_fact:
+  vars:
+    amqp_user_info: "{{ _amqp_user }}:{{ _amqp_password }}"
+    amqp_authority: "{{ amqp_user_info }}@{{ _amqp_host }}:{{ _amqp_port }}"
+    amqp_path: /{{ _amqp_vhost | replace('/', '%2F') }}
+    amqp_uri: amqp://{{ amqp_authority }}{{ amqp_path }}
+    is_provider: "{{ inventory_hostname in groups['irods_catalog'] }}"
+  tasks:
+    - name: Initialize flag
+      ansible.builtin.set_fact:
         irods_cfg_made_changes: false
 
-    - name: add common command scripts
-      copy:
+    - name: Add common command scripts
+      ansible.builtin.copy:
         src: "{{ item }}"
         dest: /var/lib/irods/msiExecCmd_bin
         mode: u=rx
       with_fileglob:
         - "files/cmd-common/*"
 
-    - name: place dynamic rule bases in /etc/irods
-      template:
+    - name: Place dynamic rule bases in /etc/irods
+      ansible.builtin.template:
         src: "{{ item }}"
         dest: /etc/irods/{{ item | basename | regex_replace('.j2$') }}
         mode: u+r
       with_fileglob:
-        - "templates/rule-bases/*"
+        - templates/rule-bases/*.re.j2
       notify:
-        - reload rules
+        - Reload rules
 
-    - name: place static config in /etc/irods
-      copy:
+    - name: Place static config in /etc/irods
+      ansible.builtin.copy:
         src: "{{ item }}"
         dest: /etc/irods/{{ item | basename }}
         mode: u+r
       with_fileglob:
-        - "files/rule-bases/*"
+        - files/rule-bases/*.re
       notify:
-        - reload rules
+        - Reload rules
 
-    - name: ensure old ipc-json.re is gone
-      file:
-        path: /etc/irods/ipc-json.re
-        state: absent
-
-  roles:
-    - role: cyverse.irods_cfg
+    - name: Configure iRODS service
+      ansible.builtin.import_role:
+        name: cyverse.irods_cfg
+        tasks_from: setup_irods.yml
       vars:
-        amqp_user_info: "{{ _amqp_user }}:{{ _amqp_password }}"
-        amqp_authority: "{{ amqp_user_info }}@{{ _amqp_host }}:{{ _amqp_port }}"
-        amqp_path: /{{ _amqp_vhost | replace('/', '%2F') }}
-        amqp_uri: amqp://{{ amqp_authority }}{{ amqp_path }}
-        provider: "{{ inventory_hostname in groups['irods_catalog'] }}"
         irods_cfg_catalog_provider_hosts: >-
-          {{ [ inventory_hostname ] if provider|bool else groups['irods_catalog'] }}
-        irods_cfg_catalog_service_role: "{{ 'provider' if provider|bool else 'consumer' }}"
+          {{ [inventory_hostname] if is_provider | bool else groups['irods_catalog'] }}
+        irods_cfg_catalog_service_role: "{{ 'provider' if is_provider | bool else 'consumer' }}"
         irods_cfg_client_server_policy: "{{ _irods_client_server_policy }}"
         irods_cfg_database_user_password_salt: "{{ _irods_user_password_salt }}"
         irods_cfg_default_dir_mode: "{{ _irods_default_dir_mode }}"
@@ -62,32 +60,34 @@
         irods_cfg_default_resource_directory: "{{ _irods_default_vault }}"
         irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
         irods_cfg_environment_variables: >-
-          {{ { 'IRODS_AMQP_URI': amqp_uri } if provider|bool else {} }}
+          {{ {'IRODS_AMQP_URI': amqp_uri} if is_provider | bool else {} }}
         irods_cfg_federation: "{{ _irods_federation }}"
         irods_cfg_host_entries: >-
           {{
-            [] if _irods_host_aliases|count == 0 else
+            [] if _irods_host_aliases | count == 0 else
             [
               {
                 'address_type': 'local',
-                'addresses': [ inventory_hostname ] + _irods_host_aliases
+                'addresses': [inventory_hostname] + _irods_host_aliases
               }
             ] }}
         irods_cfg_icat: >-
           {{
-            None if not provider|bool else
+            None if not is_provider | bool else
             {
-              'db_host': groups['dbms'][0],
+              'db_host': _irods_dbms_host,
               'db_password': _irods_db_password,
               'db_port': _irods_dbms_port,
-              'db_username': _irods_db_user
+              'db_username': _irods_db_user,
+              'odbc_driver': _irods_odbc_driver
             } }}
         irods_cfg_maximum_number_of_concurrent_rule_engine_server_processes: >-
           {{ _irods_max_num_re_procs }}
         irods_cfg_negotiation_key: "{{ _irods_negotiation_key }}"
         irods_cfg_re_additional_rulebases:
-          - ipc-custom
-          - ipc-housekeeping
+          - cve
+          - cyverse_core
+          - cyverse_housekeeping
         irods_cfg_schema_validation_base_uri: file:///var/lib/irods/configuration_schemas
         irods_cfg_server_control_plane_key: "{{ _irods_server_control_plane_key }}"
         irods_cfg_server_control_plane_port: "{{ _irods_server_control_plane_port }}"
@@ -101,14 +101,36 @@
         irods_cfg_zone_name: "{{ _irods_zone_name }}"
         irods_cfg_zone_port: "{{ _irods_zone_port }}"
         irods_cfg_zone_user: "{{ _irods_clerver_user }}"
+        irods_cfg_zone_password: "{{ _irods_clerver_password }}"
+
+    - name: Restart iRODS
+      when: _restart_allowed and irods_cfg_made_changes
+      ansible.builtin.include_tasks: tasks/restart_irods.yml
+      vars:
+        restart_op: if running
 
   post_tasks:
-    - when: _restart_irods and irods_cfg_made_changes
-      import_tasks: tasks/restart_irods.yml
+    - name: Remove old rule files
+      ansible.builtin.file:
+        path: /etc/irods/"{{ item }}"
+        state: absent
+      with_items:
+        - ipc-logic.re
+        - sernec.re
+        - sernec-env.re
+
+    - name: Remove defunct command scripts
+      ansible.builtin.file:
+        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
+        state: absent
+      loop:
+        - amqptopicsend.py
+        - generateuuid
+        - send_mail.py
 
   handlers:
-    - name: reload rules
-      file:
+    - name: Reload rules
+      ansible.builtin.file:
         path: /etc/irods/core.re
         mode: u+r
         state: touch

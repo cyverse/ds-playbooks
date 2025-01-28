@@ -4,9 +4,9 @@
 
 # - Connection Settings -
 
-listen_addresses = '{{ ([ 'localhost' ] + pg_extra_listen_addresses) | join(",") }}'
-port = {{ pg_listen_port }}
-max_connections = {{ pg_max_connections }}
+listen_addresses = '{{ ([ 'localhost' ] + postgres12_extra_listen_addresses) | join(",") }}'
+port = {{ postgres12_listen_port }}
+max_connections = {{ postgres12_max_connections }}
 
 #------------------------------------------------------------------------------
 # RESOURCE USAGE (except WAL)
@@ -14,18 +14,18 @@ max_connections = {{ pg_max_connections }}
 
 # - Memory -
 
-shared_buffers = {{ pg_shared_buffers }}
-huge_pages = {{ pg_huge_pages }}
-work_mem = {{ pg_work_mem }}
-maintenance_work_mem = {{ pg_maintenance_work_mem }}
+shared_buffers = {{ postgres12_shared_buffers }}
+huge_pages = {{ postgres12_huge_pages }}
+work_mem = {{ postgres12_work_mem }}
+maintenance_work_mem = {{ postgres12_maintenance_work_mem }}
 
 # - Asynchronous Behavior -
-{% set mpw = [ pg_max_parallel_workers, pg_max_worker_processes ] | min %}
+{% set mpw = [ postgres12_max_parallel_workers, postgres12_max_worker_processes ] | min %}
 
-effective_io_concurrency = {{ pg_effective_io_concurrency }}
-max_worker_processes = {{ pg_max_worker_processes }}
-max_parallel_maintenance_workers = {{ [ pg_max_parallel_maintenance_workers, mpw ] | min }}
-max_parallel_workers_per_gather = {{ [ pg_max_parallel_workers_per_gather, mpw ] | min }}
+effective_io_concurrency = {{ postgres12_effective_io_concurrency }}
+max_worker_processes = {{ postgres12_max_worker_processes }}
+max_parallel_maintenance_workers = {{ [ postgres12_max_parallel_maintenance_workers, mpw ] | min }}
+max_parallel_workers_per_gather = {{ [ postgres12_max_parallel_workers_per_gather, mpw ] | min }}
 max_parallel_workers = {{ mpw }}
 
 #------------------------------------------------------------------------------
@@ -34,14 +34,14 @@ max_parallel_workers = {{ mpw }}
 
 # - Settings -
 
-wal_buffers = {{ pg_wal_buffers }}
+wal_buffers = {{ postgres12_wal_buffers }}
 
 # - Checkpoints -
 
-checkpoint_timeout = {{ pg_checkpoint_timeout }}
-max_wal_size = {{ pg_max_wal_size }}
-min_wal_size = {{ pg_min_wal_size }}
-checkpoint_completion_target = {{ pg_checkpoint_completion_target }}
+checkpoint_timeout = {{ postgres12_checkpoint_timeout }}
+max_wal_size = {{ postgres12_max_wal_size }}
+min_wal_size = {{ postgres12_min_wal_size }}
+checkpoint_completion_target = {{ postgres12_checkpoint_completion_target }}
 
 #------------------------------------------------------------------------------
 # REPLICATION
@@ -49,16 +49,16 @@ checkpoint_completion_target = {{ pg_checkpoint_completion_target }}
 
 # - Sending Servers -
 
-{% if pg_downstream_nodes|length > 0 %}
-max_wal_senders = {{ pg_max_wal_senders }}
-wal_keep_segments = {{ pg_wal_keep_segments }}
+{% if postgres12_downstream_nodes|length > 0 %}
+max_wal_senders = {{ postgres12_max_wal_senders }}
+wal_keep_segments = {{ postgres12_wal_keep_segments }}
 {% endif %}
 
 # - Standby Servers -
 
-{% if pg_upstream_node %}
+{% if postgres12_upstream_node %}
 hot_standby = on
-hot_standby_feedback = {{ pg_hot_standby_feedback }}
+hot_standby_feedback = {{ postgres12_hot_standby_feedback }}
 {% endif %}
 
 #------------------------------------------------------------------------------
@@ -67,12 +67,12 @@ hot_standby_feedback = {{ pg_hot_standby_feedback }}
 
 # - Planner Cost Constants -
 
-random_page_cost = {{ pg_random_page_cost }}
-effective_cache_size = {{ pg_effective_cache_size }}
+random_page_cost = {{ postgres12_random_page_cost }}
+effective_cache_size = {{ postgres12_effective_cache_size }}
 
 #- Other Planner Options -
 
-default_statistics_target = {{ pg_default_statistics_target }}
+default_statistics_target = {{ postgres12_default_statistics_target }}
 
 #------------------------------------------------------------------------------
 # REPORTING AND LOGGING
@@ -80,11 +80,24 @@ default_statistics_target = {{ pg_default_statistics_target }}
 
 # - When to Log -
 
-log_min_duration_statement = {{ pg_log_min_duration_statement }}
+log_min_duration_statement = {{ postgres12_log_min_duration_statement }}
 
 # - What to Log -
 
-log_line_prefix = '{{ pg_log_line_prefix }}'
+log_line_prefix = '{{ postgres12_log_line_prefix }}'
+
+#------------------------------------------------------------------------------
+# PROMETHEUS MONITORING
+#------------------------------------------------------------------------------
+
+# - Enable Library - 
+
+shared_preload_libraries = 'pg_stat_statements'
+
+# - Configure - 
+
+pg_stat_statements.max = 10000
+pg_stat_statements.track = all
 
 #------------------------------------------------------------------------------
 # VERSION AND PLATFORM COMPATIBILITY
@@ -92,4 +105,4 @@ log_line_prefix = '{{ pg_log_line_prefix }}'
 
 # - Previous PostgreSQL Versions -
 
-standard_conforming_strings = {{ pg_standard_conforming_strings }}
+standard_conforming_strings = {{ postgres12_standard_conforming_strings }}

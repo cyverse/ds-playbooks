@@ -5,19 +5,18 @@
   tags:
     - no_testing
   tasks:
-    - name: update /etc/hosts
-      blockinfile:
+    - name: Update /etc/hosts
+      ansible.builtin.blockinfile:
         create: true
         path: /etc/hosts
         mode: u+r
         marker: '# {mark} DS MANAGED BLOCK'
         block: |
-          {% if inventory_hostname in groups['irods_catalog'] %}
-          {%   for d in groups['dbms'] %}
-          {%     if inventory_hostname != d and not d|ansible.utils.ipaddr %}
-          {{ lookup('dig', d) }} {{ d }}
-          {%     endif %}
-          {%   endfor %}
+          {% if inventory_hostname in groups['irods_catalog']
+               and inventory_hostname != _irods_dbms_host
+               and _irods_dbms_host != 'localhost'
+               and not _irods_dbms_host|ansible.utils.ipaddr %}
+          {{ lookup('dig', _irods_dbms_host) }} {{ _irods_dbms_host }}
           {% endif %}
           {% for i in groups['irods_catalog'] %}
           {%   if inventory_hostname != i and not i|ansible.utils.ipaddr %}

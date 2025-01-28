@@ -1,0 +1,19 @@
+[Unit]
+Description=SFTPGo, a SFTP Service for iRODS
+After=network-online.target nss-lookup.target
+
+[Service]
+Type=simple
+KillMode=process
+
+WorkingDirectory=/var/lib/sftpgo
+ExecStart=/usr/bin/sftpgo serve --config-file /etc/sftpgo/sftpgo.json
+ExecReload=
+Restart=on-failure
+RestartSec=10s
+
+EnvironmentFile=/etc/sftpgo/sftpgo.conf
+User=sftpgo
+
+[Install]
+WantedBy=multi-user.target

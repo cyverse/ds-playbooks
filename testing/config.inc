@@ -1,15 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export ENV_NAME=dstesting
+
 export DOMAIN="$ENV_NAME"_default
 
 export DBMS_HOST="$ENV_NAME"-dbms_configured-1."$DOMAIN"
 
+export IRODS_CLERVER_PASSWORD=password
 export IRODS_LAST_EPHEMERAL_PORT=20009
 export IRODS_PROVIDER_SYSTEM_GROUP=irods_provider
 export IRODS_RES_CONF_CENTOS_NAME=replRes
 export IRODS_RES_CONF_UBUNTU_NAME=ingestRes
-export IRODS_SCHEMA_VALIDATION=off
+export IRODS_SCHEMA_VALIDATION=file:///var/lib/irods/configuration_schemas
 export IRODS_VAULT=/var/lib/irods/Vault
 export IRODS_ZONE_NAME=testing
 

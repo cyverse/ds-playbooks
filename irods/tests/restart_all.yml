@@ -1,7 +1,8 @@
 ---
-- name: test restart_all
+- name: Test restart_all
   hosts: irods
   become: true
   become_user: irods
   tasks:
-    - import_tasks: tasks/test_irods_running.yml
+    - name: Verify iRODS servers are running
+      ansible.builtin.import_tasks: tasks/test_irods_running.yml

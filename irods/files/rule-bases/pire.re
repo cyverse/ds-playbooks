@@ -1,5 +1,4 @@
 # PIRE project policy
-# include this file from within ipc-custom.re
 
 @include 'pire-env'
 
@@ -7,7 +6,7 @@
 _pire_isForPIRE(*Path) =
   let *strPath = str(*Path)
   in *strPath like str(pire_PROJECT_BASE_COLL) ++ '/*' ||
-     *strPath like str(pire_PUBLIC_BASE_COLL) ++ '/*' 
+     *strPath like str(pire_PUBLIC_BASE_COLL) ++ '/*'
 
 
 # Determines if the provided collection or data object belongs to the PIRE
@@ -49,7 +48,7 @@ pire_replReplResc = pire_replIngestResc
 # Restrict the PIRE resource to files in the PIRE collection
 pep_resource_resolve_hierarchy_pre(*INSTANCE, *CONTEXT, *OUT, *OPERATION, *HOST, *PARSER, *VOTE) {
   on (
-    pire_RESC != ipc_DEFAULT_RESC
+    pire_RESC != cyverse_DEFAULT_RESC
     && *CONTEXT.resc_hier == pire_RESC
     && !_pire_isForPIRE(*CONTEXT.logical_path)
   ) {

@@ -1,16 +1,16 @@
 ---
-- name: configure | ensure enough vm huge pages
+- name: Configure | ensure enough vm huge pages
   ansible.posix.sysctl:
     name: vm.nr_hugepages
-    value: "{{ pg_num_huge_pages }}"
+    value: "{{ postgres12_num_huge_pages }}"
     state: present
     sysctl_set: true
   notify:
-    - reboot
+    - Reboot
   tags:
     - no_testing
 
-- name: configure | ensure vm.swappiness is 5
+- name: Configure | ensure vm.swappiness is 5
   ansible.posix.sysctl:
     name: vm.swappiness
     value: '5'
@@ -19,59 +19,71 @@
   tags:
     - no_testing
 
-- name: configure | ensure postgres user owns home dir
-  file:
+- name: Configure | ensure postgres user owns home dir
+  ansible.builtin.file:
     path: /var/lib/postgresql
     state: directory
     owner: postgres
     group: postgres
     recurse: true
 
-- name: configure | ensure archive dir exists
-  file:
+- name: Configure | ensure archive dir exists
+  ansible.builtin.file:
     state: directory
-    path: "{{ pg_db_path }}/archive"
+    path: "{{ postgres12_db_path }}/archive"
     owner: postgres
     group: postgres
     mode: "0770"
 
-- name: configure | template configs
-  template:
+- name: Configure | ensure config dir exists
+  ansible.builtin.file:
+    state: directory
+    path: "{{ postgres12_conf_path }}/conf.d"
+    owner: postgres
+    group: postgres
+    mode: u+rx
+
+- name: Configure | template configs
+  ansible.builtin.template:
     src: cyverse.conf.j2
-    dest: "{{ pg_conf_path }}/conf.d/cyverse.conf"
+    dest: "{{ postgres12_conf_path }}/conf.d/cyverse.conf"
     owner: postgres
     group: postgres
     mode: "0640"
   notify:
-    - restart postgres
+    - Restart postgres
 
-- name: configure | ensure block in pg_hba.conf exists
-  blockinfile:
-    path: "{{ pg_conf_path }}/pg_hba.conf"
-    insertafter: "{{ pg_hba_insertafter }}"
+- name: Configure | ensure block in pg_hba.conf exists
+  ansible.builtin.blockinfile:
+    path: "{{ postgres12_conf_path }}/pg_hba.conf"
+    create: true
+    mode: u+r
+    insertafter: "{{ postgres12_hba_insertafter }}"
     marker: "# {mark} postgres12 MANAGED BLOCK2"
     block: |
-      {% for entry in pg_hba_users %}
+      {% for entry in postgres12_hba_users %}
       {{ entry }}
       {% endfor %}
-      {% if pg_upstream_node %}
+      {% if postgres12_upstream_node %}
       {%   set ip =
-             pg_upstream_node if pg_upstream_node|ansible.utils.ipaddr else
-             lookup('dig', pg_upstream_node) %}
-      {{ '%-7s %-15s %-15s %-23s %s'|format('host', 'replication', pg_replication_user, ip ~ '/32', 'trust') }}
+             postgres12_upstream_node if postgres12_upstream_node | ansible.utils.ipaddr else
+             lookup('dig', postgres12_upstream_node) %}
+      {{ '%-7s %-15s %-15s %-23s %s'
+        | format('host', 'replication', postgres12_replication_user, ip ~ '/32', 'trust') }}
       {% endif %}
-      {% for replica in pg_downstream_nodes %}
-      {%   set ip = replica if replica|ansible.utils.ipaddr else lookup('dig', replica) %}
-      {{ '%-7s %-15s %-15s %-23s %s'|format('host', 'replication', pg_replication_user, ip ~ '/32', 'trust') }}
+      {% for replica in postgres12_downstream_nodes %}
+      {%   set ip = replica if replica | ansible.utils.ipaddr else lookup('dig', replica) %}
+      {{ '%-7s %-15s %-15s %-23s %s'
+        | format('host', 'replication', postgres12_replication_user, ip ~ '/32', 'trust') }}
       {% endfor %}
   notify:
-    - restart postgres
+    - Reload postgres
 
-- name: configure | template pgpass file
-  template:
+- name: Configure | template pgpass file
+  ansible.builtin.template:
     src: pgpass.j2
     dest: /var/lib/postgresql/.pgpass
     owner: postgres
     group: postgres
     mode: "0600"
-  when: pg_upstream_node or pg_downstream_nodes|length > 0
+  when: postgres12_upstream_node or postgres12_downstream_nodes|length > 0

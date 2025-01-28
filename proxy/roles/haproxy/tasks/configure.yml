@@ -1,47 +1,48 @@
 ---
-- ansible.builtin.import_tasks: _testing.yml
+- name: Configure | retrieve facts
+  ansible.builtin.setup:
 
-- name: configure | allowing proxy to listen on stats port
+- name: Configure | allowing proxy to listen on stats port
   when: ansible_selinux.status == 'enabled'
-  ansible.builtin.seport:
+  community.general.seport:
     ports: "{{ haproxy_stats_port }}"
     proto: tcp
     setype: tor_port_t
 
-- name: configure | enabling SELinux booleans for proxy
+- name: Configure | enabling SELinux booleans for proxy
   when: ansible_selinux.status == 'enabled'
-  ansible.builtin.seboolean:
+  ansible.posix.seboolean:
     name: haproxy_connect_any
     state: true
     persistent: true
 
-- name: configure | configure rsyslog to listen on UDP socket
+- name: Configure | configure rsyslog to listen on UDP socket
   ansible.builtin.blockinfile:
     path: /etc/rsyslog.conf
-    insertafter: '# Provides UDP syslog reception'
+    insertafter: "# Provides UDP syslog reception"
     marker: "# {mark} DS MANAGED BLOCK (haproxy)"
     block: |
       $ModLoad imudp
       $UDPServerRun 514
       $UDPServerAddress 127.0.0.1
   notify:
-    - restart rsyslog
+    - Restart rsyslog
 
-- name: configure | place rsyslog config for HAProxy
+- name: Configure | place rsyslog config for HAProxy
   ansible.builtin.copy:
     src: rsyslog-haproxy.conf
-    dest: /etc/rsyslog.d/haproxy.conf
+    dest: "{{ haproxy_rsyslog_conf }}"
     mode: u+r
   notify:
-    - restart rsyslog
+    - Restart rsyslog
 
-- name: configure | place logrotate config for HAProxy
+- name: Configure | place logrotate config for HAProxy
   ansible.builtin.copy:
     src: logrotate-haproxy
     dest: /etc/logrotate.d/haproxy
     mode: u+r
 
-- name: configure | add TLS certificates
+- name: Configure | add TLS certificates
   ansible.builtin.copy:
     dest: "{{ haproxy_stats_tls_crt }}"
     content: "{{ haproxy_stats_tls_crt_content }}"
@@ -51,22 +52,22 @@
     - haproxy_stats_tls_crt | d(False)
     - haproxy_stats_tls_crt_content | d(False)
   notify:
-    - reload haproxy
+    - Reload haproxy
 
-- name: configure | place VIP list
+- name: Configure | place VIP list
   ansible.builtin.template:
-    src: templates/vip.lst.j2
+    src: vip.lst.j2
     dest: /etc/haproxy/vip.lst
     owner: haproxy
     mode: u+r
   notify:
-    - reload haproxy
+    - Reload haproxy
 
-- name: configure | place haproxy config file
+- name: Configure | place haproxy config file
   ansible.builtin.template:
     src: haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
     owner: haproxy
     mode: u=r
   notify:
-    - reload haproxy
+    - Reload haproxy

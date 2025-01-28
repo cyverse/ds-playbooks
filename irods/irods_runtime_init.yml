@@ -1,16 +1,16 @@
 ---
-- name: run-time initialization
+- name: Run-time initialization
   hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - name: ensure service user type exists
+    - name: Ensure service user type exists
       irods_user_type:
         type: ds-service
         description: a Data Store service
 
-    - name: ensure public group's home is correct
+    - name: Ensure public group's home is correct
       become: false
       delegate_to: localhost
       irods_move:
@@ -22,7 +22,7 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: ensure public group's trash is correct
+    - name: Ensure public group's trash is correct
       become: false
       delegate_to: localhost
       irods_move:
@@ -34,7 +34,7 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: ensure CyVerse curated collection base collection exists
+    - name: Ensure CyVerse curated collection base collection exists
       become: false
       delegate_to: localhost
       irods_collection:
@@ -47,33 +47,67 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: force initialize perms when not testing
-      set_fact:
-        init_rodsadmin_perms_default: false
-      tags:
-        - no_testing
+    - name: Ensure predefined collections have UUIDs
+      become: false
+      delegate_to: localhost
+      irods_avu:
+        entity_type: collection
+        entity_name: "{{ item }}"
+        attribute: ipc_UUID
+        value: "{{ lookup('uuid', 1) }}" #  for time-based UUID
+        host: "{{ groups['irods_catalog'][0] }}"
+        zone: "{{ _irods_zone_name }}"
+        username: "{{ _irods_clerver_user }}"
+        password: "{{ _irods_clerver_password }}"
+      loop:
+        - /{{ _irods_zone_name }}
+        - /{{ _irods_zone_name }}/home
+        - /{{ _irods_zone_name }}/home/{{ _irods_clerver_user }}
+        - /{{ _irods_zone_name }}/home/shared
+        - /{{ _irods_zone_name }}/trash
+        - /{{ _irods_zone_name }}/trash/home
+        - /{{ _irods_zone_name }}/trash/home/{{ _irods_clerver_user }}
+        - /{{ _irods_zone_name }}/trash/home/shared
 
-    - name: initialize rodsadmin perms
-      script: >
-        scripts/init-rodsadmin-perms.sh \
-          '{{ groups["dbms"][0] }}' \
-          postgres \
-          '{{ hostvars[groups["dbms"][0]]["ansible_port"]|default(22) }}' \
-          '{{ hostvars[groups["dbms"][0]]["ansible_user"]|default("root") }}' \
-          '{{ groups["irods_catalog"][0] }}' \
-          '{{ hostvars[groups["irods_catalog"][0]]["_irods_service_account_name"] }}' \
-          '{{ hostvars[groups["irods_catalog"][0]]["ansible_port"]|default(22) }}' \
-          '{{ hostvars[groups["irods_catalog"][0]]["ansible_user"]|default("root") }}' \
-          '{{ _irods_zone_name }}'
-      register: response
-      changed_when: response.stdout == 'true'
+
+    - name: Initialize rodsadmin perms
+      when: init_rodsadmin_perms | d(false)
       delegate_to: localhost
       become: false
-      when: >-
-        (init_rodsadmin_perms is not defined and (init_rodsadmin_perms_default|default(true)))
-        or init_rodsadmin_perms
+      block:
+        - name: Give rodsadmin group write permission on top-level static collections
+          irods_permission:
+            zone: "{{ _irods_zone_name }}"
+            subject: rodsadmin
+            permission: write
+            object: "{{ item }}"
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            admin_user: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+          with_items:
+            - /
+            - /{{ _irods_zone_name }}
+            - /{{ _irods_zone_name }}/home
+            - /{{ _irods_zone_name }}/trash
+            - /{{ _irods_zone_name }}/trash/home
 
-    - name: ensure anonymous user exists
+        - name: Give rodsadmin group own permission on home collections
+          irods_permission:
+            zone: "{{ _irods_zone_name }}"
+            subject: rodsadmin
+            permission: own
+            object: "{{ item }}"
+            recursion: exclusive
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            admin_user: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+          with_items:
+            - /{{ _irods_zone_name }}/home
+            - /{{ _irods_zone_name }}/trash/home
+
+    - name: Ensure anonymous user exists
       delegate_to: localhost
       become: false
       irods_user:
@@ -86,10 +120,9 @@
         admin_password: "{{ _irods_clerver_password }}"
         zone: "{{ _irods_zone_name }}"
 
-    - name: ensure anonymous user has read access to required collections
+    - name: Ensure anonymous user has read access to required collections
       delegate_to: localhost
       become: false
-      no_log: true
       irods_permission:
         subject: anonymous
         permission: read
@@ -105,23 +138,51 @@
         - /{{ _irods_zone_name }}/home/shared
         - /{{ _irods_zone_name }}/home/shared/commons_repo/curated
 
-    - name: start quota usage computation
-      command: >
-        irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
-          ipc_rescheduleQuotaUsageUpdate null ruleExecOut
-      register: results
-      changed_when: results.stdout == 'scheduled quota usage updates'
+    - name: Start periodic policies
+      environment:
+        IRODS_AUTHENTICATION_FILE: /var/lib/irods/.irods/.a-adm
+        IRODS_USER_NAME: "{{ _irods_admin_username }}"
+      block:
+        - name: Initialize iRODS admin session
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: iinit
+            stdin: "{{ _irods_admin_password }}"
+          changed_when: false
 
-    - name: start storage free space determination
-      command: >
-        irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
-          ipc_rescheduleStorageFreeSpaceDetermination null ruleExecOut
-      register: results
-      changed_when: results.stdout == 'scheduled storage determination'
+        - name: Start quota usage computation
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              irule \
+                --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance \
+                cyverse_housekeeping_rescheduleQuotaUsageUpdate null ruleExecOut
+          register: results
+          changed_when: results.stdout == 'scheduled quota usage updates'
 
-    - name: start trash removal
-      command: >
-        irule --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance
-          ipc_rescheduleTrashRemoval null ruleExecOut
-      register: results
-      changed_when: results.stdout == 'scheduled trash removal'
+        - name: Start storage free space determination
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              irule \
+                --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance \
+                cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination null ruleExecOut
+          register: results
+          changed_when: results.stdout == 'scheduled storage determination'
+
+        - name: Start trash removal
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              irule \
+                --rule-engine-plugin-instance=irods_rule_engine_plugin-irods_rule_language-instance \
+                cyverse_housekeeping_rescheduleTrashRemoval null ruleExecOut
+          register: results
+          changed_when: results.stdout == 'scheduled trash removal'
+
+      always:
+        - name: Exit iRODS admin session
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: iexit full
+          changed_when: false

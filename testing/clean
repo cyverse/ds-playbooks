@@ -1,24 +1,26 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #
 # This script removes the images built by the build script. Specifically, it
 # deletes ansible-tester, all of the images composing env, and the base image
 # ansible-support.
 
-
 if [[ "$OSTYPE" == "darwin"* ]]
 then
-  readonly ExecName=$(greadlink -f "$0")
+  ExecName=$(greadlink -f "$0")
 else
-  readonly ExecName=$(readlink --canonicalize "$0")
+  ExecName=$(readlink --canonicalize "$0")
 fi
+readonly ExecName
+
 
 main()
 {
-  local baseDir=$(dirname "$ExecName")
+  local baseDir
+  baseDir=$(dirname "$ExecName")
 
   "$baseDir"/ansible-tester/clean
   "$baseDir"/env/clean "$baseDir"/config.inc
 }
 
 
-main
+main "$@"

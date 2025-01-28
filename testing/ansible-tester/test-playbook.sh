@@ -1,17 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Usage:
 #  test-playbook INSPECT PRETTY VERBOSE HOSTS SETUP PLAYBOOK
 #
 # Parameters:
 #  HOSTS     the inventory hosts to test against
-#  INSPECT   if this is set to any value, a shell will be opened that allows 
+#  INSPECT   if this is set to any value, a shell will be opened that allows
 #            access to the volumes in the env containers.
 #  PLAYBOOK  the name of the playbook being tested.
-#  PRETTY    if this is set to any value, more info is dumped and newlines in 
+#  PRETTY    if this is set to any value, more info is dumped and newlines in
 #            ouput are expanded.
 #  SETUP     the name of a playbook that prepares the environment for testing
-#            PLAYBOOK 
+#            PLAYBOOK
 #  VERBOSE   if this is set to any value, ansible will be passed the verbose
 #            flag -vvv
 #
@@ -23,6 +23,9 @@ readonly PLAYBOOK_DIR=/playbooks-under-test
 readonly LIBRARY_DIR="$PLAYBOOK_DIR"/library
 readonly TEST_DIR="$PLAYBOOK_DIR"/tests
 
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly NORMAL='\033[0m'
 
 main() {
 	local inspect="$1"
@@ -44,22 +47,29 @@ main() {
 		modPath="$LIBRARY_DIR"
 	fi
 
-	wait_for_env "$inventory"
-
 	local rc=0
+
+	if ! wait_for_env "$inventory"; then
+		display_failure 'ERROR: The environment did not come up'
+		rc=1
+	fi
 
 	if (( rc == 0 )) && [[ -n "$setup" ]]; then
 		if ! setup_env "$verbose" "$inventory" "$modPath" "$PLAYBOOK_DIR"/"$setup"; then
+			display_failure 'ERROR: The setup playbook failed'
 			rc=1
 		fi
 	fi
 
 	if (( rc == 0 )) && [[ -n "$playbook" ]]; then
 		local playbookPath="$PLAYBOOK_DIR"/"$playbook"
-      local testPath="$TEST_DIR"/"$playbook"
+		local testPath="$TEST_DIR"/"$playbook"
 
 		if ! do_test "$verbose" "$inventory" "$modPath" "$playbookPath" "$testPath" ; then
+			display_failure FAILED
 			rc=1
+		else
+			display_success PASSED
 		fi
 	fi
 
@@ -71,6 +81,17 @@ main() {
 	return $rc
 }
 
+display_failure() {
+	local msg="$1"
+
+	printf "$RED"'%s'"$NORMAL"'\n' "$msg"
+}
+
+display_success() {
+	local msg="$1"
+
+	printf "$GREEN"'%s'"$NORMAL"'\n' "$msg"
+}
 
 do_test() {
 	local verbose="$1"
@@ -121,10 +142,12 @@ do_test() {
 
 	if grep --quiet --regexp '^\(changed\|fatal\):' <<< "$idempotencyRes"; then
 		echo "$idempotencyRes"
+		printf 'failed: idempotency check\n'
 		return 1
+	else
+		printf 'ok: idempotency check\n'
 	fi
 }
-
 
 run_idempotency() {
 	local inventory="$1"
@@ -139,7 +162,6 @@ run_idempotency() {
 		2>&1
 }
 
-
 setup_env() {
 	local verbose="$1"
 	local inventory="$2"
@@ -153,17 +175,19 @@ setup_env() {
 	# shellcheck disable=SC2086
 	ansible-playbook $verboseOpt \
 		--inventory-file="$inventory" --module-path="$modPath" --skip-tags=no_testing \
-		"$setup" 
+		"$setup"
 }
-
 
 wait_for_env() {
 	local inventory="$1"
+	local output
 
 	printf 'waiting for environment to be ready\n'
-	ansible-playbook --inventory-file="$inventory" /wait-for-ready.yml > /dev/null
+	if ! output="$(ansible-playbook --inventory-file="$inventory" /wait-for-ready.yml)"; then
+		printf 'failed to bring up the environment\n%s' "$output"
+		return 1
+	fi
 }
-
 
 verbosity() {
 	local verbose="$1"
@@ -172,6 +196,5 @@ verbosity() {
 		printf -- '-vvv'
 	fi
 }
-
 
 main "$@"

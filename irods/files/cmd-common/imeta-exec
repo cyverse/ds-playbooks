@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#
+# Calls imeta with the given parameters
+#
+# Usage:
+#  imeta ARGS...
+#
+# Arguments:
+#  ARGS  a list of arguments to pass directly to imeta in the format received
+#
+# Returns:
+#  It writes any error message received from imeta to stderr. All other output
+#  is written directly to stdout in the format received.
+#
+# © 2024 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
+
+set -o errexit -o nounset -o pipefail
+
+main() {
+# XXX - Due to a bug in imeta version 4.2.8, imeta writes some errors to stdout and exits
+#       successfully.
+# 	imeta "$@"
+	local resp
+	if ! resp="$(imeta "$@")"; then
+		if [[ -n "$resp" ]]; then
+			echo "$resp"
+		fi
+
+		return 1
+	fi
+
+	if [[ "$resp" =~ Error: ]]; then
+		echo "$resp" >&2
+		return 1
+	else
+		echo "$resp"
+	fi
+# XXX - ^^^
+}
+
+main "$@"

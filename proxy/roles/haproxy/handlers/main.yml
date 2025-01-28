@@ -1,28 +1,19 @@
 ---
-- name: reload haproxy
-  when: _full_os | bool
-  service:
+- name: Reload haproxy
+  ansible.builtin.service:
     name: haproxy
     state: reloaded
 
-- name: restart haproxy
-  when: _full_os | bool
-  service:
+- name: Restart haproxy
+  when: >-
+    haproxy_restart_allowed
+    is warn_if_false(inventory_hostname + ' skipped, RESTART REQUIRED FOR SETTINGS TO TAKE')
+  ansible.builtin.service:
     name: haproxy
     state: restarted
 
-- name: restart firewall
-  when: _full_os | bool
-  service:
-    name: iptables
-    state: restarted
-
-- name: restart rsyslog
-  when: _full_os | bool
-  service:
+- name: Restart rsyslog
+  ansible.builtin.service:
     name: rsyslog
     state: restarted
-
-- name: reboot
-  debug:
-    msg: REBOOT REQUIRED FOR SETTINGS TO TAKE
+  notify: Reload haproxy

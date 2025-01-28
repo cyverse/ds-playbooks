@@ -1,0 +1,30 @@
+---
+- name: Terminate client connections
+  hosts: proxy
+  become: true
+  tags:
+    - no_testing
+  tasks:
+    - name: Terminate SFTP connections
+      community.general.haproxy:
+        backend: sftp
+        host: sftp
+        state: disabled
+        shutdown_sessions: true
+        fail_on_not_found: true
+
+    - name: Terminate WebDAV connections
+      community.general.haproxy:
+        backend: webdav
+        host: dav
+        state: disabled
+        shutdown_sessions: true
+        fail_on_not_found: true
+
+    - name: Terminate iRODS connections
+      community.general.haproxy:
+        backend: irods_direct
+        host: irods
+        state: disabled
+        shutdown_sessions: true
+        fail_on_not_found: true

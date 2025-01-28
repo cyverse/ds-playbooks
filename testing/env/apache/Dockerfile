@@ -1,4 +1,8 @@
 FROM test-env-base:centos7
 
-RUN yum install --assumeyes openssl
-RUN /etc/pki/tls/certs/make-dummy-cert /etc/pki/tls/certs/testing.crt
+RUN <<EOF
+	set -o errexit
+	yum install --assumeyes openssl
+	yum clean all
+	rm --force --recursive /var/cache/yum
+EOF

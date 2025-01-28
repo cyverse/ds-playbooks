@@ -1,13 +1,13 @@
 ---
-- name: ensure account owns /var/lib/irods
-  file:
+- name: Ensure iRODS ownership | /var/lib/irods owned by {{ _irods_service_account_name }}
+  ansible.builtin.file:
     path: /var/lib/irods
     owner: "{{ _irods_service_account_name }}"
     group: "{{ _irods_service_group_name }}"
     recurse: true
 
-- name: ensure account owns /etc/irods
-  file:
+- name: Ensure iRODS ownership | /etc/irods owned by {{ _irods_service_account_name }}
+  ansible.builtin.file:
     path: /etc/irods
     owner: "{{ _irods_service_account_name }}"
     group: "{{ _irods_service_group_name }}"

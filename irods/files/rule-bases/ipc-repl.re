@@ -1,5 +1,4 @@
 # Replication logic
-# include this file from within ipc-custom.re
 #
 # Replication is controlled by AVUs attached to relevant root resources.
 #
@@ -19,13 +18,13 @@
 #
 # DEPRECATED FUNCTIONALITY
 #
-# Unlike the logic in ipc-logic.re, the replication logic doesn't apply
+# Unlike the logic in cyverse_logic.re, the replication logic doesn't apply
 # globally. Different projects may have different replication policies.
 #
 # THIRD PARTY REPLICATION LOGIC
 #
 # Third party replication logic goes in its own file, and the file should be
-# included in ipc-custom.re. Third party logic should be implement a set of
+# included in cyverse_core.re. Third party logic should be implement a set of
 # functions prefixed by the containing file name.
 #
 # Here's the list of functions that need to be provided by in the replication
@@ -43,7 +42,8 @@
 #
 #   Example:
 #     project_replBelongsTo : path -> boolean
-#     project_replBelongsTo(*Entity) = str(*Entity) like '/' ++ ipc_ZONE ++ '/home/shared/project/*'
+#     project_replBelongsTo(*Entity) =
+#        str(*Entity) like '/' ++ cyverse_ZONE ++ '/home/shared/project/*'
 #
 # <file_name>_replIngestResc
 #   Returns the resource where newly ingested files for the project should be
@@ -97,10 +97,21 @@ _repl_replicate(*Object, *RescName) {
 
     temporaryStorage.repl_replicate = '';
 
-    if (*err < 0 && *err != -808000 && *err != -817000) {
-      _repl_logMsg('failed to replicate data object *Object, retry in 8 hours');
-      _repl_logMsg(*msg);
-      *err;
+    if (*err < 0){
+      if (*err == -808000 || *err == -817000) {
+        _repl_logMsg('failed to replicate data object *Object, data no longer exists');
+        _repl_logMsg(*msg);
+        0
+      } else if (*err == -314000) {
+        _repl_logMsg('failed to replicate data object *Object due to checksum error');
+        _repl_logMsg(*msg);
+        0
+        # the exit status is 0 to indicate that replication should not be retried
+      } else {
+        _repl_logMsg('failed to replicate data object *Object, retry in 8 hours');
+        _repl_logMsg(*msg);
+        *err;
+      }
     } else {
       _repl_logMsg('replicated data object *Object');
     }
@@ -209,18 +220,18 @@ _repl_syncReplicas(*Object) {
   _repl_logMsg('syncing replicas of data object *Object');
 
   *dataPath = '';
-# XXX - Replica updating is broken for large files in 4.2.8. See 
+# XXX - Replica updating is broken for large files in 4.2.8. See
 #       https://github.com/irods/irods/issues/5160. This is fixed in 4.2.9.
 #   foreach (*rec in SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*Object') {
 #     *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
 #   }
-# 
+#
 #   if (*dataPath == '') {
 #     _repl_logMsg('data object *Object no longer exists');
 #   } else {
 #     *err = errormsg(
 #       msiDataObjRepl(*dataPath, 'all=++++updateRepl=++++verifyChksum=', *status), *msg);
-# 
+#
 #     if (*err < 0 && *err != -808000) {
 #       _repl_logMsg('failed to sync replicas of data object *Object trying again in 8 hours');
 #       _repl_logMsg(*msg);
@@ -229,8 +240,8 @@ _repl_syncReplicas(*Object) {
 #       _repl_logMsg('synced replicas of data object *Object');
 #     }
 #   }
-  foreach (*rec in 
-    SELECT COLL_NAME, DATA_NAME, DATA_SIZE, order_asc(DATA_REPL_NUM) 
+  foreach (*rec in
+    SELECT COLL_NAME, DATA_NAME, DATA_SIZE, order_asc(DATA_REPL_NUM)
     WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '1'
   ) {
     *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
@@ -275,20 +286,19 @@ _repl_syncReplicas(*Object) {
 # SUPPORTING FUNCTIONS AND RULES
 
 _defaultIngestResc : string * boolean
-_defaultIngestResc = (ipc_DEFAULT_RESC, true)
+_defaultIngestResc = (cyverse_DEFAULT_RESC, true)
 
 
 _defaultReplResc : string * boolean
-_defaultReplResc = (ipc_DEFAULT_REPL_RESC, true)
+_defaultReplResc = (cyverse_DEFAULT_REPL_RESC, true)
 
 
 _delayTime : int
-_delayTime = if (errorcode(temporaryStorage.repl_delayTime) < 0) {
-               temporaryStorage.repl_delayTime = '1';
-               1;
-             } else {
-               int(temporaryStorage.repl_delayTime);
-             }
+_delayTime =
+  let *_ = if (errorcode(temporaryStorage.repl_delayTime) < 0) {
+      temporaryStorage.repl_delayTime = str(cyverse_INIT_REPL_DELAY);
+    } in
+  int(temporaryStorage.repl_delayTime);
 
 
 _incDelayTime {
@@ -310,7 +320,7 @@ _scheduleMv(*Object, *IngestName, *IngestOptionalStr, *ReplName, *ReplOptionalSt
 #       https://github.com/irods/irods/issues/5413.
 #     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5257
-#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See 
+#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/4055
 #   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
 #   {_mvReplicas(*Object, (*IngestName, bool(*IngestOptionalStr)), (*ReplName, bool(*ReplOptionalStr)));}
@@ -352,7 +362,7 @@ _repl_scheduleMv(*Object, *IngestName, *ReplName) {
 #       https://github.com/irods/irods/issues/5413.
 #     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5257
-#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See 
+#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/4055
 #   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
 #   {_repl_mvReplicas(*Object, *IngestName, *ReplName);}
@@ -385,21 +395,22 @@ _repl_mvReplicas_workaround(*Object, *IngestName, *ReplName) {
 
 # DEPRECATED
 _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
+  *entity = str(*Entity);
   (*ingestName, *ingestOptional) = *IngestResc;
   (*replName, *replOptional) = *ReplResc;
-  *type = ipc_getEntityType(*Entity);
+  *type = cyverse_getEntityType(*entity);
 
-  if (*type == '-C') {
+  if (cyverse_isColl(*type)) {
     # if the entity is a collection
-    foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
+    foreach (*collPat in list(*entity, *entity ++ '/%')) {
       foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
         *dataId = *rec.DATA_ID;
         _scheduleMv(*dataId, *ingestName, str(*ingestOptional), *replName, str(*replOptional));
       }
     }
-  } else if (*type == '-d') {
+  } else if (cyverse_isDataObj(*type)) {
     # if the entity is a data object
-    msiSplitPath(*Entity, *collPath, *dataName);
+    msiSplitPath(*entity, *collPath, *dataName);
 
     foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName') {
       *dataId = *rec.DATA_ID;
@@ -410,19 +421,20 @@ _scheduleMoves(*Entity, *IngestResc, *ReplResc) {
 
 
 _repl_scheduleMoves(*Entity, *IngestName, *ReplName) {
-  *type = ipc_getEntityType(*Entity);
+  *entity = str(*Entity);
+  *type = cyverse_getEntityType(*entity);
 
-  if (*type == '-C') {
+  if (cyverse_isColl(*type)) {
     # if the entity is a collection
-    foreach (*collPat in list(*Entity, *Entity ++ '/%')) {
+    foreach (*collPat in list(*entity, *entity ++ '/%')) {
       foreach (*rec in SELECT DATA_ID WHERE COLL_NAME LIKE '*collPat') {
         *dataId = *rec.DATA_ID;
         _repl_scheduleMv(*dataId, *IngestName, *ReplName);
       }
     }
-  } else if (*type == '-d') {
+  } else if (cyverse_isDataObj(*type)) {
     # if the entity is a data object
-    msiSplitPath(*Entity, *collPath, *dataName);
+    msiSplitPath(*entity, *collPath, *dataName);
 
     foreach (*rec in SELECT DATA_ID WHERE COLL_NAME = '*collPath' AND DATA_NAME = '*dataName') {
       *dataId = *rec.DATA_ID;
@@ -437,7 +449,7 @@ _repl_scheduleRepl(*Object, *RescName) {
 #       https://github.com/irods/irods/issues/5413.
 #     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5257
-#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See 
+#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/4055
 #   delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
 #   {_repl_replicate(*Object, *RescName);}
@@ -469,14 +481,20 @@ _repl_replicate_workaround(*Object, *RescName) {
 
 
 _repl_scheduleSyncReplicas(*Object) {
-  foreach (*rec in SELECT COUNT(DATA_REPL_NUM) WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '0')
-  {
+# XXX - There is a bug in iRODS 4.2.8 that prevents a general query that doesn't explicitly use
+#       r_coll_main from working when authorization is controlled by a ticket on a collection.
+#   foreach (*rec in SELECT COUNT(DATA_REPL_NUM) WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '0')
+#   {
+  foreach ( *rec in
+    SELECT COUNT(DATA_REPL_NUM), COLL_ID WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '0'
+  ) {
+# XXX - ^^^
     if (int(*rec.DATA_REPL_NUM) > 0) {
 # XXX - The rule engine plugin must be specified. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5413.
 #     - REPEAT not honored for rodsuser. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/5257
-#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See 
+#     - PLUSET doesn't understand h unit. This is fixed in iRODS 4.2.9. See
 #       https://github.com/irods/irods/issues/4055
 #       delay('<PLUSET>' ++ str(_delayTime) ++ 's</PLUSET><EF>8h REPEAT UNTIL SUCCESS</EF>')
 #       {_repl_syncReplicas(*Object)}
@@ -519,11 +537,9 @@ _ipcRepl_createOrOverwrite_old(*DataPath, *DestResc, *New, *IngestResc, *ReplRes
     *dataId = *rec.DATA_ID;
 
     if (*New) {
-# XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
-#      (*ingestName, *optional) = *IngestResc;
-#      (*replName, *optional) = *ReplResc;
-#      _repl_scheduleRepl(*dataId, if *DestResc == *replName then *ingestName else *replName);
-# XXX - ^^^
+      (*ingestName, *optional) = *IngestResc;
+      (*replName, *optional) = *ReplResc;
+      _repl_scheduleRepl(*dataId, if *DestResc == *replName then *ingestName else *replName);
     } else {
       _repl_scheduleSyncReplicas(*dataId);
     }
@@ -538,9 +554,7 @@ _ipcRepl_createOrOverwrite(*DataPath, *DestResc, *New, *IngestResc, *ReplResc) {
     *dataId = *rec.DATA_ID;
 
     if (*New) {
-# XXX - Async Automatic replication is too slow and plugs up the rule queue at the moment
-#      _repl_scheduleRepl(*dataId, if *DestResc == *ReplResc then *IngestResc else *ReplResc);
-# XXX - ^^^
+      _repl_scheduleRepl(*dataId, if *DestResc == *ReplResc then *IngestResc else *ReplResc);
     } else {
       _repl_scheduleSyncReplicas(*dataId);
     }
@@ -561,7 +575,7 @@ _setDefaultResc(*Resource) {
 # cannot override this choice, and 'preferred' means they can.
 _repl_findResc(*DataPath) {
   msiSplitPath(*DataPath, *collPath, *dataName);
-  *resc = ipc_DEFAULT_RESC;
+  *resc = cyverse_DEFAULT_RESC;
   *residency = 'preferred';
   *bestColl = '/';
 
@@ -584,7 +598,7 @@ _repl_findResc(*DataPath) {
 # Given a resource, this rule determines the list of resources that
 # asynchronously replicate its replicas.
 _repl_findReplResc(*Resc) {
-  *repl = ipc_DEFAULT_REPL_RESC;
+  *repl = cyverse_DEFAULT_REPL_RESC;
   *residency = 'preferred';
 
   foreach (*record in SELECT META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
@@ -610,23 +624,14 @@ _repl_findReplResc(*Resc) {
 
 # DEPRECATED
 _old_replEntityRename(*SourceObject, *DestObject) {
-  on (de_replBelongsTo(/*DestObject)) {}
   on (pire_replBelongsTo(/*DestObject)) {
     if (!pire_replBelongsTo(/*SourceObject)) {
       _scheduleMoves(*DestObject, pire_replIngestResc, pire_replReplResc);
     }
   }
-  on (terraref_replBelongsTo(/*DestObject)) {
-    if (!terraref_replBelongsTo(/*SourceObject)) {
-      _scheduleMoves(*DestObject, terraref_replIngestResc, terraref_replReplResc);
-    }
-  }
 }
 _old_replEntityRename(*SourceObject, *DestObject) {
   on (pire_replBelongsTo(/*SourceObject)) {
-    _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
-  }
-  on (terraref_replBelongsTo(/*SourceObject)) {
     _scheduleMoves(*DestObject, _defaultIngestResc, _defaultReplResc);
   }
 }
@@ -635,15 +640,15 @@ _old_replEntityRename(*SourceObject, *DestObject) {
 _old_replEntityRename(*SourceObject, *DestObject) {
   (*srcResc, *_) = _repl_findResc(*SourceObject);
 
-  if (*srcResc != ipc_DEFAULT_RESC) {
-    _repl_scheduleMoves(*DestObject, ipc_DEFAULT_RESC, ipc_DEFAULT_REPL_RESC);
+  if (*srcResc != cyverse_DEFAULT_RESC) {
+    _repl_scheduleMoves(*DestObject, cyverse_DEFAULT_RESC, cyverse_DEFAULT_REPL_RESC);
   }
 }
 
 replEntityRename(*SourceObject, *DestObject) {
   (*destResc, *_) = _repl_findResc(*DestObject);
 
-  if (*destResc != ipc_DEFAULT_RESC) {
+  if (*destResc != cyverse_DEFAULT_RESC) {
     (*srcResc, *_) = _repl_findResc(*SourceObject);
 
     if (*srcResc != *destResc) {
@@ -661,14 +666,8 @@ replEntityRename(*SourceObject, *DestObject) {
 
 # DEPRECATED
 _ipcRepl_acSetRescSchemeForCreate {
-  on (de_replBelongsTo(/$objPath)) {
-    _setDefaultResc(de_replIngestResc);
-  }
   on (pire_replBelongsTo(/$objPath)) {
     _setDefaultResc(pire_replIngestResc);
-  }
-  on (terraref_replBelongsTo(/$objPath)) {
-    _setDefaultResc(terraref_replIngestResc);
   }
 }
 _ipcRepl_acSetRescSchemeForCreate {
@@ -678,7 +677,7 @@ _ipcRepl_acSetRescSchemeForCreate {
 ipcRepl_acSetRescSchemeForCreate {
   (*resc, *residency) = _repl_findResc($objPath);
 
-  if (*resc != ipc_DEFAULT_RESC) {
+  if (*resc != cyverse_DEFAULT_RESC) {
     msiSetDefaultResc(*resc, *residency);
   } else {
     _ipcRepl_acSetRescSchemeForCreate;
@@ -691,14 +690,8 @@ ipcRepl_acSetRescSchemeForCreate {
 
 # DEPRECATED
 _ipcRepl_acSetRescSchemeForRepl {
-  on (de_replBelongsTo(/$objPath)) {
-    _setDefaultResc(de_replReplResc);
-  }
   on (pire_replBelongsTo(/$objPath)) {
     _setDefaultResc(pire_replReplResc);
-  }
-  on (terraref_replBelongsTo(/$objPath)) {
-    _setDefaultResc(terraref_replReplResc);
   }
 }
 _ipcRepl_acSetRescSchemeForRepl {
@@ -712,7 +705,7 @@ ipcRepl_acSetRescSchemeForRepl {
   ) {
     (*resc, *_) = _repl_findResc($objPath);
 
-    if (*resc != ipc_DEFAULT_RESC) {
+    if (*resc != cyverse_DEFAULT_RESC) {
       (*repl, *residency) = _repl_findReplResc(*resc);
       msiSetDefaultResc(*repl, *residency);
     } else {
@@ -726,11 +719,7 @@ ipcRepl_acSetRescSchemeForRepl {
 
 # DEPRECATED
 _ipcRepl_put_old(*ObjPath, *DestResc, *New) {
-  on (de_replBelongsTo(/*ObjPath)) {
-    _ipcRepl_createOrOverwrite_old(*ObjPath, *DestResc, *New, de_replIngestResc, de_replReplResc);
-  }
   on (pire_replBelongsTo(/*ObjPath)) {}
-  on (terraref_replBelongsTo(/*ObjPath)) {}
 }
 _ipcRepl_put_old(*ObjPath, *DestResc, *New) {
   _ipcRepl_createOrOverwrite_old(*ObjPath, *DestResc, *New, _defaultIngestResc, _defaultReplResc);
@@ -739,7 +728,7 @@ _ipcRepl_put_old(*ObjPath, *DestResc, *New) {
 _ipcRepl_put(*ObjPath, *DestResc, *New) {
   (*ingestResc, *_) = _repl_findResc(*ObjPath);
 
-  if (*ingestResc != ipc_DEFAULT_RESC) {
+  if (*ingestResc != cyverse_DEFAULT_RESC) {
     (*replResc, *_) = _repl_findReplResc(*ingestResc);
     _ipcRepl_createOrOverwrite(*ObjPath, *DestResc, *New, *ingestResc, *replResc);
   } else {
@@ -754,7 +743,7 @@ ipcRepl_dataObjCreated(*_, *_, *DATA_OBJ_INFO) {
 
 
 ipcRepl_dataObjModified(*_, *_, *DATA_OBJ_INFO) {
-  _ipcRepl_put(*DATA_OBJ_INFO.logical_path, *DATA_OBJ_INFO.destRescName, false);
+  _ipcRepl_put(*DATA_OBJ_INFO.logical_path, hd(split(*DATA_OBJ_INFO.resc_hier, ';')), false);
 }
 
 

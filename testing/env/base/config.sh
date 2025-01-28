@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #
 # Usage:
 #  config.sh OS VERSION
@@ -10,7 +10,6 @@
 # This script configures the common ansible requirements
 
 set -o errexit -o nounset -o pipefail
-
 
 main() {
 	if (( $# < 1 )); then
@@ -28,7 +27,7 @@ main() {
 
 	# Install required packages
 	if [[ "$os" == centos ]]; then
-		install_centos_packages "$version"
+		install_centos_packages
 	else
 		install_ubuntu_packages "$version"
 	fi
@@ -36,7 +35,7 @@ main() {
 	# Remove root's password
 	passwd -d root
 
-	# Configure passwordless root ssh access
+	# Configure root ssh access without password
 	ssh-keygen -q -f /etc/ssh/ssh_host_key -N '' -t rsa
 
 	if ! [[ -e /etc/ssh/ssh_host_dsa_key ]]; then
@@ -58,20 +57,16 @@ main() {
 	mkdir --mode 0700 /root/.ssh
 }
 
-
 # Install the required CentOS packages.
 #
 # Parameters:
 #  version  the CentOS major distribution version number
 install_centos_packages() {
-	local version="$1"
-
+	update_centos_repo
 	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-"$version"
 
-	yum --assumeyes install yum-plugin-versionlock
-
 	yum --assumeyes install epel-release
-	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-"$version"
+	rpm --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
 
 	yum --assumeyes install \
 		ca-certificates \
@@ -81,22 +76,25 @@ install_centos_packages() {
 		jq \
 		libselinux-python \
 		openssh-server \
-		python-dns \
-		python-pip \
-		python-requests \
-		python-virtualenv \
 		python3 \
-		sudo
-}
+		python3-dns \
+		python3-pip \
+		python3-requests \
+		python3-virtualenv \
+		sudo \
+		yum-plugin-versionlock
 
+	yum clean all
+	rm --force --recursive /var/cache/yum
+}
 
 install_ubuntu_packages() {
 	local version="$1"
 
-	apt-get update --quiet=2
-	apt-get install --yes --quiet=2 apt-utils 2> /dev/null
+	apt-get update
+	apt-get install --yes apt-utils 2> /dev/null
 
-	apt-get install --yes --quiet=2 \
+	apt-get install --yes \
 		ca-certificates \
 		dmidecode \
 		iproute2 \
@@ -110,8 +108,58 @@ install_ubuntu_packages() {
 		python3-selinux \
 		python3-virtualenv \
 		sudo
+
+	if [[ "$version" != '18.04' ]]; then
+		apt install --yes python-is-python3
+	fi
+
+	apt-get clean autoclean
+	rm --force --recursive /var/lib/apt/lists/*
 }
 
+update_centos_repo() {
+	cat <<'EOF' > /etc/yum.repos.d/CentOS-Base.repo
+[base]
+name=CentOS-$releasever - Base
+baseurl=http://vault.centos.org/7.9.2009/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+[updates]
+name=CentOS-$releasever - Updates
+baseurl=http://vault.centos.org/7.9.2009/updates/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+[extras]
+name=CentOS-$releasever - Extras
+baseurl=http://vault.centos.org/7.9.2009/extras/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+EOF
+}
+
+update_centos_repo() {
+	cat <<'EOF' > /etc/yum.repos.d/CentOS-Base.repo
+[base]
+name=CentOS-$releasever - Base
+baseurl=http://vault.centos.org/7.9.2009/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+[updates]
+name=CentOS-$releasever - Updates
+baseurl=http://vault.centos.org/7.9.2009/updates/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+[extras]
+name=CentOS-$releasever - Extras
+baseurl=http://vault.centos.org/7.9.2009/extras/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+EOF
+}
 
 update_pam_sshd_config() {
 	cat <<'EOF' | sed --in-place --file - /etc/pam.d/sshd
@@ -124,13 +172,11 @@ update_pam_sshd_config() {
 EOF
 }
 
-
 update_sshd_config() {
 	cat <<'EOF' | sed --in-place  --regexp-extended --file - /etc/ssh/sshd_config
 s/#?PermitRootLogin .*/PermitRootLogin yes/
 s/#?PermitEmptyPasswords no/PermitEmptyPasswords yes/
 EOF
 }
-
 
 main "$@"

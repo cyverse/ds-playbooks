@@ -1,49 +1,59 @@
 ---
-- name: replication | create replication user
+- name: Replication | create replication user
   community.postgresql.postgresql_user:
-    db: "{{ pg_db }}"
-    port: "{{ pg_listen_port }}"  # this is required because the module uses it to build the string for the socket
-    name: "{{ pg_replication_user }}"
+    db: "{{ postgres12_db }}"
+    port: "{{ postgres12_listen_port }}"
+    name: "{{ postgres12_replication_user }}"
     role_attr_flags: replication
-    password: '{{ pg_replication_pass }}'
-  when: pg_downstream_nodes|length > 0
+    password: '{{ postgres12_replication_pass }}'
+  when: postgres12_downstream_nodes|length > 0
   become: true
   become_user: postgres
+  tags: no_testing
 
-- when: pg_upstream_node and pg_destroy_default_db_on_init
+- name: Replication | start
+  when: postgres12_upstream_node and postgres12_destroy_default_db_on_init
   block:
-    - name: replication | stop database on secondaries
-      service:
+    - name: Stop database on secondaries
+      ansible.builtin.service:
         name: postgresql@12-main.service
         state: stopped
+      tags: no_testing
 
-    - name: replication | ensure pgdata path is empty
-      file:
+    - name: Ensure pgdata path is empty
+      ansible.builtin.file:
         state: absent
-        path: "{{ pg_db_path }}"
+        path: "{{ postgres12_db_path }}"
+      register: delete_data_response
 
-    - name: replication | replicate db from primary to secondaries
-      shell: |
-        pg_basebackup --progress --write-recovery-conf --no-password \
-          --host={{ pg_upstream_node }} \
-          --user={{ pg_replication_user }} \
-          --port={{ pg_listen_port }} \
-          --pgdata={{ pg_db_path }} \
-          --format=plain \
-          --wal-method=stream
+    - name: Replicate db from primary to secondaries
+      when: delete_data_response is changed
       become: true
       become_user: postgres
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          pg_basebackup --progress --write-recovery-conf --no-password \
+            --host={{ postgres12_upstream_node }} \
+            --user={{ postgres12_replication_user }} \
+            --port={{ postgres12_listen_port }} \
+            --pgdata={{ postgres12_db_path }} \
+            --format=plain \
+            --wal-method=stream
+      changed_when: true
+      tags: skip_ansible_lint
 
-    - name: replication | create standby.signal files on secondary postgres nodes
-      copy:
+    - name: Create standby.signal files on secondary postgres nodes
+      ansible.builtin.copy:
         content: ""
-        dest: "{{ pg_db_path }}/standby.signal"
+        dest: "{{ postgres12_db_path }}/standby.signal"
         force: false
         group: postgres
         owner: postgres
         mode: 0600
 
-    - name: replication | start database on secondaries
-      service:
+    - name: Start database on secondaries
+      ansible.builtin.service:
         name: postgresql@12-main.service
         state: started
+      tags: no_testing

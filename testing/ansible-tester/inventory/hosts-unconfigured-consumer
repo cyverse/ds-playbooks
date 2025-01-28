@@ -1,5 +1,3 @@
-localhost ansible_connection=local
-
 [amqp]
 dstesting-amqp-1.dstesting_default
 
@@ -24,10 +22,10 @@ dstesting-consumer_configured_centos-1.dstesting_default
 dstesting-consumer_configured_ubuntu-1.dstesting_default
 dstesting-consumer_unconfigured-1.dstesting_default
 
-[proxy]
-dstesting-proxy-1.dstesting_default
-
 [webdav]
 
+[sftp]
+
 [unmanaged_systems]
+localhost
 dstesting-amqp-1.dstesting_default

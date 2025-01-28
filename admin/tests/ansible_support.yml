@@ -1,0 +1,76 @@
+---
+- name: Test install required packages for ansible
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  tasks:
+    - name: Test Update CentOS base repo
+      when: ansible_distribution == 'CentOS'
+      ansible.builtin.command: grep --quiet '7.9.2009' /etc/yum.repos.d/CentOS-Base.repo
+      changed_when: false
+
+    - name: Test install packages
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
+      with_items:
+        - acl
+        - dmidecode
+        - jq
+        - python3
+        - python3-pip
+      loop_control:
+        loop_var: pkg
+
+    - name: Test install packages on CentOS
+      when: ansible_distribution == 'CentOS'
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
+      with_items:
+        - epel-release
+        - iproute
+        - libselinux-python
+        - python-dns
+        - python-requests
+        - python-virtualenv
+        - python2-pip
+        - yum-plugin-versionlock
+      loop_control:
+        loop_var: pkg
+
+    - name: Test install packages on Ubuntu
+      when: ansible_distribution == 'Ubuntu'
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
+      with_items:
+        - iproute2
+        - python3-dns
+        - python3-requests
+        - python3-selinux
+        - python3-virtualenv
+      loop_control:
+        loop_var: pkg
+
+    - name: Verify pip upgraded on CentOS 7
+      when: ansible_distribution == 'CentOS'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: '[[ "$(pip --version)" =~ pip\ 20 ]]'
+      changed_when: false
+
+    - name: Test install packages on Ubuntu 22.04
+      when: >-
+        ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('22.04', '>=')
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: python-is-python3
+
+- name: Test uninstall packages on ubuntu
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  tasks:
+    - name: Block for ubuntu distribution
+      when: ansible_distribution == 'Ubuntu'
+      block:
+        - name: Gather the package facts
+          ansible.builtin.package_facts:
+            manager: "auto"
+
+        - name: Fail if unattended-upgrades package is present
+          ansible.builtin.fail:
+          when: "'unattended-upgrades' in ansible_facts.packages"

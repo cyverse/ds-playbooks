@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# An ansible module for initializing the clerver connection to the catalog 
+# An ansible module for initializing the clerver connection to the catalog
 # service providers.
 #
 # Module Name:
@@ -10,7 +10,7 @@
 #  password  the password used by the clerver to connect
 #
 # Optional Variables:
-#  provider  The FQDN of the iRODS server. If this isn't provided, it assumes 
+#  provider  The FQDN of the iRODS server. If this isn't provided, it assumes
 #            the local host is the server.
 
 main()
@@ -19,6 +19,8 @@ main()
 
   local provider
   local password
+
+  # shellcheck disable=SC1090
   . "$varFile"
 
   require password
@@ -33,7 +35,10 @@ main()
 
   if [ -e "$authFile" ]
   then
-    succeed false
+    if ils < /dev/null &>/dev/null
+    then
+      succeed false
+    fi
   fi
 
   if [ -n "$provider" ]

@@ -1,0 +1,65 @@
+---
+- name: Add MD Repo rule logic
+  hosts: irods
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tasks:
+    - name: Add logic
+      when: _mdrepo_landing_colls | length > 0
+      block:
+        - name: Install command scripts
+          ansible.builtin.copy:
+            src: files/mdrepo/var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
+            dest: /var/lib/irods/msiExecCmd_bin/md-repo-touch-obj
+            mode: u+rx
+
+        - name: Install mdrepo-env.re
+          ansible.builtin.template:
+            src: templates/rule-bases/mdrepo-env.re.j2
+            dest: /etc/irods/mdrepo-env.re
+            mode: u+r
+          notify: Reload rules
+
+        - name: Install mdrepo.re
+          ansible.builtin.copy:
+            src: files/rule-bases/mdrepo.re
+            dest: /etc/irods/mdrepo.re
+            mode: u+r
+          notify: Reload rules
+
+  post_tasks:
+    - name: Remove collection creation script
+      ansible.builtin.file:
+        path: /var/lib/irods/msiExecCmd_bin/md-repo-mkdir
+        state: absent
+
+  handlers:
+    - name: Reload rules
+      ansible.builtin.file:
+        path: /etc/irods/core.re
+        state: touch
+        mode: u+r
+
+
+- name: Configure for MD Repo CLI
+  hosts: irods_catalog
+  become: "{{ _become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  run_once: true
+  gather_facts: false
+  tasks:
+    - name: Create MD Repo CLI account
+      when: _mdrepo_cli_account | length > 0
+      delegate_to: localhost
+      become: false
+      irods_user:
+        name: "{{ _mdrepo_cli_account }}"
+        type: ds-service
+        info: MD Repo command line interface
+        password: ''
+        state: present
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"

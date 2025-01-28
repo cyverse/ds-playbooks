@@ -1,46 +1,44 @@
 ---
-- name: allow catalog service providers to talk to DBMS
+- name: Allow catalog service providers to talk to DBMS
   hosts: dbms
   become: true
   tasks:
-    - name: enable notifications when not testing
-      set_fact:
+    - name: Enable notifications when not testing
+      ansible.builtin.set_fact:
         notifications_enabled: true
       tags:
         - no_testing
 
-    - name: allow communication with Postgres DBMS
-      blockinfile:
+    - name: Allow communication with Postgres DBMS
+      ansible.builtin.blockinfile:
         path: "{{ _irods_dbms_pg_hba }}"
         marker: "# {mark} DS IRODS MANAGED BLOCK"
         block: |
           {% for i in groups['irods_catalog'] %}
-          {%   set addr = i if i|ansible.utils.ipaddr else lookup('dig', i) %}
+          {%   set addr = i if i | ansible.utils.ipaddr else lookup('dig', i) %}
           {{ '%-7s %-15s %-15s %-23s %s'
             | format('host', 'ICAT', hostvars[i]._irods_db_user, addr ~ '/32', 'md5') }}
           {% endfor %}
       notify:
-        - reload postgresql
+        - Reload postgresql
       tags:
         - postgres
 
   handlers:
-    - name: reload postgresql
+    - name: Reload postgresql
       when: notifications_enabled | default(false)
-      service:
+      ansible.builtin.service:
         name: postgresql
         state: reloaded
 
 
-- import_playbook: provision.yml
+- name: Provision catalog service provider
+  ansible.builtin.import_playbook: provision.yml
 
 
-- name: provision additional for catalog service providers
+- name: Provision additional for catalog service providers
   hosts: irods_catalog
   become: true
-  collections:
-    - ansible.posix
-    - community.general
   vars:
     odbc_description: >-
       {{ lookup('ini', 'Description file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}
@@ -49,117 +47,143 @@
     odbc_setup: >-
       {{ lookup('ini', 'Setup file=files/postgresql-odbc-tmpl.ini section=PostgreSQL') }}
   tasks:
-    - name: configure linux kernel
-      sysctl:
+    - name: Configure linux kernel
+      ansible.posix.sysctl:
         name: kernel.{{ item.name }}
         value: "{{ item.value }}"
       with_items: "{{ _sysctl_kernel }}"
       tags:
         - no_testing
 
-    - name: verify PostgreSQL client version is 9.3 or 12
-      when: _irods_dbms_pg_version != '9.3' and _irods_dbms_pg_version != '12'
-      fail:
-        msg: Only PostgreSQL client versions 9.3 and 12 are supported
+    - name: Ensure parallel is installed
+      ansible.builtin.package:
+        name: parallel
+        state: present
 
-    - name: ensure PostgreSQL 9.3 clients are installed
-      when: _irods_dbms_pg_version == '9.3'
-      yum:
-        name:
-          - https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/postgresql93-libs-9.3.25-1PGDG.rhel7.x86_64.rpm
-          - https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/postgresql93-9.3.25-1PGDG.rhel7.x86_64.rpm
-          - https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/postgresql93-odbc-10.03.0000-1PGDG.rhel7.x86_64.rpm
+    - name: Ensure pika installed
+      ansible.builtin.pip:
+        name: pika>=1.2
+        state: present
 
-    - when: _irods_dbms_pg_version == '12'
+    - name: Provision CentOS
+      when: ansible_distribution == 'CentOS'
       block:
-        - name: ensure PostgreSQL 12 repo is installed
-          yum:
-            name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+        - name: CentOS | install mail client
+          ansible.builtin.package:
+            name: mailx
+            state: present
 
-        - name: ensure PostgreSQL 12 clients are installed
-          package:
+        - name: CentOS | install PostgreSQL 12 repository
+          ansible.builtin.yum:
+            name: >-
+              https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+        - name: CentOS | install PostgreSQL 12 clients are installed
+          ansible.builtin.package:
             name:
               - postgresql12
               - postgresql12-odbc
             state: present
 
-        - name: add postgres 12 clients to path
-          copy:
+        - name: CentOS | add postgres 12 clients to path
+          ansible.builtin.copy:
             src: "{{ item }}"
             dest: /etc/profile.d
             mode: a+r
           with_fileglob:
             - "files/profile.d/*"
 
-        - name: define PostgreSQL 12 ODBC Driver
-          shell: |
-            if driverDef="$(odbcinst -q -d -n PostgreSQL)"; then
-              description="$(sed --quiet 's/^Description=//p' <<< "$driverDef")"
-              driver="$(sed --quiet 's/^Driver=//p' <<< "$driverDef")"
-              setup="$(sed --quiet 's/^Setup=//p' <<< "$driverDef")"
-              if [[ "$description" == 'PostgreSQL 12 ODBC Driver' \
-                && "$driver" == '/usr/pgsql-12/lib/psqlodbc.so' \
-                && "$setup" == '/usr/pgsql-12/lib/psqlodbcw.so' ]]
-              then
-                exit 0
-              fi
-            fi
-            if ! odbcinst -i -d -r -v; then
-              exit 1
-            fi
-            echo changed
-          args:
+        - name: CentOS | define PostgreSQL 12 ODBC Driver
+          ansible.builtin.shell:
+            executable: /bin/bash
             stdin: "{{ lookup('file', 'files/postgresql-odbc-tmpl.ini') }}"
+            cmd: |
+              if driverDef="$(odbcinst -q -d -n PostgreSQL)"; then
+                description="$(sed --quiet 's/^Description=//p' <<< "$driverDef")"
+                driver="$(sed --quiet 's/^Driver=//p' <<< "$driverDef")"
+                setup="$(sed --quiet 's/^Setup=//p' <<< "$driverDef")"
+                if [[ "$description" == 'PostgreSQL 12 ODBC Driver' \
+                  && "$driver" == '/usr/pgsql-12/lib/psqlodbc.so' \
+                  && "$setup" == '/usr/pgsql-12/lib/psqlodbcw.so' ]]
+                then
+                  exit 0
+                fi
+                if ! odbcinst -i -d -r -v; then
+                  exit 1
+                fi
+                echo changed
+              fi
           register: result
           changed_when: result.stdout == 'changed'
 
-    - name: ensure required packages are installed
-      package:
-        name: "{{ item }}"
+        - name: CentOS | Lock irods-database-plugin-postgres to required version
+          community.general.yum_versionlock:
+            name: irods-database-plugin-postgres-{{ _irods_version }}
+            state: present
+# XXX - Due to https://github.com/ansible-collections/community.general/issues/4470, this isn't
+# idempotent.
+          tags: non_idempotent
+# XXX - ^^^
+
+    - name: Provision Ubuntu
+      when: ansible_distribution == 'Ubuntu'
+      block:
+        - name: Ubuntu | install mail client
+          ansible.builtin.package:
+            name: bsd-mailx
+            state: present
+
+        - name: Ubuntu | add PostgreSQL repository key
+          ansible.builtin.apt_key:
+            url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+
+        - name: Ubuntu | install PostgreSQL repository
+          ansible.builtin.copy:
+            dest: /etc/apt/sources.list.d/pgdg.list
+            mode: u+rw
+            content: >
+              deb http://apt-archive.postgresql.org/pub/repos/apt/ {{ ansible_lsb.codename }}-pgdg
+              main
+
+        - name: Ubuntu | install PostgreSQL 12 clients
+          ansible.builtin.apt:
+            update_cache: true
+            name:
+              - odbc-postgresql
+              - postgresql-client-12
+            state: present
+
+    - name: Install irods server packages
+      ansible.builtin.package:
+        name: irods-database-plugin-postgres
         state: present
-      with_items:
-        - mailx
-        - parallel
 
-    - name: ensure pika installed
-      pip:
-        name: pika<1.2
-        state: present
+    - name: Install plugins
+      ansible.builtin.import_tasks: tasks/install_plugins.yml
 
-    - name: lock irods-database-plugin-postgres to required version
-      yum_versionlock:
-        name:
-          - irods-database-plugin-postgres-{{ _irods_version }}
-        state: present
-
-    - name: install irods server packages
-      package:
-        name:
-          - irods-database-plugin-postgres
-        state: present
-
-    - import_tasks: tasks/install_plugins.yml
-
-    - import_tasks: tasks/ensure_irods_ownership.yml
+    - name: Ensure iRODS ownership
+      ansible.builtin.import_tasks: tasks/ensure_irods_ownership.yml
 
 
-- import_playbook: cfg_irods.yml
+- name: Configure catalog service providers
+  ansible.builtin.import_playbook: cfg_irods.yml
 
 
-- name: start iRODS on catalog service providers
+- name: Start iRODS on catalog service providers
   hosts: irods_catalog
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
-  become_flags: '-i'
+  become_flags: "-i"
   gather_facts: false
   tasks:
-    - name: start iRODS
+    - name: Start iRODS
       irods_ctl:
 
-    - name: authenticate clerver
+    - name: Authenticate clerver
       irods_clerver_auth:
         provider: "{{ inventory_hostname }}"
         password: "{{ _irods_clerver_password }}"
 
 
-- import_playbook: irods_runtime_init.yml
+- name: Perform run-time configuration
+  ansible.builtin.import_playbook: irods_runtime_init.yml

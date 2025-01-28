@@ -1,5 +1,0 @@
----
-haproxy_irods_vip_client_hosts:
-  - 1.2.3.4
-  - dirk.cyverse.org
-  - 5.6.7.0/24

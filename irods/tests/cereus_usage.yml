@@ -1,28 +1,33 @@
 ---
-- import_playbook: mk_storage_resources.yml
+- name: Test make storage resources
+  ansible.builtin.import_playbook: mk_storage_resources.yml
 
 
-- name: test configure iRODS for cereus
+- name: Test configure iRODS for cereus
   hosts: irods_catalog
   become: true
   become_user: irods
   run_once: true
   tasks:
-    - name: test make cereus resource hierarchy
-      shell: |
-        printf -v expHier 'cereusRes:passthru\n└── cereus:unixfilesystem'
-        actHier="$(ilsresc cereusRes)"
-        [[ "$actHier" == "$expHier" ]]
+    - name: Test creae Cereus resource
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          printf -v expHier 'cereusRes:passthru\n└── cereus:unixfilesystem'
+          actHier="$(ilsresc cereusRes)"
+          [[ "$actHier" == "$expHier" ]]
       changed_when: false
 
-    - name: test assign collection to Cereus resource
-      shell: |
-        num="$(iquest \
-          '%s' \
-          "select count(META_RESC_ATTR_ID)
-            where RESC_NAME = 'cereusRes'
-              and META_RESC_ATTR_NAME = 'ipc::hosted-collection'
-              and META_RESC_ATTR_VALUE = '/testing/home/shared/cereus'
-              and META_RESC_ATTR_UNITS = 'preferred'" )"
-        (( num == 1 ))
+    - name: Test assign collection to Cereus resource
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          num="$(iquest \
+            '%s' \
+            "select count(META_RESC_ATTR_ID)
+              where RESC_NAME = 'cereusRes'
+                and META_RESC_ATTR_NAME = 'ipc::hosted-collection'
+                and META_RESC_ATTR_VALUE = '/testing/home/shared/cereus'
+                and META_RESC_ATTR_UNITS = 'preferred'" )"
+          (( num == 1 ))
       changed_when: false

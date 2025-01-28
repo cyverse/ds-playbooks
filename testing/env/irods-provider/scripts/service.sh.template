@@ -1,9 +1,9 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #
 # Usage:
 #  service (start|stop)
 #
-# This script starts or stops a catalog service provider inside the container if 
+# This script starts or stops a catalog service provider inside the container if
 # there is one.
 #
 # It requires the following environment variable to be defined.
@@ -18,8 +18,7 @@
 # IRODS_SYSTEM_GROUP   The default group of the service account
 # IRODS_ZONE_PASSWORD  The password used to authenticate the clerver user
 
-set -e
-
+set -o errexit -o nounset -o pipefail
 
 main()
 {
@@ -45,15 +44,12 @@ main()
   esac
 }
 
-
 start()
 {
   # Ensure that the correct user owns everything in /var/lib/irods and /etc/irods
   # If this isn't done, some of the ansible ownership tests will fail.
   if [ -e /var/lib/irods/.irods/irods_environment.json ]
   then
-    chown --recursive "$IRODS_SYSTEM_USER":"$IRODS_SYSTEM_GROUP" /etc/irods /var/lib/irods
-
     until exec 3<> /dev/tcp/"$DBMS_HOST"/"$DBMS_PORT"
     do
       printf 'Waiting for DBMS\n'
@@ -63,28 +59,25 @@ start()
     exec 3<&-
     exec 3>&-
 
-    if ! su --command '/var/lib/irods/irodsctl start' --login "$IRODS_SYSTEM_USER"
+    printf 'Starting iRODS catalog provider service\n'
+    if ! sudo --login --user "$IRODS_SYSTEM_USER" /var/lib/irods/irodsctl --test start
     then
-      cat /var/lib/irods/log/rodsLog* >&2
+      printf 'Failed to start service\n'
+      cat /var/lib/irods/log/control_log.txt
       return 1
     fi
 
     touch /var/lock/subsys/irods
-
-    printf 'Authenticating clerver user\n'
-    su --command "iinit '$IRODS_ZONE_PASSWORD'" --login "$IRODS_SYSTEM_USER"
   fi
 }
-
 
 stop()
 {
-  if su --command imiscsvrinfo --login "$IRODS_SYSTEM_USER" >& /dev/null
+  if sudo --login --user  "$IRODS_SYSTEM_USER"  imiscsvrinfo >& /dev/null
   then
-    su --command '/var/lib/irods/irodsctl stop' --login "$IRODS_SYSTEM_USER"
+    sudo  --login --user  "$IRODS_SYSTEM_USER" /var/lib/irods/irodsctl stop
     rm /var/lock/subsys/irods
   fi
 }
-
 
 main "$@"

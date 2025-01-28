@@ -1,28 +1,41 @@
 ---
-version: "2.0"
-
 services:
   amqp:
-    image: test-env-base:centos7
+    image: test-env-base:ubuntu2204
+    privileged: true
+    tty: true
 
   apache:
     build:
       context: .
       dockerfile: apache/Dockerfile
+    privileged: true
+    tty: true
+
+  sftp:
+    build:
+      context: .
+      dockerfile: sftp/Dockerfile
+    privileged: true
+    tty: true
 
   dbms_configured:
     build:
       context: .
       dockerfile: postgresql/Dockerfile.configured
       args:
+        IRODS_DELAY_SERVER: "$IRODS_PROVIDER_CONF_HOST"
         IRODS_RESOURCES: "$IRODS_RES_CONF_CENTOS_NAME:$IRODS_CONSUMER_CONF_CENTOS_HOST:$IRODS_VAULT $IRODS_RES_CONF_UBUNTU_NAME:$IRODS_CONSUMER_CONF_UBUNTU_HOST:$IRODS_VAULT"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
+        IRODS_ZONE_PASSWORD: "$IRODS_CLERVER_PASSWORD"
+    privileged: true
     tty: true
 
   dbms_unconfigured:
     build:
       context: .
       dockerfile: postgresql/Dockerfile.unconfigured
+    privileged: true
     tty: true
 
   provider_configured:
@@ -37,10 +50,11 @@ services:
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_SYSTEM_GROUP: "$IRODS_PROVIDER_SYSTEM_GROUP"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
+        IRODS_ZONE_PASSWORD: "$IRODS_CLERVER_PASSWORD"
     hostname: "$IRODS_PROVIDER_CONF_HOST"
+    privileged: true
     tty: true
     depends_on:
-      - amqp
       - dbms_configured
 
   provider_unconfigured:
@@ -51,10 +65,8 @@ services:
         DBMS_HOST: "$DBMS_HOST"
         IRODS_SYSTEM_GROUP: "$IRODS_PROVIDER_SYSTEM_GROUP"
     hostname: "$IRODS_PROVIDER_UNCONF_HOST"
+    privileged: true
     tty: true
-    depends_on:
-      - amqp
-      - dbms_configured
 
   consumer_configured_centos:
     build:
@@ -68,9 +80,9 @@ services:
         IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
-    cap_add:
-      - NET_ADMIN
+        IRODS_ZONE_PASSWORD: "$IRODS_CLERVER_PASSWORD"
     hostname: "$IRODS_CONSUMER_CONF_CENTOS_HOST"
+    privileged: true
     tty: true
     depends_on:
       - provider_configured
@@ -87,9 +99,9 @@ services:
         IRODS_LAST_EPHEMERAL_PORT: $IRODS_LAST_EPHEMERAL_PORT
         IRODS_SCHEMA_VALIDATION: "$IRODS_SCHEMA_VALIDATION"
         IRODS_ZONE_NAME: "$IRODS_ZONE_NAME"
-    cap_add:
-      - NET_ADMIN
+        IRODS_ZONE_PASSWORD: "$IRODS_CLERVER_PASSWORD"
     hostname: "$IRODS_CONSUMER_CONF_UBUNTU_HOST"
+    privileged: true
     tty: true
     depends_on:
       - provider_configured
@@ -100,17 +112,6 @@ services:
       dockerfile: irods-consumer/Dockerfile.unconfigured
       args:
         IRODS_CATALOG_PROVIDER: "$IRODS_PROVIDER_CONF_HOST"
-    hostname: "${ENV_NAME}_consumer_configured_1.${DOMAIN}"
+    hostname: "${ENV_NAME}-consumer_unconfigured-1.${DOMAIN}"
+    privileged: true
     tty: true
-    depends_on:
-      - provider_configured
-
-  proxy:
-    build:
-      context: .
-      dockerfile: haproxy/Dockerfile
-    cap_add:
-      - NET_ADMIN
-    depends_on:
-      - apache
-      - provider_configured

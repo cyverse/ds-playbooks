@@ -1,41 +1,39 @@
 ---
 - name: Build image
   hosts: irods_resource
-  collections:
-    - community.docker
   run_once: true
   gather_facts: false
   vars:
     build_time: "{{ hostvars['localhost'].ansible_date_time.iso8601_basic_short }}"
   tasks:
-    - delegate_to: localhost
+    - name: Build locally
+      delegate_to: localhost
       block:
-        - name: gather localhost facts
-          setup:
+        - name: Gather localhost facts
+          ansible.builtin.setup:
           delegate_facts: true
 
-        - name: provide default resource placeholders
-          set_fact:
+        - name: Provide default resource placeholders
+          ansible.builtin.set_fact:
             irods_default_resource: _IRODS_DEFAULT_RESOURCE_
             irods_default_repl_resource: _IRODS_DEFAULT_RESOURCE_
-          delegate_facts: true
 
-        - name: create command scripts staging directory
-          file:
+        - name: Create command scripts staging directory
+          ansible.builtin.file:
             path: "{{ _build_dir }}/var/lib/irods/msiExecCmd_bin"
             state: directory
             mode: u+rwx
 
-        - name: add common command scripts
-          copy:
+        - name: Add common command scripts
+          ansible.builtin.copy:
             src: "{{ item }}"
             dest: "{{ _build_dir }}/var/lib/irods/msiExecCmd_bin"
             mode: u+rw
           with_fileglob:
             - "files/cmd-common/*"
 
-        - name: generate iRODS config files
-          import_role:
+        - name: Generate iRODS config files
+          ansible.builtin.import_role:
             name: cyverse.irods_cfg
           vars:
             irods_cfg_authentication_file: /var/lib/irods/.irods/.irodsA
@@ -58,8 +56,9 @@
                   - rs
             irods_cfg_negotiation_key: __IRODS_NEGOTIATION_KEY__
             irods_cfg_re_additional_rulebases:
-              - ipc-custom
-              - ipc-housekeeping
+              - cve
+              - cyverse_core
+              - cyverse_housekeeping
             irods_cfg_root_dir: "{{ _build_dir }}"
             irods_cfg_schema_validation_base_uri: 'off'
             irods_cfg_server_control_plane_key: __IRODS_SERVER_CONTROL_PLANE_KEY__
@@ -74,30 +73,30 @@
             irods_cfg_zone_name: "{{ _irods_zone_name }}"
             irods_cfg_zone_user: _IRODS_USER_NAME_
 
-        - name: stage dynamic rule bases
-          template:
+        - name: Stage dynamic rule bases
+          ansible.builtin.template:
             src: "{{ item }}"
             dest: "{{ _build_dir }}/etc/irods/{{ item | basename | regex_replace('.j2$') }}"
             mode: u+rw
           with_fileglob:
             - "templates/rule-bases/*"
 
-        - name: stage static rule bases
-          copy:
+        - name: Stage static rule bases
+          ansible.builtin.copy:
             src: "{{ item }}"
             dest: "{{ _build_dir }}/etc/irods"
             mode: u+rw
           with_fileglob:
             - "files/rule-bases/*"
 
-        - name: copy .dockerignore
-          copy:
+        - name: Copy .dockerignore
+          ansible.builtin.copy:
             src: files/docker-rs/dockerignore
             dest: "{{ _build_dir }}/.dockerignore"
             mode: u+rw
 
-        - name: copy resource server docker scripts
-          copy:
+        - name: Copy resource server docker scripts
+          ansible.builtin.copy:
             src: files/docker-rs/{{ item }}
             dest: "{{ _build_dir }}"
             mode: u+rw
@@ -106,39 +105,41 @@
             - periphery.sh
             - Dockerfile
 
-        - when: _irods_publish_rs_image | bool
+        - name: Retrieve previous image from Dockerhub
+          when: _irods_publish_rs_image | bool
+          tags:
+            -no_testing
           block:
-            - name: retrieve previous docker image
-              docker_image:
+            - name: Retrieve previous docker image
+              community.docker.docker_image:
                 name: cyverse/ds-irods-rs-onbuild
                 source: pull
               failed_when: false
               register: response
 
-            - name: retag previous image as local
+            - name: Retag previous image as local
               docker_tag:
                 source: cyverse/ds-irods-rs-onbuild
                 target: "{{ _irods_rs_image }}"
               failed_when: false
-          tags:
-            -no_testing
 
-        - name: inspect previous docker image
-          docker_image_info:
+        - name: Inspect previous docker image
+          community.docker.docker_image_info:
             name: "{{ _irods_rs_image }}"
           register: previous
+          failed_when: false
           tags:
             - no_testing
 
-        - name: extract previous docker image Id
-          when: previous.images | length > 0
-          set_fact:
+        - name: Extract previous docker image Id
+          when: previous.images | d([]) | length > 0
+          ansible.builtin.set_fact:
             previous_id: "{{ previous.images[0].Id }}"
           tags:
             - no_testing
 
-        - name: build docker image
-          docker_image:
+        - name: Build docker image
+          community.docker.docker_image:
             name: "{{ _irods_rs_image }}"
             source: build
             build:
@@ -153,18 +154,22 @@
           tags:
             - no_testing
 
-        - name: remove duplicate docker image
+        - name: Remove duplicate docker image
           when: response is not changed
-          docker_image:
+          community.docker.docker_image:
             name: "{{ _irods_rs_image }}"
             tag: "{{ build_time }}"
             state: absent
           tags:
             - no_testing
 
-        - when: response is changed
+        - name: Mark new image as latest
+          when: response is changed
+          tags:
+            - no_testing
+            - skip_ansible_lint
           block:
-            - name: tag new image as latest
+            - name: Tag new image as latest
               docker_tag:
                 source: "{{ _irods_rs_image }}:{{ build_time }}"
                 target: "{{ _irods_rs_image }}:latest"
@@ -178,9 +183,9 @@
                 - "{{ build_time }}"
                 - latest
 
-            - name: push published tag
+            - name: Push published tag
               when: _irods_publish_rs_image | bool
-              docker_image:
+              community.docker.docker_image:
                 source: local
                 name: cyverse/ds-irods-rs-onbuild
                 tag: "{{ item }}"
@@ -188,5 +193,3 @@
               with_items:
                 - "{{ build_time }}"
                 - latest
-          tags:
-            - no_testing

@@ -1,69 +1,73 @@
 ---
-- import_playbook: provision.yml
+- name: Test provisioning
+  ansible.builtin.import_playbook: provision.yml
 
 
-- name: test ensure irods owns what it is supposed to
+- name: Test ensure irods owns what it is supposed to
   hosts: irods_resource:!unmanaged_systems
   become: true
   tasks:
-    - name: retrieve installed package info
-      package_facts:
+    - name: Retrieve installed package info
+      ansible.builtin.package_facts:
 
-    - name: test ensure NetCDF plugs not installed
-      assert:
-        that:
-          - not "{{ item }}" in ansible_facts.packages
+    - name: Test ensure NetCDF plugs not installed
+      ansible.builtin.assert:
+        that: item not in ansible_facts.packages
       with_items:
         - irods-netcdf-client_modules
         - irods-netcdf-icommands
         - irods-netcdf-server_modules
 
-    - include_tasks: tasks/test_irods_ownership.yml
+    - name: Test iRODS ownership of /etc/irods
+      ansible.builtin.include_tasks: tasks/test_irods_ownership.yml
       vars:
         dir: /etc/irods
 
-    - include_tasks: tasks/test_irods_ownership.yml
+    - name: Test iRODS ownership of /var/lib/irods
+      ansible.builtin.include_tasks: tasks/test_irods_ownership.yml
       vars:
         dir: /var/lib/irods
 
 
-- import_playbook: cfg_irods.yml
+- name: Test iRODS configuration
+  ansible.builtin.import_playbook: cfg_irods.yml
 
 
-- name: test bootstrap iRODS start
+- name: Test bootstrap iRODS start
   hosts: dstesting-consumer_unconfigured-1.dstesting_default
   become: true
   become_user: irods
   tasks:
-    - name: test create clerver user
+    - name: Test create clerver user
       delegate_to: "{{ groups['irods_catalog'][0] }}"
-      shell: |
-        userType=$(iquest '%s' "select USER_TYPE where USER_NAME = 'rs7_admin'")
-        if (( $? != 0 )); then
-          printf \
-              'Catalog service provider appears to be down on {{ groups['irods_catalog'][0] }}\n' \
-             >&2
-          exit 1
-        fi
-        if [[ "$userType" =~ ^CAT_NO_ROWS_FOUND ]]; then
-          printf 'rs7_admin does not exist\n' >&2
-          exit 1
-        fi
-        if [[ "$userType" != rodsadmin ]]; then
-          printf 'rs7_admin is not a rodsadmin user\n' >&2
-          exit 1
-        fi
-        IRODS_HOST='{{ groups['irods_catalog'][0] }}' \
-        IRODS_USER_NAME=rods \
-        IRODS_AUTHENTICATION_FILE="$(mktemp)" \
-        iinit rods
-        if (( $? != 0 )); then
-          printf 'rs7_admin has incorrect password\n' >&2
-          exit 1
-        fi
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          csp='{{ groups['irods_catalog'][0] }}'
+          userType="$(iquest '%s' "select USER_TYPE where USER_NAME = 'rs7_admin'")"
+          if (( $? != 0 )); then
+            printf 'Catalog service provider appears to be down on %s \n' "$csp" >&2
+            exit 1
+          fi
+          if [[ "$userType" =~ ^CAT_NO_ROWS_FOUND ]]; then
+            printf 'rs7_admin does not exist\n' >&2
+            exit 1
+          fi
+          if [[ "$userType" != rodsadmin ]]; then
+            printf 'rs7_admin is not a rodsadmin user\n' >&2
+            exit 1
+          fi
+          IRODS_HOST="$csp" \
+          IRODS_USER_NAME=rs7_admin \
+          IRODS_AUTHENTICATION_FILE="$(mktemp)" \
+          iinit rs7_password
+          if (( $? != 0 )); then
+            printf 'rs7_admin has incorrect password\n' >&2
+            exit 1
+          fi
       changed_when: false
 
-    - name: test clerver user is in group rodsadmin
+    - name: Test clerver user is in group rodsadmin
       delegate_to: localhost
       become: false
       irods_group_member:
@@ -80,13 +84,15 @@
       failed_when: resp.changed
 
 
-    - name: test initialize resource server connection to catalog service providers
-      stat:
+    - name: Test initialize resource server connection to catalog service providers
+      ansible.builtin.stat:
         path: /var/lib/irods/.irods/.irodsA
       register: response
       failed_when: not response.stat.exists or response.stat.pw_name != 'irods'
 
-    - import_tasks: tasks/test_irods_running.yml
+    - name: Verify iRODS running
+      ansible.builtin.import_tasks: tasks/test_irods_running.yml
 
 
-- import_playbook: mk_storage_resources.yml
+- name: Test storage resource creation
+  ansible.builtin.import_playbook: mk_storage_resources.yml

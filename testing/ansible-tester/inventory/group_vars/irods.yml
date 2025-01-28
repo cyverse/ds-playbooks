@@ -1,4 +1,6 @@
 ---
+init_rodsadmin_perms: true
+
 avra_base_collection: /testing/home/shared/avra
 avra_manager: avra_mgr
 avra_resource_hierarchy:
@@ -16,14 +18,13 @@ cereus_resource_hierarchy:
   children:
     - name: cereus
 
-de_job_irods_user: de_job
-
 irods_amqp_host: "{{ groups['amqp'][0] }}"
 irods_amqp_user: amqp_admin
 irods_amqp_password: password
 
-irods_calliope_project_coll: /testing/home/shared/calliope
+irods_clerver_password: password
 
+irods_default_number_of_transfer_threads: 4
 irods_default_repl_resource: replRes
 
 irods_federation:
@@ -39,11 +40,26 @@ irods_federation:
     zone_key: FAKE_zone_key_2
     zone_name: cyverse
 
+irods_parallel_transfer_buffer_size: 4
+
 irods_resource_hierarchies:
   - name: ingestRes
   - name: replRes
 
+irods_s3_cred:
+  - name: cred-1
+    access_key: access-1
+    secret_key: secret-1
+  - name: cred-2
+    access_key: access-2
+    secret_key: secret-2
+
 irods_server_port_range_end: 20009
+
+mdrepo_cli_account: md-cli
+mdrepo_landing_colls:
+  - /testing/home/md-cli/landing
+  - /testing/home/shared/mdrepo/landing
 
 pire_manager: pire_mgr
 pire_resource_hierarchy:
@@ -51,11 +67,3 @@ pire_resource_hierarchy:
   type: passthru
   children:
     - name: pire
-
-terraref_base_collection: /testing/home/shared/terraref
-terraref_manager: terraref_mgr
-terraref_resource_hierarchy:
-  name: terrarefRes
-  type: passthru
-  children:
-    - name: terraref

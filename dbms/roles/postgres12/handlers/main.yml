@@ -1,39 +1,23 @@
 ---
-- name: reboot
+- name: Reboot
   when: >-
-    pg_reboot_allowed
+    postgres12_restart_allowed
     is warn_if_false(inventory_hostname + ' skipped, REBOOT REQUIRED FOR SETTINGS TO TAKE')
-  block:
-    - name: schedule reboot
-      shell: |
-        sleep 1
-        reboot
-      async: 1000000000
-      poll: 0
-      failed_when: false
+  ansible.builtin.reboot:
 
-    - name: wait for server to stop
-      wait_for:
-        host: "{{ inventory_hostname }}"
-        port: "{{ ansible_port | default(22) }}"
-        state: stopped
-      delegate_to: localhost
-      become: false
-
-    - name: verify server up
-      wait_for:
-        host: "{{ inventory_hostname }}"
-        port: "{{ ansible_port | default(22) }}"
-        state: started
-      delegate_to: localhost
-      become: false
-
-- name: restart postgres
-  service:
+- name: Reload postgres
+  when: _notifications_enabled | d(false)
+  ansible.builtin.service:
     name: postgresql
     state: restarted
 
-- name: reload postgres
-  service:
+- name: Restart postgres
+  when:
+    - _notifications_enabled | d(false)
+    - >-
+      postgres12_restart_allowed
+      is warn_if_false(
+        inventory_hostname + ' skipped, POSTGRESQL RESTART REQUIRED FOR SETTINGS TO TAKE' )
+  ansible.builtin.service:
     name: postgresql
-    state: reloaded
+    state: restarted

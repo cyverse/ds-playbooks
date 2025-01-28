@@ -1,12 +1,12 @@
 ---
-- name: test mk_resource_hierarchies
+- name: Test create coordinating resources
   hosts: irods_catalog
   become: true
   become_user: irods
   run_once: true
   tasks:
-    - name: test mk_resource_hierarchy
-      command: ilsresc {{ item }}
+    - name: Test create resource hierarchy
+      ansible.builtin.command: ilsresc {{ item }}
       changed_when: false
       with_items:
         - ingestRes

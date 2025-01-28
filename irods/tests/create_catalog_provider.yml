@@ -1,110 +1,171 @@
 ---
-- name: test allow catalog service providers to talk to DBMS
+- name: Test allow catalog service providers to talk to DBMS
   hosts: dbms
   become: true
   tasks:
-    - name: test allow communication with Postgres DBMS
-      shell: |
-        sed --quiet \
-            '/^# BEGIN DS IRODS MANAGED BLOCK$/{
-               n;
-               / *host \+ICAT \+irods \+[0-9.]\+\/32 \+md5$/!Q1;
-               n;
-               / *host \+ICAT \+irods \+[0-9.]\+\/32 \+md5$/!Q1;
-               n;
-               /^# END DS IRODS MANAGED BLOCK$/Q0 };
-             $ Q1' \
-          /etc/postgresql/12/main/pg_hba.conf
-      args:
-        warn: false
+    - name: Test allow communication with Postgres DBMS
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          sed --quiet \
+              '/^# BEGIN DS IRODS MANAGED BLOCK$/{
+                n;
+                / *host \+ICAT \+irods \+[0-9.]\+\/32 \+md5$/!Q1;
+                n;
+                / *host \+ICAT \+irods \+[0-9.]\+\/32 \+md5$/!Q1;
+                n;
+                /^# END DS IRODS MANAGED BLOCK$/Q0 };
+              $ Q1' \
+            /etc/postgresql/12/main/pg_hba.conf
       changed_when: false
+      tags: skip_ansible_lint
 
 
-- import_playbook: provision.yml
+- name: Test provisioning
+  ansible.builtin.import_playbook: provision.yml
 
 
-- name: test install catalog service provider packages
+- name: Test provision additional for catalog service providers
   hosts: irods_catalog
   become: true
   become_flags: '-i'
   tasks:
-    - include_tasks: tasks/test_pkg_installed.yml
-      with_items:
-        - mailx
-        - parallel
-        - pgdg-redhat-repo
-        - postgresql12
-        - postgresql12-odbc
-      loop_control:
-        loop_var: pkg
+    - name: Verify parallel installed
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: parallel
 
-    - name: test install PostgreSQL 12 ODBC Driver
-      command: odbcinst -q -d -n PostgreSQL
-      changed_when: false
+    - name: Verify pika installed
+      community.general.pip_package_info:
+        clients: pip3
+      register: pip_info
+      failed_when: >-
+        'pika' not in pip_info.packages['pip3']
+        or pip_info.packages['pip3']['pika'][0]['version'] is version('1.2', '<')
 
-    - name: test ensure pika installed
-      shell: |
-        set -o pipefail
-        pip --disable-pip-version-check show pika | sed --quiet 's/^Version: //p' 2> /dev/null
-      register: resp
-      changed_when: false
-      failed_when: resp.stdout is version('1.2', '>=')
+    - name: Test provision CentOS
+      when: ansible_distribution == 'CentOS'
+      block:
+        - name: CentOS | verify correct packages installed
+          ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
+          with_items:
+            - mailx
+            - pgdg-redhat-repo
+            - postgresql12
+            - postgresql12-odbc
+          loop_control:
+            loop_var: pkg
 
-    - name: test lock irods-database-plugin-postgres to required version
-      shell: |
-        set -o pipefail
-        if ! yum versionlock status | grep --quiet irods-database-plugin-postgres; then
-          printf 'irods-database-plugin-postgres not locked\n' >&2
-          exit 1
-        elif info="$(yum --quiet list installed irods-database-plugin-postgres | tail --lines=+2)"
-        then
-          readarray -t versions <<< "$info"
-          for version in "${versions[@]}"; do
-            read _ verNum _ <<< "$version"
-            if ! [[ "$verNum" =~ 4\.2\.8 ]]; then
-              printf 'found version %s\n' "$verNum" >&2
-              exit 1
-            fi
-          done
-        fi
-      changed_when: false
+        - name: CentOS | verify postgresql clients are on the the path
+          ansible.builtin.stat:
+            path: "{{ item }}"
+          register: resp
+          failed_when: >-
+            not resp.stat.exists or not resp.stat.rusr or not resp.stat.rgrp or not resp.stat.roth
+          with_items:
+            - /etc/profile.d/postgres.csh
+            - /etc/profile.d/postgres.sh
 
-    - include_tasks: tasks/test_pkg_installed.yml
+        - name: CentOS | test correct psql version
+          ansible.builtin.assert:
+            that: ansible_env.PATH is search('/usr/pgsql-12/bin' | regex_escape)
+
+        - name: CentOS | verify PostgreSQL 12 ODBC driver exists
+          ansible.builtin.command: odbcinst -q -d -n PostgreSQL
+          changed_when: false
+
+        - name: CentOS | verify irods-database-plugin-postgres locked to required version
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              set -o pipefail
+              if ! yum versionlock status | grep --quiet irods-database-plugin-postgres; then
+                printf 'irods-database-plugin-postgres not locked\n' >&2
+                exit 1
+              elif info="$(
+                yum --quiet list installed irods-database-plugin-postgres | tail --lines=+2 )"
+              then
+                readarray -t versions <<< "$info"
+                for version in "${versions[@]}"; do
+                  read _ verNum _ <<< "$version"
+                  if ! [[ "$verNum" =~ 4\.2\.8 ]]; then
+                    printf 'found version %s\n' "$verNum" >&2
+                    exit 1
+                  fi
+                done
+              fi
+          changed_when: false
+
+    - name: Test provision Ubuntu
+      when: ansible_distribution == 'Ubuntu'
+      block:
+        - name: Ubuntu | verify correct packages installed
+          ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
+          with_items:
+            - bsd-mailx
+            - odbc-postgresql
+            - postgresql-client-12
+          loop_control:
+            loop_var: pkg
+
+        - name: Ubuntu | verify PostgreSQL signing key installed
+          ansible.builtin.command: apt-key list
+          register: resp
+          changed_when: false
+          failed_when: resp.stdout is not regex('PostgreSQL Debian Repository')
+
+        - name: Ubuntu | verify PostgreSQL repository installed
+          ansible.builtin.stat:
+            path: /etc/apt/sources.list.d/pgdg.list
+          register: resp
+          failed_when: not resp.stat.exists
+
+        - name: Ubuntu | test lock irods-database-plugin-postgres to required version
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              set -o pipefail
+              apt-cache policy \
+                | grep --quiet 'irods-database-plugin-postgres -> 4.2.8 with priority 1001'
+          changed_when: false
+
+    - name: Verify PostgreSQL plugin installed
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
       vars:
         pkg: irods-database-plugin-postgres
         version: 4.2.8
 
-    - import_tasks: tasks/test_install_plugins.yml
+    - name: Verify other plugins installed
+      ansible.builtin.import_tasks: tasks/test_install_plugins.yml
 
-    - include_tasks: tasks/test_irods_ownership.yml
-      vars:
-        dir: /etc/irods
-
-    - include_tasks: tasks/test_irods_ownership.yml
-      vars:
-        dir: /var/lib/irods
-
-    - name: test correct psql version
-      assert:
-        that: ansible_env.PATH is search('/usr/pgsql-12/bin' | regex_escape)
+    - name: Verify iRODS ownership
+      ansible.builtin.include_tasks: tasks/test_irods_ownership.yml
+      with_items:
+        - /etc/irods
+        - /var/lib/irods
+      loop_control:
+        loop_var: dir
 
 
-- import_playbook: cfg_irods.yml
+- name: Test iRODS configuration
+  import_playbook: cfg_irods.yml
 
 
-- name: test start iRODS on catalog service providers
+- name: Test start iRODS on catalog service providers
   hosts: irods_catalog
   become: true
   become_user: irods
   gather_facts: false
   tasks:
-    - import_tasks: tasks/test_irods_running.yml
+    - name: Test iRODS running
+      ansible.builtin.import_tasks: tasks/test_irods_running.yml
 
-    - name: verify that clerver auth file exists
-      stat:
+    - name: Verify that clerver auth file exists
+      ansible.builtin.stat:
         path: /var/lib/irods/.irods/.irodsA
       register: response
       failed_when: not response.stat.exists or response.stat.pw_name != 'irods'
 
 
-- import_playbook: irods_runtime_init.yml
+- name: Test iRODS run-time initialization
+  ansible.builtin.import_playbook: irods_runtime_init.yml

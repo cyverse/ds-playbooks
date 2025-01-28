@@ -1,125 +1,191 @@
 ---
-- name: test run-time initialization
+- name: Test run-time initialization
   hosts: irods_catalog
   become: true
   become_user: irods
   run_once: true
   tasks:
-    - name: test ensure service user type exists
-      shell: |
-        resp = "$(iquest \
-          "select TOKEN_ID
-            where TOKEN_NAMESPACE = 'user_type'
-              and TOKEN_NAME = 'ds-service'
-              and TOKEN_VALUE2 = 'a Data Store service'" )"
-        ! [[ "$resp" =~ ^CAT_NO_ROWS_FOUND ]]
+    - name: Test ensure service user type exists
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          resp = "$(iquest \
+            "select TOKEN_ID
+              where TOKEN_NAMESPACE = 'user_type'
+                and TOKEN_NAME = 'ds-service'
+                and TOKEN_VALUE2 = 'a Data Store service'" )"
+          ! [[ "$resp" =~ ^CAT_NO_ROWS_FOUND ]]
       changed_when: false
 
-    - name: verify /zone/home/public doesn't exist
-      command: ils /testing/home/public
+    - name: Verify /zone/home/public doesn't exist
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/home/public
       register: response
       changed_when: false
       failed_when: response is succeeded
 
-    - name: verify /zone/home/shared does exist
-      command: ils /testing/home/shared
+    - name: Verify /zone/home/shared does exist
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/home/shared
       changed_when: false
 
-    - name: verify /zone/trash/home/public doesn't exist
-      command: ils /testing/trash/home/public
+    - name: Verify /zone/trash/home/public doesn't exist
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/trash/home/public
       register: response
       changed_when: false
       failed_when: response is succeeded
 
-    - name: verify /zone/trash/home/shared does exist
-      command: ils /testing/trash/home/shared
+    - name: Verify /zone/trash/home/shared does exist
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/trash/home/shared
       changed_when: false
 
-    - name: test ensure CyVerse curated collection base collection exists
-      command: ils /testing/home/shared/commons_repo/curated
-      changed_when: false
-
-    - name: verify that rodsadmin has write permission on /
-      shell: |
-        set -o pipefail
-        ils -A / | grep --quiet 'g:rodsadmin#testing:modify object'
-      changed_when: false
-
-    - name: verify that rodsadmin has write permission on the zone collection
-      shell: |
-        set -o pipefail
-        ils -A /testing | grep --quiet 'g:rodsadmin#testing:modify object'
-      changed_when: false
-
-    - name: verify that rodsadmin has write permission on zone coll members
-      shell: |
-        id="$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")"
-        totColls="$(iquest '%s' "select count(COLL_ID) where COLL_PARENT_NAME = '/testing'")"
-        totCollsWrite="$(iquest \
-          '%s' \
-          "select count(COLL_ID)
-            where COLL_PARENT_NAME = '/testing'
-              and COLL_ACCESS_USER_ID = '$id' and COLL_ACCESS_NAME = 'modify object'" )"
-        (( totColls > 0 && totColls == totCollsWrite ))
-      changed_when: false
-
-    - name: verify that rodsadmin has own permission on all other collections
-      shell: |
-        id="$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")"
-        totColls="$(iquest '%s' "select count(COLL_ID) where COLL_PARENT_NAME like '/testing/%'")"
-        totCollsOwn="$(iquest \
-          '%s' \
-          "select count(COLL_ID)
-            where COLL_PARENT_NAME like '/testing/%'
-              and COLL_ACCESS_USER_ID = '$id' and COLL_ACCESS_NAME = 'own'" )"
-        (( totColls > 0 && totColls == totCollsOwn ))
-      changed_when: false
-
-    - name: verify that rodsadmin has own permission on all data objects
-      shell: |
-        id="$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")"
-        totObjs="$(iquest '%s' "select count(DATA_ID)")"
-        totObjsOwn="$(iquest \
-          '%s' \
-          "select count(DATA_ID) where DATA_ACCESS_USER_ID = '$id' and DATA_ACCESS_NAME = 'own'" )"
-        (( totObjs == totObjsOwn ))
-      changed_when: false
-
-    - name: test ensure anonymous user exists
-      shell: test "$(iadmin lu anonymous)" != 'No rows found'
-      changed_when: false
-
-    - name: verify anonymous user has read access to zone collection
-      shell: |
-        set -o pipefail
-        ils -A /testing | grep --quiet 'anonymous#testing:read object'
-      changed_when: false
-
-    - name: verify anonymous user has read access to home collection
-      shell: |
-        set -o pipefail
-        ils -A /testing/home | grep --quiet 'anonymous#testing:read object'
-      changed_when: false
-
-    - name: verify anonymous user has read access to public collection
-      shell: |
-        set -o pipefail
-        ils -A /testing/home/shared | grep --quiet 'anonymous#testing:read object'
-      changed_when: false
-
-    - name: verify anonymous user has read access to CyVerse curated collection
-      shell: |
-        set -o pipefail
-        ils -A /testing/home/shared/commons_repo/curated \
-          | grep --quiet 'anonymous#testing:read object'
-      changed_when: false
-
-    - name: test start quota usage computation
-      shell: |
-        set -o pipefail
-        iqstat -a | grep --quiet {{ item }}
+    - name: Verify that the starting collections have UUIDs
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          output=$(iquest '%s' "select META_COLL_ATTR_VALUE where META_COLL_ATTR_NAME = 'ipc_UUID' and COLL_NAME = '{{ item }}'")
+          if [[ "$output" == *"CAT_NO_ROWS_FOUND"* ]]; then
+            echo "UUID not found for collection: {{ item }}"
+            exit 1
+          fi
       with_items:
-        - _ipc_updateQuotaUsage
-        - _ipc_determineAllStorageFreeSpace
-        - _ipc_rmTrash
+        - /testing
+        - /testing/home
+        - /testing/home/shared
+        - /testing/trash
+        - /testing/trash/home
+        - /testing/trash/home/shared
       changed_when: false
+
+    - name: Test ensure CyVerse curated collection base collection exists
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: ils /testing/home/shared/commons_repo/curated
+      changed_when: false
+
+    - name: Verify that rodsadmin has write permission on /
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A / | grep --quiet 'g:rodsadmin#testing:modify object'
+      changed_when: false
+
+    - name: Verify that rodsadmin has write permission on the zone collection
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A /testing | grep --quiet 'g:rodsadmin#testing:modify object'
+      changed_when: false
+
+    - name: Verify that rodsadmin has write permission on static collections
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          groupId="$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")"
+          iquest '%s' \
+            "select COLL_ACCESS_NAME
+              where COLL_NAME = '{{ item }}' and COLL_ACCESS_USER_ID = '$groupId'"
+      register: result
+      failed_when:
+        result.stdout != 'modify object'
+      changed_when: false
+      with_items:
+        - /
+        - /testing
+        - /testing/home
+        - /testing/trash
+        - /testing/trash/home
+
+    - name: Verify that rodsadmin has own permission on all other collections
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          groupId="$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")"
+          totColls="$(iquest '%s' "select count(COLL_ID) where COLL_NAME like '{{ item }}/%'")"
+          totCollsOwn="$(iquest '%s' \
+            "select count(COLL_ID)
+              where COLL_NAME like '{{ item }}/%'
+                and COLL_ACCESS_USER_ID = '$groupId' and COLL_ACCESS_NAME = 'own'" )"
+          (( totColls > 0 && totColls == totCollsOwn ))
+      changed_when: false
+      with_items:
+        - /testing/home
+        - /testing/trash/home
+
+    - name: Verify that rodsadmin has own permission on all data objects
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          groupId="$(iquest '%s' "select USER_GROUP_ID where USER_GROUP_NAME = 'rodsadmin'")"
+          totObjs="$(iquest '%s' "select count(DATA_ID)")"
+          totObjsOwn="$(iquest '%s' \
+            "select count(DATA_ID)
+              where DATA_ACCESS_USER_ID = '$groupId' and DATA_ACCESS_NAME = 'own'" )"
+          (( totObjs == totObjsOwn ))
+      changed_when: false
+
+    - name: Test ensure anonymous user exists
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: test "$(iadmin lu anonymous)" != 'No rows found'
+      changed_when: false
+
+    - name: Verify anonymous user has read access to zone collection
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A /testing | grep --quiet 'anonymous#testing:read object'
+      changed_when: false
+
+    - name: Verify anonymous user has read access to home collection
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A /testing/home | grep --quiet 'anonymous#testing:read object'
+      changed_when: false
+
+    - name: Verify anonymous user has read access to public collection
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A /testing/home/shared | grep --quiet 'anonymous#testing:read object'
+      changed_when: false
+
+    - name: Verify anonymous user has read access to CyVerse curated collection
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ils -A /testing/home/shared/commons_repo/curated \
+            | grep --quiet 'anonymous#testing:read object'
+      changed_when: false
+
+    - name: Test start quota usage computation
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          iqstat -u rods | grep --quiet {{ item }}
+      with_items:
+        - cyverse_housekeeping_updateQuotaUsage
+        - cyverse_housekeeping_determineAllStorageFreeSpace
+        - cyverse_housekeeping_rmTrash
+      changed_when: false
+
+    - name: Verify iRODS admin session exited
+      ansible.builtin.stat:
+        path: /var/lib/irods/.irods/.a-adm
+      register: resp
+      failed_when: resp.stat.exists

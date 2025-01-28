@@ -1,18 +1,18 @@
 ---
-- name: create ICAT DB
+- name: Create ICAT DB
   hosts: irods_catalog
   run_once: true
-  become: true
   gather_facts: false
   tasks:
-    - name: create DB on primary DBMS
-      import_role:
+    - name: Create DB on primary DBMS
+      ansible.builtin.import_role:
         name: postgresql_db
       vars:
         postgresql_db_dbms_port: "{{ _irods_dbms_port }}"
         postgresql_db_name: ICAT
         postgresql_db_admin_user: "{{ _irods_db_user }}"
         postgresql_db_admin_password: "{{ _irods_db_password }}"
-      delegate_to: "{{ groups['dbms_primary'][0] }}"
+      delegate_to: "{{ _irods_dbms_host }}"
       delegate_facts: true
+      become: true
       become_user: postgres

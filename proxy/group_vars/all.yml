@@ -1,10 +1,15 @@
 ---
-proxy_internal_client_hosts: []
+_restart_allowed: "{{ proxy_restart_allowed | d(false) }}"
 
-proxy_stats_auth: null
-proxy_stats_tls_crt: null
-proxy_stats_tls_crt_content: null
-proxy_stats_client_hosts: []
+_rsyslog_conf: "{{ proxy_rsyslog_conf | d('/etc/rsyslog.d/haproxy.conf') }}"
 
-proxy_irods_reconn_ports: 20000-20399
-proxy_irods_vip_client_hosts: []
+_stats_auth: "{{ proxy_stats_auth | d(none) }}"
+_stats_tls_crt: "{{ proxy_stats_tls_crt | d(none) }}"
+_stats_tls_crt_content: "{{ proxy_stats_tls_crt_content | d(none) }}"
+
+_irods_direct_max_conn: "{{ proxy_irods_direct_max_conn | d(200) }}"
+_irods_reconn_ports: "{{ proxy_irods_reconn_ports | d('20000-20399') }}"
+_irods_vip_client_hosts: "{{ proxy_irods_vip_client_hosts | d([]) }}"
+
+_sftp_port: "{{ proxy_sftp_port | d(22) }}"
+_sftp_backend_port: "{{ proxy_sftp_backend_port | d(2022) }}"

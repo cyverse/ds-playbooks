@@ -1,10 +1,11 @@
 ---
-- import_playbook: stop_all.yml
+- name: Stop iRODS
+  ansible.builtin.import_playbook: stop_all.yml
   tags:
     - non_idempotent
 
 
-- name: start receivers
+- name: Start receivers
   hosts: irods
   vars:
     ephemeral_ports: >-
@@ -12,15 +13,15 @@
   tags:
     - non_idempotent
   tasks:
-    - name: wait for active zone port connections to close
-      wait_for:
+    - name: Wait for active zone port connections to close
+      ansible.builtin.wait_for:
         port: "{{ _irods_zone_port }}"
         state: drained
- 
-    - name: start receiver
+
+    - name: Start receiver
       port_check_receiver:
         tcp_ports: >-
-          {{ [ _irods_zone_port, _irods_server_control_plane_port ] | union(ephemeral_ports) }}
+          {{ [_irods_zone_port, _irods_server_control_plane_port] | union(ephemeral_ports) }}
         udp_ports: "{{ ephemeral_ports }}"
       async: 600
       poll: 0
@@ -28,33 +29,36 @@
       changed_when: false
 
 
-- name: check ports from catalog service providers
+- name: Check ports from catalog service providers
   hosts: irods_catalog
   gather_facts: false
   serial: 1
   tags:
     - non_idempotent
   tasks:
-    - name: check own grid port
+    - name: Check own grid port
       port_check_sender:
         destination: "{{ ansible_fqdn }}"
         tcp_ports:
           - "{{ _irods_server_control_plane_port }}"
       ignore_errors: true
+      tags:
+        - skip_ansible_lint
 
-    - name: check other providers grid port
+    - name: Check other providers grid port
       port_check_sender:
         destination: "{{ item }}"
         tcp_ports:
           - "{{ hostvars[item]._irods_server_control_plane_port }}"
       ignore_errors: true
       with_items: >-
-        {{ 
-          groups['irods_catalog'] 
-            | difference(groups['irods_resource']) 
-            | difference([ inventory_hostname ]) }}
+        {{ groups['irods_catalog']
+          | difference(groups['irods_resource'])
+          | difference([inventory_hostname]) }}
+      tags:
+        - skip_ansible_lint
 
-    - name: check resource server ports
+    - name: Check resource server ports
       port_check_sender:
         destination: "{{ item }}"
         tcp_ports:
@@ -63,16 +67,18 @@
         timeout: "{{ _check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['irods_resource'] | difference([inventory_hostname]) }}"
+      tags:
+        - skip_ansible_lint
 
 
-- name: check port access from resource servers
+- name: Check port access from resource servers
   hosts: irods_resource
   gather_facts: false
   serial: 1
   tags:
     - non_idempotent
   tasks:
-    - name: check catalog service providers ports
+    - name: Check catalog service providers ports
       port_check_sender:
         destination: "{{ item }}"
         tcp_ports:
@@ -80,62 +86,74 @@
         timeout: "{{ _check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['irods_catalog'] | difference([inventory_hostname]) }}"
+      tags:
+        - skip_ansible_lint
 
-    - name: check other resource servers ports
+    - name: Check other resource servers ports
       port_check_sender:
         destination: "{{ item }}"
         tcp_ports: >-
-          {{ 
-            [ hostvars[item]._irods_zone_port ]
-              | union(
-                range(
-                    hostvars[item]._irods_server_port_range_start|int, 
-                    hostvars[item]._irods_server_port_range_end|int + 1 ) 
-                  | list ) }}
+          {{ [hostvars[item]._irods_zone_port]
+            | union(
+              range(
+                hostvars[item]._irods_server_port_range_start | int,
+                hostvars[item]._irods_server_port_range_end | int + 1 )
+              | list ) }}
         udp_ports: >-
-          {{ 
-            range(
-                hostvars[item]._irods_server_port_range_start|int, 
-                hostvars[item]._irods_server_port_range_end|int + 1 ) 
-              | list }}
+          {{ range(
+              hostvars[item]._irods_server_port_range_start | int,
+              hostvars[item]._irods_server_port_range_end | int + 1 )
+            | list }}
         timeout: "{{ _check_routes_timeout }}"
       ignore_errors: true
       with_items: "{{ groups['irods_resource'] | difference([inventory_hostname]) }}"
+      tags:
+        - skip_ansible_lint
 
 
-- name: stop receivers
+- name: Stop receivers
   hosts: irods
   gather_facts: false
   tags:
     - non_idempotent
   tasks:
-    - name: stop receiver
+    - name: Stop receiver
       port_check_sender:
         tcp_ports:
           - "{{ _irods_zone_port }}"
         msg: finished
       ignore_errors: true
+      tags:
+        - skip_ansible_lint
 
-    - name: wait for receiver to stop
-      async_status:
+    - name: Wait for receiver to stop
+      ansible.builtin.async_status:
         jid: "{{ receiver.ansible_job_id }}"
       register: job_result
       until: job_result.finished
       retries: 1
       failed_when: not job_result.finished
 
-    - name: check receiver failure
+    - name: Check receiver failure
       when: job_result.msg is defined
-      fail:
+      ansible.builtin.fail:
         msg: '{{ job_result.msg }}'
       ignore_errors: true
+      tags:
+        - skip_ansible_lint
 
 
-- name: restart previously stopped iRODS servers
+- name: Restart previously stopped iRODS servers
   hosts: irods
   become: "{{ _become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
   gather_facts: false
   tasks:
-    - when: stop_irods_result is changed
-      include_tasks: tasks/restart_irods.yml
+    - name: Restart
+      when: stop_all_result is changed
+      ansible.builtin.include_tasks: tasks/restart_irods.yml
+      vars:
+        restart_op: always
+      tags:
+        - non_idempotent
+        - skip_ansible_lint

@@ -1,0 +1,117 @@
+---
+- name: Install ansible core facts requirement
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Determine if CentOS 7
+      ansible.builtin.stat:
+        path: /etc/centos-release
+      register: centos7
+
+    - name: Update CentOS base repo
+      when: centos7.stat.exists
+      ansible.builtin.copy:
+        dest: /etc/yum.repos.d/CentOS-Base.repo
+        content: |
+          [base]
+          name=CentOS-$releasever - Base
+          baseurl=http://vault.centos.org/7.9.2009/os/$basearch/
+          gpgcheck=1
+          gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+          [updates]
+          name=CentOS-$releasever - Updates
+          baseurl=http://vault.centos.org/7.9.2009/updates/$basearch/
+          gpgcheck=1
+          gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+          [extras]
+          name=CentOS-$releasever - Extras
+          baseurl=http://vault.centos.org/7.9.2009/extras/$basearch/
+          gpgcheck=1
+          gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+        mode: a+r
+
+    - name: Install dmidecode support
+      ansible.builtin.package:
+        name: dmidecode
+        state: present
+        use: "{{ _ansible_support_package_manager }}"
+
+
+- name: Install required packages for ansible
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  tasks:
+    - name: Update apt cache on Ubuntu machines
+      when: ansible_distribution == 'Ubuntu'
+      ansible.builtin.apt:
+        update_cache: true
+      tags:
+        - non_idempotent
+
+    - name: Install EPEL repository on CentOS machines
+      when: ansible_distribution == 'CentOS'
+      ansible.builtin.package:
+        name: epel-release
+        state: present
+
+    - name: Install packages
+      ansible.builtin.package:
+        name:
+          - acl
+          - "{{ 'iproute2' if ansible_distribution == 'Ubuntu' else 'iproute' }}"
+          - jq
+          - python3
+          - "{{ 'python3-dns' if ansible_distribution == 'Ubuntu' else 'python-dns' }}"
+          - python3-pip
+          - "{{ 'python3-requests' if ansible_distribution == 'Ubuntu' else 'python-requests' }}"
+          - "{{ 'python3-selinux' if ansible_distribution == 'Ubuntu' else 'libselinux-python3' }}"
+          - >-
+            {{ 'python3-virtualenv' if ansible_distribution == 'Ubuntu' else 'python-virtualenv' }}
+        state: present
+
+    - name: Install pip2 on CentOS machines
+      when: ansible_distribution == 'CentOS'
+      ansible.builtin.package:
+       name: python2-pip
+       state: present
+
+    - name: Upgrade pip2 on CentOS machines
+      when: ansible_distribution == 'CentOS'
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o errexit -o pipefail
+          if ! [[ "$(pip --version)" =~ pip\ 20 ]]; then
+            curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python
+            echo changed
+          fi
+      register: response
+      changed_when: response.stdout == 'changed'
+
+    - name: Install yum-plugin-versionlock on CentOS machines
+      when: ansible_distribution == 'CentOS'
+      ansible.builtin.package:
+        name: yum-plugin-versionlock
+        state: present
+
+    - name: Install python-is-python3 on Ubuntu 22.04 machines
+      when: >-
+        ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('22.04', '>=')
+      ansible.builtin.package:
+        name: python-is-python3
+        state: present
+
+- name: Remove packages on ubuntu
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  tasks:
+    - name: Remove unattended-upgrades on Ubuntu machines
+      when: ansible_distribution == 'Ubuntu'
+      ansible.builtin.apt:
+        name: unattended-upgrades
+        state: absent
+      tags:
+        - idempotent

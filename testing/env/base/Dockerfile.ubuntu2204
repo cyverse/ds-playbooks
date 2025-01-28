@@ -1,0 +1,9 @@
+FROM ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN --mount=target=/tmp/config,source=base/config.sh /tmp/config ubuntu 22.04
+
+COPY base/entrypoint.sh /entrypoint
+
+ENTRYPOINT [ "/entrypoint" ]

@@ -1,127 +1,104 @@
 ---
-- name: test the default variables populate the configs correctly
+- name: Test the default variables populate the configs correctly
   hosts: localhost
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
   vars:
-    expected_bisque_irods_url: irods://dstesting-provider_configured-1.dstesting_default
     avra_env: "{{ lookup('template', '../templates/rule-bases/avra-env.re.j2') }}"
-    bisque_env: "{{ lookup('template', '../templates/rule-bases/bisque-env.re.j2') }}"
-    captcn_env: "{{ lookup('template', '../templates/rule-bases/captcn-env.re.j2') }}"
-    ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
+    cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
     pire_env: "{{ lookup('template', '../templates/rule-bases/pire-env.re.j2') }}"
-    sernec_env: "{{ lookup('template', '../templates/rule-bases/sernec-env.re.j2') }}"
-    terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
   tasks:
-    - name: verify constants expand correctly in ipc-env.re.j2
-      assert:
+    - name: Verify constants expand correctly in cyverse-env.re.j2
+      ansible.builtin.assert:
         that:
-          - ipc_env is search("ipc_AMQP_EXCHANGE = 'irods'")
-          - ipc_env is search("ipc_DEFAULT_REPL_RESC = 'demoResc'")
-          - ipc_env is search("ipc_DEFAULT_RESC = 'demoResc'")
-          - ipc_env is search("ipc_MAX_NUM_RE_PROCS = 4")
-          - ipc_env is search("ipc_RE_HOST = 'dstesting-provider_configured-1.dstesting_default'")
+          - cyverse_env is search("cyverse_AMQP_EXCHANGE = 'irods'")
+          - cyverse_env is search("cyverse_DEFAULT_REPL_RESC = 'demoResc'")
+          - cyverse_env is search("cyverse_DEFAULT_RESC = 'demoResc'")
+          - >-
+            cyverse_env
+            is search(
+              "cyverse_EMAIL_FROM_ADDR = 'irods@dstesting-provider_configured-1.dstesting_default'"
+            )
+          - cyverse_env is search("cyverse_EMAIL_REPORT_ADDR = 'root@localhost'")
+          - cyverse_env is search("cyverse_INIT_REPL_DELAY = 0")
+          - cyverse_env is search("cyverse_MAX_NUM_RE_PROCS = 4")
+          - cyverse_env is search("cyverse_ZONE = 'testing'")
+          - >-
+            cyverse_env
+              is search("cyverse_RE_HOST = 'dstesting-provider_configured-1.dstesting_default'")
 
-    - name: verify constants expand correctly in avra-env.re.j2
-      assert:
+    - name: Verify constants expand correctly in avra-env.re.j2
+      ansible.builtin.assert:
         that:
-          - avra_env is search("avra_BASE_COLL = ''")
           - avra_env is search("avra_RESC = 'demoResc'")
 
-    - name: verify constants expand correctly in bisque-env.re.j2
-      assert:
-        that: >-
-          bisque_env
-          is search(
-            "bisque_IRODS_URL_BASE = 'irods://dstesting-provider_configured-1.dstesting_default'" )
-
-    - name: verify constants expand correctly in captcn-env.re.j2
-      assert:
-        that:
-          - captcn_env is search('captcn_OWNERS = list()' | regex_escape)
-          - captcn_env is search('captcn_WRITERS = list()' | regex_escape)
-          - captcn_env is search('captcn_READERS = list()' | regex_escape)
-
-    - name: verify constants expand correctly in pire-env.re.j2
-      assert:
+    - name: Verify constants expand correctly in pire-env.re.j2
+      ansible.builtin.assert:
         that: pire_env is search("pire_RESC = 'demoResc'")
 
-    - name: verify constants expand correctly in sernec-env.re.j2
-      assert:
-        that:
-          - sernec_env is search('sernec_OWNERS = list()' | regex_escape)
-          - sernec_env is search('sernec_WRITERS = list()' | regex_escape)
-          - sernec_env is search('sernec_READERS = list()' | regex_escape)
 
-    - name: verify constants expand correctly in terraref-env.re.j2
-      assert:
-        that:
-          - terraref_env is search("terraref_BASE_COLL = ''")
-          - terraref_env is search("terraref_RESC = 'demoResc'")
-
-
-- name: test that custom AMQP exchange set correctly in ipc-env.re
+- name: Test non resource custom values set correctly in cyverse-env.re
   hosts: localhost
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
   vars:
+    canonical_hostname: local
     irods_amqp_exchange: exchange
-    ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
+    irods_init_repl_delay: 1
+    irods_max_num_re_procs: 1
+    irods_re_host: other
+    irods_service_account_name: balloon
+    irods_zone_name: zoner
+    report_email_addr: bob@reports
+    cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
   tasks:
-    - name: verify resource constants
-      assert:
-        that: ipc_env is search("ipc_AMQP_EXCHANGE = 'exchange'")
+    - name: Verify custom values
+      ansible.builtin.assert:
+        that:
+          - cyverse_env is search("cyverse_AMQP_EXCHANGE = 'exchange'")
+          - cyverse_env is search("cyverse_EMAIL_FROM_ADDR = 'balloon@local'")
+          - cyverse_env is search("cyverse_EMAIL_REPORT_ADDR = 'bob@reports'")
+          - cyverse_env is search("cyverse_INIT_REPL_DELAY = 1")
+          - cyverse_env is search("cyverse_MAX_NUM_RE_PROCS = 1")
+          - cyverse_env is search("cyverse_RE_HOST = 'other'")
+          - cyverse_env is search("cyverse_ZONE = 'zoner'")
 
 
-- name: test that custom default resc set correctly in ipc-env.re
+- name: Test that custom default resc set correctly in cyverse-env.re
   hosts: localhost
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
   vars:
     irods_default_resource: custom
-    ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
+    cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
   tasks:
-    - name: verify resource constants
-      assert:
+    - name: Verify resource constants
+      ansible.builtin.assert:
         that:
-          - ipc_env is search("ipc_DEFAULT_REPL_RESC = 'custom'")
-          - ipc_env is search("ipc_DEFAULT_RESC = 'custom'")
+          - cyverse_env is search("cyverse_DEFAULT_REPL_RESC = 'custom'")
+          - cyverse_env is search("cyverse_DEFAULT_RESC = 'custom'")
 
 
-- name: test that custom default replication resc set correctly in ipc-env.re
+- name: Test that custom default replication resc set correctly in cyverse-env.re
   hosts: localhost
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
   vars:
     irods_default_repl_resource: custom
-    ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
+    cyverse_env: "{{ lookup('template', '../templates/rule-bases/cyverse-env.re.j2') }}"
   tasks:
-    - name: verify resource constants
-      assert:
+    - name: Verify resource constants
+      ansible.builtin.assert:
         that:
-          - ipc_env is search("ipc_DEFAULT_REPL_RESC = 'custom'")
-          - ipc_env is search("ipc_DEFAULT_RESC = 'demoResc'")
+          - cyverse_env is search("cyverse_DEFAULT_REPL_RESC = 'custom'")
+          - cyverse_env is search("cyverse_DEFAULT_RESC = 'demoResc'")
 
 
-- name: test that ipc_MAX_NUM_RE_PROCS set correctly in ipc-env.re
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    irods_max_num_re_procs: 1
-    ipc_env: "{{ lookup('template', '../templates/rule-bases/ipc-env.re.j2') }}"
-  tasks:
-    - name: verify ipc_MAX_NUM_RE_PROCS
-      assert:
-        that: ipc_env is search("ipc_MAX_NUM_RE_PROCS = 1")
-
-
-- name: test Avra params are set correctly
+- name: Test Avra params are set correctly
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -132,29 +109,13 @@
       name: avraRes
     avra_env: "{{ lookup('template', '../templates/rule-bases/avra-env.re.j2') }}"
   tasks:
-    - name: verify params
-      assert:
+    - name: Verify params
+      ansible.builtin.assert:
         that:
-          - avra_env is search("avra_BASE_COLL = 'base'")
           - avra_env is search("avra_RESC = 'avraRes'")
 
 
-- name: test that bisque-env.re gets generated correctly with a bisque iRODS host is provided
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    bisque_irods_host: custom.irods.host
-    bisque_env: "{{ lookup('template', '../templates/rule-bases/bisque-env.re.j2') }}"
-  tasks:
-    - name: verify bisque_env
-      assert:
-        that:
-          - bisque_env is search("bisque_IRODS_URL_BASE = 'irods://custom.irods.host'")
-
-
-- name: test PIRE params are set correctly
+- name: Test PIRE params are set correctly
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -164,72 +125,6 @@
       name: pireRes
     pire_env: "{{ lookup('template', '../templates/rule-bases/pire-env.re.j2') }}"
   tasks:
-    - name: verify params
-      assert:
+    - name: Verify params
+      ansible.builtin.assert:
         that: pire_env is search("pire_RESC = 'pireRes'")
-
-
-- name: test that CAP_TCN perm groups are generated correctly
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    captcn_owners:
-      - own1
-      - own2
-    captcn_readers:
-      - read1
-      - read2
-    captcn_writers:
-      - write1
-      - write2
-    captcn_env: "{{ lookup('template', '../templates/rule-bases/captcn-env.re.j2') }}"
-  tasks:
-    - name: verify captcn_env
-      assert:
-        that:
-          - captcn_env is search('captcn_OWNERS = list("own1", "own2")' | regex_escape)
-          - captcn_env is search('captcn_WRITERS = list("write1", "write2")' | regex_escape)
-          - captcn_env is search('captcn_READERS = list("read1", "read2")' | regex_escape)
-
-
-- name: test that sernec perm groups are generated correctly
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    sernec_owners:
-      - own1
-      - own2
-    sernec_readers:
-      - read1
-      - read2
-    sernec_writers:
-      - write1
-      - write2
-    sernec_env: "{{ lookup('template', '../templates/rule-bases/sernec-env.re.j2') }}"
-  tasks:
-    - name: verify sernec_env
-      assert:
-        that:
-          - sernec_env is search('sernec_OWNERS = list("own1", "own2")' | regex_escape)
-          - sernec_env is search('sernec_WRITERS = list("write1", "write2")' | regex_escape)
-          - sernec_env is search('sernec_READERS = list("read1", "read2")' | regex_escape)
-
-
-- name: test TerraREF params are set correctly
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../group_vars/all.yml
-  vars:
-    terraref_base_collection: base
-    terraref_env: "{{ lookup('template', '../templates/rule-bases/terraref-env.re.j2') }}"
-  tasks:
-    - name: verify params
-      assert:
-        that:
-          - terraref_env is search("terraref_BASE_COLL = 'base'")
-          - terraref_env is search("terraref_RESC = 'demoResc'")

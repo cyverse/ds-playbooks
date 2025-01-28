@@ -13,5 +13,6 @@
     - name: install iptables package
       package:
         name: >-
-          {{ 'iptables-persistent' if ansible_distribution == 'Ubuntu' else 'iptables-services' }}
+          {{ 'iptables-persistent' if ansible_distribution == 'Ubuntu' else
+            'iptables-services' }}
         state: present

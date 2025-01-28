@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #
 # Usage:
 #  entrypoint [SVC-SCRIPT]
@@ -20,15 +20,16 @@
 # When executed with 'stop', it should stop any services started by when the
 # 'start' option is passed in. It should not exit until these services have
 # stopped.
-#
+
+set -o errexit -o nounset -o pipefail
 
 
 main()
 {
-  local svc="$1"
+  Svc="$*"
 
-  start "$svc"
-  trap "kill \${!}; stop '$svc'; exit \$?" SIGTERM
+  start "$Svc"
+  trap 'kill ${!}; stop "$Svc"; exit $?' SIGTERM
 
   while true
   do
@@ -44,7 +45,10 @@ start()
 
   if [ -n "$svc" ]
   then
-    eval "$svc" start
+    if ! eval "$svc" start
+    then
+      printf '%s failed to start\n' "$svc"
+    fi
   fi
 
   /usr/sbin/sshd
@@ -57,7 +61,7 @@ stop()
 {
   local svc="$1"
 
-  kill -SIGTERM $(cat /var/run/sshd.pid)
+  kill -SIGTERM "$(cat /var/run/sshd.pid)"
 
   if [ -n "$svc" ]
   then
@@ -66,6 +70,4 @@ stop()
 }
 
 
-set -e
-
-main "$*"
+main "$@"

@@ -3,13 +3,8 @@ FROM cyverse/irods:4.2.8
 ### Switch back to root for installation
 USER root
 
-### Install NetCDF plugins
-RUN yum --assumeyes install \
-      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-client_modules-4.2.8.0-centos-7-x86_64.rpm \
-      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-icommands-4.2.8.0-centos-7-x86_64.rpm \
-      http://people.renci.org/~dmoore/irods_netcdf/packages_2021_03_24/irods-netcdf-server_modules-4.2.8.0-centos-7-x86_64.rpm && \
 ### Install support for UUID generation
-    yum --assumeyes install uuidd && \
+RUN yum --assumeyes install uuidd && \
 ### Install support for periphery script
     yum --assumeyes install moreutils && \
 ### Clean up installation artifacts
@@ -29,8 +24,6 @@ RUN chown --recursive irods:irods /etc/irods /var/lib/irods && \
 COPY periphery.sh /periphery
 RUN chown irods:irods /periphery && \
     chmod ug+x /periphery
-
-VOLUME /var/lib/irods/log /var/lib/irods/log/proc
 
 EXPOSE 1247/tcp 1248/tcp 20000-20009/tcp 20000-20009/udp
 
@@ -53,8 +46,7 @@ ONBUILD ARG IRODS_STORAGE_RES
 ONBUILD RUN /on-build-instantiate && \
             rm --force /on-build-instantiate
 
-ONBUILD VOLUME /irods_vault/"$IRODS_STORAGE_RES"
-
 ONBUILD USER irods-host-user
+ONBUILD ENV HOME=/var/lib/irods
 
 ONBUILD ENV IRODS_STORAGE_RES="$IRODS_STORAGE_RES"

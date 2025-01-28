@@ -5,57 +5,51 @@
 # Usage:
 #  init-ansible
 
-set -e
+set -o errexit -o nounset -o pipefail
 
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-  readonly ExecName=$(greadlink -f "$0")
-else
-  readonly ExecName=$(readlink --canonicalize "$0")
-fi
+ExecName=$(readlink --canonicalize "$0")
+readonly ExecName
 
-readonly PlaybooksDir=$(dirname "$ExecName")
+PlaybooksDir=$(dirname "$ExecName")
+readonly PlaybooksDir
 
 
 main()
 {
-  ansible-galaxy install -r "$PlaybooksDir"/requirements.yml
+	ansible-galaxy install --force -r "$PlaybooksDir"/requirements-ansible.yml
 
-  local roleDir
+	local roleDir
 
-  while read -r roleDir
-  do
-    local reqFile="$roleDir"/requirements.yml
+	while read -r roleDir; do
+		local reqFile="$roleDir"/requirements.yml
 
-    if [[ -f "$reqFile" ]]
-    then
-      # ansible-galaxy won't update roles installed through dependencies, so
-      # delete all roles before updating
-      local roles
-      readarray -t roles < <(listSubDirs "$roleDir")
+		if [[ -f "$reqFile" ]]; then
+			# ansible-galaxy won't update roles installed through dependencies, so
+			# delete all roles before updating
+			local roles
+			readarray -t roles < <(listSubDirs "$roleDir")
 
-      local role
-      for role in "${roles[@]}"; do
-        if [[ -f "$roleDir"/"$role"/meta/.galaxy_install_info ]]; then
-          ansible-galaxy role remove --roles-path="$roleDir" "$role"
-        fi
-      done
+			local role
+			for role in "${roles[@]}"; do
+				if [[ -f "$roleDir"/"$role"/meta/.galaxy_install_info ]]; then
+					ansible-galaxy role remove --roles-path="$roleDir" "$role"
+				fi
+			done
 
-      ansible-galaxy role install --role-file="$reqFile" --roles-path="$roleDir"
-    fi
-  done < <(find "$PlaybooksDir" -type d -name roles)
+			ansible-galaxy role install --role-file="$reqFile" --roles-path="$roleDir"
+		fi
+	done < <(find "$PlaybooksDir" -type d -name roles)
 }
 
 listSubDirs()
 {
-  local roleDir="$1"
+	local roleDir="$1"
 
-  if [[ "$OSTYPE" == "darwin"* ]]
-  then
-    find "$roleDir" -maxdepth 1 -mindepth 1 -type d -print0 | xargs -0 stat -f '%f\n'
-  else
-    find "$roleDir" -maxdepth 1 -mindepth 1 -type d -printf '%f\n'
-  fi
+	if [[ "$OSTYPE" == "darwin"* ]]; then
+		find "$roleDir" -maxdepth 1 -mindepth 1 -type d -print0 | xargs -0 stat -f '%f\n'
+	else
+		find "$roleDir" -maxdepth 1 -mindepth 1 -type d -printf '%f\n'
+	fi
 }
 
 

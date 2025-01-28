@@ -1,0 +1,62 @@
+---
+- name: Determine the servers that are on physical machines
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  tasks:
+    - name: Group by virtualization type
+      ansible.builtin.group_by:
+        key: "{{ 'physical' if ansible_virtualization_type == 'NA'
+                            or ansible_virtualization_type == 'kvm' else
+                 'virtual' }}"
+      changed_when: false
+
+
+- name: Determine the NIC throughput and OS version for the physical servers
+  hosts: physical
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Call ethtool
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          ethtool {{ ansible_default_ipv4.alias }} | sed -n 's/\tSpeed: \([0-9]*\).*/\1/p'
+      register: ethtool
+      changed_when: false
+
+    - name: Group by NIC speed
+      ansible.builtin.group_by:
+        key: network_{{ '10G' if ethtool.stdout | int >= 10000 else '1G' }}
+      changed_when: false
+
+
+- name: Tune MTU
+  hosts: physical
+  become: true
+  gather_facts: false
+  roles:
+    - role: cyverse.ip
+      ip_link_mtu: "{{ _network_mtu }}"
+
+
+- name: Tune txqueuelen
+  hosts: physical
+  become: true
+  gather_facts: false
+  roles:
+    - role: cyverse.ip
+      ip_link_txqueuelen: "{{ _network_txqueuelen }}"
+
+
+- name: Tune TCP
+  hosts: all:!unmanaged_systems:!localhost
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Configure linux kernel
+      ansible.posix.sysctl:
+        name: net.{{ item.name }}
+        value: "{{ item.value }}"
+      with_items: "{{ _network_sysctl }}"
+      tags: no_testing

@@ -1,11 +1,11 @@
 ---
-- name: disable SELinux
+- name: Disable SELinux
   hosts: all:!unmanaged_systems:!localhost
   become: true
   tasks:
-    - name: disable SELinux
+    - name: Disable SELinux
       when: ansible_selinux.status == "enabled"
-      selinux:
+      ansible.posix.selinux:
         state: disabled
   tags:
     - no_testing

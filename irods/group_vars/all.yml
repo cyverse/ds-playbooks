@@ -13,20 +13,10 @@ _avra_resource_hierarchy: "{{ avra_resource_hierarchy | default(_irods_resource_
 
 _become_svc_acnt: "{{ become_svc_acnt | default(true) }}"
 
-_bisque_irods_host: "{{ bisque_irods_host | default(_canonical_hostname) }}"
-_bisque_password: "{{ bisque_password | default('admin') }}"
-_bisque_projects: "{{ bisque_projects | default([]) }}"
-_bisque_url: "{{ bisque_url | default(None) }}"
-_bisque_user: "{{ bisque_user | default('admin') }}"
-
 _build_dir: "{{ build_dir | default('/tmp') }}"
 
 _canonical_hostname: "{{ canonical_hostname | default(groups['irods_catalog'][0]) }}"
 _canonical_irods_port: "{{ canonical_irods_port | default(_irods_zone_port) }}"
-
-_captcn_owners: "{{ captcn_owners | default([]) }}"
-_captcn_readers: "{{ captcn_readers | default([]) }}"
-_captcn_writers: "{{ captcn_writers | default([]) }}"
 
 _cereus_collections: "{{ cereus_collections | default([]) }}"
 _cereus_resource_hierarchy: >-
@@ -34,33 +24,33 @@ _cereus_resource_hierarchy: >-
 
 _check_routes_timeout: "{{ check_routes_timeout | default(3) }}"
 
-_de_job_irods_user: "{{ de_job_irods_user | default(None) }}"
-
 _firewall_chain: "{{ firewall_chain | default('INPUT') }}"
 
+_irods_admin_password: "{{ irods_admin_password | default(_irods_clerver_password) }}"
 _irods_admin_username: "{{ irods_admin_username | default(_irods_clerver_user) }}"
 _irods_allowed_clients: "{{ irods_allowed_src | default('0.0.0.0/0') }}"
 _irods_clerver_password: "{{ irods_clerver_password | default('rods') }}"
 _irods_clerver_user: "{{ irods_clerver_user | default('rods') }}"
 _irods_db_password: "{{ irods_db_password | default('testpassword') }}"
 _irods_db_user: "{{ irods_db_user | default('irods') }}"
+_irods_dbms_host: "{{ irods_dbms_host | d(groups['irods_catalog'][0]) }}"
 _irods_dbms_pg_hba: "{{ irods_dbms_pg_hba | default('/etc/postgresql/12/main/pg_hba.conf') }}"
-_irods_dbms_pg_version: "{{ irods_dbms_pg_version | default('12') }}"
 _irods_dbms_port: "{{ irods_dbms_port | default(5432) }}"
 _irods_default_dir_mode: "{{ irods_default_dir_mode | default('0750') }}"
 _irods_default_file_mode: "{{ irods_default_file_mode | default('0600') }}"
-_irods_default_number_of_transfer_threads: >-
-  {{ irods_default_number_of_transfer_threads | default(None) }}
+_irods_default_number_of_transfer_threads: "{{ irods_default_number_of_transfer_threads | d(3) }}"
 _irods_default_repl_resource: "{{ irods_default_repl_resource | default(_irods_default_resource) }}"
 _irods_default_resource: >-
   {{ irods_default_resource | default(_irods_resource_hierarchies[0].name) }}
 _irods_default_vault: "{{ irods_default_vault | default(None) }}"
 _irods_federation: "{{ irods_federation | default([]) }}"
 _irods_host_aliases: "{{ irods_host_aliases | default([]) }}"
+_irods_init_repl_delay: "{{ irods_init_repl_delay | d(0) }}"
 _irods_max_num_re_procs: "{{ irods_max_num_re_procs | default(4) }}"
 _irods_negotiation_key: "{{ irods_negotiation_key | default(None) }}"
+_irods_odbc_driver: "{{ irods_odbc_driver| d('PostgreSQL') }}"
 _irods_other_host_entries: "{{ irods_other_host_entries | default([]) }}"
-_irods_parallel_transfer_buffer_size: "{{ irods_parallel_transfer_buffer_size | default(None) }}"
+_irods_parallel_transfer_buffer_size: "{{ irods_parallel_transfer_buffer_size | d(100) }}"
 _irods_publish_rs_image: "{{ irods_publish_rs_image | default(false) }}"
 _irods_re_host: "{{ irods_re_host | default(groups['irods_catalog'][0]) }}"
 _irods_resource_hierarchies: >-
@@ -69,6 +59,7 @@ _irods_resource_hierarchies: >-
       if irods_resource_hierarchies is defined and irods_resource_hierarchies|length > 0 else
     [ { "name": "demoResc" } ] }}
 _irods_rs_image: "{{ irods_rs_image | default('ds-irods-rs-onbuild') }}"
+_irods_s3_cred: "{{ irods_s3_cred | d([]) }}"
 _irods_server_port_range_end: "{{ irods_server_port_range_end | default(20199) }}"
 _irods_server_port_range_start: "{{ irods_server_port_range_start | default(20000) }}"
 _irods_server_control_plane_key: "{{ irods_server_control_plane_key | default(None) }}"
@@ -80,33 +71,17 @@ _irods_version: "{{ irods_version | default('4.2.8') }}"
 _irods_zone_key: "{{ irods_zone_key | default(None) }}"
 _irods_zone_name: "{{ irods_zone_name | default('tempZone') }}"
 
+_mdrepo_cli_account: "{{ mdrepo_cli_account | d(None) }}"
+_mdrepo_landing_colls: "{{ mdrepo_landing_colls | d([]) }}"
+
 _pire_manager: "{{ pire_manager | default(None) }}"
 _pire_resource_hierarchy: "{{ pire_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}"
 
 _report_email_addr: "{{ report_email_addr | default('root@localhost') }}"
 
-_restart_irods: "{{ restart_irods | default(false) }}"
-
-_sernec_owners: "{{ sernec_owners if sernec_owners is defined else [] }}"
-_sernec_readers: "{{ sernec_readers if sernec_readers is defined else [] }}"
-_sernec_writers: "{{ sernec_writers if sernec_writers is defined else [] }}"
-
-_sparcd_admin: "{{ sparcd_admin | default(None) }}"
-_sparcd_base_collection: >-
-  {{ sparcd_base_collection
-    | default(
-      '/' + _irods_zone_name + '/home/' + _sparcd_admin + '/Sparcd/Collections'
-        if _sparcd_admin else
-      None ) }}
-_sparcd_report_email_addr: >-
-  {{ sparcd_report_email_addr | default(_report_email_addr if _sparcd_admin else None) }}
+_restart_allowed: "{{ restart_allowed | d(false) }}"
 
 _sysctl_kernel: "{{ sysctl_kernel | default([]) }}"
-
-_terraref_base_collection: "{{ terraref_base_collection | default(None) }}"
-_terraref_manager: "{{ terraref_manager | default(_irods_clerver_user) }}"
-_terraref_resource_hierarchy: >-
-  {{ terraref_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}
 
 _webdav_access_limit: "{{ webdav_access_limit | default(None) }}"
 _webdav_allowed_src: "{{ webdav_allowed_src | default(['0.0.0.0/0']) }}"
@@ -116,6 +91,7 @@ _webdav_cache_max_file_size: "{{ webdav_cache_max_file_size | default(10) }}"
 _webdav_cache_max_ttl: "{{ webdav_cache_max_ttl | default(86400) }}"
 _webdav_cache_size: "{{ webdav_cache_size | default(1000) }}"
 _webdav_cache_ttl_fraction: "{{ webdav_cache_ttl_fraction | default(0.1) }}"
+_webdav_canonical_hostname: "{{ webdav_canonical_hostname | d(_canonical_hostname) }}"
 _webdav_davrods_access_limit: "{{ webdav_davrods_access_limit | default(None) }}"
 _webdav_max_request_workers: "{{ webdav_max_request_workers | default(192) }}"
 _webdav_purgeman_irods_user: "{{ webdav_purgeman_irods_user | default(_irods_admin_username) }}"
@@ -129,6 +105,23 @@ _webdav_tls_chain_file: "{{ webdav_tls_chain_file | default('/etc/ssl/certs/dumm
 _webdav_tls_key: "{{ webdav_tls_key | default(None) }}"
 _webdav_tls_key_file: "{{ webdav_tls_key_file | default('/etc/ssl/certs/dummy.key') }}"
 _webdav_varnish_service_port: "{{ webdav_varnish_service_port | default(6081) }}"
+
+_sftp_port: "{{ sftp_port | default(2022) }}"
+_sftp_proxy_allowed: "{{ sftp_proxy_allowed | default([]) }}"
+_sftp_user_host_allowed: "{{ sftp_user_host_allowed | default([]) }}"
+_sftp_user_host_rejected: "{{ sftp_user_host_rejected | default([]) }}"
+_sftpgo_admin_ui_port:  "{{ sftpgo_admin_ui_port | default(18023) }}"
+_sftpgo_vault_dir: "{{ sftpgo_vault_dir | default('/sftpgo_vault') }}"
+_sftpgo_admin_username: "{{ sftpgo_admin_username | default('admin') }}"
+_sftpgo_admin_password: "{{ sftpgo_admin_password | mandatory }}"
+_sftpgo_irods_proxy_username: "{{ sftpgo_irods_proxy_username | default('sftp') }}"
+_sftpgo_irods_proxy_password: "{{ sftpgo_irods_proxy_password | mandatory }}"
+_sftpgo_irods_auth_scheme: "{{ sftpgo_irods_auth_scheme | default('native') }}"
+_sftpgo_irods_ssl_ca_cert_path: "{{ sftpgo_irods_ssl_ca_cert_path | default('') }}"
+_sftpgo_irods_ssl_algorithm: "{{ sftpgo_irods_ssl_algorithm | default('') }}"
+_sftpgo_irods_ssl_key_size: "{{ sftpgo_irods_ssl_key_size | default(0) }}"
+_sftpgo_irods_ssl_salt_size: "{{ sftpgo_irods_ssl_salt_size | default(0) }}"
+_sftpgo_irods_ssl_hash_rounds: "{{ sftpgo_irods_ssl_hash_rounds | default(0) }}"
 
 # The following are internal constants
 

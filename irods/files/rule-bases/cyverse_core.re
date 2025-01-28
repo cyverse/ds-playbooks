@@ -25,7 +25,6 @@
 # service's rule.
 
 @include 'avra'
-@include 'bisque'
 @include 'coge'
 @include 'mdrepo'
 @include 'pire'
@@ -46,10 +45,6 @@
 # created collection that wasn't created administratively.
 #
 cyverse_core_acPostProcForCollCreate_exclusive {
-	*err = errormsg(bisque_acPostProcForCollCreate, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
 	*err = errormsg(coge_acPostProcForCollCreate, *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
@@ -90,7 +85,6 @@ acCreateUser {
 # This rule applies the project specific data delete policies.
 #
 acDataDeletePolicy {
-	bisque_acDataDeletePolicy;
 	cyverse_logic_acDataDeletePolicy;
 }
 
@@ -312,10 +306,6 @@ acPostProcForDelete {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
-	*err = errormsg(bisque_acPostProcForDelete, *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
 }
 
 # This rule sets the post-processing policy for an ACL change.
@@ -425,10 +415,6 @@ acPostProcForObjRename(*SourceObject, *DestObject) {
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
 	}
-	*err = errormsg(bisque_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
-	if (*err < 0) {
-		writeLine('serverLog', *msg);
-	}
 	*err = errormsg(coge_acPostProcForObjRename(*SourceObject, *DestObject), *msg);
 	if (*err < 0) {
 		writeLine('serverLog', *msg);
@@ -528,11 +514,8 @@ pep_api_data_obj_copy_post(*Instance, *Comm, *DataObjCopyInp, *TransStat) {
 #              object
 #
 pep_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp) {
-  	ipcEncryption_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp)
-}
-
-pep_api_data_obj_create_and_stat_pre(*Instance, *Comm, *DataObjInp, *OpenStat) {
-  	ipcEncryption_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp)
+	ipcEncryption_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp);
+	mdrepo_api_data_obj_create_pre(*Instance, *Comm, *DataObjInp);
 }
 
 # This is the post processing logic for when a data object is created through
@@ -545,6 +528,22 @@ pep_api_data_obj_create_and_stat_pre(*Instance, *Comm, *DataObjInp, *OpenStat) {
 #
 pep_api_data_obj_create_post(*Instance, *Comm, *DataObjInp) {
 	ipcTrash_api_data_obj_create_post(*Instance, *Comm, *DataObjInp);
+}
+
+
+# DATA_OBJ_CREATE_AND_STAT
+
+# This is the pre processing logic for when an attempt is made to create a data
+# object and stat its replica through the API using a DATA_OBJ_CREATE_AND_STAT
+# request.
+#
+#  Instance    (string) unknown
+#  Comm        (`KeyValuePair_PI`) user connection and auth information
+#  DataObjInp  (`KeyValuePair_PI`) information related to the created data
+#              object
+#
+pep_api_data_obj_create_and_stat_pre(*Instance, *Comm, *DataObjInp, *OpenStat) {
+	ipcEncryption_api_data_obj_create_and_stat_pre(*Instance, *Comm, *DataObjInp);
 }
 
 
@@ -695,7 +694,7 @@ pep_api_rm_coll_except(*Instance, *Comm, *RmCollInp, *CollOprStat) {
 # STRUCT_FILE_EXT_AND_REG
 
 # This is the pre processing logic for when an attempt is made to extract a
-# struct file and register files in it through the API using a 
+# struct file and register files in it through the API using a
 # STRUCT_FILE_EXT_AND_REG request.
 #
 #  Instance                  (string) unknown
@@ -741,10 +740,6 @@ _cyverse_core_mkDataObjSessVar(*Path) = 'ipc-data-obj-' ++ str(*Path)
 # 	if (*err < 0) {
 # 		writeLine('serverLog', *msg);
 # 	}
-# 	*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-# 	if (*err < 0) {
-# 		writeLine('serverLog', *msg);
-# 	}
 # 	*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 # 	if (*err < 0) {
 # 		writeLine('serverLog', *msg);
@@ -761,10 +756,6 @@ _cyverse_core_dataObjCreated(*User, *Zone, *DataObjInfo, *Step) {
 		writeLine('serverLog', *msg);
 	}
 	if (*Step != 'FINISH') {
-		*err = errormsg(bisque_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
-		if (*err < 0) {
-			writeLine('serverLog', *msg);
-		}
 		*err = errormsg(coge_dataObjCreated(*User, *Zone, *DataObjInfo), *msg);
 		if (*err < 0) {
 			writeLine('serverLog', *msg);

@@ -226,7 +226,7 @@ cyverse_housekeeping_rmTrash {
 	*subjArg = execCmdArg(*subject);
 	*bodyArg = execCmdArg(*body);
 	*args = "*fromArg *toArg *subjArg *bodyArg";
-	*status = errorcode(msiExecCmd('send_mail.py', *args, 'null', 'null', 'null', *out));
+	*status = errorcode(msiExecCmd('send-mail', *args, 'null', 'null', 'null', *out));
 	if (*status < 0) {
 		msiGetStderrInExecCmdOut(*out, *resp);
 		writeLine('serverLog', 'DS: failed to mail trash removal report');

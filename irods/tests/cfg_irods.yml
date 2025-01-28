@@ -19,8 +19,6 @@
       with_items:
         - avra.re
         - avra-env.re
-        - bisque.re
-        - bisque-env.re
         - coge.re
         - core.dvm
         - core.fnm
@@ -43,6 +41,12 @@
         - server_config.json
         - service_account.config
 
+    - name: Verify rule unit tests didn't get deployed
+      ansible.builtin.stat:
+        path: /etc/irods/tests
+      register: resp
+      failed_when: resp.stat.exists
+
     - name: Verify irods_environment.json is in place
       ansible.builtin.stat:
         path: /var/lib/irods/.irods/irods_environment.json
@@ -57,12 +61,23 @@
         not response.stat.exists
         or response.stat.pw_name != 'irods'
         or not response.stat.xusr
-      with_items:
-        - amqptopicsend.py
+      loop:
+        - amqp-topic-send
         - correct-size
         - delete-scheduled-rule
-        - generateuuid
+        - generate-uuid
         - imeta-exec
+        - send-mail
+
+    - name: Verify defunct command scripts absent
+      ansible.builtin.stat:
+        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
+      register: resp
+      failed_when: resp.stat.exists
+      loop:
+        - amqptopicsend.py
+        - generateuuid
+        - send_mail.py
 
     - name: Verify database_config.json does not exist
       ansible.builtin.stat:
@@ -264,3 +279,13 @@
                 == 'dstesting-consumer_configured_ubuntu-1.dstesting_default'
               - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
               - hosts_config.host_entries[0].addresses[2].address == 'alias-2'
+
+    - name: Verify old rule files removed
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: resp
+      failed_when: resp.stat.exists
+      with_items:
+        - ipc-logic.re
+        - sernec.re
+        - sernec-env.re

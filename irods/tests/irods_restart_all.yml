@@ -4,5 +4,5 @@
   become: true
   become_user: irods
   tasks:
-    - name: Test iRODS running
+    - name: Verify iRODS servers are running
       ansible.builtin.import_tasks: tasks/test_irods_running.yml

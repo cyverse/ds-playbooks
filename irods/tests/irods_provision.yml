@@ -44,6 +44,7 @@
           changed_when: false
           with_items:
             - irods-icommands
+            - irods-resource-plugin-s3
             - irods-runtime
             - irods-server
 
@@ -80,11 +81,13 @@
         - name: Ubuntu | test lock iRODS packages to required version
           ansible.builtin.shell:
             executable: /bin/bash
-            cmd: apt-cache policy '{{ item }}' | grep --quiet '\*\*\* 4\.3\.1'
+            cmd: |
+              set -o pipefail
+              apt-cache policy \
+                | grep --quiet --regexp='{{ item }} -> 4\.3\.1\(\..*\)\? with priority 1001'
           changed_when: false
           with_items:
-            - irods-icommands
-            - irods-runtime
+            - irods-resource-plugin-s3
             - irods-server
           tags: skip_ansible_lint
 
@@ -101,6 +104,12 @@
       vars:
         pkg: irods-server
         version: 4.3.1
+
+    - name: Verify iRODS S3 resource plugin installed
+      ansible.builtin.include_tasks: tasks/test_pkg_installed.yml
+      vars:
+        pkg: irods-resource-plugin-s3
+        version: 4.2.8
 
     - name: Test create service group
       ansible.builtin.command:

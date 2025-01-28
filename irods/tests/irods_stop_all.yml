@@ -1,6 +1,7 @@
 ---
 - name: Test stop all
   hosts: irods
+  become: true
   tasks:
     - name: Check if svc acnt exists
       ansible.builtin.shell:
@@ -15,7 +16,6 @@
       changed_when: false
 
     - name: Verify that all servers are down
-      become: true
       become_user: irods
       ansible.builtin.shell:
         executable: /bin/bash

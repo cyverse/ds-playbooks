@@ -1,5 +1,5 @@
 ---
-- name: Test create storage resources
+- name: Test create avra storage resources
   ansible.builtin.import_playbook: irods_storage_resources.yml
 
 

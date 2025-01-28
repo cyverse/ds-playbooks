@@ -4,6 +4,7 @@
 # © 2024 The Arizona Board of Regents on behalf of The University of Arizona.
 # For license information, see https://cyverse.org/license.
 
+"""This is the ansible module irods_move."""
 
 import ssl
 from ansible.module_utils.basic import AnsibleModule
@@ -76,22 +77,17 @@ class IRODSMoveModule:
         Initialize module
         """
 
-        self.module_args = dict(
-            source=dict(type="str", required=True),
-            destination=dict(type="str", required=True),
+        self.module_args = {
+            'source': {'type': 'str', 'required': True},
+            'destination': {'type': 'str', 'required': True},
+            'host': {'type': 'str', 'required': True},
+            'port': {'type': 'int', 'required': True},
+            'admin_user': {'type': 'str', 'no_log': True, 'required': True},
+            'admin_password': {'type': 'str', 'no_log': True, 'required': True},
+            'zone': {'type': 'str', 'required': True},
+        }
 
-            host=dict(type="str", required=True),
-            port=dict(type="int", required=True),
-            admin_user=dict(type="str", no_log=True, required=True),
-            admin_password=dict(type="str", no_log=True, required=True),
-            zone=dict(type="str", required=True),
-        )
-
-        self.result = dict(
-            changed=False,
-            exc='',
-            exc_msg=''
-        )
+        self.result = {'changed': False, 'exc': '', 'exc_msg': ""}
 
         self.module = AnsibleModule(
             argument_spec=self.module_args,
@@ -106,39 +102,22 @@ class IRODSMoveModule:
 
         self.session = None
 
-    def init_session(self):
-        try:
-            self.session = iRODSSession(
-                source=self.module.params["source"],
-                destination=self.module.params["destination"],
-                host=self.module.params["host"],
-                port=self.module.params["port"],
-                user=self.module.params["admin_user"],
-                password=self.module.params["admin_password"],
-                zone=self.module.params["zone"],
-                **self.ssl_settings)
-
-        except Exception as exc:
-            self.result["exc"] = exc
-            self.result["exc_message"] = "Unable to connect to iRODS."
-            self._fail(self.result["exc_message"])
-
     def run_module(self):
+        """This performs the business logic of the module."""
         if self.module.check_mode:
             self.module.exit_json(**self.result)
 
-        self.init_session()
-
         try:
-            self.rename()
+            self._init_session()
+            self._rename()
             self.module.exit_json(**self.result)
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             self.result["exc"] = type(exc).__name__
             self.result["exc_msg"] = str(exc)
-            self._fail("Unable to move irods object/collection {}".format(
-                self.module.params["source"]), exc)
+            self._fail(
+                f"Unable to move irods object/collection {self.module.params['source']}", exc)
 
-    def rename(self):
+    def _rename(self):
         # rename collection
         path = self.module.params["source"]
         new_path = self.module.params["destination"]
@@ -161,16 +140,24 @@ class IRODSMoveModule:
         else:
             self.module.fail_json(msg=msg, **self.result)
 
+    def _init_session(self):
+        self.session = iRODSSession(
+            source=self.module.params["source"],
+            destination=self.module.params["destination"],
+            host=self.module.params["host"],
+            port=self.module.params["port"],
+            user=self.module.params["admin_user"],
+            password=self.module.params["admin_password"],
+            zone=self.module.params["zone"],
+            **self.ssl_settings)
+
 
 def main():
     """
     Entrypoint of the Ansible module
     """
-    try:
-        module = IRODSMoveModule()
-        module.run_module()
-    except Exception:
-        pass
+    module = IRODSMoveModule()
+    module.run_module()
 
 
 if __name__ == '__main__':

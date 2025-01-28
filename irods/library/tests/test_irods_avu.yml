@@ -9,7 +9,7 @@
           touch /tmp/object
           iinit <<< password
           iadmin mkuser tester rodsuser
-          iadmin moduser tester password testit
+          iadmin moduser tester password password
           iput -f -R ingestRes /tmp/object add-object
           iput -f -R ingestRes /tmp/object set-object
           imeta add -d set-object set-a1 set-v1 set-u
@@ -36,6 +36,7 @@
         entity_name: /testing/home/rods/add-object
         zone: testing
         password: password
+        state: add
 
     - name: Explicit add explicit unitless <a1,v1> to data object
       irods_avu:
@@ -49,7 +50,7 @@
         zone: testing
         username: rods
         password: password
-        state: present
+        state: add
       register: results
       failed_when: results['changed'] or results['failed']
 
@@ -62,6 +63,7 @@
         host: localhost
         zone: testing
         password: password
+        state: add
 
     - name: Add <a1,v2> to data object
       irods_avu:
@@ -70,6 +72,7 @@
         entity_name: /testing/home/rods/add-object
         zone: testing
         password: password
+        state: add
 
     - name: Add <a2,v1> to data object
       irods_avu:
@@ -78,6 +81,7 @@
         entity_name: /testing/home/rods/add-object
         zone: testing
         password: password
+        state: add
 
     - name: Set new <set-a3,set-v1> to data object
       irods_avu:
@@ -200,7 +204,8 @@
         entity_name: /testing/home/rods/add-object
         host: null
         zone: testing
-        password: rods
+        password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('host')
 
@@ -212,6 +217,7 @@
         host: buz
         zone: testing
         password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('Could not connect')
 
@@ -224,6 +230,7 @@
         zone: testing
         username: rods
         password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('port')
 
@@ -236,6 +243,7 @@
         zone: testing
         username: rods
         password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('Could not connect')
 
@@ -247,6 +255,7 @@
         zone: unknown
         username: rods
         password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('cannot be authenticated')
 
@@ -257,7 +266,8 @@
         entity_name: /testing/home/rods/add-object
         zone: testing
         username: unknown
-        password: testit
+        password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('cannot be authenticated')
 
@@ -268,7 +278,8 @@
         entity_name: /testing/home/rods/add-object
         zone: testing
         username: tester
-        password: testit
+        password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('rodsadmin')
 
@@ -279,6 +290,7 @@
         entity_name: /testing/home/rods/add-object
         zone: testing
         password: ods
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('cannot be authenticated')
 
@@ -289,6 +301,7 @@
         entity_name: /testing/home/rods/add-object
         zone: testing
         password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('attribute')
 
@@ -299,5 +312,6 @@
         entity_name: /testing/home/rods/add-object
         zone: testing
         password: password
+        state: add
       register: result
       failed_when: not result.failed or result.msg is not search('value')

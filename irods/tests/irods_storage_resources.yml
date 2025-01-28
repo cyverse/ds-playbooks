@@ -31,7 +31,9 @@
       register: pip_info
 
     - name: Verify python modules for irods_unixfilesystem_resource installed
-      when: "'python-irodsclient' not in pip_info.packages['pip3']"
+      when:
+        - "'python-irodsclient' not in pip_info.packages['pip3']"
+        - pip_info.packages['pip3']['python-irodsclient'].version is version_compare('2.0.0', '<')
       ansible.builtin.fail:
 
     - name: Test define storage resource  # noqa: run-once[task]

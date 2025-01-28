@@ -12,7 +12,19 @@
       tags: non_idempotent
 
   tasks:
-    - name: Start service
+    - name: Verify restart stopped service
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Verify restart started service
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test restarted_if_running state
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Start stopped service
       irods_ctl:
         state: started
 
@@ -39,12 +51,20 @@
           /var/lib/irods/irodsctl status | grep --quiet irodsServer
       changed_when: false
 
+    - name: Start started service
+      ansible.builtin.debug:
+        msg: TODO implement
+
 
 - name: Test irods_ctl stop
   hosts: irods_resource
   become: true
   become_user: irods
   tasks:
+    - name: Verify stop stopped service
+      ansible.builtin.debug:
+        msg: TODO implement
+
     - name: Stop service
       irods_ctl:
         state: stopped

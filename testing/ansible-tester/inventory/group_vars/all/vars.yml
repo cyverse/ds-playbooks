@@ -1,5 +1,5 @@
 ---
-bisque_url: http://localhost.localdomain/
+check_routes_timeout: 5
 
 connectivity_maintainer_keys:
   - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMNAkCWfBgthPFt3580sM8H0BXpCQVrEI8Y2Kpq9bO+N allowed 1
@@ -17,3 +17,5 @@ irods_icat_password: testpassword
 irods_zone_name: testing
 
 mail_domain_name: testing_default
+
+irods_restart: true

@@ -1,24 +1,37 @@
 ---
 - name: Test irods_resource_hierarchy module
-  hosts: localhost
-  gather_facts: false
+  hosts: irods_catalog
+  run_once: true
+  become: true
+  become_user: irods
   tasks:
-    - name: Test hierarchy without name
-      ansible.builtin.debug:
-        msg: TODO implement
+    - name: Test with default host and port
+      block:
+        - name: Test missing admin_password
+          irods_resource_hierarchy:
+            admin_username: rods
+            zone: testing
+            hierarchy:
+              name: ingestRes
+          register: resp
+          failed_when: resp is not failed
 
-    - name: Test hierarchy with name but no type
-      ansible.builtin.debug:
-        msg: TODO implement
+        - name: Test missing admin_username
+          ansible.builtin.debug:
+            msg: TODO implement
 
-    - name: Test hierarchy with name and type only
-      ansible.builtin.debug:
-        msg: TODO implement
+        - name: Test missing hierarchy
+          ansible.builtin.debug:
+            msg: TODO implement
 
-    - name: Test hierarchy with name, type, and children
-      ansible.builtin.debug:
-        msg: TODO implement
+        - name: Test missing zone
+          ansible.builtin.debug:
+            msg: TODO implement
 
-    - name: Test hieararchy with name, type, and context
+        - name: Test all required parameters provided
+          ansible.builtin.debug:
+            msg: TODO implement
+
+    - name: Test providing host and port
       ansible.builtin.debug:
         msg: TODO implement

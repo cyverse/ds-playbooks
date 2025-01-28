@@ -11,12 +11,6 @@ _avra_base_collection: "{{ avra_base_collection | default(None) }}"
 _avra_manager: "{{ avra_manager | default(_irods_clerver_user) }}"
 _avra_resource_hierarchy: "{{ avra_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}"
 
-_bisque_irods_host: "{{ bisque_irods_host | d(_irods_canonical_hostname) }}"
-_bisque_password: "{{ bisque_password | default('admin') }}"
-_bisque_projects: "{{ bisque_projects | default([]) }}"
-_bisque_url: "{{ bisque_url | default(None) }}"
-_bisque_user: "{{ bisque_user | default('admin') }}"
-
 _cereus_collections: "{{ cereus_collections | default([]) }}"
 _cereus_resource_hierarchy: >-
   {{ cereus_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}
@@ -61,6 +55,7 @@ _irods_resource_hierarchies: >-
     [ { "name": "demoResc" } ] }}
 _irods_restart: "{{ irods_restart | d(false) }}"
 _irods_rs_image: "{{ irods_rs_image | default('ds-irods-rs-onbuild') }}"
+_irods_s3_cred: "{{ irods_s3_cred | d([]) }}"
 _irods_server_port_range_end: "{{ irods_server_port_range_end | default(20199) }}"
 _irods_server_port_range_start: "{{ irods_server_port_range_start | default(20000) }}"
 _irods_server_control_plane_key: "{{ irods_server_control_plane_key | default(None) }}"

@@ -2,10 +2,35 @@
 # The stop command results are stored in `stop_all_result` for inspection by a
 # parent playbook.
 
+- name: Stop all | check if iRODS service account exists
+  hosts: irods
+  become: true
+  tasks:
+    - name: Check if user exists
+      ansible.builtin.user:
+        name: "{{ _irods_service_account_name }}"
+      check_mode: true
+      register: resp
+      changed_when: false
+
+    - name: Create irods account group
+      when: resp.state | d('') == 'present'
+      ansible.builtin.group_by:
+        key: has_irods_acnt
+      changed_when: false
+
+    - name: Indicate service wasn't running
+      when: resp.state | d('') != 'present'
+      ansible.builtin.set_fact:
+        stop_all_result:
+          changed: false
+
+
 - name: Stop all | stop iRODS catalog consumers
-  hosts: irods_resource:!irods_catalog
+  hosts: irods_resource:!irods_catalog:&has_irods_acnt
   become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
   tasks:
     - name: Stop
       irods_ctl:
@@ -14,9 +39,10 @@
 
 
 - name: Stop all | stop iRODS catalog providers
-  hosts: irods_catalog
+  hosts: irods_catalog:&has_irods_acnt
   become: "{{ _irods_become_svc_acnt }}"
   become_user: "{{ _irods_service_account_name }}"
+  gather_facts: false
   tasks:
     - name: Stop
       irods_ctl:

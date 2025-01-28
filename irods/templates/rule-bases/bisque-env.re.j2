@@ -1,9 +1,0 @@
-# VERSION 2
-#
-# bisque-env.re
-#
-# These are the environment-specific BisQue rules.
-
-bisque_IRODS_URL_BASE = 'irods://{{ _bisque_irods_host }}'
-
-bisque_PROJECTS = list({{ _bisque_projects | map('to_json') | join(', ') }})

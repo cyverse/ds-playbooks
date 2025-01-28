@@ -1,52 +1,86 @@
 ---
 - name: Test irods_move module
-  hosts: irods_catalog
-  become: true
-  become_user: irods
-  run_once: true
+  hosts: localhost
+  gather_facts: false
   vars:
-    password: password
-    src1: /testing/home/rods/src1
-    src2: /testing/home/rods/src2
-    bad_src: /testing/home/rods/missing_src
-    dest1: /testing/home/rods/dest1
-    dest2: /testing/home/rods/dest2
+    irods_host: "{{ groups['irods_catalog'][0] }}"
+    irods_port: 1247
+    irods_zone: testing
+    irods_user: rods
+    irods_password: password
+    test_src: /testing/home/rods/test_src
+    test_dest: /testing/home/rods/test_dst
+
   pre_tasks:
-    - name: Create test objects
+    - name: Initialize iRODS session
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          if ! [[ -e /root/.irods/.irodsA ]]; then
+            iinit <<< '{{ irods_password }}' > /dev/null
+            echo changed
+          fi
+      register: resp
+      changed_when: resp.stdout == 'changed'
+
+    - name: Create test collection
       ansible.builtin.shell:
         executable: /bin/bash
         cmd: |
           set -o errexit
-          imkdir '{{ src1 }}' '{{ src2 }}'
-      changed_when: true
+          res="$(iquest "select COLL_ID where COLL_NAME = '{{ test_src }}'")"
+          if [[ "$res" =~ ^CAT_NO_ROWS_FOUND: ]]; then
+            imkdir '{{ test_src }}' > /dev/null
+            echo changed
+          fi
+      register: resp
+      changed_when: resp.stdout == 'changed'
       tags: non_idempotent
 
   tasks:
+    - name: Neither source nor destination exist
+      failed_when: response is succeeded
+      irods_move:
+        source: /testing/home/rods/null
+        destination: /testing/home/rods/null
+        host: "{{ irods_host }}"
+        port: "{{ irods_port }}"
+        admin_user: "{{ irods_user }}"
+        admin_password: "{{ irods_password }}"
+        zone: "{{ irods_zone }}"
+      register: response
+
     - name: Move collection
       irods_move:
-        source: "{{ src1 }}"
-        destination: "{{ dest1 }}"
-        host: "{{ ansible_hostname }}"
-        port: 1247
-        admin_user: rods
-        admin_password: "{{ password }}"
-        zone: testing
+        source: "{{ test_src }}"
+        destination: "{{ test_dest }}"
+        host: "{{ irods_host }}"
+        port: "{{ irods_port }}"
+        admin_user: "{{ irods_user }}"
+        admin_password: "{{ irods_password }}"
+        zone: "{{ irods_zone }}"
+      register: response
 
     - name: Verify move
+      changed_when: false
       ansible.builtin.shell:
         executable: /bin/bash
-        cmd: '! ils {{ src1 }} && ils {{ dest1 }}'
-      changed_when: false
+        cmd: |
+          if ! ils {{ test_src }} && ils {{ test_dest }}; then
+            exit 0
+          else
+            exit 1
+          fi
 
     - name: Test if source and destination are identical
       irods_move:
-        source: "{{ src2 }}"
-        destination: "{{ src2 }}"
-        host: "{{ groups['irods_catalog'][0] }}"
-        port: 1247
-        admin_user: rods
-        admin_password: "{{ password }}"
-        zone: testing
+        source: "{{ test_dest }}"
+        destination: "{{ test_dest }}"
+        host: "{{ irods_host }}"
+        port: "{{ irods_port }}"
+        admin_user: "{{ irods_user }}"
+        admin_password: "{{ irods_password }}"
+        zone: "{{ irods_zone }}"
       register: response
       failed_when: response is changed or response is succeeded
 

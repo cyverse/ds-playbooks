@@ -3,11 +3,13 @@
 #
 # Copyright: © 2021, The Arizona Board of Regents
 # Standard BSD License | CyVerse (see https://cyverse.org/license)
-
-from ansible.module_utils.basic import AnsibleModule
-from typing import Mapping, Optional, Union
-from ssl import Purpose
+"""
+This defines the irods_avu ansible module.
+"""
 import ssl
+from ssl import Purpose
+from typing import Mapping, Optional, Union
+from ansible.module_utils.basic import AnsibleModule
 
 ANSIBLE_METADATA = {
     "metadata_version": "1.1",
@@ -63,15 +65,16 @@ options:
 
   state:
     description: >
-      This is the desired state to achieve. "set" means a single AVU is
-      attached with this attribute. "present" means that the AVU will be
-      attached if there isn't already an AVU with the same attribute and
-      value. Any others will be removed. "absent" means that an AVU with
-      the provided attribute and value will be removed.
+      This is the desired state to achieve. 
+        - "set" means a single AVU is attached with this attribute.
+        - "present" means that an AVU will be added as long as there isn't already one with the same attribute.
+        - "absent" means that an AVU with the provided attribute and value will be removed.
+        - "add" means that an AVU will be added if there isn't already one with the same attribute, value, and unit.
 
     default: present
     choices:
       - absent
+      - add
       - present
       - set
 
@@ -161,17 +164,19 @@ _IRODSCLIENT_PACK_ERR: Optional[Exception] = None
 
 try:
     from irods.data_object import iRODSDataObject
+    from irods.collection import iRODSCollection
     from irods.exception import CAT_INVALID_AUTHENTICATION, \
         CAT_INVALID_CLIENT_USER, CAT_INVALID_USER, CollectionDoesNotExist, \
         DataObjectDoesNotExist, NetworkException
     from irods.meta import iRODSMeta
     from irods.resource import iRODSResource
     from irods.session import iRODSSession
-except Exception as e:
-    _IRODSCLIENT_PACK_ERR = e
+
+except Exception as import_error:   #pylint: disable=broad-except
+    _IRODSCLIENT_PACK_ERR = import_error
 
 
-_IrodsEntity = Union[iRODSDataObject, iRODSResource]
+_IrodsEntity = Union[iRODSDataObject, iRODSResource, iRODSCollection]
 
 
 class _IrodsAvuError(Exception):
@@ -185,11 +190,20 @@ class _IrodsAvuError(Exception):
 class _IrodsAvuAuthenticationError(_IrodsAvuError):
 
     def __init__(self, zone: str, user: str):
-        msgTmpl = "user '{0}' cannot be authenticated in zone '{1}'"
+        msg_tmpl = "user '{0}' cannot be authenticated in zone '{1}'"
 
         super(_IrodsAvuAuthenticationError, self).__init__(
-            msgTmpl.format(user, zone))
+            msg_tmpl.format(user, zone))
 
+def _ensure_avu_present(
+    entity: _IrodsEntity, attribute: str, value: str, units: Optional[str]
+) -> bool:
+
+    if len(entity.metadata.get_all(attribute)) > 0:
+        return False
+
+    entity.metadata.add(attribute, value, units)
+    return True
 
 def _ensure_avu_added(
     entity: _IrodsEntity, attribute: str, value: str, units: Optional[str]
@@ -232,14 +246,25 @@ def _get_entity(
     if entity_type == "data object":
         try:
             return session.data_objects.get(entity_name)
-        except CollectionDoesNotExist:
+        except CollectionDoesNotExist as e:
             raise _IrodsAvuError(
-                "The data object '{0}' does not exist".format(entity_name))
-        except DataObjectDoesNotExist:
+                f"The collection '{entity_name}' does not exist") from e
+        except DataObjectDoesNotExist as e:
             raise _IrodsAvuError(
-                "The data object '{0}' does not exist".format(entity_name))
+                f"The data object '{entity_name}' does not exist") from e
     elif entity_type == "resource":
-        return session.resources.get(entity_name)
+        try:
+            return session.resources.get(entity_name)
+        except Exception as e:
+            raise _IrodsAvuError(
+                f"The resource '{entity_name}' does not exist") from e
+
+    elif entity_type == "collection":
+        try:
+            return session.collections.get(entity_name)
+        except CollectionDoesNotExist as e:
+            raise _IrodsAvuError(
+                f"The collection '{entity_name}' does not exist") from e
     else:
         raise _IrodsAvuError("entities of that type not supported")
 
@@ -275,24 +300,26 @@ def _irods_avu(
         ) as session:
             if not session.users.get(username, zone).type == "rodsadmin":
                 raise _IrodsAvuError(
-                    "'{0}' must be a rodsadmin user".format(username))
+                    f"'{username}' must be a rodsadmin user")
 
             entity = _get_entity(session, entity_type, entity_name)
 
             if state == "absent":
                 return _ensure_avu_removed(entity, attribute, value, units)
-            elif state == "present":
+            elif state == "add":
                 return _ensure_avu_added(entity, attribute, value, units)
             elif state == "set":
                 return _ensure_avu_set(entity, attribute, value, units)
+            elif state == "present":
+                return _ensure_avu_present(entity, attribute, value, units)
             else:
                 raise _IrodsAvuError("state not implemented")
-    except CAT_INVALID_AUTHENTICATION:
-        raise _IrodsAvuAuthenticationError(zone, username)
-    except CAT_INVALID_CLIENT_USER:
-        raise _IrodsAvuAuthenticationError(zone, username)
-    except CAT_INVALID_USER:
-        raise _IrodsAvuAuthenticationError(zone, username)
+    except CAT_INVALID_AUTHENTICATION as e:
+        raise _IrodsAvuAuthenticationError(zone, username) from e
+    except CAT_INVALID_CLIENT_USER as e:
+        raise _IrodsAvuAuthenticationError(zone, username) from e
+    except CAT_INVALID_USER as e:
+        raise _IrodsAvuAuthenticationError(zone, username) from e
 
 
 def _validate_params(
@@ -316,11 +343,11 @@ def _prep_module() -> AnsibleModule:
         entity_name=dict(type='str', required=True),
         entity_type=dict(
             type='str',
-            choices=["data object", "resource"],
+            choices=["data object", "resource", "collection"],
             default="data object"),
         state=dict(
             type='str',
-            choices=["absent", "present", "set"],
+            choices=["absent", "present", "add", "set"],
             default="present"),
         host=dict(type='str', default="localhost.localdomain"),
         port=dict(type='int', default=1247),
@@ -335,7 +362,7 @@ def main() -> None:
     """Entrypoint of module."""
     module: AnsibleModule = _prep_module()
     if _IRODSCLIENT_PACK_ERR:
-        err_msg = "python-irodsclient issue: %s" % (str(_IRODSCLIENT_PACK_ERR))
+        err_msg = f"python-irodsclient issue: {_IRODSCLIENT_PACK_ERR}"
         module.fail_json(msg=err_msg)
         return
 
@@ -349,7 +376,7 @@ def main() -> None:
         module.fail_json(msg=str(e))
     except NetworkException as e:
         module.fail_json(msg=str(e))
-    except Exception as e:
+    except Exception as e:    #pylint: disable=broad-except
         tmpl = "An unexpected exception of type {0} occurred. Arguments: {1!r}"
         module.fail_json(msg=tmpl.format(type(e).__name__, e.args))
 

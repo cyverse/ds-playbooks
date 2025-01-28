@@ -5,27 +5,31 @@
 
 - name: Configure iRODS for Cereus
   hosts: irods_catalog
-  become: "{{ _irods_become_svc_acnt }}"
-  become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - name: Create cereus resource
-      irods_resource_hierarchy:
-        hierarchy: "{{ _cereus_resource_hierarchy }}"
-
-    - name: Assign collection to Cereus resource
+    - name: Configure iRODS for Cereus
       delegate_to: localhost
-      become: false
-      no_log: true
-      irods_avu:
-        entity_type: resource
-        entity_name: "{{ _cereus_resource_hierarchy.name }}"
-        attribute: ipc::hosted-collection
-        value: "{{ item }}"
-        units: preferred
-        host: "{{ groups['irods_catalog'][0] }}"
-        port: "{{ _irods_zone_port }}"
-        zone: "{{ _irods_zone_name }}"
-        username: "{{ _irods_clerver_user }}"
-        password: "{{ _irods_clerver_password }}"
-      with_items: "{{ _cereus_collections }}"
+      block:
+        - name: Create Cereus resource
+          irods_resource_hierarchy:
+            hierarchy: "{{ _cereus_resource_hierarchy }}"
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            zone: "{{ _irods_zone_name }}"
+            admin_username: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+
+        - name: Assign collection to Cereus resource
+          irods_avu:
+            entity_type: resource
+            entity_name: "{{ _cereus_resource_hierarchy.name }}"
+            attribute: ipc::hosted-collection
+            value: "{{ item }}"
+            units: preferred
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            zone: "{{ _irods_zone_name }}"
+            username: "{{ _irods_clerver_user }}"
+            password: "{{ _irods_clerver_password }}"
+            state: set
+          with_items: "{{ _cereus_collections }}"

@@ -60,22 +60,9 @@
         name: parallel
         state: present
 
-    - name: Retrieve pika info
-      community.general.pip_package_info:
-        clients: pip3
-      register: pip_info
-
-    - name: Uninstall old version of pika
-      ansible.builtin.pip:
-        name: pika
-        state: absent
-      when:
-        - "'pika' in pip_info.packages['pip3']"
-        - pip_info.packages['pip3']['pika'][0]['version'] is version('1.2', '<')
-
     - name: Ensure pika installed
       ansible.builtin.pip:
-        name: pika
+        name: pika>=1.2
         state: present
 
     - name: Provision CentOS

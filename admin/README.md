@@ -9,16 +9,17 @@ This is a collection of playbooks for maintaining DS servers.
 
 ## Variables
 
-Variable                          | Required | Default | Choices | Comments
-----------------------------------|----------|---------|---------|---------
-`ansible_support_package_manager` |          | no      | auto    | The package manager to use
-`connectivity_maintainer_keys`    | no       | []      |         | A list of public ssh keys allowed or disallowed to connect as the `ansible_user` on all of the managed hosts, __see below__
-`connectivity_proxied_ssh`        | no       | false   |         | Whether or not the connection ansible uses to get to the managed node goes through a bastion host
-`mail_domain_name`                | yes      |         |         | The public FQDN for the environment being configured. This is used for configuring services that require a public domain to work, like mail.
-`network_mtu`                     | no       | 1500    |         | The MTU to set on the primary NIC
-`network_sysctl`                  | no       | []      |         | a list of sysctl network parameters to set for the server being configured, __see below__
-`network_txqueuelen`              | no       | 1000    |         | The transmission queue length to set on the primary NIC
-`reboot_rebootable`               | no       | true    |         | Whether or not the server being configured is rebootable
+Variable                                       | Required | Default | Choices | Comments
+-----------------------------------------------|----------|---------|---------|---------
+`ansible_support_package_manager`              |          | no      | auto    | The package manager to use
+`connectivity_maintainer_keys`                 | no       | []      |         | A list of public ssh keys allowed or disallowed to connect as the `ansible_user` on all of the managed hosts, __see below__
+`connectivity_proxied_ssh`                     | no       | false   |         | Whether or not the connection ansible uses to get to the managed node goes through a bastion host
+`mail_domain_name`                             | yes      |         |         | The public FQDN for the environment being configured. This is used for configuring services that require a public domain to work, like mail.
+`network_mtu`                                  | no       | 1500    |         | The MTU to set on the primary NIC
+`network_sysctl`                               | no       | []      |         | a list of sysctl network parameters to set for the server being configured, __see below__
+`network_txqueuelen`                           | no       | 1000    |         | The transmission queue length to set on the primary NIC
+`reboot_rebootable`                            | no       | true    |         | Whether or not the server being configured is rebootable
+`upgrade_system_packages_reboot_on_pkg_change` | no       | false   |         | Whether or not to automatically reboot the host if a system package was upgraded
 
 An element of `connectivity_maintainer_keys` is either a string or a mapping with the following fields.
 

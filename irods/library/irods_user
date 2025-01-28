@@ -1,7 +1,7 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-# © 2023 The Arizona Board of Regents on behalf of The University of Arizona.
+
+# © 2025 The Arizona Board of Regents on behalf of The University of Arizona.
 # For license information, see https://cyverse.org/license.
 
 """
@@ -16,8 +16,6 @@ import ssl
 from typing import Optional
 
 from ansible.module_utils.basic import AnsibleModule
-
-__metaclass__ = type  # pylint: disable=invalid-name
 
 DOCUMENTATION = r'''
 ---
@@ -54,6 +52,12 @@ options:
             - absent
         default: present
         type: str
+    force:
+        description: >
+            If the user has data in their home or trash folder, the user will not be removed unless
+            this is set to `true`.
+        type: bool
+        default: false
     info:
         description: >
             This is information to set about the user. It is only meaningful when O(state) is
@@ -145,6 +149,7 @@ EXAMPLES = r'''
     zone: tempZone
     name: test_user1
     state: absent
+    force: true
     admin_user: rods
     admin_password: 1234
 '''
@@ -160,6 +165,8 @@ user:
 _IRODSCLIENT_PACK_ERR: Optional[Exception] = None
 
 try:
+    from irods.access import iRODSAccess
+    from irods.collection import iRODSCollection
     from irods.exception import CAT_INVALID_USER, UserDoesNotExist
     from irods.session import iRODSSession
     from irods.user import iRODSUser
@@ -180,7 +187,12 @@ _ARG_SPEC = {
         "type": "str",
         "choices": ["present", "absent"],
         "default": "present",
-        "required": False
+        "required": False,
+    },
+    "force": {
+        "type": "bool",
+        "default": False,
+        "required": False,
     },
     "info": {
         "type": "str",
@@ -242,6 +254,7 @@ class Request:
             'admin_password': module_params['admin_password']}
         self._username = module_params['name']
         self._state = _State.from_param(module_params['state'])
+        self._force = module_params['force']
         self._user_info = module_params.get('info')
         self._password = module_params.get('password')
         self._user_type = module_params.get('type')
@@ -288,6 +301,11 @@ class Request:
     def state(self) -> _State:
         """The state of the user account after this module finishes."""
         return self._state
+
+    @property
+    def force(self) -> bool:
+        """Indicates that a user removal should delete user data."""
+        return self._force
 
     @property
     def password(self) -> Optional[str]:
@@ -358,6 +376,41 @@ class Irods(ABC):
             object for it, otherwise it returns None.
         """
 
+    @abstractmethod
+    def get_user_home(self, user: iRODSUser) -> iRODSCollection:
+        """
+        This retrieves a user's home collection.
+
+        Args:
+            user  the user of interest
+
+        Returns:
+            It returns an iRODS collection object.
+        """
+
+    @abstractmethod
+    def get_user_trash(self, user: iRODSUser) -> iRODSCollection:
+        """
+        This retrieves a user's trash collection.
+
+        Args:
+            user  the user of interest
+
+        Returns:
+            It returns an iRODS collection object.
+        """
+
+    @abstractmethod
+    def set_coll_perm(self, coll: iRODSCollection, perm: str) -> None:
+        """
+        This recursively gives the user owning the current iRODS session a given permission on a
+        given collection
+
+        Args:
+            coll  the collection receiving the permission
+            perm  the permission being assigned
+        """
+
 
 class _IrodsImpl(Irods):
 
@@ -408,15 +461,36 @@ class _IrodsImpl(Irods):
         except UserDoesNotExist:
             return None
 
+    def get_user_home(self, user):
+        return self._session.collections.get(f"/{self._session.zone}/home/{user.name}")
+
+    def get_user_trash(self, user):
+        return self._session.collections.get(f"/{self._session.zone}/trash/home/{user.name}")
+
+    def set_coll_perm(self, coll, perm):
+        return self._session.acls.set(
+            iRODSAccess(perm, coll.path, self._session.username), recursive=True, admin=True)
+
+
+def _empty_collection(irods, coll):
+    irods.set_coll_perm(coll, 'own')
+    for child in coll.subcollections:
+        child.remove(force=True)
+    for obj in coll.data_objects:
+        obj.unlink(force=True)
+
 
 def _create_user(irods, name, user_type, password, info):
     irods.create_user(username=name, user_type=user_type, password=password, info=info)
     return True
 
 
-def _ensure_user_removed(user):
+def _ensure_user_removed(irods, user, force):
     if not user:
         return False
+    if force:
+        _empty_collection(irods, irods.get_user_home(user))
+        _empty_collection(irods, irods.get_user_trash(user))
     user.remove()
     return True
 
@@ -448,7 +522,7 @@ def irods_user(request: Request, irods: Irods) -> bool:
     """
     user = irods.get_user(request.username)
     if request.state == _State.ABSENT:
-        return _ensure_user_removed(user)
+        return _ensure_user_removed(irods, user, request.force)
     if not user:
         return _create_user(
             irods=irods,

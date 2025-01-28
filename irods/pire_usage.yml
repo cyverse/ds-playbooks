@@ -5,45 +5,43 @@
 
 - name: Configure iRODS for PIRE
   hosts: irods_catalog
-  become: "{{ _irods_become_svc_acnt }}"
-  become_user: "{{ _irods_service_account_name }}"
   run_once: true
   tasks:
-    - name: Make PIRE resource hierarchy
-      irods_resource_hierarchy:
-        hierarchy: "{{ _pire_resource_hierarchy }}"
-
-    - name: Create group for PIRE members
+    - name: Configure iRODS for PIRE
       delegate_to: localhost
-      become: false
-      irods_group:
-        group: pire
-        state: present
-        host: "{{ groups['irods_catalog'][0] }}"
-        port: "{{ _irods_zone_port }}"
-        admin_user: "{{ _irods_clerver_user }}"
-        admin_password: "{{ _irods_clerver_password }}"
-        zone: "{{ _irods_zone_name }}"
-
-    - name: Create public collection
-      delegate_to: localhost
-      become: false
-      irods_collection:
-        path: /{{ _irods_zone_name }}/home/shared/eht
-        parents: true
-        state: present
-        host: "{{ groups['irods_catalog'][0] }}"
-        port: "{{ _irods_zone_port }}"
-        admin_user: "{{ _irods_clerver_user }}"
-        admin_password: "{{ _irods_clerver_password }}"
-        zone: "{{ _irods_zone_name }}"
-
-    - name: Init PIRE manager
-      when: _pire_manager != ''
-      delegate_to: localhost
-      become: false
       block:
+        - name: Make PIRE resource hierarchy
+          irods_resource_hierarchy:
+            hierarchy: "{{ _pire_resource_hierarchy }}"
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            zone: "{{ _irods_zone_name }}"
+            admin_username: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+
+        - name: Create group for PIRE members
+          irods_group:
+            group: pire
+            state: present
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            admin_user: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+            zone: "{{ _irods_zone_name }}"
+
+        - name: Create public collection
+          irods_collection:
+            path: /{{ _irods_zone_name }}/home/shared/eht
+            parents: true
+            state: present
+            host: "{{ groups['irods_catalog'][0] }}"
+            port: "{{ _irods_zone_port }}"
+            admin_user: "{{ _irods_clerver_user }}"
+            admin_password: "{{ _irods_clerver_password }}"
+            zone: "{{ _irods_zone_name }}"
+
         - name: Add PIRE manager to group
+          when: _pire_manager != ''
           irods_group_member:
             group: pire
             users:
@@ -56,6 +54,7 @@
             zone: "{{ _irods_zone_name }}"
 
         - name: Create project collection
+          when: _pire_manager != ''
           irods_collection:
             path: /{{ _irods_zone_name }}/home/shared/bhpire
             parents: true
@@ -66,6 +65,7 @@
             zone: "{{ _irods_zone_name }}"
 
         - name: Give PIRE manager own permission on project collection
+          when: _pire_manager != ''
           irods_permission:
             subject: "{{ _pire_manager }}"
             permission: own

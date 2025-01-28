@@ -41,6 +41,12 @@
         - server_config.json
         - service_account.config
 
+    - name: Verify rule unit tests didn't get deployed
+      ansible.builtin.stat:
+        path: /etc/irods/tests
+      register: resp
+      failed_when: resp.stat.exists
+
     - name: Verify irods_environment.json is in place
       ansible.builtin.stat:
         path: /var/lib/irods/.irods/irods_environment.json
@@ -273,3 +279,13 @@
                 == 'dstesting-consumer_configured_ubuntu-1.dstesting_default'
               - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
               - hosts_config.host_entries[0].addresses[2].address == 'alias-2'
+
+    - name: Verify old rule files removed
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: resp
+      failed_when: resp.stat.exists
+      with_items:
+        - ipc-logic.re
+        - sernec.re
+        - sernec-env.re

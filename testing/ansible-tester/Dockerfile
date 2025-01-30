@@ -20,7 +20,7 @@ RUN \
 	apt-get --yes upgrade
 	apt-get install --yes \
 		dmidecode gpg-agent lsb-release python-is-python3 python3 python3-pip openssh-client rpm wget
-	python3 -m pip install -r /requirements.txt
+	pip install --requirement=/requirements.txt
 	ansible-galaxy collection install --requirements-file=/requirements.yml
 
 ### Install inspection support

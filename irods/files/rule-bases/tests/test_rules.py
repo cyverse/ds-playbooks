@@ -4,7 +4,7 @@
 # © 2025 The Arizona Board of Regents on behalf of The University of Arizona.
 # For license information, see https://cyverse.org/license.
 
-"""This is a library to support testing iRODS rule logic for BisQue."""
+"""This is a library to support testing iRODS rule logic."""
 
 import enum
 from enum import Enum

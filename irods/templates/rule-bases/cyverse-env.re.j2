@@ -18,7 +18,7 @@ cyverse_DEFAULT_RESC = '{{ _irods_default_resource }}'
 
 # the email address of the iRODS grid
 cyverse_EMAIL_FROM_ADDR: string
-cyverse_EMAIL_FROM_ADDR = '{{ _irods_service_account_name }}@{{ _canonical_hostname }}'
+cyverse_EMAIL_FROM_ADDR = '{{ _irods_service_account_name }}@{{ inventory_hostname }}'
 
 # the email address where any notifications will be sent
 cyverse_EMAIL_REPORT_ADDR: string

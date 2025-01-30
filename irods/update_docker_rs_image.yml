@@ -30,7 +30,7 @@
             dest: "{{ _build_dir }}/var/lib/irods/msiExecCmd_bin"
             mode: u+rw
           with_fileglob:
-            - "files/cmd-common/*"
+            - "files/cmd-common/var/lib/irods/msiExecCmd_bin/*"
 
         - name: Generate iRODS config files
           ansible.builtin.import_role:

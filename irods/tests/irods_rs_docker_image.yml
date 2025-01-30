@@ -60,18 +60,18 @@
           - server_config.default_resource_directory == '/irods_vault/_IRODS_STORAGE_RESOURCE_'
           - server_config.default_resource_name == '_IRODS_DEFAULT_RESOURCE_'
           - server_config.negotiation_key == '__IRODS_NEGOTIATION_KEY__'
-          - >-
-            server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[0]
-            == 'cve'
-          - >-
-            server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1]
-            == 'cyverse_core'
+          - server_config.plugin_configuration.rule_engines | length == 2
+          - server_config.plugin_configuration.rule_engines[0].plugin_name == 'irods_rule_engine_plugin-irods_rule_language'
+          - server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set | length == 4
+          - server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[0] == 'cve'
+          - server_config.plugin_configuration.rule_engines[0].plugin_specific_configuration.re_rulebase_set[1] == 'cyverse_core'
 
     - name: Verify server_config.plugin_configuration.rule_engines rule language plugin_specific_configuration.re_rulebase_set
       ansible.builtin.debug:
         msg: TODO implement for {{ item }}
       with_items:
         - cyverse_housekeeping
+        - core
 
     - name: Verify server_config.plugin_configuration.rule_engines rule language plugin_specific_configuration
       ansible.builtin.debug:

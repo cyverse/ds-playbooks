@@ -69,16 +69,6 @@
         - imeta-exec
         - send-mail
 
-    - name: Verify defunct command scripts absent
-      ansible.builtin.stat:
-        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
-      register: resp
-      failed_when: resp.stat.exists
-      loop:
-        - amqptopicsend.py
-        - generateuuid
-        - send_mail.py
-
     - name: Verify database_config.json does not exist
       ansible.builtin.stat:
         path: /etc/irods/database_config.json
@@ -289,3 +279,14 @@
         - ipc-logic.re
         - sernec.re
         - sernec-env.re
+
+    - name: Verify defunct command scripts absent
+      ansible.builtin.stat:
+        path: /var/lib/irods/msiExecCmd_bin/{{ item }}
+      register: resp
+      failed_when: resp.stat.exists
+      loop:
+        - amqptopicsend.py
+        - generateuuid
+        - README.md
+        - send_mail.py

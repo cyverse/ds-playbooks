@@ -1,4 +1,0 @@
----
-postgresql_db_admin_user: postgres
-postgresql_db_dbms_port: 5432
-postgresql_db_name: postgres

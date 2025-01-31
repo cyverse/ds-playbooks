@@ -15,11 +15,7 @@
           - cyverse_env is search("cyverse_AMQP_EXCHANGE = 'irods'")
           - cyverse_env is search("cyverse_DEFAULT_REPL_RESC = 'demoResc'")
           - cyverse_env is search("cyverse_DEFAULT_RESC = 'demoResc'")
-          - >-
-            cyverse_env
-            is search(
-              "cyverse_EMAIL_FROM_ADDR = 'irods@dstesting-provider_configured-1.dstesting_default'"
-            )
+          - cyverse_env is search("cyverse_EMAIL_FROM_ADDR = 'irods@localhost'")
           - cyverse_env is search("cyverse_EMAIL_REPORT_ADDR = 'root@localhost'")
           - cyverse_env is search("cyverse_INIT_REPL_DELAY = 0")
           - cyverse_env is search("cyverse_MAX_NUM_RE_PROCS = 4")
@@ -44,7 +40,6 @@
   vars_files:
     - ../group_vars/all.yml
   vars:
-    canonical_hostname: local
     irods_amqp_exchange: exchange
     irods_init_repl_delay: 1
     irods_max_num_re_procs: 1
@@ -58,7 +53,7 @@
       ansible.builtin.assert:
         that:
           - cyverse_env is search("cyverse_AMQP_EXCHANGE = 'exchange'")
-          - cyverse_env is search("cyverse_EMAIL_FROM_ADDR = 'balloon@local'")
+          - cyverse_env is search("cyverse_EMAIL_FROM_ADDR = 'balloon@localhost'")
           - cyverse_env is search("cyverse_EMAIL_REPORT_ADDR = 'bob@reports'")
           - cyverse_env is search("cyverse_INIT_REPL_DELAY = 1")
           - cyverse_env is search("cyverse_MAX_NUM_RE_PROCS = 1")

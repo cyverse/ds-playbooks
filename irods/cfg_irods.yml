@@ -20,7 +20,7 @@
         dest: /var/lib/irods/msiExecCmd_bin
         mode: u=rx
       with_fileglob:
-        - "files/cmd-common/*"
+        - 'files/cmd-common/var/lib/irods/msiExecCmd_bin/*'
 
     - name: Place dynamic rule bases in /etc/irods
       ansible.builtin.template:
@@ -126,6 +126,7 @@
       loop:
         - amqptopicsend.py
         - generateuuid
+        - README.md
         - send_mail.py
 
   handlers:

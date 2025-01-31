@@ -498,6 +498,7 @@ _cyverse_logic_sendEntityRm(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 
 # Indicates whether or not an AVU is protected
 _cyverse_logic_isAVUProtected(*Attr) = cyverse_startsWith(*Attr, 'ipc')
+_cyverse_logic_isAVUProtectedUUID(*Attr) = *Attr == 'ipc_UUID'
 
 # Verifies that an attribute can be modified. If it can't it fails and sends an
 # error message to the caller.
@@ -505,24 +506,27 @@ _cyverse_logic_ensureAVUEditable(*EditorName, *EditorZone, *Attr, *Val, *Unit) {
 	if (_cyverse_logic_isAVUProtected(*Attr) && !_cyverse_logic_isAdm(*EditorName, *EditorZone)) {
 		cut;
 		failmsg(-830000, 'CYVERSE ERROR: attempt to alter protected AVU <*Attr, *Val, *Unit>');
+	} else if (_cyverse_logic_isAdm(*EditorName, *EditorZone) && _cyverse_logic_isAVUProtectedUUID(*Attr)) {
+		cut; 
+		failmsg(-830000, 'CYVERSE ERROR: attempt to alter ipc_UUID AVU <*Attr, *Val, *Unit>');
 	}
 }
 
-# If an AVU is not protected, it sets the AVU to the given item
-_cyverse_logic_setAVUIfUnprotected(*EntityType, *EntityName, *Attr, *Val, *Unit) {
-	if (!_cyverse_logic_isAVUProtected(*Attr)) {
+# If an AVU is allowed, it sets the AVU to the given item
+_cyverse_logic_setAVU(*EntityType, *EntityName, *Attr, *Val, *Unit) {
+	if (!_cyverse_logic_isAVUProtected(*Attr) || (_cyverse_logic_isAVUProtected(*Attr) && !_cyverse_logic_isAVUProtectedUUID(*Attr))) {
 		msiModAVUMetadata(*EntityType, *EntityName, 'set', *Attr, *Val, *Unit);
-	}
+	} 
 }
 
-# Copies the unprotected AVUs from a given collection to the given item.
-_cyverse_logic_cpUnprotectedCollAVUs(*CollPath, *TargetType, *TargetName) {
+# Copies the AVUs from a given collection to the given item.
+_cyverse_logic_cpCollAVUs(*CollPath, *TargetType, *TargetName) {
 	*path = str(*CollPath);
 	foreach (*avu in
 		SELECT META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE, META_COLL_ATTR_UNITS
 		WHERE COLL_NAME == *path
 	) {
-		_cyverse_logic_setAVUIfUnprotected(
+		_cyverse_logic_setAVU(
 			*TargetType,
 			*TargetName,
 			*avu.META_COLL_ATTR_NAME,
@@ -531,15 +535,15 @@ _cyverse_logic_cpUnprotectedCollAVUs(*CollPath, *TargetType, *TargetName) {
 	}
 }
 
-# Copies the unprotected AVUs from a given data object to the given item.
-_cyverse_logic_cpUnprotectedDataObjAVUs(*DataObjPath, *TargetType, *TargetName) {
+# Copies the AVUs from a given data object to the given item.
+_cyverse_logic_cpDataObjAVUs(*DataObjPath, *TargetType, *TargetName) {
 	msiSplitPath(str(*DataObjPath), *collPath, *dataObjName);
 
 	foreach (*avu in
 		SELECT META_DATA_ATTR_NAME, META_DATA_ATTR_VALUE, META_DATA_ATTR_UNITS
 		WHERE COLL_NAME == *collPath AND DATA_NAME == *dataObjName
 	) {
-		_cyverse_logic_setAVUIfUnprotected(
+		_cyverse_logic_setAVU(
 			*TargetType,
 			*TargetName,
 			*avu.META_DATA_ATTR_NAME,
@@ -548,13 +552,13 @@ _cyverse_logic_cpUnprotectedDataObjAVUs(*DataObjPath, *TargetType, *TargetName) 
 	}
 }
 
-# Copies the unprotected AVUs from a given resource to the given item.
-_cyverse_logic_cpUnprotectedRescAVUs(*RescName, *TargetType, *TargetName) {
+# Copies the AVUs from a given resource to the given item.
+_cyverse_logic_cpRescAVUs(*RescName, *TargetType, *TargetName) {
 	foreach (*avu in
 		SELECT META_RESC_ATTR_NAME, META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
 		WHERE RESC_NAME == *RescName
 	) {
-		_cyverse_logic_setAVUIfUnprotected(
+		_cyverse_logic_setAVU(
 			*TargetType,
 			*TargetName,
 			*avu.META_RESC_ATTR_NAME,
@@ -563,8 +567,8 @@ _cyverse_logic_cpUnprotectedRescAVUs(*RescName, *TargetType, *TargetName) {
 	}
 }
 
-# Copies the unprotected AVUs from a given user to the given item.
-_cyverse_logic_cpUnprotectedUserAVUs(*Username, *TargetType, *TargetName) {
+# Copies the AVUs from a given user to the given item.
+_cyverse_logic_cpUserAVUs(*Username, *TargetType, *TargetName) {
 	*nameParts = split(*Username, '#');
 	*query =
 		if size(*nameParts) == 2 then
@@ -577,7 +581,7 @@ _cyverse_logic_cpUnprotectedUserAVUs(*Username, *TargetType, *TargetName) {
 			SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
 			WHERE USER_NAME == *Username;
 	foreach (*avu in *query) {
-		_cyverse_logic_setAVUIfUnprotected(
+		_cyverse_logic_setAVU(
 			*TargetType,
 			*TargetName,
 			*avu.META_USER_ATTR_NAME,
@@ -763,21 +767,22 @@ cyverse_logic_acPreProcForModifyAVUMetadata(
 #  rodsZoneClient
 #
 cyverse_logic_acPreProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) {
-	if (!_cyverse_logic_isAdm($userNameClient, $rodsZoneClient)) {
-		if (cyverse_isColl(*SrcType)) {
-			_cyverse_logic_cpUnprotectedCollAVUs(*SrcName, *TgtType, *TgtName);
-		} else if (cyverse_isDataObj(*SrcType)) {
-			_cyverse_logic_cpUnprotectedDataObjAVUs(*SrcName, *TgtType, *TgtName);
-		} else if (cyverse_isResc(*SrcType)) {
-			_cyverse_logic_cpUnprotectedRescAVUs(*SrcName, *TgtType, *TgtName);
-		} else if (cyverse_isUser(*SrcType)) {
-			_cyverse_logic_cpUnprotectedUserAVUs(*SrcName, *TgtType, *TgtName);
-		}
+	
+	if (cyverse_isColl(*SrcType)) {
+		_cyverse_logic_cpCollAVUs(*SrcName, *TgtType, *TgtName);
+	} else if (cyverse_isDataObj(*SrcType)) {
+		_cyverse_logic_cpDataObjAVUs(*SrcName, *TgtType, *TgtName);
+	} else if (cyverse_isResc(*SrcType)) {
+		_cyverse_logic_cpRescAVUs(*SrcName, *TgtType, *TgtName);
+	} else if (cyverse_isUser(*SrcType)) {
+		_cyverse_logic_cpUserAVUs(*SrcName, *TgtType, *TgtName);
+	}
 
+	if (!_cyverse_logic_isAdm($userNameClient, $rodsZoneClient)) {
 		# fail to prevent iRODS from also copying the protected metadata
 		cut;
 		failmsg(0, 'CYVERSE SUCCESS: Successfully copied the unprotected metadata.');
-	}
+	} 
 }
 
 # This rule sends one of the AVU metadata set messages, depending on which

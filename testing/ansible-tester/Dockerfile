@@ -12,6 +12,7 @@ COPY apt-preferences-irods /etc/apt/preferences.d/irods
 RUN \
 	--mount=source=requirements.txt,target=/requirements.txt \
 	--mount=source=requirements.yml,target=/requirements.yml \
+	--mount=source=requirements-testing.txt,target=/requirements-testing.txt \
 <<EOF
 	set -o errexit
 
@@ -21,6 +22,7 @@ RUN \
 	apt-get install --yes \
 		dmidecode gpg-agent lsb-release python-is-python3 python3 python3-pip openssh-client rpm wget
 	pip install --requirement=/requirements.txt
+	pip install --requirement=/requirements-testing.txt
 	ansible-galaxy collection install --requirements-file=/requirements.yml
 
 ### Install inspection support

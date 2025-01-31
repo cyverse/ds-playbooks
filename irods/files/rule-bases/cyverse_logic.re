@@ -514,11 +514,9 @@ _cyverse_logic_ensureAVUEditable(*EditorName, *EditorZone, *Attr, *Val, *Unit) {
 
 # If an AVU is allowed, it sets the AVU to the given item
 _cyverse_logic_setAVU(*EntityType, *EntityName, *Attr, *Val, *Unit) {
-	if (!_cyverse_logic_isAVUProtected(*Attr)) {
+	if (!_cyverse_logic_isAVUProtected(*Attr) || (_cyverse_logic_isAVUProtected(*Attr) && !_cyverse_logic_isAVUProtectedUUID(*Attr))) {
 		msiModAVUMetadata(*EntityType, *EntityName, 'set', *Attr, *Val, *Unit);
-	} else if (_cyverse_logic_isAVUProtected(*Attr) && !_cyverse_logic_isAVUProtectedUUID(*Attr)) {
-		msiModAVUMetadata(*EntityType, *EntityName, 'set', *Attr, *Val, *Unit);
-	}
+	} 
 }
 
 # Copies the unprotected AVUs from a given collection to the given item.

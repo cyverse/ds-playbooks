@@ -506,9 +506,6 @@ _cyverse_logic_ensureAVUEditable(*EditorName, *EditorZone, *Attr, *Val, *Unit) {
 	if (_cyverse_logic_isAVUProtected(*Attr) && !_cyverse_logic_isAdm(*EditorName, *EditorZone)) {
 		cut;
 		failmsg(-830000, 'CYVERSE ERROR: attempt to alter protected AVU <*Attr, *Val, *Unit>');
-	} else if (_cyverse_logic_isAdm(*EditorName, *EditorZone) && _cyverse_logic_isAVUProtectedUUID(*Attr)) {
-		cut; 
-		failmsg(-830000, 'CYVERSE ERROR: attempt to alter ipc_UUID AVU <*Attr, *Val, *Unit>');
 	}
 }
 
@@ -516,7 +513,9 @@ _cyverse_logic_ensureAVUEditable(*EditorName, *EditorZone, *Attr, *Val, *Unit) {
 _cyverse_logic_setAVU(*EntityType, *EntityName, *Attr, *Val, *Unit) {
 	if (!_cyverse_logic_isAVUProtected(*Attr) || (_cyverse_logic_isAVUProtected(*Attr) && !_cyverse_logic_isAVUProtectedUUID(*Attr))) {
 		msiModAVUMetadata(*EntityType, *EntityName, 'set', *Attr, *Val, *Unit);
-	} 
+	} else {
+		writeLine('stdout' ,'CYVERSE NOTIFICATION: Cannot copy AVU <*Attr, *Val, *Unit>, either not having admin permissions or it is a protected UUID');
+	}
 }
 
 # Copies the AVUs from a given collection to the given item.

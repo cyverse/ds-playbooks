@@ -498,7 +498,7 @@ _cyverse_logic_sendEntityRm(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 
 # Indicates whether or not an AVU is protected
 _cyverse_logic_isAVUProtected(*Attr) = cyverse_startsWith(*Attr, 'ipc')
-_cyverse_logic_isAVUProtectedUUID(*Attr) = *Attr == 'ipc_UUID'
+_cyverse_logic_isAVUProtectedUUID(*Attr) = *Attr == _cyverse_logic_UUID_ATTR
 
 # Verifies that an attribute can be modified. If it can't it fails and sends an
 # error message to the caller.

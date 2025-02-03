@@ -8,6 +8,7 @@
 
 import enum
 from enum import Enum
+from os import environ
 import pprint
 from typing import List, Optional, Tuple
 from unittest import TestCase
@@ -17,38 +18,6 @@ from paramiko import AutoAddPolicy, SSHClient
 from irods.message import RErrorStack
 from irods.rule import Rule
 from irods.session import iRODSSession
-
-
-#
-# IRODS
-#
-
-_irods_session: iRODSSession
-
-
-def open_irods(host, port, zone, user, password):
-    """
-    This establishes a global, shared iRODS connection.
-
-    Args:
-        host  the catalog provider to connect to
-        port  the port to connect on
-        zone  the iRODS zone to use
-        user  the admin user to connect as
-        password  the password to authenticate the session
-    """
-    global _irods_session  # pylint: disable=[global-statement]
-    _irods_session = iRODSSession(
-        host=host,
-        port=int(port),
-        zone=zone,
-        user=user,
-        password=password)
-
-
-def close_irods():
-    """This closes the global, shared iRODS connection."""
-    _irods_session.cleanup()  # noqa: F821
 
 
 #
@@ -247,6 +216,24 @@ class IrodsTestCase(TestCase):
         """
         return (IrodsVal.path(path), IrodsVal.string(path))
 
+    def setUp(self):
+        super().setUp()
+        self._irods = iRODSSession(
+            host=environ.get("IRODS_HOST"),
+            port=int(environ.get("IRODS_PORT")),
+            zone=environ.get("IRODS_ZONE_NAME"),
+            user=environ.get("IRODS_USER_NAME"),
+            password=environ.get("IRODS_PASSWORD"))
+
+    def tearDown(self):
+        self._irods.cleanup()
+        return super().tearDown()
+
+    @property
+    def irods(self) -> iRODSSession:
+        """provides access to an open iRODS session"""
+        return self._irods
+
     def fn_test(self, fn: str, args: List[IrodsVal], exp_res: IrodsVal) -> None:
         """
         Tests an iRODS rule function.
@@ -264,7 +251,7 @@ class IrodsTestCase(TestCase):
 
     def _mk_rule(self, logic):
         return Rule(
-            session=_irods_session,  # noqa: F821
+            session=self._irods,
             instance_name='irods_rule_engine_plugin-irods_rule_language-instance',
             body=logic,
             output='ruleExecOut')

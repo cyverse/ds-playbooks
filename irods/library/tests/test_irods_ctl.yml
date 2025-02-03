@@ -12,18 +12,6 @@
       tags: non_idempotent
 
   tasks:
-    - name: Verify restart stopped service
-      ansible.builtin.debug:
-        msg: TODO implement
-
-    - name: Verify restart started service
-      ansible.builtin.debug:
-        msg: TODO implement
-
-    - name: Test restarted_if_running state
-      ansible.builtin.debug:
-        msg: TODO implement
-
     - name: Start stopped service
       irods_ctl:
         state: started
@@ -55,6 +43,21 @@
       ansible.builtin.debug:
         msg: TODO implement
 
+    - name: Test restarted_if_running state when iRODS running
+      irods_ctl:
+        state: restarted_if_running
+      register: resp
+      failed_when: resp is not changed
+      tags: non_idempotent
+
+    - name: Verify service is started
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -o pipefail
+          /var/lib/irods/irodsctl status | grep --quiet irodsServer
+      changed_when: false
+
 
 - name: Test irods_ctl stop
   hosts: irods_resource
@@ -76,3 +79,15 @@
           set -o pipefail
           /var/lib/irods/irodsctl status | grep --quiet 'No iRODS servers running'
       changed_when: false
+
+    - name: Verify restart stopped service
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Verify restart started service
+      ansible.builtin.debug:
+        msg: TODO implement
+
+    - name: Test restarted_if_running state when iRODS not running
+      ansible.builtin.debug:
+        msg: TODO implement

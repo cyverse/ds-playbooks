@@ -511,7 +511,7 @@ _cyverse_logic_ensureAVUEditable(*EditorName, *EditorZone, *Attr, *Val, *Unit) {
 
 # If an AVU is allowed, it sets the AVU to the given item
 _cyverse_logic_setAVU(*EntityType, *EntityName, *Attr, *Val, *Unit) {
-	if (!_cyverse_logic_isAVUProtected(*Attr) || (_cyverse_logic_isAVUProtected(*Attr) && !_cyverse_logic_isAVUProtectedUUID(*Attr))) {
+	if (!_cyverse_logic_isAVUProtected(*Attr) || (_cyverse_logic_isAdm($userNameClient, $rodsZoneClient) && !_cyverse_logic_isAVUProtectedUUID(*Attr))) {
 		msiModAVUMetadata(*EntityType, *EntityName, 'set', *Attr, *Val, *Unit);
 	} else {
 		writeLine('stdout' ,'CYVERSE NOTIFICATION: Cannot copy AVU <*Attr, *Val, *Unit>, either not having admin permissions or it is a protected UUID');
@@ -777,11 +777,9 @@ cyverse_logic_acPreProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, 
 		_cyverse_logic_cpUserAVUs(*SrcName, *TgtType, *TgtName);
 	}
 
-	if (!_cyverse_logic_isAdm($userNameClient, $rodsZoneClient)) {
-		# fail to prevent iRODS from also copying the protected metadata
-		cut;
-		failmsg(0, 'CYVERSE SUCCESS: Successfully copied the unprotected metadata.');
-	} 
+	# fail to prevent iRODS from also copying the protected metadata
+	cut;
+	failmsg(0, 'CYVERSE SUCCESS: Successfully copied the allowed metadata.');
 }
 
 # This rule sends one of the AVU metadata set messages, depending on which

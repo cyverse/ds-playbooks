@@ -1,10 +1,16 @@
-# Environment specific PIRE rule customizations belong in this file.
+# Environment specific PIRE and EHT rule customizations belong in this file.
+#
+# © 2025 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
 
+# The base collection for the PIRE project's private data
 pire_PROJECT_BASE_COLL : path
 pire_PROJECT_BASE_COLL = '/' ++ cyverse_ZONE ++ '/home/shared/bhpire'
 
+# The base collection for the PIRE and EHT projects' public data
 pire_PUBLIC_BASE_COLL : path
 pire_PUBLIC_BASE_COLL = '/' ++ cyverse_ZONE ++ '/home/shared/eht'
 
+# The resource storing PIRE and EHT data.
 pire_RESC : string
 pire_RESC = '{{ _pire_resource_hierarchy.name }}'

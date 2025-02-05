@@ -499,6 +499,9 @@ _cyverse_logic_sendEntityRm(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
 # Indicates whether or not an AVU is protected
 _cyverse_logic_isAVUProtected(*Attr) = cyverse_startsWith(*Attr, 'ipc')
 
+# Indicates whether the protected AVU is ipc_UUID, which has some additional safeguards
+_cyverse_logic_isAVUProtectedUUID(*Attr) = *Attr == _cyverse_logic_UUID_ATTR
+
 # Verifies that an attribute can be modified. If it can't it fails and sends an
 # error message to the caller.
 _cyverse_logic_ensureAVUEditable(*EditorName, *EditorZone, *Attr, *Val, *Unit) {
@@ -508,63 +511,71 @@ _cyverse_logic_ensureAVUEditable(*EditorName, *EditorZone, *Attr, *Val, *Unit) {
 	}
 }
 
-# If an AVU is not protected, it sets the AVU to the given item
-_cyverse_logic_setAVUIfUnprotected(*EntityType, *EntityName, *Attr, *Val, *Unit) {
-	if (!_cyverse_logic_isAVUProtected(*Attr)) {
+# If an AVU is allowed, it sets the AVU to the given item
+_cyverse_logic_setAVUToCopy(*EntityType, *EntityName, *Attr, *Val, *Unit, *UserName, *RodsZone) {
+	if (!_cyverse_logic_isAVUProtected(*Attr) || (_cyverse_logic_isAdm(*UserName, *RodsZone) && !_cyverse_logic_isAVUProtectedUUID(*Attr))) {
 		msiModAVUMetadata(*EntityType, *EntityName, 'set', *Attr, *Val, *Unit);
+	} else {
+		writeLine('stdout' ,'CYVERSE NOTIFICATION: Cannot copy AVU <*Attr, *Val, *Unit>, either not having admin permissions or it is a protected UUID');
 	}
 }
 
-# Copies the unprotected AVUs from a given collection to the given item.
-_cyverse_logic_cpUnprotectedCollAVUs(*CollPath, *TargetType, *TargetName) {
+# Copies the AVUs from a given collection to the given item.
+_cyverse_logic_cpCollAVUs(*CollPath, *TargetType, *TargetName, *UserName, *RodsZone) {
 	*path = str(*CollPath);
 	foreach (*avu in
 		SELECT META_COLL_ATTR_NAME, META_COLL_ATTR_VALUE, META_COLL_ATTR_UNITS
 		WHERE COLL_NAME == *path
 	) {
-		_cyverse_logic_setAVUIfUnprotected(
+		_cyverse_logic_setAVUToCopy(
 			*TargetType,
 			*TargetName,
 			*avu.META_COLL_ATTR_NAME,
 			*avu.META_COLL_ATTR_VALUE,
-			*avu.META_COLL_ATTR_UNITS );
+			*avu.META_COLL_ATTR_UNITS,
+			*UserName,
+			*RodsZone );
 	}
 }
 
-# Copies the unprotected AVUs from a given data object to the given item.
-_cyverse_logic_cpUnprotectedDataObjAVUs(*DataObjPath, *TargetType, *TargetName) {
+# Copies the AVUs from a given data object to the given item.
+_cyverse_logic_cpDataObjAVUs(*DataObjPath, *TargetType, *TargetName, *UserName, *RodsZone) {
 	msiSplitPath(str(*DataObjPath), *collPath, *dataObjName);
 
 	foreach (*avu in
 		SELECT META_DATA_ATTR_NAME, META_DATA_ATTR_VALUE, META_DATA_ATTR_UNITS
 		WHERE COLL_NAME == *collPath AND DATA_NAME == *dataObjName
 	) {
-		_cyverse_logic_setAVUIfUnprotected(
+		_cyverse_logic_setAVUToCopy(
 			*TargetType,
 			*TargetName,
 			*avu.META_DATA_ATTR_NAME,
 			*avu.META_DATA_ATTR_VALUE,
-			*avu.META_DATA_ATTR_UNITS );
+			*avu.META_DATA_ATTR_UNITS,
+			*UserName,
+			*RodsZone );
 	}
 }
 
-# Copies the unprotected AVUs from a given resource to the given item.
-_cyverse_logic_cpUnprotectedRescAVUs(*RescName, *TargetType, *TargetName) {
+# Copies the AVUs from a given resource to the given item.
+_cyverse_logic_cpRescAVUs(*RescName, *TargetType, *TargetName, *UserName, *RodsZone) {
 	foreach (*avu in
 		SELECT META_RESC_ATTR_NAME, META_RESC_ATTR_VALUE, META_RESC_ATTR_UNITS
 		WHERE RESC_NAME == *RescName
 	) {
-		_cyverse_logic_setAVUIfUnprotected(
+		_cyverse_logic_setAVUToCopy(
 			*TargetType,
 			*TargetName,
 			*avu.META_RESC_ATTR_NAME,
 			*avu.META_RESC_ATTR_VALUE,
-			*avu.META_RESC_ATTR_UNITS );
+			*avu.META_RESC_ATTR_UNITS,
+			*UserName,
+			*RodsZone );
 	}
 }
 
-# Copies the unprotected AVUs from a given user to the given item.
-_cyverse_logic_cpUnprotectedUserAVUs(*Username, *TargetType, *TargetName) {
+# Copies the AVUs from a given user to the given item.
+_cyverse_logic_cpUserAVUs(*Username, *TargetType, *TargetName, *UserName, *RodsZone) {
 	*nameParts = split(*Username, '#');
 	*query =
 		if size(*nameParts) == 2 then
@@ -577,12 +588,14 @@ _cyverse_logic_cpUnprotectedUserAVUs(*Username, *TargetType, *TargetName) {
 			SELECT META_USER_ATTR_NAME, META_USER_ATTR_VALUE, META_USER_ATTR_UNITS
 			WHERE USER_NAME == *Username;
 	foreach (*avu in *query) {
-		_cyverse_logic_setAVUIfUnprotected(
+		_cyverse_logic_setAVUToCopy(
 			*TargetType,
 			*TargetName,
 			*avu.META_USER_ATTR_NAME,
 			*avu.META_USER_ATTR_VALUE,
-			*avu.META_USER_ATTR_UNITS );
+			*avu.META_USER_ATTR_UNITS,
+			*UserName,
+			*RodsZone );
 	}
 }
 
@@ -763,21 +776,20 @@ cyverse_logic_acPreProcForModifyAVUMetadata(
 #  rodsZoneClient
 #
 cyverse_logic_acPreProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) {
-	if (!_cyverse_logic_isAdm($userNameClient, $rodsZoneClient)) {
-		if (cyverse_isColl(*SrcType)) {
-			_cyverse_logic_cpUnprotectedCollAVUs(*SrcName, *TgtType, *TgtName);
-		} else if (cyverse_isDataObj(*SrcType)) {
-			_cyverse_logic_cpUnprotectedDataObjAVUs(*SrcName, *TgtType, *TgtName);
-		} else if (cyverse_isResc(*SrcType)) {
-			_cyverse_logic_cpUnprotectedRescAVUs(*SrcName, *TgtType, *TgtName);
-		} else if (cyverse_isUser(*SrcType)) {
-			_cyverse_logic_cpUnprotectedUserAVUs(*SrcName, *TgtType, *TgtName);
-		}
-
-		# fail to prevent iRODS from also copying the protected metadata
-		cut;
-		failmsg(0, 'CYVERSE SUCCESS: Successfully copied the unprotected metadata.');
+	
+	if (cyverse_isColl(*SrcType)) {
+		_cyverse_logic_cpCollAVUs(*SrcName, *TgtType, *TgtName, $userNameClient, $rodsZoneClient);
+	} else if (cyverse_isDataObj(*SrcType)) {
+		_cyverse_logic_cpDataObjAVUs(*SrcName, *TgtType, *TgtName, $userNameClient, $rodsZoneClient);
+	} else if (cyverse_isResc(*SrcType)) {
+		_cyverse_logic_cpRescAVUs(*SrcName, *TgtType, *TgtName, $userNameClient, $rodsZoneClient);
+	} else if (cyverse_isUser(*SrcType)) {
+		_cyverse_logic_cpUserAVUs(*SrcName, *TgtType, *TgtName, $userNameClient, $rodsZoneClient);
 	}
+
+	# fail to prevent iRODS from also copying the protected metadata
+	cut;
+	failmsg(0, 'CYVERSE SUCCESS: Successfully copied the allowed metadata.');
 }
 
 # This rule sends one of the AVU metadata set messages, depending on which

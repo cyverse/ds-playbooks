@@ -776,7 +776,6 @@ cyverse_logic_acPreProcForModifyAVUMetadata(
 #  rodsZoneClient
 #
 cyverse_logic_acPreProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) {
-	
 	if (cyverse_isColl(*SrcType)) {
 		_cyverse_logic_cpCollAVUs(*SrcName, *TgtType, *TgtName, $userNameClient, $rodsZoneClient);
 	} else if (cyverse_isDataObj(*SrcType)) {

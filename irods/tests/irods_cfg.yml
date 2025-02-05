@@ -270,6 +270,9 @@
               - hosts_config.host_entries[0].addresses[1].address == 'alias-1'
               - hosts_config.host_entries[0].addresses[2].address == 'alias-2'
 
+    - name: Test iRODS restart
+      ansible.builtin.include_tasks: tasks/restart_irods.yml
+
     - name: Verify old rule files removed
       ansible.builtin.stat:
         path: "{{ item }}"

@@ -28,7 +28,7 @@
 #                             configuration files or 'off'.
 # IRODS_SYSTEM_GROUP          The system group for the iRODS process
 # IRODS_SYSTEM_USER           The system user for the iRODS process
-# IRODS_ZONE_KEY              The shared secred used for authentication during
+# IRODS_ZONE_KEY              The shared secret used for authentication during
 #                             server-to-server communication
 # IRODS_ZONE_NAME             The name of the iRODS zone.
 # IRODS_ZONE_PASSWORD         The password used to authenticate the

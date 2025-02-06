@@ -60,7 +60,10 @@ RUN \
 	pip3 install pika==1.1
 
 ### Configure ODBC and iRODS
-/tmp/config-irods
+### XXX - psutil required by iRODS 4.2.8 setup iRODS script
+	yum --assumeyes install python3-psutil
+### XXX - ^^^
+	/tmp/config-irods
 
 ### Create service script
 	/tmp/prep-svc-script

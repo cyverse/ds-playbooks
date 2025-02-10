@@ -1,7 +1,0 @@
----
-dbms_irods_password: "{{ irods_icat_password }}"
-
-dbms_max_connections: 10
-
-dbms_replication_password: password
-dbms_replication_user: replicator

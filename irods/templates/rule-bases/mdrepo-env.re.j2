@@ -1,8 +1,0 @@
-# Environment specific MD Repo rule customizations belong in this file.
-#
-# © 2025 The Arizona Board of Regents on behalf of The University of Arizona.
-# For license information, see https://cyverse.org/license.
-
-# Data sets that are to be added to MD Repo are uploaded to this collection.
-mdrepo_LANDING_COLLS : list string
-mdrepo_LANDING_COLLS = list({{ _mdrepo_landing_colls | map('to_json') | join(', ') }})

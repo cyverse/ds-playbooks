@@ -1,4 +1,0 @@
----
-ansible_python_interpreter: /usr/bin/python3
-
-dbms_mem_num_huge_pages: 0

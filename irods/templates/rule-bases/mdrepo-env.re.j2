@@ -1,4 +1,0 @@
-# Environment specific MD Repo rule customizations belong in this file.
-
-mdrepo_LANDING_COLLS : list string
-mdrepo_LANDING_COLLS = list({{ _mdrepo_landing_colls | map('to_json') | join(', ') }})

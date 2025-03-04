@@ -776,7 +776,6 @@ cyverse_logic_acPreProcForModifyAVUMetadata(
 #  rodsZoneClient
 #
 cyverse_logic_acPreProcForModifyAVUMetadata(*Opt, *SrcType, *TgtType, *SrcName, *TgtName) {
-	
 	if (cyverse_isColl(*SrcType)) {
 		_cyverse_logic_cpCollAVUs(*SrcName, *TgtType, *TgtName, $userNameClient, $rodsZoneClient);
 	} else if (cyverse_isDataObj(*SrcType)) {
@@ -1343,6 +1342,11 @@ cyverse_logic_dataObjMod(*Username, *Zone, *DataObjInfo) {
 	_cyverse_logic_registerAction(*id, *me);
 
 	if (_cyverse_logic_isCurrentAction(*id, *me)) {
+		*err = errormsg(
+			_cyverse_logic_schedChksumRepl(*DataObjInfo.logical_path, *DataObjInfo.replica_number),
+			*msg );
+		if (*err < 0) { writeLine('serverLog', *msg); }
+
 		*uuid = '';
 		_cyverse_logic_ensureUUID(
 			cyverse_DATA_OBJ,

@@ -17,7 +17,6 @@
 
 set -o errexit -o nounset -o pipefail
 
-
 main() {
 	if (( $# < 3 )); then
 		printf 'The the data object id, replica number, and size are required.' >&2
@@ -28,8 +27,10 @@ main() {
 	local replNum="$2"
 	local size="$3"
 
-	iadmin modrepl data_id "$id" repl_num "$replNum" DATA_SIZE "$size"
-}
+	# Ensure size is an integer
+	size="${size%.*}"
 
+	iadmin modrepl data_id "$id" replica_number "$replNum" DATA_SIZE "$size"
+}
 
 main "$@"

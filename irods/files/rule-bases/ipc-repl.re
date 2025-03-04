@@ -245,7 +245,7 @@ _repl_syncReplicas(*Object) {
     WHERE DATA_ID = '*Object' AND DATA_REPL_STATUS = '1'
   ) {
     *dataPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
-    *dataSize = int(*rec.DATA_SIZE);
+    *dataSize = double(*rec.DATA_SIZE);
     *replNum = int(*rec.DATA_REPL_NUM);
     break;
   }
@@ -264,7 +264,7 @@ _repl_syncReplicas(*Object) {
       if (*dataSize > 1048576) {  # 1 MiB
         *idArg = execCmdArg(*Object);
         *replNumArg = execCmdArg(str(*replNum));
-        *sizeArg = execCmdArg(str(*dataSize));
+        *sizeArg = execCmdArg(trimr(str(*dataSize), "."));
         *argv = "*idArg *replNumArg *sizeArg";
         *err = errormsg(msiExecCmd('correct-size', *argv, "", "", "", *out), *msg);
 

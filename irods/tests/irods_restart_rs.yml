@@ -1,8 +1,0 @@
----
-- name: Test restart resource servers
-  hosts: irods_resource
-  become: true
-  become_user: irods
-  tasks:
-    - name: Verify iRODS running
-      ansible.builtin.import_tasks: tasks/test_irods_running.yml

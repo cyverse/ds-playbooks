@@ -15,8 +15,8 @@
       become: false
       run_once: true
       irods_user:
-        name: "{{ _sftpgo_irods_proxy_username }}"
-        password: "{{ _sftpgo_irods_proxy_password }}"
+        name: "{{ _sftp_irods_proxy_username }}"
+        password: "{{ _sftp_irods_proxy_password }}"
         state: present
         type: rodsadmin
         host: "{{ groups['irods_catalog'][0] }}"
@@ -131,14 +131,14 @@
 
     - name: Create a vault dir
       ansible.builtin.file:
-        path: "{{ _sftpgo_vault_dir }}"
+        path: "{{ _sftp_vault_dir }}"
         state: directory
         owner: sftpgo
         mode: '0700'
 
     - name: Create a vault data, backup dir
       ansible.builtin.file:
-        path: "{{ _sftpgo_vault_dir }}/{{ item }}"
+        path: "{{ _sftp_vault_dir }}/{{ item }}"
         state: directory
         owner: sftpgo
         mode: '0700'

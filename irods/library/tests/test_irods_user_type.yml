@@ -1,7 +1,0 @@
----
-- name: test irods_user_type module
-  hosts: localhost
-  gather_facts: false
-  tasks:
-    - debug:
-        msg: TODO implement

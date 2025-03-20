@@ -328,7 +328,7 @@
       vars:
         irods_cfg_environment_file: etc/httpd/irods/irods_environment.json
         irods_cfg_chown: false
-        irods_cfg_host: "{{ _canonical_hostname }}"
+        irods_cfg_host: "{{ _irods_canonical_hostname }}"
         irods_cfg_zone_name: "{{ _irods_zone_name }}"
         irods_cfg_zone_user: anonymous
         irods_cfg_home: /{{ _irods_zone_name }}
@@ -480,7 +480,7 @@
         - Restart varnish
         - Restart varnishncsa
 
-    - name: Configure selinux for varnish
+    - name: Configure selinux for apache
       when: ansible_selinux.status == 'enabled'
       community.general.selinux_permissive:
         domain: httpd_t

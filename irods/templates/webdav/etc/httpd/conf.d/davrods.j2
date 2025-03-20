@@ -41,7 +41,7 @@ Dav davrods-locallock
 
 {%   endif %}
 DavRodsEnvFile /etc/httpd/irods/irods_environment.json
-DavRodsServer {{ _canonical_hostname }} {{ _canonical_irods_port }}
+DavRodsServer {{ _irods_canonical_hostname }} {{ _irods_canonical_zone_port }}
 DavRodsZone {{ _irods_zone_name }}
 DavRodsExposedRoot {{ exposedRoot }}
 DavRodsRxBufferKbs 32768

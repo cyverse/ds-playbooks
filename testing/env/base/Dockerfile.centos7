@@ -1,7 +1,0 @@
-FROM centos:7
-
-RUN --mount=target=/tmp/config,source=base/config.sh /tmp/config centos 7
-
-COPY base/entrypoint.sh /entrypoint
-
-ENTRYPOINT [ "/entrypoint" ]

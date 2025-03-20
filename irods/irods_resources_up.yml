@@ -1,0 +1,17 @@
+---
+- name: Bring up all resources
+  hosts: irods_resource
+  become: "{{ _irods_become_svc_acnt }}"
+  become_user: "{{ _irods_service_account_name }}"
+  tasks:
+    - name: Bring up storage resource and parents
+      become: false
+      delegate_to: localhost
+      irods_resource_up:
+        resource: "{{ item.name }}"
+        host: "{{ groups['irods_catalog'][0] }}"
+        port: "{{ _irods_zone_port }}"
+        admin_user: "{{ _irods_clerver_user }}"
+        admin_password: "{{ _irods_clerver_password }}"
+        zone: "{{ _irods_zone_name }}"
+      with_items: "{{ _irods_storage_resources }}"

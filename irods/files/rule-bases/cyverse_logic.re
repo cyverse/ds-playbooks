@@ -471,14 +471,21 @@ _cyverse_logic_sendDataObjOpen(*Id, *Path, *Size, *AuthorName, *AuthorZone) {
 }
 
 _cyverse_logic_sendEntityMv(*Type, *Id, *OldPath, *NewPath, *AuthorName, *AuthorZone) {
-	*msg = cyverse_json_document(
-		list(
-			_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
-			_cyverse_logic_mkEntityField(*Id),
-			cyverse_json_string('old-path', '*OldPath'),
-			cyverse_json_string('new-path', '*NewPath') ) );
+	*msgType = _cyverse_logic_getMsgType(*Type);
 
-	_cyverse_logic_sendMsg(_cyverse_logic_getMsgType(*Type) ++ '.mv', *msg);
+	if (*msgType == '') {
+		writeLine('serverLog', 'Failed to determine message type for entity type "*Type"');
+		-1105000;  # INVALID_OBJECT_TYPE
+	} else {
+		*msg = cyverse_json_document(
+			list(
+				_cyverse_logic_mkAuthorField(*AuthorName, *AuthorZone),
+				_cyverse_logic_mkEntityField(*Id),
+				cyverse_json_string('old-path', '*OldPath'),
+				cyverse_json_string('new-path', '*NewPath') ) );
+
+		_cyverse_logic_sendMsg(*msgType ++ '.mv', *msg);
+	}
 }
 
 _cyverse_logic_sendEntityRm(*Type, *Id, *Path, *AuthorName, *AuthorZone) {
@@ -1161,14 +1168,22 @@ cyverse_logic_acPostProcForOpen {
 #  userNameClient
 #  rodsZoneClient
 #
+# Error Codes:
+#   -1105000 (INVALID_OBJECT_TYPE)  if the type of DestEntity cannot be determined
+#
 cyverse_logic_acPostProcForObjRename(*SrcEntity, *DestEntity) {
 	*type = cyverse_getEntityType(*DestEntity);
-	*uuid = '';
-	_cyverse_logic_ensureUUID(*type, *DestEntity, $userNameClient, $rodsZoneClient, *uuid);
+	if (*type == '') {
+		writeLine('serverLog', 'Cannot determine the type of "*DestEntity"');
+		-1105000;
+	} else {
+		*uuid = '';
+		_cyverse_logic_ensureUUID(*type, *DestEntity, $userNameClient, $rodsZoneClient, *uuid);
 
-	if (*uuid != '') {
-		_cyverse_logic_sendEntityMv(
-			*type, *uuid, *SrcEntity, *DestEntity, $userNameClient, $rodsZoneClient );
+		if (*uuid != '') {
+			_cyverse_logic_sendEntityMv(
+				*type, *uuid, *SrcEntity, *DestEntity, $userNameClient, $rodsZoneClient );
+		}
 	}
 }
 

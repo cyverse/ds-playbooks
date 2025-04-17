@@ -130,15 +130,14 @@ cyverse_getEntityType: forall X in {path string}, X -> string
 cyverse_getEntityType(*Entity) =
 	let *entity = str(*Entity) in
 	let *type = '' in
-	if errormsg(msiGetObjType(*entity, *type), *err) < 0
-	then let *_ = writeLine('serverLog', 'cyverse_getEntityType(*entity) -> *err') in ''
+	let *ec = errormsg(msiGetObjType(*entity, *type), *err) in
+	if *ec < 0 then let *_ = writeLine('serverLog', 'msiGetObjType(*entity) -> *ec: "*err"') in ''
 	else
 		if cyverse_isColl(*type) then cyverse_COLL
 		else if cyverse_isDataObj(*type) then cyverse_DATA_OBJ
 		else if cyverse_isResc(*type) then cyverse_RESC
 		else if cyverse_isUser(*type) then cyverse_USER
 		else *type
-
 
 # This function checks to see if a collection or data object is inside a user
 # collection managed by a service.
@@ -246,7 +245,6 @@ cyverse_ensureAccessOnMv(*SvcUser, *SvcColl, *Perm, *OldPath, *NewPath) {
 		}
 	}
 }
-
 
 # This rule sets a protected AVU on an entity as a rodsadmin user.
 #

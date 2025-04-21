@@ -842,7 +842,7 @@ cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *At
 	}
 }
 
-# This rule sends a message indicating that an AVU was modified.
+# For a collection or data object, this rule sends a message indicating that an AVU was modified.
 #
 # Parameters:
 #  Opt         (unused)
@@ -871,30 +871,34 @@ cyverse_logic_acPostProcForModifyAVUMetadata(*Opt, *EntityType, *EntityName, *At
 cyverse_logic_acPostProcForModifyAVUMetadata(
 	*Opt, *EntityType, *EntityName, *Attr, *Val, *Unit, *New1, *New2, *New3
 ) {
-	*newArgs = list(*New1, *New2, *New3);
-	*uuid = '';
-	_cyverse_logic_ensureUUID(*EntityType, *EntityName, $userNameClient, $rodsZoneClient, *uuid);
+	if (cyverse_isFSType(*EntityType)) {
+		*newArgs = list(*New1, *New2, *New3);
+		*uuid = '';
+		_cyverse_logic_ensureUUID(*EntityType, *EntityName, $userNameClient, $rodsZoneClient, *uuid);
 
-	# Determine the new AVU settings.
-	*newAttr = _cyverse_logic_getNewAVUSetting(*Attr, 'n:', *newArgs);
-	*newVal = _cyverse_logic_getNewAVUSetting(*Val, 'v:', *newArgs);
-	*newUnit = _cyverse_logic_getNewAVUSetting(*Unit, 'u:', *newArgs);
+		# Determine the new AVU settings.
+		*newAttr = _cyverse_logic_getNewAVUSetting(*Attr, 'n:', *newArgs);
+		*newVal = _cyverse_logic_getNewAVUSetting(*Val, 'v:', *newArgs);
+		*newUnit = _cyverse_logic_getNewAVUSetting(*Unit, 'u:', *newArgs);
 
-	# Send AVU modified message.
-	_cyverse_logic_sendAVUMod(
-		*EntityType,
-		*uuid,
-		*Attr,
-		*Val,
-		*Unit,
-		*newAttr,
-		*newVal,
-		*newUnit,
-		$userNameClient,
-		$rodsZoneClient );
+		# Send AVU modified message.
+		_cyverse_logic_sendAVUMod(
+			*EntityType,
+			*uuid,
+			*Attr,
+			*Val,
+			*Unit,
+			*newAttr,
+			*newVal,
+			*newUnit,
+			$userNameClient,
+			$rodsZoneClient );
+	}
 }
 
-# This rules sends an AVU metadata copy message.
+# This rules sends an AVU metadata copy message when the source and the target are collections or
+# data objects. If only the target is a collection or data object, it sends an AVU metadata add
+# message for each AVU being copied.
 #
 # Parameters:
 #  Opt      (unused)

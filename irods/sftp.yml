@@ -4,7 +4,7 @@
   strategy: linear
   become: true
   tasks:
-    - name: Enable notifcations when not testing
+    - name: Enable notifications when not testing
       ansible.builtin.set_fact:
         notifications_enabled: true
       tags:

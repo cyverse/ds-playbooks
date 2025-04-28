@@ -4,6 +4,6 @@ sftpgo_admin_password: sftpgo_pass
 sftpgo_irods_proxy_password: sftpgo_irods_pass
 sftpgo_irods_auth_scheme: native
 
-sftpgo_proxy_allowed:
+sftp_proxy_allowed:
   - 127.0.0.1
   - data.cyverse.org

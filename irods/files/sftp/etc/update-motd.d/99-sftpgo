@@ -1,8 +1,0 @@
-#!/bin/sh
-
-printf "\n"
-printf "###############################\n"
-printf " SFTPGO Service                \n"
-printf "###############################\n"
-printf " To start/restart/stop/status-check SFTPGo service: \n"
-printf " > service sftpgo start|restart|stop|status\n"

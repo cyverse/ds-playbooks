@@ -52,6 +52,7 @@
         or (sftpgo_account.rc != 0)
         or (sftpgo_version.stdout != '2.4.5')
         or (sftpgo_resp.stat.checksum != '01d5b2133ad07d56b46ae2297e1aa89b8a5a2bef')
+      notify: Restart sftpgo
       block:
         - name: Check if sftpgo service exists
           ansible.builtin.stat:

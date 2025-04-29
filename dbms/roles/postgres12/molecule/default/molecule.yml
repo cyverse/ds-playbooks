@@ -1,8 +1,0 @@
----
-driver:
-  name: podman
-platforms:
-  - name: instance
-    image: postgresql12
-    pre_build_image: false
-    dockerfile: Dockerfile

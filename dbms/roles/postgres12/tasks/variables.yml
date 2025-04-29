@@ -1,8 +1,0 @@
----
-
-- name: Variables | verify required vars exist
-  ansible.builtin.assert:
-    that:
-      - postgres12_replication_user is defined
-      - postgres12_replication_pass is defined
-  when: postgres12_upstream_node or postgres12_downstream_nodes|length > 0

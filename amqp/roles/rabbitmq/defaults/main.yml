@@ -1,7 +1,0 @@
----
-rabbitmq_admin_username: guest
-rabbitmq_admin_password: guest
-
-rabbitmq_broker_port: 5672
-
-rabbitmq_mgmt_port: 15672

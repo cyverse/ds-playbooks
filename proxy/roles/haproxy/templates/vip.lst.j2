@@ -1,5 +1,0 @@
-{{ ansible_managed | comment }}
-
-{% for v in haproxy_irods_vip_client_hosts %}
-{{  v if v|ansible.utils.ipaddr else lookup('dig', v) }}
-{% endfor %}

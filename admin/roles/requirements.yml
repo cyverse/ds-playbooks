@@ -1,4 +1,0 @@
----
-- name: cyverse.ip
-  src: https://github.com/CyVerse-Ansible/ansible-ip
-  version: 554959620bf37d398a7934fc18e9e3a11a812690

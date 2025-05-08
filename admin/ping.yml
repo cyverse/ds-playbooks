@@ -1,7 +1,0 @@
----
-- name: Check ansible connectivity to hosts
-  hosts: all
-  gather_facts: false
-  tasks:
-    - name: gather facts
-      setup:

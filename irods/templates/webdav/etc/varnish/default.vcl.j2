@@ -25,9 +25,12 @@ sub vcl_recv {
     if (req.method != "GET" && req.method != "HEAD") {
         return (pass);
     }
+    if (req.url ~ "\?([^&]*&)?ticket=") {
+        return (pass);
+    }
     if (req.http.Cache-Control ~ "(private|no-store)") {
         # do not cache
-        return (pass); 
+        return (pass);
     }
     if (req.http.Cache-Control ~ "no-cache" || req.http.Pragma == "no-cache") {
         # invalidate cache
@@ -111,7 +114,7 @@ sub vcl_backend_response {
     # Determine cache or not
     if (std.integer(beresp.http.Content-Length, 0) > {{ _webdav_cache_max_file_size|int * 1024 * 1024 }}) {
         # this determines how long the file will not be cached
-        # raise an error to restart without caching 
+        # raise an error to restart without caching
         set beresp.http.X-Restart-And-Pipe = "1";
         set beresp.ttl = 1s;
         set beresp.grace = 0s;
@@ -121,6 +124,6 @@ sub vcl_backend_response {
         # guard against infinite loop
         unset bereq.http.X-Restart-And-Pipe;
     }
-    
+
     return (deliver);
 }

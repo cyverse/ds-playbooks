@@ -9,7 +9,7 @@
  #}
 {% macro mk(def) -%}
 {%   if def.comment is defined %}
-{# assuiming the macro is already identited on level #}
+{# assuming the macro is already identified on level #}
 # {{ def.comment | wordwrap(76, True, '\n  # ') }}
 {%   endif %}
 <Location "{{ def.path }}" >

@@ -47,6 +47,10 @@ DavRodsExposedRoot {{ exposedRoot }}
 DavRodsRxBufferKbs 32768
 DavRodsHtmlHead /etc/httpd/irods/{{ htmlHead }}
 
+# Enable tickets, and automatically append '?ticket=...' to links in web browser directory listings.
+DavrodsTickets ReadOnly
+DavrodsHtmlEmitTickets On
+
 Header set Vary Authorization
 
 # if request is made by clients other than web-browser, let them download the file

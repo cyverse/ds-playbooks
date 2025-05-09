@@ -83,6 +83,13 @@
               </If>
               # XXX - ^^^
 
+              RewriteEngine On
+
+              # If the URL query string contains a ticket, strip it and pass it to Davrods.
+              RewriteCond expr "%{QUERY_STRING} =~ /(?:^|&)ticket=([^&]*)/"
+              RewriteCond expr "unescape($1) =~ /(.+)/"
+              RewriteRule .* - [E=DAVRODS_TICKET:%1,QSD,L]
+
               # Redirect dav-anon to dav
               <LocationMatch "/dav-anon/{{ _irods_zone_name }}/((commons/(community_released|cyverse_curated)|home|projects)(/.*)?)" >
                 Require expr %{REQUEST_URI} !~ m#^/dav-anon/{{ _irods_zone_name }}/home(/[^/]*/?)?$#

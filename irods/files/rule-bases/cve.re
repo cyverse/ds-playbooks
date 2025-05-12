@@ -72,3 +72,56 @@ pep_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL
 		failmsg(-31000, 'CYVERSE ERROR: no physical path allowed');
 	}
 }
+
+
+# There is a security hole in irm -f that allows a user with read permission on
+# a data object to silently delete the underlying physical files. See
+# https://github.com/irods/irods/issues/8441 for more information. This rule
+# prevents this from happening.
+#
+# This can be removed after upgrading to 4.3.5
+#
+# Parameters:
+#  Instance          (string) unused
+#  Comm              (`KeyValuePair_PI`) information related to the session
+#  DataObjUnlinkInp  (`KeyValuePair_PI`) information to the data object being
+#                    deleted
+#
+# Error Codes:
+#  -818000 (CAT_NO_ACCESS_PERMISSION)
+#
+_cve_DEL_VAL = 1130
+_cve_delete_forbidden(*ClientUser, *ClientZone, *DataPath) =
+	let *permSufficient = 0 in
+	let *collPath = '' in
+	let *dataName = '' in
+	let *_ = msiSplitPath(str(*DataPath), *collPath, *dataName) in
+	let *_ = foreach (*groupRec in
+			select USER_GROUP_NAME where USER_NAME = '*ClientUser' and USER_ZONE = '*ClientZone'
+		) {
+			*group = *groupRec.USER_GROUP_NAME;
+			foreach (*accessRec in
+				select DATA_ACCESS_TYPE
+				where USER_NAME = '*group' and COLL_NAME = '*collPath' and DATA_NAME = '*dataName'
+			) {
+				if (int(*accessRec.DATA_ACCESS_TYPE) >= _cve_DEL_VAL) {
+					*permSufficient = 1;
+				}
+			}
+			if (*permSufficient > 0) {
+			 	break;
+			}
+		} in
+	*permSufficient < 1
+
+pep_api_data_obj_unlink_pre(*Instance, *Comm, *DataObjUnlinkInp) {
+	on (
+		_cve_delete_forbidden(*Comm.user_user_name, *Comm.user_rods_zone, *DataObjUnlinkInp.obj_path)
+	) {
+		msg = 'pep_api_data_obj_unlink_pre: prevented [' ++ *client_user ++ '#' ++ *client_zone ++ ']'
+			++ ' from removing logical_path[' ++ *logical_path ++ ']';
+
+		writeLine('serverLog', *msg);
+		failmsg(-818000, 'delete_object or greater required');
+	}
+}

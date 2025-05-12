@@ -113,7 +113,6 @@ _cve_delete_forbidden(*ClientUser, *ClientZone, *DataPath) =
 			}
 		} in
 	*permSufficient < 1
-
 pep_api_data_obj_unlink_pre(*Instance, *Comm, *DataObjUnlinkInp) {
 	on (
 		_cve_delete_forbidden(*Comm.user_user_name, *Comm.user_rods_zone, *DataObjUnlinkInp.obj_path)

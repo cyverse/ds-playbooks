@@ -1,2 +1,8 @@
+User-agent: ModelContextProtocol/1.0 (Autonomous; +https://github.com/modelcontextprotocol/servers)
+Allow: /
+
+User-agent: AIVerde/1.0
+Allow: /
+
 User-agent: *
 Disallow: /

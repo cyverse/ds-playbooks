@@ -113,13 +113,13 @@ _cve_delete_forbidden(*ClientUser, *ClientZone, *DataPath) =
 			}
 		} in
 	*permSufficient < 1
-
 pep_api_data_obj_unlink_pre(*Instance, *Comm, *DataObjUnlinkInp) {
 	on (
 		_cve_delete_forbidden(*Comm.user_user_name, *Comm.user_rods_zone, *DataObjUnlinkInp.obj_path)
 	) {
-		msg = 'pep_api_data_obj_unlink_pre: prevented [' ++ *client_user ++ '#' ++ *client_zone ++ ']'
-			++ ' from removing logical_path[' ++ *logical_path ++ ']';
+		msg = 'pep_api_data_obj_unlink_pre: prevented '
+			++ *Comm.user_user_name ++ '#' ++ *Comm.user_rods_zone ++ ' from removing logical_path '
+			++ *DataObjUnlinkInp.obj_path;
 
 		writeLine('serverLog', *msg);
 		failmsg(-818000, 'delete_object or greater required');

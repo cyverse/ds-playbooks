@@ -1,4 +1,6 @@
 ---
+_block_client_hosts: "{{ proxy_block_client_hosts | d([]) }}"
+
 _restart_allowed: "{{ proxy_restart_allowed | d(false) }}"
 
 _rsyslog_conf: "{{ proxy_rsyslog_conf | d('/etc/rsyslog.d/haproxy.conf') }}"

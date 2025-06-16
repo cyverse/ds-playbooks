@@ -4,6 +4,6 @@ driver:
 platforms:
   - name: instance
     image: ubuntu-systemd
-    pre_build_image: true
+    pre_build_image: false
     dockerfile: ubuntu.dockerfile
     command: /lib/systemd/systemd

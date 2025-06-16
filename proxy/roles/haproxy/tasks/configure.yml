@@ -63,6 +63,15 @@
   notify:
     - Reload haproxy
 
+- name: Configure | place block list
+  ansible.builtin.template:
+    src: block.lst.j2
+    dest: /etc/haproxy/block.lst
+    owner: haproxy
+    mode: u+r
+  notify:
+    - Reload haproxy
+
 - name: Configure | place haproxy config file
   ansible.builtin.template:
     src: haproxy.cfg.j2

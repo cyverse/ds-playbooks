@@ -5,6 +5,7 @@
   roles:
     - role: haproxy
       vars:
+        haproxy_block_client_lost: "{{ proxy_block_client_list }}"
         # Reserve two CPUs for OS
         haproxy_num_threads: "{{ [ ansible_processor_vcpus - 2, 1 ] | max }}"
         haproxy_queue_timeout: 10m

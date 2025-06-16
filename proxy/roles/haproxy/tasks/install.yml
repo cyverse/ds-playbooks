@@ -35,7 +35,7 @@
   notify:
     - Restart haproxy
   tags:
-    - no_testing
+    - molecule-idempotence-notest
 
 - name: Install | ensure IP forwarding allowed
   ansible.posix.sysctl:

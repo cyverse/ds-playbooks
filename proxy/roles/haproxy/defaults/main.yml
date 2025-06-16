@@ -1,4 +1,6 @@
 ---
+haproxy_block_client_hosts: []
+
 haproxy_num_threads: 1
 
 haproxy_queue_timeout: null

@@ -79,7 +79,8 @@
 
 - name: Configure | ensure block.lst exists
   ansible.builtin.copy:
-    content: ''
+    remote_src: true
+    src: /etc/haproxy/block.lst.template
     dest: /etc/haproxy/block.lst
     owner: haproxy
     mode: u+r

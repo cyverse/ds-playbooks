@@ -149,8 +149,9 @@ listen sftp
 listen webdav
   bind                    :{{ haproxy_webdav_port }},:{{ haproxy_webdav_tls_port }}
   acl                     vip-src     src -f /etc/haproxy/vip.lst
+  acl                     allowed     src -f /etc/haproxy/allow.lst
   acl                     blocked     src -f /etc/haproxy/block.lst
   acl                     block-conn  sc1_conn_cur gt 10
   tcp-request connection  track-sc1 src table concurrency_st if !vip-src
-  tcp-request connection  reject if !vip-src blocked or block-conn
+  tcp-request connection  reject if !vip-src !allowed blocked or block-conn
   server                  dav {{ haproxy_webdav_hosts[0] if haproxy_webdav_hosts[0]|ansible.utils.ipaddr else lookup('dig', haproxy_webdav_hosts[0]) }}

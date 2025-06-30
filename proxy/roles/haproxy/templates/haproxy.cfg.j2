@@ -96,13 +96,12 @@ frontend irods_main
   acl                        is-conn        capture.req.hdr(0) -m str RODS_CONNECT
   acl                        is-ping        capture.req.hdr(0) -m str HEARTBEAT
   acl                        vip-src        src -f /etc/haproxy/vip.lst
-  acl                        blocked        src -f /etc/haproxy/block.lst
   acl                        throttle-conn  sc1_conn_cur gt 1
   acl                        block-conn     sc1_conn_cur gt 10
   tcp-request inspect-delay  5s
   tcp-request content        capture req.payload_lv(0,4),regsub(^\s*<MsgHeader_PI\s*>[\s\S]*<type\s*>,),regsub(</type\s*>[\s\S]*</MsgHeader_PI\s*>\s*$,) len 16
   tcp-request content        track-sc1 src table concurrency_st if is-conn !vip-src
-  tcp-request content        reject if !is-conn !is-ping or !vip-src blocked or block-conn
+  tcp-request content        reject if !is-conn !is-ping or block-conn
   use_backend                irods_throttled if !is-ping throttle-conn
   default_backend            irods_direct
 
@@ -137,10 +136,9 @@ backend irods_direct
 listen sftp
   bind                    :{{ haproxy_sftp_port }}
   acl                     vip-src     src -f /etc/haproxy/vip.lst
-  acl                     blocked     src -f /etc/haproxy/block.lst
   acl                     block-conn  sc1_conn_cur gt 10
   tcp-request connection  track-sc1 src table concurrency_st if !vip-src
-  tcp-request connection  reject if !vip-src blocked or block-conn
+  tcp-request connection  reject if block-conn
   server                  sftp {{ haproxy_sftp_hosts[0] if haproxy_sftp_hosts[0]|ansible.utils.ipaddr else lookup('dig', haproxy_sftp_hosts[0]) }}:{{ haproxy_sftp_backend_port }} send-proxy-v2
 
 

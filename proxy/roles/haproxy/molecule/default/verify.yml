@@ -5,19 +5,8 @@
   vars_files:
     - ../../defaults/main.yml
   vars:
-    vip: "{{ lookup('template', '../../templates/vip.lst.j2') }}"
     haproxy: "{{ lookup('template', '../../templates/haproxy.cfg.j2') }}"
   tasks:
-    - name: Verify vip.list is ansible managed
-      ansible.builtin.assert:
-        that: vip is search('^#\n# Ansible managed')
-
-    - name: Verify the VIP list has nothing below the header comment
-      ansible.builtin.assert:
-        that:
-          - vip is search('^#')
-          - vip is not search('\n[^#\n]')
-
     - name: Verify haproxy config is ansible managed
       ansible.builtin.assert:
         that: haproxy is search('^#\n# Ansible managed')
@@ -72,29 +61,6 @@
         that:
           - haproxy is search('\nlisten webdav\n(..[^\n]*\n)*  bind .* :80,:443\n')
           - haproxy is search('\nlisten webdav\n(..[^\n]*\n)*  server .* 127.0.0.1\n')
-
-
-- name: Verify | VIP list template custom expansion
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - ../../defaults/main.yml
-    - vars/vip_clients.yml
-  vars:
-    vip: "{{ lookup('template', '../../templates/vip.lst.j2') }}"
-    data_ip: "{{ lookup('dig', 'data.cyverse.org') }}"
-  tasks:
-    - name: Verify the ip address passes through
-      ansible.builtin.assert:
-        that: vip is search('\n' ~ ('1.2.3.4'|regex_escape) ~ '\n')
-
-    - name: Verify the host name converted to address
-      ansible.builtin.assert:
-        that: vip is search('\n' ~ (data_ip|regex_escape) ~ '\n')
-
-    - name: Verify CIDR block passes through
-      ansible.builtin.assert:
-        that: vip is search('\n' ~ ('5.6.7.0/24'|regex_escape) ~ '\n')
 
 
 - name: Verify | haproxy config template custom expansion

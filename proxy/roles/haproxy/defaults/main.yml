@@ -1,4 +1,6 @@
 ---
+haproxy_allow_client_hosts: []
+
 haproxy_block_client_hosts: []
 
 haproxy_num_threads: 1

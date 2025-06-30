@@ -54,23 +54,38 @@
   notify:
     - Reload haproxy
 
-- name: Configure | place VIP list
-  ansible.builtin.template:
-    src: vip.lst.j2
-    dest: /etc/haproxy/vip.lst
+- name: Configure | place static address lists
+  ansible.builtin.copy:
+    dest: /etc/haproxy/{{ item.file }}
     owner: haproxy
     mode: u+r
+    content: |
+      #
+      # Ansible managed
+      #
+
+      {% for h in item.addresses %}
+      {{  h if h|ansible.utils.ipaddr else lookup('dig', h) }}
+      {% endfor %}
+  loop:
+    - file: allow.lst
+      addresses: "{{ haproxy_allow_client_hosts }}"
+    - file: block.lst.template
+      addresses: "{{ haproxy_block_client_hosts }}"
+    - file: vip.lst
+      addresses: "{{ haproxy_irods_vip_client_hosts }}"
   notify:
     - Reload haproxy
 
-- name: Configure | place block list
-  ansible.builtin.template:
-    src: block.lst.j2
+- name: Configure | ensure block.lst exists
+  ansible.builtin.copy:
+    content: ''
     dest: /etc/haproxy/block.lst
     owner: haproxy
     mode: u+r
+    force: false
   notify:
-    - Reload haproxy
+    - Restart haproxy
 
 - name: Configure | place haproxy config file
   ansible.builtin.template:

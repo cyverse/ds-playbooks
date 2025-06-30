@@ -1,5 +1,0 @@
-{{ ansible_managed | comment }}
-
-{% for h in haproxy_block_client_hosts %}
-{{  h if h|ansible.utils.ipaddr else lookup('dig', h) }}
-{% endfor %}

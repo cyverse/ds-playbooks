@@ -5,6 +5,7 @@
   roles:
     - role: haproxy
       vars:
+        haproxy_allow_client_hosts: "{{ _allow_client_hosts }}"
         haproxy_block_client_hosts: "{{ _block_client_hosts }}"
         # Reserve two CPUs for OS
         haproxy_num_threads: "{{ [ ansible_processor_vcpus - 2, 1 ] | max }}"

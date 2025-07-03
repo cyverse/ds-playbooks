@@ -59,8 +59,12 @@
     - name: Verify haproxy config webdav listener
       ansible.builtin.assert:
         that:
-          - haproxy is search('\nlisten webdav\n(..[^\n]*\n)*  bind .* :80,:443\n')
-          - haproxy is search('\nlisten webdav\n(..[^\n]*\n)*  server .* 127.0.0.1\n')
+          - haproxy is search('\nlisten webdav\n(..[^\n]*\n)*  bind .* :80\n')
+          - haproxy is search('\nlisten webdav\n(..[^\n]*\n)*  server .* dav 127.0.0.1\n')
+
+    - name: Verify haproxy config no webdavs listener
+      ansible.builtin.assert:
+        that: haproxy is not search('\nlisten webdavs\n')
 
 
 - name: Verify | haproxy config template custom expansion
@@ -80,7 +84,10 @@
 
     - name: Verify haproxy config default section
       ansible.builtin.debug:
-        msg: TODO implement
+        msg: "TODO: implement {{ item }}"
+      loop:
+        - maxconn
+        - timeout queue
 
     - name: TODO implement
       ansible.builtin.debug:

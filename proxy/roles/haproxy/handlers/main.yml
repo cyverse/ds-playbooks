@@ -1,8 +1,16 @@
 ---
-- name: Reload haproxy
-  ansible.builtin.service:
-    name: haproxy
-    state: reloaded
+- name: Reload haproxy if running
+  block:
+    - name: Get status of services
+      ansible.builtin.service_facts:
+      listen: Reload haproxy
+
+    - name: Do reload haproxy
+      when: ansible_facts.services['haproxy.service']['state'] == 'running'
+      ansible.builtin.service:
+        name: haproxy
+        state: reloaded
+      listen: Reload haproxy
 
 - name: Restart haproxy
   when: >-

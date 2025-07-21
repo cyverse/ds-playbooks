@@ -7,7 +7,7 @@
 
 set -o errexit -o nounset -o pipefail
 
-ExecName=$(readlink --canonicalize "$0")
+ExecName=$(realpath --canonicalize-existing "$0")
 readonly ExecName
 
 PlaybooksDir=$(dirname "$ExecName")

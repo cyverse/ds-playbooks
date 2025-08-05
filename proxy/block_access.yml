@@ -15,7 +15,7 @@
 
     - name: Terminate WebDAV connections
       community.general.haproxy:
-        backend: webdav
+        backend: webdavs
         host: dav
         state: disabled
         shutdown_sessions: true

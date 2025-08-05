@@ -14,7 +14,7 @@
 
     - name: Enable WebDAV access
       community.general.haproxy:
-        backend: webdav
+        backend: webdavs
         host: dav
         state: enabled
         fail_on_not_found: true

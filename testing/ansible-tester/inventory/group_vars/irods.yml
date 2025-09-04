@@ -9,15 +9,6 @@ avra_resource_hierarchy:
   children:
     - name: avra
 
-cereus_collections:
-  - /testing/home/shared/cereus
-
-cereus_resource_hierarchy:
-  name: cereusRes
-  type: passthru
-  children:
-    - name: cereus
-
 irods_amqp_host: "{{ groups['amqp'][0] }}"
 irods_amqp_user: amqp_admin
 irods_amqp_password: password

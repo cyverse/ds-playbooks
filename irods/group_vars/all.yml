@@ -18,10 +18,6 @@ _build_dir: "{{ build_dir | default('/tmp') }}"
 _canonical_hostname: "{{ canonical_hostname | default(groups['irods_catalog'][0]) }}"
 _canonical_irods_port: "{{ canonical_irods_port | default(_irods_zone_port) }}"
 
-_cereus_collections: "{{ cereus_collections | default([]) }}"
-_cereus_resource_hierarchy: >-
-  {{ cereus_resource_hierarchy | default(_irods_resource_hierarchies[0]) }}
-
 _check_routes_timeout: "{{ check_routes_timeout | default(3) }}"
 
 _firewall_chain: "{{ firewall_chain | default('INPUT') }}"

@@ -19,8 +19,6 @@ Variable                                   | Required | Default                 
 `build_dir`                                | no       | /tmp                                 |         | The directory used for building artifacts for deployment
 `canonical_hostname`                       | no       | `groups['irods_catalog'][0]`         |         | The external FQDN used to access the data store services
 `canonical_irods_port`                     | no       | 1247                                 |         | The port on the `canonical_hostname` host listening for connections to iRODS
-`cereus_collections`                       | no       | []                                   |         | A list of collections whose data belongs on the Cereus resource, each entry must be an absolute path
-`cereus_resource_hierarchy`                | no       | `irods_resource_hierarchies[0]`      |         | the Cereus resource used for hosting data for Cereus related projects
 `check_routes_timeout`                     | no       | 3                                    |         | The number of seconds the `check_route` playbook will wait for a response during a single port check
 `firewall_chain`                           | no       | INPUT                                |         | The iptables chain managing authorizing iRODS connections
 `irods_admin_password`                     | no       | `irods_clerver_password`             |         | The iRODS admin account password

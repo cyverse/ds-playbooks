@@ -123,6 +123,7 @@ cyverse_housekeeping_rescheduleStorageFreeSpaceDetermination {
 #
 
 _cyverse_housekeeping_rmTrashColl(*CutOffTimestamp, *SUCCEEDED) {
+	writeLine('serverLog', 'DS: Starting collection removal from trash');
 	*SUCCEEDED = true;
 	*zone = cyverse_ZONE;
 # XXX - Because of https://github.com/irods/irods/issues/6918
@@ -160,6 +161,7 @@ _cyverse_housekeeping_rmTrashColl(*CutOffTimestamp, *SUCCEEDED) {
 }
 
 _cyverse_housekeeping_rmTrashData(*CutOffTimestamp, *SUCCEEDED) {
+	writeLine('serverLog', 'DS: Starting data object removal from trash');
 	*SUCCEEDED = true;
 	*zone = cyverse_ZONE;
 	foreach( *row in

@@ -68,7 +68,7 @@
       {{  h if h|ansible.utils.ipaddr else lookup('dig', h) }}
       {% endfor %}
   loop:
-    - file: allow.lst
+    - file: allow.lst.template
       addresses: "{{ haproxy_allow_client_hosts }}"
     - file: block.lst.template
       addresses: "{{ haproxy_block_client_hosts }}"

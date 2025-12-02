@@ -13,16 +13,31 @@
           - rabbitmq_conf is search("listeners.tcp.1 = :::1" | regex_escape)
           - rabbitmq_conf is search("management.tcp.port = 2" | regex_escape)
 
-
 - name: Verify | test installation
   hosts: all
   tasks:
     - name: Retrieve facts about distro packages
       ansible.builtin.package_facts:
 
-    - name: Test install CA certificates for get_url
+    - name: Test required packages installed.
       ansible.builtin.assert:
-        that: "'ca-certificates' in ansible_facts.packages"
+        that: "'{{ item }}' in ansible_facts.packages"
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg
+
+    - name: Test install repositories
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      with_items:
+        - /etc/apt/preferences.d/erlang
+        - /etc/apt/preferences.d/rabbitmq
+        - /etc/apt/sources.list.d/rabbitmq.list
+        - /usr/share/keyrings/com.rabbitmq.team.gpg
+      register: resp
+      failed_when: not resp.stat.exists or not resp.stat.rusr
 
     - name: Test install Erlang
       ansible.builtin.assert:
@@ -53,19 +68,6 @@
         that:
           - ansible_facts.packages['rabbitmq-server'] | length == 1
           - ansible_facts.packages['rabbitmq-server'][0].version is version('3.12', '<')
-
-    - name: Test install repositories
-      ansible.builtin.stat:
-        path: "{{ item }}"
-      with_items:
-        - /etc/apt/preferences.d/erlang
-        - /etc/apt/preferences.d/rabbitmq
-        - /etc/apt/sources.list.d/rabbitmq.list
-        - /usr/share/keyrings/com.rabbitmq.team.asc
-        - /usr/share/keyrings/rabbitmq.9F4587F226208342.asc
-        - /usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.asc
-      register: resp
-      failed_when: not resp.stat.exists or not resp.stat.rusr
 
     - name: Test rabbitmq config file placement
       ansible.builtin.stat:

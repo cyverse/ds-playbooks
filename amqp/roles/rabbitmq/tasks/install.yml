@@ -1,4 +1,28 @@
 ---
+- name: Install | detect old RabbitMQ repo
+  shell:
+    executable: /bin/bash
+    cmd: |
+      if \
+        [[ -e /etc/apt/sources.list.d/rabbitmq.list ]] \
+        && ! grep --quiet 'com.rabbitmq.team.gpg' /etc/apt/sources.list.d/rabbitmq.list
+      then
+        echo old
+      fi
+  register: resp
+  changed_when: false
+
+- name: Install | removed old RabbitMQ repo
+  when: resp.stdout == 'old'
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/rabbitmq.list
+    - /usr/share/keyrings/rabbitmq.9F4587F226208342.asc
+    - /usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.asc
+    - /usr/share/keyrings/com.rabbitmq.team.asc
+
 - name: Install | install CA certificates for get_url
   ansible.builtin.apt:
     name:

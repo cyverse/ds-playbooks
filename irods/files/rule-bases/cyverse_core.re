@@ -12,6 +12,7 @@
 @include 'cyverse'
 
 @include 'cyverse_logic'
+@include 'cyverse_transfer_tracking'
 @include 'ipc-repl'
 @include 'ipc-trash'
 @include 'ipc-encryption'
@@ -461,6 +462,13 @@ acPostProcForRmColl {
 
 ## API ##
 
+# BULK_DATA_OBJ_PUT
+
+pep_api_bulk_data_obj_put_post(*Instance, *Comm, *BulkOprInp, *Buf) {
+	cyverse_transfer_tracking_api_bulk_data_obj_put_post(*Instance, *Comm, *BulkOprInp, *Buf);
+}
+
+
 # COLL_CREATE
 
 # This is the post processing logic for when a collection is created through the
@@ -547,6 +555,14 @@ pep_api_data_obj_create_and_stat_pre(*Instance, *Comm, *DataObjInp, *OpenStat) {
 }
 
 
+# DATA_OBJ_GET
+
+pep_api_data_obj_get_post(*Instance, *Comm, *DataObjInp, *Buf, *PORTAL_OPR) {
+	cyverse_transfer_tracking_api_data_obj_get_post(
+		*Instance, *Comm, *DataObjInp, *Buf, *PORTAL_OPR );
+}
+
+
 # DATA_OBJ_OPEN
 
 # This is the pre processing logic for when an attempt is made to open a data
@@ -593,7 +609,19 @@ pep_api_data_obj_put_pre(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL
 #
 pep_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT) {
 	ipcTrash_api_data_obj_put_post(*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT);
+
+	cyverse_transfer_tracking_api_data_obj_put_post(
+		*Instance, *Comm, *DataObjInp, *DataObjInpBBuf, *PORTAL_OPR_OUT );
 }
+
+
+# DATA_OBJ_READ
+
+# XXX: Broken in 4.2.8
+#pep_api_data_obj_read_post(*Instance, *Comm, *DataObjReadInp, *Buf) {
+#	cyverse_transfer_tracking_api_data_obj_read_post(*Instance, *Comm, *DataObjReadInp, *Buf);
+#}
+# XXX: ^^^
 
 
 # DATA_OBJ_RENAME
@@ -661,6 +689,15 @@ pep_api_data_obj_unlink_post(*Instance, *Comm, *DataObjUnlinkInp) {
 pep_api_data_obj_unlink_except(*Instance, *Comm, *DataObjUnlinkInp) {
 	ipcTrash_api_data_obj_unlink_except(*Instance, *Comm, *DataObjUnlinkInp);
 }
+
+
+# DATA_OBJ_WRITE
+
+# XXX: Broken in 4.2.8
+#pep_api_data_obj_write_post(*Instance, *Comm, *DataObjWriteInp, *Buf) {
+#	cyverse_transfer_tracking_api_data_obj_write_post(*Instance, *Comm, *DataObjWriteInp, *Buf);
+#}
+# XXX: ^^^
 
 
 # RM_COLL

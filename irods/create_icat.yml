@@ -16,3 +16,30 @@
       delegate_facts: true
       become: true
       become_user: postgres
+
+    - name: Create transfer totals table
+      community.postgresql.postgresql_table:
+        login_db: ICAT
+        owner: "{{ _irods_db_user }}"
+        name: r_transfer_totals
+        columns:
+          - user_id BIGINT NOT NULL
+          - action VARCHAR(250) NOT NULL
+          - exbibytes BIGINT NOT NULL
+          - bytes BIGINT NOT NULL
+      delegate_to: "{{ _irods_dbms_host }}"
+      delegate_facts: true
+      become: true
+      become_user: postgres
+
+    - name: Create index for transfer totals table
+      community.postgresql.postgresql_idx:
+        login_db: ICAT
+        name: unique_user_action
+        table: r_transfer_totals
+        columns: user_id, action
+        unique: true
+      delegate_to: "{{ _irods_dbms_host }}"
+      delegate_facts: true
+      become: true
+      become_user: postgres

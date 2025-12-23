@@ -6,4 +6,5 @@ collections:
   - name: community.docker
   - name: community.general
   - name: community.postgresql
+    version: 3.11.0
   - name: community.rabbitmq # Needed for testing

@@ -1,9 +1,4 @@
 _cyverse_transfer_tracking_addTransfer(*User, *Zone, *Dir, *Vol) {
-	*query = \
-		"select USER_ID where USER_NAME = '*User' and USER_ZONE = '*Zone' and USER_TYPE = 'rodsuser'";
-
-	msiExecStrCondQuery(*query, *res);
-
 	foreach( *res in
 		select USER_ID where USER_NAME = '*User' and USER_ZONE = '*Zone' and USER_TYPE = 'rodsuser'
 	) {

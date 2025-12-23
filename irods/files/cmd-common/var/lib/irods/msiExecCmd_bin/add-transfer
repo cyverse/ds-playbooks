@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# does not handle the rollover at each exbibyte
+# - exbibyte is 2^60
+# - BIGINT can hold 2^63 - 1
+# separate script/process will handle rollover with a transaction
+# - if bytes > 2^60:
+#      exbibytes = bytes / 2^60
+#      bytes = bytes % 2^60
+
+set -o errexit -o nounset -o pipefail
+
+export PGHOST="$IRODS_DATABASE_HOST"
+export PGPORT="$IRODS_DATABASE_PORT"
+export PGUSER="$IRODS_DATABASE_USER"
+export PGPASSWORD="$IRODS_DATABASE_PASSWORD"
+
+
+main() {
+	userId="$1"
+	action="$2"
+	bytes="$3"
+
+	# this does not yet handle the rollover at each exbibyte
+	psql ICAT <<EOF
+INSERT INTO r_transfer_totals(user_id, action, exbibytes, bytes)
+	VALUES ($userId, '$action', 0, $bytes)
+ON CONFLICT (user_id, action) DO UPDATE
+	SET
+		exbibytes = r_transfer_totals.exbibytes + EXCLUDED.exbibytes,
+		bytes = r_transfer_totals.bytes + EXCLUDED.bytes;
+EOF
+}
+
+main "$@"

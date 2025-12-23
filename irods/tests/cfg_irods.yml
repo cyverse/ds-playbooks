@@ -63,6 +63,7 @@
         or response.stat.pw_name != 'irods'
         or not response.stat.xusr
       loop:
+        - add-transfer
         - amqp-topic-send
         - correct-size
         - delete-scheduled-rule
@@ -140,9 +141,11 @@
               - server_config.default_resource_directory is not defined
               - server_config.default_resource_name == 'ingestRes'
               - server_config.environment_variables.IRODS_DATABASE_USER_PASSWORD_SALT == 'salt'
-              - >-
-                server_config.environment_variables.IRODS_AMQP_URI
-                == "amqp://amqp_admin:password@dstesting-amqp-1.dstesting_default:5672/%2F"
+              - server_config.environment_variables.IRODS_AMQP_URI == "amqp://amqp_admin:password@dstesting-amqp-1.dstesting_default:5672/%2F"
+              - server_config.environment_variables.IRODS_DATABASE_HOST == 'dstesting-dbms_configured-1.dstesting_default'
+              - server_config.environment_variables.IRODS_DATABASE_PORT == '5432'
+              - server_config.environment_variables.IRODS_DATABASE_USER == 'irods'
+              - server_config.environment_variables.IRODS_DATABASE_PASSWORD == 'testpassword'
               - server_config.federation | length == 2
               - server_config.federation[0].catalog_provider_hosts | length == 2
               - server_config.federation[0].catalog_provider_hosts[0] == '128.196.65.155'

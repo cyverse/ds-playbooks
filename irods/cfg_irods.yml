@@ -60,7 +60,15 @@
         irods_cfg_default_resource_directory: "{{ _irods_default_vault }}"
         irods_cfg_default_resource_name: "{{ _irods_default_resource }}"
         irods_cfg_environment_variables: >-
-          {{ {'IRODS_AMQP_URI': amqp_uri} if is_provider | bool else {} }}
+          {{
+            {} if not is_provider | bool else
+            {
+              'IRODS_AMQP_URI': amqp_uri,
+              'IRODS_DATABASE_HOST': _irods_dbms_host,
+              'IRODS_DATABASE_PORT': _irods_dbms_port,
+              'IRODS_DATABASE_USER': _irods_db_user,
+              'IRODS_DATABASE_PASSWORD': _irods_db_password
+            } }}
         irods_cfg_federation: "{{ _irods_federation }}"
         irods_cfg_host_entries: >-
           {{

@@ -4,7 +4,9 @@ collections:
   - name: ansible.utils
   - name: ansible.netcommon
   - name: community.docker
+    version: '<5'
   - name: community.general
+    version: '<12'
   - name: community.postgresql
     version: 3.11.0
-  - name: community.rabbitmq # Needed for testing
+  - name: community.rabbitmq  # Needed for testing

@@ -10,6 +10,10 @@
             LoadModule log_forensic_module modules/mod_log_forensic.so
           </IfModule>
 
+          <IfModule !macro_module>
+            LoadModule macro_module modules/mod_macro.so
+          </IfModule>
+
           <IfModule !proxy_html_module>
             LoadModule proxy_html_module modules/mod_proxy_html.so
           </IfModule>
@@ -27,9 +31,9 @@
           </IfModule>
 
           <IfModule mpm_worker_module>
-            ServerLimit             {{ _webdav_server_limit }}
-            ThreadsPerChild         {{ _webdav_threads_per_child }}
-            MaxRequestWorkers       {{ _webdav_max_request_workers }}
+            ServerLimit        {{ _webdav_server_limit }}
+            ThreadsPerChild    {{ _webdav_threads_per_child }}
+            MaxRequestWorkers  {{ _webdav_max_request_workers }}
           </IfModule>
 
           QS_ErrorResponseCode 429
@@ -48,13 +52,19 @@
           ProxyHTMLEnable On
           ProxyHTMLLinks a href
           ProxyHTMLLinks base href
+
+          ErrorDocument 410 /errors/moved_project.html
         apache_vhosts:
           - servername: "{{ _webdav_canonical_hostname }}"
             extra_parameters: |
               ServerAlias {{ inventory_hostname }}
 
               ErrorLog logs/http_error_log
-              CustomLog logs/http_request_log {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %a \"%r\" %>s %L %{forensic-id}n"' }}
+
+              CustomLog \
+                logs/http_request_log \
+                {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %a \"%r\" %>s %L %{forensic-id}n"' }}
+
               LogLevel warn
 
               RedirectPermanent / https://{{ _webdav_canonical_hostname }}/
@@ -67,7 +77,11 @@
               {% endif %}
 
               ErrorLog logs/error_log
-              CustomLog logs/access_log {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %{X-Forwarded-For}i \"%r\" %>s %L %{forensic-id}n"' }}
+
+              CustomLog \
+                logs/access_log \
+                {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %{X-Forwarded-For}i \"%r\" %>s %L %{forensic-id}n"' }}
+
               LogLevel warn
 
               Header set Access-Control-Allow-Headers "Range"
@@ -89,6 +103,19 @@
               RewriteCond expr "%{QUERY_STRING} =~ /(?:^|&)ticket=([^&]*)/"
               RewriteCond expr "unescape($1) =~ /(.+)/"
               RewriteRule .* - [E=DAVRODS_TICKET:%1,QSD,L]
+
+              RewriteRule \
+                "^/dav/{{ _irods_zone_name }}/(commons/community_released|projects)/([^/]*)" \
+                - \
+                [E=PROJECT:$2]
+
+              <Macro RedirectMovedProjects $path>
+              {% if _webdav_moved_projects %}
+                <If "%{ENV:PROJECT} in { {{ _webdav_moved_projects | map('regex_replace', '^(.*)$', "'\1'") | join(', ') }} }" >
+                  Redirect gone $path
+                </If>
+              {% endif %}
+              </Macro>
 
               # Redirect dav-anon to dav
               <LocationMatch "/dav-anon/{{ _irods_zone_name }}/((commons/(community_released|cyverse_curated)|home|projects)(/.*)?)" >
@@ -116,6 +143,7 @@
                     /dav/{{ _irods_zone_name }}/commons/community_released/commons_repo/curated \
                     /dav/{{ _irods_zone_name }}/commons/cyverse_curated
 
+                  Use RedirectMovedProjects /dav/{{ _irods_zone_name }}/commons/community_released
                   {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'community-head.html') }}
               - path: /dav/{{ _irods_zone_name }}/commons/cyverse_curated
                 comment: Anonymous read-only access to the data curated by CyVerse
@@ -127,8 +155,8 @@
                 comment: Authenticated read-write access to the home collection
                 extra_parameters: |
                   {% from 'davrods.j2' import davrods with context %}
-                  RedirectPermanent /dav/{{ _irods_zone_name }}/home/shared \
-                                    /dav/{{ _irods_zone_name }}/projects
+                  RedirectPermanent \
+                    /dav/{{ _irods_zone_name }}/home/shared /dav/{{ _irods_zone_name }}/projects
 
                   {{ davrods('Home', 'home-head.html',
                        [ 'expr %{REQUEST_URI} !~ m#^/dav/' ~ _irods_zone_name ~ '/home(/[^/]*/?)?$# || %{REMOTE_USER} != "anonymous"',
@@ -137,6 +165,7 @@
                 comment: Authenticated read-write access to the project folders
                 extra_parameters: |
                   {% from 'davrods.j2' import davrods with context %}
+                  Use RedirectMovedProjects /dav/{{ _irods_zone_name }}/projects
                   {{ davrods('/' ~ _irods_zone_name ~ '/home/shared', 'projects-head.html',
                        [ 'valid-user' ]) }}
               - path: /server-status
@@ -163,7 +192,11 @@
               {% endif -%}
 
               ErrorLog logs/https_error_log
-              CustomLog logs/https_request_log {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %{SSL_PROTOCOL}x %{SSL_CIPHER}x %a \"%r\" %>s %L %{forensic-id}n"' }}
+
+              CustomLog \
+                logs/https_request_log \
+                {{ '"%{%Y-%m-%d %T}t.%{usec_frac}t %{SSL_PROTOCOL}x %{SSL_CIPHER}x %a \"%r\" %>s %L %{forensic-id}n"' }}
+
               LogLevel warn
 
               RewriteEngine On
@@ -197,7 +230,7 @@
         - no_testing
 
   pre_tasks:
-    - name: Enable notifcations when not testing
+    - name: Enable notifications when not testing
       ansible.builtin.set_fact:
         notifications_enabled: true
       tags:
@@ -371,6 +404,18 @@
         dest: /var/www/html/index.html
         mode: a+r
 
+    - name: Create errors folder
+      ansible.builtin.file:
+        path: /var/www/html/errors
+        recurse: true
+        state: directory
+
+    - name: Place project moved page
+      ansible.builtin.copy:
+        src: files/webdav/var/www/html/errors/moved_project.html
+        dest: /var/www/html/errors/moved_project.html
+        mode: a+r
+
     - name: Add robots.txt
       ansible.builtin.copy:
         src: files/webdav/var/www/html/robots.txt
@@ -433,7 +478,7 @@
         state: directory
         mode: 0777
 
-    # Varnish creates in-memory log upto 4GB.
+    # Varnish creates in-memory log up to 4GB.
     - name: Mount varnish shared memory
       ansible.posix.mount:
         path: /var/lib/varnish

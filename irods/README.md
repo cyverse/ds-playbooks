@@ -101,6 +101,7 @@ Variable                                   | Required | Default                 
 `webdav_canonical_hostname`                | no       | `canonical_hostname`                 |         | The FQDN or IP address of the WebDAV service.
 `webdav_davrods_access_limit`              | no       |                                      |         | If defined, the upper limit on the number of simultaneous requests that will be served by davrods
 `webdav_max_request_workers`               | no       | 192                                  |         | The upper limit on the number of simultaneous requests that will be served. This typically have the value of `webdav_server_limit` multiplied by `webdav_threads_per_child`
+`webdav_moved_projects`                    | no       | []                                   |         | A list of names (not paths) of project home collections that have been moved out of CyVerse.
 `webdav_purgeman_irods_user`               | no       | `irods_admin_username`               |         | The irods user who converts data object uuid to path
 `webdav_purgeman_irods_password`           | yes      |                                      |         | The password of the purgeman irods user
 `webdav_server_limit`                      | no       | 48                                   |         | the number of cpu cores to be used

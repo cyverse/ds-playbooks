@@ -473,7 +473,7 @@ _repl_replicate_workaround(*Object, *RescName) {
         <PLUSET>28800s</PLUSET>
         <EF>0s REPEAT 0 TIMES</EF> ' )
     {#_repl_replicate
-      _repl__replicate_workaround(*Object, *RescName);
+      _repl_replicate_workaround(*Object, *RescName);
     }
   }
 }

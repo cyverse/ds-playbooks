@@ -84,14 +84,11 @@ _cyverse_logic_getNewAVUSetting(*Orig, *Prefix, *Candidates) =
 #  ReplNum    the replica number that will be check summed
 #
 cyverse_logic_chksumRepl(*DataObjId, *ReplNum) {
-	*dataObjPath = '';
-	foreach (*rec in
-		SELECT COLL_NAME, DATA_NAME WHERE DATA_ID = '*DataObjId' AND DATA_REPL_NUM = '*ReplNum'
+	foreach ( *rec in
+		SELECT COLL_NAME, DATA_NAME
+		WHERE DATA_ID = '*DataObjId' AND DATA_REPL_NUM = '*ReplNum' AND DATA_CHECKSUM = ''
 	) {
 		*dataObjPath = *rec.COLL_NAME ++ '/' ++ *rec.DATA_NAME;
-	}
-
-	if (*dataObjPath != '') {
 		msiAddKeyValToMspStr('forceChksum', '', *opts);
 		msiAddKeyValToMspStr('replNum', str(*ReplNum), *opts);
 		msiDataObjChksum(*dataObjPath, *opts, *_);

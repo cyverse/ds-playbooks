@@ -8,6 +8,9 @@
       "hook": ""
     },
     "setstat_mode": 0,
+    "rename_mode": 0,
+    "resume_max_size": 0,
+    "secret_min_entropy": 80,
     "temp_path": "",
     "proxy_protocol": 1,
     "proxy_allowed": [
@@ -16,14 +19,20 @@
       "{{ ip }}"{% if not loop.last %},{% endif %}
 {% endfor +%}
     ],
+    "proxy_skipped": [],
     "startup_hook": "",
     "post_connect_hook": "",
     "post_disconnect_hook": "",
-    "data_retention_hook": "",
     "max_total_connections": 0,
     "max_per_host_connections": 20,
-    "whitelist_file": "",
+    "allowlist_status": 0,
     "allow_self_connections": 0,
+    "umask": "",
+    "server_version": "",
+    "tz": "",
+    "metadata": {
+      "read": 0
+    },
     "defender": {
       "enabled": true,
       "driver": "memory",
@@ -37,8 +46,10 @@
       "observation_time": 30,
       "entries_soft_limit": 100,
       "entries_hard_limit": 150,
-      "safelist_file": "",
-      "blocklist_file": "",
+      "login_delay": {
+        "success": 0,
+        "password_failed": 1000
+      }
       "safelist": [
 {%- for host_allowed in _sftp_user_host_allowed %}
 {%    set ip = host_allowed if host_allowed|ansible.utils.ipaddr else lookup('dig', host_allowed) %}
@@ -64,12 +75,14 @@
           "DAV",
           "HTTP"
         ],
-        "allow_list": [],
         "generate_defender_events": false,
         "entries_soft_limit": 100,
         "entries_hard_limit": 150
       }
-    ]
+    ],
+    "event_manager": {
+      "enabled_commands": []
+    }
   },
   "acme": {
     "domains": [],
@@ -96,16 +109,17 @@
       }
     ],
     "max_auth_tries": 0,
-    "banner": "Welcome to SFTP service for CyVerse DataStore!",
     "host_keys": [],
     "host_certificates": [],
     "host_key_algorithms": [],
-    "moduli": [],
     "kex_algorithms": [],
     "ciphers": [],
     "macs": [],
+    "public_key_algorithms": [],
     "trusted_user_ca_keys": [],
     "revoked_user_certs_file": "",
+    "opkssh_path": "",
+    "opkssh_checksum": "",
     "login_banner_file": "",
     "enabled_ssh_commands": [
       "md5sum",
@@ -117,8 +131,7 @@
     ],
     "keyboard_interactive_authentication": false,
     "keyboard_interactive_auth_hook": "",
-    "password_authentication": true,
-    "folder_prefix": ""
+    "password_authentication": true
   },
   "ftpd": {
     "bindings": [
@@ -132,6 +145,7 @@
         "min_tls_version": 12,
         "force_passive_ip": "",
         "passive_ip_overrides": [],
+        "passive_host": "",
         "client_auth_type": 0,
         "tls_cipher_suites": [],
         "passive_connections_security": 0,
@@ -139,7 +153,6 @@
         "debug": false
       }
     ],
-    "banner": "",
     "banner_file": "",
     "active_transfers_port_non_20": true,
     "passive_port_range": {
@@ -166,7 +179,9 @@
         "min_tls_version": 12,
         "client_auth_type": 0,
         "tls_cipher_suites": [],
+        "tls_protocols": [],
         "prefix": "",
+        "proxy_mode": 0,
         "proxy_allowed": [],
         "client_ip_proxy_header": "",
         "client_ip_header_depth": 0,
@@ -196,7 +211,8 @@
       },
       "mime_types": {
         "enabled": true,
-        "max_size": 1000
+        "max_size": 1000,
+        "custom_mappings": []
       }
     }
   },
@@ -255,6 +271,11 @@
     "create_default_admin": true,
     "naming_rules": 0,
     "is_shared": 0,
+    "node": {
+      "host": "",
+      "port": 0,
+      "proto": "http"
+    },
     "backups_path": "{{ _sftpgo_vault_dir }}/backups"
   },
   "httpd": {
@@ -266,21 +287,27 @@
         "enable_web_client": true,
         "enable_rest_api": true,
         "enabled_login_methods": 0,
+        "disabled_login_methods": 0,
         "enable_https": false,
         "certificate_file": "",
         "certificate_key_file": "",
         "min_tls_version": 12,
         "client_auth_type": 0,
         "tls_cipher_suites": [],
+        "tls_protocols": [],
+        "proxy_mode": 0,
         "proxy_allowed": [],
         "client_ip_proxy_header": "",
         "client_ip_header_depth": 0,
         "hide_login_url": 0,
         "render_openapi": true,
-        "web_client_integrations": [],
+        "languages": [
+          "en"
+        ],
         "oidc": {
           "client_id": "",
           "client_secret": "",
+          "client_secret_file": "",
           "config_url": "",
           "redirect_base_url": "",
           "scopes": [
@@ -310,7 +337,10 @@
           "content_security_policy": "",
           "permissions_policy": "",
           "cross_origin_opener_policy": "",
-          "expect_ct_header": ""
+          "cross_origin_resource_policy": "",
+          "cross_origin_embedder_policy": "",
+          "referrer_policy": "",
+          "cache_control": ""
         },
         "branding": {
           "web_admin": {
@@ -318,10 +348,9 @@
             "short_name": "",
             "favicon_path": "",
             "logo_path": "",
-            "login_image_path": "",
             "disclaimer_name": "",
             "disclaimer_path": "",
-            "default_css": "",
+            "default_css": [],
             "extra_css": []
           },
           "web_client": {
@@ -329,10 +358,9 @@
             "short_name": "",
             "favicon_path": "",
             "logo_path": "",
-            "login_image_path": "",
             "disclaimer_name": "",
             "disclaimer_path": "",
-            "default_css": "",
+            "default_css": [],
             "extra_css": []
           }
         }
@@ -347,8 +375,12 @@
     "ca_certificates": [],
     "ca_revocation_lists": [],
     "signing_passphrase": "",
+    "signing_passphrase_file": "",
     "token_validation": 0,
-    "max_upload_file_size": 1048576000,
+    "cookie_lifetime": 20,
+    "share_cookie_lifetime": 120,
+    "jwt_lifetime": 20,
+    "max_upload_file_size": 0,
     "cors": {
       "enabled": false,
       "allowed_origins": [],
@@ -375,7 +407,8 @@
     "certificate_file": "",
     "certificate_key_file": "",
     "min_tls_version": 12,
-    "tls_cipher_suites": []
+    "tls_cipher_suites": [],
+    "tls_protocols": []
   },
   "http": {
     "timeout": 20,
@@ -439,7 +472,15 @@
     "auth_type": 0,
     "encryption": 0,
     "domain": "",
-    "templates_path": "/usr/share/sftpgo/templates"
+    "templates_path": "/usr/share/sftpgo/templates",
+    "debug": 0,
+    "oauth2": {
+      "provider": 0,
+      "tenant": "",
+      "client_id": "",
+      "client_secret": "",
+      "refresh_token": ""
+    }
   },
   "plugins": []
 }

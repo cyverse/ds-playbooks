@@ -11,6 +11,21 @@
         mode: u+rx
         state: directory
 
+    - name: Find existing S3 credentials files
+      ansible.builtin.find:
+        paths: /etc/irods/s3-credentials
+        file_type: file
+      register: _irods_s3_existing_cred_files
+
+    - name: Remove stale S3 credentials files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ _irods_s3_existing_cred_files.files }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+      when: item.path | basename not in (_irods_s3_cred | map(attribute='name') | list)
+
     - name: Create S3 credentials files
       ansible.builtin.copy:
         dest: /etc/irods/s3-credentials/{{ item.name }}

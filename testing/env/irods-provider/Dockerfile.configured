@@ -1,8 +1,14 @@
 FROM test-env-base:centos7
 
 ### Install PostgreSQL ODBC connector
-RUN yum --assumeyes install \
-  https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+COPY <<EOF /etc/yum.repos.d/pgdg-12.repo
+[pgdg12-archive]
+name=PostgreSQL 12 RPMs for RHEL/Rocky Linux/AlmaLinux/CentOS 7
+baseurl=https://yum-archive.postgresql.org/12/redhat/rhel-7-x86_64
+enabled=1
+gpgcheck=0
+EOF
+
 RUN yum --assumeyes install postgresql12-odbc
 
 ### Install iRODS
@@ -52,3 +58,7 @@ CMD [ "/service.sh" ]
 RUN yum --assumeyes install openssh-clients
 RUN pip3 --quiet install 'python-irodsclient<2.0.0'
 COPY irods-provider/config/pre_config.re /etc/irods/
+
+RUN mkdir --parents /etc/irods/s3-credentials
+RUN touch /etc/irods/s3-credentials/cred-stale
+RUN chown --recursive irods /etc/irods/s3-credentials

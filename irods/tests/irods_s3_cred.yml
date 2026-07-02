@@ -38,3 +38,9 @@
     - name: Verify contents
       ansible.builtin.assert:
         that: cred is regex('^access-1\nsecret-1\n')
+
+    - name: Verify stale credential file was removed
+      ansible.builtin.stat:
+        path: /etc/irods/s3-credentials/cred-stale
+      register: resp
+      failed_when: resp.stat.exists
